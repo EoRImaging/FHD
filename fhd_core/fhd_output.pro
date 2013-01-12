@@ -140,8 +140,15 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     model_uv_arr=Ptrarr(npol,/allocate)
     model_holo_arr=Ptrarr(npol,/allocate)
     
+    source_uv_mask=fltarr(dimension,elements)
     FOR pol_i=0,npol-1 DO BEGIN
-        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension,beam_correction=beam_correction)
+        mask_i=where(*image_uv_arr[pol_i],n_mask_use)
+        IF n_mask_use GT 0 THEN source_uv_mask[mask_i]=1
+    ENDFOR
+    IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
+    
+    FOR pol_i=0,npol-1 DO BEGIN
+        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension,beam_correction=beam_correction,mask=source_uv_mask)
 ;        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension)
         *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i])*normalization
         *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i])*(*beam_correction[pol_i])
