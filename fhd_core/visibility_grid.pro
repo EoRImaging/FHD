@@ -145,7 +145,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO BEGIN
-        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
+;        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
+        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
         box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)        
     ENDFOR
 

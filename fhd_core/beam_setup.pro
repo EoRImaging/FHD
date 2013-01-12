@@ -224,7 +224,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        psf_base1=dirty_image_generate((beam1_0*(*proj[pol1]))*Conj(beam2_0*(*proj[pol2])),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
         
-        psf_base1=abs(psf_base1)
+;        psf_base1=abs(psf_base1)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
         beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])

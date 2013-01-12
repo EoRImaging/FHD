@@ -22,25 +22,29 @@ compile_opt idl2,strictarrsubs
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 dims=Size(psf_base_ptr,/dimension)
 n_freq_bin=dims[1]
-;IF N_Elements(freq_bin_i) EQ 0 THEN freq_bin_i=n_freq_bin/2
+psf_dim=(size(*psf_base_ptr[0,0,0,0],/dimension))[0]
 
-IF N_Elements(freq_bin_i) GT 0 THEN psf_base=*psf_base_ptr[pol_i,freq_bin_i,0,0] $
-;ELSE BEGIN
-;    psf_base=*psf_base_ptr[pol_i,0,0,0]
-;    FOR freq_i=1,n_freq_bin-1 DO psf_base+=*psf_base_ptr[pol_i,freq_i,0,0]
+IF N_Elements(freq_bin_i) GT 0 THEN BEGIN
+    psf_base=*psf_base_ptr[pol_i,freq_bin_i,0,0]
+    beam_base_uv=Complexarr(dimension,elements)
+    beam_base_uv[dimension/2.-Floor(psf_dim/2.):dimension/2.-Floor(psf_dim/2.)+psf_dim-1,elements/2.-Floor(psf_dim/2.):elements/2.-Floor(psf_dim/2.)+psf_dim-1]=psf_base
+    beam_base=fft_shift(real_part(FFT(fft_shift(beam_base_uv),/inverse)))    
+ENDIF ELSE BEGIN
+    beam_base=fltarr(dimension,elements)
+    FOR freq_i=0,n_freq_bin-1 DO BEGIN
+        beam_base_uv=Complexarr(dimension,elements)
+        beam_base_uv[dimension/2.-Floor(psf_dim/2.):dimension/2.-Floor(psf_dim/2.)+psf_dim-1,elements/2.-Floor(psf_dim/2.):elements/2.-Floor(psf_dim/2.)+psf_dim-1]=psf_base
+        beam_base1=fft_shift(real_part(FFT(fft_shift(beam_base_uv),/inverse)))  
+        beam_base+=beam_base1/n_freq_bin
+    ENDFOR
+    
+;    psf_base=weight_invert(*psf_base_ptr[pol_i,0,0,0],/abs)
+;    FOR freq_i=1,n_freq_bin-1 DO psf_base+=weight_invert(*psf_base_ptr[pol_i,freq_i,0,0],/abs)
 ;    psf_base/=n_freq_bin
-;ENDELSE
-ELSE BEGIN
-    psf_base=weight_invert(*psf_base_ptr[pol_i,0,0,0],/abs)
-    FOR freq_i=1,n_freq_bin-1 DO psf_base+=weight_invert(*psf_base_ptr[pol_i,freq_i,0,0],/abs)
-    psf_base/=n_freq_bin
-    psf_base=weight_invert(psf_base,/abs)
+;    psf_base=weight_invert(psf_base,/abs)
 ENDELSE
-psf_dim=(size(psf_base,/dimension))[0]
 
-beam_base_uv=fltarr(dimension,elements)
-beam_base_uv[dimension/2.-Floor(psf_dim/2.):dimension/2.-Floor(psf_dim/2.)+psf_dim-1,elements/2.-Floor(psf_dim/2.):elements/2.-Floor(psf_dim/2.)+psf_dim-1]=psf_base
-beam_base=fft_shift(real_part(FFT(fft_shift(beam_base_uv),/inverse)))>0.
+
 ;beam_base/=max(beam_base)
 
 RETURN,beam_base
