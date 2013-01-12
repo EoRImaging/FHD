@@ -33,7 +33,7 @@ ENDIF ELSE BEGIN
     beam_base=fltarr(dimension,elements)
     FOR freq_i=0,n_freq_bin-1 DO BEGIN
         beam_base_uv=Complexarr(dimension,elements)
-        beam_base_uv[dimension/2.-Floor(psf_dim/2.):dimension/2.-Floor(psf_dim/2.)+psf_dim-1,elements/2.-Floor(psf_dim/2.):elements/2.-Floor(psf_dim/2.)+psf_dim-1]=psf_base
+        beam_base_uv[dimension/2.-Floor(psf_dim/2.):dimension/2.-Floor(psf_dim/2.)+psf_dim-1,elements/2.-Floor(psf_dim/2.):elements/2.-Floor(psf_dim/2.)+psf_dim-1]=*psf_base_ptr[pol_i,freq_i,0,0]
         beam_base1=fft_shift(real_part(FFT(fft_shift(beam_base_uv),/inverse)))  
         beam_base+=beam_base1/n_freq_bin
     ENDFOR
