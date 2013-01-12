@@ -12,7 +12,8 @@ IF tag_exist(A,'i_use') THEN BEGIN
     i_use=A.i_use
     n=N_Elements(i_use)
     
-    IF Keyword_Set(double) THEN B=dblarr(N_Elements(X)) ELSE B=Fltarr(N_Elements(X))
+;    IF Keyword_Set(double) THEN B=dblarr(N_Elements(X)) ELSE B=Fltarr(N_Elements(X))
+    IF Keyword_Set(double) THEN B=Dcomplexarr(N_Elements(X)) ELSE B=Complexarr(N_Elements(X))
     
     IF N_Params() LE 3 THEN BEGIN
         FOR i0=0.,n-1 DO BEGIN
@@ -33,7 +34,8 @@ ENDIF ELSE BEGIN
     ija=A.ija-1
     
     n=A.ija[0]-2. ;DO NOT include an extra -1 here. It MUST be ija[0]-2.
-    IF Keyword_Set(double) THEN B=dblarr(N_Elements(X)) ELSE B=Fltarr(N_Elements(X))
+;    IF Keyword_Set(double) THEN B=dblarr(N_Elements(X)) ELSE B=Fltarr(N_Elements(X))
+    IF Keyword_Set(double) THEN B=Dcomplexarr(N_Elements(X)) ELSE B=Complexarr(N_Elements(X))
     
     IF N_Params() LE 3 THEN BEGIN
         FOR i=0.,n-1 DO BEGIN

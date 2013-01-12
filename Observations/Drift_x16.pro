@@ -13,10 +13,10 @@ FOR fi=0,n_files-1 DO filename_list[fi]=Strmid(filename_list[fi],0,Strpos(filena
 ;filename_list=Reverse(filename_list)
 
 n_files=N_Elements(filename_list)
-version=1
+version=2
 alignment_file_header=['filename','degpix','obsra',' obsdec','zenra',' zendec','obsx','','obsy','zenx','zeny','obs_rotation','dx','dy','theta','scale']
 textfast,alignment_file_header,filename='alignment'+'v'+strn(version),data_dir=data_directory,/write
-FOR fi=1,n_files-1 DO BEGIN
+FOR fi=2,n_files-1 DO BEGIN
 ;IF fi LT 27 THEN CONTINUE
     filename=filename_list[fi]
     UPNAME=StrUpCase(filename)

@@ -103,7 +103,7 @@ IF map_flag THEN BEGIN
         inds_init=where(ptr_test EQ 0,nzero)
         IF nzero EQ 0 THEN CONTINUE
         inds_init=(index_arr[xmin1:xmin1+psf_dim-1,ymin1:ymin1+psf_dim-1])[inds_init]
-        FOR ii=0,nzero-1 DO map_fn[inds_init[ii]]=Ptr_new(dblarr(psf_dim2,psf_dim2))
+        FOR ii=0,nzero-1 DO map_fn[inds_init[ii]]=Ptr_new(dcomplexarr(psf_dim2,psf_dim2))
 ;        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO map_fn[xmin1+i,ymin1+j]=Ptr_new(dblarr(psf_dim2,psf_dim2))
     ENDFOR
 ENDIF
@@ -145,8 +145,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO BEGIN
-;        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
-        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
+        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
+;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
         box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)        
     ENDFOR
 
