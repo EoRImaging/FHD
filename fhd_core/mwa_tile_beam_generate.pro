@@ -29,6 +29,7 @@ antenna_height=0.35 ;meters (rumor)
 
 degpix_use=!RaDeg/(kbinsize_use*psf_dim2) 
 Kconv=(2*!Pi)*(frequency/299792458.) ;wavenumber (radians/meter)
+;Kconv=(frequency/299792458.) ;wavenumber (radians/meter)
 wavelength=299792458./frequency
 
 IF Keyword_Set(antenna_beam_arr) THEN IF Keyword_Set(*antenna_beam_arr[0]) THEN BEGIN
@@ -66,7 +67,7 @@ proj_north=Reform(yvals,(psf_dim2)^2.)
 proj_z=Cos(za_arr_use*!DtoR)
 
 ;phase of each dipole for the source (relative to the beamformer settings)
-D_d=proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d
+D_d=proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d*!Radeg
 D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 
 groundplane=2D*Sin(Cos(za_arr_use*!DtoR)#(Kconv*(antenna_height+zc_arr))) ;looks correct

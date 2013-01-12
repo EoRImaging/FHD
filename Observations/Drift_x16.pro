@@ -16,7 +16,7 @@ n_files=N_Elements(filename_list)
 version=1
 alignment_file_header=['filename','degpix','obsra',' obsdec','zenra',' zendec','obsx','','obsy','zenx','zeny','obs_rotation','dx','dy','theta','scale']
 textfast,alignment_file_header,filename='alignment'+'v'+strn(version),data_dir=data_directory,/write
-FOR fi=0,n_files-1 DO BEGIN
+FOR fi=1,n_files-1 DO BEGIN
 ;IF fi LT 27 THEN CONTINUE
     filename=filename_list[fi]
     UPNAME=StrUpCase(filename)
