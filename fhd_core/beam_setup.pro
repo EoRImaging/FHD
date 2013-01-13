@@ -212,6 +212,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         gain1_avg=Median(gain1,dimension=2)
         gain2_avg=Median(gain2,dimension=2)
         
+        ;mwa_tile_beam_generate.pro
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$
             frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3)
