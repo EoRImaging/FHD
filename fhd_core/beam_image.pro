@@ -35,8 +35,10 @@ ENDIF ELSE BEGIN
         beam_base_uv=Complexarr(dimension,elements)
         beam_base_uv[dimension/2.-Floor(psf_dim/2.):dimension/2.-Floor(psf_dim/2.)+psf_dim-1,elements/2.-Floor(psf_dim/2.):elements/2.-Floor(psf_dim/2.)+psf_dim-1]=*psf_base_ptr[pol_i,freq_i,0,0]
         beam_base1=fft_shift(real_part(FFT(fft_shift(beam_base_uv),/inverse)))  
+;        beam_base+=weight_invert(beam_base1)
         beam_base+=beam_base1/n_freq_bin
     ENDFOR
+;    beam_base=weight_invert(beam_base);/n_freq_bin
     
 ;    psf_base=weight_invert(*psf_base_ptr[pol_i,0,0,0],/abs)
 ;    FOR freq_i=1,n_freq_bin-1 DO psf_base+=weight_invert(*psf_base_ptr[pol_i,freq_i,0,0],/abs)

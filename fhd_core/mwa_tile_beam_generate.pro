@@ -67,7 +67,7 @@ proj_north=Reform(yvals,(psf_dim2)^2.)
 proj_z=Cos(za_arr_use*!DtoR)
 
 ;phase of each dipole for the source (relative to the beamformer settings)
-D_d=proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d*!Radeg
+D_d=(proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d*!Radeg);/Kconv
 D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 
 groundplane=2D*Sin(Cos(za_arr_use*!DtoR)#(Kconv*(antenna_height+zc_arr))) ;looks correct
@@ -84,6 +84,7 @@ ii=Complex(0,1)
 ;;IF polarization EQ 0 THEN pol=(1.-((xvals*!DtoR-xc)^2.)/2.)>0. ELSE pol=(1.-((yvals*!DtoR-yc)^2.)/2.)>0.
 
 dipole_gain_arr=groundplane*projection*Exp(-ii*Kconv*D_d*!DtoR)
+;dipole_gain_arr=groundplane*projection*Exp(-ii*D_d*!DtoR)
 ;horizon_test=where(abs(za_arr_use) GE 90.,n_horizon_test)
 ;horizon_mask=fltarr(psf_dim2,psf_dim2)+1
 ;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    

@@ -224,6 +224,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;;        psf_base0=dirty_image_generate((beam1_0*(*proj0[pol1]))*Conj(beam2_0*(*proj0[pol2])),/no_real)
 ;        psf_base1=dirty_image_generate((beam1_0*(*proj[pol1]))*Conj(beam2_0*(*proj[pol2])),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
+;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
 ;        psf_base1=abs(psf_base1)
         
