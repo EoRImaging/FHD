@@ -90,31 +90,6 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     t1+=t2a-t1a
     
 ;;    TEMPORARY addition to fix polarization for off-zenith pointings
-;    polarization_map=vis_jones_matrix(obs,polarization_correction,ra_arr=ra_arr,dec_arr=dec_arr)
-;    p_map_simple=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-;    p_corr_simple=[polarization_correction[0,0],polarization_correction[0,1],polarization_correction[2,2],polarization_correction[2,3]]
-;    FOR pol_i=0,1 DO BEGIN
-;        *p_map_simple[pol_i]*=0.5/(*p_map_simple[pol_i])[dimension/2,elements/2.]
-;        *p_corr_simple[pol_i]*=1.0/(*p_corr_simple[pol_i])[dimension/2,elements/2.]
-;;        *p_map_simple[pol_i]*=0.5/(*p_map_simple[pol_i])[obs.zenx,obs.zeny]
-;;        *p_corr_simple[pol_i]*=1.0/(*p_corr_simple[pol_i])[obs.zenx,obs.zeny]
-;    ENDFOR
-    
-;    dxc=dimension/2.-obs.zenx
-;    dyc=elements/2.-obs.zeny
-;    
-;    xvals=meshgrid(dimension,elements,1)-dimension/2
-;    yvals=meshgrid(dimension,elements,2)-elements/2
-;    xcvals=obs.degpix*(xvals+dxc)*Cos(!DtoR*obs.rotation)-obs.degpix*(yvals+dyc)*Sin(!DtoR*obs.rotation)
-;    ycvals=obs.degpix*(yvals+dyc)*Cos(!DtoR*obs.rotation)+obs.degpix*(xvals+dxc)*Sin(!DtoR*obs.rotation)
-;    
-;    p_map_simple=Ptrarr(4,/allocate)
-;    p_corr_simple=Ptrarr(4,/allocate)
-;    *p_map_simple[0]=0.5*Cos(xcvals*!DtoR)^2.
-;    *p_map_simple[1]=0.5*Cos(ycvals*!DtoR)^2.
-;    *p_map_simple[2]=0.5*Cos(xcvals*!DtoR)*Cos(ycvals*!DtoR)
-;    *p_map_simple[3]=0.5*Cos(xcvals*!DtoR)*Cos(ycvals*!DtoR)
-;    FOR pol_i=0,3 DO *p_corr_simple[pol_i]=0.5*weight_invert(*p_map_simple[pol_i])
     
     ;beam_threshold=0.05
     beam_mask=fltarr(dimension,elements)+1
@@ -133,9 +108,9 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     t2+=t3a-t2a
     
     instr_images=Ptrarr(npol,/allocate)
-    stokes_images=Ptrarr(npol,/allocate)
+;    stokes_images=Ptrarr(npol,/allocate)
     instr_sources=Ptrarr(npol,/allocate)
-    stokes_sources=Ptrarr(npol,/allocate)
+;    stokes_sources=Ptrarr(npol,/allocate)
     
     model_uv_arr=Ptrarr(npol,/allocate)
     model_holo_arr=Ptrarr(npol,/allocate)
@@ -155,22 +130,24 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         *instr_sources[pol_i]=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=8,dimension=dimension,width=.75)
     ENDFOR
     
-    stokes_list1=[0,0,2,2]
-    stokes_list2=[1,1,3,3]
-    sign=[1,-1,1,-1]
+;    stokes_list1=[0,0,2,2]
+;    stokes_list2=[1,1,3,3]
+;    sign=[1,-1,1,-1]
 ;    FOR pol_i=0,npol-1 DO BEGIN
 ;        *stokes_images[pol_i]=(*instr_images[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])*(*p_corr_simple[stokes_list1[pol_i]])+$
 ;            sign[pol_i]*(*instr_images[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])*(*p_corr_simple[stokes_list2[pol_i]])
 ;        *stokes_sources[pol_i]=(*instr_sources[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])*(*p_corr_simple[stokes_list1[pol_i]])+$
 ;            sign[pol_i]*(*instr_sources[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])*(*p_corr_simple[stokes_list2[pol_i]])
 ;    ENDFOR
-    FOR pol_i=0,npol-1 DO BEGIN
-        *stokes_images[pol_i]=(*instr_images[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])+$
-            sign[pol_i]*(*instr_images[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])
-        *stokes_sources[pol_i]=(*instr_sources[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])+$
-            sign[pol_i]*(*instr_sources[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])
-    ENDFOR
-;    gal_model_holo=fhd_galaxy_model(map_fn_arr,ra_arr=ra_arr,dec_arr=dec_arr,p_map=p_map_simple,frequency=Median(obs.freq),normalization=normalization)
+    stokes_images=stokes_cnv(instr_images,beam=beam_base)
+    stokes_sources=stokes_cnv(instr_sources,beam=beam_base)
+;    FOR pol_i=0,npol-1 DO BEGIN
+;        *stokes_images[pol_i]=(*instr_images[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])+$
+;            sign[pol_i]*(*instr_images[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])
+;        *stokes_sources[pol_i]=(*instr_sources[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])+$
+;            sign[pol_i]*(*instr_sources[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])
+;    ENDFOR
+;;    gal_model_holo=fhd_galaxy_model(map_fn_arr,ra_arr=ra_arr,dec_arr=dec_arr,p_map=p_map_simple,frequency=Median(obs.freq),normalization=normalization)
     
     t4a=Systime(1)
     t3+=t4a-t3a
