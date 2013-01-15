@@ -173,9 +173,16 @@ FOR pol_i=0,npol-1 DO BEGIN
     normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
     
     *weights_arr[pol_i]=weights_single
+    source_uv_mask[where(weights_single)]=1.
+ENDFOR
+;normalization=mean(normalization_arr[0:npol-1])/2. ;factor of two accounts for complex conjugate
+normalization=.25
+
+FOR pol_i=0,npol-1 DO BEGIN    
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])^2.
     
-    source_uv_mask[where(weights_single)]=1.
+;    ;TEMPORARY!
+;    dirty_image_single*=normalization
     
     ;THIS IS THE ONE LINE TO UNCOMMENT IF RE-INSERTING POLARIZATION CORRECTION EFFECTS
 ;    ;TEMPORARY addition to fix polarization for off-zenith pointings
@@ -194,7 +201,9 @@ FOR pol_i=0,npol-1 DO BEGIN
     *model_uv_full[pol_i]=complexarr(dimension,elements)
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
-normalization=mean(normalization_arr[0:npol-1])/2. ;factor of two accounts for complex conjugate
+
+;;TEMPORARY!
+;normalization=normalization^2.
 
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
@@ -219,8 +228,10 @@ beam_avg_box=beam_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 
 dirty_image_composite_smooth=fltarr(dimension,elements)
-dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=Median(dirty_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even) *beam_corr_box
-converge_check[0]=(converge_check2[0]=Stddev(((dirty_image_composite-dirty_image_composite_smooth)*beam_avg)[where(source_mask,n_pix0)],/nan))
+dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
+    Median(dirty_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even) *beam_corr_box
+converge_check[0]=(converge_check2[0]=$
+    Stddev(((dirty_image_composite-dirty_image_composite_smooth)*beam_avg)[where(source_mask,n_pix0)],/nan))
 print,"Initial convergence:",converge_check[0]
 
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
