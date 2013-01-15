@@ -130,7 +130,7 @@ print,'Calculating beam model'
 psf=beam_setup(obs,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,_Extra=extra)
 
 beam=Ptrarr(n_pol,/allocate)
-FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf.base,pol_i=pol_i,dimension=obs.dimension)
+FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
 
 vis_arr=Ptrarr(n_pol,/allocate)
 flag_arr=Ptrarr(n_pol,/allocate)

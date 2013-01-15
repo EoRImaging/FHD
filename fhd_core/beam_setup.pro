@@ -281,7 +281,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
 ENDFOR
 
-psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals)
+psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
+    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm)
 save,psf,filename=file_path+'_beams'+'.sav'
 RETURN,psf
 END

@@ -71,7 +71,7 @@ si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]
 
 ;Build a fits header
-mkhdr,fits_header,*dirty_array[0]
+mkhdr,fits_header,*residual_array[0]
 astr=obs.astr
 putast, fits_header, astr, cd_type=1
 
@@ -88,8 +88,6 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
     t2a=Systime(1)
     t1+=t2a-t1a
-    
-;;    TEMPORARY addition to fix polarization for off-zenith pointings
     
     ;beam_threshold=0.05
     beam_mask=fltarr(dimension,elements)+1
@@ -108,9 +106,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     t2+=t3a-t2a
     
     instr_images=Ptrarr(npol,/allocate)
-;    stokes_images=Ptrarr(npol,/allocate)
     instr_sources=Ptrarr(npol,/allocate)
-;    stokes_sources=Ptrarr(npol,/allocate)
     
     model_uv_arr=Ptrarr(npol,/allocate)
     model_holo_arr=Ptrarr(npol,/allocate)
@@ -130,25 +126,9 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         *instr_sources[pol_i]=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=8,dimension=dimension,width=.75)
     ENDFOR
     
-;    stokes_list1=[0,0,2,2]
-;    stokes_list2=[1,1,3,3]
-;    sign=[1,-1,1,-1]
-;    FOR pol_i=0,npol-1 DO BEGIN
-;        *stokes_images[pol_i]=(*instr_images[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])*(*p_corr_simple[stokes_list1[pol_i]])+$
-;            sign[pol_i]*(*instr_images[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])*(*p_corr_simple[stokes_list2[pol_i]])
-;        *stokes_sources[pol_i]=(*instr_sources[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])*(*p_corr_simple[stokes_list1[pol_i]])+$
-;            sign[pol_i]*(*instr_sources[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])*(*p_corr_simple[stokes_list2[pol_i]])
-;    ENDFOR
     stokes_images=stokes_cnv(instr_images,beam=beam_base)
     stokes_sources=stokes_cnv(instr_sources,beam=beam_base)
-;    FOR pol_i=0,npol-1 DO BEGIN
-;        *stokes_images[pol_i]=(*instr_images[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])+$
-;            sign[pol_i]*(*instr_images[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])
-;        *stokes_sources[pol_i]=(*instr_sources[stokes_list1[pol_i]])*(*beam_correction[stokes_list1[pol_i]])+$
-;            sign[pol_i]*(*instr_sources[stokes_list2[pol_i]])*(*beam_correction[stokes_list2[pol_i]])
-;    ENDFOR
-;;    gal_model_holo=fhd_galaxy_model(map_fn_arr,ra_arr=ra_arr,dec_arr=dec_arr,p_map=p_map_simple,frequency=Median(obs.freq),normalization=normalization)
-    
+
     t4a=Systime(1)
     t3+=t4a-t3a
     
@@ -264,35 +244,34 @@ Imagefast,ra_arr,filename=filename+' RA',$
     offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,/show,/sphere
     
 FOR pol_i=0,npol-1 DO BEGIN
-    IF Keyword_Set(coord_debug) THEN BEGIN
-;        instr_residual=Reverse(reverse(*instr_images[pol_i],1),2)
-;        instr_source=Reverse(reverse(*instr_sources[pol_i],1),2)
-;        instr_restored=Reverse(reverse(instr_residual+instr_source,1),2)
-;        beam_use=Reverse(reverse(*beam_base[pol_i],1),2)
-;        beam_est_use=Reverse(reverse(*beam_est[pol_i],1),2)
-;        beam_diff=beam_use-beam_est_use
-;        stokes_residual=Reverse(reverse((*stokes_images[pol_i])*beam_mask,1),2)
-;        stokes_source=Reverse(reverse((*stokes_sources[pol_i])*beam_mask,1),2)
-;        stokes_restored=Reverse(reverse(stokes_residual+stokes_source,1),2)
-;        mrc_image=Reverse(reverse(mrc_image,1),2)
-        instr_residual=reverse(*instr_images[pol_i],1)
-        instr_source=reverse(*instr_sources[pol_i],1)
-        instr_restored=reverse(instr_residual+instr_source,1)
-;        beam_use=reverse(*beam_base[pol_i]*(*p_map_simple[pol_i]),1)*2.
-        beam_use=reverse(*beam_base[pol_i],1)
-        IF beam_est_flag THEN BEGIN
-            beam_est_use=reverse(*beam_est[pol_i],1)
-            beam_diff=beam_use-beam_est_use
-        ENDIF
-        stokes_residual=reverse((*stokes_images[pol_i])*beam_mask,1)
-        stokes_source=reverse((*stokes_sources[pol_i])*beam_mask,1)
-        stokes_restored=reverse(stokes_residual+stokes_source,1)
-        mrc_image=reverse(mrc_image,1)
-    ENDIF ELSE BEGIN
+;    IF Keyword_Set(coord_debug) THEN BEGIN
+;;        instr_residual=Reverse(reverse(*instr_images[pol_i],1),2)
+;;        instr_source=Reverse(reverse(*instr_sources[pol_i],1),2)
+;;        instr_restored=Reverse(reverse(instr_residual+instr_source,1),2)
+;;        beam_use=Reverse(reverse(*beam_base[pol_i],1),2)
+;;        beam_est_use=Reverse(reverse(*beam_est[pol_i],1),2)
+;;        beam_diff=beam_use-beam_est_use
+;;        stokes_residual=Reverse(reverse((*stokes_images[pol_i])*beam_mask,1),2)
+;;        stokes_source=Reverse(reverse((*stokes_sources[pol_i])*beam_mask,1),2)
+;;        stokes_restored=Reverse(reverse(stokes_residual+stokes_source,1),2)
+;;        mrc_image=Reverse(reverse(mrc_image,1),2)
+;        instr_residual=reverse(*instr_images[pol_i],1)
+;        instr_source=reverse(*instr_sources[pol_i],1)
+;        instr_restored=reverse(instr_residual+instr_source,1)
+;;        beam_use=reverse(*beam_base[pol_i]*(*p_map_simple[pol_i]),1)*2.
+;        beam_use=reverse(*beam_base[pol_i],1)
+;        IF beam_est_flag THEN BEGIN
+;            beam_est_use=reverse(*beam_est[pol_i],1)
+;            beam_diff=beam_use-beam_est_use
+;        ENDIF
+;        stokes_residual=reverse((*stokes_images[pol_i])*beam_mask,1)
+;        stokes_source=reverse((*stokes_sources[pol_i])*beam_mask,1)
+;        stokes_restored=reverse(stokes_residual+stokes_source,1)
+;        mrc_image=reverse(mrc_image,1)
+;    ENDIF ELSE BEGIN
         instr_residual=*instr_images[pol_i]
         instr_source=*instr_sources[pol_i]
         instr_restored=instr_residual+instr_source
-;        beam_use=*beam_base[pol_i]*(*p_map_simple[pol_i])*2.
         beam_use=*beam_base[pol_i];*(*p_map_simple[pol_i])*2.
         IF beam_est_flag THEN BEGIN
             beam_est_use=*beam_est[pol_i]
@@ -301,7 +280,7 @@ FOR pol_i=0,npol-1 DO BEGIN
         stokes_residual=(*stokes_images[pol_i])*beam_mask
         stokes_source=(*stokes_sources[pol_i])*beam_mask
         stokes_restored=stokes_residual+stokes_source
-    ENDELSE
+;    ENDELSE
     
     t8a=Systime(1)
     
