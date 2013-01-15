@@ -181,8 +181,9 @@ IF map_flag THEN BEGIN
 ENDIF
 
 image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
-image_uv+=image_uv_conj
-IF Arg_present(weights) THEN weights+=Shift(Reverse(reverse(weights,1),2),1,1)
+image_uv=(image_uv+image_uv_conj)/2.
+
+IF Arg_present(weights) THEN weights=(weights+Shift(Reverse(reverse(weights,1),2),1,1))/2.
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
 
