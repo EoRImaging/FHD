@@ -31,7 +31,8 @@
 PRO uvfits2fhd,data_directory=data_directory,filename=filename,version=version,no_output=no_output,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     cut_baselines=cut_baselines,n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,$
-    rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,_Extra=extra
+    rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
+    _Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -44,6 +45,7 @@ IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=12;0 ;minimum baseline thre
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
+IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=1
 IF N_Elements(flag) EQ 0 THEN flag=1.
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=1
 IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
@@ -131,6 +133,17 @@ psf=beam_setup(obs,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=sil
 
 beam=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
+
+
+beam_mask=fltarr(obs.dimension,obs.elements)+1
+FOR pol_i=0,(n_pol<2)-1 DO BEGIN
+    mask0=fltarr(obs.dimension,obs.elements)
+    mask_i=region_grow(*beam[pol_i],obs.obsx+obs.dimension*obs.obsy,thresh=[0.05,max(*beam[pol_i])])
+    mask0[mask_i]=1
+    beam_mask*=mask0
+ENDFOR
+
+hpx_cnv=healpix_cnv_generate(obs,nside=nside,mask=beam_mask,radius=radius,restore_last=(~Keyword_Set(healpix_recalculate)))
 
 vis_arr=Ptrarr(n_pol,/allocate)
 flag_arr=Ptrarr(n_pol,/allocate)

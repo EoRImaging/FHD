@@ -22,7 +22,8 @@ FOR fi=3,n_files-1 DO BEGIN
     UPNAME=StrUpCase(filename)
     pcal=strpos(UPNAME,'_CAL')
     filename_use=StrMid(filename,0,pcal)
-    beam_recalculate=1
+    beam_recalculate=0
+    healpix_recalculate=1
     mapfn=0
     flag=0
     grid=1
@@ -34,8 +35,8 @@ FOR fi=3,n_files-1 DO BEGIN
     max_sources=10000.
     uvfits2fhd,data_directory=data_directory,filename=filename,n_pol=2,version=version,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
-        mapfn_recalculate=mapfn,flag=flag,grid=grid,GPU_enable=GPU_enable,$
-        /silent,max_sources=max_sources,deconvolve=deconvolve,$
+        mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
+        GPU_enable=GPU_enable,/silent,max_sources=max_sources,deconvolve=deconvolve,$
         no_output=0,noise_calibrate=noise_calibrate,fluxfix=fluxfix,align=align
 ;    fhd_output,filename=filename,data_directory=data_directory,version=version,$
 ;        noise_calibrate=noise_calibrate,fluxfix=fluxfix,align=align;,/restore

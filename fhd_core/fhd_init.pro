@@ -4,10 +4,8 @@ FUNCTION fhd_init,obs,restore=restore,pol_use=pol_use,freq_use=freq_use,time_i_u
     mapfn_threshold=mapfn_threshold,baseline_threshold=baseline_threshold,beam_threshold=beam_threshold,add_threshold=add_threshold,$
     polarization_map=polarization_map,polarization_correction=polarization_correction,ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,$
     beam_base=beam_base,beam_correction=beam_correction,independent_fit=independent_fit,reject_pol_sources=reject_pol_sources,$
-    beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,version=version
+    beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius
 
-
-vis_path_default,data_directory,filename,file_path,obs=obs,version=version
 
 npol=obs.n_pol
 ext='.UVFITS'
@@ -39,7 +37,5 @@ fhd={npol:npol,baseline_threshold:baseline_threshold,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,smooth_width:smooth_width,$
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius}
 
-
-save,fhd,filename=file_path+'_fhd_params.sav'
 RETURN,fhd
 END

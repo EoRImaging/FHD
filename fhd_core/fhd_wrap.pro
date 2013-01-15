@@ -28,6 +28,8 @@ compile_opt idl2,strictarrsubs
 vis_path_default,data_directory,filename,file_path,obs=obs,version=version
 IF N_Elements(obs) EQ 0 THEN restore,file_path+'_obs.sav'
 fhd=fhd_init(obs,_Extra=extra)
+save,fhd,filename=file_path+'_fhd_params.sav'
+
 npol=fhd.npol
 dimension=obs.dimension
 elements=obs.elements
