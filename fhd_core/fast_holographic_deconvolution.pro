@@ -60,9 +60,9 @@ compile_opt idl2,strictarrsubs
 
 t00=Systime(1)    
 vis_path_default,data_directory,filename,file_path,obs=obs
-;image_uv_arr is a pointer array with dimensions (npol) 
+;image_uv_arr is a pointer array with dimensions (n_pol) 
 
-npol=fhd.npol
+n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
 gain_factor=fhd.gain_factor
 mapfn_interval=fhd.mapfn_interval
@@ -110,15 +110,15 @@ pc_not_used=1.
 ;that will include all polarizations and frequencies, at ONE time snapshot
 IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last) 
 nfreq_beam=(size(psf.base,/dimension))[1]
-beam_base=Ptrarr(npol,/allocate)
-beam_correction=Ptrarr(npol,/allocate)
-beam_i=Ptrarr(npol,/allocate)
-beam_mask=Ptrarr(npol,/allocate)
+beam_base=Ptrarr(n_pol,/allocate)
+beam_correction=Ptrarr(n_pol,/allocate)
+beam_i=Ptrarr(n_pol,/allocate)
+beam_mask=Ptrarr(n_pol,/allocate)
 source_mask=fltarr(dimension,elements)+1.; & source_mask[valid_radec_i]=1.
 gain_array=fltarr(dimension,elements)+gain_factor
 beam_avg=fltarr(dimension,elements)
 nbeam_avg=0
-FOR pol_i=0,npol-1 DO BEGIN ;this should be by frequency! and also by time
+FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     *beam_base[pol_i]=beam_image(psf,pol_i=pol_i,dimension=dimension)
     *beam_mask[pol_i]=fltarr(dimension,elements)
     
@@ -141,20 +141,20 @@ beam_corr_avg=weight_invert(beam_avg,beam_threshold)
 ;gain_array*=Sqrt(beam_avg>0.)*source_mask
 
 
-IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(npol,/allocate)
-weights_arr=Ptrarr(npol,/allocate)
-dirty_array=Ptrarr(npol,/allocate)
-residual_array=Ptrarr(npol,/allocate)
-model_arr=Ptrarr(npol,/allocate)
-normalization_arr=fltarr(npol) ;factor to normalize holo_mapfn_apply
-model_uv=Ptrarr(npol,/allocate)
-model_uv_full=Ptrarr(npol,/allocate)
-model_uv_holo=Ptrarr(npol,/allocate)
+IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
+weights_arr=Ptrarr(n_pol,/allocate)
+dirty_array=Ptrarr(n_pol,/allocate)
+residual_array=Ptrarr(n_pol,/allocate)
+model_arr=Ptrarr(n_pol,/allocate)
+normalization_arr=fltarr(n_pol) ;factor to normalize holo_mapfn_apply
+;model_uv=Ptrarr(n_pol,/allocate)
+model_uv_full=Ptrarr(n_pol,/allocate)
+model_uv_holo=Ptrarr(n_pol,/allocate)
 
 source_comp_init,comp_arr,n_sources=max_sources
 pol_names=['xx','yy','xy','yx','I','Q','U','V'] ;not used, but here for reference
 
-pol_cut=1-histogram(pol_use,min=0,bin=1,nbins=npol)
+pol_cut=1-histogram(pol_use,min=0,bin=1,nbins=n_pol)
 
 ;load holo map functions and initialize output arrays
 dirty_image_composite=fltarr(dimension,elements)
@@ -162,7 +162,7 @@ dirty_image_composite_Q=fltarr(dimension,elements)
 dirty_image_composite_U=fltarr(dimension,elements)
 dirty_image_composite_V=fltarr(dimension,elements)
 source_uv_mask=fltarr(dimension,elements)
-FOR pol_i=0,npol-1 DO BEGIN
+FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_cut[pol_i] THEN CONTINUE
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
         holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
@@ -175,10 +175,10 @@ FOR pol_i=0,npol-1 DO BEGIN
     *weights_arr[pol_i]=weights_single
     source_uv_mask[where(weights_single)]=1.
 ENDFOR
-;normalization=mean(normalization_arr[0:npol-1])/2. ;factor of two accounts for complex conjugate
+;normalization=mean(normalization_arr[0:n_pol-1])/2. ;factor of two accounts for complex conjugate
 normalization=.25
 
-FOR pol_i=0,npol-1 DO BEGIN    
+FOR pol_i=0,n_pol-1 DO BEGIN    
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])^2.
     
 ;    ;TEMPORARY!
@@ -197,7 +197,7 @@ FOR pol_i=0,npol-1 DO BEGIN
         2:dirty_image_composite_V+=dirty_image_single
         3:dirty_image_composite_V-=dirty_image_single
     ENDCASE
-    *model_uv[pol_i]=complexarr(dimension,elements)
+;    *model_uv[pol_i]=complexarr(dimension,elements)
     *model_uv_full[pol_i]=complexarr(dimension,elements)
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
@@ -243,7 +243,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     model_image_composite_Q=fltarr(dimension,elements)
     model_image_composite_U=fltarr(dimension,elements)
     model_image_composite_V=fltarr(dimension,elements)
-    FOR pol_i=0,npol-1 DO BEGIN 
+    FOR pol_i=0,n_pol-1 DO BEGIN 
         IF pol_cut[pol_i] THEN CONTINUE
         model_image_holo=dirty_image_generate(*model_uv_holo[pol_i])
         model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
@@ -284,7 +284,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
             image_smooth_V=Median(image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
             image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
-        ENDIF ELSE IF npol GT 2 THEN BEGIN
+        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
             image_use_U=dirty_image_composite_U-model_image_composite_U
             image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use_U,smooth_width,/median,/circle)
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
@@ -301,7 +301,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q ;uses previously calculated image_smooth!
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
             image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V ;uses previously calculated image_smooth!
-        ENDIF ELSE IF npol GT 2 THEN BEGIN
+        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
             image_use_U=dirty_image_composite_U-model_image_composite_U
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
         ENDIF    
@@ -318,7 +318,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         unmask_i=where(source_mask GT 0,n_pix)
         IF Float(n_pix)/Float(n_pix0) LE 0.75 THEN BEGIN
             print,String(format='("Failure to centroid after",I," iterations")',i)
-            FOR pol_i=0,npol-1 DO BEGIN
+            FOR pol_i=0,n_pol-1 DO BEGIN
                 *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i])*normalization
             ENDFOR
             converge_check2=converge_check2[0:i-1]
@@ -368,10 +368,10 @@ FOR i=0L,max_iter-1 DO BEGIN
         comp_arr[si].ra=ra
         comp_arr[si].dec=dec
         
-        beam_corr_src=fltarr(npol)
-        beam_src=fltarr(npol)
+        beam_corr_src=fltarr(n_pol)
+        beam_src=fltarr(n_pol)
         gain_factor_use=gain_array[additional_i[src_i]]
-        FOR pol_i=0,npol-1 DO BEGIN   
+        FOR pol_i=0,n_pol-1 DO BEGIN   
             beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
             beam_src[pol_i]=(*beam_base[pol_i])[additional_i[src_i]]
             
@@ -395,7 +395,7 @@ FOR i=0L,max_iter-1 DO BEGIN
 
         ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
         source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
-        FOR pol_i=0,npol-1 DO BEGIN
+        FOR pol_i=0,n_pol-1 DO BEGIN
             (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
 ;            (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*source_uv_vals
 ;            (*model_uv_full[pol_i])[uv_i_use]+=flux_arr[pol_i]*source_uv_vals
@@ -405,7 +405,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF si GE max_sources THEN BEGIN
             t4_0=Systime(1)
             t3+=t4_0-t3_0
-            FOR pol_i=0,npol-1 DO BEGIN
+            FOR pol_i=0,n_pol-1 DO BEGIN
                 *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i])*normalization
             ENDFOR
             i3=0    
@@ -420,9 +420,9 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF si GE max_sources THEN BREAK
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    IF i3 EQ 0 THEN flux_ref=Median(flux_arr[0:(npol<2)-1,*,*]) ;replace with median across all pol/freq/time
-    IF (i3 GE mapfn_interval) OR (Median(flux_arr[0:(npol<2)-1,*,*]) LT flux_ref*mapfn_threshold) OR ((i+1) mod check_iter EQ 0) THEN BEGIN
-        FOR pol_i=0,npol-1 DO BEGIN
+    IF i3 EQ 0 THEN flux_ref=Median(flux_arr[0:(n_pol<2)-1,*,*]) ;replace with median across all pol/freq/time
+    IF (i3 GE mapfn_interval) OR (Median(flux_arr[0:(n_pol<2)-1,*,*]) LT flux_ref*mapfn_threshold) OR ((i+1) mod check_iter EQ 0) THEN BEGIN
+        FOR pol_i=0,n_pol-1 DO BEGIN
             *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i])*normalization
         ENDFOR
         i3=0
@@ -454,7 +454,7 @@ ENDFOR
 noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*beam_corr_avg
 source_array=Components2Sources(comp_arr,radius=0.5,noise_map=noise_map)
 
-FOR pol_i=0,npol-1 DO BEGIN
+FOR pol_i=0,n_pol-1 DO BEGIN
     *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
 ENDFOR  
 
