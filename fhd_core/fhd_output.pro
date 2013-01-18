@@ -224,8 +224,10 @@ IF not Keyword_Set(restore_last) THEN BEGIN
 ;    ENDFOR
     
     
+;    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,stokes_images,instr_sources,stokes_sources,$
+;        beam_est,model_uv_arr,model_holo_arr,calibration,p_map_simple,p_corr_simple,filename=file_path+'_output.sav'
     save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,stokes_images,instr_sources,stokes_sources,$
-        beam_est,model_uv_arr,model_holo_arr,calibration,p_map_simple,p_corr_simple,filename=file_path+'_output.sav'
+        model_uv_arr,model_holo_arr,calibration,filename=file_path+'_output.sav'
     
 ENDIF ELSE restore,file_path+'_output.sav'
 

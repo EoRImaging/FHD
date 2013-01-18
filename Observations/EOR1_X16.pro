@@ -7,10 +7,10 @@ filename_list=file_search(rootdir('mwa')+data_directory,'*_cal.uvfits',count=n_f
 
 filename_list=Strmid(filename_list,Strlen(rootdir('mwa')+data_directory))
 FOR fi=0,n_files-1 DO filename_list[fi]=Strmid(filename_list[fi],0,Strpos(filename_list[fi],'.'))
-filename_list=filename_list[0:5]
+;filename_list=filename_list[0:5]
 
 n_files=N_Elements(filename_list)
-version=7
+version=0
 alignment_file_header=['filename','degpix','obsra',' obsdec','zenra',' zendec','obsx','','obsy','zenx','zeny','obs_rotation','dx','dy','theta','scale']
 textfast,alignment_file_header,filename='alignment'+'v'+strn(version),data_dir=data_directory,/write
 FOR fi=0,n_files-1 DO BEGIN
@@ -19,11 +19,11 @@ FOR fi=0,n_files-1 DO BEGIN
     UPNAME=StrUpCase(filename)
     pcal=strpos(UPNAME,'_CAL')
     filename_use=StrMid(filename,0,pcal)
-    beam_recalculate=0
-    mapfn=0
-    flag=0
-    grid=0
-    deconvolve=0
+    beam_recalculate=1
+    mapfn=1
+    flag=1
+    grid=1
+    deconvolve=1
     REPHASE_TO_ZENITH=1
     noise_calibrate=0
     fluxfix=0
@@ -46,7 +46,7 @@ combine_obs_healpix,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,rest
     lon_arr=lon_arr,lat_arr=lat_arr,flux_scale=flux_scale
 combine_obs_hpx_image,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx,smooth_hpx,$
     nside=nside,restore_last=0,weight_threshold=0.25,version=version,data_directory=data_directory,$
-    lon_arr=lon_arr,lat_arr=lat_arr,high_dirty=30.,high_res=5.,high_source=30.
+    lon_arr=lon_arr,lat_arr=lat_arr,high_dirty=6.0,low_dirty=-1.5,high_residual=3.0,high_source=3.0
 calibration_test,version=version,data_directory=data_directory  
 ;vis_split_export_multi2,hpx_inds,filename_list=filename_list,version=version,beam_threshold=0.1,$
 ;    data_directory=data_directory,n_avg=n_avg,restore_last=1,nside=nside

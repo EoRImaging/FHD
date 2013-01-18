@@ -2,7 +2,7 @@ PRO allsky_beta
 except=!except
 !except=0 
 
-version=1
+version=0
 
 data_directory=filepath('',root='DATA2',subdir=['Beta','Allsky'])
 filename_list=file_search(rootdir('mwa')+data_directory,'*_cal.uvfits',count=n_files)
@@ -18,8 +18,6 @@ fi=0
 iter=-1
 WHILE fi LT n_files DO BEGIN
 
-;FOR fi=0,n_files-1 DO BEGIN
-
     filename=filename_list[fi]
     UPNAME=StrUpCase(filename)
     pcal=strpos(UPNAME,'_CAL')
@@ -31,7 +29,7 @@ WHILE fi LT n_files DO BEGIN
     deconvolve=1
     noise_calibrate=0
     fluxfix=0
-    align=1
+    align=0
     silent=1
     GPU_enable=0
     max_sources=10000.
@@ -55,9 +53,8 @@ WHILE fi LT n_files DO BEGIN
 ;    FOR fi0=0,n_files-1 DO filename_list[fi0]=Strmid(filename_list[fi0],0,Strpos(filename_list[fi0],'.'))
 ;    n_files=N_Elements(filename_list)
 ENDWHILE
-;ENDFOR
 
-combine_obs_sources,calibration,source_list,filename_list,restore_last=0,version=version,data_directory=data_directory,/no_align
+combine_obs_sources,calibration,source_list,filename_list,restore_last=0,version=version,data_directory=data_directory;,/no_align
 combine_obs_healpix,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx,smooth_hpx,$
     nside=nside,restore_last=0,version=version,data_directory=data_directory,$
     lon_arr=lon_arr,lat_arr=lat_arr
