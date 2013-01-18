@@ -5,6 +5,8 @@ compile_opt idl2,strictarrsubs
 n_obs=N_Elements(obs_arr)
 fhd=fhd_init(*obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations
 
+obs_arr2=Replicate(*obs_arr[0],n_obs) & FOR i=1,n_obs-1 DO obs_arr2[i]=*obs_arr[i]
+
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
 gain_factor=fhd.gain_factor
@@ -45,7 +47,6 @@ box_coords=Lonarr(n_obs,4)
 
 FOR obs_i=0.,n_obs-1 DO BEGIN
     obs=*obs_arr[obs_i]
-;    vis_coordinates,obs,ra_arr,dec_arr,astr=astr
     dimension=obs.dimension
     elements=obs.elements
     xvals=meshgrid(dimension,elements,1)-dimension/2
@@ -93,51 +94,21 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     *xv_arr[obs_i]=xvals[uv_i_use]
     *yv_arr[obs_i]=yvals[uv_i_use]
     
-    box_coords[obs_i,0]=(Min((*xv_arr[obs_i])[where(source_mask)])+dimension/2.-smooth_width)>0
-    box_coords[obs_i,1]=(Max((*xv_arr[obs_i])[where(source_mask)])+dimension/2.+smooth_width)<(dimension-1)
-    box_coords[obs_i,2]=(Min((*yv_arr[obs_i])[where(source_mask)])+elements/2.-smooth_width)>0
-    box_coords[obs_i,3]=(Max((*yv_arr[obs_i])[where(source_mask)])+elements/2.+smooth_width)<(elements-1)
+    box_coords[obs_i,0]=(Min((*xv_arr[obs_i])[where(beam_mask)])+dimension/2.-smooth_width)>0
+    box_coords[obs_i,1]=(Max((*xv_arr[obs_i])[where(beam_mask)])+dimension/2.+smooth_width)<(dimension-1)
+    box_coords[obs_i,2]=(Min((*yv_arr[obs_i])[where(beam_mask)])+elements/2.-smooth_width)>0
+    box_coords[obs_i,3]=(Max((*yv_arr[obs_i])[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
 ENDFOR
 
 ;healpix indices are in sparse format. Need to combine them
-hpx_min=Lon64arr(n_obs) 
-hpx_max=Lon64arr(n_obs) 
-FOR obs_i=0,n_obs-1 DO BEGIN
-    hpx_min[obs_i]=Min((*hpx_cnv[obs_i]).inds)
-    hpx_max[obs_i]=Max((*hpx_cnv[obs_i]).inds)
-ENDFOR
-hpx_min=Min(hpx_min)
-hpx_max=Max(hpx_max)
-n_hpx=hpx_max-hpx_min+1
+hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,full_ind_reference=full_ind_reference)
+n_hpx_full=nside2npix(nside)
+degpix=Sqrt((4*!Pi*!Radeg^2.)/n_hpx_full)
+local_radius=local_max_radius*Mean(obs_arr2.degpix)
 
-ind_hist=lonarr(n_hpx)
-;ri_arr=Ptrarr(n_obs,/allocate)
-hist_arr=Ptrarr(n_obs,/allocate)
-FOR obs_i=0,n_obs-1 DO BEGIN
-    ind_hist1=histogram((*hpx_cnv[obs_i]).inds,min=hpx_min,max=hpx_max,/bin);,reverse=ri) ;should not actually need ri
-    *hist_arr[obs_i]=ind_hist1
-;    *ri_arr[obs_i]=ri
-    ind_hist+=ind_hist1
-ENDFOR
-ind_hist1=0 ;free memory
-;ri=0 ;free memory
-
-ind_use=where(ind_hist,n_hpx_use)
-ind_hist=0 ;free memory
-hpx_inds=ind_use+hpx_min
-
-hpx_ind_map=Ptrarr(n_obs,/allocate)
-FOR obs_i=0,n_obs-1 DO BEGIN
-    ind_use2=where((*hist_arr[obs_i])[ind_use],n_use2)
-;    ri=*ri_arr[obs_i]
-;    ind_map=ri[ri[ind_use[ind_use2]]]
-    *hpx_ind_map[obs_i]=ind_use2;[Sort(ind_map)]
-    *hist_arr[obs_i]=0  ;free memory
-;    *ri_arr[obs_i]=0  ;free memory
-ENDFOR
-ind_use2=0
-Ptr_free,hist_arr;,ri_arr
-
+pix2vec_ring,nside,hpx_inds,pix_coords
+vec2ang,pix_coords,dec_hpx,ra_hpx,/astro
+;pix_coords=0 ;free memory
     
 converge_check=Fltarr(Ceil(max_iter/check_iter))
 converge_check2=Fltarr(max_iter)
@@ -154,6 +125,7 @@ healpix_map=Ptrarr(n_pol,/allocate)
 weights_map=Ptrarr(n_pol,/allocate)
 weights_corr_map=Ptrarr(n_pol,/allocate)
 smooth_map=Ptrarr(n_pol,/allocate)
+source_mask=Fltarr(n_hpx)+1.
 FOR pol_i=0,n_pol-1 DO BEGIN
     FOR obs_i=0,n_obs-1 DO BEGIN
         (*weights_map[pol_i])[*hpx_ind_map[obs_i]]+=*weights_arr[pol_i,obs_i]
@@ -188,8 +160,31 @@ FOR i=0L,max_iter-1 DO BEGIN
     ;NOTE healpix_map and smooth_hpx are in instrumental polarization, weighted by the beam squared
     
     ;convert to Stokes I
+    source_find_hpx=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])
+    IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])
+    
+    residual_I=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])^2.
+    IF n_pol GT 1 THEN residual_I+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])^2.
     
     ;detect sources
+    flux_ref=Max(source_find_hpx*source_mask,max_i)
+    flux_ref1=flux_ref*add_threshold
+    source_i=where(source_find_hpx*source_mask GT flux_ref1,n_src)
+    IF n_src GT max_add_sources THEN BEGIN
+        source_list=source_find_hpx[source_i]
+        source_i=source_i[(Reverse(Sort(source_list)))[0:max_add_sources-1]]
+    ENDIF
+    
+    flux_arr=residual_I[source_i]
+    ra_arr=fltarr(n_src)
+    dec_arr=fltarr(n_src)
+    FOR src_i=0L,n_src-1 DO BEGIN
+        Query_disc,nside,pix_coords[source_i[src_i],*],local_radius,region_inds,ninds,/deg
+        region_i=full_ind_reference[region_inds]
+        region_i=region_i[where(region_i GE 0)] ;guaranteed at least the center pixel
+        ra_arr[src_i]=Total(ra_hpx[region_i]*source_find_hpx[region_i])/Total(source_find_hpx[region_i])
+        dec_arr[src_i]=Total(dec_hpx[region_i]*source_find_hpx[region_i])/Total(source_find_hpx[region_i])
+    ENDFOR
     
     ;update models
     
