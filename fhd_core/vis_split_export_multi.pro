@@ -25,10 +25,10 @@ ENDFOR
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
 
 n_hpx=N_Elements(hpx_inds)
-residual_hpx_arr=Ptrarr(n_pol,n_freq,4,/allocate)
-model_hpx_arr=Ptrarr(n_pol,n_freq,4,/allocate)
-dirty_hpx_arr=Ptrarr(n_pol,n_freq,4,/allocate)
-weights_hpx_arr=Ptrarr(n_pol,n_freq,4,/allocate)
+residual_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
+model_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
+dirty_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
+weights_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     FOR freq_i=0,n_freq-1 DO BEGIN
         *residual_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)

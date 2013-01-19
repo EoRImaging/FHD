@@ -22,12 +22,12 @@ FOR fi=3,n_files-1 DO BEGIN
     UPNAME=StrUpCase(filename)
     pcal=strpos(UPNAME,'_CAL')
     filename_use=StrMid(filename,0,pcal)
-    beam_recalculate=0
+    beam_recalculate=1
     healpix_recalculate=1
-    mapfn=0
-    flag=0
+    mapfn=1
+    flag=1
     grid=1
-    deconvolve=0
+    deconvolve=1
     noise_calibrate=0
     fluxfix=0
     align=0
@@ -37,7 +37,7 @@ FOR fi=3,n_files-1 DO BEGIN
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         GPU_enable=GPU_enable,/silent,max_sources=max_sources,deconvolve=deconvolve,$
-        no_output=0,noise_calibrate=noise_calibrate,fluxfix=fluxfix,align=align
+        no_output=1,noise_calibrate=noise_calibrate,fluxfix=fluxfix,align=align
 ;    fhd_output,filename=filename,data_directory=data_directory,version=version,$
 ;        noise_calibrate=noise_calibrate,fluxfix=fluxfix,align=align;,/restore
 ENDFOR

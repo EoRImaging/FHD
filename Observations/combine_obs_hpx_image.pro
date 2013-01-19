@@ -110,7 +110,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         write_fits_cut4,file_path_src+'.fits',*Stokes_inds[stk_i],Stokes_sources,/ring,Coords='C',nside=nside
         write_fits_cut4,file_path_dty+'.fits',*Stokes_inds[stk_i],Stokes_dirty,/ring,Coords='C',nside=nside
         
-        write_fits_cut4,file_path_mrc+'.fits',*Stokes_inds[stk_i],Stokes_mrc,/ring,Coords='C',nside=nside
+;        write_fits_cut4,file_path_mrc+'.fits',*Stokes_inds[stk_i],Stokes_mrc,/ring,Coords='C',nside=nside
         write_fits_cut4,file_path_smt+'.fits',*Stokes_inds[stk_i],Stokes_smooth,/ring,Coords='C',nside=nside
     ENDFOR    
 ENDIF
@@ -149,8 +149,8 @@ FOR stk_i=0,1 DO BEGIN
     healpix_image,file_path_dty,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
         title=title_dty,lon=lon_avg,lat=Median(lat_arr),min=low_dirty*cnorm,max=high_dirty*cnorm,/half,color_table=color_table
         
-    healpix_image,file_path_mrc,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
-        title=title_mrc,lon=lon_avg,lat=Median(lat_arr),min=0,max=high_residual*cnorm,/half,color_table=-color_table
+;    healpix_image,file_path_mrc,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
+;        title=title_mrc,lon=lon_avg,lat=Median(lat_arr),min=0,max=high_residual*cnorm,/half,color_table=-color_table
         
     healpix_image,file_path_smt,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
         title=title_smt,lon=lon_avg,lat=Median(lat_arr),min=low_residual*cnorm/2.,max=high_residual*cnorm/2.,/half,color_table=color_table
