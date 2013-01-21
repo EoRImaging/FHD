@@ -18,7 +18,7 @@ CASE os_type OF
       ;'+1' handles the case of the directory being the first entry, and of stripping off the ':' in all other cases
       init_pos=Strpos(!Path,':',pos,/REVERSE_SEARCH)+1 
       final_pos=pos+len
-      RootDirectory=Strmid(!Path,init_pos,final_pos-init_pos)+'/'
+      RootDirectory=Expand_path(Strmid(!Path,init_pos,final_pos-init_pos))+'/'
    END
 ENDCASE
 IF file_test(Rootdirectory) EQ 0 THEN message,String(format='(A," : folder not found")',Rootdirectory)

@@ -60,7 +60,7 @@ vis_path_default,data_directory,filename,file_path,version=version,_Extra=extra
 print,'Deconvolving: ',filename
 print,'Directory: ',data_directory
 print,'Base file_path:',file_path
-ext='.UVFITS'
+ext='.uvfits'
 header_filepath=file_path+'_header.sav'
 flags_filepath=file_path+'_flags.sav'
 vis_filepath=file_path+'_vis.sav'
