@@ -3,9 +3,9 @@ PRO fhd_multi,obs_arr,_Extra=extra
 compile_opt idl2,strictarrsubs  
 
 n_obs=N_Elements(obs_arr)
-fhd=fhd_init(*obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations
+fhd=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations
 
-obs_arr2=Replicate(*obs_arr[0],n_obs) & FOR i=1,n_obs-1 DO obs_arr2[i]=*obs_arr[i]
+;obs_arr2=Replicate(*obs_arr[0],n_obs) & FOR i=1,n_obs-1 DO obs_arr2[i]=*obs_arr[i]
 
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
@@ -22,6 +22,7 @@ local_max_radius=fhd.local_max_radius
 pol_use=fhd.pol_use
 independent_fit=fhd.independent_fit
 reject_pol_sources=fhd.reject_pol_sources
+local_radius=local_max_radius*Mean(obs_arr.degpix)
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -46,7 +47,7 @@ yv_arr=Ptrarr(n_obs,/allocate)
 box_coords=Lonarr(n_obs,4)
 
 FOR obs_i=0.,n_obs-1 DO BEGIN
-    obs=*obs_arr[obs_i]
+    obs=obs_arr[obs_i]
     dimension=obs.dimension
     elements=obs.elements
     xvals=meshgrid(dimension,elements,1)-dimension/2
@@ -103,8 +104,7 @@ ENDFOR
 ;healpix indices are in sparse format. Need to combine them
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,full_ind_reference=full_ind_reference)
 n_hpx_full=nside2npix(nside)
-degpix=Sqrt((4*!Pi*!Radeg^2.)/n_hpx_full)
-local_radius=local_max_radius*Mean(obs_arr2.degpix)
+degpix_hpx=Sqrt((4*!Pi*!Radeg^2.)/n_hpx_full)
 
 pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,dec_hpx,ra_hpx,/astro
@@ -182,9 +182,15 @@ FOR i=0L,max_iter-1 DO BEGIN
         Query_disc,nside,pix_coords[source_i[src_i],*],local_radius,region_inds,ninds,/deg
         region_i=full_ind_reference[region_inds]
         region_i=region_i[where(region_i GE 0)] ;guaranteed at least the center pixel
-        ra_arr[src_i]=Total(ra_hpx[region_i]*source_find_hpx[region_i])/Total(source_find_hpx[region_i])
-        dec_arr[src_i]=Total(dec_hpx[region_i]*source_find_hpx[region_i])/Total(source_find_hpx[region_i])
+        ra1=ra_hpx[region_i]
+        dec1=dec_hpx[region_i]
+        
+        simg1=source_find_hpx[region_i]
+        ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
+        dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
     ENDFOR
+    
+    
     
     ;update models
     

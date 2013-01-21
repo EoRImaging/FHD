@@ -8,6 +8,7 @@ ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
     print,'Saved Healpix grid map restored'
     restore,file_path+'_hpxcnv'+'.sav'
+    nside=hpx_cnv.nside
     RETURN,hpx_cnv
 ENDIF
 

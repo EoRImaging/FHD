@@ -1,6 +1,6 @@
 PRO combine_obs_healpix,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
     nside=nside,restore_last=restore_last,version=version,data_directory=data_directory,$
-    lon_arr=lon_arr,lat_arr=lat_arr,flux_scale=flux_scale
+    flux_scale=flux_scale,obs_arr=obs_arr
 
 except=!except
 !except=0 
@@ -38,17 +38,20 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         obs_i_use=lindgen(n_obs)
     ENDIF
     
-    obs_arr=Ptrarr(n_obs,/allocate)
+    obs_base=vis_struct_init_obs()
+    obs_arr=Replicate(obs_base,n_obs)
+;    obs_arr=Ptrarr(n_obs,/allocate)
     hpx_cnv=Ptrarr(n_obs,/allocate) 
-    lon_arr=fltarr(n_obs)
-    lat_arr=fltarr(n_obs)
+;    lon_arr=fltarr(n_obs)
+;    lat_arr=fltarr(n_obs)
+    
     
     FOR obs_i=0,n_obs-1 DO BEGIN
         vis_path_default,data_directory,filename_list[obs_i_use[obs_i]],file_path,version=version
         restore,file_path+'_obs.sav'
-        *obs_arr[obs_i]=obs
-        lon_arr[obs_i]=obs.obsra
-        lat_arr[obs_i]=obs.obsdec
+        obs_arr[obs_i]=obs
+;        lon_arr[obs_i]=obs.obsra
+;        lat_arr[obs_i]=obs.obsdec
         *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,restore_last=1)
         IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
             message,String(format='("Mismatched HEALPix NSIDE for ",A)',filename_list[obs_i]) 
@@ -71,9 +74,11 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
     FOR obs_i=0,n_obs-1 DO BEGIN
         heap_gc
-        obs=*obs_arr[obs_i]
+        obs=obs_arr[obs_i]
         filename=filename_list[obs_i]
         vis_path_default,data_directory,filename,file_path,version=version,obs=obs
+        restore,file_path+'_fhd_params.sav'
+        ;restores the fhd structure that contains the parameters used in deconvolution 
         restore,file_path+'_fhd.sav'
     ;   save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
@@ -106,31 +111,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             (*dirty_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(dirty_single,*hpx_cnv[obs_i])
             (*smooth_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(residual_smooth,*hpx_cnv[obs_i])
             
-;            (*residual_hpx[pol_i])[hpx_inds0]+=hpx_vals
-;            (*weights_hpx[pol_i])[hpx_inds0]+=hpx_weights
-;            (*sources_hpx[pol_i])[hpx_inds0]+=*image_list[0]
-;            (*restored_hpx[pol_i])[hpx_inds0]+=*image_list[1]
-;            (*dirty_hpx[pol_i])[hpx_inds0]+=*image_list[2]
-;;            (*mrc_hpx[pol_i])[hpx_inds0]+=*image_list[3]
-;            (*smooth_hpx[pol_i])[hpx_inds0]+=*image_list[4]
-;            
-;;            hpx_inds[hpx_inds0]=1
-;;            Ptr_free,image_list
         ENDFOR
-;        Ptr_free,residual_array,dirty_array,image_uv_arr,weights_arr,$
-;           beam_base,beam_correction,instr_images,stokes_images,instr_sources,stokes_sources,$
-;           model_uv_arr,model_holo_arr;,p_map_simple,p_corr_simple;,map_fn_arr
     ENDFOR
-;    hpx_inds=where(hpx_inds,n_hpx)
-;    FOR pol_i=0,npol-1 DO BEGIN
-;        *residual_hpx[pol_i]=(*residual_hpx[pol_i])[hpx_inds]
-;        *weights_hpx[pol_i]=(*weights_hpx[pol_i])[hpx_inds]
-;        *sources_hpx[pol_i]=(*sources_hpx[pol_i])[hpx_inds]
-;        *restored_hpx[pol_i]=(*restored_hpx[pol_i])[hpx_inds]
-;        *dirty_hpx[pol_i]=(*dirty_hpx[pol_i])[hpx_inds]
-;;        *mrc_hpx[pol_i]=(*mrc_hpx[pol_i])[hpx_inds]
-;        *smooth_hpx[pol_i]=(*smooth_hpx[pol_i])[hpx_inds]    
-;    ENDFOR
     
     save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,smooth_hpx,hpx_inds,nside,lon_arr,lat_arr,filename=output_path
 ENDIF ELSE restore,output_path

@@ -1,6 +1,6 @@
 PRO combine_obs_hpx_image,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx,smooth_hpx,$
     nside=nside,restore_last=restore_last,weight_threshold=weight_threshold,version=version,data_directory=data_directory,$
-    lon_arr=lon_arr,lat_arr=lat_arr,$
+    obs_arr=obs_arr,$
     color_table=color_table,high_dirty=high_dirty,high_source=high_source,high_residual=high_residual,$
     fraction_polarized=fraction_polarized,low_dirty=low_dirty,low_source=low_source,low_residual=low_residual
 
@@ -35,6 +35,8 @@ sign=[[1.,1.],[1.,-1.]]
 Stk_nm=['I','Q']
 npix=nside2npix(nside)
 ;IF not Keyword_Set(nside) THEN nside=npix2nside(npix)
+lon_arr=obs_arr.obsra
+lat_arr=obs_arr.obsdec
 n_files=N_Elements(lon_arr)
 lon_hist=histogram(Floor(lon_arr),min=0,/bin,max=359)
 lon_test=morph_distance(lon_hist,/background)

@@ -114,9 +114,11 @@ IF N_Elements(n_vis) EQ 0 THEN n_vis=0L
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline=0.
 IF N_Elements(zenx) EQ 0 THEN zenx=obsx
 IF N_Elements(zeny) EQ 0 THEN zeny=obsy
-IF N_Elements(astr) EQ 0 THEN vis_coordinates,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-    dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
-
+IF N_Elements(astr) EQ 0 THEN BEGIN
+    MAKE_ASTR, astr, CD = [[1.,0.],[0.,1.]] , DELT = [degpix,degpix], CRPIX = [dimension/2.+1.,elements/2.+1.], $
+        CRVAL = [obsra,obsdec], CTYPE = ['RA---SIN','DEC--SIN'], PV2=[0.,0.],$
+        LATPOLE = 0., LONGPOLE = 180.
+ENDIF
 struct={data_directory:data_directory,filename:filename,dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
     tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,rotation:rotation,$
