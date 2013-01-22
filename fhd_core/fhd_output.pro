@@ -240,11 +240,11 @@ IF Keyword_Set(t6a) THEN t6=t7a-t6a
 
 IF N_Elements(beam_est) EQ 0 THEN beam_est_flag=0 ELSE beam_est_flag=1
 
-Imagefast,dec_arr,filename=filename+' Dec',$
+Imagefast,dec_arr,filename=filename+'_Dec',$
     data_dir=image_dir,/right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=Min(dec_arr),high=Max(dec_arr),$
     lat_center=obs.obsdec,lon_center=obs.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs.degpix,$
     offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,/show,/sphere
-Imagefast,ra_arr,filename=filename+' RA',$
+Imagefast,ra_arr,filename=filename+'_RA',$
     data_dir=image_dir,/right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=Min(ra_arr),high=Max(ra_arr),$
     lat_center=obs.obsdec,lon_center=obs.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs.degpix,$
     offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,/show,/sphere

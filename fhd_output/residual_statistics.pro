@@ -86,7 +86,13 @@ cgPlot,residual_vals,residual_hist,color='black',linestyle=0,/ylog,yrange=[0.1,m
 cgPlot,residual_vals_gauss,residual_gauss_fit,/over,color='red',linestyle=2,psym=psym_gauss
 Al_Legend,['Residual','Gaussian fit'],linestyle=[0,2],psym=[0,0],charsize=1.,color=['black','red'],/left
 Al_Legend,[amp_str,center_str,sig_str],charsize=1.,color='black',/right
-IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
-    ELSE PS_End,Density=300,Resize=25.,/png,/NoWait
+
+IF !version.os_family EQ 'unix' THEN BEGIN
+    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
+        ELSE PS_End,Density=300,Resize=25.,/png
+ENDIF ELSE BEGIN
+    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
+        ELSE PS_End,Density=300,Resize=25.,/png,/NoWait
+ENDELSE
 
 END
