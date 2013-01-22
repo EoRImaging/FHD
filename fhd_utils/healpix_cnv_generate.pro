@@ -1,12 +1,12 @@
-FUNCTION healpix_cnv_generate,obs,nside=nside,mask=mask,radius=radius,restore_last=restore_last
+FUNCTION healpix_cnv_generate,obs,nside=nside,mask=mask,radius=radius,restore_last=restore_last,silent=silent
 
 vis_path_default,data_directory,filename,file_path,obs=obs
 IF Keyword_Set(restore_last) AND (file_test(file_path+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
-    print,file_path+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
+    IF ~Keyword_Set(silent) THEN print,file_path+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
     restore_last=0
 ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
-    print,'Saved Healpix grid map restored'
+    IF ~Keyword_Set(silent) THEN print,'Saved Healpix grid map restored'
     restore,file_path+'_hpxcnv'+'.sav'
     nside=hpx_cnv.nside
     RETURN,hpx_cnv

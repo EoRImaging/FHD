@@ -38,8 +38,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         obs_i_use=lindgen(n_obs)
     ENDIF
     
-    obs_base=vis_struct_init_obs()
-    obs_arr=Replicate(obs_base,n_obs)
+;    obs_base=vis_struct_init_obs()
+;    obs_arr=Replicate(obs_base,n_obs)
 ;    obs_arr=Ptrarr(n_obs,/allocate)
     hpx_cnv=Ptrarr(n_obs,/allocate) 
 ;    lon_arr=fltarr(n_obs)
@@ -49,14 +49,16 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     FOR obs_i=0,n_obs-1 DO BEGIN
         vis_path_default,data_directory,filename_list[obs_i_use[obs_i]],file_path,version=version
         restore,file_path+'_obs.sav'
+        IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs)
         obs_arr[obs_i]=obs
 ;        lon_arr[obs_i]=obs.obsra
 ;        lat_arr[obs_i]=obs.obsdec
-        *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,restore_last=1)
+        *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,/restore_last,/silent)
         IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
             message,String(format='("Mismatched HEALPix NSIDE for ",A)',filename_list[obs_i]) 
     ENDFOR
     hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
+    n_hpx=N_Elements(hpx_inds)
 
 ;    n_obs=N_Elements(cal_use)
 ;    fi_use=lindgen(n_obs)
@@ -71,6 +73,14 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     dirty_hpx=Ptrarr(npol,/allocate)
 ;    mrc_hpx=Ptrarr(npol,/allocate)
     smooth_hpx=Ptrarr(npol,/allocate)
+    FOR pol_i=0,npol-1 DO BEGIN
+      *residual_hpx[pol_i]=fltarr(n_hpx)
+      *weights_hpx[pol_i]=fltarr(n_hpx)
+      *sources_hpx[pol_i]=fltarr(n_hpx)
+      *restored_hpx[pol_i]=fltarr(n_hpx)
+      *dirty_hpx[pol_i]=fltarr(n_hpx)
+      *smooth_hpx[pol_i]=fltarr(n_hpx)
+    ENDFOR
     
     FOR obs_i=0,n_obs-1 DO BEGIN
         heap_gc
@@ -114,7 +124,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         ENDFOR
     ENDFOR
     
-    save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,smooth_hpx,hpx_inds,nside,lon_arr,lat_arr,filename=output_path
+    save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,smooth_hpx,hpx_inds,nside,obs_arr,filename=output_path
 ENDIF ELSE restore,output_path
 
 END
