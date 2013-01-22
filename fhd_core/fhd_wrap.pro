@@ -35,7 +35,7 @@ dimension=obs.dimension
 elements=obs.elements
 
 ;obs.pflag=0
-obs.cal=1.
+;obs.cal=1.
 
 pol_names=['xx','yy','xy','yx']
 ext='.UVFITS'

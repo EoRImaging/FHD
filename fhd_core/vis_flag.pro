@@ -23,10 +23,11 @@ IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=0
 IF N_Elements(sigma_threshold) EQ 0 THEN sigma_threshold=3.
 
 data_abs=Sqrt(Reform((data_array[0,*,*,*]))^2.+Reform((data_array[1,*,*,*]))^2.)
-n_frequencies=N_Elements(obs.freq)
+n_frequencies=obs.n_freq
 n_pol=(size(data_array,/dimension))[1]
-tile_A=obs.tile_A
-tile_B=obs.tile_B
+tile_A=(*obs.bin).tile_A
+tile_B=(*obs.bin).tile_B
+freq=(*obs.bin).freq
 n_tiles=n_elements(uniq(tile_A[sort(tile_A)]))
 flag_center=1
 flag_edge=3
@@ -36,7 +37,7 @@ flag_arr[*,where(coarse_channel_pos EQ 16),*]=0
 flag_arr[*,where((coarse_channel_pos LT flag_edge) OR (coarse_channel_pos GT 32-flag_edge-1)),*]=0
 
 IF Keyword_Set(cut_baselines) THEN BEGIN
-    uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(obs.freq)
+    uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(freq)
     IF cut_baselines GT 0 THEN cut_baselines_i=where(uv_dist LE cut_baselines,n_baselines_cut) $
         ELSE cut_baselines_i=where(uv_dist GE Abs(cut_baselines),n_baselines_cut)
     IF N_baselines_cut GT 0 THEN flag_arr[*,*,cut_baselines_i]=0

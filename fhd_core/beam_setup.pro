@@ -62,23 +62,23 @@ n_tiles=obs.n_tile
 n_frequencies=obs.n_freq
 n_pol=obs.n_pol
 
-tile_A=obs.tile_A
-tile_B=obs.tile_B
+tile_A=(*obs.bin).tile_A
+tile_B=(*obs.bin).tile_B
 
-frequency_array=obs.freq
-freq_bin_i=obs.fbin_i
+frequency_array=(*obs.bin).freq
+freq_bin_i=(*obs.bin).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 
 freq_center=fltarr(nfreq_bin)
 FOR fi=0L,nfreq_bin-1 DO freq_center[fi]=Median(frequency_array[where(freq_bin_i EQ fi)])
-bin_offset=obs.bin_offset
+bin_offset=(*obs.bin).bin_offset
 nbaselines=bin_offset[1]
 
 obsra=obs.obsra
 obsdec=obs.obsdec
 zenra=obs.zenra
 zendec=obs.zendec
-Jdate=obs.Jdate
+Jdate=obs.Jd0
 rotation=obs.rotation
 
 beam_setup_init,gain_array_X,gain_array_Y,filename=filename,data_directory=data_directory
@@ -99,7 +99,7 @@ yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
 vis_coordinates,degpix=degpix_use,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
     dimension=psf_dim2,rotation=rotation,valid_i=valid_i,astr=astr,zen_astr=zen_astr
 
-Eq2Hor,obsra,obsdec,Min(obs.jdate),obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
 norm=Sqrt(2.)*[ex0,ey0]
 
@@ -110,7 +110,7 @@ yvals2=meshgrid(psf_dim2,psf_dim2,2)
 ;valid_i0=where(Finite(ra_arr_use0))
 ;;vis_coordinates,0,ra_arr_use0,dec_arr_use0,degpix=degpix_use,obsra=zenra,obsdec=zendec,zenra=zenra,zendec=zendec,$
 ;;    dimension=psf_dim2,rotation=0,valid_i=valid_i0
-;Eq2Hor,ra_arr_use0[valid_i0],dec_arr_use0[valid_i0],Min(obs.jdate),alt_arr0,az_arr0a,lat=obs.lat,lon=obs.lon,alt=obs.alt
+;Eq2Hor,ra_arr_use0[valid_i0],dec_arr_use0[valid_i0],Jdate,alt_arr0,az_arr0a,lat=obs.lat,lon=obs.lon,alt=obs.alt
 ;za_arr0=fltarr(psf_dim2,psf_dim2)+90. & za_arr0[valid_i0]=90.-alt_arr0
 ;az_arr0=fltarr(psf_dim2,psf_dim2) & az_arr0[valid_i0]=az_arr0a
 ;
@@ -125,7 +125,7 @@ yvals2=meshgrid(psf_dim2,psf_dim2,2)
 
 xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
 valid_i=where(Finite(ra_arr_use1))
-Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Min(obs.jdate),alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt
+Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt
 za_arr=fltarr(psf_dim2,psf_dim2)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 

@@ -13,7 +13,7 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF
 
 t00=Systime(1)
-astr=obs.astr
+astr=(*obs.bin).astr
 dimension=obs.dimension
 elements=obs.elements
 IF N_Elements(radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4.

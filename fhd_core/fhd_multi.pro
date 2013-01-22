@@ -184,8 +184,8 @@ FOR i=0L,max_iter-1 DO BEGIN
         region_i=region_i[where(region_i GE 0)] ;guaranteed at least the center pixel
         ra1=ra_hpx[region_i]
         dec1=dec_hpx[region_i]
-        
         simg1=source_find_hpx[region_i]
+        
         ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
         dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
     ENDFOR

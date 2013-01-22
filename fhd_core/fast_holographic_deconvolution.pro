@@ -152,7 +152,7 @@ model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
 
 source_comp_init,comp_arr,n_sources=max_sources
-pol_names=['xx','yy','xy','yx','I','Q','U','V'] ;not used, but here for reference
+pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
 
 pol_cut=1-histogram(pol_use,min=0,bin=1,nbins=n_pol)
 
@@ -165,8 +165,10 @@ source_uv_mask=fltarr(dimension,elements)
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_cut[pol_i] THEN CONTINUE
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
-        *map_fn_arr[pol_i]=map_fn_single
+        file_name_base='_mapfn_'+pol_names[pol_i]
+        restore,file_path+file_name_base+'.sav' ;map_fn
+;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
+        *map_fn_arr[pol_i]=map_fn
     ENDIF
     weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i]))
     normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,baseline_threshold=baseline_threshold))[dimension/2.,elements/2.]

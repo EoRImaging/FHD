@@ -72,7 +72,7 @@ source_arr=source_array[si_use]
 
 ;Build a fits header
 mkhdr,fits_header,*residual_array[0]
-astr=obs.astr
+astr=(*obs.bin).astr
 putast, fits_header, astr, cd_type=1
 
 t1a=Systime(1)
@@ -81,9 +81,13 @@ t0+=t1a-t0a
 IF not Keyword_Set(restore_last) THEN BEGIN
 
     map_fn_arr=Ptrarr(npol,/allocate)
+    pol_names=['xx','yy','xy','yx','I','Q','U','V']
     FOR pol_i=0,npol-1 DO BEGIN
-        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
-        *map_fn_arr[pol_i]=map_fn_single
+        file_name_base='_mapfn_'+pol_names[pol_i]
+        restore,file_path+file_name_base+'.sav' ;map_fn
+        *map_fn_arr[pol_i]=map_fn
+;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
+;        *map_fn_arr[pol_i]=map_fn_single
     ENDFOR
     
     t2a=Systime(1)

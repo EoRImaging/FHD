@@ -33,16 +33,14 @@ IF Keyword_Set(obs) THEN BEGIN
     rotation=obs.rotation
     obsx=obs.obsx
     obsy=obs.obsy
-    IF tag_exist(obs,'astr') THEN BEGIN ;compatibility with old code before astr was part of obs
-        astr=obs.astr
-        xvals=meshgrid(dimension,elements,1)
-        yvals=meshgrid(dimension,elements,2)
-        xy2ad,xvals,yvals,astr,ra_arr,dec_arr
-        ad2xy,zenra,zendec,astr,zenx,zeny
-        obs.zenx=zenx
-        obs.zeny=zeny
-        RETURN
-    ENDIF
+    astr=(*obs.bin).astr
+    xvals=meshgrid(dimension,elements,1)
+    yvals=meshgrid(dimension,elements,2)
+    xy2ad,xvals,yvals,astr,ra_arr,dec_arr
+    ad2xy,zenra,zendec,astr,zenx,zeny
+    obs.zenx=zenx
+    obs.zeny=zeny
+    RETURN
 ENDIF ELSE BEGIN
     IF N_Elements(elements) EQ 0 THEN elements=dimension
     IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
@@ -53,7 +51,7 @@ ENDIF ELSE BEGIN
     IF N_Elements(zenra) EQ 0 THEN zenra=obsra
     IF N_Elements(zendec) EQ 0 THEN zendec=obsdec    
 ENDELSE
-;JD0=Median(obs.Jdate)
+
 IF Abs(obsra-zenra) GT 90. THEN lon_offset=obsra-((obsra GT zenra) ? 360.:(-360.))-zenra ELSE lon_offset=obsra-zenra
 
 lat_offset=-(zendec-obsdec)

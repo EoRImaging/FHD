@@ -36,10 +36,10 @@ kbinsize=obs.kpix
 kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
 
-freq_bin_i=obs.fbin_i
+freq_bin_i=(*obs.bin).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-bin_offset=obs.bin_offset
-frequency_array=obs.freq
+bin_offset=(*obs.bin).bin_offset
+frequency_array=(*obs.bin).freq
 
 psf_base=psf.base
 psf_dim=(Size(*psf_base[0],/dimension))[0]
