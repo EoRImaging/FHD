@@ -113,6 +113,7 @@ IF N_Elements(n_tile) EQ 0 THEN n_tile=0.
 IF N_Elements(n_freq) EQ 0 THEN n_freq=0.
 IF N_Elements(n_vis) EQ 0 THEN n_vis=0L
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline=0.
+IF N_Elements(min_baseline) EQ 0 THEN min_baseline=0
 IF N_Elements(zenx) EQ 0 THEN zenx=obsx
 IF N_Elements(zeny) EQ 0 THEN zeny=obsy
 IF N_Elements(astr) EQ 0 THEN BEGIN
