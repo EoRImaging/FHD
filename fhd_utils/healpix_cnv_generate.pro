@@ -1,4 +1,4 @@
-FUNCTION healpix_cnv_generate,obs,nside=nside,mask=mask,radius=radius,restore_last=restore_last,silent=silent
+FUNCTION healpix_cnv_generate,obs,nside=nside,mask=mask,radius=radius,restore_last=restore_last,silent=silent,_Extra=extra
 
 vis_path_default,data_directory,filename,file_path,obs=obs
 IF Keyword_Set(restore_last) AND (file_test(file_path+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
