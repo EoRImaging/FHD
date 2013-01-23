@@ -10,6 +10,8 @@ file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(file_list,version=version)
 
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs')
+
+catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 ;filename_list=filename_list[[0,25]]
 
 ;filename_list=Reverse(filename_list)
@@ -30,7 +32,7 @@ FOR fi=0,n_files-1 DO BEGIN
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,$
-        no_output=no_output,noise_calibrate=noise_calibrate,align=align
+        no_output=no_output,noise_calibrate=noise_calibrate,align=align,catalog_file_path=catalog_file_path
 ENDFOR
 
 ;flux_scale=79.4/2651. ;set 3C444 to catalog value

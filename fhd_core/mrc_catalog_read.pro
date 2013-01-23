@@ -1,8 +1,8 @@
-FUNCTION mrc_catalog_read,astr,names=names
+FUNCTION mrc_catalog_read,astr,names=names,file_path=file_path
 ;MRC catalog is 99% complete to 1 Jy. Catalog is at 408MHz
-filename='MRC full radio catalog.fits'
-data_dir='DATA'
-file_path=filepath(filename,root=rootdir('mwa'),subdir=data_dir)
+;filename='MRC full radio catalog.fits'
+;data_dir='DATA'
+;file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 catalog=mrdfits(file_path,1,header,/silent)
 flux=catalog.flux
 ra=catalog.ra

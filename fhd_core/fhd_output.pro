@@ -1,6 +1,6 @@
 PRO fhd_output,obs,fhd, file_path_fhd=file_path_fhd,version=version,$
     noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,_Extra=extra,$
-    fluxfix=fluxfix,align=align
+    fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path
 
 compile_opt idl2,strictarrsubs  
 t0a=Systime(1)
@@ -141,64 +141,66 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     t4a=Systime(1)
     t3+=t4a-t3a
     
-    mrc_cat=mrc_catalog_read(astr)
-    mrc_i_use=where((mrc_cat.x GE zoom_low) AND (mrc_cat.x LE zoom_high) AND (mrc_cat.y GE zoom_low) AND (mrc_cat.y LE zoom_high),n_mrc)
-    
-    IF Keyword_Set(align) THEN BEGIN 
-        error=0
-        source_array1_base=fltarr(6,ns_use)
-        source_array1_base[0,*]=source_arr.x
-        source_array1_base[1,*]=source_arr.y
-        source_array1_base[4,*]=source_arr.flux.I
-        source_array1_base[5,*]=Round(source_arr.x)+Round(source_arr.y)*dimension
-        source_array2_base=fltarr(6,n_mrc)
-        source_array2_base[0,*]=mrc_cat[mrc_i_use].x
-        source_array2_base[1,*]=mrc_cat[mrc_i_use].y
-        source_array2_base[4,*]=mrc_cat[mrc_i_use].flux.I
-        source_array2_base[5,*]=Round(mrc_cat[mrc_i_use].x)+Round(mrc_cat[mrc_i_use].y)*dimension
-        image_align,fltarr(dimension,elements),fltarr(dimension,elements),dx,dy,theta,scale,source_array1_base,source_array2_base,source_array1_out,source_array2_out,$
-            radius=128.,sub_max_number=32,final_match=20,binsize=1.,error=error,min_radius=32,fix_scale=1.,fix_theta=0
-         
-        IF not Keyword_Set(error) THEN BEGIN
+    IF Keyword_Set(catalog_file_path) AND file_test(catalog_file_path) EQ 1 THEN BEGIN
+        mrc_cat=mrc_catalog_read(astr,file_path=catalog_file_path)
+        mrc_i_use=where((mrc_cat.x GE zoom_low) AND (mrc_cat.x LE zoom_high) AND (mrc_cat.y GE zoom_low) AND (mrc_cat.y LE zoom_high),n_mrc)
         
-            print,"Alignment success. Dx:",dx,' Dy:',dy,' Theta:',theta,' Scale:',scale
-;            temp_out=Strarr(15)
-;            temp_out[0]=filename
-;            temp_out[1:*]=[obs.degpix,obs.obsra,obs.obsdec,obs.zenra,obs.zendec,obs.obsx,obs.obsy,obs.zenx,obs.zeny,obs.rotation,dx,dy,theta,scale]
-;            textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
+        IF Keyword_Set(align) THEN BEGIN 
+            error=0
+            source_array1_base=fltarr(6,ns_use)
+            source_array1_base[0,*]=source_arr.x
+            source_array1_base[1,*]=source_arr.y
+            source_array1_base[4,*]=source_arr.flux.I
+            source_array1_base[5,*]=Round(source_arr.x)+Round(source_arr.y)*dimension
+            source_array2_base=fltarr(6,n_mrc)
+            source_array2_base[0,*]=mrc_cat[mrc_i_use].x
+            source_array2_base[1,*]=mrc_cat[mrc_i_use].y
+            source_array2_base[4,*]=mrc_cat[mrc_i_use].flux.I
+            source_array2_base[5,*]=Round(mrc_cat[mrc_i_use].x)+Round(mrc_cat[mrc_i_use].y)*dimension
+            image_align,fltarr(dimension,elements),fltarr(dimension,elements),dx,dy,theta,scale,source_array1_base,source_array2_base,source_array1_out,source_array2_out,$
+                radius=128.,sub_max_number=32,final_match=20,binsize=1.,error=error,min_radius=32,fix_scale=1.,fix_theta=0
+             
+            IF not Keyword_Set(error) THEN BEGIN
             
-;            RETURN
-
-            IF (Abs(dx)>Abs(dy)) LE 50. AND (Abs(theta) LE 45.) THEN BEGIN            
-                x1_vals=source_arr.x
-                y1_vals=source_arr.y
-                x1a_vals=Scale*(x1_vals*Cos(theta*!DtoR)-y1_vals*Sin(theta*!DtoR))+dx
-                y1a_vals=Scale*(y1_vals*Cos(theta*!DtoR)+x1_vals*Sin(theta*!DtoR))+dy
-                ra_vals=Interpolate(ra_arr,x1a_vals,y1a_vals)
-                dec_vals=Interpolate(dec_arr,x1a_vals,y1a_vals)
-                source_arr.ra=ra_vals
-                source_arr.dec=dec_vals
+                print,"Alignment success. Dx:",dx,' Dy:',dy,' Theta:',theta,' Scale:',scale
+    ;            temp_out=Strarr(15)
+    ;            temp_out[0]=filename
+    ;            temp_out[1:*]=[obs.degpix,obs.obsra,obs.obsdec,obs.zenra,obs.zendec,obs.obsx,obs.obsy,obs.zenx,obs.zeny,obs.rotation,dx,dy,theta,scale]
+    ;            textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
                 
-                x2_vals=mrc_cat[mrc_i_use].x
-                y2_vals=mrc_cat[mrc_i_use].y
-                x2a_vals=(1./Scale)*((x2_vals-dx)*Cos(theta*!DtoR)+(y2_vals-dy)*Sin(theta*!DtoR))
-                y2a_vals=(1./Scale)*((y2_vals-dy)*Cos(theta*!DtoR)-(x2_vals-dx)*Sin(theta*!DtoR))
-                mrc_cat[mrc_i_use].x=x2a_vals
-                mrc_cat[mrc_i_use].y=y2a_vals
-            ENDIF
+    ;            RETURN
+    
+                IF (Abs(dx)>Abs(dy)) LE 50. AND (Abs(theta) LE 45.) THEN BEGIN            
+                    x1_vals=source_arr.x
+                    y1_vals=source_arr.y
+                    x1a_vals=Scale*(x1_vals*Cos(theta*!DtoR)-y1_vals*Sin(theta*!DtoR))+dx
+                    y1a_vals=Scale*(y1_vals*Cos(theta*!DtoR)+x1_vals*Sin(theta*!DtoR))+dy
+                    ra_vals=Interpolate(ra_arr,x1a_vals,y1a_vals)
+                    dec_vals=Interpolate(dec_arr,x1a_vals,y1a_vals)
+                    source_arr.ra=ra_vals
+                    source_arr.dec=dec_vals
+                    
+                    x2_vals=mrc_cat[mrc_i_use].x
+                    y2_vals=mrc_cat[mrc_i_use].y
+                    x2a_vals=(1./Scale)*((x2_vals-dx)*Cos(theta*!DtoR)+(y2_vals-dy)*Sin(theta*!DtoR))
+                    y2a_vals=(1./Scale)*((y2_vals-dy)*Cos(theta*!DtoR)-(x2_vals-dx)*Sin(theta*!DtoR))
+                    mrc_cat[mrc_i_use].x=x2a_vals
+                    mrc_cat[mrc_i_use].y=y2a_vals
+                ENDIF
+            ENDIF ELSE BEGIN
+                print,'Alignment failure on:',filename
+    ;            temp_out=Strarr(15)
+    ;            temp_out[0]=filename
+    ;            temp_out[1:*]=[obs.degpix,obs.obsra,obs.obsdec,obs.zenra,obs.zendec,obs.obsx,obs.obsy,obs.zenx,obs.zeny,obs.rotation,'NAN','NAN','NAN','NAN']
+    ;            textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
+            ENDELSE
         ENDIF ELSE BEGIN
-            print,'Alignment failure on:',filename
-;            temp_out=Strarr(15)
-;            temp_out[0]=filename
-;            temp_out[1:*]=[obs.degpix,obs.obsra,obs.obsdec,obs.zenra,obs.zendec,obs.obsx,obs.obsy,obs.zenx,obs.zeny,obs.rotation,'NAN','NAN','NAN','NAN']
-;            textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
+    ;        temp_out=Strarr(15)
+    ;        temp_out[0]=filename
+    ;        temp_out[1:*]=[obs.degpix,obs.obsra,obs.obsdec,obs.zenra,obs.zendec,obs.obsx,obs.obsy,obs.zenx,obs.zeny,obs.rotation,'NAN','NAN','NAN','NAN']
+    ;        textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
         ENDELSE
-    ENDIF ELSE BEGIN
-;        temp_out=Strarr(15)
-;        temp_out[0]=filename
-;        temp_out[1:*]=[obs.degpix,obs.obsra,obs.obsdec,obs.zenra,obs.zendec,obs.obsx,obs.obsy,obs.zenx,obs.zeny,obs.rotation,'NAN','NAN','NAN','NAN']
-;        textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
-    ENDELSE
+    ENDIF
     
     t5a=Systime(1)
     t4+=t5a-t4a
