@@ -59,7 +59,7 @@ PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_ar
 compile_opt idl2,strictarrsubs  
 
 t00=Systime(1)    
-vis_path_default,data_directory,filename,file_path,obs=obs
+;vis_path_default,data_directory,filename,file_path,obs=obs
 ;image_uv_arr is a pointer array with dimensions (n_pol) 
 
 n_pol=fhd.npol
@@ -106,7 +106,7 @@ pc_not_used=1.
 ;;;    *p_corr_simple[pol_i]*=1.0/(*p_corr_simple[pol_i])[obs.zenx,obs.zeny]    
 ;;ENDFOR
 
-;the particular set of beams read will be the ones specified by file_path.
+;the particular set of beams read will be the ones specified by file_path_fhd.
 ;that will include all polarizations and frequencies, at ONE time snapshot
 IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last) 
 nfreq_beam=(size(psf.base,/dimension))[1]
@@ -166,7 +166,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_cut[pol_i] THEN CONTINUE
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
         file_name_base='_mapfn_'+pol_names[pol_i]
-        restore,file_path+file_name_base+'.sav' ;map_fn
+        restore,file_path_fhd+file_name_base+'.sav' ;map_fn
 ;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
         *map_fn_arr[pol_i]=map_fn
     ENDIF

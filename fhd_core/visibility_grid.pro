@@ -22,7 +22,7 @@
 ;
 ; :Author: Ian Sullivan
 ;-
-FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,weights=weights,$
+FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,GPU_enable=GPU_enable    
 t0=Systime(1)
 heap_gc
@@ -176,8 +176,7 @@ ENDFOR
 
 IF map_flag THEN BEGIN
     map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension)
-    vis_path_default,data_directory,filename,file_path,obs=obs
-    save,map_fn,filename=file_path+'_mapfn_'+pol_names[polarization]+'.sav'
+    save,map_fn,filename=file_path_fhd+'_mapfn_'+pol_names[polarization]+'.sav'
 ENDIF
 
 image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)

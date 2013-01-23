@@ -1,13 +1,14 @@
-FUNCTION healpix_cnv_generate,obs,nside=nside,mask=mask,radius=radius,restore_last=restore_last,silent=silent,_Extra=extra
+FUNCTION healpix_cnv_generate,obs,file_path_fhd,nside=nside,mask=mask,radius=radius,$
+    restore_last=restore_last,silent=silent,_Extra=extra
 
-vis_path_default,data_directory,filename,file_path,obs=obs
-IF Keyword_Set(restore_last) AND (file_test(file_path+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
-    IF ~Keyword_Set(silent) THEN print,file_path+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
+;vis_path_default,data_directory,filename,file_path,obs=obs
+IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
+    IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
     restore_last=0
 ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
     IF ~Keyword_Set(silent) THEN print,'Saved Healpix grid map restored'
-    restore,file_path+'_hpxcnv'+'.sav'
+    restore,file_path_fhd+'_hpxcnv'+'.sav'
     nside=hpx_cnv.nside
     RETURN,hpx_cnv
 ENDIF
@@ -24,7 +25,6 @@ IF not Keyword_Set(nside) THEN BEGIN
     Nside=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
 ENDIF
 npix=nside2npix(nside)
-
 
 ang2vec,obs.obsdec,obs.obsra,cen_coords,/astro
 
@@ -117,7 +117,7 @@ ENDFOR
 
 hpx_cnv={nside:nside,ija:ija,sa:sa,i_use:i_use,inds:hpx_inds}
 
-save,hpx_cnv,filename=file_path+'_hpxcnv'+'.sav'
+save,hpx_cnv,filename=file_path_fhd+'_hpxcnv'+'.sav'
 ;print,Systime(1)-t00 ; currently takes 4 - 8 seconds (43MB file). Takes ~ 0.17s to apply
 RETURN,hpx_cnv
 END

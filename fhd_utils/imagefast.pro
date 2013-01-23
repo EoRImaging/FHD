@@ -1,8 +1,8 @@
-PRO imagefast,Image,filename=filename,data_directory=data_directory,no_ps=no_ps,$
+PRO imagefast,Image,file_path=file_path,no_ps=no_ps,$
     no_colorbar=no_colorbar,vertical_colorbar=vertical_colorbar,colorbar_title=colorbar_title,color_table=color_table,$
     right_colorbar=right_colorbar,left_colorbar=left_colorbar,$
     layout=layout,margin=margin,background=background,over_plot=over_plot,charsize=charsize,$
-    project_name=project_name,transparent=transparent,title=title,reverse_image=reverse_image,$
+    transparent=transparent,title=title,reverse_image=reverse_image,$
     significant_figures=significant_figures,mask=mask,resize=resize,hist_equal=hist_equal,$
     tick_spacing=tick_spacing,logarithmic_color=logarithmic_color,sqrt_color=sqrt_color,invert_color=invert_color,$
     color_center=color_center,low=low,high=high,$
@@ -41,11 +41,14 @@ PRO imagefast,Image,filename=filename,data_directory=data_directory,no_ps=no_ps,
 ;7: Satellite 8: Cylindrical 9: Mercator 10: Mollweide 11: Sinusoidal 12: Aitoff 
 
 ;
-IF N_Elements(filename) EQ 0 THEN filename_use='ImageFast' ELSE filename_use=filename
-IF N_Elements(project_name) EQ 0 THEN project_name='mwa'
-RootDirectory=rootdir(project_name)
-IF Keyword_Set(data_directory) THEN filename_full=filepath(filename_use,Root_dir=RootDirectory,subdir=data_directory) $
-    ELSE filename_full=filepath(filename_use,Root_dir=RootDirectory)
+IF N_Elements(file_path) EQ 0 THEN BEGIN
+    file_path_use=expand_path('ImageFast')
+    print,"Path not specified. File put here: ", file_path_use 
+ENDIF ELSE file_path_use=file_path
+;IF N_Elements(project_name) EQ 0 THEN project_name='mwa'
+;RootDirectory=rootdir(project_name)
+;IF Keyword_Set(data_directory) THEN filename_full=filepath(filename_use,Root_dir=RootDirectory,subdir=data_directory) $
+;    ELSE filename_full=filepath(filename_use,Root_dir=RootDirectory)
 
 IF N_Elements(significant_figures) EQ 0 THEN sigfig=2 ELSE sigfig=significant_figures
 IF N_Elements(background) EQ 0 THEN background='white'
@@ -228,7 +231,7 @@ pixres=72.
 xsize2=xsize/pixres
 ysize2=ysize/pixres
 
-PS_Start,filename=filename_full+'.ps',/quiet,/nomatch,_Extra=extra,charsize=charsize,xsize=xsize2,ysize=ysize2
+PS_Start,filename=file_path_full+'.ps',/quiet,/nomatch,_Extra=extra,charsize=charsize,xsize=xsize2,ysize=ysize2
 ;position_default=[x0, y0, x1, y1]
 image_position=[xstart/xsize,ystart/ysize,(xstart+dimension)/xsize,(ystart+elements)/ysize]
 cgImage,image_use,/keep_aspect,background=background,layout=layout,margin=margin,noerase=noerase,$

@@ -28,7 +28,7 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO uvfits2fhd,data_directory=data_directory,filename=filename,version=version,no_output=no_output,$
+PRO uvfits2fhd,file_path_vis,version=version,no_output=no_output,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     cut_baselines=cut_baselines,n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,$
     rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
@@ -49,34 +49,35 @@ IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=1
 IF N_Elements(flag) EQ 0 THEN flag=1.
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=1
 IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
-IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
-IF Keyword_Set(GPU_enable) THEN BEGIN
-    Defsysv,'GPU',exist=gpuvar_exist
-    IF gpuvar_exist eq 0 THEN GPUinit
-    IF !GPU.mode NE 1 THEN GPU_enable=0
-ENDIF
+;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
+;IF Keyword_Set(GPU_enable) THEN BEGIN
+;    Defsysv,'GPU',exist=gpuvar_exist
+;    IF gpuvar_exist eq 0 THEN GPUinit
+;    IF !GPU.mode NE 1 THEN GPU_enable=0
+;ENDIF
 
-vis_path_default,data_directory,filename,file_path,version=version,_Extra=extra
+file_path_fhd=fhd_path_setup(file_path_vis,data_directory=data_directory,filename=filename,version=version)
+;vis_path_default,data_directory,filename,file_path,version=version,_Extra=extra
 print,'Deconvolving: ',filename
 print,'Directory: ',data_directory
-print,'Base file_path:',file_path
+print,'Output file_path:',file_path_fhd
 ext='.uvfits'
-header_filepath=file_path+'_header.sav'
-flags_filepath=file_path+'_flags.sav'
-vis_filepath=file_path+'_vis.sav'
-obs_filepath=file_path+'_obs.sav'
-params_filepath=file_path+'_params.sav'
-hdr_filepath=file_path+'_hdr.sav'
+header_filepath=file_path_fhd+'_header.sav'
+flags_filepath=file_path_fhd+'_flags.sav'
+vis_filepath=file_path_fhd+'_vis.sav'
+obs_filepath=file_path_fhd+'_obs.sav'
+params_filepath=file_path_fhd+'_params.sav'
+hdr_filepath=file_path_fhd+'_hdr.sav'
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
 ;info_struct=mrdfits(filepath(filename+ext,root_dir=rootdir('mwa'),subdir=data_directory),2,info_header,/silent)
-data_struct=mrdfits(filepath(filename+ext,root_dir=rootdir('mwa'),subdir=data_directory),0,data_header0,/silent)
+data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
 ;; testing for export type. If multibeam, then read original header
 casa_type = strlowcase(strtrim(sxpar(data_header0, 'OBJECT'), 2))
 if casa_type ne 'multi' then use_calheader = 1 else use_calheader = 0
 if use_calheader eq 0 then begin
-  IF file_test(header_filepath) EQ 0 THEN uvfits_header_casafix,filename,data_directory,version=version
+  IF file_test(header_filepath) EQ 0 THEN uvfits_header_casafix,file_path_vis,version=version
   RESTORE,header_filepath
   hdr=vis_header_extract(data_header,header2=data_header0, params = data_struct.params)
 endif else begin
@@ -85,7 +86,7 @@ endif else begin
 endelse
 
 params=vis_param_extract(data_struct.params,hdr)
-obs=vis_struct_init_obs(hdr,params, data_directory=data_directory, filename=filename,n_pol=n_pol,version=version,_Extra=extra)
+obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
 
 IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     print,"REPHASING VISIBILITIES TO POINT AT ZENITH!!"
@@ -102,7 +103,7 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     
     hdr.obsra=obs.zenra
     hdr.obsdec=obs.zendec
-    obs=vis_struct_init_obs(hdr,params, data_directory=data_directory, filename=filename,n_pol=n_pol,version=version,rotation=rotation,_Extra=extra)
+    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,rotation=rotation,_Extra=extra)
 ENDIF ELSE phase_shift=1.
 
 pol_dim=hdr.pol_dim
@@ -116,12 +117,11 @@ data_array=data_struct.array
 data_struct=0. ;free memory
 
 flag_arr0=Reform(data_array[flag_index,*,*,*])
-IF file_test(flags_filepath) EQ 0 THEN flag=1
 IF Keyword_Set(flag) THEN BEGIN
     print,'Flagging anomalous data'
     vis_flag,data_array,flag_arr0,obs,params,cut_baselines=cut_baselines,sigma_threshold=3.
     SAVE,flag_arr0,filename=flags_filepath
-ENDIF ELSE RESTORE,flags_filepath
+ENDIF ELSE IF file_test(flags_filepath) NE 0 THEN RESTORE,flags_filepath
 
 save,obs,filename=obs_filepath
 save,params,filename=params_filepath
@@ -129,7 +129,7 @@ save,hdr,filename=hdr_filepath
     
 ;Read in or construct a new beam model. Also sets up the structure PSF
 print,'Calculating beam model'
-psf=beam_setup(obs,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,_Extra=extra)
+psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,_Extra=extra)
 
 beam=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
@@ -143,7 +143,8 @@ FOR pol_i=0,(n_pol<2)-1 DO BEGIN
     beam_mask*=mask0
 ENDFOR
 
-hpx_cnv=healpix_cnv_generate(obs,nside=nside,mask=beam_mask,radius=radius,restore_last=(~Keyword_Set(healpix_recalculate)),_Extra=extra)
+hpx_cnv=healpix_cnv_generate(obs,file_path_fhd,nside=nside,mask=beam_mask,radius=radius,$
+    restore_last=(~Keyword_Set(healpix_recalculate)),_Extra=extra)
 
 vis_arr=Ptrarr(n_pol,/allocate)
 flag_arr=Ptrarr(n_pol,/allocate)
@@ -166,9 +167,9 @@ t_mapfn_gen=fltarr(n_pol)
 ;Grid the visibilities
 max_arr=fltarr(n_pol)
 cal=fltarr(n_pol)
-test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path+'_uv_'+pol_names[0]+'.sav')
+test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[0]+'.sav')
 IF test_mapfn EQ 0 THEN grid_recalculate=1
-test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path+'_mapfn_'+pol_names[0]+'.sav')
+test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[0]+'.sav')
 IF test_mapfn EQ 0 THEN mapfn_recalculate=(grid_recalculate=1)
 IF Keyword_Set(grid_recalculate) THEN BEGIN
     print,'Gridding visibilities'
@@ -177,7 +178,7 @@ IF Keyword_Set(grid_recalculate) THEN BEGIN
 ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
 ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
 ;        ELSE $
-        dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
+        dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,file_path_fhd,timing=t_grid0,$
             polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate)
         t_grid[pol_i]=t_grid0
         dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0)
@@ -191,29 +192,29 @@ IF Keyword_Set(grid_recalculate) THEN BEGIN
 ;;            weights_grid*=norm
 ;        ENDIF
         
-        save,dirty_UV,weights_grid,filename=file_path+'_uv_'+pol_names[pol_i]+'.sav'
-        save,dirty_img,filename=file_path+'_dirty_'+pol_names[pol_i]+'.sav'
+        save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
+        save,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
     ENDFOR
     print,'Gridding time:',t_grid
 ENDIF ELSE BEGIN
     print,'Visibilities not re-gridded'
 ;    FOR pol_i=0,n_pol-1 DO BEGIN
-;        restore,file_path+'_uv_'+pol_names[pol_i]+'.sav'
-;        restore,file_path+'_dirty_'+pol_names[pol_i]+'.sav'
+;        restore,file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
+;        restore,file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
 ;        norm0=Max(*psf.base[pol_i,(Size(psf.base,/dimension))[1]/2.,0,0])
 ;        n_vis_orig=((obs.bin_offset)[1]-obs.n_tile)*obs.n_freq*Float(N_Elements(obs.bin_offset))
 ;        
 ;        dirty_UV*=norm0^2.
 ;        dirty_img*=norm0^2.
-;        save,dirty_UV,weights_grid,filename=file_path+'_uv_'+pol_names[pol_i]+'.sav'
-;        save,dirty_img,filename=file_path+'_dirty_'+pol_names[pol_i]+'.sav'
+;        save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
+;        save,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
 ;    ENDFOR
 ENDELSE
 
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,params,psf,fhd,_Extra=extra,silent=silent,GPU_enable=GPU_enable
+    fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,GPU_enable=GPU_enable
 ENDIF ELSE print,'Gridded visibilities not deconvolved'
 
 ;Generate fits data files and images
@@ -222,7 +223,7 @@ IF not Keyword_Set(no_output) THEN BEGIN
 ;    ;Temporary addition:
 ;    fhd_paper_figures,restore_last=0,coord_debug=0,silent=0,show_grid=1,version=version,_Extra=extra
     
-    fhd_output,obs,fhd,silent=silent,_Extra=extra
+    fhd_output,obs,fhd,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
 ENDIF
 
 ;;generate images showing the uv contributions of each tile. Very helpful for debugging!

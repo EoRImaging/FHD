@@ -19,20 +19,20 @@
 ;
 ; :Author: isullivan
 ;-
-FUNCTION beam_setup,obs,data_directory=data_directory,filename=filename,restore_last=restore_last,$
+FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,$
-    instrument=instrument,silent=silent,version=version,psf_dim=psf_dim,psf_resolution=psf_resolution,_Extra=extra
+    instrument=instrument,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 
-vis_path_default,data_directory,filename,file_path,obs=obs,version=version
-IF Keyword_Set(restore_last) AND (file_test(file_path+'_beams'+'.sav') EQ 0) THEN BEGIN 
-    print,file_path+'_beams'+'.sav' +' Not found. Recalculating.' 
+;vis_path_default,data_directory,filename,file_path,obs=obs,version=version
+IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_beams'+'.sav') EQ 0) THEN BEGIN 
+    print,file_path_fhd+'_beams'+'.sav' +' Not found. Recalculating.' 
     restore_last=0
 ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
     print,'Saved beam model restored'
-    restore,file_path+'_beams'+'.sav'
+    restore,file_path_fhd+'_beams'+'.sav'
     RETURN,psf
 ENDIF
 
@@ -81,7 +81,7 @@ zendec=obs.zendec
 Jdate=obs.Jd0
 rotation=obs.rotation
 
-beam_setup_init,gain_array_X,gain_array_Y,filename=filename,data_directory=data_directory,n_tiles=n_tiles,nfreq_bin=nfreq_bin
+beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin
 
 ;begin forming psf
 psf_residuals_i=Ptrarr(n_pol,nfreq_bin,nbaselines,/allocate) ;contains arrays of pixel indices of pixels with modified psf for a given baseline id
@@ -283,6 +283,6 @@ ENDFOR
 
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm)
-save,psf,filename=file_path+'_beams'+'.sav'
+save,psf,filename=file_path_fhd+'_beams'+'.sav'
 RETURN,psf
 END

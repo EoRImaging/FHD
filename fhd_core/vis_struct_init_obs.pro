@@ -1,10 +1,6 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
-    lon=lon,lat=lat,alt=alt,rotation=rotation, data_directory=data_directory, filename=filename,$
-    pflag=pflag, n_pol=n_pol,version=version, _Extra=extra
+    lon=lon,lat=lat,alt=alt,rotation=rotation, pflag=pflag, n_pol=n_pol, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
-IF N_Elements(data_directory) EQ 0 THEN data_directory='' ;full path and file name of the associated visibility, excluding the '.uvfits' extension
-IF N_Elements(filename) EQ 0 THEN filename=''
-IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(dimension) EQ 0 THEN dimension=1024. ;dimension of the image in pixels; dimension = x direction
 IF N_Elements(elements) EQ 0 THEN elements=dimension ;elements = y direction
 IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
@@ -121,15 +117,15 @@ IF N_Elements(astr) EQ 0 THEN BEGIN
         CRVAL = [obsra,obsdec], CTYPE = ['RA---SIN','DEC--SIN'], PV2=[0.,0.],$
         LATPOLE = 0., LONGPOLE = 180.
 ENDIF
-;struct={data_directory:data_directory,filename:filename,dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
+;struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
 ;    tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
 ;    obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,rotation:rotation,$
-;    pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,version:version,$
+;    pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,$
 ;    max_baseline:max_baseline,min_baseline:min_baseline,astr:astr}
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,astr:astr}
-struct={data_directory:data_directory,filename:filename,dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
+struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
     obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,rotation:rotation,$
-    pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,version:version,jd0:jd0,$
+    pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,jd0:jd0,$
     max_baseline:max_baseline,min_baseline:min_baseline,bin:Ptr_new(arr)}    
 RETURN,struct
 END

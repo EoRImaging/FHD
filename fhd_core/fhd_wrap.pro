@@ -14,7 +14,7 @@
 ;
 ; :Author: isullivan May 6, 2012
 ;-
-PRO fhd_wrap,obs,params,psf,fhd,beam_threshold=beam_threshold,$
+PRO fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,beam_threshold=beam_threshold,$
     data_directory=data_directory,filename=filename,version=version,silent=silent,GPU_enable=GPU_enable,_Extra=extra
 
 ;snapshot data must have been gridded previously, and the Holo map fns generated
@@ -25,10 +25,9 @@ PRO fhd_wrap,obs,params,psf,fhd,beam_threshold=beam_threshold,$
 heap_gc
 compile_opt idl2,strictarrsubs  
 
-vis_path_default,data_directory,filename,file_path,obs=obs,version=version
-IF N_Elements(obs) EQ 0 THEN restore,file_path+'_obs.sav'
+IF N_Elements(obs) EQ 0 THEN restore,file_path_fhd+'_obs.sav'
 fhd=fhd_init(obs,_Extra=extra)
-save,fhd,filename=file_path+'_fhd_params.sav'
+save,fhd,filename=file_path_fhd+'_fhd_params.sav'
 
 npol=fhd.npol
 dimension=obs.dimension
@@ -40,8 +39,8 @@ elements=obs.elements
 pol_names=['xx','yy','xy','yx']
 ext='.UVFITS'
 
-IF N_Elements(params) EQ 0 THEN restore,filename=file_path+'_params.sav'
-IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,data_directory=data_directory,filename=filename,/restore_last) 
+IF N_Elements(params) EQ 0 THEN restore,filename=file_path_fhd+'_params.sav'
+IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,file_path_fhd,/restore_last) 
 
 ;set to fit each polarization independantly 
 ;(only flux is independant, all locations are from Stokes I). 
@@ -49,22 +48,22 @@ IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,data_directory=data_directory,fi
 
 image_uv_arr=Ptrarr(npol,/allocate)
 FOR pol_i=0,npol-1 DO BEGIN
-    restore,filename=file_path+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid
+    restore,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid
     *image_uv_arr[pol_i]=dirty_uv*obs.cal[pol_i]
 ENDFOR
-IF Keyword_Set(GPU_enable) THEN $    
-    GPU_fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
-        residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
-        ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,$
-        beam_base=beam_base,beam_correction=beam_correction,normalization=normalization $
-ELSE $
+;IF Keyword_Set(GPU_enable) THEN $    
+;    GPU_fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
+;        residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
+;        ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,$
+;        beam_base=beam_base,beam_correction=beam_correction,normalization=normalization $
+;ELSE $
     fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
         residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
         ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,$
         beam_base=beam_base,beam_correction=beam_correction,normalization=normalization
         
 save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
-    beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
+    beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav'
 
 ;Build a fits header
 ;mkhdr,fits_header,*dirty_array[0]
