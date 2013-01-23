@@ -1,9 +1,8 @@
 FUNCTION mwa_tile_beam_generate,antenna_gain_arr,antenna_beam_arr,$
-    frequency=frequency,angle_offset=angle_offset,polarization=polarization,$
+    frequency=frequency,polarization=polarization,$
     psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,$
-    foreshorten_U=foreshorten_U,foreshorten_V=foreshorten_V,normalization=normalization,$
-    xvals=xvals,yvals=yvals,zenith_angle_offset=zenith_angle_offset,window=window,azimuth_angle_offset=azimuth_angle_offset,$
-    dimension=dimension,elements=elements,za_arr=za_arr,az_arr=az_arr,delay_settings=delay_settings
+    normalization=normalization,xvals=xvals,yvals=yvals,$
+    dimension=dimension,elements=elements,za_arr=za_arr,az_arr=az_arr,delay_settings=delay_settings,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 ;indices of antenna_gain_arr correspond to these antenna locations:

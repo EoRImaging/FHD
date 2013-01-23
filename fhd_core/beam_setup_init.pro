@@ -1,4 +1,4 @@
-PRO beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin
+PRO beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain
 ;IF not Keyword_Set(data_directory) THEN vis_path_default,data_directory,filename ;set default if not supplied
 ext='.UVFITS'
 tile_gain_x_filename='tile_gains_x'
@@ -12,10 +12,12 @@ tile_gain_y_filename='tile_gains_y'
 IF N_Elements(n_tiles) EQ 0 THEN n_tiles=32.
 IF N_Elements(nfreq_bin) EQ 0 THEN nfreq_bin=24. ;by coarse frequency channel
 ;gain_array=fltarr(17,nfreq_bin*n_tiles)+1. ;17 columns: first is tile number, 16 for each dipole in a tile
-base_gain=fltarr(16)+1.
-base_gain[[0,3,12,15]]=1.
-base_gain[[1,2,4,7,8,11,13,14]]=1.
-base_gain=[1.,base_gain] ;17 columns: first is tile number, 16 for each dipole in a tile
+IF N_Elements(base_gain) EQ 0 THEN BEGIN
+    base_gain=fltarr(16)+1.
+    base_gain[[0,3,12,15]]=1.
+    base_gain[[1,2,4,7,8,11,13,14]]=1.
+ENDIF
+base_gain_use=[1.,base_gain] ;17 columns: first is tile number, 16 for each dipole in a tile
 gain_array=base_gain#(fltarr(nfreq_bin*n_tiles)+1.)
 gain_array[0,*]=Floor(indgen(nfreq_bin*n_tiles)/nfreq_bin)+1
 

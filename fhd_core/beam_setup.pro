@@ -38,6 +38,7 @@ ENDIF
 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
 tile_beam_fn=instrument+'_tile_beam_generate' ;mwa_tile_beam_generate
+IF instrument EQ 'paper' THEN base_gain=fltarr(1)+1.
 ;Fixed parameters 
 IF N_Elements(obs) EQ 0 THEN restore,file_path+'_obs.sav'
 dimension=obs.dimension
@@ -81,7 +82,7 @@ zendec=obs.zendec
 Jdate=obs.Jd0
 rotation=obs.rotation
 
-beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin
+beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain
 
 ;begin forming psf
 psf_residuals_i=Ptrarr(n_pol,nfreq_bin,nbaselines,/allocate) ;contains arrays of pixel indices of pixels with modified psf for a given baseline id

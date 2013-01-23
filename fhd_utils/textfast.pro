@@ -36,6 +36,7 @@ CASE action OF
     END
     'read':BEGIN
         IF Keyword_Set(string) THEN BEGIN
+            Data=Read_Ascii(file_path_use,data_start=first_line)
             n_columns=(size(data.(0),/dimension))[0]
             template={version:1,datastart:first_line,delimiter:byte(32),missingvalue:!Values.F_NAN,Commentsymbol:'',fieldcount:n_columns,$
             fieldtypes:lonarr(n_columns)+7,fieldlocations:indgen(n_columns),fieldnames:string(indgen(n_columns)),fieldgroups:indgen(n_columns)}
