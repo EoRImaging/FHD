@@ -18,7 +18,7 @@ IF N_Elements(base_gain) EQ 0 THEN BEGIN
     base_gain[[1,2,4,7,8,11,13,14]]=1.
 ENDIF
 base_gain_use=[1.,base_gain] ;17 columns: first is tile number, 16 for each dipole in a tile
-gain_array=base_gain#(fltarr(nfreq_bin*n_tiles)+1.)
+gain_array=base_gain_use#(fltarr(nfreq_bin*n_tiles)+1.)
 gain_array[0,*]=Floor(indgen(nfreq_bin*n_tiles)/nfreq_bin)+1
 
 tile_gain_x_filepath=file_path_fhd+tile_gain_x_filename
