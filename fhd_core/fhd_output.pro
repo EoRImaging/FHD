@@ -301,10 +301,14 @@ FOR pol_i=0,npol-1 DO BEGIN
     FitsFast,instr_source,fits_header,/write,file_path=export_path+'_Sources_'+pol_names[pol_i]
     FitsFast,instr_restored,fits_header,/write,file_path=export_path+'_Restored_'+pol_names[pol_i]
     FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
+    FitsFast,*weights_arr[pol_i],fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
     IF beam_est_flag THEN FitsFast,beam_est_use,fits_header,/write,file_path=export_path+'_Beam_estimate_'+pol_names[pol_i]
     
     t9a=Systime(1)
     t8+=t9a-t8a
+    
+    Imagefast,*weights_arr[pol_i],file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=Min(*weights_arr[pol_i]),high=Max(*weights_arr[pol_i])
     
     instr_low=Min(instr_residual[where(beam_mask)])
     instr_high=Max(instr_residual[where(beam_mask)])
