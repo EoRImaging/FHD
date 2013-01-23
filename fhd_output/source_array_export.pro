@@ -1,4 +1,4 @@
-PRO source_array_export,source_array,beam_avg,radius,filename=filename,data_directory=data_directory
+PRO source_array_export,source_array,beam_avg,radius,file_path=file_path
 IF N_Elements(radius) EQ 0 THEN radius=0.
 IF N_Elements(beam_avg) EQ 0 THEN beam_avg_use=1. ELSE beam_avg_use=beam_avg[source_array.x,source_array.y]
 header=['#id','x_loc','y_loc','RA','Dec','S/N','radius','avg_beam','XX_apparent','YY_apparent','Stokes_I','Stokes_Q']
@@ -16,6 +16,6 @@ source_arr_out[8,*]=source_array.flux.xx
 source_arr_out[9,*]=source_array.flux.yy
 source_arr_out[10,*]=source_array.flux.I
 source_arr_out[11,*]=source_array.flux.Q
-Textfast,source_arr_out,header,/write,data_dir=data_directory,filename=filename
+Textfast,source_arr_out,header,/write,file_path=file_path
 
 END

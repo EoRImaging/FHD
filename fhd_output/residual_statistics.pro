@@ -1,5 +1,5 @@
 PRO residual_statistics,residual_image,obs,fhd,radius_inc=radius_inc,beam_base=beam_base,ston=ston,center=center,$
-    data_directory=data_directory,filename=filename,no_ps=no_ps
+    file_path_base=file_path_base,no_ps=no_ps
 ;Need to specify both obs and fhd structures
 
 compile_opt idl2,strictarrsubs  
@@ -72,16 +72,15 @@ fwhm_str=String(format='("Gaussian FWHM: ",F5.2)',2*SQRT(2*ALOG(2))*gauss_params
 xtitle='Flux density (Jy)'
 ytitle='Number of pixels'
 
-title=String(format='(A," residual!C (S/N > ",A,")")',filename,Strtrim(Strn(ston)))
+title=String(format='(A," residual!C (S/N > ",A,")")',file_basename(file_path_base),Strtrim(Strn(ston)))
 name=String(format='("_residual_histogram_StoN_",A)',Strtrim(Strn(Fix(ston)),2))
-file_path=filepath(filename+name,root=rootdir('mwa'),sub=data_directory)
 
 ymargin=[4,4]
 psym_res=10
 psym_gauss=0
 
 
-PS_Start,filename=file_path+'.ps',/quiet,/nomatch,_Extra=extra,charsize=charsize,xsize=10.35,ysize=8
+PS_Start,filename=file_path_base+name+'.ps',/quiet,/nomatch,_Extra=extra,charsize=charsize,xsize=10.35,ysize=8
 cgPlot,residual_vals,residual_hist,color='black',linestyle=0,/ylog,yrange=[0.1,max(residual_hist)],xrange=[xlow,xhigh],xtitle=xtitle,ytitle=ytitle,Title=title,ymargin=ymargin,psym=psym_res
 cgPlot,residual_vals_gauss,residual_gauss_fit,/over,color='red',linestyle=2,psym=psym_gauss
 Al_Legend,['Residual','Gaussian fit'],linestyle=[0,2],psym=[0,0],charsize=1.,color=['black','red'],/left

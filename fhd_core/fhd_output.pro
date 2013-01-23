@@ -22,8 +22,8 @@ IF not Keyword_Set(obs) THEN restore,file_path_fhd+'_obs.sav'
 IF not Keyword_Set(fhd) THEN restore,file_path_fhd+'_fhd_params.sav'
 ;version=obs.version
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
-version_name='v'+strn(version)
-version_dirname='fhd_'+version_name
+;version_name='v'+strn(version)
+;version_dirname='fhd_'+version_name
 
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
@@ -385,7 +385,7 @@ radius=angle_difference(obs.obsdec,obs.obsra,comp_arr.dec,comp_arr.ra,/degree)
 source_array_export,comp_arr,beam_avg,radius,file_path=export_path+'_component_list'
 
 residual_statistics,(*stokes_images[0])*beam_mask,obs,fhd,radius=stats_radius,beam_base=beam_base,ston=fhd.sigma_cut,/center,$
-    data_directory=image_dir,filename=filename
+    file_path_base=image_path
 
 t10=Systime(1)-t10b
 t00=Systime(1)-t0a
