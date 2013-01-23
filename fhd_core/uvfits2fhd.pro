@@ -28,18 +28,18 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO uvfits2fhd,file_path_vis,version=version,no_output=no_output,$
+PRO uvfits2fhd,file_path_vis,no_output=no_output,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     cut_baselines=cut_baselines,n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,$
     rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
-    _Extra=extra
+    file_path_fhd=file_path_fhd,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
 !except=0 ;System variable that controls when math errors are printed. Set to 0 to disable.
 heap_gc 
 t0=Systime(1)
-IF N_Elements(version) EQ 0 THEN version=0
+;IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(calibrate) EQ 0 THEN calibrate=0
 IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=12;0 ;minimum baseline threshold to cut BEFORE processing. If negative, specifies a maximum instead.
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
@@ -56,10 +56,11 @@ IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
 ;    IF !GPU.mode NE 1 THEN GPU_enable=0
 ;ENDIF
 
-file_path_fhd=fhd_path_setup(file_path_vis,data_directory=data_directory,filename=filename,version=version)
+;file_path_fhd=fhd_path_setup(file_path_vis,data_directory=data_directory,filename=filename,version=version,$
+;    output_dir=output_dir,output_filename=output_filename)
+
 ;vis_path_default,data_directory,filename,file_path,version=version,_Extra=extra
-print,'Deconvolving: ',filename
-print,'Directory: ',data_directory
+print,'Deconvolving: ',file_path_vis
 print,'Output file_path:',file_path_fhd
 ext='.uvfits'
 header_filepath=file_path_fhd+'_header.sav'
@@ -77,7 +78,7 @@ data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
 casa_type = strlowcase(strtrim(sxpar(data_header0, 'OBJECT'), 2))
 if casa_type ne 'multi' then use_calheader = 1 else use_calheader = 0
 if use_calheader eq 0 then begin
-  IF file_test(header_filepath) EQ 0 THEN uvfits_header_casafix,file_path_vis,version=version
+  IF file_test(header_filepath) EQ 0 THEN uvfits_header_casafix,file_path_vis,file_path_fhd=file_path_fhd
   RESTORE,header_filepath
   hdr=vis_header_extract(data_header,header2=data_header0, params = data_struct.params)
 endif else begin
@@ -143,7 +144,7 @@ FOR pol_i=0,(n_pol<2)-1 DO BEGIN
     beam_mask*=mask0
 ENDFOR
 
-hpx_cnv=healpix_cnv_generate(obs,file_path_fhd,nside=nside,mask=beam_mask,radius=radius,$
+hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,radius=radius,$
     restore_last=(~Keyword_Set(healpix_recalculate)),_Extra=extra)
 
 vis_arr=Ptrarr(n_pol,/allocate)

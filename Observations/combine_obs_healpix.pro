@@ -1,5 +1,5 @@
-PRO combine_obs_healpix,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
-    nside=nside,restore_last=restore_last,version=version,data_directory=data_directory,$
+PRO combine_obs_healpix,file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
+    nside=nside,restore_last=restore_last,version=version,output_path=output_path,$
     flux_scale=flux_scale,obs_arr=obs_arr
 
 except=!except
@@ -8,15 +8,17 @@ heap_gc
 
 IF N_Elements(flux_scale) EQ 0 THEN flux_scale=1.
 
-IF not Keyword_Set(data_directory) THEN vis_path_default,data_directory
+;IF not Keyword_Set(data_directory) THEN vis_path_default,data_directory
+;
+;IF N_Elements(version) EQ 0 THEN version=0 ELSE version=Fix(version)
+;version_name='v'+strn(version)
+;version_dirname='fhd_'+version_name
+;output_dir=filepath('',root=data_directory,sub=['Combined_obs',version_dirname])
+;IF file_test(rootdir('mwa')+output_dir) EQ 0 THEN file_mkdir,rootdir('mwa')+output_dir   
+;output_path=filepath('Healpix'+'v'+strn(version)+'.sav',root_dir=rootdir('mwa')+output_dir)
 
-IF N_Elements(version) EQ 0 THEN version=0 ELSE version=Fix(version)
-version_name='v'+strn(version)
-version_dirname='fhd_'+version_name
-output_dir=filepath('',root=data_directory,sub=['Combined_obs',version_dirname])
-IF file_test(rootdir('mwa')+output_dir) EQ 0 THEN file_mkdir,rootdir('mwa')+output_dir   
-output_path=filepath('Healpix'+'v'+strn(version)+'.sav',root_dir=rootdir('mwa')+output_dir)
 
+save_path=output_path+'_maps.sav'
 
 IF not Keyword_Set(restore_last) THEN BEGIN
     
@@ -26,7 +28,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     npol=2
     cal_ref_i=2
     fix_flux=1
-    combine_obs_sources,calibration,source_list,filename_list,version=version,/restore_last,data_directory=data_directory
+    combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
     
     cal_use=calibration
     obs_i_use=where(cal_use,n_obs,complement=fi_cut,ncomp=n_cut)
@@ -47,15 +49,15 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
     
     FOR obs_i=0,n_obs-1 DO BEGIN
-        vis_path_default,data_directory,filename_list[obs_i_use[obs_i]],file_path,version=version
+        file_path=file_list[obs_i]
         restore,file_path+'_obs.sav'
         IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs)
         obs_arr[obs_i]=obs
 ;        lon_arr[obs_i]=obs.obsra
 ;        lat_arr[obs_i]=obs.obsdec
-        *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,/restore_last,/silent)
+        *hpx_cnv[obs_i]=healpix_cnv_generate(file_path_fhd=file_path,nside=nside,/restore_last,/silent)
         IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
-            message,String(format='("Mismatched HEALPix NSIDE for ",A)',filename_list[obs_i]) 
+            message,String(format='("Mismatched HEALPix NSIDE for ",A)',file_basename(file_list[obs_i])) 
     ENDFOR
     hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
     n_hpx=N_Elements(hpx_inds)
@@ -85,8 +87,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     FOR obs_i=0,n_obs-1 DO BEGIN
         heap_gc
         obs=obs_arr[obs_i]
-        filename=filename_list[obs_i]
-        vis_path_default,data_directory,filename,file_path,version=version,obs=obs
+        file_path=file_list[obs_i]
         restore,file_path+'_fhd_params.sav'
         ;restores the fhd structure that contains the parameters used in deconvolution 
         restore,file_path+'_fhd.sav'
@@ -124,7 +125,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         ENDFOR
     ENDFOR
     
-    save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,smooth_hpx,hpx_inds,nside,obs_arr,filename=output_path
-ENDIF ELSE restore,output_path
+    save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,smooth_hpx,hpx_inds,nside,obs_arr,filename=save_path
+ENDIF ELSE restore,save_path
 
 END

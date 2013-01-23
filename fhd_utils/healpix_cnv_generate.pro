@@ -1,4 +1,4 @@
-FUNCTION healpix_cnv_generate,obs,file_path_fhd,nside=nside,mask=mask,radius=radius,$
+FUNCTION healpix_cnv_generate,obs,file_path_fhd=file_path_fhd,nside=nside,mask=mask,radius=radius,$
     restore_last=restore_last,silent=silent,_Extra=extra
 
 ;vis_path_default,data_directory,filename,file_path,obs=obs

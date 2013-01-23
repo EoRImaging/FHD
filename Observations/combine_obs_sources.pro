@@ -1,19 +1,12 @@
-PRO combine_obs_sources,calibration,source_list,filename_list,no_align=no_align,restore_last=restore_last,$
-    version=version,data_directory=data_directory
+PRO combine_obs_sources,file_list,calibration,source_list,no_align=no_align,restore_last=restore_last,output_path=output_path
 
 except=!except
 !except=0 
 heap_gc
 
 ref_i=0.
-IF not Keyword_Set(data_directory) THEN vis_path_default,data_directory
 
-IF N_Elements(version) EQ 0 THEN version=0 ELSE version=Fix(version)
-version_name='v'+strn(version)
-version_dirname='fhd_'+version_name
-dir=filepath('',root=data_directory,sub=['Combined_obs',version_dirname])
-IF file_test(rootdir('mwa')+dir) EQ 0 THEN file_mkdir,rootdir('mwa')+dir   
-save_path=filepath('combined_obs_sources.sav',root=Rootdir('mwa')+dir)
+save_path=output_path+'_sources.sav'
 
 StoN=2. ;minimum signal to noise threshold 
 min_detect=3. ;minimum number of observations a given source must be detected in
@@ -21,22 +14,12 @@ detect_radius=3.0 ;maximum radius in pixels to consider sources as matches. Conv
 
 ns_use=0.
 
+IF file_test(save_path) EQ 0 THEN restore_last=0
 IF Keyword_Set(restore_last) THEN BEGIN
     restore,filename=save_path 
-    n_files=N_Elements(filename_list)
+    n_files=N_Elements(file_list)
 ENDIF ELSE BEGIN
-    IF Keyword_Set(no_align) THEN BEGIN
-        filename_list=file_search(rootdir('mwa')+data_directory,'*_cal.uvfits',count=n_files)
-        filename_list=Strmid(filename_list,Strlen(rootdir('mwa')+data_directory))
-        FOR fi=0,n_files-1 DO filename_list[fi]=Strmid(filename_list[fi],0,Strpos(filename_list[fi],'.'))
-    ENDIF ELSE BEGIN
-        textfast,alignment,filename='alignment'+'v'+strn(version),data_dir=data_directory,/read,/string,first_line=1
-        ;columns of alignment:  0:filename 1:degpix 2:obsra  3:obsdec 4:zenra  5:zendec 6:obsx  
-        ;                       7:obsy 8:zenx 9:zeny 10:obs_rotation 11:dx 12:dy 13:theta 14:scale 
-        filename_list=Reform(alignment[0,*])
-        n_files=N_Elements(filename_list)
-        degpix=median(alignment[1,*]) ;degpix should be the same for all, but extract it in a way that tolerates errors
-    ENDELSE
+    n_files=N_Elements(file_list)
     source_array_raw=Ptrarr(n_files,/allocate)
     ;columns of THIS source array:  0:#id 1:x_loc 2:y_loc 3:RA 4:Dec 5:S/N 6:radius 7:avg_beam 
     ;                               8:XX_apparent 9:YY_apparent 10:Stokes_I 11:Stokes_Q 
@@ -44,13 +27,13 @@ ENDIF ELSE BEGIN
     n_src=fltarr(n_files)
     src_i=Ptrarr(n_files,/allocate)
     FOR fi=0,n_files-1 DO BEGIN
-        filename=filename_list[fi]
-        vis_path_default,data_directory,filename,file_path,version=version
+        file_path=file_list[fi]
         restore,file_path+'_obs.sav'
+        IF fi EQ 0 THEN obs_arr=Replicate(obs,n_files)
+        obs_arr[fi]=obs
         IF N_Elements(degpix) EQ 0 THEN degpix=obs.degpix
         
-        single_dir=filepath('',root=data_directory,sub=['fhd_v'+strn(version),filename_list[fi],'export'])
-        textfast,sa,/read,filename=filename_list[fi]+'_source_list',data_dir=single_dir,root=Rootdir('mwa'),first_line=1
+        textfast,sa,/read,file_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list',first_line=1
         
         IF N_Elements(sa) GT 0 THEN BEGIN
             ston0=reform(sa[5,*])
@@ -75,8 +58,8 @@ ENDIF ELSE BEGIN
     sa_radius=fltarr(ns)
     sa_channel=Strarr(ns)
     sa_pointing=Strarr(ns)
-    channel_list=Strarr(n_files) & FOR fi=0,n_files-1 DO channel_list[fi]=Strmid(filename_list[fi],10,3)
-    pointing_list=Strarr(n_files) & FOR fi=0,n_files-1 DO pointing_list[fi]=Strmid(filename_list[fi],0,3)
+    channel_list=Strarr(n_files) & FOR fi=0,n_files-1 DO channel_list[fi]=Strmid(file_basename(file_list[fi]),10,3)
+    pointing_list=Strarr(n_files) & FOR fi=0,n_files-1 DO pointing_list[fi]=Strmid(file_basename(file_list[fi]),0,3)
     
     FOR fi=0,n_files-1 DO BEGIN
         IF n_src[fi] EQ 0 THEN CONTINUE
@@ -281,7 +264,7 @@ ENDIF ELSE BEGIN
             (*source_list[gi].sources)[si].flux/=cal_use
         ENDFOR
     ENDFOR 
-    save,filename=save_path,source_list,source_matrix,sigma_matrix,cal_matrix,calibration,filename_list,degpix
+    save,filename=save_path,source_list,source_matrix,sigma_matrix,cal_matrix,calibration,file_list,degpix
     
     print,Strn(ns_use)+" sources detected in at least "+Strn(min_detect)+" observations."
 
