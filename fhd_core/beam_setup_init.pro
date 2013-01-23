@@ -25,12 +25,12 @@ tile_gain_y_filepath=file_path_fhd+tile_gain_y_filename
 ;do not overwrite a gain_array if one already exists (it's either real data, or the same default data as this!)
 IF file_test(tile_gain_x_filepath) EQ 0 THEN BEGIN
     gain_array_X=gain_array
-    textfast,gain_array_X,tile_gain_x_filepath,/write
-ENDIF ELSE textfast,gain_array_X,tile_gain_x_filepath,/read
+    textfast,gain_array_X,file_path=tile_gain_x_filepath,/write
+ENDIF ELSE textfast,gain_array_X,file_path=tile_gain_x_filepath,/read
 
 IF file_test(tile_gain_y_filepath) EQ 0 THEN BEGIN
     gain_array_Y=gain_array_X
-    textfast,gain_array_Y,tile_gain_y_filepath,/write
-ENDIF ELSE textfast,gain_array_Y,tile_gain_y_filepath,/read
+    textfast,gain_array_Y,file_path=tile_gain_y_filepath,/write
+ENDIF ELSE textfast,gain_array_Y,file_path=tile_gain_y_filepath,/read
 
 END

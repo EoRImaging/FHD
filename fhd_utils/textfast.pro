@@ -1,4 +1,4 @@
-PRO TextFast,data,header,file_path,read=read,write=write,action=action,column_list=column_list,$
+PRO TextFast,data,header,file_path=file_path,read=read,write=write,action=action,column_list=column_list,$
  first_line=first_line,xdr=xdr,string=string,append=append,extension=extension
 
 ON_ERROR,2
