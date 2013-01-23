@@ -13,14 +13,14 @@
 ;
 ; :Keywords:
 ;    cut_baselines
-;    sigma_threshold
+;    flag_nsigma
 ;
 ; :Author: isullivan 2012
 ;-
-PRO vis_flag,data_array,flag_arr,obs,params,cut_baselines=cut_baselines,sigma_threshold=sigma_threshold
+PRO vis_flag,data_array,flag_arr,obs,params,cut_baselines=cut_baselines,flag_nsigma=flag_nsigma,_Extra=extra
 
 IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=0
-IF N_Elements(sigma_threshold) EQ 0 THEN sigma_threshold=3.
+IF N_Elements(flag_nsigma) EQ 0 THEN flag_nsigma=3.
 
 data_abs=Sqrt(Reform((data_array[0,*,*,*]))^2.+Reform((data_array[1,*,*,*]))^2.)
 n_frequencies=obs.n_freq
@@ -79,15 +79,15 @@ tile_dev=Stddev(tile_fom[where(tile_fom)])
 freq_mean=Median(freq_fom[freq_nonzero_i],n_frequencies/20.)
 freq_dev=Stddev((freq_fom[freq_nonzero_i]-freq_mean))
 
-tile_cut0=where((Abs(tile_mean-tile_fom) GT 2.*sigma_threshold*tile_dev) OR (tile_fom EQ 0),n_tile_cut0,complement=tile_i_use0)
-freq_cut0=freq_nonzero_i[where((Abs(freq_mean-freq_fom) GT 2.*sigma_threshold*freq_dev) OR (freq_fom EQ 0),n_freq_cut0,complement=freq_i_use0)]
+tile_cut0=where((Abs(tile_mean-tile_fom) GT 2.*flag_nsigma*tile_dev) OR (tile_fom EQ 0),n_tile_cut0,complement=tile_i_use0)
+freq_cut0=freq_nonzero_i[where((Abs(freq_mean-freq_fom) GT 2.*flag_nsigma*freq_dev) OR (freq_fom EQ 0),n_freq_cut0,complement=freq_i_use0)]
 freq_i_use0=freq_nonzero_i[freq_i_use0]
 tile_mean2=Median(tile_fom[tile_i_use0])
 tile_dev2=Stddev(tile_fom[tile_i_use0])    
 freq_mean2=Median(freq_fom,n_frequencies/20.)
 freq_dev2=Stddev((freq_fom-freq_mean2)[freq_i_use0])
-tile_cut=where((Abs(tile_mean2-tile_fom) GT sigma_threshold*tile_dev2) OR (tile_fom EQ 0),n_tile_cut,complement=tile_i_use)
-freq_cut=where((Abs(freq_mean2-freq_fom) GT sigma_threshold*freq_dev2) OR (freq_fom EQ 0.),n_freq_cut,complement=freq_i_use)
+tile_cut=where((Abs(tile_mean2-tile_fom) GT flag_nsigma*tile_dev2) OR (tile_fom EQ 0),n_tile_cut,complement=tile_i_use)
+freq_cut=where((Abs(freq_mean2-freq_fom) GT flag_nsigmaflag_nsigma*freq_dev2) OR (freq_fom EQ 0.),n_freq_cut,complement=freq_i_use)
         
 IF n_tile_cut GT 0 THEN BEGIN
     print,'Tiles cut:',tile_cut+1

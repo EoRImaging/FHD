@@ -120,7 +120,7 @@ data_struct=0. ;free memory
 flag_arr0=Reform(data_array[flag_index,*,*,*])
 IF Keyword_Set(flag) THEN BEGIN
     print,'Flagging anomalous data'
-    vis_flag,data_array,flag_arr0,obs,params,cut_baselines=cut_baselines,sigma_threshold=3.
+    vis_flag,data_array,flag_arr0,obs,params,cut_baselines=cut_baselines,_Extra=extra
     SAVE,flag_arr0,filename=flags_filepath,/compress
 ENDIF ELSE IF file_test(flags_filepath) NE 0 THEN RESTORE,flags_filepath
 
