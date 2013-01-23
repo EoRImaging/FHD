@@ -283,6 +283,6 @@ ENDFOR
 
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm)
-save,psf,filename=file_path_fhd+'_beams'+'.sav'
+save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 RETURN,psf
 END
