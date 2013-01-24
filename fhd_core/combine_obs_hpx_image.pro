@@ -1,7 +1,8 @@
 PRO combine_obs_hpx_image,file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
     nside=nside,restore_last=restore_last,weight_threshold=weight_threshold,obs_arr=obs_arr,output_path=output_path,$
     color_table=color_table,high_dirty=high_dirty,high_source=high_source,high_residual=high_residual,$
-    fraction_polarized=fraction_polarized,low_dirty=low_dirty,low_source=low_source,low_residual=low_residual
+    fraction_polarized=fraction_polarized,low_dirty=low_dirty,low_source=low_source,low_residual=low_residual,$
+    map_projection=map_projection,_Extra=extra
 
 except=!except
 !except=0 
@@ -16,6 +17,12 @@ IF N_Elements(low_dirty) EQ 0 THEN low_dirty=-high_dirty/2.
 IF N_Elements(low_source) EQ 0 THEN low_source=0.
 IF N_Elements(low_residual) EQ 0 THEN low_residual=-high_residual
 IF N_Elements(fraction_polarized) EQ 0 THEN fraction_polarized=0.5
+IF N_Elements(map_projection) EQ 0 THEN map_projection='orth' ELSE map_projection=StrLowCase(map_projection)
+proj_list=['mollweide','orthographic','gnomic','cartesian']
+proj_name_list=['MOLLVIEW', 'GNOMVIEW', 'CARTVIEW', 'ORTHVIEW']
+
+proj_i=where(strpos(proj_list,map_projection) GE 0,n_match_proj)
+IF n_match_proj EQ 0 THEN proj_routine='orthview' ELSE proj_routine=proj_name_list[proj_i]
 
 save_path_base=output_path+'_maps'
 
@@ -106,9 +113,9 @@ FOR stk_i=0,1 DO BEGIN
         
     title_img='Composite Stokes '+Stk_nm[stk_i]+' residual'
     title_wts='Composite Stokes '+Stk_nm[stk_i]+' weights'
-    healpix_image,file_path_img,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
+    healpix_image,file_path_img,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
         title=title_img,lon=lon_avg,lat=Median(lat_arr),min=low_residual*cnorm,max=high_residual*cnorm,/half,color_table=color_table
-    healpix_image,file_path_wts,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
+    healpix_image,file_path_wts,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
         title=title_wts,lon=lon_avg,lat=Median(lat_arr),/half,color_table=color_table
         
     title_rst='Composite Stokes '+Stk_nm[stk_i]+' restored'
@@ -116,14 +123,14 @@ FOR stk_i=0,1 DO BEGIN
     title_dty='Composite Stokes '+Stk_nm[stk_i]+' dirty'
     
     title_smt='Composite Stokes '+Stk_nm[stk_i]+' smooth'
-    healpix_image,file_path_rst,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
+    healpix_image,file_path_rst,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
         title=title_rst,lon=lon_avg,lat=Median(lat_arr),min=low_dirty*cnorm,max=high_dirty*cnorm,/half,color_table=color_table
-    healpix_image,file_path_src,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
+    healpix_image,file_path_src,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
         title=title_src,lon=lon_avg,lat=Median(lat_arr),min=0,max=high_dirty*cnorm,/half,color_table=color_table
-    healpix_image,file_path_dty,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
+    healpix_image,file_path_dty,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
         title=title_dty,lon=lon_avg,lat=Median(lat_arr),min=low_dirty*cnorm,max=high_dirty*cnorm,/half,color_table=color_table
         
-    healpix_image,file_path_smt,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
+    healpix_image,file_path_smt,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
         title=title_smt,lon=lon_avg,lat=Median(lat_arr),min=low_residual*cnorm/2.,max=high_residual*cnorm/2.,/half,color_table=color_table
 ENDFOR
 
