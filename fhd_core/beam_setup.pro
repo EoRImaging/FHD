@@ -48,7 +48,7 @@ kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
 degpix=obs.degpix
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=32. ;=32?
-IF N_Elements(psf_dim) EQ 0 THEN psf_dim=16. ;=16?
+IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) ;=16?
 psf_dim2=psf_dim*psf_resolution
 
 degpix_use=!RaDeg/(kbinsize*psf_dim)

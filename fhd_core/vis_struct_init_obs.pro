@@ -1,17 +1,11 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
-    lon=lon,lat=lat,alt=alt,rotation=rotation, pflag=pflag, n_pol=n_pol, _Extra=extra
+    lon=lon,lat=lat,alt=alt,rotation=rotation, pflag=pflag, n_pol=n_pol,$
+    FoV=FoV, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
-IF N_Elements(dimension) EQ 0 THEN dimension=1024. ;dimension of the image in pixels; dimension = x direction
-IF N_Elements(elements) EQ 0 THEN elements=dimension ;elements = y direction
-IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
-IF N_Elements(degpix) EQ 0 THEN degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
 IF N_Elements(alt) EQ 0 THEN alt=377.83 ;altitude (meters)
 IF N_Elements(pflag) EQ 0 THEN pflag=0
-
-IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
-IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
 
 IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     obsra=header.obsra
@@ -87,10 +81,26 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     max_baseline=Max(kr_arr)
     min_baseline=Min(kr_arr[where(kr_arr)])
     
+    IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
+    IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline ELSE k_span=!RaDeg/degpix 
+    dimension_test=2.^Ceil(ALOG10(k_span/kbinsize)/ALOG10(2.))
+    
+    IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ;dimension of the image in pixels; dimension = x direction
+    IF N_Elements(elements) EQ 0 THEN elements=dimension ;elements = y direction
+    degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
+    IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
+    IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
+    
     vis_coordinates,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
         dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
 ENDIF 
 
+IF N_Elements(dimension) EQ 0 THEN dimension=1024. ;dimension of the image in pixels; dimension = x direction
+IF N_Elements(elements) EQ 0 THEN elements=dimension ;elements = y direction
+IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
+IF N_Elements(degpix) EQ 0 THEN degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
+IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
+IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
 IF N_Elements(tile_A) EQ 0 THEN tile_A=lonarr(1) ;tile numbers start from 1
 IF N_Elements(tile_B) EQ 0 THEN tile_B=lonarr(1) ;tile numbers start from 1
 IF N_Elements(bin_offset) EQ 0 THEN bin_offset=lonarr(1) ;indices to the start of each time integration
