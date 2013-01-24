@@ -25,13 +25,13 @@ freq_arr=(findgen(n_freq)-freq_ref_i)*freq_delt+freq_ref_val
 beam_slice=fltarr(naxis1,naxis2)
 FOR i=0,naxis1-1 DO FOR j=0,naxis2-1 DO beam_slice[i,j]=Interpol(beam_cube[i,j,*],freq_arr,frequency)
 
-IF polarization EQ 0 THEN BEGIN
-    ra_arr=(meshgrid(naxis1,naxis2,1)-beam_RA_pix0)*beam_RA_delt+beam_RA0
-    dec_arr=(meshgrid(naxis1,naxis2,2)-beam_Dec_pix0)*beam_Dec_delt+beam_Dec0
-ENDIF ELSE BEGIN
-    ra_arr=(meshgrid(naxis1,naxis2,2)-beam_RA_pix0)*beam_RA_delt+beam_RA0
-    dec_arr=(meshgrid(naxis1,naxis2,1)-beam_Dec_pix0)*beam_Dec_delt+beam_Dec0
-ENDELSE
+;IF polarization EQ 0 THEN BEGIN
+;    ra_arr=(meshgrid(naxis1,naxis2,1)-beam_RA_pix0)*beam_RA_delt+beam_RA0
+;    dec_arr=(meshgrid(naxis1,naxis2,2)-beam_Dec_pix0)*beam_Dec_delt+beam_Dec0
+;ENDIF ELSE BEGIN
+;    ra_arr=(meshgrid(naxis1,naxis2,2)-beam_RA_pix0)*beam_RA_delt+beam_RA0
+;    dec_arr=(meshgrid(naxis1,naxis2,1)-beam_Dec_pix0)*beam_Dec_delt+beam_Dec0
+;ENDELSE
 
 
 RETURN,tile_beam

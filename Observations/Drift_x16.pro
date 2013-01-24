@@ -1,4 +1,4 @@
-PRO Drift_x16
+PRO Drift_x16,cleanup=cleanup
 except=!except
 !except=0 
 heap_gc
@@ -18,12 +18,12 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 
 n_files=N_Elements(file_list)
 FOR fi=0,n_files-1 DO BEGIN
-    beam_recalculate=1
+    beam_recalculate=0
     healpix_recalculate=0
     mapfn=0
-    flag=1
+    flag=0
     grid=0
-    deconvolve=1
+    deconvolve=0
     no_output=0
     noise_calibrate=0
     align=0
@@ -36,13 +36,14 @@ FOR fi=0,n_files-1 DO BEGIN
 ENDFOR
 
 ;flux_scale=79.4/2651. ;set 3C444 to catalog value
-combine_obs_sources,fhd_file_list,calibration,source_list,restore_last=0,output_path=healpix_path
-combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
-    nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,obs_arr=obs_arr
-combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
-    weight_threshold=0.5,fraction_pol=0.5,high_dirty=6.0,low_dirty=-1.5,high_residual=3.0,high_source=3.0,$
-    nside=nside,output_path=healpix_path,restore_last=0,obs_arr=obs_arr
-
-calibration_test,fhd_file_list,output_path=healpix_path
+;combine_obs_sources,fhd_file_list,calibration,source_list,restore_last=0,output_path=healpix_path
+;combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
+;    nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,obs_arr=obs_arr
+;combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
+;    weight_threshold=0.5,fraction_pol=0.5,high_dirty=6.0,low_dirty=-1.5,high_residual=3.0,high_source=3.0,$
+;    nside=nside,output_path=healpix_path,restore_last=0,obs_arr=obs_arr
+;
+;calibration_test,fhd_file_list,output_path=healpix_path
+IF Keyword_Set(cleanup) THEN FOR fi=0,n_files-1 DO fhd_cleanup,fhd_file_list[fi]
 !except=except
 END
