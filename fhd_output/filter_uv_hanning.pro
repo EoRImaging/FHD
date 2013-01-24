@@ -1,5 +1,7 @@
-FUNCTION filter_uv_hanning,image_uv
+FUNCTION filter_uv_hanning,image_uv,_Extra=extra
 
-image_uv_filtered=image_uv*(1.-Hanning(size(image_uv_filtered,/dimension)))
+dimension=(size(image_uv,/dimension))[0]
+elements=(size(image_uv,/dimension))[1]
+image_uv_filtered=image_uv*(1.-Hanning(dimension,elements))
 RETURN,image_uv_filtered
 END
