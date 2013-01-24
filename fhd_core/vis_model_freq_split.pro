@@ -1,16 +1,16 @@
 FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
-    weights_arr=weights_arr,n_avg=n_avg,filename=filename,data_directory=data_directory,timing=timing,no_data=no_data,$
-    fft=fft
+    weights_arr=weights_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,$
+    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path
 ;no need to specify data_directory or filename if obs exists
-vis_path_default,data_directory,filename,file_path,obs=obs
+;vis_path_default,data_directory,filename,file_path,obs=obs
 ext='.UVFITS'
 t0=Systime(1)
 
-flags_filepath=file_path+'_flags.sav'
+flags_filepath=fhd_file_path+'_flags.sav'
 ;vis_filepath=file_path+'_vis.sav'
-params_filepath=file_path+'_params.sav'
-psf_filepath=file_path+'_beams.sav'
-obs_filepath=file_path+'_obs.sav'
+params_filepath=fhd_file_path+'_params.sav'
+psf_filepath=fhd_file_path+'_beams.sav'
+obs_filepath=fhd_file_path+'_obs.sav'
 
 
 SWITCH N_Params() OF
@@ -31,9 +31,9 @@ imaginary_index=1
 IF Keyword_Set(source_list) + Keyword_Set(model_uv_arr) EQ 0 THEN model_flag=0. ELSE model_flag=1.
 IF model_flag EQ 0 THEN no_data=0
 IF N_Elements(no_data) EQ 0 THEN no_data=0
-IF N_Elements(vis_data_arr) EQ 0 AND not Keyword_Set(no_data) THEN BEGIN
+IF N_Elements(vis_data_arr) EQ 0 AND ~Keyword_Set(no_data) THEN BEGIN
     data_flag=1
-    data_struct=mrdfits(filepath(filename+ext,root_dir=rootdir('mwa'),subdir=data_directory),0,/silent)
+    data_struct=mrdfits(vis_file_path,0,/silent)
     data_array=data_struct.array
     data_struct=0. ;free memory
     vis_data_arr=Ptrarr(n_pol,/allocate)
@@ -58,7 +58,7 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 nf=Max(freq_bin_i)+1L
-IF model_flag THEN vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr)
+IF model_flag THEN vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=fhd_file_path)
 residual_arr=Ptrarr(n_pol,nf,/allocate)
 weights_arr=Ptrarr(n_pol,nf,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN

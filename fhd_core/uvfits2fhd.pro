@@ -122,7 +122,8 @@ IF Keyword_Set(flag) THEN BEGIN
     print,'Flagging anomalous data'
     vis_flag,data_array,flag_arr0,obs,params,cut_baselines=cut_baselines,_Extra=extra
     SAVE,flag_arr0,filename=flags_filepath,/compress
-ENDIF ELSE IF file_test(flags_filepath) NE 0 THEN RESTORE,flags_filepath
+ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
+    IF file_test(flags_filepath) NE 0 THEN RESTORE,flags_filepath ELSE SAVE,flag_arr0,filename=flags_filepath,/compress
 
 save,obs,filename=obs_filepath
 save,params,filename=params_filepath
