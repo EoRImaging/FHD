@@ -30,7 +30,7 @@
 ;-
 PRO uvfits2fhd,file_path_vis,no_output=no_output,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
-    cut_baselines=cut_baselines,n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,$
+    n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,$
     rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
     file_path_fhd=file_path_fhd,_Extra=extra
 
@@ -41,7 +41,8 @@ heap_gc
 t0=Systime(1)
 ;IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(calibrate) EQ 0 THEN calibrate=0
-IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=12;0 ;minimum baseline threshold to cut BEFORE processing. If negative, specifies a maximum instead.
+;IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=12;0 ;minimum baseline threshold to cut BEFORE processing. If negative, specifies a maximum instead.
+IF N_Elements(min_baseline) EQ 0 THEN min_baseline=12.
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
@@ -120,7 +121,7 @@ data_struct=0. ;free memory
 flag_arr0=Reform(data_array[flag_index,*,*,*])
 IF Keyword_Set(flag) THEN BEGIN
     print,'Flagging anomalous data'
-    vis_flag,data_array,flag_arr0,obs,params,cut_baselines=cut_baselines,_Extra=extra
+    vis_flag,data_array,flag_arr0,obs,params,_Extra=extra
     SAVE,flag_arr0,filename=flags_filepath,/compress
 ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
     IF file_test(flags_filepath) NE 0 THEN RESTORE,flags_filepath ELSE SAVE,flag_arr0,filename=flags_filepath,/compress

@@ -1,6 +1,6 @@
 PRO fhd_output,obs,fhd, file_path_fhd=file_path_fhd,version=version,$
     noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,_Extra=extra,$
-    fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path
+    fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn
 
 compile_opt idl2,strictarrsubs  
 t0a=Systime(1)
@@ -131,7 +131,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension,beam_correction=beam_correction,mask=source_uv_mask)
 ;        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension)
         *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i])*normalization
-        *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i])*(*beam_correction[pol_i])
+        *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i],$
+            image_filter_fn=image_filter_fn,_Extra=extra)*(*beam_correction[pol_i])
         *instr_sources[pol_i]=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=8,dimension=dimension,width=.75)
     ENDFOR
     

@@ -17,9 +17,10 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO vis_flag,data_array,flag_arr,obs,params,cut_baselines=cut_baselines,flag_nsigma=flag_nsigma,_Extra=extra
+PRO vis_flag,data_array,flag_arr,obs,params,flag_nsigma=flag_nsigma,_Extra=extra
 
-IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=0
+min_baseline=obs.min_baseline
+max_baseline=obs.max_baseline
 IF N_Elements(flag_nsigma) EQ 0 THEN flag_nsigma=3.
 
 data_abs=Sqrt(Reform((data_array[0,*,*,*]))^2.+Reform((data_array[1,*,*,*]))^2.)
@@ -36,12 +37,11 @@ coarse_channel_pos=indgen(n_frequencies) mod 32
 flag_arr[*,where(coarse_channel_pos EQ 16),*]=0
 flag_arr[*,where((coarse_channel_pos LT flag_edge) OR (coarse_channel_pos GT 32-flag_edge-1)),*]=0
 
-IF Keyword_Set(cut_baselines) THEN BEGIN
-    uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(freq)
-    IF cut_baselines GT 0 THEN cut_baselines_i=where(uv_dist LE cut_baselines,n_baselines_cut) $
-        ELSE cut_baselines_i=where(uv_dist GE Abs(cut_baselines),n_baselines_cut)
-    IF N_baselines_cut GT 0 THEN flag_arr[*,*,cut_baselines_i]=0
-ENDIF
+;IF Keyword_Set(cut_baselines) THEN BEGIN
+uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(freq)
+cut_baselines_i=where((uv_dist LT min_baseline) OR (uv_dist GT max_baseline),n_baselines_cut)
+IF N_baselines_cut GT 0 THEN flag_arr[*,*,cut_baselines_i]=0
+;ENDIF
 
 tile_fom=fltarr(n_tiles)
 FOR tile_i=0,n_tiles-1 DO BEGIN

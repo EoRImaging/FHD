@@ -21,7 +21,8 @@
 ; :Author: isullivan May 4, 2012
 ;-
 FUNCTION dirty_image_generate,dirty_image_uv,baseline_threshold=baseline_threshold,mask=mask,$
-    normalization=normalization,resize=resize,width_smooth=width_smooth,hanning_filter=hanning_filter,no_real=no_real
+    normalization=normalization,resize=resize,width_smooth=width_smooth,$
+    hanning_filter=hanning_filter,no_real=no_real,image_filter_fn=image_filter_fn,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 IF N_Elements(baseline_threshold) EQ 0 THEN baseline_threshold=0.
@@ -44,6 +45,8 @@ ENDIF ELSE di_uv_use=dirty_image_uv
 
 IF Keyword_Set(hanning_filter) THEN IF hanning_filter EQ -1 THEN $
     di_uv_use*=fft_shift(hanning(dimension,elements)) ELSE di_uv_use*=hanning(dimension,elements)
+
+IF Keyword_Set(image_filter_fn) THEN di_uv_use=Call_Function(image_filter_fn,di_uv_use,_Extra=extra)
 
 IF Keyword_Set(resize) THEN BEGIN
     dimension2=dimension*resize

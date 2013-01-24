@@ -1,5 +1,5 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
-    lon=lon,lat=lat,alt=alt,rotation=rotation, pflag=pflag, n_pol=n_pol,$
+    lon=lon,lat=lat,alt=alt,rotation=rotation, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
@@ -78,12 +78,12 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     kx_arr=params.uu#frequency_array
     ky_arr=params.vv#frequency_array
     kr_arr=Sqrt(Temporary(kx_arr)^2.+Temporary(ky_arr)^2.)
-    max_baseline=Max(kr_arr)
-    min_baseline=Min(kr_arr[where(kr_arr)])
+    IF N_Elements(max_baseline) EQ 0 THEN max_baseline=Max(kr_arr)
+    IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)])
     
     IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
-    IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline ELSE k_span=!RaDeg/degpix 
-    dimension_test=2.^Ceil(ALOG10(k_span/kbinsize)/ALOG10(2.))
+    IF N_Elements(degpix) EQ 0 THEN k_span=4.*max_baseline ELSE k_span=!RaDeg/degpix 
+    dimension_test=2.^Round(ALOG10(k_span/kbinsize)/ALOG10(2.))
     
     IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ;dimension of the image in pixels; dimension = x direction
     IF N_Elements(elements) EQ 0 THEN elements=dimension ;elements = y direction

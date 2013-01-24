@@ -4,7 +4,7 @@ except=!except
 heap_gc
 
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
-IF N_Elements(ps_export) EQ 0 THEN ps_export=1
+IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 version=0
 
 data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
@@ -20,7 +20,7 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 
 n_files=N_Elements(vis_file_list)
 FOR fi=0,n_files-1 DO BEGIN
-    beam_recalculate=1
+    beam_recalculate=0
     healpix_recalculate=0
     mapfn=0
     flag=0
@@ -29,11 +29,13 @@ FOR fi=0,n_files-1 DO BEGIN
     no_output=0
     noise_calibrate=0
     align=0
+    dimension=1024.
     max_sources=10000.
+    image_filter_uv='filter_uv_hanning' ;applied ONLY to output images
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
-        /silent,max_sources=max_sources,deconvolve=deconvolve,$
+        /silent,max_sources=max_sources,deconvolve=deconvolve,dimension=dimension,$
         no_output=no_output,noise_calibrate=noise_calibrate,align=align,catalog_file_path=catalog_file_path
 ENDFOR
 

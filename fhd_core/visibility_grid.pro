@@ -23,7 +23,7 @@
 ; :Author: Ian Sullivan
 ;-
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,$
-    timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,GPU_enable=GPU_enable    
+    timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,GPU_enable=GPU_enable
 t0=Systime(1)
 heap_gc
 
@@ -35,6 +35,8 @@ elements=Float(obs.elements)
 kbinsize=obs.kpix
 kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
+min_baseline=obs.min_baseline
+max_baseline=obs.max_baseline
 
 freq_bin_i=(*obs.bin).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
@@ -78,6 +80,13 @@ range_test_x_i=where((xmin LT 0) OR (xmax GE dimension),n_test_x)
 range_test_y_i=where((ymin LT 0) OR (ymax GE elements),n_test_y)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
+
+dist_test=Sqrt((xcen-dimension/2.)^2.+(ycen-elements/2.)^2.)
+flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+IF n_dist_flag GT 0 THEN BEGIN
+    xmin[flag_dist_i]=-1
+    ymin[flag_dist_i]=-1
+ENDIF
 
 IF Keyword_Set(flag_arr) THEN BEGIN
     flag_i=where(flag_arr LE 0,n_flag)
