@@ -31,7 +31,7 @@ FOR fi=0,n_files-1 DO BEGIN
     align=0
     dimension=1024.
     max_sources=10000.
-    image_filter_uv='filter_uv_hanning' ;applied ONLY to output images
+    image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
