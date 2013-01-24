@@ -1,11 +1,13 @@
 PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list
 heap_gc
 
-cube_filepath=output_path+'_healpix_freq_cube.sav'
+n_obs=N_Elements(fhd_file_list)
+base_filename_range=file_basename([vis_file_list[0],vis_file_list[n_obs-1]],'_cal.uvfits')
+obs_range=strjoin(base_filename_range,'-',/single)
+cube_filepath=output_path+'_'+obs_range+'_cube.sav'
 dir=file_dirname(output_path)
 IF file_test(dir) EQ 0 THEN file_mkdir,dir   
 
-n_obs=N_Elements(fhd_file_list)
 hpx_cnv=Ptrarr(n_obs,/allocate)
 
 FOR obs_i=0,n_obs-1 DO BEGIN
@@ -19,6 +21,8 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ENDFOR
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
 
+n_pol=Min(obs_arr.n_pol)
+n_freq=Min(obs_arr.n_freq)
 n_hpx=N_Elements(hpx_inds)
 residual_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
 model_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
@@ -36,7 +40,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     fhd_path=fhd_file_list[obs_i]
     vis_path=vis_file_list[obs_i]
     restore,fhd_path+'_beams.sav'
-    restore,fhd_path+'_obs.sav'
+;    restore,fhd_path+'_obs.sav' ;obs now restored earlier
     ; *_fhd.sav contains:
     ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     ;    beam_base,beam_correction,ra_arr,dec_arr,astr

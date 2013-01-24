@@ -34,10 +34,10 @@ icomp=Complex(0,1)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 
-freq_bin_i=obs.fbin_i
+freq_bin_i=(*obs.bin).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-bin_offset=obs.bin_offset
-frequency_array=obs.freq
+bin_offset=(*obs.bin).bin_offset
+frequency_array=(*obs.bin).freq
 
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
@@ -57,7 +57,7 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     
     beam_corr_src=fltarr(n_pol,n_sources)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        beam_single=beam_image(psf.base,pol_i=pol_i,dimension=obs.dimension)
+        beam_single=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
         beam_corr_single=weight_invert(beam_single)
         beam_corr_src[pol_i,*]=beam_corr_single[source_list.x,source_list.y]
     ENDFOR
