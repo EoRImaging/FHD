@@ -6,6 +6,7 @@ heap_gc
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 version=0
+image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 
 data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
@@ -31,7 +32,6 @@ FOR fi=0,n_files-1 DO BEGIN
     align=0
     dimension=1024.
     max_sources=10000.
-    image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
@@ -43,13 +43,13 @@ ENDFOR
 map_projection='orth'
 ;flux_scale=79.4/2651. ;set 3C444 to catalog value
 combine_obs_sources,fhd_file_list,calibration,source_list,restore_last=0,output_path=healpix_path
-combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
-    nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,obs_arr=obs_arr
-combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,smooth_hpx,$
+combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,obs_arr=obs_arr,$
+    nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,image_filter_fn=image_filter_fn
+combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,$
     weight_threshold=0.5,fraction_pol=0.5,high_dirty=6.0,low_dirty=-1.5,high_residual=3.0,high_source=3.0,$
     nside=nside,output_path=healpix_path,restore_last=0,obs_arr=obs_arr,map_projection=map_projection
 
-calibration_test,fhd_file_list,output_path=healpix_path
+;calibration_test,fhd_file_list,output_path=healpix_path
 
 IF Keyword_Set(ps_export) THEN BEGIN
     vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list

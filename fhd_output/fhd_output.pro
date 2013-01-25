@@ -133,7 +133,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i])*normalization
         *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i],$
             image_filter_fn=image_filter_fn,_Extra=extra)*(*beam_correction[pol_i])
-        *instr_sources[pol_i]=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=8,dimension=dimension,width=.75)
+        *instr_sources[pol_i]=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=16,dimension=dimension,width=.5)
     ENDFOR
     
     stokes_images=stokes_cnv(instr_images,beam=beam_base)

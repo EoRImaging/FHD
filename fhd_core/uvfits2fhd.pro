@@ -146,8 +146,9 @@ FOR pol_i=0,(n_pol<2)-1 DO BEGIN
     beam_mask*=mask0
 ENDFOR
 
-hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,radius=radius,$
-    restore_last=(~Keyword_Set(healpix_recalculate)),_Extra=extra)
+IF Keyword_Set(healpix_recalculate) THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,$
+    nside=nside,mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
+hpx_cnv=0
 
 vis_arr=Ptrarr(n_pol,/allocate)
 flag_arr=Ptrarr(n_pol,/allocate)
