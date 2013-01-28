@@ -55,12 +55,13 @@ dimension_uv=obs.dimension
 
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     dimension_use=((obs.dimension>obs.elements)*pad_uv_image)>(obs.dimension>obs.elements)
+    IF tag_exist(extra,'dimension') THEN extra.dimension=dimension_use
     obs_out=vis_struct_init_obs(hdr,params,n_pol=obs.n_pol,dimension=dimension_use,_Extra=extra)
 ENDIF ELSE obs_out=obs
 dimension=obs_out.dimension
 elements=obs_out.elements
 
-zoom_radius=Round(18./(degpix)/16.)*16.
+zoom_radius=Round(18./(obs_out.degpix)/16.)*16.
 zoom_low=dimension/2.-zoom_radius
 zoom_high=dimension/2.+zoom_radius-1
 stats_radius=10. ;degrees
@@ -105,12 +106,15 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     ;beam_threshold=0.05
     beam_mask=fltarr(dimension,elements)+1
     beam_avg=fltarr(dimension,elements)
+    beam_base_out=Ptrarr(npol,/allocate)
+    beam_correction_out=Ptrarr(npol,/allocate)
     FOR pol_i=0,(npol<2)-1 DO BEGIN
-        *beam_base[pol_i]=beam_image(psf,pol_i=pol_i,dimension=dimension)
-        beam_mask_test=*beam_base[pol_i];*(*p_map_simple[pol_i]);*(ps_not_used*2.)
+        *beam_base_out[pol_i]=beam_image(psf,pol_i=pol_i,dimension=dimension)
+        *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold)
+        beam_mask_test=*beam_base_out[pol_i];*(*p_map_simple[pol_i]);*(ps_not_used*2.)
         beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold,Max(beam_mask_test)])
         beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
-        beam_avg+=*beam_base[pol_i]
+        beam_avg+=*beam_base_out[pol_i]
         beam_mask*=beam_mask0
     ENDFOR
     beam_avg/=(npol<2)
@@ -137,13 +141,13 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             beam_correction=beam_correction,mask=source_uv_mask)
         *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i])*normalization
         *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i],$
-            image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction[pol_i])
+            image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,width=.5)
     ENDFOR
     
-    stokes_images=stokes_cnv(instr_images,beam=beam_base)
-    stokes_sources=stokes_cnv(instr_sources,beam=beam_base)
+    stokes_images=stokes_cnv(instr_images,beam=beam_base_out)
+    stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out)
 
     t4a=Systime(1)
     t3+=t4a-t3a
@@ -241,7 +245,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     t5+=t6a-t5a
 ;    beam_est=Ptrarr(npol,/allocate)
 ;    FOR pol_i=0,npol-1 DO BEGIN
-;        beam_est_single=beam_estimate(*instr_images[pol_i],radius=20.,nsigma=3,beam_model=*beam_base[pol_i])
+;        beam_est_single=beam_estimate(*instr_images[pol_i],radius=20.,nsigma=3,beam_model=*beam_base_out[pol_i])
 ;        *beam_est[pol_i]=beam_est_single
 ;    ENDFOR
     
@@ -272,7 +276,7 @@ FOR pol_i=0,npol-1 DO BEGIN
 ;;        instr_residual=Reverse(reverse(*instr_images[pol_i],1),2)
 ;;        instr_source=Reverse(reverse(*instr_sources[pol_i],1),2)
 ;;        instr_restored=Reverse(reverse(instr_residual+instr_source,1),2)
-;;        beam_use=Reverse(reverse(*beam_base[pol_i],1),2)
+;;        beam_use=Reverse(reverse(*beam_base_out[pol_i],1),2)
 ;;        beam_est_use=Reverse(reverse(*beam_est[pol_i],1),2)
 ;;        beam_diff=beam_use-beam_est_use
 ;;        stokes_residual=Reverse(reverse((*stokes_images[pol_i])*beam_mask,1),2)
@@ -282,8 +286,8 @@ FOR pol_i=0,npol-1 DO BEGIN
 ;        instr_residual=reverse(*instr_images[pol_i],1)
 ;        instr_source=reverse(*instr_sources[pol_i],1)
 ;        instr_restored=reverse(instr_residual+instr_source,1)
-;;        beam_use=reverse(*beam_base[pol_i]*(*p_map_simple[pol_i]),1)*2.
-;        beam_use=reverse(*beam_base[pol_i],1)
+;;        beam_use=reverse(*beam_base_out[pol_i]*(*p_map_simple[pol_i]),1)*2.
+;        beam_use=reverse(*beam_base_out[pol_i],1)
 ;        IF beam_est_flag THEN BEGIN
 ;            beam_est_use=reverse(*beam_est[pol_i],1)
 ;            beam_diff=beam_use-beam_est_use
@@ -296,7 +300,7 @@ FOR pol_i=0,npol-1 DO BEGIN
         instr_residual=*instr_images[pol_i]
         instr_source=*instr_sources[pol_i]
         instr_restored=instr_residual+instr_source
-        beam_use=*beam_base[pol_i];*(*p_map_simple[pol_i])*2.
+        beam_use=*beam_base_out[pol_i];*(*p_map_simple[pol_i])*2.
         IF beam_est_flag THEN BEGIN
             beam_est_use=*beam_est[pol_i]
             beam_diff=beam_use-beam_est_use
@@ -399,12 +403,13 @@ source_array_export,source_arr_out,beam_avg,radius,file_path=export_path+'_sourc
 
 ;old .sav files had source_array_full instead of comp_arr, so check for that here
 IF N_Elements(comp_arr) EQ 0 THEN comp_arr=source_array_full
+comp_arr_out=comp_arr
 ad2xy,comp_arr.ra,comp_arr.dec,astr_out,sx,sy
 comp_arr_out.x=sx & comp_arr_out.y=sy
 radius=angle_difference(obs_out.obsdec,obs_out.obsra,comp_arr.dec,comp_arr.ra,/degree)
 source_array_export,comp_arr_out,beam_avg,radius,file_path=export_path+'_component_list'
 
-residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base,ston=fhd.sigma_cut,/center,$
+residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
     file_path_base=image_path
 
 t10=Systime(1)-t10b
