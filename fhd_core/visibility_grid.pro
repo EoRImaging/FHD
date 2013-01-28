@@ -81,7 +81,8 @@ range_test_y_i=where((ymin LT 0) OR (ymax GE elements),n_test_y)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
-dist_test=Sqrt((xcen-dimension/2.)^2.+(ycen-elements/2.)^2.)
+;dist_test=Sqrt((xcen-dimension/2.)^2.+(ycen-elements/2.)^2.)
+dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1

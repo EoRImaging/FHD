@@ -32,12 +32,13 @@ FOR fi=0,n_files-1 DO BEGIN
     align=0
     dimension=1024.
     max_sources=10000.
+    pad_uv_image=2.
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         no_output=no_output,noise_calibrate=noise_calibrate,align=align,$
-        dimension=dimension,image_filter_fn=image_filter_fn
+        dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image
 ENDFOR
 
 map_projection='orth'

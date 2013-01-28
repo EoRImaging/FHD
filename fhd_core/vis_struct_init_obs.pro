@@ -77,12 +77,16 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     
     kx_arr=params.uu#frequency_array
     ky_arr=params.vv#frequency_array
-    kr_arr=Sqrt(Temporary(kx_arr)^2.+Temporary(ky_arr)^2.)
-    IF N_Elements(max_baseline) EQ 0 THEN max_baseline=Max(kr_arr)
+    kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
+    IF N_Elements(max_baseline) EQ 0 THEN BEGIN
+        max_baseline=Max(kr_arr)
+        max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr))
+    ENDIF ELSE max_baseline_use=max_baseline
     IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)])
+    kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
     
     IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
-    IF N_Elements(degpix) EQ 0 THEN k_span=4.*max_baseline ELSE k_span=!RaDeg/degpix 
+    IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline_use ELSE k_span=!RaDeg/degpix 
     dimension_test=2.^Round(ALOG10(k_span/kbinsize)/ALOG10(2.))
     
     IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ;dimension of the image in pixels; dimension = x direction

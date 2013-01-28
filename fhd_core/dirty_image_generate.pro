@@ -22,7 +22,8 @@
 ;-
 FUNCTION dirty_image_generate,dirty_image_uv,baseline_threshold=baseline_threshold,mask=mask,$
     normalization=normalization,resize=resize,width_smooth=width_smooth,$
-    hanning_filter=hanning_filter,no_real=no_real,image_filter_fn=image_filter_fn,_Extra=extra
+    hanning_filter=hanning_filter,no_real=no_real,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
+    _Extra=extra
 
 compile_opt idl2,strictarrsubs  
 IF N_Elements(baseline_threshold) EQ 0 THEN baseline_threshold=0.
@@ -49,17 +50,25 @@ IF Keyword_Set(hanning_filter) THEN IF hanning_filter EQ -1 THEN $
 IF Keyword_Set(image_filter_fn) THEN di_uv_use=Call_Function(image_filter_fn,di_uv_use,_Extra=extra)
 
 IF Keyword_Set(resize) THEN BEGIN
-    dimension2=dimension*resize
-    elements2=elements*resize
+    dimension=dimension*resize
+    elements=elements*resize
     di_uv_real=Real_part(di_uv_use)
     di_uv_img=Imaginary(di_uv_use)
-    di_uv_real=REBIN(di_uv_real,dimension2,elements2)
-    di_uv_img=REBIN(di_uv_img,dimension2,elements2)
+    di_uv_real=REBIN(di_uv_real,dimension,elements)
+    di_uv_img=REBIN(di_uv_img,dimension,elements)
     di_uv_use=complex(di_uv_real,di_uv_img)    
 ENDIF
 
 ;IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use)))/(dimension*elements) $
 ;    ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use))))/(dimension*elements)
+
+IF Keyword_Set(pad_uv_image) THEN BEGIN
+    dimension_new=((dimension>elements)*pad_uv_image)>(dimension>elements)
+    di_uv1=Complexarr(dimension_new,dimension_new)
+    di_uv1[dimension_new/2.-dimension/2.:dimension_new/2.+dimension/2.-1,$
+        dimension_new/2.-elements/2.:dimension_new/2.+elements/2.-1]=di_uv_use
+    di_uv_use=di_uv1
+ENDIF
 
 IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use))) $
     ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use))))

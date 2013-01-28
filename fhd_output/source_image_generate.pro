@@ -1,5 +1,6 @@
 FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolution,threshold=threshold,$
-    dimension=dimension,elements=elements,width=width,ring_radius=ring_radius,n_sources=n_sources
+    dimension=dimension,elements=elements,width=width,ring_radius=ring_radius,n_sources=n_sources,$
+    _Extra=extra
 IF Keyword_Set(obs) THEN BEGIN
     dimension=obs.dimension
     elements=obs.elements
