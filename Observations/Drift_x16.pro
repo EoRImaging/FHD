@@ -30,7 +30,7 @@ FOR fi=0,n_files-1 DO BEGIN
     flag=recalculate_all
     grid=recalculate_all
     deconvolve=recalculate_all
-    no_output=export_images
+    export_images=export_images
     noise_calibrate=0
     align=0
     dimension=1024.
@@ -40,7 +40,7 @@ FOR fi=0,n_files-1 DO BEGIN
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
-        no_output=no_output,noise_calibrate=noise_calibrate,align=align,$
+        export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image
 ENDFOR
 

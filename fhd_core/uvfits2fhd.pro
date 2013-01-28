@@ -28,7 +28,7 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO uvfits2fhd,file_path_vis,no_output=no_output,$
+PRO uvfits2fhd,file_path_vis,export_images=export_images,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,$
     rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
@@ -215,7 +215,7 @@ ENDIF ELSE BEGIN
 ;    ENDFOR
 ENDELSE
 
-IF ~Keyword_Set(no_output) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 THEN deconvolve=1
+IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 THEN deconvolve=1
 
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
@@ -224,7 +224,7 @@ IF Keyword_Set(deconvolve) THEN BEGIN
 ENDIF ELSE print,'Gridded visibilities not deconvolved'
 
 ;Generate fits data files and images
-IF ~Keyword_Set(no_output) THEN BEGIN
+IF Keyword_Set(export_images) THEN BEGIN
     print,'Exporting images'
 ;    ;Temporary addition:
 ;    fhd_paper_figures,restore_last=0,coord_debug=0,silent=0,show_grid=1,version=version,_Extra=extra
