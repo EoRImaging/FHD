@@ -1,4 +1,4 @@
-PRO Drift_x16,cleanup=cleanup,ps_export=ps_export
+PRO Drift_x16,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images
 except=!except
 !except=0 
 heap_gc
@@ -19,15 +19,18 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 
 ;filename_list=Reverse(filename_list)
 
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
+IF N_Elements(export_images) EQ 0 THEN export_images=1
+
 n_files=N_Elements(vis_file_list)
 FOR fi=0,n_files-1 DO BEGIN
-    beam_recalculate=0
-    healpix_recalculate=0
-    mapfn=0
-    flag=0
-    grid=0
-    deconvolve=0
-    no_output=0
+    beam_recalculate=recalculate_all
+    healpix_recalculate=recalculate_all
+    mapfn=recalculate_all
+    flag=recalculate_all
+    grid=recalculate_all
+    deconvolve=recalculate_all
+    no_output=export_images
     noise_calibrate=0
     align=0
     dimension=1024.

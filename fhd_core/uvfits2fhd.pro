@@ -215,6 +215,8 @@ ENDIF ELSE BEGIN
 ;    ENDFOR
 ENDELSE
 
+IF ~Keyword_Set(no_output) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 THEN deconvolve=1
+
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
@@ -222,7 +224,7 @@ IF Keyword_Set(deconvolve) THEN BEGIN
 ENDIF ELSE print,'Gridded visibilities not deconvolved'
 
 ;Generate fits data files and images
-IF not Keyword_Set(no_output) THEN BEGIN
+IF ~Keyword_Set(no_output) THEN BEGIN
     print,'Exporting images'
 ;    ;Temporary addition:
 ;    fhd_paper_figures,restore_last=0,coord_debug=0,silent=0,show_grid=1,version=version,_Extra=extra
