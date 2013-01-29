@@ -1,25 +1,3 @@
-;+
-; :Description:
-;    Computes the FFT of an image, accounting for IDL's convention of putting the k=0 mode in the center of an image
-;    
-;    NOT NORMALIZED CORRECTLY (needs a ~1/sqrt(2*!Pi) /dimension correction)
-;
-; :Params:
-;    dirty_image_uv
-;
-; :Keywords:
-;    baseline_threshold - radius of mask to apply, in wavelengths. If negative, masks everything larger than the specified threshold
-;    
-;    mask - mask to apply before taking the FFT
-;    
-;    normalization - if the correct FFT normalization factor is known, supply it here
-;    
-;    resize - Obsolete, not recommended
-;    
-;    width_smooth - width of taper to reduce ringing in the image if baseline_threshold or mask are used
-;
-; :Author: isullivan May 4, 2012
-;-
 FUNCTION dirty_image_generate,dirty_image_uv,baseline_threshold=baseline_threshold,mask=mask,$
     normalization=normalization,resize=resize,width_smooth=width_smooth,$
     hanning_filter=hanning_filter,no_real=no_real,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$

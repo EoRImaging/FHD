@@ -66,7 +66,7 @@ print,'Output file_path:',file_path_fhd
 ext='.uvfits'
 header_filepath=file_path_fhd+'_header.sav'
 flags_filepath=file_path_fhd+'_flags.sav'
-vis_filepath=file_path_fhd+'_vis.sav'
+;vis_filepath=file_path_fhd+'_vis.sav'
 obs_filepath=file_path_fhd+'_obs.sav'
 params_filepath=file_path_fhd+'_params.sav'
 hdr_filepath=file_path_fhd+'_hdr.sav'
