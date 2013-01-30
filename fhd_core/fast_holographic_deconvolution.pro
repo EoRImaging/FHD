@@ -461,7 +461,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR  
 
 t00=Systime(1)-t00
+print,'Deconvolution timing [per iteration]'
+print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1/i)))
+print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2/i)))
+print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3/i)))
+print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4/i)))
 timing=[t00,t1,t2,t3,t4]
-print,timing
+;print,timing
 
 END  

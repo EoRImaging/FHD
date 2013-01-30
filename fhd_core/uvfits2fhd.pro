@@ -47,7 +47,7 @@ IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=1
-IF N_Elements(flag) EQ 0 THEN flag=1.
+IF N_Elements(flag) EQ 0 THEN flag=0.
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=1
 IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
 ;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
@@ -95,7 +95,7 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     dimension=obs.dimension
     elements=obs.elements
     rotation=obs.rotation
-    frequency_array=obs.freq
+    frequency_array=(*obs.bin).freq
     kbinsize=obs.kpix
     kx_arr=params.uu/kbinsize
     ky_arr=params.vv/kbinsize
@@ -107,6 +107,19 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     hdr.obsdec=obs.zendec
     obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,rotation=rotation,_Extra=extra)
 ENDIF ELSE phase_shift=1.
+
+kbinsize=obs.kpix
+degpix=obs.degpix
+dimension=obs.dimension
+bandwidth=Round((Max((*obs.bin).freq)-Min((*obs.bin).freq))/1E5)/10.
+fov=dimension*degpix
+k_span=kbinsize*dimension
+print,String(format='("Image size used: ",A," pixels")',Strn(dimension))
+print,String(format='("Image resolution used: ",A," degrees/pixel")',Strn(degpix))
+print,String(format='("Field of view used: ",A," degrees")',Strn(fov))
+print,String(format='("Bandwidth used: ",A," MHz")',Strn(bandwidth))
+print,String(format='("UV resolution used: ",A," wavelengths")',Strn(kbinsize))
+print,String(format='("UV image size used: ",A," wavelengths")',Strn(k_span))
 
 pol_dim=hdr.pol_dim
 freq_dim=hdr.freq_dim
