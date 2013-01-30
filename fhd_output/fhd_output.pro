@@ -85,7 +85,7 @@ source_arr_out.x=sx & source_arr_out.y=sy
 
 ;Build a fits header
 mkhdr,fits_header,*residual_array[0]
-putast, fits_header, astr_out, cd_type=1
+putast, fits_header, astr_out;, cd_type=1
 
 t1a=Systime(1)
 t0+=t1a-t0a

@@ -462,10 +462,10 @@ ENDFOR
 
 t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'
-print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1/i)))
-print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2/i)))
-print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3/i)))
-print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4/i)))
+print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100))
+print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100))
+print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100))
+print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100))
 timing=[t00,t1,t2,t3,t4]
 ;print,timing
 

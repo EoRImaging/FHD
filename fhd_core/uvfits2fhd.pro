@@ -10,7 +10,8 @@
 ; :Keywords:
 ;    data_directory - working directory
 ;    
-;    filename - uvfits filename, omitting the .uvfits extension. If the data is already calibrated, it should end with _cal.uvfits instead of just .uvfits
+;    filename - uvfits filename, omitting the .uvfits extension. 
+;       If the data is already calibrated, it should end with _cal.uvfits instead of just .uvfits
 ;    
 ;    beam_recalculate - if set, generates a new beam model
 ;    
@@ -22,7 +23,8 @@
 ;    
 ;    n_pol - 1: use xx only, 2: use xx and xy, 4: use xx, yy, xy, and yx (Default: as many as are available)
 ;    
-;    flag - set to look for anomalous visibility data and update flags (default=1, also set to 1 if '_flags.sav' does not exist)
+;    flag - set to look for anomalous visibility data and update flags 
+;       (default=1, also set to 1 if '_flags.sav' does not exist)
 ;    
 ;    Extra - pass any non-default parameters to fast_holographic_deconvolution through this parameter 
 ;
@@ -41,7 +43,6 @@ heap_gc
 t0=Systime(1)
 ;IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(calibrate) EQ 0 THEN calibrate=0
-;IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=12;0 ;minimum baseline threshold to cut BEFORE processing. If negative, specifies a maximum instead.
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=12.
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
@@ -159,14 +160,16 @@ FOR pol_i=0,(n_pol<2)-1 DO BEGIN
     beam_mask*=mask0
 ENDFOR
 
-IF Keyword_Set(healpix_recalculate) THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,$
-    nside=nside,mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
+IF Keyword_Set(healpix_recalculate) OR (file_test(file_path_fhd+'_hpxcnv.sav') EQ 0) THEN $
+    hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
+        mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
 hpx_cnv=0
 
 vis_arr=Ptrarr(n_pol,/allocate)
 flag_arr=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))*phase_shift
+    *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),$
+        Reform(data_array[imaginary_index,pol_i,*,*]))*phase_shift
     *flag_arr[pol_i]=reform(flag_arr0[pol_i,*,*])
 ENDFOR
 ;free memory
@@ -202,8 +205,10 @@ IF Keyword_Set(grid_recalculate) THEN BEGIN
         
 ;        IF Keyword_Set(CASA_calibration) THEN BEGIN
 ;            norm=Max(*psf.base[pol_i,(Size(psf.base,/dimension))[1]/2.,0,0])
-;            n_vis_orig=((obs.bin_offset)[1]-obs.n_tile)*obs.n_freq*Float(N_Elements(obs.bin_offset)) ;I have subtracted the auto-correlations
-;;            norm*=n_vis_orig/obs.n_vis ;vis_flag updates obs.n_vis to only the number of unflagged visibilities (potentially need to update during gridding in case some are outside of the image!)
+;            ;I have subtracted the auto-correlations
+;            n_vis_orig=((obs.bin_offset)[1]-obs.n_tile)*obs.n_freq*Float(N_Elements(obs.bin_offset)) 
+;;            norm*=n_vis_orig/obs.n_vis ;vis_flag updates obs.n_vis to only the number of unflagged visibilities 
+;                           ;(potentially need to update during gridding in case some are outside of the image!)
 ;            dirty_UV/=norm^2.
 ;            dirty_img/=norm^2.
 ;;            weights_grid*=norm
