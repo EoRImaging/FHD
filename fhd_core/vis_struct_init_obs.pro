@@ -40,15 +40,15 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
 
     zenpos2,Min(Jdate),zenra,zendec, lat=lat, lng=lon,/degree,/J2000
 
-    IF Abs(obsra-zenra) GT 90. THEN ra_diff=obsra-((obsra GT zenra) ? 360.:(-360.))-zenra ELSE ra_diff=obsra-zenra
-    dec_diff=obsdec-zendec
-    lon_diff=ra_diff*Cos(zendec*!DtoR)
-    IF N_Elements(rotation) EQ 0 THEN BEGIN
-    ;    rotation=-ra_diff*Sin(obsdec*!DtoR)/(1-Sin(dec_diff*!DtoR))
-    ;    rotation=-Atan(Sin(lon_diff*!DtoR)/(Cos(lon_diff*!DtoR)*Cos(obsdec*!DtoR)))*!RaDeg ;calculated from rotation matrices
-        rotation=-Float(Atan(Sin(Double(lon_diff*!DtoR)),(Cos(Double(lon_diff*!DtoR))*Cos(Double(obsdec*!DtoR))))*!RaDeg) ;calculated from rotation matrices
-        rotation*=Sin(zendec*!DtoR)*Cos(dec_diff*!DtoR)^2.
-    ENDIF
+;    IF Abs(obsra-zenra) GT 90. THEN ra_diff=obsra-((obsra GT zenra) ? 360.:(-360.))-zenra ELSE ra_diff=obsra-zenra
+;    dec_diff=obsdec-zendec
+;    lon_diff=ra_diff*Cos(zendec*!DtoR)
+;    IF N_Elements(rotation) EQ 0 THEN BEGIN
+;    ;    rotation=-ra_diff*Sin(obsdec*!DtoR)/(1-Sin(dec_diff*!DtoR))
+;    ;    rotation=-Atan(Sin(lon_diff*!DtoR)/(Cos(lon_diff*!DtoR)*Cos(obsdec*!DtoR)))*!RaDeg ;calculated from rotation matrices
+;        rotation=-Float(Atan(Sin(Double(lon_diff*!DtoR)),(Cos(Double(lon_diff*!DtoR))*Cos(Double(obsdec*!DtoR))))*!RaDeg) ;calculated from rotation matrices
+;        rotation*=Sin(zendec*!DtoR)*Cos(dec_diff*!DtoR)^2.
+;    ENDIF
 ;    obsra0=obsra
 ;    obsdec0=obsdec
 ;    zenra0=zenra
@@ -95,8 +95,10 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
     IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
     
-    vis_coordinates,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-        dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
+    projection_slant_orthographic,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
+        dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
+;    vis_coordinates,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
+;        dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
 ENDIF 
 
 IF N_Elements(dimension) EQ 0 THEN dimension=1024. ;dimension of the image in pixels; dimension = x direction

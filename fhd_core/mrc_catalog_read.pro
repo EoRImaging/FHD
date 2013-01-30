@@ -20,7 +20,9 @@ source_comp_init,mrc_cat,n_sources=ns
 
 IF Keyword_Set(astr) THEN BEGIN
     ra0=astr.crval[0]
-    i_use=where((Abs(ra-ra0) LE 90.) OR (Abs(ra-ra0-360) LE 90.) OR (Abs(ra-ra0+360) LE 90.),n_use)
+    dec0=astr.crval[1]
+    angs=angle_difference(dec0,ra0,dec,ra,/degree)
+    i_use=where(Abs(angs) LE 45,n_use)
     IF n_use GT 0 THEN BEGIN
         ad2xy,ra[i_use],dec[i_use],astr,x_arr,y_arr
         mrc_cat[i_use].x=x_arr

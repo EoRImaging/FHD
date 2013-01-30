@@ -97,9 +97,12 @@ yvals_i=meshgrid(psf_dim,psf_dim,2)*psf_resolution
 xvals=meshgrid(psf_dim2,psf_dim2,1)/psf_resolution-psf_dim/2.
 yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
 
-vis_coordinates,degpix=degpix_use,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-    dimension=psf_dim2,rotation=rotation,valid_i=valid_i,astr=astr,zen_astr=zen_astr
+;vis_coordinates,degpix=degpix_use,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
+;    dimension=psf_dim2,rotation=rotation,valid_i=valid_i,astr=astr,zen_astr=zen_astr
 
+projection_slant_orthographic,astr=astr,valid_i=valid_i,$
+    degpix=degpix_use,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
+    dimension=psf_dim2
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
 norm=Sqrt(2.)*[ex0,ey0]

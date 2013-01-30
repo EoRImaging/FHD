@@ -19,7 +19,7 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 
 ;filename_list=Reverse(filename_list)
 
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(export_images) EQ 0 THEN export_images=1
 
 n_files=N_Elements(vis_file_list)
