@@ -11,7 +11,7 @@ IF Keyword_Set(restore_last) THEN BEGIN
     restore,file_path_fhd+'_hpxcnv'+'.sav'
     nside=hpx_cnv.nside
     RETURN,hpx_cnv
-ENDIF
+ENDIF ELSE IF N_Elements(obs) EQ 0 THEN restore,file_path_fhd+'_obs.sav'
 
 t00=Systime(1)
 astr=(*obs.bin).astr

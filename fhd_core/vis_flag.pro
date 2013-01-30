@@ -87,7 +87,7 @@ tile_dev2=Stddev(tile_fom[tile_i_use0])
 freq_mean2=Median(freq_fom,n_frequencies/20.)
 freq_dev2=Stddev((freq_fom-freq_mean2)[freq_i_use0])
 tile_cut=where((Abs(tile_mean2-tile_fom) GT flag_nsigma*tile_dev2) OR (tile_fom EQ 0),n_tile_cut,complement=tile_i_use)
-freq_cut=where((Abs(freq_mean2-freq_fom) GT flag_nsigmaflag_nsigma*freq_dev2) OR (freq_fom EQ 0.),n_freq_cut,complement=freq_i_use)
+freq_cut=where((Abs(freq_mean2-freq_fom) GT flag_nsigma*flag_nsigma*freq_dev2) OR (freq_fom EQ 0.),n_freq_cut,complement=freq_i_use)
         
 IF n_tile_cut GT 0 THEN BEGIN
     print,'Tiles cut:',tile_cut+1
