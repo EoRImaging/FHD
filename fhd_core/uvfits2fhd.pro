@@ -63,6 +63,7 @@ IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
 
 ;vis_path_default,data_directory,filename,file_path,version=version,_Extra=extra
 print,'Deconvolving: ',file_path_vis
+print,systime()
 print,'Output file_path:',file_path_fhd
 ext='.uvfits'
 header_filepath=file_path_fhd+'_header.sav'
