@@ -96,7 +96,7 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     print,"REPHASING VISIBILITIES TO POINT AT ZENITH!!"
     dimension=obs.dimension
     elements=obs.elements
-    rotation=obs.rotation
+;    rotation=obs.rotation
     frequency_array=(*obs.bin).freq
     kbinsize=obs.kpix
     kx_arr=params.uu/kbinsize
@@ -107,7 +107,7 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     
     hdr.obsra=obs.zenra
     hdr.obsdec=obs.zendec
-    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,rotation=rotation,_Extra=extra)
+    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
 ENDIF ELSE phase_shift=1.
 
 kbinsize=obs.kpix
