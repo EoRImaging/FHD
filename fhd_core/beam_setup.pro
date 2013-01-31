@@ -80,7 +80,7 @@ obsdec=obs.obsdec
 zenra=obs.zenra
 zendec=obs.zendec
 Jdate=obs.Jd0
-rotation=obs.rotation
+;rotation=obs.rotation
 
 beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain
 

@@ -1,5 +1,5 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
-    lon=lon,lat=lat,alt=alt,rotation=rotation, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
+    lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
@@ -116,7 +116,7 @@ IF N_Elements(frequency_array) EQ 0 THEN frequency_array=fltarr(1) ;full frequen
 IF N_Elements(freq_bin_i) EQ 0 THEN freq_bin_i=lonarr(1) ;bin number of each frequency. The same psf is used for all frequencies with the same bin number
 IF N_Elements(zenra) EQ 0 THEN zenra=0. ;degrees
 IF N_Elements(zendec) EQ 0 THEN zendec=0. ;degrees
-IF N_Elements(rotation) EQ 0 THEN rotation=0. ;degrees
+;IF N_Elements(rotation) EQ 0 THEN rotation=0. ;degrees
 IF N_Elements(obsra) EQ 0 THEN obsra=0. ;degrees
 IF N_Elements(obsdec) EQ 0 THEN obsdec=0. ;degrees
 IF N_Elements(calibration) EQ 0 THEN calibration=fltarr(4)+1.
@@ -140,7 +140,7 @@ ENDIF
 ;    max_baseline:max_baseline,min_baseline:min_baseline,astr:astr}
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,astr:astr}
 struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
-    obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,rotation:rotation,$
+    obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,$
     pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,jd0:jd0,$
     max_baseline:max_baseline,min_baseline:min_baseline,bin:Ptr_new(arr)}    
 RETURN,struct
