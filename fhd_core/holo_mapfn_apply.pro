@@ -16,23 +16,22 @@
 ;
 ; :Author: isullivan May 6, 2012
 ;-
-FUNCTION holo_mapfn_apply,image,map_fn,mask,timing=timing,transpose=transpose
+FUNCTION holo_mapfn_apply,image,map_fn,mask,timing=timing,transpose=transpose,complex=complex,double=double,_Extra=extra
 t0=Systime(1)
 
-dimension=(size(image,/dimension))[0]
-elements=(size(image,/dimension))[1]
+dimension=Float((size(image,/dimension))[0])
+elements=Float((size(image,/dimension))[1])
 
-image_real_vector=reform(Real_part(image),Float(dimension)*elements)
-image_comp_vector=reform(Imaginary(image),Float(dimension)*elements)
-
-;image_complex_vector=reform(image,Float(dimension)*elements)
-;SPRSAX2,map_fn,image_complex_vector,result_image_complex,transpose=0,mask=0
-;result_image=reform(result_image_complex,dimension,elements)
-;result_image_conj=Shift(Reverse(reverse(Conj(result_image),1),2),1,1)
-;result_image+=result_image_conj
-
-SPRSAX2,map_fn,image_real_vector,result_image_real,image_comp_vector,result_image_comp,transpose=0,mask=0
-result_image=Complex(result_image_real,result_image_comp)
+IF Keyword_Set(complex) THEN BEGIN
+    image_complex_vector=reform(image,dimension*elements)
+    SPRSAX2,map_fn,image_complex_vector,result_image_complex,complex=complex,double=double,transpose=0,mask=0
+    result_image=reform(result_image_complex,dimension,elements)
+ENDIF ELSE BEGIN
+    image_real_vector=reform(Real_part(image),dimension*elements)
+    image_comp_vector=reform(Imaginary(image),dimension*elements)
+    SPRSAX2,map_fn,image_real_vector,result_image_real,image_comp_vector,result_image_comp,complex=complex,double=double,transpose=0,mask=0
+    result_image=Complex(result_image_real,result_image_comp)
+ENDELSE
 result_image=reform(result_image,dimension,elements)
 result_image_conj=Shift(Reverse(reverse(Conj(result_image),1),2),1,1)
 result_image+=result_image_conj

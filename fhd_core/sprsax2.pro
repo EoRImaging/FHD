@@ -13,8 +13,15 @@ IF tag_exist(A,'i_use') THEN BEGIN
     n=N_Elements(i_use)
     
     ;To use a douple precision or complex B, supply it from the calling program
-    IF N_Elements(B) EQ 0 THEN B=Fltarr(N_Elements(X))
-
+;    IF N_Elements(B) EQ 0 THEN B=Fltarr(N_Elements(X))
+    IF N_Elements(B) EQ 0 THEN BEGIN
+        CASE 1 OF
+            Keyword_Set(complex) AND Keyword_Set(double): B=Dcomplexarr(N_Elements(X))
+            Keyword_Set(double): B=Dblarr(N_Elements(X))
+            Keyword_Set(complex): B=Complexarr(N_Elements(X))
+            ELSE: B=Fltarr(N_Elements(X))
+        ENDCASE
+    ENDIF
     IF N_Params() GT 3 THEN BEGIN
         b2_flag=1 
         B2=B

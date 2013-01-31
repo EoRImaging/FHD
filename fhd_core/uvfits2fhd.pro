@@ -199,7 +199,7 @@ IF Keyword_Set(grid_recalculate) THEN BEGIN
 ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
 ;        ELSE $
         dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,file_path_fhd,timing=t_grid0,$
-            polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate)
+            polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate,_Extra=extra)
         t_grid[pol_i]=t_grid0
         dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0)
         

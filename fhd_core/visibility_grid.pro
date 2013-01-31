@@ -23,7 +23,8 @@
 ; :Author: Ian Sullivan
 ;-
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,$
-    timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,GPU_enable=GPU_enable
+    timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
+    GPU_enable=GPU_enable,complex=complex,double=double,_Extra=extra
 t0=Systime(1)
 heap_gc
 
@@ -105,6 +106,14 @@ vis_density=Float(Total(bin_n))/(dimension*elements)
 
 ;initialize ONLY those elements of the map_fn array that will receive data
 index_arr=Lindgen(dimension,elements)
+CASE 1 OF
+    Keyword_Set(complex) AND Keyword_Set(double): init_arr=Dcomplexarr(psf_dim2,psf_dim2)
+    Keyword_Set(double): init_arr=Dblarr(psf_dim2,psf_dim2)
+    Keyword_Set(complex): init_arr=Complexarr(psf_dim2,psf_dim2)
+    ELSE: init_arr=Fltarr(psf_dim2,psf_dim2)
+ENDCASE
+arr_type=Size(init_arr,/type)
+
 IF map_flag THEN BEGIN
     FOR bi=0L,n_bin_use-1 DO BEGIN
         xmin1=xmin[ri[ri[bin_i[bi]]]]
@@ -113,8 +122,7 @@ IF map_flag THEN BEGIN
         inds_init=where(ptr_test EQ 0,nzero)
         IF nzero EQ 0 THEN CONTINUE
         inds_init=(index_arr[xmin1:xmin1+psf_dim-1,ymin1:ymin1+psf_dim-1])[inds_init]
-;        FOR ii=0,nzero-1 DO map_fn[inds_init[ii]]=Ptr_new(dcomplexarr(psf_dim2,psf_dim2))
-        FOR ii=0,nzero-1 DO map_fn[inds_init[ii]]=Ptr_new(Dblarr(psf_dim2,psf_dim2))
+        FOR ii=0,nzero-1 DO map_fn[inds_init[ii]]=Ptr_new(init_arr)
     ENDFOR
 ENDIF
 
@@ -129,7 +137,7 @@ IF not Keyword_Set(silent) THEN Print,"Gridding "+pol_names[polarization]+" pola
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     ;MUST use double precision!
-    box_arr=dblarr(psf_dim*psf_dim,psf_dim*psf_dim)
+    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     
     x_off1=x_offset[inds]
@@ -150,7 +158,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;    bl_fr_ii=where(bl_fr_n,n_bl_fr_ii)
     
     vis_n=bin_n[bin_i[bi]]
-    box_matrix=dblarr(vis_n,psf_dim*psf_dim)
+    box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
     
     t3_0=Systime(1)
     t2+=t3_0-t1_0
@@ -168,7 +176,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t4+=t5_0-t4_0
     
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
-    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr_W
+    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Abs(box_arr_W)
     
     t6_0=Systime(1)
     t5+=t6_0-t5_0

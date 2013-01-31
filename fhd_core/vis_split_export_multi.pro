@@ -1,4 +1,5 @@
-PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list
+PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,$
+    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,_Extra=extra
 heap_gc
 
 n_obs=N_Elements(fhd_file_list)
@@ -54,17 +55,17 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     elements=obs.elements    
     
     model_arr1=vis_model_freq_split(source_list,obs,psf,model_uv_arr=model_uv_arr,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft)
+        weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft,_Extra=extra)
     
     dirty_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        n_avg=n_avg,timing=t_split1,/fft)    
+        n_avg=n_avg,timing=t_split1,/fft,_Extra=extra)    
     
     n_pol=(size(model_arr1,/dimension))[0]
     n_freq=(size(model_arr1,/dimension))[1]
     weights_in=Ptrarr(n_pol,n_freq,/allocate)
     FOR i=0,N_Elements(weights_in)-1 DO *weights_in[i]=complexarr(obs.dimension,obs.elements)+1    
     weights_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=weights_in,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        n_avg=n_avg,timing=t_split2,/no_data,/fft)
+        n_avg=n_avg,timing=t_split2,/no_data,/fft,_Extra=extra)
         
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq-1 DO BEGIN
         (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],*hpx_cnv[obs_i])

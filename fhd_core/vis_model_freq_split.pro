@@ -1,6 +1,6 @@
 FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
     weights_arr=weights_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,$
-    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path
+    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,_Extra=extra
 ;no need to specify data_directory or filename if obs exists
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ext='.UVFITS'
@@ -73,7 +73,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         freq_cut=where(freq_bin_i NE fi,n_cut)
         IF n_cut GT 0 THEN flags_use[freq_cut,*]=0
         dirty_UV=visibility_grid(vis_use,flags_use,obs,psf,params,timing=t_grid0,$
-            polarization=pol_i,weights=weights_grid,silent=1,mapfn_recalculate=0)
+            polarization=pol_i,weights=weights_grid,silent=1,mapfn_recalculate=0,_Extra=extra)
         IF Keyword_Set(fft) THEN BEGIN
             *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv)
             *weights_arr[pol_i,fi]=dirty_image_generate(weights_grid)
