@@ -97,7 +97,7 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     dimension=obs.dimension
     elements=obs.elements
 ;    rotation=obs.rotation
-    frequency_array=(*obs.bin).freq
+    frequency_array=obs.freq
     kbinsize=obs.kpix
     kx_arr=params.uu/kbinsize
     ky_arr=params.vv/kbinsize
@@ -113,7 +113,7 @@ ENDIF ELSE phase_shift=1.
 kbinsize=obs.kpix
 degpix=obs.degpix
 dimension=obs.dimension
-bandwidth=Round((Max((*obs.bin).freq)-Min((*obs.bin).freq))/1E5)/10.
+bandwidth=Round((Max(obs.freq)-Min(obs.freq))/1E5)/10.
 fov=dimension*degpix
 k_span=kbinsize*dimension
 print,String(format='("Image size used: ",A," pixels")',Strn(dimension))
