@@ -17,11 +17,11 @@ healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_fi
 catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 
 n_files=N_Elements(vis_file_list)
-FOR fi=0,n_files-1 DO BEGIN
+FOR fi=6,n_files-1 DO BEGIN
     beam_recalculate=recalculate_all
     healpix_recalculate=recalculate_all
     mapfn=recalculate_all
-    flag=recalculate_all
+    flag=0
     grid=recalculate_all
     deconvolve=recalculate_all
     export_images=export_images
@@ -30,12 +30,14 @@ FOR fi=0,n_files-1 DO BEGIN
 ;    dimension=2048.
     max_sources=10000.
     pad_uv_image=1.
+    precess=0
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
-        dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image
+        dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
+        complex=complex_beam,double=double_precison_beam,precess=precess
 ENDFOR
 
 map_projection='orth'
