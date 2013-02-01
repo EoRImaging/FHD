@@ -3,11 +3,11 @@ except=!except
 !except=0 
 heap_gc
 
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
-version=1
+version=0
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 
 data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
@@ -18,10 +18,10 @@ healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_fi
 
 catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 
-complex_beam=1
+complex_beam=0
 double_precison_beam=0
 n_files=N_Elements(vis_file_list)
-FOR fi=2,2 DO BEGIN
+FOR fi=0L,n_files DO BEGIN
     beam_recalculate=0
     healpix_recalculate=recalculate_all
     mapfn=recalculate_all
@@ -32,7 +32,7 @@ FOR fi=2,2 DO BEGIN
     noise_calibrate=0
     align=0
     dimension=1024.
-    max_sources=1000.
+    max_sources=10000.
     pad_uv_image=2.
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
