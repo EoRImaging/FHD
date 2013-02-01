@@ -188,9 +188,9 @@ t_mapfn_gen=fltarr(n_pol)
 ;Grid the visibilities
 max_arr=fltarr(n_pol)
 cal=fltarr(n_pol)
-test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[0]+'.sav')
+test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
 IF test_mapfn EQ 0 THEN grid_recalculate=1
-test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[0]+'.sav')
+test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav')
 IF test_mapfn EQ 0 THEN mapfn_recalculate=(grid_recalculate=1)
 IF Keyword_Set(grid_recalculate) THEN BEGIN
     print,'Gridding visibilities'
