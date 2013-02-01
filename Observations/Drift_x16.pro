@@ -21,7 +21,7 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 complex_beam=0
 double_precison_beam=0
 n_files=N_Elements(vis_file_list)
-FOR fi=0L,n_files DO BEGIN
+FOR fi=0L,n_files-1 DO BEGIN
     beam_recalculate=0
     healpix_recalculate=recalculate_all
     mapfn=recalculate_all

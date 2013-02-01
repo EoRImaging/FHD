@@ -256,5 +256,6 @@ ENDIF
 ;mwa_tile_locate,obs=obs,params=params,psf=psf
 timing=Systime(1)-t0
 print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
+print,''
 !except=except
 END
