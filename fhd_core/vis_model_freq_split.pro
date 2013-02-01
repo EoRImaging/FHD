@@ -58,7 +58,10 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 nf=Max(freq_bin_i)+1L
-IF model_flag THEN vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=fhd_file_path)
+IF model_flag THEN BEGIN
+   vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=fhd_file_path,timing=t_model)
+   print,"Vis modeling and degridding: ", strn(t_model)
+ENDIF
 residual_arr=Ptrarr(n_pol,nf,/allocate)
 weights_arr=Ptrarr(n_pol,nf,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
@@ -68,6 +71,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         model_flag:vis_use=*vis_model_arr[pol_i]/n_avg
     ENDCASE
     
+    t_grid=0
     FOR fi=0L,nf-1 DO BEGIN
         flags_use=*flag_arr[pol_i]
         freq_cut=where(freq_bin_i NE fi,n_cut)
@@ -81,7 +85,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             *residual_arr[pol_i,fi]=dirty_uv
             *weights_arr[pol_i,fi]=weights_grid
         ENDELSE
+        t_grid+=t_grid0
     ENDFOR  
+    print,"Gridding timing: ",strn(t_grid)
     vis_use=0 ;free memory  
 ENDFOR
 timing=Systime(1)-t0

@@ -136,8 +136,8 @@ t6=0
 IF not Keyword_Set(silent) THEN Print,"Gridding "+pol_names[polarization]+" polarization time elapsed: estimated time remaining"
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
-    ;MUST use double precision!
-    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
+;    ;MUST use double precision!
+;    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     
     x_off1=x_offset[inds]

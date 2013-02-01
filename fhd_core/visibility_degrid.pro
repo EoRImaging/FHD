@@ -123,7 +123,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     vis_n=bin_n[bin_i[bi]]
     box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
     
-    box_arr=image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]
+    box_arr=Reform(image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim*psf_dim)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO BEGIN

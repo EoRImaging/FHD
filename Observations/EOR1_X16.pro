@@ -1,4 +1,4 @@
-PRO EOR1_X16,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images
+PRO EOR1_X16,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version
 except=!except
 !except=0 
 heap_gc
@@ -7,7 +7,7 @@ IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(export_images) EQ 0 THEN export_images=1
-version=0
+IF N_Elements(version) EQ 0 THEN version=0
 
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1'])

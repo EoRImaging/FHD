@@ -1,4 +1,4 @@
-FUNCTION vis_source_model,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path
+FUNCTION vis_source_model,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path,timing=timing
 
 t0=Systime(1)
 
@@ -54,7 +54,7 @@ n_sources=N_Elements(source_list)
 ;ycen=frequency_array#ky_arr
 
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
-    
+    t_model0=Systime(1)
     beam_corr_src=fltarr(n_pol,n_sources)
     FOR pol_i=0,n_pol-1 DO BEGIN
         beam_single=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
@@ -70,6 +70,8 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=source_list[si].flux.(pol_i)*beam_corr_src[pol_i,si]*source_uv
         
     ENDFOR
+    t_model=Systime(1)-t_model0
+    print,"DFT timing: ",strn(t_model)
 ENDIF
 
 vis_arr=Ptrarr(n_pol,/allocate)
@@ -104,7 +106,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        ENDFOR
 ;    ENDFOR
     *vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],*flag_arr[pol_i],obs,psf,params,$
-        timing=timing,polarization=polarization,silent=silent,complex=complex,double=double,_Extra=extra)
+        timing=t_degrid0,polarization=polarization,silent=silent,complex=complex,double=double,_Extra=extra)
+    print,"Degridding timing: ",strn(t_degrid0)
 ENDFOR
 
 timing=Systime(1)-t0
