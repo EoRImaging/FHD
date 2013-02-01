@@ -83,27 +83,28 @@ psf_dim=(Size(*psf_base[0],/dimension))[0]
 psf_resolution=(Size(psf_base,/dimension))[2]
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    vis_single=Complexarr(n_freq,vis_dimension)
-    FOR bi=0L,nbaselines-1 DO BEGIN
-        baseline_i=bi mod nbaselines
-        IF Keyword_Set(flag_switch) THEN IF Total((*flag_arr[pol_i])[*,bi+bin_offset]) EQ 0 THEN CONTINUE
-        IF kx_arr[bi] EQ 0 THEN CONTINUE ;skip the auto-correlations
-        FOR fi=0L,n_freq-1 DO BEGIN
-            freq_i=freq_bin_i[fi]
-            IF Keyword_Set(flag_switch) THEN IF Total((*flag_arr[pol_i])[fi,bi+bin_offset]) EQ 0 THEN CONTINUE
-            freq=frequency_array[fi]
-            
-            FOR ti=0L,n_samples-1 DO BEGIN
-                bi_use=bi+bin_offset[ti]
-                IF Keyword_Set(flag_switch) THEN IF (*flag_arr[pol_i])[fi,bi_use] EQ 0 THEN CONTINUE
-                vis_single[fi,bi_use]=visibility_psf(psf_base, psf_residuals_n, psf_residuals_i, psf_residuals_val,$
-                    freq_i=freq_i,baseline_i=baseline_i,xcenter=kx_arr[bi_use]*freq,$
-                    ycenter=ky_arr[bi_use]*freq,image_sample=*model_uv_arr[pol_i],dimension=dimension,$
-                    polarization=pol_i,psf_dim=psf_dim,psf_resolution=psf_resolution)
-            ENDFOR
-        ENDFOR
-    ENDFOR
-    *vis_arr[pol_i]=vis_single
+;    vis_single=Complexarr(n_freq,vis_dimension)
+;    FOR bi=0L,nbaselines-1 DO BEGIN
+;        baseline_i=bi mod nbaselines
+;        IF Keyword_Set(flag_switch) THEN IF Total((*flag_arr[pol_i])[*,bi+bin_offset]) EQ 0 THEN CONTINUE
+;        IF kx_arr[bi] EQ 0 THEN CONTINUE ;skip the auto-correlations
+;        FOR fi=0L,n_freq-1 DO BEGIN
+;            freq_i=freq_bin_i[fi]
+;            IF Keyword_Set(flag_switch) THEN IF Total((*flag_arr[pol_i])[fi,bi+bin_offset]) EQ 0 THEN CONTINUE
+;            freq=frequency_array[fi]
+;            
+;            FOR ti=0L,n_samples-1 DO BEGIN
+;                bi_use=bi+bin_offset[ti]
+;                IF Keyword_Set(flag_switch) THEN IF (*flag_arr[pol_i])[fi,bi_use] EQ 0 THEN CONTINUE
+;                vis_single[fi,bi_use]=visibility_psf(psf_base, psf_residuals_n, psf_residuals_i, psf_residuals_val,$
+;                    freq_i=freq_i,baseline_i=baseline_i,xcenter=kx_arr[bi_use]*freq,$
+;                    ycenter=ky_arr[bi_use]*freq,image_sample=*model_uv_arr[pol_i],dimension=dimension,$
+;                    polarization=pol_i,psf_dim=psf_dim,psf_resolution=psf_resolution)
+;            ENDFOR
+;        ENDFOR
+;    ENDFOR
+    *vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],*flag_arr[pol_i],obs,psf,params,$
+        timing=timing,polarization=polarization,silent=silent,complex=complex,double=double,_Extra=extra)
 ENDFOR
 
 timing=Systime(1)-t0

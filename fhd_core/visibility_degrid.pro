@@ -1,30 +1,6 @@
-;+
-; :Description:
-;    Grids visibilities to the uv plane using a high-resolution beam model. Written using the efficient notation of holo_mapfn_generate.pro
-;
-; :Params:
-;    visibility_array - single polarization visibility data
-;    
-;    flag_arr - 
-;    
-;    obs - structure containing details of the observation
-;    
-;    params - structure containing u and v coordinates of the baselines, in meters/c.
-;    
-;    psf - structure containing the high-resolution gridded beam model.
-;
-; :Keywords:
-;    weights - if set, contains the weights generated from gridding visibilities with value 1
-;    
-;    timing
-;    
-;    polarization - polarization index used to pick the correct beam
-;
-; :Author: Ian Sullivan
-;-
-FUNCTION visibility_degrid,image_uv,flag_arr,obs,psf,params,file_path_fhd,$
+FUNCTION visibility_degrid,image_uv,flag_arr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
-    GPU_enable=GPU_enable,complex=complex,double=double,_Extra=extra
+    complex=complex,double=double,_Extra=extra
 t0=Systime(1)
 heap_gc
 
@@ -62,8 +38,6 @@ vis_dimension=Float(nbaselines*n_samples)
 IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_frequencies,vis_dimension) $
     ELSE visibility_array=Complexarr(n_frequencies,vis_dimension) 
 
-;image_uv=Complexarr(dimension,elements)
-
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
@@ -78,7 +52,6 @@ range_test_y_i=where((ymin LT 0) OR (ymax GE elements),n_test_y)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
-;dist_test=Sqrt((xcen-dimension/2.)^2.+(ycen-elements/2.)^2.)
 dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
 IF n_dist_flag GT 0 THEN BEGIN
@@ -138,7 +111,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     x_off1=x_offset[inds]
     y_off1=y_offset[inds]
-;    vis_box=visibility_array[inds]
         
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
@@ -147,11 +119,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     base_i=baseline_i[bt_i]
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
-    
-    ;match all visibilities that use exactly the same beam model
-;    bl_fr_i=fbin+base_i*nfreq_bin
-;    bl_fr_n=histogram(bl_fr_i,binsize=1,reverse_indices=rbfi,omin=bl_fr_min)
-;    bl_fr_ii=where(bl_fr_n,n_bl_fr_ii)
     
     vis_n=bin_n[bin_i[bi]]
     box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
@@ -167,43 +134,18 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-;    box_arr=vis_box#box_matrix/vis_density
     vis_box=box_matrix#box_arr
-;    IF Arg_present(weights) THEN box_arr_W=Replicate(1./vis_density,bin_n[bin_i[bi]])#box_matrix
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
     visibility_array[inds]=vis_box
     
-;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Abs(box_arr_W)
-    
-    t6_0=Systime(1)
-    t5+=t6_0-t5_0
-;    IF map_flag THEN BEGIN
-;        box_arr_map=matrix_multiply(box_matrix,box_matrix,/atranspose)/vis_density
-;        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
-;            ij=i+j*psf_dim
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-;        ENDFOR
-;    ENDIF
-    t6_1=Systime(1)
-;    t6+=t6_1-t6_0
-    t1+=t6_1-t1_0 
+    t5_1=Systime(1)
+    t5+=t5_1-t5_0
+    t1+=t5_1-t1_0 
 ENDFOR
 
-;IF map_flag THEN BEGIN
-;    map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension)
-;    save,map_fn,filename=file_path_fhd+'_mapfn_'+pol_names[polarization]+'.sav'
-;ENDIF
-;
-;image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
-;image_uv=(image_uv+image_uv_conj)/2.
-;
-;IF Arg_present(weights) THEN weights=(weights+Shift(Reverse(reverse(weights,1),2),1,1))/2.
-;;normalization=dimension*elements
-;;image_uv*=normalization ;account for FFT convention
-
-IF not Keyword_Set(silent) THEN print,t1,t2,t3,t4,t5,t6
+IF not Keyword_Set(silent) THEN print,t1,t2,t3,t4,t5
 timing=Systime(1)-t0
 RETURN,visibility_array
 END
