@@ -73,8 +73,8 @@ offset_lon=5.;15. paper 10 memo
 reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=0;1 paper 3 memo
 label_spacing=1.
-astr_out=(*obs_out.bin).astr
-astr=(*obs.bin).astr
+astr_out=obs_out.astr
+astr=obs.astr
 
 si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]

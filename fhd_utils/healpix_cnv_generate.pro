@@ -14,7 +14,7 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF ELSE IF N_Elements(obs) EQ 0 THEN restore,file_path_fhd+'_obs.sav'
 
 t00=Systime(1)
-astr=(*obs.bin).astr
+astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
 IF N_Elements(radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4.

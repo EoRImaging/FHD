@@ -34,10 +34,10 @@ icomp=Complex(0,1)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 
-freq_bin_i=(*obs.bin).fbin_i
+freq_bin_i=obs.fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-bin_offset=(*obs.bin).bin_offset
-frequency_array=(*obs.bin).freq
+bin_offset=(*obs.baseline_info).bin_offset
+frequency_array=obs.freq
 
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize

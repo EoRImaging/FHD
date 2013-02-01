@@ -50,7 +50,7 @@ IF N_Elements(flag_arr) EQ 0 THEN BEGIN
 ENDIF
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
-    freq_bin_i=(*obs.bin).fbin_i
+    freq_bin_i=obs.fbin_i
     n_avg=Round(n_freq/Max(freq_bin_i+1))
     
 ENDIF ELSE BEGIN

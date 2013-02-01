@@ -39,10 +39,10 @@ ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
-freq_bin_i=(*obs.bin).fbin_i
+freq_bin_i=obs.fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-bin_offset=(*obs.bin).bin_offset
-frequency_array=(*obs.bin).freq
+bin_offset=(*obs.basline_info).bin_offset
+frequency_array=obs.freq
 
 psf_base=psf.base
 psf_dim=(Size(*psf_base[0],/dimension))[0]
