@@ -42,6 +42,8 @@ zenith_ang=angle_difference(obsdec,obsra,zendec,zenra,/degree)
 ;parallactic_ang_argument=((Sin(zendec*!DtoR)-Sin(obsdec*!DtoR))*Cos(zenith_ang*!DtoR))/(Cos(obsdec*!DtoR)*Sin(zenith_ang*!DtoR))
 ;IF parallactic_ang_argument GT 1 THEN parallactic_ang_argument=1.-(parallactic_ang_argument-1.)
 hour_angle=lon_offset
+;parallactic angle from http://www.astron.nl/aips++/docs/glossary/p.html#parallactic_angle with lambda=zendec, h=hour_angle, delta=obsdec
+;minus sign??
 parallactic_ang=-!Radeg*atan(-sin(!DtoR*hour_angle),cos(!DtoR*obsdec)*tan(!DtoR*zendec)-sin(!DtoR*obsdec)*cos(!DtoR*hour_angle))
 ;parallactic_ang=Atan(parallactic_ang_argument<1)*!RaDeg ;
 

@@ -7,10 +7,7 @@ IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
 IF N_Elements(alt) EQ 0 THEN alt=377.83 ;altitude (meters)
 IF N_Elements(pflag) EQ 0 THEN pflag=0
 
-IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
-    obsra=header.obsra
-    obsdec=header.obsdec
-    
+IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN    
     time=params.time
     b0i=Uniq(time)
     time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600.
@@ -36,33 +33,22 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     month=Float(Strmid(header.date,5,2))
     day=Float(Strmid(header.date,8,2))
     jdate=double(header.jd0)+time[b0i]
+;    caldat,min(jdate),month1,day1,year1,hour1,minute1,second1
+;    print,hour1,minute1,second1
     epoch=Double(year+ymd2dn(year,month,day)/365.25)
-
-    zenpos2,Min(Jdate),zenra,zendec, lat=lat, lng=lon,/degree,/J2000
-
-;    IF Abs(obsra-zenra) GT 90. THEN ra_diff=obsra-((obsra GT zenra) ? 360.:(-360.))-zenra ELSE ra_diff=obsra-zenra
-;    dec_diff=obsdec-zendec
-;    lon_diff=ra_diff*Cos(zendec*!DtoR)
-;    IF N_Elements(rotation) EQ 0 THEN BEGIN
-;    ;    rotation=-ra_diff*Sin(obsdec*!DtoR)/(1-Sin(dec_diff*!DtoR))
-;    ;    rotation=-Atan(Sin(lon_diff*!DtoR)/(Cos(lon_diff*!DtoR)*Cos(obsdec*!DtoR)))*!RaDeg ;calculated from rotation matrices
-;        rotation=-Float(Atan(Sin(Double(lon_diff*!DtoR)),(Cos(Double(lon_diff*!DtoR))*Cos(Double(obsdec*!DtoR))))*!RaDeg) ;calculated from rotation matrices
-;        rotation*=Sin(zendec*!DtoR)*Cos(dec_diff*!DtoR)^2.
-;    ENDIF
-;    obsra0=obsra
-;    obsdec0=obsdec
-;    zenra0=zenra
-;    zendec0=zendec
-;    JPrecess,obsra0,obsdec0,obsra1,obsdec1,epoch=epoch
-;    JPrecess,zenra0,zendec0,zenra1,zendec1,epoch=epoch
-;    obsra_shift=obsra1-obsra0
-;    obsdec_shift=obsdec1-obsdec0
-;    zenra_shift=zenra1-zenra0
-;    zendec_shift=zendec1-zendec0
-;    obsra+=obsra_shift
-;    obsdec+=obsdec_shift
-;    zenra+=zenra_shift
-;    zendec+=zendec_shift
+;    time_offset=60.
+;    ra_offset=0.
+;    dec_offset=-0.05
+    time_offset=0.
+    ra_offset=0.
+    dec_offset=0.
+    time_offset/=(24.*3600.)
+    
+    obsra=header.obsra-ra_offset
+    obsdec=header.obsdec-dec_offset
+    Precess,obsra,obsdec,epoch,2000.
+;    Precess,obsra,obsdec,2000.,epoch
+    zenpos2,Min(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
 
     ;256 tile upper limit is hard-coded in CASA format
     ;these tile numbers have been verified to be correct
