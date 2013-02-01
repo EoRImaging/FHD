@@ -10,7 +10,7 @@ IF N_Elements(export_images) EQ 0 THEN export_images=1
 version=0
 
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
-data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1'])
+data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1'])
 
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)

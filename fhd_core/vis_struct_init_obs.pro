@@ -130,6 +130,6 @@ struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
     obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,$
     pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,jd0:jd0,$
     max_baseline:max_baseline,min_baseline:min_baseline,$
-    tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,astr:astr,basline_info:Ptr_new(arr)}    
+    freq:frequency_array,fbin_i:freq_bin_i,astr:astr,basline_info:Ptr_new(arr)}    
 RETURN,struct
 END
