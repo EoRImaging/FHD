@@ -89,7 +89,7 @@ xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 rvals=Sqrt(xvals^2.+yvals^2.)
 
-vis_coordinates,obs,ra_arr,dec_arr,astr=astr
+projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr
 
 ps_not_used=1./2.
 pc_not_used=1.
