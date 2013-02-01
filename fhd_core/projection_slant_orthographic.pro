@@ -15,7 +15,7 @@ IF Keyword_Set(obs) THEN BEGIN
 ;    rotation=obs.rotation
     obsx=obs.obsx
     obsy=obs.obsy
-    astr=(*obs.bin).astr
+    astr=obs.astr
     xvals=meshgrid(dimension,elements,1)
     yvals=meshgrid(dimension,elements,2)
     xy2ad,xvals,yvals,astr,ra_arr,dec_arr

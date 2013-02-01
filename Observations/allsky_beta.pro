@@ -2,7 +2,7 @@ PRO allsky_beta,cleanup=cleanup
 except=!except
 !except=0 
 
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=1
 version=0
 
@@ -21,7 +21,7 @@ FOR fi=0,n_files-1 DO BEGIN
     beam_recalculate=recalculate_all
     healpix_recalculate=recalculate_all
     mapfn=recalculate_all
-    flag=0.
+    flag=recalculate_all
     grid=recalculate_all
     deconvolve=recalculate_all
     export_images=export_images
