@@ -41,7 +41,7 @@ max_baseline=obs.max_baseline
 
 freq_bin_i=obs.fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-bin_offset=(*obs.basline_info).bin_offset
+bin_offset=(*obs.baseline_info).bin_offset
 frequency_array=obs.freq
 
 psf_base=psf.base

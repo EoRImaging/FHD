@@ -63,8 +63,8 @@ n_tiles=obs.n_tile
 n_frequencies=obs.n_freq
 n_pol=obs.n_pol
 
-tile_A=(*obs.basline_info).tile_A
-tile_B=(*obs.basline_info).tile_B
+tile_A=(*obs.baseline_info).tile_A
+tile_B=(*obs.baseline_info).tile_B
 
 frequency_array=obs.freq
 freq_bin_i=obs.fbin_i
@@ -72,7 +72,7 @@ nfreq_bin=Max(freq_bin_i)+1
 
 freq_center=fltarr(nfreq_bin)
 FOR fi=0L,nfreq_bin-1 DO freq_center[fi]=Median(frequency_array[where(freq_bin_i EQ fi)])
-bin_offset=(*obs.basline_info).bin_offset
+bin_offset=(*obs.baseline_info).bin_offset
 nbaselines=bin_offset[1]
 
 obsra=obs.obsra
