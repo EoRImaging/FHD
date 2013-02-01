@@ -5,6 +5,8 @@ heap_gc
 
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
+IF N_Elements(export_images) EQ 0 THEN export_images=1
 version=0
 
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
@@ -16,12 +18,6 @@ fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs')
 
 catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
-;filename_list=filename_list[[0,25]]
-
-;filename_list=Reverse(filename_list)
-
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
-IF N_Elements(export_images) EQ 0 THEN export_images=1
 
 complex_beam=0
 double_precison_beam=0
@@ -30,7 +26,7 @@ FOR fi=0,n_files-1 DO BEGIN
     beam_recalculate=recalculate_all
     healpix_recalculate=recalculate_all
     mapfn=recalculate_all
-    flag=recalculate_all
+    flag=0
     grid=recalculate_all
     deconvolve=recalculate_all
     export_images=export_images
