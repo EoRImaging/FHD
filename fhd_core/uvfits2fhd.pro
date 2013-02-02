@@ -10,7 +10,8 @@
 ; :Keywords:
 ;    data_directory - working directory
 ;    
-;    filename - uvfits filename, omitting the .uvfits extension. If the data is already calibrated, it should end with _cal.uvfits instead of just .uvfits
+;    filename - uvfits filename, omitting the .uvfits extension. 
+;       If the data is already calibrated, it should end with _cal.uvfits instead of just .uvfits
 ;    
 ;    beam_recalculate - if set, generates a new beam model
 ;    
@@ -22,7 +23,8 @@
 ;    
 ;    n_pol - 1: use xx only, 2: use xx and xy, 4: use xx, yy, xy, and yx (Default: as many as are available)
 ;    
-;    flag - set to look for anomalous visibility data and update flags (default=1, also set to 1 if '_flags.sav' does not exist)
+;    flag - set to look for anomalous visibility data and update flags 
+;       (default=1, also set to 1 if '_flags.sav' does not exist)
 ;    
 ;    Extra - pass any non-default parameters to fast_holographic_deconvolution through this parameter 
 ;
@@ -41,13 +43,12 @@ heap_gc
 t0=Systime(1)
 ;IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(calibrate) EQ 0 THEN calibrate=0
-;IF N_Elements(cut_baselines) EQ 0 THEN cut_baselines=12;0 ;minimum baseline threshold to cut BEFORE processing. If negative, specifies a maximum instead.
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=12.
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=1
-IF N_Elements(flag) EQ 0 THEN flag=1.
+IF N_Elements(flag) EQ 0 THEN flag=0.
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=1
 IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
 ;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
@@ -62,6 +63,7 @@ IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
 
 ;vis_path_default,data_directory,filename,file_path,version=version,_Extra=extra
 print,'Deconvolving: ',file_path_vis
+print,systime()
 print,'Output file_path:',file_path_fhd
 ext='.uvfits'
 header_filepath=file_path_fhd+'_header.sav'
@@ -94,7 +96,7 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     print,"REPHASING VISIBILITIES TO POINT AT ZENITH!!"
     dimension=obs.dimension
     elements=obs.elements
-    rotation=obs.rotation
+;    rotation=obs.rotation
     frequency_array=obs.freq
     kbinsize=obs.kpix
     kx_arr=params.uu/kbinsize
@@ -105,8 +107,21 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     
     hdr.obsra=obs.zenra
     hdr.obsdec=obs.zendec
-    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,rotation=rotation,_Extra=extra)
+    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
 ENDIF ELSE phase_shift=1.
+
+kbinsize=obs.kpix
+degpix=obs.degpix
+dimension=obs.dimension
+bandwidth=Round((Max(obs.freq)-Min(obs.freq))/1E5)/10.
+fov=dimension*degpix
+k_span=kbinsize*dimension
+print,String(format='("Image size used: ",A," pixels")',Strn(dimension))
+print,String(format='("Image resolution used: ",A," degrees/pixel")',Strn(degpix))
+print,String(format='("Field of view used: ",A," degrees")',Strn(fov))
+print,String(format='("Bandwidth used: ",A," MHz")',Strn(bandwidth))
+print,String(format='("UV resolution used: ",A," wavelengths")',Strn(kbinsize))
+print,String(format='("UV image size used: ",A," wavelengths")',Strn(k_span))
 
 pol_dim=hdr.pol_dim
 freq_dim=hdr.freq_dim
@@ -146,14 +161,16 @@ FOR pol_i=0,(n_pol<2)-1 DO BEGIN
     beam_mask*=mask0
 ENDFOR
 
-IF Keyword_Set(healpix_recalculate) THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,$
-    nside=nside,mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
+IF Keyword_Set(healpix_recalculate) OR (file_test(file_path_fhd+'_hpxcnv.sav') EQ 0) THEN $
+    hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
+        mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
 hpx_cnv=0
 
 vis_arr=Ptrarr(n_pol,/allocate)
 flag_arr=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))*phase_shift
+    *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),$
+        Reform(data_array[imaginary_index,pol_i,*,*]))*phase_shift
     *flag_arr[pol_i]=reform(flag_arr0[pol_i,*,*])
 ENDFOR
 ;free memory
@@ -171,9 +188,9 @@ t_mapfn_gen=fltarr(n_pol)
 ;Grid the visibilities
 max_arr=fltarr(n_pol)
 cal=fltarr(n_pol)
-test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[0]+'.sav')
+test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
 IF test_mapfn EQ 0 THEN grid_recalculate=1
-test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[0]+'.sav')
+test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav')
 IF test_mapfn EQ 0 THEN mapfn_recalculate=(grid_recalculate=1)
 IF Keyword_Set(grid_recalculate) THEN BEGIN
     print,'Gridding visibilities'
@@ -183,14 +200,16 @@ IF Keyword_Set(grid_recalculate) THEN BEGIN
 ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
 ;        ELSE $
         dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,file_path_fhd,timing=t_grid0,$
-            polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate)
+            polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate,_Extra=extra)
         t_grid[pol_i]=t_grid0
         dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0)
         
 ;        IF Keyword_Set(CASA_calibration) THEN BEGIN
 ;            norm=Max(*psf.base[pol_i,(Size(psf.base,/dimension))[1]/2.,0,0])
-;            n_vis_orig=((obs.bin_offset)[1]-obs.n_tile)*obs.n_freq*Float(N_Elements(obs.bin_offset)) ;I have subtracted the auto-correlations
-;;            norm*=n_vis_orig/obs.n_vis ;vis_flag updates obs.n_vis to only the number of unflagged visibilities (potentially need to update during gridding in case some are outside of the image!)
+;            ;I have subtracted the auto-correlations
+;            n_vis_orig=((obs.bin_offset)[1]-obs.n_tile)*obs.n_freq*Float(N_Elements(obs.bin_offset)) 
+;;            norm*=n_vis_orig/obs.n_vis ;vis_flag updates obs.n_vis to only the number of unflagged visibilities 
+;                           ;(potentially need to update during gridding in case some are outside of the image!)
 ;            dirty_UV/=norm^2.
 ;            dirty_img/=norm^2.
 ;;            weights_grid*=norm
@@ -237,5 +256,6 @@ ENDIF
 ;mwa_tile_locate,obs=obs,params=params,psf=psf
 timing=Systime(1)-t0
 print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
+print,''
 !except=except
 END

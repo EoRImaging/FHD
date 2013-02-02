@@ -1,16 +1,13 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
-    lon=lon,lat=lat,alt=alt,rotation=rotation, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
-    FoV=FoV, _Extra=extra
+    lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
+    FoV=FoV,precess=precess, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
 IF N_Elements(alt) EQ 0 THEN alt=377.83 ;altitude (meters)
 IF N_Elements(pflag) EQ 0 THEN pflag=0
 
-IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
-    obsra=header.obsra
-    obsdec=header.obsdec
-    
+IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN    
     time=params.time
     b0i=Uniq(time)
     time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600.
@@ -36,33 +33,22 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     month=Float(Strmid(header.date,5,2))
     day=Float(Strmid(header.date,8,2))
     jdate=double(header.jd0)+time[b0i]
+;    caldat,min(jdate),month1,day1,year1,hour1,minute1,second1
+;    print,hour1,minute1,second1
     epoch=Double(year+ymd2dn(year,month,day)/365.25)
-
-    zenpos2,Min(Jdate),zenra,zendec, lat=lat, lng=lon,/degree,/J2000
-
-    IF Abs(obsra-zenra) GT 90. THEN ra_diff=obsra-((obsra GT zenra) ? 360.:(-360.))-zenra ELSE ra_diff=obsra-zenra
-    dec_diff=obsdec-zendec
-    lon_diff=ra_diff*Cos(zendec*!DtoR)
-    IF N_Elements(rotation) EQ 0 THEN BEGIN
-    ;    rotation=-ra_diff*Sin(obsdec*!DtoR)/(1-Sin(dec_diff*!DtoR))
-    ;    rotation=-Atan(Sin(lon_diff*!DtoR)/(Cos(lon_diff*!DtoR)*Cos(obsdec*!DtoR)))*!RaDeg ;calculated from rotation matrices
-        rotation=-Float(Atan(Sin(Double(lon_diff*!DtoR)),(Cos(Double(lon_diff*!DtoR))*Cos(Double(obsdec*!DtoR))))*!RaDeg) ;calculated from rotation matrices
-        rotation*=Sin(zendec*!DtoR)*Cos(dec_diff*!DtoR)^2.
-    ENDIF
-;    obsra0=obsra
-;    obsdec0=obsdec
-;    zenra0=zenra
-;    zendec0=zendec
-;    JPrecess,obsra0,obsdec0,obsra1,obsdec1,epoch=epoch
-;    JPrecess,zenra0,zendec0,zenra1,zendec1,epoch=epoch
-;    obsra_shift=obsra1-obsra0
-;    obsdec_shift=obsdec1-obsdec0
-;    zenra_shift=zenra1-zenra0
-;    zendec_shift=zendec1-zendec0
-;    obsra+=obsra_shift
-;    obsdec+=obsdec_shift
-;    zenra+=zenra_shift
-;    zendec+=zendec_shift
+;    time_offset=60.
+;    ra_offset=0.
+;    dec_offset=-0.05
+    time_offset=0.
+    ra_offset=0.
+    dec_offset=0.
+    time_offset/=(24.*3600.)
+    
+    obsra=header.obsra-ra_offset
+    obsdec=header.obsdec-dec_offset
+    IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
+;    Precess,obsra,obsdec,2000.,epoch
+    zenpos2,Min(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
 
     ;256 tile upper limit is hard-coded in CASA format
     ;these tile numbers have been verified to be correct
@@ -95,8 +81,10 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
     IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
     
-    vis_coordinates,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-        dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
+    projection_slant_orthographic,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
+        dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
+;    vis_coordinates,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
+;        dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
 ENDIF 
 
 IF N_Elements(dimension) EQ 0 THEN dimension=1024. ;dimension of the image in pixels; dimension = x direction
@@ -114,7 +102,7 @@ IF N_Elements(frequency_array) EQ 0 THEN frequency_array=fltarr(1) ;full frequen
 IF N_Elements(freq_bin_i) EQ 0 THEN freq_bin_i=lonarr(1) ;bin number of each frequency. The same psf is used for all frequencies with the same bin number
 IF N_Elements(zenra) EQ 0 THEN zenra=0. ;degrees
 IF N_Elements(zendec) EQ 0 THEN zendec=0. ;degrees
-IF N_Elements(rotation) EQ 0 THEN rotation=0. ;degrees
+;IF N_Elements(rotation) EQ 0 THEN rotation=0. ;degrees
 IF N_Elements(obsra) EQ 0 THEN obsra=0. ;degrees
 IF N_Elements(obsdec) EQ 0 THEN obsdec=0. ;degrees
 IF N_Elements(calibration) EQ 0 THEN calibration=fltarr(4)+1.
@@ -136,10 +124,12 @@ ENDIF
 ;    obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,rotation:rotation,$
 ;    pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,$
 ;    max_baseline:max_baseline,min_baseline:min_baseline,astr:astr}
-arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,astr:astr}
+;arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,astr:astr}
+arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate}
 struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
-    obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,rotation:rotation,$
+    obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,$
     pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,jd0:jd0,$
-    max_baseline:max_baseline,min_baseline:min_baseline,bin:Ptr_new(arr)}    
+    max_baseline:max_baseline,min_baseline:min_baseline,$
+    freq:frequency_array,fbin_i:freq_bin_i,astr:astr,baseline_info:Ptr_new(arr)}    
 RETURN,struct
 END

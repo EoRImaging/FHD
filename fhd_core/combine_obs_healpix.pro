@@ -98,7 +98,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     ;        beam_est,model_uv_arr,model_holo_arr,calibration,p_map_simple,p_corr_simple,filename=file_path+'_output.sav'
         restore,file_path+'_obs.sav'
                 
-        astr=(*obs.bin).astr            
+        astr=obs.astr            
         si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
         source_arr=source_array[si_use]
                 

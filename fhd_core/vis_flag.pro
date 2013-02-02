@@ -26,9 +26,9 @@ IF N_Elements(flag_nsigma) EQ 0 THEN flag_nsigma=3.
 data_abs=Sqrt(Reform((data_array[0,*,*,*]))^2.+Reform((data_array[1,*,*,*]))^2.)
 n_frequencies=obs.n_freq
 n_pol=(size(data_array,/dimension))[1]
-tile_A=(*obs.bin).tile_A
-tile_B=(*obs.bin).tile_B
-freq=(*obs.bin).freq
+tile_A=(*obs.baseline_info).tile_A
+tile_B=(*obs.baseline_info).tile_B
+freq=obs.freq
 n_tiles=n_elements(uniq(tile_A[sort(tile_A)]))
 flag_center=1
 flag_edge=3
@@ -87,7 +87,7 @@ tile_dev2=Stddev(tile_fom[tile_i_use0])
 freq_mean2=Median(freq_fom,n_frequencies/20.)
 freq_dev2=Stddev((freq_fom-freq_mean2)[freq_i_use0])
 tile_cut=where((Abs(tile_mean2-tile_fom) GT flag_nsigma*tile_dev2) OR (tile_fom EQ 0),n_tile_cut,complement=tile_i_use)
-freq_cut=where((Abs(freq_mean2-freq_fom) GT flag_nsigmaflag_nsigma*freq_dev2) OR (freq_fom EQ 0.),n_freq_cut,complement=freq_i_use)
+freq_cut=where((Abs(freq_mean2-freq_fom) GT flag_nsigma*flag_nsigma*freq_dev2) OR (freq_fom EQ 0.),n_freq_cut,complement=freq_i_use)
         
 IF n_tile_cut GT 0 THEN BEGIN
     print,'Tiles cut:',tile_cut+1

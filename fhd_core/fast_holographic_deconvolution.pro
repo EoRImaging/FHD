@@ -54,7 +54,7 @@
 PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,$
-    beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd
+    beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 
@@ -89,7 +89,7 @@ xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 rvals=Sqrt(xvals^2.+yvals^2.)
 
-vis_coordinates,obs,ra_arr,dec_arr,astr=astr
+projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr
 
 ps_not_used=1./2.
 pc_not_used=1.
@@ -170,7 +170,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
         *map_fn_arr[pol_i]=map_fn
     ENDIF
-    weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i]))
+    weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],_Extra=extra))
     normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,baseline_threshold=baseline_threshold))[dimension/2.,elements/2.]
     normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
     
@@ -235,6 +235,7 @@ dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
 converge_check[0]=(converge_check2[0]=$
     Stddev(((dirty_image_composite-dirty_image_composite_smooth)*beam_avg)[where(source_mask,n_pix0)],/nan))
 print,"Initial convergence:",converge_check[0]
+print,"Gain factor used:",fhd.gain_factor
 
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
@@ -321,7 +322,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF Float(n_pix)/Float(n_pix0) LE 0.75 THEN BEGIN
             print,String(format='("Failure to centroid after",I," iterations")',i)
             FOR pol_i=0,n_pol-1 DO BEGIN
-                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i])*normalization
+                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
             ENDFOR
             converge_check2=converge_check2[0:i-1]
             converge_check=converge_check[0:i2]
@@ -408,7 +409,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             t4_0=Systime(1)
             t3+=t4_0-t3_0
             FOR pol_i=0,n_pol-1 DO BEGIN
-                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i])*normalization
+                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
             ENDFOR
             i3=0    
             t4+=Systime(1)-t4_0
@@ -425,7 +426,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF i3 EQ 0 THEN flux_ref=Median(flux_arr[0:(n_pol<2)-1,*,*]) ;replace with median across all pol/freq/time
     IF (i3 GE mapfn_interval) OR (Median(flux_arr[0:(n_pol<2)-1,*,*]) LT flux_ref*mapfn_threshold) OR ((i+1) mod check_iter EQ 0) THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i])*normalization
+            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
         ENDFOR
         i3=0
     ENDIF ELSE i3+=1
@@ -461,7 +462,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR  
 
 t00=Systime(1)-t00
+print,'Deconvolution timing [per iteration]'
+print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))
+print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
+print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.))
+print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
 timing=[t00,t1,t2,t3,t4]
-print,timing
+;print,timing
 
 END  

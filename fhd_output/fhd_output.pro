@@ -73,8 +73,8 @@ offset_lon=5.;15. paper 10 memo
 reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=0;1 paper 3 memo
 label_spacing=1.
-astr_out=(*obs_out.bin).astr
-astr=(*obs.bin).astr
+astr_out=obs_out.astr
+astr=obs.astr
 
 si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]
@@ -85,7 +85,7 @@ source_arr_out.x=sx & source_arr_out.y=sy
 
 ;Build a fits header
 mkhdr,fits_header,*residual_array[0]
-putast, fits_header, astr_out, cd_type=1
+putast, fits_header, astr_out;, cd_type=1
 
 t1a=Systime(1)
 t0+=t1a-t0a
@@ -136,14 +136,15 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     ENDFOR
     IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
     
+    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/2.
     FOR pol_i=0,npol-1 DO BEGIN
         *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
             beam_correction=beam_correction,mask=source_uv_mask)
-        *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i])*normalization
+        *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
         *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
-            dimension=dimension,width=.5)
+            dimension=dimension,width=restored_beam_width)
     ENDFOR
     
     stokes_images=stokes_cnv(instr_images,beam=beam_base_out)
@@ -223,7 +224,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
     IF n_mrc GT 0 THEN BEGIN
         mrc_cat=mrc_cat[mrc_i_use]
-        mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=8,dimension=dimension,width=1,ring=6.)
+        mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=8,dimension=dimension,$
+            width=restored_beam_width,ring=6.*pad_uv_image)
         mrc_image*=Median(source_arr_out.flux.I)/median(mrc_cat.flux.I)
     ENDIF
     

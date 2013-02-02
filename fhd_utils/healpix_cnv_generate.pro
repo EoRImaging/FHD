@@ -1,7 +1,7 @@
 FUNCTION healpix_cnv_generate,obs,file_path_fhd=file_path_fhd,nside=nside,mask=mask,radius=radius,$
-    restore_last=restore_last,silent=silent,_Extra=extra
+    restore_last=restore_last,silent=silent,$
+    _Extra=extra
 
-;vis_path_default,data_directory,filename,file_path,obs=obs
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
     IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
     restore_last=0
@@ -11,10 +11,10 @@ IF Keyword_Set(restore_last) THEN BEGIN
     restore,file_path_fhd+'_hpxcnv'+'.sav'
     nside=hpx_cnv.nside
     RETURN,hpx_cnv
-ENDIF
+ENDIF ELSE IF N_Elements(obs) EQ 0 THEN restore,file_path_fhd+'_obs.sav'
 
 t00=Systime(1)
-astr=(*obs.bin).astr
+astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
 IF N_Elements(radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4.
@@ -60,8 +60,8 @@ ENDIF ;ELSE BEGIN
 ;ENDELSE
 hpx_inds=hpx_inds0[pix_i_use]
 
-x_frac=xv_hpx-Floor(xv_hpx)
-y_frac=yv_hpx-Floor(yv_hpx)
+x_frac=1.-(xv_hpx-Floor(xv_hpx))
+y_frac=1.-(yv_hpx-Floor(yv_hpx))
 image_inds=Long64(Floor(xv_hpx)+dimension*Floor(yv_hpx))
 corner_inds=Long64([0,1,dimension,dimension+1])
 
