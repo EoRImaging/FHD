@@ -22,15 +22,18 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ENDFOR
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
 
+
+IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/Max(obs_arr.fbin_i+1)))
 n_pol=Min(obs_arr.n_pol)
 n_freq=Min(obs_arr.n_freq)
+n_freq_use=n_freq/n_avg
 n_hpx=N_Elements(hpx_inds)
-residual_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
-model_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
-dirty_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
-weights_hpx_arr=Ptrarr(n_pol,n_freq,/allocate)
+residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+dirty_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+weights_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    FOR freq_i=0,n_freq-1 DO BEGIN
+    FOR freq_i=0,n_freq_use-1 DO BEGIN
         *residual_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *model_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *dirty_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
@@ -69,7 +72,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;    weights_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=weights_in,fhd_file_path=fhd_path,vis_file_path=vis_path,$
 ;        n_avg=n_avg,timing=t_split2,/no_data,/fft,_Extra=extra)
         
-    FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq-1 DO BEGIN
+    FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
         (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
             healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
         (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
@@ -81,33 +84,33 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     ENDFOR
 ENDFOR
 
-dirty_xx_cube=fltarr(n_hpx,n_freq)
-dirty_yy_cube=fltarr(n_hpx,n_freq)
-FOR fi=0L,n_freq-1 DO BEGIN
+dirty_xx_cube=fltarr(n_hpx,n_freq_use)
+dirty_yy_cube=fltarr(n_hpx,n_freq_use)
+FOR fi=0L,n_freq_use-1 DO BEGIN
     dirty_xx_cube[*,fi]=*dirty_hpx_arr[0,fi]
     dirty_yy_cube[*,fi]=*dirty_hpx_arr[1,fi]
 ENDFOR
 Ptr_free,dirty_hpx_arr
 
-res_xx_cube=fltarr(n_hpx,n_freq)
-res_yy_cube=fltarr(n_hpx,n_freq)
-FOR fi=0L,n_freq-1 DO BEGIN
+res_xx_cube=fltarr(n_hpx,n_freq_use)
+res_yy_cube=fltarr(n_hpx,n_freq_use)
+FOR fi=0L,n_freq_use-1 DO BEGIN
     res_xx_cube[*,fi]=*residual_hpx_arr[0,fi]
     res_yy_cube[*,fi]=*residual_hpx_arr[1,fi]
 ENDFOR
 Ptr_free,residual_hpx_arr
 
-model_xx_cube=fltarr(n_hpx,n_freq)
-model_yy_cube=fltarr(n_hpx,n_freq)
-FOR fi=0L,n_freq-1 DO BEGIN
+model_xx_cube=fltarr(n_hpx,n_freq_use)
+model_yy_cube=fltarr(n_hpx,n_freq_use)
+FOR fi=0L,n_freq_use-1 DO BEGIN
     model_xx_cube[*,fi]=*model_hpx_arr[0,fi]
     model_yy_cube[*,fi]=*model_hpx_arr[1,fi]
 ENDFOR
 Ptr_free,model_hpx_arr
 
-weights_xx_cube=fltarr(n_hpx,n_freq)
-weights_yy_cube=fltarr(n_hpx,n_freq)
-FOR fi=0L,n_freq-1 DO BEGIN
+weights_xx_cube=fltarr(n_hpx,n_freq_use)
+weights_yy_cube=fltarr(n_hpx,n_freq_use)
+FOR fi=0L,n_freq_use-1 DO BEGIN
     weights_xx_cube[*,fi]=*weights_hpx_arr[0,fi]
     weights_yy_cube[*,fi]=*weights_hpx_arr[1,fi]
 ENDFOR

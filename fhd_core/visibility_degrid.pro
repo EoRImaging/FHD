@@ -71,8 +71,6 @@ ENDIF
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
 bin_i=where(bin_n,n_bin_use);+bin_min
 
-vis_density=Float(Total(bin_n))/(dimension*elements)
-
 ;initialize ONLY those elements of the map_fn array that will receive data
 index_arr=Lindgen(dimension,elements)
 CASE 1 OF
@@ -82,18 +80,6 @@ CASE 1 OF
     ELSE: init_arr=Fltarr(psf_dim2,psf_dim2)
 ENDCASE
 arr_type=Size(init_arr,/type)
-
-;IF map_flag THEN BEGIN
-;    FOR bi=0L,n_bin_use-1 DO BEGIN
-;        xmin1=xmin[ri[ri[bin_i[bi]]]]
-;        ymin1=ymin[ri[ri[bin_i[bi]]]]
-;        ptr_test=Ptr_valid(map_fn[xmin1:xmin1+psf_dim-1,ymin1:ymin1+psf_dim-1])
-;        inds_init=where(ptr_test EQ 0,nzero)
-;        IF nzero EQ 0 THEN CONTINUE
-;        inds_init=(index_arr[xmin1:xmin1+psf_dim-1,ymin1:ymin1+psf_dim-1])[inds_init]
-;        FOR ii=0,nzero-1 DO map_fn[inds_init[ii]]=Ptr_new(init_arr)
-;    ENDFOR
-;ENDIF
 
 time_check_interval=Ceil(n_bin_use/10.)
 t1=0
@@ -105,7 +91,7 @@ t6=0
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     ;MUST use double precision!
-    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
+;    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     
     x_off1=x_offset[inds]
@@ -137,7 +123,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
-    visibility_array[inds]=vis_box
+    visibility_array[inds]+=vis_box
     
     t5_1=Systime(1)
     t5+=t5_1-t5_0
