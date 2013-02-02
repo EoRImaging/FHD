@@ -23,9 +23,9 @@ ENDFOR
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
 
 
-IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/Max(obs_arr.fbin_i+1)))
 n_pol=Min(obs_arr.n_pol)
 n_freq=Min(obs_arr.n_freq)
+IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/Max(obs_arr.fbin_i+1)))
 n_freq_use=n_freq/n_avg
 n_hpx=N_Elements(hpx_inds)
 residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
