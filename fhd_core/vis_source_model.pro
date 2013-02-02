@@ -106,7 +106,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        ENDFOR
 ;    ENDFOR
     *vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],*flag_arr[pol_i],obs,psf,params,$
-        timing=t_degrid0,polarization=polarization,silent=silent,complex=complex,double=double,_Extra=extra)
+        timing=t_degrid0,polarization=pol_i,silent=silent,complex=complex,double=double,_Extra=extra)
     print,"Degridding timing: ",strn(t_degrid0)
 ENDFOR
 

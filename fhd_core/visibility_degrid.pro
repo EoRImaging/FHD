@@ -83,17 +83,17 @@ CASE 1 OF
 ENDCASE
 arr_type=Size(init_arr,/type)
 
-IF map_flag THEN BEGIN
-    FOR bi=0L,n_bin_use-1 DO BEGIN
-        xmin1=xmin[ri[ri[bin_i[bi]]]]
-        ymin1=ymin[ri[ri[bin_i[bi]]]]
-        ptr_test=Ptr_valid(map_fn[xmin1:xmin1+psf_dim-1,ymin1:ymin1+psf_dim-1])
-        inds_init=where(ptr_test EQ 0,nzero)
-        IF nzero EQ 0 THEN CONTINUE
-        inds_init=(index_arr[xmin1:xmin1+psf_dim-1,ymin1:ymin1+psf_dim-1])[inds_init]
-        FOR ii=0,nzero-1 DO map_fn[inds_init[ii]]=Ptr_new(init_arr)
-    ENDFOR
-ENDIF
+;IF map_flag THEN BEGIN
+;    FOR bi=0L,n_bin_use-1 DO BEGIN
+;        xmin1=xmin[ri[ri[bin_i[bi]]]]
+;        ymin1=ymin[ri[ri[bin_i[bi]]]]
+;        ptr_test=Ptr_valid(map_fn[xmin1:xmin1+psf_dim-1,ymin1:ymin1+psf_dim-1])
+;        inds_init=where(ptr_test EQ 0,nzero)
+;        IF nzero EQ 0 THEN CONTINUE
+;        inds_init=(index_arr[xmin1:xmin1+psf_dim-1,ymin1:ymin1+psf_dim-1])[inds_init]
+;        FOR ii=0,nzero-1 DO map_fn[inds_init[ii]]=Ptr_new(init_arr)
+;    ENDFOR
+;ENDIF
 
 time_check_interval=Ceil(n_bin_use/10.)
 t1=0
@@ -102,7 +102,6 @@ t3=0
 t4=0
 t5=0
 t6=0
-IF not Keyword_Set(silent) THEN Print,"Gridding "+pol_names[polarization]+" polarization time elapsed: estimated time remaining"
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     ;MUST use double precision!
