@@ -1,4 +1,5 @@
-FUNCTION vis_source_model,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path,timing=timing
+FUNCTION vis_source_model,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path,$
+    timing=timing,silent=silent
 
 t0=Systime(1)
 
@@ -71,7 +72,7 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
         
     ENDFOR
     t_model=Systime(1)-t_model0
-    print,"DFT timing: ",strn(t_model)
+    IF ~Keyword_Set(silent) THEN print,"DFT timing: ",strn(t_model)
 ENDIF
 
 vis_arr=Ptrarr(n_pol,/allocate)
@@ -105,9 +106,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;            ENDFOR
 ;        ENDFOR
 ;    ENDFOR
-    *vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],*flag_arr[pol_i],obs,psf,params,$
-        timing=t_degrid0,polarization=pol_i,silent=silent,complex=complex,double=double,_Extra=extra)
-    print,"Degridding timing: ",strn(t_degrid0)
+    *vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],*flag_arr[pol_i],obs,psf,params,/silent,$
+        timing=t_degrid0,polarization=pol_i,complex=complex,double=double,_Extra=extra)
+    IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid0)
 ENDFOR
 
 timing=Systime(1)-t0
