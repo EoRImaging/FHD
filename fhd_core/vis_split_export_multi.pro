@@ -15,11 +15,14 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;    vis_path_default,data_directory,filename_list[obs_i],file_path,version=version
     file_path=fhd_file_list[obs_i]
     restore,file_path+'_obs.sav'
+    
     IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs) ELSE obs_arr[obs_i]=obs
-    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,/restore_last,file_path=file_path)
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,/restore_last,file_path=file_path,/silent)
     IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
         message,String(format='("Mismatched HEALPix NSIDE for ",A)',file_basename(file_path)) 
 ENDFOR
+freq_test=obs_arr.freq
+
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
 
 
@@ -59,7 +62,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     dimension=obs.dimension
     elements=obs.elements    
     
-    model_arr1=vis_model_freq_split(source_list,obs,psf,model_uv_arr=model_uv_arr,fhd_file_path=fhd_path,vis_file_path=vis_path,$
+    model_arr1=vis_model_freq_split(source_list,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
         weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft,_Extra=extra)
     
     dirty_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_path,vis_file_path=vis_path,$
