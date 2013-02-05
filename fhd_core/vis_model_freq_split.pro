@@ -1,5 +1,5 @@
 FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
-    weights_arr=weights_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,$
+    weights_arr=weights_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
     fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,_Extra=extra
 ;no need to specify data_directory or filename if obs exists
 ;vis_path_default,data_directory,filename,file_path,obs=obs
@@ -59,7 +59,7 @@ ENDELSE
 nf=Max(freq_bin_i)+1L
 IF model_flag THEN BEGIN
    vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,$
-    file_path=fhd_file_path,timing=t_model,silent=silent)
+        file_path=fhd_file_path,timing=t_model,silent=silent,uv_mask=uv_mask)
    IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
 ENDIF
 residual_arr=Ptrarr(n_pol,nf,/allocate)

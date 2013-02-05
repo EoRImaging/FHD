@@ -62,11 +62,14 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     dimension=obs.dimension
     elements=obs.elements    
     
-    model_arr1=vis_model_freq_split(source_list,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft,_Extra=extra)
-    
+    uv_mask=fltarr(dimension,elements)
+    uv_mask[where(*weights_arr[0] OR *weights_arr[1])]=1
     dirty_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1,_Extra=extra)    
+        n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1,_Extra=extra) 
+        
+    model_arr1=vis_model_freq_split(source_list,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
+        weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask,_Extra=extra)
+       
     
 ;    n_pol=(size(model_arr1,/dimension))[0]
 ;    n_freq=(size(model_arr1,/dimension))[1]
