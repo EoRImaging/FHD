@@ -5,8 +5,8 @@ heap_gc
 
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
-IF N_Elements(export_images) EQ 0 THEN export_images=0
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
+IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(version) EQ 0 THEN version=0
 
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
@@ -35,7 +35,7 @@ FOR fi=0,n_files-1 DO BEGIN
     dimension=1024.
     max_sources=10000.
     pad_uv_image=2.
-    precess=0
+    precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
