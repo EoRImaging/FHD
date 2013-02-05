@@ -24,7 +24,7 @@
 ;-
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
-    GPU_enable=GPU_enable,complex=complex,double=double,_Extra=extra
+    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,_Extra=extra
 t0=Systime(1)
 heap_gc
 
@@ -215,6 +215,7 @@ ENDIF
 ;image_uv*=normalization ;account for FFT convention
 
 IF not Keyword_Set(silent) THEN print,t1,t2,t3,t4,t5,t6
+time_arr=[t1,t2,t3,t4,t5,t6]
 timing=Systime(1)-t0
 RETURN,image_uv
 END

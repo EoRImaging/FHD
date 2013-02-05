@@ -72,13 +72,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         data_flag:vis_use=*vis_data_arr[pol_i]
         model_flag:vis_use=*vis_model_arr[pol_i];/n_avg
     ENDCASE
-    
+    tarr=fltarr(6)
     FOR fi=0L,nf-1 DO BEGIN
         flags_use=*flag_arr[pol_i]
         freq_cut=where(freq_bin_i NE fi,n_cut)
         IF n_cut GT 0 THEN flags_use[freq_cut,*]=0
         dirty_UV=visibility_grid(vis_use,flags_use,obs,psf,params,timing=t_grid0,$
-            polarization=pol_i,weights=weights_holo,silent=1,mapfn_recalculate=0,_Extra=extra)
+            polarization=pol_i,weights=weights_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,_Extra=extra)
         IF Keyword_Set(fft) THEN BEGIN
             *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra)
             *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,_Extra=extra)
@@ -86,11 +86,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             *residual_arr[pol_i,fi]=dirty_uv
             *weights_arr[pol_i,fi]=weights_holo
         ENDELSE
+        tarr+=tarr0
         t_grid+=t_grid0
     ENDFOR  
     vis_use=0 ;free memory  
 ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Gridding timing: ",strn(t_grid)
+IF ~Keyword_Set(silent) THEN print,strn(tarr)
 timing=Systime(1)-t0
 RETURN,residual_arr
 END

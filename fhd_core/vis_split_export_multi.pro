@@ -48,7 +48,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     vis_path=vis_file_list[obs_i]
     
     print,"Frequency splitting: "+file_basename(vis_path,'_cal.uvfits',/fold_case)
-    restore,fhd_path+'_beams.sav'
+    restore,fhd_path+'_beams.sav' ;psf
 ;    restore,fhd_path+'_obs.sav' ;obs now restored earlier
     ; *_fhd.sav contains:
     ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
