@@ -91,7 +91,12 @@ IF n_dist_flag GT 0 THEN BEGIN
 ENDIF
 
 IF Keyword_Set(flag_arr) THEN BEGIN
-    flag_i=where(flag_arr LE 0,n_flag)
+    flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
+    IF n_unflag EQ 0 THEN BEGIN
+        timing=Systime(1)-t0
+        image_uv=Complexarr(dimension,elements)
+        RETURN,image_uv
+    ENDIF
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
