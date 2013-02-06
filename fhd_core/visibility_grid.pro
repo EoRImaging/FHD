@@ -24,7 +24,7 @@
 ;-
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
-    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,_Extra=extra
+    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -40,9 +40,13 @@ min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
 freq_bin_i=obs.fbin_i
-nfreq_bin=Max(freq_bin_i)+1
-bin_offset=(*obs.baseline_info).bin_offset
-frequency_array=obs.freq
+IF N_Elements(fi_use) GT 0 THEN freq_bin_i=freq_bin_i[fi_use] ELSE fi_use=Lindgen(N_Elements(freq_bin_i))
+
+;n_freq_bin=N_Elements(freq_bin_i)
+;
+;nfreq_bin=Max(freq_bin_i)+1
+;bin_offset=(*obs.baseline_info).bin_offset
+frequency_array=(obs.freq)[fi_use]
 
 psf_base=psf.base
 psf_dim=(Size(*psf_base[0],/dimension))[0]
@@ -51,14 +55,13 @@ psf_resolution=(Size(psf_base,/dimension))[2]
 flag_switch=Keyword_Set(flag_arr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
-baseline_i=params.baseline_arr
-nbaselines=bin_offset[1]
-n_samples=N_Elements(bin_offset)
+;baseline_i=params.baseline_arr
+;nbaselines=bin_offset[1]
+;n_samples=N_Elements(bin_offset)
 n_frequencies=N_Elements(frequency_array)
-n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
 
-vis_dimension=Float(nbaselines*n_samples)
+;vis_dimension=Float(nbaselines*n_samples)
 
 image_uv=Complexarr(dimension,elements)
 weights=fltarr(dimension,elements)
@@ -165,8 +168,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
 
-    bt_i=Floor(inds/n_frequencies)
-    base_i=baseline_i[bt_i]
+;    bt_i=Floor(inds/n_frequencies)
+;    base_i=baseline_i[bt_i]
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
     
@@ -229,7 +232,7 @@ ENDIF
 ;image_uv*=normalization ;account for FFT convention
 
 IF not Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4,t5,t6
-time_arr=[t1,t2,t3,t4,t5,t6]
+time_arr=[t0,t1,t2,t3,t4,t5,t6]
 timing=Systime(1)-t0_0
 RETURN,image_uv
 END
