@@ -1,4 +1,6 @@
-PRO EOR1_X16,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,_Extra=extra
+PRO EOR1_X16,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
+    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
+    grid=grid,deconvolve=deconvolve,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -22,20 +24,19 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 complex_beam=0
 double_precison_beam=0
 n_files=N_Elements(vis_file_list)
+IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
+IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
+IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
+flag=0
+IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
+IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
+noise_calibrate=0
+align=0
+dimension=1024.
+max_sources=10000.
+pad_uv_image=2.
+precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FOR fi=0,n_files-1 DO BEGIN
-    beam_recalculate=recalculate_all
-    healpix_recalculate=recalculate_all
-    mapfn=recalculate_all
-    flag=0
-    grid=recalculate_all
-    deconvolve=recalculate_all
-    export_images=export_images
-    noise_calibrate=0
-    align=0
-    dimension=1024.
-    max_sources=10000.
-    pad_uv_image=2.
-    precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
