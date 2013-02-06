@@ -23,7 +23,7 @@ psf_base_ptr=psf.base
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 dims=Size(psf_base_ptr,/dimension)
 n_freq_bin=dims[1]
-psf_dim=(size(*psf_base_ptr[0,0,0,0],/dimension))[0]
+psf_dim=Sqrt((size(*psf_base_ptr[0,0,0,0],/dimension))[0])
 xl=dimension/2.-Floor(psf_dim/2.)
 xh=dimension/2.-Floor(psf_dim/2.)+psf_dim-1
 yl=elements/2.-Floor(psf_dim/2.)
@@ -34,7 +34,7 @@ n_bin_use=0.
 FOR freq_i=0,n_freq_bin-1 DO BEGIN
     IF N_Elements(freq_bin_i) GT 0 THEN IF Total(freq_bin_i EQ freq_i) EQ 0 THEN CONTINUE
     beam_base_uv=Complexarr(dimension,elements)
-    beam_base_uv[xl:xh,yl:yh]=Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,freq_i,0,0]):*psf_base_ptr[pol_i,freq_i,0,0]
+    beam_base_uv[xl:xh,yl:yh]=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,freq_i,0,0]):*psf_base_ptr[pol_i,freq_i,0,0],psf_dim,psf_dim)
     beam_base1=fft_shift(real_part(FFT(fft_shift(beam_base_uv),/inverse)))
     beam_base+=beam_base1
     n_bin_use+=1.

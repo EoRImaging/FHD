@@ -86,7 +86,7 @@ psf_base=psf.base
 psf_residuals_n=psf.res_n
 psf_residuals_i=psf.res_i
 psf_residuals_val=psf.res_val
-psf_dim=(Size(*psf_base[0],/dimension))[0]
+psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
 FOR pol_i=0,n_pol-1 DO BEGIN

@@ -49,7 +49,7 @@ IF N_Elements(fi_use) GT 0 THEN freq_bin_i=freq_bin_i[fi_use] ELSE fi_use=Lindge
 frequency_array=(obs.freq)[fi_use]
 
 psf_base=psf.base
-psf_dim=(Size(*psf_base[0],/dimension))[0]
+psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
 flag_switch=Keyword_Set(flag_arr)
@@ -184,9 +184,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO BEGIN
-        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
-;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
-        box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)        
+;        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
+;;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
+;        box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)  
+        box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]         
     ENDFOR
 
     t4_0=Systime(1)
