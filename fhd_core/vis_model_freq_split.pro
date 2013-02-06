@@ -66,13 +66,13 @@ residual_arr=Ptrarr(n_pol,nf,/allocate)
 weights_arr=Ptrarr(n_pol,nf,/allocate)
 
 t_grid=0
+tarr=fltarr(8)
 FOR pol_i=0,n_pol-1 DO BEGIN
     CASE 1 OF 
         (data_flag AND model_flag):vis_use=*vis_data_arr[pol_i]-*vis_model_arr[pol_i];/n_avg
         data_flag:vis_use=*vis_data_arr[pol_i]
         model_flag:vis_use=*vis_model_arr[pol_i];/n_avg
     ENDCASE
-    tarr=fltarr(8)
     FOR fi=0L,nf-1 DO BEGIN
         fi_use=where(freq_bin_i2 EQ fi,nf_use)
         flags_use1=(*flag_arr[pol_i])[fi_use,*]
