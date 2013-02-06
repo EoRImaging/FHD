@@ -72,7 +72,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         data_flag:vis_use=*vis_data_arr[pol_i]
         model_flag:vis_use=*vis_model_arr[pol_i];/n_avg
     ENDCASE
-    tarr=fltarr(7)
+    tarr=fltarr(8)
     FOR fi=0L,nf-1 DO BEGIN
         fi_use=where(freq_bin_i2 EQ fi,nf_use)
         flags_use1=(*flag_arr[pol_i])[fi_use,*]

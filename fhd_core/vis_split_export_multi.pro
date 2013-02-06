@@ -55,10 +55,6 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     ;    beam_base,beam_correction,ra_arr,dec_arr,astr
     restore,fhd_path+'_fhd.sav'
     
-    IF Keyword_Set(source_array) THEN source_list=source_array
-;    IF N_Elements(source_list) + N_Elements(model_uv_arr) EQ 0 THEN BEGIN ;consistency with old .SAV files
-;        source_list=source_array
-;    ENDIF
     obs=obs_arr[obs_i]
     dimension=obs.dimension
     elements=obs.elements    
@@ -68,7 +64,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     dirty_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_path,vis_file_path=vis_path,$
         n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1,_Extra=extra) 
         
-    model_arr1=vis_model_freq_split(source_list,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
+    model_arr1=vis_model_freq_split(source_array,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
         weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask,_Extra=extra)
        
     

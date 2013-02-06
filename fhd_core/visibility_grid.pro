@@ -192,35 +192,33 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     box_arr=vis_box#box_matrix/vis_density
-    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        Replicate(1./vis_density,vis_n)#box_matrix
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
+    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+        Replicate(1./vis_density,vis_n)#box_matrix
     
     t6_0=Systime(1)
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
         box_arr_map=matrix_multiply(box_matrix,box_matrix,/atranspose)/vis_density
-;        IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-;            matrix_multiply(Replicate(2.,psf_dim*psf_dim),Abs(box_arr_map))
-;        IF map_flag THEN BEGIN
-            FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
-                ij=i+j*psf_dim
-                (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-            ENDFOR
-;        ENDIF
+        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
+            ij=i+j*psf_dim
+            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+        ENDFOR
     ENDIF
     t6_1=Systime(1)
     t6+=t6_1-t6_0
     t1+=t6_1-t1_0 
 ENDFOR
 
+t7_0=Systime(1)
 IF map_flag THEN BEGIN
     map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension)
     save,map_fn,filename=file_path_fhd+'_mapfn_'+pol_names[polarization]+'.sav'
 ENDIF
+t7=Systime(1)-t7_0
 
 image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
 image_uv=(image_uv+image_uv_conj)/2.
@@ -231,8 +229,8 @@ ENDIF
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
 
-IF not Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4,t5,t6
-time_arr=[t0,t1,t2,t3,t4,t5,t6]
+IF not Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4,t5,t6,t7
+time_arr=[t0,t1,t2,t3,t4,t5,t6,t7]
 timing=Systime(1)-t0_0
 RETURN,image_uv
 END
