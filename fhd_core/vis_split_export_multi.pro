@@ -55,9 +55,10 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     ;    beam_base,beam_correction,ra_arr,dec_arr,astr
     restore,fhd_path+'_fhd.sav'
     
-    IF N_Elements(source_list) + N_Elements(model_uv_arr) EQ 0 THEN BEGIN ;consistency with old .SAV files
-        source_list=source_array
-    ENDIF
+    IF Keyword_Set(source_array) THEN source_list=source_array
+;    IF N_Elements(source_list) + N_Elements(model_uv_arr) EQ 0 THEN BEGIN ;consistency with old .SAV files
+;        source_list=source_array
+;    ENDIF
     obs=obs_arr[obs_i]
     dimension=obs.dimension
     elements=obs.elements    
