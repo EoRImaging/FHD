@@ -74,7 +74,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDCASE
     tarr=fltarr(7)
     FOR fi=0L,nf-1 DO BEGIN
-        fi_use=where(freq_bin_i2,nf_use)
+        fi_use=where(freq_bin_i2 EQ fi,nf_use)
         flags_use1=(*flag_arr[pol_i])[fi_use,*]
         vis_use1=vis_use[fi_use,*]
 ;        freq_cut=where(freq_bin_i2 NE fi,n_cut)
@@ -94,7 +94,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    vis_use=0 ;free memory  
 ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Gridding timing: ",strn(t_grid)
-IF ~Keyword_Set(silent) THEN print,strn(tarr)
+IF ~Keyword_Set(silent) THEN print,tarr
 timing=Systime(1)-t0
 RETURN,residual_arr
 END
