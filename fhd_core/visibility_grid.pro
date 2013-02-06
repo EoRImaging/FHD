@@ -109,16 +109,29 @@ bin_i=where(bin_n,n_bin_use);+bin_min
 
 vis_density=Float(Total(bin_n))/(dimension*elements)
 
-;initialize ONLY those elements of the map_fn array that will receive data
 index_arr=Lindgen(dimension,elements)
+n_psf_dim=N_Elements(psf_base)
 CASE 1 OF
-    Keyword_Set(complex) AND Keyword_Set(double): init_arr=Dcomplexarr(psf_dim2,psf_dim2)
-    Keyword_Set(double): init_arr=Dblarr(psf_dim2,psf_dim2)
-    Keyword_Set(complex): init_arr=Complexarr(psf_dim2,psf_dim2)
-    ELSE: init_arr=Fltarr(psf_dim2,psf_dim2)
+    Keyword_Set(complex) AND Keyword_Set(double): BEGIN
+        init_arr=Dcomplexarr(psf_dim2,psf_dim2)
+        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Dcomplex(*psf_base[i])
+    END
+    Keyword_Set(double): BEGIN
+        init_arr=Dblarr(psf_dim2,psf_dim2)
+        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Double(Abs(*psf_base[i]))
+    END
+    Keyword_Set(complex): BEGIN
+        init_arr=Complexarr(psf_dim2,psf_dim2)
+        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Complex(*psf_base[i])
+    END
+    ELSE: BEGIN
+        init_arr=Fltarr(psf_dim2,psf_dim2)
+        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Float(abs(*psf_base[i]))
+    ENDELSE
 ENDCASE
 arr_type=Size(init_arr,/type)
 
+;initialize ONLY those elements of the map_fn array that will receive data
 IF map_flag THEN BEGIN
     FOR bi=0L,n_bin_use-1 DO BEGIN
         xmin1=xmin[ri[ri[bin_i[bi]]]]
