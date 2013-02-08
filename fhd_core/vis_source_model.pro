@@ -1,5 +1,5 @@
 FUNCTION vis_source_model,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path,$
-    timing=timing,silent=silent
+    timing=timing,silent=silent,uv_mask=uv_mask
 
 t0=Systime(1)
 
@@ -34,6 +34,10 @@ icomp=Complex(0,1)
 
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
+IF ~Keyword_Set(uv_mask) THEN uv_mask=Fltarr(dimension,elements)+1
+uv_use_i=where(uv_mask)
+xvals=xvals[uv_use_i]
+yvals=yvals[uv_use_i]
 
 freq_bin_i=obs.fbin_i
 nfreq_bin=Max(freq_bin_i)+1
@@ -68,7 +72,7 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     
     FOR si=0.,n_sources-1 DO BEGIN
         source_uv=Exp(icomp*(2.*!Pi/dimension)*((source_list[si].x-dimension/2.)*xvals+(source_list[si].y-elements/2.)*yvals))
-        FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=source_list[si].flux.(pol_i)*beam_corr_src[pol_i,si]*source_uv
+        FOR pol_i=0,n_pol-1 DO (*model_uv_arr[pol_i])[uv_use_i]+=source_list[si].flux.(pol_i)*beam_corr_src[pol_i,si]*source_uv
         
     ENDFOR
     t_model=Systime(1)-t_model0
@@ -82,7 +86,7 @@ psf_base=psf.base
 psf_residuals_n=psf.res_n
 psf_residuals_i=psf.res_i
 psf_residuals_val=psf.res_val
-psf_dim=(Size(*psf_base[0],/dimension))[0]
+psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
 FOR pol_i=0,n_pol-1 DO BEGIN

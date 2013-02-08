@@ -40,7 +40,7 @@ FOR fi0=0,n_use-1 DO BEGIN
     temp_out[1:*]=[obs.degpix,obs.obsra,obs.obsdec,obs.zenra,obs.zendec,cal_use[fi],$
         (*beam_base[0])[cx,cy],(*beam_base[1])[cx,cy],normalization,uv_use_frac] 
     textfast,temp_out,file_path=output_path+'_calibration',/append,/write
-    
+    heap_gc
 ENDFOR
 
 END

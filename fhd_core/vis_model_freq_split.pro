@@ -1,5 +1,5 @@
 FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
-    weights_arr=weights_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,$
+    weights_arr=weights_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
     fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,_Extra=extra
 ;no need to specify data_directory or filename if obs exists
 ;vis_path_default,data_directory,filename,file_path,obs=obs
@@ -49,36 +49,38 @@ IF N_Elements(flag_arr) EQ 0 THEN BEGIN
 ENDIF
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
-    freq_bin_i=obs.fbin_i
-    n_avg=Round(n_freq/Max(freq_bin_i+1))
+    freq_bin_i2=obs.fbin_i
+    n_avg=Round(n_freq/Max(freq_bin_i2+1))
     
 ENDIF ELSE BEGIN
-    freq_bin_i=Floor(lindgen(n_freq)/n_avg)
+    freq_bin_i2=Floor(lindgen(n_freq)/n_avg)
 ENDELSE
 
-nf=Max(freq_bin_i)+1L
+nf=Max(freq_bin_i2)+1L
 IF model_flag THEN BEGIN
    vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,$
-    file_path=fhd_file_path,timing=t_model,silent=silent)
+        file_path=fhd_file_path,timing=t_model,silent=silent,uv_mask=uv_mask)
    IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
 ENDIF
 residual_arr=Ptrarr(n_pol,nf,/allocate)
 weights_arr=Ptrarr(n_pol,nf,/allocate)
 
 t_grid=0
+tarr=fltarr(8)
 FOR pol_i=0,n_pol-1 DO BEGIN
     CASE 1 OF 
-        (data_flag AND model_flag):vis_use=*vis_data_arr[pol_i]-*vis_model_arr[pol_i]/n_avg
+        (data_flag AND model_flag):vis_use=*vis_data_arr[pol_i]-*vis_model_arr[pol_i];/n_avg
         data_flag:vis_use=*vis_data_arr[pol_i]
-        model_flag:vis_use=*vis_model_arr[pol_i]/n_avg
+        model_flag:vis_use=*vis_model_arr[pol_i];/n_avg
     ENDCASE
-    
     FOR fi=0L,nf-1 DO BEGIN
-        flags_use=*flag_arr[pol_i]
-        freq_cut=where(freq_bin_i NE fi,n_cut)
-        IF n_cut GT 0 THEN flags_use[freq_cut,*]=0
-        dirty_UV=visibility_grid(vis_use,flags_use,obs,psf,params,timing=t_grid0,$
-            polarization=pol_i,weights=weights_holo,silent=1,mapfn_recalculate=0,_Extra=extra)
+        fi_use=where(freq_bin_i2 EQ fi,nf_use)
+        flags_use1=(*flag_arr[pol_i])[fi_use,*]
+        vis_use1=vis_use[fi_use,*]
+;        freq_cut=where(freq_bin_i2 NE fi,n_cut)
+;        IF n_cut GT 0 THEN flags_use[freq_cut,*]=0
+        dirty_UV=visibility_grid(vis_use1,flags_use1,obs,psf,params,timing=t_grid0,fi_use=fi_use,$
+            polarization=pol_i,weights=weights_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,_Extra=extra)
         IF Keyword_Set(fft) THEN BEGIN
             *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra)
             *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,_Extra=extra)
@@ -86,11 +88,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             *residual_arr[pol_i,fi]=dirty_uv
             *weights_arr[pol_i,fi]=weights_holo
         ENDELSE
+        tarr+=tarr0
         t_grid+=t_grid0
     ENDFOR  
-    vis_use=0 ;free memory  
+;    vis_use=0 ;free memory  
 ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Gridding timing: ",strn(t_grid)
+IF ~Keyword_Set(silent) THEN print,tarr
 timing=Systime(1)-t0
 RETURN,residual_arr
 END

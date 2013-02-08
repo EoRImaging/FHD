@@ -280,7 +280,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDFOR
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2,beam1_arr,beam2_arr
         FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-            *psf_base[pol_i,freq_i,i,j]=psf_base1[xvals_i+i,yvals_i+j];/Total(psf_base1[xvals_i+i,yvals_i+j]) 
+            *psf_base[pol_i,freq_i,i,j]=Reform(psf_base1[xvals_i+i,yvals_i+j],psf_dim*psf_dim) 
         breakpoint0=0
     ENDFOR
 ENDFOR

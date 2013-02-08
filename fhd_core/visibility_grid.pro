@@ -24,8 +24,8 @@
 ;-
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
-    GPU_enable=GPU_enable,complex=complex,double=double,_Extra=extra
-t0=Systime(1)
+    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,_Extra=extra
+t0_0=Systime(1)
 heap_gc
 
 pol_names=['xx','yy','xy','yx']
@@ -40,25 +40,28 @@ min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
 freq_bin_i=obs.fbin_i
-nfreq_bin=Max(freq_bin_i)+1
-bin_offset=(*obs.baseline_info).bin_offset
-frequency_array=obs.freq
+IF N_Elements(fi_use) GT 0 THEN freq_bin_i=freq_bin_i[fi_use] ELSE fi_use=Lindgen(N_Elements(freq_bin_i))
+
+;n_freq_bin=N_Elements(freq_bin_i)
+;
+;nfreq_bin=Max(freq_bin_i)+1
+;bin_offset=(*obs.baseline_info).bin_offset
+frequency_array=(obs.freq)[fi_use]
 
 psf_base=psf.base
-psf_dim=(Size(*psf_base[0],/dimension))[0]
+psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
 flag_switch=Keyword_Set(flag_arr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
-baseline_i=params.baseline_arr
-nbaselines=bin_offset[1]
-n_samples=N_Elements(bin_offset)
+;baseline_i=params.baseline_arr
+;nbaselines=bin_offset[1]
+;n_samples=N_Elements(bin_offset)
 n_frequencies=N_Elements(frequency_array)
-n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
 
-vis_dimension=Float(nbaselines*n_samples)
+;vis_dimension=Float(nbaselines*n_samples)
 
 image_uv=Complexarr(dimension,elements)
 weights=fltarr(dimension,elements)
@@ -91,7 +94,12 @@ IF n_dist_flag GT 0 THEN BEGIN
 ENDIF
 
 IF Keyword_Set(flag_arr) THEN BEGIN
-    flag_i=where(flag_arr LE 0,n_flag)
+    flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
+    IF n_unflag EQ 0 THEN BEGIN
+        timing=Systime(1)-t0_0
+        image_uv=Complexarr(dimension,elements)
+        RETURN,image_uv
+    ENDIF
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
@@ -104,16 +112,29 @@ bin_i=where(bin_n,n_bin_use);+bin_min
 
 vis_density=Float(Total(bin_n))/(dimension*elements)
 
-;initialize ONLY those elements of the map_fn array that will receive data
 index_arr=Lindgen(dimension,elements)
+n_psf_dim=N_Elements(psf_base)
 CASE 1 OF
-    Keyword_Set(complex) AND Keyword_Set(double): init_arr=Dcomplexarr(psf_dim2,psf_dim2)
-    Keyword_Set(double): init_arr=Dblarr(psf_dim2,psf_dim2)
-    Keyword_Set(complex): init_arr=Complexarr(psf_dim2,psf_dim2)
-    ELSE: init_arr=Fltarr(psf_dim2,psf_dim2)
+    Keyword_Set(complex) AND Keyword_Set(double): BEGIN
+        init_arr=Dcomplexarr(psf_dim2,psf_dim2)
+        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Dcomplex(*psf_base[i])
+    END
+    Keyword_Set(double): BEGIN
+        init_arr=Dblarr(psf_dim2,psf_dim2)
+        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Double(Abs(*psf_base[i]))
+    END
+    Keyword_Set(complex): BEGIN
+        init_arr=Complexarr(psf_dim2,psf_dim2)
+        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Complex(*psf_base[i])
+    END
+    ELSE: BEGIN
+        init_arr=Fltarr(psf_dim2,psf_dim2)
+        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Float(abs(*psf_base[i]))
+    ENDELSE
 ENDCASE
 arr_type=Size(init_arr,/type)
 
+;initialize ONLY those elements of the map_fn array that will receive data
 IF map_flag THEN BEGIN
     FOR bi=0L,n_bin_use-1 DO BEGIN
         xmin1=xmin[ri[ri[bin_i[bi]]]]
@@ -126,6 +147,7 @@ IF map_flag THEN BEGIN
     ENDFOR
 ENDIF
 
+t0=Systime(1)-t0_0
 time_check_interval=Ceil(n_bin_use/10.)
 t1=0
 t2=0
@@ -146,8 +168,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
 
-    bt_i=Floor(inds/n_frequencies)
-    base_i=baseline_i[bt_i]
+;    bt_i=Floor(inds/n_frequencies)
+;    base_i=baseline_i[bt_i]
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
     
@@ -162,51 +184,54 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO BEGIN
-        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
-;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
-        box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)        
+;        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
+;;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
+;        box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)  
+        box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]         
     ENDFOR
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     box_arr=vis_box#box_matrix/vis_density
-    IF Arg_present(weights) THEN box_arr_W=Replicate(1./vis_density,vis_n)#box_matrix
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
+    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+        Replicate(1./vis_density,vis_n)#box_matrix
     
     t6_0=Systime(1)
     t5+=t6_0-t5_0
-    IF map_flag OR Arg_present(weights) THEN BEGIN
+    IF map_flag THEN BEGIN
         box_arr_map=matrix_multiply(box_matrix,box_matrix,/atranspose)/vis_density
-        IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-            matrix_multiply(Replicate(2.,psf_dim*psf_dim),Abs(box_arr_map))
-        IF map_flag THEN BEGIN
-            FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
-                ij=i+j*psf_dim
-                (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-            ENDFOR
-        ENDIF
+        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
+            ij=i+j*psf_dim
+            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+        ENDFOR
     ENDIF
     t6_1=Systime(1)
     t6+=t6_1-t6_0
     t1+=t6_1-t1_0 
 ENDFOR
 
+t7_0=Systime(1)
 IF map_flag THEN BEGIN
     map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension)
     save,map_fn,filename=file_path_fhd+'_mapfn_'+pol_names[polarization]+'.sav'
 ENDIF
+t7=Systime(1)-t7_0
 
 image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
 image_uv=(image_uv+image_uv_conj)/2.
 
-IF Arg_present(weights) THEN weights=(weights+Shift(Reverse(reverse(weights,1),2),1,1))/2.
+IF Arg_present(weights) THEN BEGIN
+    weights=(weights+Shift(Reverse(reverse(weights,1),2),1,1));/2.
+ENDIF
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
 
-IF not Keyword_Set(silent) THEN print,t1,t2,t3,t4,t5,t6
-timing=Systime(1)-t0
+IF not Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4,t5,t6,t7
+time_arr=[t0,t1,t2,t3,t4,t5,t6,t7]
+timing=Systime(1)-t0_0
 RETURN,image_uv
 END
