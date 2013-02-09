@@ -144,6 +144,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     data_struct=0. ;free memory
     
     flag_arr0=Reform(data_array[flag_index,*,*,*])
+    IF n_pol EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
     IF Keyword_Set(flag) THEN BEGIN
         print,'Flagging anomalous data'
         vis_flag,data_array,flag_arr0,obs,params,_Extra=extra
@@ -161,7 +162,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
-    
     
     beam_mask=fltarr(obs.dimension,obs.elements)+1
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN

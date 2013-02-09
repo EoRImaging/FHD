@@ -23,6 +23,7 @@ stokes_list1=[0,0,2,2]
 stokes_list2=[1,1,3,3]
 sign=[1,-1,1,-1]
 
+IF n_pol EQ 1 THEN stokes_list1=(stokes_list2=[0,0,0,0])
 FOR pol_i=0,n_pol-1 DO BEGIN
     *image_arr_out[pol_i]=(*image_arr[stokes_list1[pol_i]])*(*beam_use[stokes_list1[pol_i]])*(*p_use[stokes_list1[pol_i]])+$
         sign[pol_i]*(*image_arr[stokes_list2[pol_i]])*(*beam_use[stokes_list2[pol_i]])*(*p_use[stokes_list2[pol_i]])
