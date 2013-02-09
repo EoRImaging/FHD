@@ -5,6 +5,14 @@ FUNCTION paper_tile_beam_generate,antenna_gain_arr,antenna_beam_arr,$
     dimension=dimension,elements=elements,za_arr=za_arr,az_arr=az_arr,$
     ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra
 
+IF N_Elements(normalization) EQ 0 THEN normalization=1.
+IF Keyword_Set(antenna_beam_arr) THEN IF Keyword_Set(*antenna_beam_arr[0]) THEN BEGIN
+    tile_beam=*antenna_beam_arr[0]*antenna_gain_arr[0]
+    tile_beam*=normalization
+    tile_beam=tile_beam
+    RETURN,tile_beam
+ENDIF
+
 paper_beam_filepath=rootdir()+'PAPER_DATA\PAPER_beam_xx.fits'
 beam_cube=mrdfits(paper_beam_filepath,0,header,/silent)
 naxis1=sxpar(header,'NAXIS1')
@@ -66,6 +74,9 @@ ad2xy,ra_use,dec_use,astr,xv_use,yv_use
 tile_beam_use=interpolate(beam_slice,xv_use,yv_use)
 tile_beam=Fltarr(size(za_arr,/dimension))
 tile_beam[valid_i2]=tile_beam_use  ;gives default polarization of XX (polarization=0)
+
+IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(1,/allocate)
+*antenna_beam_arr[0]=tile_beam
 
 RETURN,tile_beam
 END

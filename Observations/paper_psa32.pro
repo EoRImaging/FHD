@@ -32,7 +32,8 @@ IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 noise_calibrate=0
 align=0
-dimension=1024.
+;dimension=1024.
+kbinsize=0.25
 max_sources=10000.
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
@@ -47,7 +48,7 @@ FOR fi=0L,n_files-1 DO BEGIN
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,$
-        instrument=instrument,lon=lon,lat=lat,_Extra=extra
+        instrument=instrument,lon=lon,lat=lat,kbinsize=kbinsize,_Extra=extra
 ENDFOR
 
 map_projection='orth'
