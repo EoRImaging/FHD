@@ -28,6 +28,8 @@ degpix=(Abs(beam_RA_delt)+Abs(beam_Dec_delt))/2.
 beam_slice=fltarr(naxis1,naxis2)
 FOR i=0,naxis1-1 DO FOR j=0,naxis2-1 DO beam_slice[i,j]=Interpol(beam_cube[i,j,*],freq_arr,frequency)
 
+IF Keyword_Set(polarization) THEN beam_slice=Rotate(beam_slice,1)
+
 ;IF polarization EQ 0 THEN BEGIN
 ;    ra_arr=(meshgrid(naxis1,naxis2,1)-beam_RA_pix0)*beam_RA_delt+beam_RA0
 ;    dec_arr=(meshgrid(naxis1,naxis2,2)-beam_Dec_pix0)*beam_Dec_delt+beam_Dec0
@@ -63,8 +65,7 @@ dec_use=dec_arr[valid_i2]-dec_offset
 ad2xy,ra_use,dec_use,astr,xv_use,yv_use
 tile_beam_use=interpolate(beam_slice,xv_use,yv_use)
 tile_beam=Fltarr(size(za_arr,/dimension))
-tile_beam[valid_i2]=tile_beam_use
-IF Keyword_Set(polarization) THEN tile_beam=Rotate(tile_beam,1)  ;gives default polarization of XX (polarization=0)
+tile_beam[valid_i2]=tile_beam_use  ;gives default polarization of XX (polarization=0)
 
 RETURN,tile_beam
 END
