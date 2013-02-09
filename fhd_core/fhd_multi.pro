@@ -207,6 +207,41 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     ;update models
     
+    FOR src_i=0L,n_sources-1 DO BEGIN
+        FOR obs_i=0L,n_obs-1 DO BEGIN
+            ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
+            
+            
+            FOR pol_i=0,n_pol-1 DO BEGIN   
+                beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
+                beam_src[pol_i]=(*beam_base[pol_i])[additional_i[src_i]]
+                
+                IF Keyword_Set(independent_fit) THEN BEGIN
+                    sign=(pol_i mod 2) ? -1:1
+                    IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]]+sign*image_use_Q[additional_i[src_i]]
+                    IF pol_i GE 2 THEN flux_use=image_use_U[additional_i[src_i]]+sign*image_use_V[additional_i[src_i]]
+                ENDIF ELSE IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]] ELSE flux_use=image_use_U[additional_i[src_i]]
+                
+                flux_use*=gain_factor_use/2.
+                comp_arr[si].flux.(pol_i)=flux_use*beam_src[pol_i];*ps_not_used ;Apparent brightness, instrumental polarization X gain (a scalar)
+    ;            comp_arr[si].flux.(pol_i)=flux_use*gain_factor_use*beam_src[pol_i]*(*p_map_simple[pol_i])[additional_i[src_i]]
+    ;            flux_use*=ps_not_used*(*beam_correction[pol_i])[additional_i[src_i]]
+                flux_arr[pol_i]=flux_use;*beam_corr_src[pol_i] ;"True sky" instrumental pol
+            ENDFOR
+            
+            comp_arr[si].flux.I=flux_arr[0]+flux_arr[1]
+            comp_arr[si].flux.Q=flux_arr[0]-flux_arr[1]
+            comp_arr[si].flux.U=flux_arr[2]+flux_arr[3]
+            comp_arr[si].flux.V=flux_arr[2]-flux_arr[3]
+            
+            ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
+            source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+        ENDFOR
+        
+        si+=1
+    ENDFOR
     ;apply HMF
     
     ;check convergence
