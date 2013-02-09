@@ -219,11 +219,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ;mwa_tile_beam_generate.pro
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
             frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,$
-            psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3)
+            psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
         IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
         beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$
             frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,$
-            psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3)
+            psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
         
 ;;        psf_base0=dirty_image_generate((beam1_0*(*proj0[pol1]))*Conj(beam2_0*(*proj0[pol2])),/no_real)
 ;        psf_base1=dirty_image_generate((beam1_0*(*proj[pol1]))*Conj(beam2_0*(*proj[pol2])),/no_real)
@@ -247,14 +249,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FOR tile_i=0,n_tiles-1 DO BEGIN
             *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
                 frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,$
-                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize)
+                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,$
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
             *beam2_arr[tile_i]=Call_function(tile_beam_fn,gain2[*,tile_i],antenna_beam_arr2,$
                 frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,$
-                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize)
+                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,$
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
         ENDFOR
         
         FOR bi=0,nbaselines-1 DO BEGIN
-            IF Min((gain1[*,tile_A[bi]-1]-gain1_avg EQ fltarr(16)) AND (gain2[*,tile_B[bi]-1]-gain2_avg EQ fltarr(16))) THEN BEGIN
+            IF Min((gain1[*,tile_A[bi]-1]-gain1_avg EQ fltarr(N_Elements(base_gain))) AND (gain2[*,tile_B[bi]-1]-gain2_avg EQ fltarr(N_Elements(base_gain)))) THEN BEGIN
                 psf_residuals_n[pol_i,freq_i,bi]=0
                 CONTINUE
             ENDIF

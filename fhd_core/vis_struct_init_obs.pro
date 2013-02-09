@@ -49,17 +49,29 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
 ;    Precess,obsra,obsdec,2000.,epoch
     zenpos2,Min(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
-
-    ;256 tile upper limit is hard-coded in CASA format
-    ;these tile numbers have been verified to be correct
-    tile_A=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
-    tile_B=Long(Fix(params.baseline_arr mod 256))
     
     calibration=fltarr(4)+1.
     IF N_Elements(n_pol) EQ 0 THEN n_pol=header.n_pol
     n_tile=header.n_tile
     n_freq=header.n_freq
     n_vis=Float(N_Elements(time))*n_freq
+    
+    ;256 tile upper limit is hard-coded in CASA format
+    ;these tile numbers have been verified to be correct
+    tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
+    tile_B1=Long(Fix(params.baseline_arr mod 256))
+    hist_A1=histogram(tile_A1,min=0,max=256,/binsize,reverse_ind=ria)
+    hist_B1=histogram(tile_B1,min=0,max=256,/binsize,reverse_ind=rib)
+    hist_AB=hist_A1+hist_B1
+    tile_nums=where(hist_AB,n_tile)
+    
+    tile_A=(tile_B=Lonarr(N_Elements(params.baseline_arr)))
+    FOR i0=0,n_tile-1 DO BEGIN
+        tile_i=tile_nums[i0]
+        IF hist_A1[tile_i] GT 0 THEN tile_A[ria[ria[tile_i]:ria[tile_i+1]-1]]=i0+1
+        IF hist_B1[tile_i] GT 0 THEN tile_B[rib[rib[tile_i]:rib[tile_i+1]-1]]=i0+1
+    ENDFOR
+    
     
     kx_arr=params.uu#frequency_array
     ky_arr=params.vv#frequency_array
