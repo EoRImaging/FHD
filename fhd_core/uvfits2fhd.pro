@@ -144,7 +144,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     data_struct=0. ;free memory
     
     flag_arr0=Reform(data_array[flag_index,*,*,*])
-    IF n_pol EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
+    IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
     IF Keyword_Set(flag) THEN BEGIN
         print,'Flagging anomalous data'
         vis_flag,data_array,flag_arr0,obs,params,_Extra=extra
