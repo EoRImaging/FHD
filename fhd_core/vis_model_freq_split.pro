@@ -88,8 +88,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             *residual_arr[pol_i,fi]=dirty_uv
             *weights_arr[pol_i,fi]=weights_holo
         ENDELSE
-        tarr+=tarr0
-        t_grid+=t_grid0
+        IF Keyword_Set(tarr0) THEN tarr+=tarr0
+        IF Keyword_Set(t_grid0) THEN t_grid+=t_grid0
     ENDFOR  
 ;    vis_use=0 ;free memory  
 ENDFOR
