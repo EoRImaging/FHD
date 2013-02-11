@@ -1,6 +1,6 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
-    FoV=FoV,precess=precess, _Extra=extra
+    FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
@@ -49,6 +49,25 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
 ;    Precess,obsra,obsdec,2000.,epoch
     zenpos2,Min(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
+    
+    IF Keyword_Set(scale_uv) THEN BEGIN
+        params.uu*=scale_uv
+        params.vv*=scale_uv
+        params.ww*=scale_uv
+    ENDIF
+    IF Keyword_Set(rotate_uv) THEN BEGIN
+        uu1=(uu=params.uu)
+        vv1=(vv=params.vv)
+;        vv/=Cos(lat*!DtoR)^2.
+        FOR i=0,nb-1 DO BEGIN
+            zenpos2,Jdate[i]-time_offset,zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
+            rotation_use=angle_difference(zendec,zenra,zendec2,zenra2,/degree)
+            uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_use*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_use*!DtoR)
+            vv1[bin_start[i]:bin_end[i]]=vv[bin_start[i]:bin_end[i]]*Cos(rotation_use*!DtoR)+uu[bin_start[i]:bin_end[i]]*Sin(rotation_use*!DtoR)
+        ENDFOR
+        params.uu=uu1
+        params.vv=vv1        
+    ENDIF
     
     calibration=fltarr(4)+1.
     IF N_Elements(n_pol) EQ 0 THEN n_pol=header.n_pol

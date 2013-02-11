@@ -33,22 +33,25 @@ IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 noise_calibrate=0
 align=0
 ;dimension=1024.
-kbinsize=0.25
+kbinsize=0.5
 max_sources=1000.
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 instrument='paper'
 lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
+rotate_uv=1.
+scale_uv=2.*!Pi
+n_pol=1
 FOR fi=0L,n_files-1 DO BEGIN
-    uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
+    uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,$
-        instrument=instrument,lon=lon,lat=lat,kbinsize=kbinsize,_Extra=extra
+        instrument=instrument,lon=lon,lat=lat,kbinsize=kbinsize,rotate_uv=rotate_uv,scale_uv=scale_uv,_Extra=extra
 ENDFOR
 
 map_projection='orth'
