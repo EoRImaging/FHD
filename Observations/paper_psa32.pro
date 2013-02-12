@@ -40,8 +40,8 @@ precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 instrument='paper'
 lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
-rotate_uv=1.
-scale_uv=2.*!Pi
+rotate_uv=0
+scale_uv=!Pi
 n_pol=1
 FOR fi=0L,n_files-1 DO BEGIN
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
