@@ -7,18 +7,19 @@ compile_opt idl2,strictarrsubs
 dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
+n_pol=obs.n_pol
 IF N_Elements(radius_inc) EQ 0 THEN radius_inc=10. ;degrees
 IF N_Elements(ston) EQ 0 THEN ston=0. ;signal to noise source threshold that has been removed from residual_image
 
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)+1
-FOR pol_i=0,1 DO BEGIN
+FOR pol_i=0,((n_pol-1)<1) DO BEGIN
     beam_i=region_grow(*beam_base[pol_i],dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold,Max(*beam_base[pol_i])])
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1    
     beam_mask*=beam_mask0
     beam_avg*=*beam_base[pol_i]
 ENDFOR
-beam_avg=Sqrt(beam_avg>0)
+IF n_pol GT 1 THEN beam_avg=Sqrt(beam_avg>0)
 
 res_Is=(residual_image*beam_avg-median(residual_image*beam_avg,fhd.smooth_width))
 

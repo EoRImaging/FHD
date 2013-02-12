@@ -58,12 +58,13 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF Keyword_Set(rotate_uv) THEN BEGIN
         uu1=(uu=params.uu)
         vv1=(vv=params.vv)
-;        vv/=Cos(lat*!DtoR)^2.
+;        uu*=Cos(lat*!DtoR)^2.
+        rotation_arr=fltarr(nb)
         FOR i=0,nb-1 DO BEGIN
             zenpos2,Jdate[i]-time_offset,zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
-            rotation_use=angle_difference(zendec,zenra,zendec2,zenra2,/degree)
-            uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_use*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_use*!DtoR)
-            vv1[bin_start[i]:bin_end[i]]=vv[bin_start[i]:bin_end[i]]*Cos(rotation_use*!DtoR)+uu[bin_start[i]:bin_end[i]]*Sin(rotation_use*!DtoR)
+            rotation_arr[i]=angle_difference(zendec,zenra,zendec2,zenra2,/degree);/2.
+            uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
+            vv1[bin_start[i]:bin_end[i]]=vv[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)+uu[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
         ENDFOR
         params.uu=uu1
         params.vv=vv1        
