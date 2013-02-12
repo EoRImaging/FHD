@@ -12,8 +12,9 @@ IF Keyword_Set(antenna_beam_arr) THEN IF Keyword_Set(*antenna_beam_arr[0]) THEN 
     tile_beam=tile_beam
     RETURN,tile_beam
 ENDIF
-
-paper_beam_filepath=rootdir()+'PAPER_DATA\PAPER_beam_xx.fits'
+IF strlowcase(!version.os_family) EQ 'windows' THEN $ 
+    paper_beam_filepath=rootdir()+'PAPER_DATA\PAPER_beam_xx.fits' ELSE $
+    paper_beam_filepath='/data2/PAPER/PAPER_beam_xx.fits'
 beam_cube=mrdfits(paper_beam_filepath,0,header,/silent)
 naxis1=sxpar(header,'NAXIS1')
 naxis2=sxpar(header,'NAXIS2')
