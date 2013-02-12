@@ -52,9 +52,27 @@ ymin=Floor(ycen0-box_dim/2.) & ymax=ymin+box_dim-1
 
 si1=where((xmin GE 0) AND (ymin GE 0) AND (xmax LE dimension-1) AND (ymax LE elements-1),ns)
 source_image=fltarr(dimension,elements)
-FOR si=0L,ns-1L DO source_image[xmin[si1[si]]:xmax[si1[si]],ymin[si1[si]]:ymax[si1[si]]]+=$
-    flux[si1[si]]*(*beam_useR_arr[x_offset[si1[si]],y_offset[si1[si]]])
-
+FOR si=0L,ns-1L DO BEGIN
+    IF Ptr_valid(source_array[si].extend) THEN BEGIN
+        comp_arr=*(source_array[si].extend)
+        cx=comp_arr.x
+        cy=comp_arr.y
+        x_offset1=Round((Ceil(cx)-cx)*resolution) mod resolution    
+        y_offset1=Round((Ceil(cy)-cy)*resolution) mod resolution
+        xcen1=Round(cx+x_offset1/resolution) ;do this after offset, in case it has rounded to the next grid point
+        ycen1=Round(cy+y_offset1/resolution)
+        xmin1=Floor(xcen1-box_dim/2.) & xmax1=xmin1+box_dim-1
+        ymin1=Floor(ycen1-box_dim/2.) & ymax1=ymin1+box_dim-1
+        ci1=where((xmin1 GE 0) AND (ymin1 GE 0) AND (xmax1 LE dimension-1) AND (ymax1 LE elements-1),nc)
+        FOR ci=0L,nc-1 DO BEGIN
+            source_image[xmin1[ci1[ci]]:xmax1[ci1[ci]],ymin1[ci1[ci]]:ymax1[ci1[ci]]]+=$
+                comp_arr[ci1[ci]].flux.(pol_i)*(*beam_useR_arr[x_offset1[ci1[ci]],y_offset1[ci1[ci]]])
+        ENDFOR
+    ENDIF ELSE BEGIN
+        source_image[xmin[si1[si]]:xmax[si1[si]],ymin[si1[si]]:ymax[si1[si]]]+=$
+            flux[si1[si]]*(*beam_useR_arr[x_offset[si1[si]],y_offset[si1[si]]])
+    ENDELSE
+ENDFOR
 ;source_image=fltarr(dimension,elements)
 ;IF Keyword_Set(ring_radius) THEN FOR si=0,ns-1 DO $
 ;    source_image+=sf[si]*Exp(-Abs(((x_vals-sx[si])/width)^2.+((y_vals-sy[si])/width)^2.-2.*ring_radius)/2.) $

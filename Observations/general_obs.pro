@@ -1,7 +1,8 @@
 PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,$
-    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,_Extra=extra
+    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
+    complex_beam=complex_beam,double_precison_beam=double_precison_beam,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -21,8 +22,8 @@ IF N_Elements(healpix_path) EQ 0 THEN healpix_path=fhd_path_setup(output_dir=dat
 
 IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 
-complex_beam=0
-double_precison_beam=0
+IF N_Elements(complex_beam) EQ 0 THEN complex_beam=0
+IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 n_files=N_Elements(vis_file_list)
 
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all

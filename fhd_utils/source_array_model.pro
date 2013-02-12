@@ -14,10 +14,21 @@ IF Keyword_Set(mask) THEN BEGIN
 ENDIF ELSE model_uv=Dcomplexarr(dimension,elements)
 
 FOR si=0L,ns-1 DO BEGIN
-    IF not Keyword_Set(beam_correction) THEN beam_corr_src=1. $
-        ELSE beam_corr_src=(*beam_correction[pol_i])[Floor(source_array[si].x),Floor(source_array[si].y)]
-    source_uv=Exp(icomp*(2d*!DPi/dimension)*((source_array[si].x-dimension/2.)*xvals+(source_array[si].y-elements/2.)*yvals))
-    model_uv+=source_array[si].flux.(pol_i)*beam_corr_src*source_uv 
+    IF Ptr_valid(source_array[si].extend) THEN BEGIN
+        comp_arr=*(source_array[si].extend)
+        nc=(size(comp_arr,/dimension))[0]
+        FOR ci=0L,nc-1 DO BEGIN
+            IF not Keyword_Set(beam_correction) THEN beam_corr_src=1. $
+                ELSE beam_corr_src=(*beam_correction[pol_i])[Floor(comp_arr[ci].x),Floor(comp_arr[ci].y)]
+            source_uv=Exp(icomp*(2d*!DPi/dimension)*((comp_arr[ci].x-dimension/2.)*xvals+(comp_arr[ci].y-elements/2.)*yvals))
+            model_uv+=comp_arr[ci].flux.(pol_i)*beam_corr_src*source_uv 
+        ENDFOR
+    ENDIF ELSE BEGIN
+        IF not Keyword_Set(beam_correction) THEN beam_corr_src=1. $
+            ELSE beam_corr_src=(*beam_correction[pol_i])[Floor(source_array[si].x),Floor(source_array[si].y)]
+        source_uv=Exp(icomp*(2d*!DPi/dimension)*((source_array[si].x-dimension/2.)*xvals+(source_array[si].y-elements/2.)*yvals))
+        model_uv+=source_array[si].flux.(pol_i)*beam_corr_src*source_uv 
+    ENDELSE
 ENDFOR
 
 IF Keyword_Set(mask) THEN BEGIN
