@@ -1,7 +1,7 @@
-FUNCTION Components2Sources,comp_arr,radius=radius,noise_map=noise_map
+FUNCTION Components2Sources,comp_arr,radius=radius,noise_map=noise_map,extend_allow=extend_allow
 compile_opt idl2,strictarrsubs  
 
-IF N_Elements(radius) EQ 0 THEN radius=0.5
+IF N_Elements(radius) EQ 0 THEN radius=1.
 
 ns=(size(comp_arr,/dimension))[0]
 group_id=fltarr(ns)-1
@@ -13,7 +13,7 @@ FOR si=0L,ns-1 DO BEGIN
     dx=comp_arr[si].x-comp_arr[si_use].x
     dy=comp_arr[si].y-comp_arr[si_use].y
     dr=sqrt(dx^2.+dy^2.)
-    group_i=where(dr LE radius,n_group) ;guaranteed at least one since si is included in si_use
+    group_i=where(dr LT radius,n_group) ;guaranteed at least one since si is included in si_use
     group_id[si_use[group_i]]=g_id
     g_id+=1
 ENDFOR
@@ -36,7 +36,12 @@ FOR gi=0L,ng-1 DO BEGIN
     IF Keyword_Set(noise_map) THEN source_arr[gi].ston=Total(flux_I)/noise_map[source_arr[gi].x,source_arr[gi].y] ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
     
-    source_arr[gi].extend=0 ;need to add some way to handle extended sources!
+    
+    dist_test=Sqrt((source_arr[gi].x-comp_arr[si_g].x)^2.+(source_arr[gi].y-comp_arr[si_g].y)^2.)
+    IF Stddev(dist_test) GE radius/4. THEN BEGIN
+        *(source_arr[gi].extend)=comp_arr[si_g]
+    ENDIF
+;    source_arr[gi].extend=0 ;need to add some way to handle extended sources!
 ENDFOR
 
 RETURN,source_arr

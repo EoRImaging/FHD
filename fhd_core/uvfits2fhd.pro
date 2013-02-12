@@ -144,12 +144,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
     data_struct=0. ;free memory
     
     flag_arr0=Reform(data_array[flag_index,*,*,*])
+    IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
     IF Keyword_Set(flag) THEN BEGIN
         print,'Flagging anomalous data'
         vis_flag,data_array,flag_arr0,obs,params,_Extra=extra
         SAVE,flag_arr0,filename=flags_filepath,/compress
     ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
-        IF file_test(flags_filepath) NE 0 THEN RESTORE,flags_filepath ELSE SAVE,flag_arr0,filename=flags_filepath,/compress
+        SAVE,flag_arr0,filename=flags_filepath,/compress
     
     save,obs,filename=obs_filepath
     save,params,filename=params_filepath
@@ -161,7 +162,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
-    
     
     beam_mask=fltarr(obs.dimension,obs.elements)+1
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN

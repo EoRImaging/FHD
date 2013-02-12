@@ -1,6 +1,6 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
-    FoV=FoV,precess=precess, _Extra=extra
+    FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
@@ -49,17 +49,49 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
 ;    Precess,obsra,obsdec,2000.,epoch
     zenpos2,Min(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
-
-    ;256 tile upper limit is hard-coded in CASA format
-    ;these tile numbers have been verified to be correct
-    tile_A=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
-    tile_B=Long(Fix(params.baseline_arr mod 256))
+    
+    IF Keyword_Set(scale_uv) THEN BEGIN
+        params.uu*=scale_uv
+        params.vv*=scale_uv
+        params.ww*=scale_uv
+    ENDIF
+    IF Keyword_Set(rotate_uv) THEN BEGIN
+        uu1=(uu=params.uu)
+        vv1=(vv=params.vv)
+;        uu*=Cos(lat*!DtoR)^2.
+        rotation_arr=fltarr(nb)
+        FOR i=0,nb-1 DO BEGIN
+            zenpos2,Jdate[i]-time_offset,zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
+            rotation_arr[i]=angle_difference(zendec,zenra,zendec2,zenra2,/degree);/2.
+            uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
+            vv1[bin_start[i]:bin_end[i]]=vv[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)+uu[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
+        ENDFOR
+        params.uu=uu1
+        params.vv=vv1        
+    ENDIF
     
     calibration=fltarr(4)+1.
     IF N_Elements(n_pol) EQ 0 THEN n_pol=header.n_pol
     n_tile=header.n_tile
     n_freq=header.n_freq
     n_vis=Float(N_Elements(time))*n_freq
+    
+    ;256 tile upper limit is hard-coded in CASA format
+    ;these tile numbers have been verified to be correct
+    tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
+    tile_B1=Long(Fix(params.baseline_arr mod 256))
+    hist_A1=histogram(tile_A1,min=0,max=256,/binsize,reverse_ind=ria)
+    hist_B1=histogram(tile_B1,min=0,max=256,/binsize,reverse_ind=rib)
+    hist_AB=hist_A1+hist_B1
+    tile_nums=where(hist_AB,n_tile)
+    
+    tile_A=(tile_B=Lonarr(N_Elements(params.baseline_arr)))
+    FOR i0=0,n_tile-1 DO BEGIN
+        tile_i=tile_nums[i0]
+        IF hist_A1[tile_i] GT 0 THEN tile_A[ria[ria[tile_i]:ria[tile_i+1]-1]]=i0+1
+        IF hist_B1[tile_i] GT 0 THEN tile_B[rib[rib[tile_i]:rib[tile_i+1]-1]]=i0+1
+    ENDFOR
+    
     
     kx_arr=params.uu#frequency_array
     ky_arr=params.vv#frequency_array

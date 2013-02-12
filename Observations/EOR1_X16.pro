@@ -12,7 +12,7 @@ IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(version) EQ 0 THEN version=0
 
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
-data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1'])
+data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1'])
 
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)
@@ -39,7 +39,7 @@ precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FOR fi=0,n_files-1 DO BEGIN
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
-        mapfn_recalculate=mapfn,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
+        mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
