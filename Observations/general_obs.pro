@@ -61,7 +61,7 @@ IF Keyword_Set(ps_export) THEN BEGIN
     vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,_Extra=extra
 ENDIF
 IF Keyword_Set(cleanup) THEN FOR fi=0,n_files-1 DO fhd_cleanup,fhd_file_list[fi]
+
+
 !except=except
-
-
 END
