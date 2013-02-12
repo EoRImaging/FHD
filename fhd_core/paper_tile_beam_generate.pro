@@ -71,7 +71,7 @@ dec_offset=dec_arr[dimension/2.,elements/2.]
 ra_use=ra_arr[valid_i2]-ra_offset
 dec_use=dec_arr[valid_i2]-dec_offset
 ad2xy,ra_use,dec_use,astr,xv_use,yv_use
-tile_beam_use=interpolate(beam_slice,xv_use,yv_use)
+tile_beam_use=interpolate(beam_slice,xv_use,yv_use,missing=0)
 tile_beam=Fltarr(size(za_arr,/dimension))
 tile_beam[valid_i2]=tile_beam_use  ;gives default polarization of XX (polarization=0)
 
