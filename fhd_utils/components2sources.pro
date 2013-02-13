@@ -39,7 +39,7 @@ FOR gi=0L,ng-1 DO BEGIN
     
     dist_test=Sqrt((source_arr[gi].x-comp_arr[si_g].x)^2.+(source_arr[gi].y-comp_arr[si_g].y)^2.)
     IF Stddev(dist_test) GE radius/4. THEN BEGIN
-        *(source_arr[gi].extend)=comp_arr[si_g]
+        (source_arr[gi].extend)=Ptr_new(comp_arr[si_g])
     ENDIF
 ;    source_arr[gi].extend=0 ;need to add some way to handle extended sources!
 ENDFOR
