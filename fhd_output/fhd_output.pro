@@ -41,6 +41,14 @@ image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
 
+IF Keyword_Set(image_filter_fn) THEN BEGIN
+    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
+    IF Keyword_Set(filter_name) THEN BEGIN
+        export_path+='_'+filter_name
+        image_path+='_'+filter_name
+    ENDIF
+ENDIF
+
 ; *_fhd.sav contains:
 ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization_arr,weights_arr,$
 ;    beam_base,beam_correction,ra_arr,dec_arr,astr
