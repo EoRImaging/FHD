@@ -19,6 +19,8 @@
 FUNCTION holo_mapfn_apply,image,map_fn,mask,timing=timing,transpose=transpose,complex=complex,double=double,_Extra=extra
 t0=Systime(1)
 
+IF N_Elements(complex) EQ 0 THEN complex=1
+
 dimension=Float((size(image,/dimension))[0])
 elements=Float((size(image,/dimension))[1])
 

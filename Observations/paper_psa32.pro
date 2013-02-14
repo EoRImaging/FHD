@@ -34,15 +34,15 @@ noise_calibrate=0
 align=0
 ;dimension=1024.
 kbinsize=0.5
-max_sources=1000.
+max_sources=10000.
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 instrument='paper'
 lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
 rotate_uv=0
-scale_uv=!Pi
-n_pol=1
+scale_uv=1.
+n_pol=2
 FOR fi=0L,n_files-1 DO BEGIN
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
