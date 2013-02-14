@@ -43,6 +43,7 @@ lon=Ten(21,25,41)
 rotate_uv=0
 scale_uv=1.
 n_pol=2
+mirror_X=1
 FOR fi=0L,n_files-1 DO BEGIN
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
@@ -51,7 +52,8 @@ FOR fi=0L,n_files-1 DO BEGIN
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,$
-        instrument=instrument,lon=lon,lat=lat,kbinsize=kbinsize,rotate_uv=rotate_uv,scale_uv=scale_uv,_Extra=extra
+        instrument=instrument,lon=lon,lat=lat,kbinsize=kbinsize,$
+        rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,_Extra=extra
 ENDFOR
 
 map_projection='orth'
