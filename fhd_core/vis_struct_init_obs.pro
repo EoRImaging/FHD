@@ -103,7 +103,8 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)])
     kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
     
-    IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
+    IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
+    IF ~Keyword_Set(kbinsize) THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
     IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline_use ELSE k_span=!RaDeg/degpix 
     dimension_test=2.^Round(ALOG10(k_span/kbinsize)/ALOG10(2.))
     
