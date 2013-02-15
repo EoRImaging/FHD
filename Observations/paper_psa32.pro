@@ -48,7 +48,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,$
-    rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,$
+    rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,lon=lon,lat=lat,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,_Extra=extra
 
 !except=except
