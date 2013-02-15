@@ -35,11 +35,13 @@ FOR freq_i=0,n_freq_bin-1 DO BEGIN
     IF N_Elements(freq_bin_i) GT 0 THEN IF Total(freq_bin_i EQ freq_i) EQ 0 THEN CONTINUE
     beam_base_uv=Complexarr(dimension,elements)
     beam_base_uv[xl:xh,yl:yh]=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,freq_i,0,0]):*psf_base_ptr[pol_i,freq_i,0,0],psf_dim,psf_dim)
-    beam_base1=fft_shift(real_part(FFT(fft_shift(beam_base_uv),/inverse)))
+    beam_base_uv+=Shift(Reverse(reverse(Conj(beam_base_uv),1),2),1,1)
+    beam_base1=fft_shift(FFT(fft_shift(beam_base_uv),/inverse))/2.
     beam_base+=beam_base1
     n_bin_use+=1.
 ENDFOR
 beam_base/=n_bin_use
+beam_base=real_part(beam_base)
 
 CASE pol_i OF 
     0:BEGIN pol_i1=0 & pol_i2=0 & END
