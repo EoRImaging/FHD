@@ -138,6 +138,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     t3a=Systime(1)
     t2+=t3a-t2a
     
+    dirty_images=Ptrarr(npol,/allocate)
     instr_images=Ptrarr(npol,/allocate)
     instr_sources=Ptrarr(npol,/allocate)
     
@@ -156,6 +157,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
             beam_correction=beam_correction,mask=source_uv_mask)
         *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
+        *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],$
+            image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
@@ -251,6 +254,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         calibration=noise_floor/Stddev(res_Is[beam_i])
         FOR pol_i=0,npol-1 DO BEGIN
             *instr_images[pol_i]*=calibration
+            *dirty_images[pol_i]*=calibration
             *stokes_images[pol_i]*=calibration
             *instr_sources[pol_i]*=calibration
             *stokes_sources[pol_i]*=calibration
@@ -269,7 +273,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
 ;    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,stokes_images,instr_sources,stokes_sources,$
 ;        beam_est,model_uv_arr,model_holo_arr,calibration,p_map_simple,p_corr_simple,filename=file_path_fhd+'_output.sav'
-    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,stokes_images,instr_sources,stokes_sources,$
+    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,dirty_images,stokes_images,instr_sources,stokes_sources,$
         model_uv_arr,model_holo_arr,calibration,filename=file_path_fhd+'_output.sav'
     
 ENDIF ELSE restore,file_path_fhd+'_output.sav'
@@ -315,6 +319,7 @@ FOR pol_i=0,npol-1 DO BEGIN
 ;        mrc_image=reverse(mrc_image,1)
 ;    ENDIF ELSE BEGIN
         instr_residual=*instr_images[pol_i]
+        instr_dirty=*dirty_images[pol_i]
         instr_source=*instr_sources[pol_i]
         instr_restored=instr_residual+instr_source
         beam_use=*beam_base_out[pol_i];*(*p_map_simple[pol_i])*2.
@@ -329,6 +334,7 @@ FOR pol_i=0,npol-1 DO BEGIN
     
     t8a=Systime(1)
     
+    FitsFast,instr_dirty,fits_header,/write,file_path=export_path+filter_name+'_Dirty_'+pol_names[pol_i]
     FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+'_Residual_'+pol_names[pol_i]
     FitsFast,instr_source,fits_header,/write,file_path=export_path+'_Sources_'+pol_names[pol_i]
     FitsFast,instr_restored,fits_header,/write,file_path=export_path+filter_name+'_Restored_'+pol_names[pol_i]
@@ -346,6 +352,8 @@ FOR pol_i=0,npol-1 DO BEGIN
     instr_low=Min(instr_residual[where(beam_mask)])
     instr_high=Max(instr_residual[where(beam_mask)])
     instrS_high=Max(instr_restored[where(beam_mask)])
+    Imagefast,instr_dirty,file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=instr_low,high=instrS_high
     Imagefast,instr_residual,file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high;,$
 ;        lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs_out.degpix,$
