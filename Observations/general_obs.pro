@@ -22,7 +22,7 @@ IF N_Elements(healpix_path) EQ 0 THEN healpix_path=fhd_path_setup(output_dir=dat
 
 IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 
-IF N_Elements(complex_beam) EQ 0 THEN complex_beam=0
+IF N_Elements(complex_beam) EQ 0 THEN complex_beam=1
 IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 n_files=N_Elements(vis_file_list)
 
