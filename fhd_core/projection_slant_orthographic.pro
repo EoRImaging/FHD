@@ -56,7 +56,7 @@ projection_name='SIN'
 ;image is centered at obsra, obsdec, but projection is centered at zenra, zendec
 
 CTYPE=['RA---'+projection_name,'DEC--'+projection_name]
-delt=[degpix,degpix]
+IF N_Elements(degpix) EQ 2 THEN delt=degpix ELSE delt=[degpix,degpix]
 cd=[[1.,0.],[0.,1.]]
 ;;cd=[[Cos(rotation*!DtoR),Sin(rotation*!DtoR)],[-Sin(rotation*!DtoR),Cos(rotation*!DtoR)]]
 PV2_1=xi

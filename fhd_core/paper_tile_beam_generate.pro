@@ -32,7 +32,7 @@ freq_ref_val=sxpar(header,'CRVAL3')
 freq_delt=sxpar(header,'CDELT3')
 freq_arr=(findgen(n_freq)-freq_ref_i)*freq_delt+freq_ref_val
 
-degpix=(Abs(beam_RA_delt)+Abs(beam_Dec_delt))/2.
+degpix=[beam_RA_delt,beam_Dec_delt]
 
 beam_slice=fltarr(naxis1,naxis2)
 FOR i=0,naxis1-1 DO FOR j=0,naxis2-1 DO beam_slice[i,j]=Interpol(beam_cube[i,j,*],freq_arr,frequency)

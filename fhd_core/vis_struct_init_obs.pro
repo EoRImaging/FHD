@@ -1,6 +1,6 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
-    FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv, _Extra=extra
+    FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
@@ -114,6 +114,9 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
     IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
     
+    degpix=[degpix,degpix]
+    IF Keyword_Set(mirror_X) THEN degpix[0]*=-1
+    IF Keyword_Set(mirror_Y) THEN degpix[1]*=-1
     projection_slant_orthographic,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
         dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
 ;    vis_coordinates,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
