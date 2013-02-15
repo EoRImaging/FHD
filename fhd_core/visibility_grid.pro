@@ -189,10 +189,11 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;        box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)  
         box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]         
     ENDFOR
+    box_matrix_dag=Conj(box_matrix)
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    box_arr=vis_box#box_matrix/vis_density
+    box_arr=vis_box#box_matrix_dag/vis_density
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
@@ -203,7 +204,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t6_0=Systime(1)
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
-        box_arr_map=matrix_multiply(box_matrix,box_matrix,/atranspose)/vis_density
+        box_arr_map=matrix_multiply(box_matrix,box_matrix_dag,/atranspose)/vis_density
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
             (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
