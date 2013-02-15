@@ -87,6 +87,15 @@ source_arr_out=source_arr
 
 ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
 source_arr_out.x=sx & source_arr_out.y=sy
+extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
+IF n_extend GT 0 THEN BEGIN
+    FOR ext_i=0L,n_extend-1 DO BEGIN
+        comp_arr_out=*source_arr_out[extend_test[ext_i]].extend
+        ad2xy,comp_arr_out.ra,comp_arr_out.dec,astr_out,cx,cy
+        comp_arr_out.x=cx & comp_arr_out.y=cy
+        *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
+    ENDFOR
+ENDIF
 
 ;Build a fits header
 mkhdr,fits_header,*residual_array[0]
