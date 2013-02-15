@@ -209,35 +209,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate,_Extra=extra)
             t_grid[pol_i]=t_grid0
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0)
-            
-    ;        IF Keyword_Set(CASA_calibration) THEN BEGIN
-    ;            norm=Max(*psf.base[pol_i,(Size(psf.base,/dimension))[1]/2.,0,0])
-    ;            ;I have subtracted the auto-correlations
-    ;            n_vis_orig=((obs.bin_offset)[1]-obs.n_tile)*obs.n_freq*Float(N_Elements(obs.bin_offset)) 
-    ;;            norm*=n_vis_orig/obs.n_vis ;vis_flag updates obs.n_vis to only the number of unflagged visibilities 
-    ;                           ;(potentially need to update during gridding in case some are outside of the image!)
-    ;            dirty_UV/=norm^2.
-    ;            dirty_img/=norm^2.
-    ;;            weights_grid*=norm
-    ;        ENDIF
-            
             save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
             save,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
         ENDFOR
         print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
-    ;    FOR pol_i=0,n_pol-1 DO BEGIN
-    ;        restore,file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
-    ;        restore,file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
-    ;        norm0=Max(*psf.base[pol_i,(Size(psf.base,/dimension))[1]/2.,0,0])
-    ;        n_vis_orig=((obs.bin_offset)[1]-obs.n_tile)*obs.n_freq*Float(N_Elements(obs.bin_offset))
-    ;        
-    ;        dirty_UV*=norm0^2.
-    ;        dirty_img*=norm0^2.
-    ;        save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
-    ;        save,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
-    ;    ENDFOR
     ENDELSE
      
 ENDIF
@@ -252,10 +229,7 @@ ENDIF ELSE print,'Gridded visibilities not deconvolved'
 
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
-    print,'Exporting images'
-;    ;Temporary addition:
-;    fhd_paper_figures,restore_last=0,coord_debug=0,silent=0,show_grid=1,version=version,_Extra=extra
-    
+    print,'Exporting images'    
     fhd_output,obs,fhd,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
 ENDIF
 
