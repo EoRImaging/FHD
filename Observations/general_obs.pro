@@ -1,8 +1,8 @@
 PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,$
+    grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
-    complex_beam=complex_beam,double_precison_beam=double_precison_beam,_Extra=extra
+    complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -36,10 +36,11 @@ noise_calibrate=0
 align=0
 ;dimension=1024.
 max_sources=10000.
-pad_uv_image=2.
-precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
+IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=2.
+IF N_Elements(n_pol) EQ 0 THEN n_pol=2
+IF N_Elements(precess) EQ 0 THEN precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FOR fi=0L,n_files-1 DO BEGIN
-    uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=2,$
+    uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
