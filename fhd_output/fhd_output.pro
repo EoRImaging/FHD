@@ -125,13 +125,14 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     beam_correction_out=Ptrarr(npol,/allocate)
     FOR pol_i=0,(npol<2)-1 DO BEGIN
         *beam_base_out[pol_i]=beam_image(psf,pol_i=pol_i,dimension=dimension)
-        *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold)
-        beam_mask_test=*beam_base_out[pol_i];*(*p_map_simple[pol_i]);*(ps_not_used*2.)
-        beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold,Max(beam_mask_test)])
+        *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold/2.)
+        beam_mask_test=*beam_base_out[pol_i]
+        beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold/2.,Max(beam_mask_test)])
         beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
         beam_avg+=*beam_base_out[pol_i]
         beam_mask*=beam_mask0
     ENDFOR
+    FOR pol_i=0,(npol<2)-1 DO *beam_correction_out[pol_i]*=beam_mask
     beam_avg/=(npol<2)
     beam_i=where(beam_mask)
     
