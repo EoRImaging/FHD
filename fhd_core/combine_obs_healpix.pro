@@ -34,6 +34,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     obs_i_use=where(cal_use,n_obs,complement=fi_cut,ncomp=n_cut)
     cal_use[obs_i_use]=1./cal_use[obs_i_use]
     
+    cal_use[*]=1.
+    
     IF n_cut NE 0 THEN BEGIN
         cal_use[fi_cut]=1.
         n_obs=N_Elements(cal_use)
