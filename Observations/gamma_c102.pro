@@ -14,7 +14,7 @@ IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=0
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 
-data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['Gamma','C102',Strn(Floor(channel))])
+data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['Gamma','C102',Strn(Floor(channel))])
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
