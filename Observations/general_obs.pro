@@ -3,7 +3,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
-    update_file_list=update_file_list,_Extra=extra
+    update_file_list=update_file_list,combine_healpix=combine_healpix,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -58,14 +58,16 @@ WHILE fi LT n_files DO BEGIN
 ENDWHILE
 
 map_projection='orth'
-combine_obs_sources,fhd_file_list,calibration,source_list,restore_last=0,output_path=healpix_path
-combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,obs_arr=obs_arr,$
-    nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,image_filter_fn=image_filter_fn,_Extra=extra
-combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,$
-    weight_threshold=0.5,fraction_pol=0.5,high_dirty=6.0,low_dirty=-1.5,high_residual=3.0,high_source=3.0,$
-    nside=nside,output_path=healpix_path,restore_last=0,obs_arr=obs_arr,map_projection=map_projection,_Extra=extra
-
-calibration_test,fhd_file_list,output_path=healpix_path
+IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=recalculate_all*(n_files GT 1)
+IF Keyword_Set(combine_healpix) THEN BEGIN
+    combine_obs_sources,fhd_file_list,calibration,source_list,restore_last=0,output_path=healpix_path
+    combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,obs_arr=obs_arr,$
+        nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,image_filter_fn=image_filter_fn,_Extra=extra
+    combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,$
+        weight_threshold=0.5,fraction_pol=0.5,high_dirty=6.0,low_dirty=-1.5,high_residual=3.0,high_source=3.0,$
+        nside=nside,output_path=healpix_path,restore_last=0,obs_arr=obs_arr,map_projection=map_projection,_Extra=extra
+    calibration_test,fhd_file_list,output_path=healpix_path
+ENDIF
 
 IF Keyword_Set(ps_export) THEN BEGIN
     vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,_Extra=extra
