@@ -454,7 +454,7 @@ FOR i=0L,max_iter-1 DO BEGIN
 ENDFOR
 
 ;condense clean components
-noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*beam_corr_avg
+noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
 source_array=Components2Sources(comp_arr,radius=0.5,noise_map=noise_map)
 
 FOR pol_i=0,n_pol-1 DO BEGIN

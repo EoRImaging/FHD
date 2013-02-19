@@ -33,7 +33,10 @@ FOR gi=0L,ng-1 DO BEGIN
     FOR pol_i=0,7 DO source_arr[gi].flux.(pol_i)=Total(comp_arr[si_g].flux.(pol_i))
     source_arr[gi].id=gi
     comp_arr[si_g].id=gi
-    IF Keyword_Set(noise_map) THEN source_arr[gi].ston=Total(flux_I)/noise_map[source_arr[gi].x,source_arr[gi].y] ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
+    IF Keyword_Set(noise_map) THEN BEGIN
+        nm0=noise_map[source_arr[gi].x,source_arr[gi].y] 
+        IF nm0 GT 0 THEN source_arr[gi].ston=Total(flux_I)/nm0 ELSE source_arr[gi].ston=0.
+    ENDIF ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
     
     

@@ -1,6 +1,6 @@
 PRO combine_obs_healpix,file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,$
     nside=nside,restore_last=restore_last,version=version,output_path=output_path,$
-    flux_scale=flux_scale,obs_arr=obs_arr,image_filter_fn=image_filter_fn,_Extra=extra
+    flux_scale=flux_scale,obs_arr=obs_arr,image_filter_fn=image_filter_fn,ston_cut=ston_cut,_Extra=extra
 
 except=!except
 !except=0 
@@ -33,6 +33,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     cal_use=calibration
     obs_i_use=where(cal_use,n_obs,complement=fi_cut,ncomp=n_cut)
     cal_use[obs_i_use]=1./cal_use[obs_i_use]
+    
+    cal_use[*]=1.
     
     IF n_cut NE 0 THEN BEGIN
         cal_use[fi_cut]=1.
@@ -101,6 +103,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         astr=obs.astr            
         si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
         source_arr=source_array[si_use]
+        
+        IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT ston_cut THEN CONTINUE
                 
         FOR pol_i=0,npol-1 DO BEGIN
             dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn)*cal_use[obs_i]
