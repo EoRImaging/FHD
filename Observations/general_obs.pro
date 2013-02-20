@@ -3,7 +3,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
-    update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,_Extra=extra
+    update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,flag=flag,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -30,7 +30,7 @@ n_files=N_Elements(vis_file_list)
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
-flag=0
+IF N_Elements(flag) EQ 0 THEN flag=0
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 noise_calibrate=0
