@@ -87,12 +87,18 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         file_path_dty=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_dirty'
 ;        file_path_smt=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_smooth'
         
-        write_fits_cut4,file_path_img+'.fits',*Stokes_inds[stk_i],*Stokes_images[stk_i],/ring,Coords='C',nside=nside
-        write_fits_cut4,file_path_wts+'.fits',*Stokes_inds[stk_i],*Stokes_weights[stk_i],/ring,Coords='C',nside=nside
+        write_healpix_fits,file_path_img,*Stokes_images[stk_i],*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
+        write_healpix_fits,file_path_wts,*Stokes_weights[stk_i],*Stokes_inds[stk_i],nside=nside
+        write_healpix_fits,file_path_rst,Stokes_restored,*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
+        write_healpix_fits,file_path_src,Stokes_sources,*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
+        write_healpix_fits,file_path_dty,Stokes_dirty,*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
         
-        write_fits_cut4,file_path_rst+'.fits',*Stokes_inds[stk_i],Stokes_restored,/ring,Coords='C',nside=nside
-        write_fits_cut4,file_path_src+'.fits',*Stokes_inds[stk_i],Stokes_sources,/ring,Coords='C',nside=nside
-        write_fits_cut4,file_path_dty+'.fits',*Stokes_inds[stk_i],Stokes_dirty,/ring,Coords='C',nside=nside
+;        write_fits_cut4,file_path_img+'.fits',*Stokes_inds[stk_i],*Stokes_images[stk_i],/ring,Coords='C',nside=nside
+;        write_fits_cut4,file_path_wts+'.fits',*Stokes_inds[stk_i],*Stokes_weights[stk_i],/ring,Coords='C',nside=nside
+;        
+;        write_fits_cut4,file_path_rst+'.fits',*Stokes_inds[stk_i],Stokes_restored,/ring,Coords='C',nside=nside
+;        write_fits_cut4,file_path_src+'.fits',*Stokes_inds[stk_i],Stokes_sources,/ring,Coords='C',nside=nside
+;        write_fits_cut4,file_path_dty+'.fits',*Stokes_inds[stk_i],Stokes_dirty,/ring,Coords='C',nside=nside
         
 ;        write_fits_cut4,file_path_smt+'.fits',*Stokes_inds[stk_i],Stokes_smooth,/ring,Coords='C',nside=nside
     ENDFOR    
