@@ -3,7 +3,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
-    update_file_list=update_file_list,combine_healpix=combine_healpix,_Extra=extra
+    update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -41,8 +41,9 @@ IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=2.
 IF N_Elements(n_pol) EQ 0 THEN n_pol=2
 IF N_Elements(precess) EQ 0 THEN precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 
-fi=0
-WHILE fi LT n_files DO BEGIN
+IF N_Elements(start_fi) EQ 0 THEN fi=0 ELSE fi=start_fi
+IF N_Elements(end_fi) EQ 0 THEN end_fi=n_files
+WHILE fi LT end_fi DO BEGIN
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
@@ -54,6 +55,7 @@ WHILE fi LT n_files DO BEGIN
     IF Keyword_Set(update_file_list) THEN BEGIN ;use this if simultaneously downloading and deconvolving observations
         vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
         fhd_file_list=fhd_path_setup(vis_file_list,version=version)
+        end_fi=n_files
     ENDIF
 ENDWHILE
 
