@@ -8,42 +8,50 @@ except=!except
 !except=0 
 heap_gc
 
+;Set which procedures are to be run
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
-IF N_Elements(export_images) EQ 0 THEN export_images=1
+IF N_Elements(export_images) EQ 0 THEN export_images=0
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=0
-IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 
+;Set up paths
 IF N_Elements(data_directory) EQ 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
 IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 IF N_Elements(fhd_file_list) EQ 0 THEN fhd_file_list=fhd_path_setup(vis_file_list,version=version)
-
 IF N_Elements(healpix_path) EQ 0 THEN healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
-
 IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
-
-IF N_Elements(complex_beam) EQ 0 THEN complex_beam=1
-IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 n_files=N_Elements(vis_file_list)
 
+;Set which files to restore or recalculate (if the file is not found, it will be recalculated regardless)
+IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag) EQ 0 THEN flag=0
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
-noise_calibrate=0
-align=0
-;dimension=1024.
-max_sources=10000.
-IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=2.
+
+;Set up gridding and deconvolution parameters
+IF N_Elements(complex_beam) EQ 0 THEN complex_beam=1
 IF N_Elements(n_pol) EQ 0 THEN n_pol=2
 IF N_Elements(precess) EQ 0 THEN precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
+IF N_Elements(gain_factor) EQ 0 THEN gain_factor=0.6
+IF N_Elements(max_sources) EQ 0 THEN max_sources=2500. ;maximum total number of source components to fit
+IF N_Elements(add_threshold) EQ 0 THEN add_threshold=0.65 ;also fit additional components brighter than this threshold
+IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q, (U, V) seperately. Otherwise, only I (and U) is fit
+;dimension=1024.
+
+;Set up output image parameters
+IF N_Elements(quickview) EQ 0 THEN quickview=1
+IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=2. ;grid output images at a higher resolution if set (ignored for quickview images)
+IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
+noise_calibrate=0
+align=0
 
 IF N_Elements(start_fi) EQ 0 THEN fi=0 ELSE fi=start_fi
-IF N_Elements(end_fi) EQ 0 THEN end_fi=n_files
-WHILE fi LT end_fi DO BEGIN
+IF N_Elements(end_fi) EQ 0 THEN end_fi=n_files-1
+WHILE fi LE end_fi DO BEGIN
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
