@@ -106,7 +106,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         
         IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT ston_cut THEN CONTINUE
         
-        restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/2.
+        restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
         FOR pol_i=0,npol-1 DO BEGIN
             dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn)*cal_use[obs_i]
             model_single=dirty_image_generate(*model_uv_holo[pol_i],image_filter_fn=image_filter_fn)*cal_use[obs_i]
@@ -118,8 +118,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             
 ;            residual_background=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],/hanning)*cal_use[obs_i]
 ;            residual_smooth=residual_single-residual_background
-            weights_single=(*beam_base[pol_i]^2.)
-            
+            weights_single=(*beam_base[pol_i]^2.)            
             
             (*residual_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(residual_single,*hpx_cnv[obs_i])
             (*weights_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(weights_single,*hpx_cnv[obs_i])

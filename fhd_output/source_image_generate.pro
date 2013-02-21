@@ -33,12 +33,12 @@ yvals_i=meshgrid(box_dim,box_dim,2)*resolution
 IF Keyword_Set(ring_radius) THEN $
     beam_useR=Exp(-Abs(((x_valsR)/(width*resolution))^2.+((y_valsR)/(width*resolution))^2.-2.*(ring_radius+1)/width)/2.) $
 ELSE beam_useR=Exp(-Abs(((x_valsR)/(width*resolution))^2.+((y_valsR)/(width*resolution))^2.)/2.)
-beam_useR/=Total(beam_useR)/resolution^2. ;make sure it is normalized
+;beam_useR/=Total(beam_useR)/resolution^2. ;make sure it is normalized
 ;beam_useR/=Max(beam_useR) ;make sure it is normalized to 1
 IF Keyword_Set(ring_radius) THEN beam_useR*=ring_radius
 beam_useR_arr=Ptrarr(resolution,resolution,/allocate)
 FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-    *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]
+    *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Total(beam_useR[xvals_i+i,yvals_i+j])
 
 sx=source_array[0:ns-1].x
 sy=source_array[0:ns-1].y

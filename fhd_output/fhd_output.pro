@@ -155,7 +155,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     ENDFOR
     IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
     
-    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/2.
+    ;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
+    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
     FOR pol_i=0,npol-1 DO BEGIN
         *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
             beam_correction=beam_correction,mask=source_uv_mask)
