@@ -25,7 +25,14 @@ ENDIF ELSE di_uv_use=dirty_image_uv
 IF Keyword_Set(hanning_filter) THEN IF hanning_filter EQ -1 THEN $
     di_uv_use*=fft_shift(hanning(dimension,elements)) ELSE di_uv_use*=hanning(dimension,elements)
 
-IF Keyword_Set(image_filter_fn) THEN di_uv_use=Call_Function(image_filter_fn,di_uv_use,_Extra=extra)
+IF Keyword_Set(image_filter_fn) THEN BEGIN
+    di_uv_use=Call_Function(image_filter_fn,di_uv_use,_Extra=extra) ;filter_uv_hanning.pro default    
+    source_uv_mask=fltarr(dimension,elements)
+    source_uv_mask[where(di_uv_use)]=1
+    filter_norm=max(Real_part(fft_shift(FFT(fft_shift(source_uv_mask)))))/$
+        max(Real_part(fft_shift(FFT(fft_shift(Call_Function(image_filter_fn,source_uv_mask,_Extra=extra))))))
+    di_uv_use*=filter_norm
+ENDIF
 
 IF Keyword_Set(resize) THEN BEGIN
     dimension=dimension*resize
