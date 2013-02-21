@@ -59,7 +59,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             Stokes_single+=stk_res0*sign[stk_i,pol_i]
 ;            Stokes_smooth+=*smooth_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*sign[stk_i,pol_i]
             Stokes_weights_single+=*weights_hpx[pol_i]
-            stk_src0=*sources_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*2.
+            stk_src0=*sources_hpx[pol_i]*weight_invert(*weights_hpx[pol_i]);*2.
             Stokes_sources+=stk_src0*sign[stk_i,pol_i]
             Stokes_restored+=(stk_res0+stk_src0)*sign[stk_i,pol_i]
             Stokes_dirty+=*dirty_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*sign[stk_i,pol_i]
@@ -70,7 +70,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             area=4.*!Pi*(!RaDeg^2.)*(Float(n_hpx)/npix)
             print,"Observed area: "+Strn(area)+" degrees from "+Strn(n_files)+" snapshot observations."
         ENDIF
-        norm=1.;1./Max(Stokes_weights_single)
+        norm=1.;1./Max(Stokes_weights_single)^2.
 ;        
         *Stokes_images[stk_i]=Stokes_single[hpx_ind_use]*norm
         *Stokes_weights[stk_i]=Stokes_weights_single[hpx_ind_use]

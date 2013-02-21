@@ -165,7 +165,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
-            dimension=dimension,width=restored_beam_width)
+            dimension=dimension,width=restored_beam_width,pad_uv_image=pad_uv_image)
     ENDFOR
     
     stokes_images=stokes_cnv(instr_images,beam=beam_base_out)

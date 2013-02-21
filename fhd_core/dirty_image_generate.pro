@@ -52,7 +52,7 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
     di_uv1=Complexarr(dimension_new,dimension_new)
     di_uv1[dimension_new/2.-dimension/2.:dimension_new/2.+dimension/2.-1,$
         dimension_new/2.-elements/2.:dimension_new/2.+elements/2.-1]=di_uv_use
-    di_uv_use=di_uv1
+    di_uv_use=di_uv1*pad_uv_image^2.
 ENDIF
 
 IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use))) $

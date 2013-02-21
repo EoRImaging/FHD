@@ -1,6 +1,6 @@
 FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolution,threshold=threshold,$
     dimension=dimension,elements=elements,width=width,ring_radius=ring_radius,n_sources=n_sources,$
-    _Extra=extra
+    pad_uv_image=pad_uv_image,_Extra=extra
 IF Keyword_Set(obs) THEN BEGIN
     dimension=obs.dimension
     elements=obs.elements
@@ -33,8 +33,8 @@ yvals_i=meshgrid(box_dim,box_dim,2)*resolution
 IF Keyword_Set(ring_radius) THEN $
     beam_useR=Exp(-Abs(((x_valsR)/(width*resolution))^2.+((y_valsR)/(width*resolution))^2.-2.*(ring_radius+1)/width)/2.) $
 ELSE beam_useR=Exp(-Abs(((x_valsR)/(width*resolution))^2.+((y_valsR)/(width*resolution))^2.)/2.)
-;beam_useR/=Total(beam_useR)/resolution^2. ;make sure it is normalized to 1
-beam_useR/=Max(beam_useR) ;make sure it is normalized to 1
+beam_useR/=Total(beam_useR)/resolution^2. ;make sure it is normalized
+;beam_useR/=Max(beam_useR) ;make sure it is normalized to 1
 IF Keyword_Set(ring_radius) THEN beam_useR*=ring_radius
 beam_useR_arr=Ptrarr(resolution,resolution,/allocate)
 FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
@@ -79,5 +79,6 @@ ENDFOR
 ;ELSE FOR si=0.,ns-1 DO $
 ;    source_image+=sf[si]*Exp(-(((x_vals-sx[si])/width)^2.+((y_vals-sy[si])/width)^2.)/2.) 
 Ptr_free,beam_useR_arr
+IF Keyword_set(pad_uv_image) THEN source_image*=pad_uv_image^2.
 RETURN,source_image
 END

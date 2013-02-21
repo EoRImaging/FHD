@@ -105,12 +105,14 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         source_arr=source_array[si_use]
         
         IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT ston_cut THEN CONTINUE
-                
+        
+        restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/2.
         FOR pol_i=0,npol-1 DO BEGIN
             dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn)*cal_use[obs_i]
             model_single=dirty_image_generate(*model_uv_holo[pol_i],image_filter_fn=image_filter_fn)*cal_use[obs_i]
 
-            sources_single=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=16,dimension=dimension,width=.5)*(*beam_base[pol_i])*cal_use[obs_i]
+            sources_single=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=16,dimension=dimension,width=restored_beam_width)*$
+                cal_use[obs_i]*(*beam_base[pol_i]) ;source_arr is already in instrumental pol (x beam once)
             
             residual_single=dirty_single-model_single
             
@@ -128,6 +130,14 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             
         ENDFOR
     ENDFOR
+    
+;    FOR pol_i=0,npol-1 DO BEGIN
+;        norm=Max(*weights_hpx[pol_i])
+;        *residual_hpx[pol_i]/=norm
+;        *sources_hpx[pol_i]/=norm
+;        *restored_hpx[pol_i]/=norm
+;        *dirty_hpx[pol_i]/=norm
+;    ENDFOR
     
     save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,hpx_inds,nside,obs_arr,filename=save_path
 ENDIF ELSE restore,save_path
