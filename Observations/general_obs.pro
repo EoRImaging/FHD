@@ -53,12 +53,13 @@ IF N_Elements(start_fi) EQ 0 THEN fi=0 ELSE fi=start_fi
 IF N_Elements(end_fi) EQ 0 THEN end_fi=n_files-1
 WHILE fi LE end_fi DO BEGIN
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
-        independent_fit=0,reject_pol_sources=0,beam_recalculate=beam_recalculate,$
+        independent_fit=independent_fit,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-        complex=complex_beam,double=double_precison_beam,precess=precess,_Extra=extra
+        complex=complex_beam,double=double_precison_beam,precess=precess,$
+        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,_Extra=extra
     fi+=1.
     IF Keyword_Set(update_file_list) THEN BEGIN ;use this if simultaneously downloading and deconvolving observations
         vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
