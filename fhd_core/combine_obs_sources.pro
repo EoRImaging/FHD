@@ -26,10 +26,12 @@ ENDIF ELSE BEGIN
     
     n_src=fltarr(n_files)
     src_i=Ptrarr(n_files,/allocate)
+    fi_c=-1
     FOR fi=0,n_files-1 DO BEGIN
         file_path=file_list[fi]
+        IF file_test(file_path+'_obs.sav') EQ 0 THEN CONTINUE ELSE fi_c+=1
         restore,file_path+'_obs.sav'
-        IF fi EQ 0 THEN obs_arr=Replicate(obs,n_files)
+        IF fi_c EQ 0 THEN obs_arr=Replicate(obs,n_files)
         obs_arr[fi]=obs
         IF N_Elements(degpix) EQ 0 THEN degpix=obs.degpix
         
