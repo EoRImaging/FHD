@@ -4,6 +4,15 @@ IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 ;version_name='v'+strn(version)
 ;version_dirname='fhd_'+version_name
 
+np=N_Params() 
+IF N_Elements(beam_base) GT 0 THEN np=3 ELSE np=np<2
+SWITCH np OF
+    0:restore,file_path_fhd+'_fhd_params.sav'
+    1:restore,file_path_fhd+'_obs.sav'
+    2:restore,file_path_fhd+'_fhd.sav'
+    3:
+ENDSWITCH
+
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
 export_path=filepath(basename,root=dirpath,sub='export')
@@ -81,10 +90,14 @@ FOR pol_i=0,npol-1 DO BEGIN
 ENDFOR
 
 ;write sources to a text file
+Ires=(*stokes_images[0])[source_array.x,source_array.y]
+Qres=(*stokes_images[1])[source_array.x,source_array.y]
 radius=angle_difference(obs.obsdec,obs.obsra,source_array.dec,source_array.ra,/degree)
-source_array_export,source_array,beam_avg,radius,file_path=export_path+'_source_list'
+source_array_export,source_array,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list'
 
+Ires=(*stokes_images[0])[comp_arr.x,comp_arr.y]
+Qres=(*stokes_images[1])[comp_arr.x,comp_arr.y]
 radius=angle_difference(obs.obsdec,obs.obsra,comp_arr.dec,comp_arr.ra,/degree)
-source_array_export,comp_arr,beam_avg,radius,file_path=export_path+'_component_list'
+source_array_export,comp_arr,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_component_list'
 
 END

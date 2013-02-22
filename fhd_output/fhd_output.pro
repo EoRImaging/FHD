@@ -389,7 +389,9 @@ ENDFOR
 t10b=Systime(1)
 ;write sources to a text file
 radius=angle_difference(obs_out.obsdec,obs_out.obsra,source_arr_out.dec,source_arr_out.ra,/degree)
-source_array_export,source_arr_out,beam_avg,radius,file_path=export_path+'_source_list'
+Ires=(*stokes_images[0])[source_arr_out.x,source_arr_out.y]
+Qres=(*stokes_images[1])[source_arr_out.x,source_arr_out.y]
+source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list2'
 
 ;old .sav files had source_array_full instead of comp_arr, so check for that here
 IF N_Elements(comp_arr) EQ 0 THEN comp_arr=source_array_full
@@ -397,7 +399,9 @@ comp_arr_out=comp_arr
 ad2xy,comp_arr.ra,comp_arr.dec,astr_out,sx,sy
 comp_arr_out.x=sx & comp_arr_out.y=sy
 radius=angle_difference(obs_out.obsdec,obs_out.obsra,comp_arr.dec,comp_arr.ra,/degree)
-source_array_export,comp_arr_out,beam_avg,radius,file_path=export_path+'_component_list'
+Ires=(*stokes_images[0])[comp_arr_out.x,comp_arr_out.y]
+Qres=(*stokes_images[1])[comp_arr_out.x,comp_arr_out.y]
+source_array_export,comp_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_component_list2'
 
 residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
     file_path_base=image_path
