@@ -30,7 +30,7 @@ ENDIF ELSE BEGIN
     FOR fi=0,n_files-1 DO BEGIN
         file_path=file_list[fi]
         sa_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list'
-        IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(sa_path) EQ 0) THEN CONTINUE ELSE fi_c+=1
+        IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(sa_path+'.txt') EQ 0) THEN CONTINUE ELSE fi_c+=1
         restore,file_path+'_obs.sav'
         IF fi_c EQ 0 THEN obs_arr=Replicate(obs,n_files)
         obs_arr[fi]=obs
