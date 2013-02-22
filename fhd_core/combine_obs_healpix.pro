@@ -30,16 +30,23 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     fix_flux=1
     combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
     
-    cal_use=calibration
-    obs_i_use=where(cal_use,n_obs,complement=fi_cut,ncomp=n_cut)
+    n_files=N_Elements(file_list)
+    
+    ftest=intarr(n_files)
+    FOR file_i=0,n_files-1 DO ftest[file_i]=file_test(file_list[file_i]+'_obs.sav')   
+    file_i_use=where(ftest,n_files) 
+    file_list_use=file_list[file_i_use]
+    
+    cal_use=calibration[file_i_use]
+    obs_i_use=where(cal_use AND ftest,n_obs,complement=fi_cut,ncomp=n_cut)
     cal_use[obs_i_use]=1./cal_use[obs_i_use]
     
     cal_use[*]=1.
     
     IF n_cut NE 0 THEN BEGIN
         cal_use[fi_cut]=1.
-        n_obs=N_Elements(cal_use)
-        obs_i_use=lindgen(n_obs)
+        n_obs=n_files
+        obs_i_use=file_i_use
     ENDIF
     
 ;    obs_base=vis_struct_init_obs()
@@ -51,7 +58,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
     
     FOR obs_i=0,n_obs-1 DO BEGIN
-        file_path=file_list[obs_i]
+        file_path=file_list_use[obs_i]
         restore,file_path+'_obs.sav'
         IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs)
         obs_arr[obs_i]=obs
@@ -59,7 +66,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
 ;        lat_arr[obs_i]=obs.obsdec
         *hpx_cnv[obs_i]=healpix_cnv_generate(file_path_fhd=file_path,nside=nside,/restore_last,/silent)
         IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
-            message,String(format='("Mismatched HEALPix NSIDE for ",A)',file_basename(file_list[obs_i])) 
+            message,String(format='("Mismatched HEALPix NSIDE for ",A)',file_basename(file_list_use[obs_i])) 
     ENDFOR
     hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
     n_hpx=N_Elements(hpx_inds)
@@ -89,7 +96,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     FOR obs_i=0,n_obs-1 DO BEGIN
         heap_gc
         obs=obs_arr[obs_i]
-        file_path=file_list[obs_i]
+        file_path=file_list_use[obs_i]
         restore,file_path+'_fhd_params.sav'
         ;restores the fhd structure that contains the parameters used in deconvolution 
         restore,file_path+'_fhd.sav'
