@@ -56,10 +56,10 @@ ENDIF ELSE BEGIN
     sa_ston=fltarr(ns)
     sa_beam=fltarr(ns)
     sa_radius=fltarr(ns)
-    sa_channel=Strarr(ns)
-    sa_pointing=Strarr(ns)
-    channel_list=Strarr(n_files) & FOR fi=0,n_files-1 DO channel_list[fi]=Strmid(file_basename(file_list[fi]),10,3)
-    pointing_list=Strarr(n_files) & FOR fi=0,n_files-1 DO pointing_list[fi]=Strmid(file_basename(file_list[fi]),0,3)
+;    sa_channel=Strarr(ns)
+;    sa_pointing=Strarr(ns)
+;    channel_list=Strarr(n_files) & FOR fi=0,n_files-1 DO channel_list[fi]=Strmid(file_basename(file_list[fi]),10,3)
+;    pointing_list=Strarr(n_files) & FOR fi=0,n_files-1 DO pointing_list[fi]=Strmid(file_basename(file_list[fi]),0,3)
     
     FOR fi=0,n_files-1 DO BEGIN
         IF n_src[fi] EQ 0 THEN CONTINUE
@@ -75,8 +75,8 @@ ENDIF ELSE BEGIN
         sa_ston[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[5,*])
         sa_radius[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[6,*])
         sa_beam[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[7,*])
-        sa_channel[ns_i[fi]:ns_i[fi+1]-1]=channel_list[fi]
-        sa_pointing[ns_i[fi]:ns_i[fi+1]-1]=pointing_list[fi]
+;        sa_channel[ns_i[fi]:ns_i[fi+1]-1]=channel_list[fi]
+;        sa_pointing[ns_i[fi]:ns_i[fi+1]-1]=pointing_list[fi]
         
     ENDFOR
     
@@ -132,8 +132,8 @@ ENDIF ELSE BEGIN
         IF N_Elements(where(sa_ston[si_g_use] GE StoN)) GE min_detect THEN ns_use+=1.
         
         source_sub=replicate(source_sub_base,n_gs)
-        source_sub.channel=sa_channel[si_g_use]
-        source_sub.pointing=sa_pointing[si_g_use]
+;        source_sub.channel=sa_channel[si_g_use]
+;        source_sub.pointing=sa_pointing[si_g_use]
         source_sub.ston=sa_ston[si_g_use]
         source_sub.flux=sa_I[si_g_use]
         source_sub.beam=sa_beam[si_g_use]

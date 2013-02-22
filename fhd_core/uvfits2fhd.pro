@@ -34,7 +34,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,$
     rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
-    file_path_fhd=file_path_fhd,force_data=force_data,_Extra=extra
+    file_path_fhd=file_path_fhd,force_data=force_data,quickview=quickview,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -227,8 +227,10 @@ IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 T
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
     fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,GPU_enable=GPU_enable
-ENDIF ELSE print,'Gridded visibilities not deconvolved'
-
+ENDIF ELSE BEGIN
+    print,'Gridded visibilities not deconvolved'
+    IF Keyword_Set(quickview) THEN fhd_quickview,file_path_fhd=file_path_fhd,_Extra=extra
+ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     print,'Exporting images'    

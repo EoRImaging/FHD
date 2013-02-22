@@ -82,11 +82,11 @@ FOR pol_i=0,npol-1 DO BEGIN
     IF pol_i EQ 0 THEN Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$
         lat_center=obs.obsdec,lon_center=obs.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs.degpix,$
-        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
+        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,/no_ps
     IF pol_i EQ 1 THEN Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokesS_high,$
         lat_center=obs.obsdec,lon_center=obs.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs.degpix,$
-        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
+        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,/no_ps
 ENDFOR
 
 ;write sources to a text file
