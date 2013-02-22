@@ -49,9 +49,11 @@ IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_hanning' ;ap
 noise_calibrate=0
 align=0
 
-IF N_Elements(start_fi) EQ 0 THEN fi=0 ELSE fi=start_fi
+IF N_Elements(start_fi) EQ 0 THEN start_fi=0
+fi=start_fi
 IF N_Elements(end_fi) EQ 0 THEN end_fi=n_files-1
 WHILE fi LE end_fi DO BEGIN
+    IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi)),Strn(Floor(end_fi-start_fi)))
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
