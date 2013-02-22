@@ -29,13 +29,14 @@ ENDIF ELSE BEGIN
     fi_c=-1
     FOR fi=0,n_files-1 DO BEGIN
         file_path=file_list[fi]
-        IF file_test(file_path+'_obs.sav') EQ 0 THEN CONTINUE ELSE fi_c+=1
+        sa_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list'
+        IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(sa_path) EQ 0) THEN CONTINUE ELSE fi_c+=1
         restore,file_path+'_obs.sav'
         IF fi_c EQ 0 THEN obs_arr=Replicate(obs,n_files)
         obs_arr[fi]=obs
         IF N_Elements(degpix) EQ 0 THEN degpix=obs.degpix
         
-        textfast,sa,/read,file_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list',first_line=1
+        textfast,sa,/read,file_path=sa_path,first_line=1
         
         IF N_Elements(sa) GT 0 THEN BEGIN
             ston0=reform(sa[5,*])
