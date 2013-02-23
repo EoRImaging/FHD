@@ -44,7 +44,7 @@ lon_use=lon_arr
 lon_mod_i=where(lon_arr LE lon_branch,n_branch)
 IF n_branch GT 0 THEN lon_use[lon_mod_i]+=360.
 lon_avg=Median(lon_use) & IF lon_avg GE 360. THEN lon_avg-=360.
-
+IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
 
 IF not Keyword_Set(restore_last) THEN BEGIN
     FOR stk_i=0,1 DO BEGIN
