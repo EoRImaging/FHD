@@ -15,7 +15,8 @@
 ; :Author: isullivan May 6, 2012
 ;-
 PRO fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,beam_threshold=beam_threshold,quickview=quickview,$
-    data_directory=data_directory,filename=filename,version=version,silent=silent,GPU_enable=GPU_enable,_Extra=extra
+    data_directory=data_directory,filename=filename,version=version,silent=silent,transfer_mapfn=transfer_mapfn,$
+    GPU_enable=GPU_enable,_Extra=extra
 
 ;snapshot data must have been gridded previously, and the Holo map fns generated
 ;reads and deconvolves simultaneously on multiple polarizations, time intervals, and frequencies
@@ -59,7 +60,7 @@ ENDFOR
 ;ELSE $
     fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
         residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
-        ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,$
+        ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,transfer_mapfn=transfer_mapfn,$
         beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,_Extra=extra
         
 save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$

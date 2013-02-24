@@ -3,7 +3,8 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
-    update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,flag=flag,_Extra=extra
+    update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,flag=flag,$
+    transfer_mapfn=transfer_mapfn,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -31,6 +32,7 @@ IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag) EQ 0 THEN flag=0
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
+IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
 ;Set up gridding and deconvolution parameters
 IF N_Elements(complex_beam) EQ 0 THEN complex_beam=1
@@ -55,7 +57,7 @@ IF N_Elements(end_fi) EQ 0 THEN end_fi=n_files-1
 WHILE fi LE end_fi DO BEGIN
     IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi)),Strn(Floor(end_fi-start_fi)))
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
-        independent_fit=independent_fit,beam_recalculate=beam_recalculate,$
+        independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
