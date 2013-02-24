@@ -32,7 +32,7 @@
 ;-
 PRO uvfits2fhd,file_path_vis,export_images=export_images,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
-    n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,$
+    n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
     file_path_fhd=file_path_fhd,force_data=force_data,quickview=quickview,_Extra=extra
 
@@ -51,6 +51,7 @@ IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=1
 IF N_Elements(flag) EQ 0 THEN flag=0.
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=1
 IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
+IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
 ;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
 ;IF Keyword_Set(GPU_enable) THEN BEGIN
@@ -63,6 +64,8 @@ print,'Deconvolving: ',file_path_vis
 print,systime()
 print,'Output file_path:',file_path_fhd
 ext='.uvfits'
+fhd_dir=file_dirname(file_path_fhd)
+basename=file_basename(file_path_fhd)
 header_filepath=file_path_fhd+'_header.sav'
 flags_filepath=file_path_fhd+'_flags.sav'
 ;vis_filepath=file_path_fhd+'_vis.sav'
@@ -77,6 +80,11 @@ pol_names=['xx','yy','xy','yx','I','Q','U','V']
 test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
 IF test_mapfn EQ 0 THEN grid_recalculate=1
 test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav')
+IF Keyword_Set(transfer_mapfn) THEN BEGIN
+    test_mapfn=1
+    IF size(transfer_mapfn,/type) NE 7 THEN transfer_mapfn=basename
+    IF basename NE transfer_mapfn THEN mapfn_recalculate=0
+ENDIF
 IF test_mapfn EQ 0 THEN mapfn_recalculate=(grid_recalculate=1)
 IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 
@@ -147,12 +155,37 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     flag_arr0=Reform(data_array[flag_index,*,*,*])
     IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
-    IF Keyword_Set(flag) THEN BEGIN
-        print,'Flagging anomalous data'
-        vis_flag,data_array,flag_arr0,obs,params,_Extra=extra
+    IF Keyword_Set(transfer_mapfn) THEN BEGIN
+        flag_arr1=flag_arr0
         SAVE,flag_arr0,filename=flags_filepath,/compress
-    ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
+        restore,filepath(transfer_mapfn+'_flags.sav',root=fhd_dir)
+        n0=N_Elements(flags_arr0[0,*,*])
+        n1=N_Elements(flags_arr1[0,*,*])
+        CASE 1 OF
+            n0 EQ n1:FOR pol_i=0,m_pol-1 DO flags_arr1[pol_i,*,*]*=flags_arr0[pol_i,*,*] ;in case using different # of pol's
+            n1 GT n0: BEGIN
+                nf0=(size(flags_arr0,/dimension))[1]
+                nb0=(size(flags_arr0,/dimension))[2]
+                FOR pol_i=0,m_pol-1 DO flags_arr1[pol_i,0:nf0-1,0:nb0-1]*=flags_arr0[pol_i,*,*]
+            END
+            ELSE: BEGIN
+                nf1=(size(flags_arr1,/dimension))[1]
+                nb1=(size(flags_arr1,/dimension))[2]
+                print,"WARNING: restoring flags and Mapfn from mismatched data! Mapfn may be corrupted!"
+                FOR pol_i=0,m_pol-1 DO flags_arr1[pol_i,*,*]*=flags_arr0[pol_i,0:nf1-1,0:nb1-1]
+            ENDELSE
+        ENDCASE
+        flags_arr0=flags_arr1
         SAVE,flag_arr0,filename=flags_filepath,/compress
+        flags_arr1=0
+    ENDIF ELSE BEGIN
+        IF Keyword_Set(flag) THEN BEGIN
+            print,'Flagging anomalous data'
+            vis_flag,data_array,flag_arr0,obs,params,_Extra=extra
+            SAVE,flag_arr0,filename=flags_filepath,/compress
+        ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
+            SAVE,flag_arr0,filename=flags_filepath,/compress
+    ENDELSE
     
     save,obs,filename=obs_filepath
     save,params,filename=params_filepath
@@ -226,7 +259,7 @@ IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 T
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,GPU_enable=GPU_enable
+    fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,transfer_mapfn=transfer_mapfn;,GPU_enable=GPU_enable
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
     IF Keyword_Set(quickview) THEN fhd_quickview,file_path_fhd=file_path_fhd,_Extra=extra

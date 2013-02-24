@@ -53,7 +53,7 @@
 ;-
 PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
-    ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,$
+    ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
@@ -165,8 +165,10 @@ source_uv_mask=fltarr(dimension,elements)
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_cut[pol_i] THEN CONTINUE
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-        file_name_base='_mapfn_'+pol_names[pol_i]
-        restore,file_path_fhd+file_name_base+'.sav' ;map_fn
+        IF Keyword_Set(transfer_mapfn) THEN $
+            file_path_mapfn=filepath(transfer_mapfn+'_mapfn_'+pol_names[pol_i],root=file_dirname(file_path_fhd)) $
+            ELSE file_path_mapfn=file_path_fhd+'_mapfn_'+pol_names[pol_i]
+        restore,file_path_mapfn+'.sav' ;map_fn
 ;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
         *map_fn_arr[pol_i]=map_fn
     ENDIF
