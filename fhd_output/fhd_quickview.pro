@@ -1,4 +1,5 @@
-PRO fhd_quickview,fhd,obs,residual_array,source_array,comp_arr,beam_base,file_path_fhd=file_path_fhd,image_filter_fn=image_filter_fn,_Extra=extra
+PRO fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,beam_base,$
+    file_path_fhd=file_path_fhd,image_filter_fn=image_filter_fn,_Extra=extra
 
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 ;version_name='v'+strn(version)
@@ -47,8 +48,9 @@ instr_images=Ptrarr(npol,/allocate)
 instr_sources=Ptrarr(npol,/allocate)
 restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/2.
 FOR pol_i=0,npol-1 DO BEGIN
-    *instr_images[pol_i]=dirty_image_generate(*residual_array[pol_i],image_filter_fn=image_filter_fn,$
-        _Extra=extra)*weight_invert(*beam_base[pol_i])
+;    *instr_images[pol_i]=dirty_image_generate(*residual_array[pol_i],image_filter_fn=image_filter_fn,$
+;        _Extra=extra)*weight_invert(*beam_base[pol_i])
+    *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],image_filter_fn=image_filter_fn)*weight_invert(*beam_base[pol_i])
     *instr_sources[pol_i]=source_image_generate(source_array,obs,pol_i=pol_i,resolution=16,$
         dimension=dimension,width=restored_beam_width)
 ENDFOR
