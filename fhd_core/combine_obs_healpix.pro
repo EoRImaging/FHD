@@ -132,8 +132,6 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             
             residual_single=dirty_single-model_single
             
-;            residual_background=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],/hanning)*cal_use[obs_i]
-;            residual_smooth=residual_single-residual_background
             weights_single=(*beam_base[pol_i]^2.)            
             
             (*residual_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(residual_single,hpx_cnv)
@@ -141,18 +139,9 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             (*sources_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(sources_single,hpx_cnv)
             (*restored_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(residual_single+sources_single,hpx_cnv)
             (*dirty_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(dirty_single,hpx_cnv)
-;            (*smooth_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(residual_smooth,hpx_cnv)
             
         ENDFOR
     ENDFOR
-    
-;    FOR pol_i=0,npol-1 DO BEGIN
-;        norm=Max(*weights_hpx[pol_i])
-;        *residual_hpx[pol_i]/=norm
-;        *sources_hpx[pol_i]/=norm
-;        *restored_hpx[pol_i]/=norm
-;        *dirty_hpx[pol_i]/=norm
-;    ENDFOR
     
     save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,hpx_inds,nside,obs_arr,filename=save_path
 ENDIF ELSE restore,save_path
