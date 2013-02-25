@@ -162,13 +162,15 @@ dirty_image_composite_Q=fltarr(dimension,elements)
 dirty_image_composite_U=fltarr(dimension,elements)
 dirty_image_composite_V=fltarr(dimension,elements)
 source_uv_mask=fltarr(dimension,elements)
+IF Keyword_Set(transfer_mapfn) THEN BEGIN
+    file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) 
+    print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
+ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
+
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_cut[pol_i] THEN CONTINUE
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-        IF Keyword_Set(transfer_mapfn) THEN $
-            file_path_mapfn=filepath(transfer_mapfn+'_mapfn_'+pol_names[pol_i],root=file_dirname(file_path_fhd)) $
-            ELSE file_path_mapfn=file_path_fhd+'_mapfn_'+pol_names[pol_i]
-        restore,file_path_mapfn+'.sav' ;map_fn
+        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
 ;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
         *map_fn_arr[pol_i]=map_fn
     ENDIF
