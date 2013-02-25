@@ -7,17 +7,6 @@ except=!except
 heap_gc
 
 IF N_Elements(flux_scale) EQ 0 THEN flux_scale=1.
-
-;IF not Keyword_Set(data_directory) THEN vis_path_default,data_directory
-;
-;IF N_Elements(version) EQ 0 THEN version=0 ELSE version=Fix(version)
-;version_name='v'+strn(version)
-;version_dirname='fhd_'+version_name
-;output_dir=filepath('',root=data_directory,sub=['Combined_obs',version_dirname])
-;IF file_test(rootdir('mwa')+output_dir) EQ 0 THEN file_mkdir,rootdir('mwa')+output_dir   
-;output_path=filepath('Healpix'+'v'+strn(version)+'.sav',root_dir=rootdir('mwa')+output_dir)
-
-
 save_path=output_path+'_maps.sav'
 
 IF not Keyword_Set(restore_last) THEN BEGIN
@@ -38,24 +27,23 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     file_list_use=file_list[file_i_use]
     
     cal_use=calibration[file_i_use]
-    obs_i_use=where(cal_use AND ftest,n_obs,complement=fi_cut,ncomp=n_cut)
+    
+    cal_thresh=[0.5,2.]
+    obs_i_use=where((cal_use GT min(cal_thresh)) AND (cal_use LT max(cal_thresh)) AND ftest,$
+        n_obs,complement=fi_cut,ncomp=n_cut)
     cal_use[obs_i_use]=1./cal_use[obs_i_use]
+    IF n_cut GT 0 THEN cal_use[fi_cut]=0
     
-    cal_use[*]=1.
+    cal_use[obs_i_use]=1.
     
-    IF n_cut NE 0 THEN BEGIN
-        cal_use[fi_cut]=1.
-        n_obs=n_files
-        obs_i_use=file_i_use
-    ENDIF
+;    IF n_cut NE 0 THEN BEGIN
+;        cal_use[fi_cut]=1.
+;        n_obs=n_files
+;        obs_i_use=file_i_use
+;    ENDIF
+    cal_use*=flux_scale 
     
-;    obs_base=vis_struct_init_obs()
-;    obs_arr=Replicate(obs_base,n_obs)
-;    obs_arr=Ptrarr(n_obs,/allocate)
-    hpx_cnv=Ptrarr(n_obs,/allocate) 
-;    lon_arr=fltarr(n_obs)
-;    lat_arr=fltarr(n_obs)
-    
+    hpx_cnv=Ptrarr(n_obs,/allocate)     
     
     FOR obs_i=0,n_obs-1 DO BEGIN
         file_path=file_list_use[obs_i]
@@ -68,21 +56,8 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
             message,String(format='("Mismatched HEALPix NSIDE for ",A)',file_basename(file_list_use[obs_i])) 
         
-;        lon_arr[obs_i]=obs.obsra
-;        lat_arr[obs_i]=obs.obsdec
-;        *hpx_cnv[obs_i]=healpix_cnv_generate(file_path_fhd=file_path,nside=nside,/restore_last,/silent)
-;        IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
-;            message,String(format='("Mismatched HEALPix NSIDE for ",A)',file_basename(file_list_use[obs_i])) 
     ENDFOR
-    
-;    hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
     n_hpx=nside2npix(nside)
-
-;    n_obs=N_Elements(cal_use)
-;    fi_use=lindgen(n_obs)
-;    cal_use[*]=1.
-    
-    cal_use*=flux_scale 
     
     residual_hpx=Ptrarr(npol,/allocate)
     weights_hpx=Ptrarr(npol,/allocate)
