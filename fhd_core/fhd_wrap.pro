@@ -66,16 +66,11 @@ ENDFOR
 save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav'
 
-IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,beam_base,file_path_fhd=file_path_fhd,_Extra=extra
-;Build a fits header
-;mkhdr,fits_header,*dirty_array[0]
-;putast, fits_header, astr, cd_type=1
-;FOR pol_i=0,npol-1 DO BEGIN
-;    name_base=filename+'_fhd_'+pol_names[pol_i]
-;    Fitsfast,*beam_base[pol_i],fits_header,/write,filename=name_base+'_beam',data_dir=fhd.dir
-;    Fitsfast,*dirty_array[pol_i],fits_header,/write,filename=name_base+'_dirty',data_dir=fhd.dir
-;    Fitsfast,*residual_array[pol_i],fits_header,/write,filename=name_base+'_fhd_residual',data_dir=fhd.dir
-;    
-;ENDFOR    
+;IF N_Elements(quickview) EQ 0 THEN quickview=1
+;IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
+;    beam_base,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(quickview) EQ 0 THEN quickview=1
+IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
+    beam_base,file_path_fhd=file_path_fhd,_Extra=extra
 
 END
