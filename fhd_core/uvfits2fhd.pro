@@ -81,9 +81,11 @@ test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'
 IF test_mapfn EQ 0 THEN grid_recalculate=1
 test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav')
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
-    test_mapfn=1
     IF size(transfer_mapfn,/type) NE 7 THEN transfer_mapfn=basename
-    IF basename NE transfer_mapfn THEN mapfn_recalculate=0
+    IF basename NE transfer_mapfn THEN BEGIN
+        mapfn_recalculate=0
+        test_mapfn=1
+    ENDIF
 ENDIF
 IF test_mapfn EQ 0 THEN mapfn_recalculate=(grid_recalculate=1)
 IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
@@ -159,25 +161,25 @@ IF Keyword_Set(data_flag) THEN BEGIN
         flag_arr1=flag_arr0
         SAVE,flag_arr0,filename=flags_filepath,/compress
         restore,filepath(transfer_mapfn+'_flags.sav',root=fhd_dir)
-        n0=N_Elements(flags_arr0[0,*,*])
-        n1=N_Elements(flags_arr1[0,*,*])
+        n0=N_Elements(flag_arr0[0,*,*])
+        n1=N_Elements(flag_arr1[0,*,*])
         CASE 1 OF
-            n0 EQ n1:FOR pol_i=0,m_pol-1 DO flags_arr1[pol_i,*,*]*=flags_arr0[pol_i,*,*] ;in case using different # of pol's
+            n0 EQ n1:FOR pol_i=0,n_pol-1 DO flag_arr1[pol_i,*,*]*=flag_arr0[pol_i,*,*] ;in case using different # of pol's
             n1 GT n0: BEGIN
-                nf0=(size(flags_arr0,/dimension))[1]
-                nb0=(size(flags_arr0,/dimension))[2]
-                FOR pol_i=0,m_pol-1 DO flags_arr1[pol_i,0:nf0-1,0:nb0-1]*=flags_arr0[pol_i,*,*]
+                nf0=(size(flag_arr0,/dimension))[1]
+                nb0=(size(flag_arr0,/dimension))[2]
+                FOR pol_i=0,n_pol-1 DO flag_arr1[pol_i,0:nf0-1,0:nb0-1]*=flag_arr0[pol_i,*,*]
             END
             ELSE: BEGIN
-                nf1=(size(flags_arr1,/dimension))[1]
-                nb1=(size(flags_arr1,/dimension))[2]
+                nf1=(size(flag_arr1,/dimension))[1]
+                nb1=(size(flag_arr1,/dimension))[2]
                 print,"WARNING: restoring flags and Mapfn from mismatched data! Mapfn may be corrupted!"
-                FOR pol_i=0,m_pol-1 DO flags_arr1[pol_i,*,*]*=flags_arr0[pol_i,0:nf1-1,0:nb1-1]
+                FOR pol_i=0,n_pol-1 DO flag_arr1[pol_i,*,*]*=flag_arr0[pol_i,0:nf1-1,0:nb1-1]
             ENDELSE
         ENDCASE
-        flags_arr0=flags_arr1
+        flag_arr0=flag_arr1
         SAVE,flag_arr0,filename=flags_filepath,/compress
-        flags_arr1=0
+        flag_arr1=0
     ENDIF ELSE BEGIN
         IF Keyword_Set(flag) THEN BEGIN
             print,'Flagging anomalous data'
