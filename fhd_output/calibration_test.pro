@@ -24,9 +24,9 @@ FOR fi0=0,n_use-1 DO BEGIN
     restore,file_path+'_fhd.sav'
 ;   save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
 ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
-    restore,file_path+'_output.sav'
-;    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,stokes_images,instr_sources,stokes_sources,$
-;        beam_est,model_uv_arr,model_holo_arr,calibration,p_map_simple,p_corr_simple,filename=file_path+'_output.sav'
+;    restore,file_path+'_output.sav'
+;;    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,stokes_images,instr_sources,stokes_sources,$
+;;        beam_est,model_uv_arr,model_holo_arr,calibration,p_map_simple,p_corr_simple,filename=file_path+'_output.sav'
     restore,file_path+'_obs.sav'
     
     source_uv_mask=fltarr(obs.dimension,obs.elements)
