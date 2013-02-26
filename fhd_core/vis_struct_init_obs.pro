@@ -108,8 +108,8 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline_use ELSE k_span=!RaDeg/degpix 
     dimension_test=2.^Round(ALOG10(k_span/kbinsize)/ALOG10(2.))
     
-    IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ;dimension of the image in pixels; dimension = x direction
-    IF N_Elements(elements) EQ 0 THEN elements=dimension ;elements = y direction
+    IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ELSE dimension=Float(dimension);dimension of the image in pixels; dimension = x direction
+    IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
     degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
     IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
     IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
