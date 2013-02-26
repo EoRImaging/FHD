@@ -48,20 +48,24 @@ IF N_Elements(flag_arr) EQ 0 THEN BEGIN
     ENDFOR
 ENDIF
 
-;IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
-;    bin_start=(*obs.baseline_info).bin_offset
-;    nt=N_Elements(bin_start)
-;    nb=(size(*flag_arr[0],/dimension))[1]
-;    bin_end=fltarr(nt)
-;    bin_end[0:nt-2]=bin_start[1:nt-1]-1
-;    bin_end[nt-1]=nb-1
-;    nt2=Floor(nt/2)
-;    bi_n=findgen(nb)
-;    even_bi_use=lindgen(
-;    odd_bi_use=indgen(nt2)+1
-;    flag_arr1=fltarr(size(*flag_arr[0],/dimension))
-;    IF Keyword_Set(even_only) THEN flag_arr1[*,bin_start
-;ENDIF
+IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
+    bin_start=(*obs.baseline_info).bin_offset
+    nt=N_Elements(bin_start)
+    nb=(size(*flag_arr[0],/dimension))[1]
+    bin_end=fltarr(nt)
+    bin_end[0:nt-2]=bin_start[1:nt-1]-1
+    bin_end[nt-1]=nb-1
+    bin_i=lonarr(nb)-1
+    nt2=Floor(nt/2)
+    FOR t_i=0,2*nt2-1 DO bin_i[bin_start[t_i]:bin_end[t_i]]=t_i
+    bi_n=findgen(nb)
+    even_bi_use=where(bin_i mod 2 EQ 0)
+    odd_bi_use=where(bin_i mod 2 EQ 1)
+    flag_arr1=fltarr(size(*flag_arr[0],/dimension))
+    IF Keyword_Set(even_only) THEN flag_arr1[*,even_bi_use]=1
+    IF Keyword_Set(odd_only) THEN flag_arr1[*,odd_bi_use]=1
+    FOR pol_i=0,n_pol-1 DO *flag_arr[pol_i]*=flag_arr1
+ENDIF
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
     freq_bin_i2=obs.fbin_i
