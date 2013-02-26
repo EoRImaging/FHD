@@ -1,5 +1,5 @@
 PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,$
-    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,_Extra=extra
+    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,even=even,_Extra=extra
 heap_gc
 
 n_obs=N_Elements(fhd_file_list)
@@ -82,31 +82,31 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;        n_avg=n_avg,timing=t_split2,/no_data,/fft,_Extra=extra)
     
     hpx_cnv=healpix_cnv_generate(obs,nside=nside,/restore_last,file_path=file_path,/silent)
-    hind1=histogram(hpx_inds,/bin,min=hpx_ind_min,max=hpx_ind_max,reverse_ind=ri1)
+    hind1=histogram(hpx_cnv.inds,/bin,min=hpx_ind_min,max=hpx_ind_max,reverse_ind=ri1)
     n_ref1=Total(hind1)
     
     hpx_ind_map=where(hind0*hind1,n_ref)
     IF n_ref EQ n_ref1 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-            (*residual_hpx_arr[pol_i,freq_i])[hpx_cnv.inds]+=$
+            (*residual_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
                 healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],hpx_cnv)
-            (*dirty_hpx_arr[pol_i,freq_i])[hpx_cnv.inds]+=$
+            (*dirty_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
                 healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],hpx_cnv)
-            (*model_hpx_arr[pol_i,freq_i])[hpx_cnv.inds]+=$
+            (*model_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
                 healpix_cnv_apply(*model_arr1[pol_i,freq_i],hpx_cnv)
-            (*weights_hpx_arr[pol_i,freq_i])[hpx_cnv.inds]+=$
+            (*weights_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
                 healpix_cnv_apply(*weights_arr1[pol_i,freq_i],hpx_cnv)
         ENDFOR
     ENDIF ELSE BEGIN
         hpx_ind_map1=ri1[ri1[hpx_ind_map]]
         FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-            (*residual_hpx_arr[pol_i,freq_i])[hpx_cnv.inds]+=$
+            (*residual_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
                 (healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-            (*dirty_hpx_arr[pol_i,freq_i])[hpx_cnv.inds]+=$
+            (*dirty_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
                 (healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-            (*model_hpx_arr[pol_i,freq_i])[hpx_cnv.inds]+=$
+            (*model_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
                 (healpix_cnv_apply(*model_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-            (*weights_hpx_arr[pol_i,freq_i])[hpx_cnv.inds]+=$
+            (*weights_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
                 (healpix_cnv_apply(*weights_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
         ENDFOR
     ENDELSE
@@ -145,5 +145,5 @@ ENDFOR
 Ptr_free,weights_hpx_arr
 
 save,filename=cube_filepath,dirty_xx_cube,res_xx_cube,model_xx_cube,weights_xx_cube,$
-    dirty_yy_cube,res_yy_cube,model_yy_cube,weights_yy_cube,obs_arr,nside,n_avg,/compress
+    dirty_yy_cube,res_yy_cube,model_yy_cube,weights_yy_cube,obs_arr,nside,hpx_inds,n_avg,/compress
 END
