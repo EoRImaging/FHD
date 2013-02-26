@@ -15,7 +15,6 @@ IF file_test(dir) EQ 0 THEN file_mkdir,dir
 
 ;hpx_cnv=Ptrarr(n_obs,/allocate)
 
-hpx_ind_test=intarr(nside2npix(nside))
 IF N_Elements(hpx_inds) EQ 0 THEN BEGIN
     FOR obs_i=0,n_obs-1 DO BEGIN
     ;    vis_path_default,data_directory,filename_list[obs_i],file_path,version=version
@@ -24,7 +23,8 @@ IF N_Elements(hpx_inds) EQ 0 THEN BEGIN
         
         IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs) ELSE obs_arr[obs_i]=obs
         hpx_cnv=healpix_cnv_generate(obs,nside=nside,/restore_last,file_path=file_path,/silent)
-        hpx_ind_test[hpx_cnv]=1
+        IF obs_i EQ 0 THEN hpx_ind_test=intarr(nside2npix(nside))
+        hpx_ind_test[hpx_cnv.inds]=1
         IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
             message,String(format='("Mismatched HEALPix NSIDE for ",A)',file_basename(file_path)) 
     ENDFOR
