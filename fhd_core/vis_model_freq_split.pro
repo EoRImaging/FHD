@@ -1,6 +1,6 @@
 FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
     weights_arr=weights_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
-    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,_Extra=extra
+    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,_Extra=extra
 ;no need to specify data_directory or filename if obs exists
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ext='.UVFITS'
@@ -47,6 +47,21 @@ IF N_Elements(flag_arr) EQ 0 THEN BEGIN
         *flag_arr[pol_i]=reform(flag_arr0[pol_i,*,*])
     ENDFOR
 ENDIF
+
+;IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
+;    bin_start=(*obs.baseline_info).bin_offset
+;    nt=N_Elements(bin_start)
+;    nb=(size(*flag_arr[0],/dimension))[1]
+;    bin_end=fltarr(nt)
+;    bin_end[0:nt-2]=bin_start[1:nt-1]-1
+;    bin_end[nt-1]=nb-1
+;    nt2=Floor(nt/2)
+;    bi_n=findgen(nb)
+;    even_bi_use=lindgen(
+;    odd_bi_use=indgen(nt2)+1
+;    flag_arr1=fltarr(size(*flag_arr[0],/dimension))
+;    IF Keyword_Set(even_only) THEN flag_arr1[*,bin_start
+;ENDIF
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
     freq_bin_i2=obs.fbin_i

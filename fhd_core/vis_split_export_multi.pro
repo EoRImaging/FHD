@@ -1,11 +1,15 @@
 PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,$
-    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,even=even,_Extra=extra
+    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,even_only=even_only,odd_only=odd_only,_Extra=extra
 heap_gc
 
 n_obs=N_Elements(fhd_file_list)
 base_filename_range=file_basename([vis_file_list[0],vis_file_list[n_obs-1]],'_cal.uvfits')
 obs_range=strjoin(base_filename_range,'-',/single)
-cube_filepath=output_path+'_'+obs_range+'_cube.sav'
+;cube_filepath=output_path+'_'+obs_range+'_cube.sav'
+cube_filepath=output_path+'_'+obs_range
+IF Keyword_Set(even_only) THEN cube_filepath+='_even'
+IF Keyword_Set(odd_only) THEN cube_filepath+='_odd'
+cube_filepath+='_cube.sav'
 dir=file_dirname(output_path)
 IF file_test(dir) EQ 0 THEN file_mkdir,dir   
 
@@ -68,10 +72,10 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     uv_mask=fltarr(dimension,elements)
     uv_mask[where(*weights_arr[0] OR *weights_arr[1])]=1
     dirty_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1,_Extra=extra) 
+        n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1,even_only=even_only,odd_only=odd_only,_Extra=extra) 
         
     model_arr1=vis_model_freq_split(source_array,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask,_Extra=extra)
+        weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask,even_only=even_only,odd_only=odd_only,_Extra=extra)
        
     
 ;    n_pol=(size(model_arr1,/dimension))[0]
