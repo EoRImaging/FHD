@@ -1,6 +1,7 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
-    FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y, _Extra=extra
+    FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
+    zenra=zenra,zendec=zendec, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
@@ -48,7 +49,19 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     obsdec=header.obsdec-dec_offset
     IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
 ;    Precess,obsra,obsdec,2000.,epoch
-    zenpos2,Min(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
+
+    IF Keyword_Set(zenra) THEN BEGIN
+        IF Keyword_Set(precess) THEN BEGIN
+            IF N_Elements(zendec) EQ 0 THEN zendec=lat
+            Precess,zenra,zendec,epoch,2000.
+        ENDIF ELSE BEGIN
+            IF N_Elements(zendec) EQ 0 THEN BEGIN
+                zendec=lat
+                zenra0=zenra
+                Precess,zenra0,zendec,epoch,2000. ;slight error, since zenra0 is NOT in J2000, but assume the effect on zendec is small
+            ENDIF
+        ENDELSE
+    ENDIF ELSE zenpos2,Median(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
     
     IF Keyword_Set(scale_uv) THEN BEGIN
         params.uu*=scale_uv
