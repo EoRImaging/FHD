@@ -4,7 +4,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,flag=flag,$
-    transfer_mapfn=transfer_mapfn,_Extra=extra
+    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -84,7 +84,10 @@ IF Keyword_Set(combine_healpix) THEN BEGIN
 ENDIF
 
 IF Keyword_Set(ps_export) THEN BEGIN
-    vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,_Extra=extra
+    IF Keyword_Set(split_ps_export) THEN BEGIN
+        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,/even,_Extra=extra
+        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,/odd,_Extra=extra
+    ENDIF ELSE vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,_Extra=extra
 ENDIF
 IF Keyword_Set(cleanup) THEN FOR fi=0,n_files-1 DO fhd_cleanup,fhd_file_list[fi]
 
