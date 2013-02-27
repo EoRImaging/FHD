@@ -1,12 +1,13 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
-    zenra=zenra,zendec=zendec, _Extra=extra
+    zenra=zenra,zendec=zendec,nfreq_avg=nfreq_avg,freq_bin=freq_bin,_Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
 IF N_Elements(alt) EQ 0 THEN alt=377.83 ;altitude (meters)
 IF N_Elements(pflag) EQ 0 THEN pflag=0
+IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=32.
 
 IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN    
     time=params.time
@@ -24,7 +25,7 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     bin_offset=fltarr(nb) & bin_offset[1:*]=total(bin_width[0:nb-2],/cumulative)    
     
     frequency_array=(findgen(header.n_freq)-header.freq_ref_i)*header.freq_width+header.freq_ref
-    freq_bin=32.*header.freq_width  ;Hz
+    IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*header.freq_width  ;Hz
     freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
     nfreq_bin=N_Elements(freq_hist)
     freq_bin_i=fltarr(header.n_freq)
