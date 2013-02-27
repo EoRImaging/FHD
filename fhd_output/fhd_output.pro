@@ -4,6 +4,7 @@ PRO fhd_output,obs,fhd, file_path_fhd=file_path_fhd,version=version,$
     pad_uv_image=pad_uv_image,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
+heap_gc
 t0a=Systime(1)
 t0=0
 t1=0
@@ -17,25 +18,16 @@ t8=0
 t9=0
 t10=0
 
-
-;vis_path_default,data_directory,filename,file_path,obs=obs,version=version
 IF not Keyword_Set(obs) THEN restore,file_path_fhd+'_obs.sav'
 IF not Keyword_Set(fhd) THEN restore,file_path_fhd+'_fhd_params.sav'
-;version=obs.version
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
-;version_name='v'+strn(version)
-;version_dirname='fhd_'+version_name
 
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
 IF not Keyword_Set(silent) THEN print,'Exporting: ',basename
-;export_dir=filepath('',root=data_directory,sub=[version_dirname,filename,'export'])
-;export_path=filepath(filename,root=rootdir('mwa'),sub=export_dir)
 export_path=filepath(basename,root=dirpath,sub='export')
 export_dir=file_dirname(export_path)
 
-;image_dir=filepath('',root=data_directory,sub=[version_dirname,filename,'Images'])
-;image_path=filepath(filename,root=rootdir('mwa'),sub=image_dir)
 image_path=filepath(basename,root=dirpath,sub='images')
 image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
@@ -105,7 +97,7 @@ putast, fits_header, astr_out;, cd_type=1
 t1a=Systime(1)
 t0+=t1a-t0a
 
-IF not Keyword_Set(restore_last) THEN BEGIN
+;IF not Keyword_Set(restore_last) THEN BEGIN
 
     map_fn_arr=Ptrarr(npol,/allocate)
     pol_names=['xx','yy','xy','yx','I','Q','U','V']
@@ -177,7 +169,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
     IF Keyword_Set(catalog_file_path) AND file_test(catalog_file_path) EQ 1 THEN BEGIN
         mrc_cat=mrc_catalog_read(astr_out,file_path=catalog_file_path)
-        mrc_i_use=where((mrc_cat.x GE zoom_low) AND (mrc_cat.x LE zoom_high) AND (mrc_cat.y GE zoom_low) AND (mrc_cat.y LE zoom_high),n_mrc)
+        mrc_i_use=where((mrc_cat.x GE 0) AND (mrc_cat.x LE dimension-1) AND (mrc_cat.y GE 0) AND (mrc_cat.y LE elements-1),n_mrc)
         
         IF Keyword_Set(align) THEN BEGIN 
             error=0
@@ -242,11 +234,10 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
     t5a=Systime(1)
     t4+=t5a-t4a
-;    RETURN
     
     IF n_mrc GT 0 THEN BEGIN
         mrc_cat=mrc_cat[mrc_i_use]
-        mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=8,dimension=dimension,$
+        mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
             width=restored_beam_width,ring=6.*pad_uv_image)
         mrc_image*=Median(source_arr_out.flux.I)/median(mrc_cat.flux.I)
     ENDIF
@@ -268,11 +259,6 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     
     t6a=Systime(1)
     t5+=t6a-t5a
-;    beam_est=Ptrarr(npol,/allocate)
-;    FOR pol_i=0,npol-1 DO BEGIN
-;        beam_est_single=beam_estimate(*instr_images[pol_i],radius=20.,nsigma=3,beam_model=*beam_base_out[pol_i])
-;        *beam_est[pol_i]=beam_est_single
-;    ENDFOR
     
     ;FREE MEMORY
     Ptr_free,map_fn_arr
@@ -280,27 +266,25 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     Ptr_free,model_uv_full
     Ptr_free,model_uv_holo
     
-    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,dirty_images,stokes_images,instr_sources,stokes_sources,$
-        model_uv_arr,model_holo_arr,calibration,filename=file_path_fhd+'_output.sav'
-    
-ENDIF ELSE restore,file_path_fhd+'_output.sav'
+;    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,dirty_images,stokes_images,instr_sources,stokes_sources,$
+;        model_uv_arr,model_holo_arr,calibration,filename=file_path_fhd+'_output.sav'
+;    
+;ENDIF ELSE restore,file_path_fhd+'_output.sav'
 
 t7a=Systime(1)
 IF Keyword_Set(t6a) THEN t6=t7a-t6a
 
-IF N_Elements(beam_est) EQ 0 THEN beam_est_flag=0 ELSE beam_est_flag=1
-
+x_inc=where(beam_mask) mod dimension
+y_inc=Floor(where(beam_mask)/dimension)
+zoom_low=min(x_inc)<min(y_inc)
+zoom_high=max(x_inc)>max(y_inc)
     
 FOR pol_i=0,npol-1 DO BEGIN
     instr_residual=*instr_images[pol_i]
     instr_dirty=*dirty_images[pol_i]
     instr_source=*instr_sources[pol_i]
     instr_restored=instr_residual+instr_source
-    beam_use=*beam_base_out[pol_i];*(*p_map_simple[pol_i])*2.
-    IF beam_est_flag THEN BEGIN
-        beam_est_use=*beam_est[pol_i]
-        beam_diff=beam_use-beam_est_use
-    ENDIF
+    beam_use=*beam_base_out[pol_i]
     stokes_residual=(*stokes_images[pol_i])*beam_mask
     stokes_source=(*stokes_sources[pol_i])*beam_mask
     stokes_restored=stokes_residual+stokes_source
@@ -313,7 +297,6 @@ FOR pol_i=0,npol-1 DO BEGIN
     FitsFast,instr_restored,fits_header,/write,file_path=export_path+filter_name+'_Restored_'+pol_names[pol_i]
     FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
     FitsFast,*weights_arr[pol_i],fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
-    IF beam_est_flag THEN FitsFast,beam_est_use,fits_header,/write,file_path=export_path+'_Beam_estimate_'+pol_names[pol_i]
     
     t9a=Systime(1)
     t8+=t9a-t8a
@@ -336,15 +319,6 @@ FOR pol_i=0,npol-1 DO BEGIN
     Imagefast,beam_use*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
         low=min(beam_use*100),high=max(beam_use*100),/invert
-        
-    IF beam_est_flag THEN BEGIN
-        Imagefast,beam_est_use*100.,file_path=image_path+'_Beam_estimate_'+pol_names[pol_i],/log,$
-            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
-            low=min(beam_est_use*100),high=max(beam_est_use*100),/invert
-        Imagefast,beam_diff*100.,file_path=image_path+'_Beam_diff_'+pol_names[pol_i],log=0,$
-            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
-            low=min(beam_diff*100)>(-10.),high=max(beam_diff*100)<10,/invert
-    ENDIF
     
     t8b=Systime(1)
     t9+=t8b-t9a
@@ -393,8 +367,6 @@ Ires=(*stokes_images[0])[source_arr_out.x,source_arr_out.y]
 IF npol GT 1 THEN Qres=(*stokes_images[1])[source_arr_out.x,source_arr_out.y]
 source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list2'
 
-;old .sav files had source_array_full instead of comp_arr, so check for that here
-IF N_Elements(comp_arr) EQ 0 THEN comp_arr=source_array_full
 comp_arr_out=comp_arr
 ad2xy,comp_arr.ra,comp_arr.dec,astr_out,sx,sy
 comp_arr_out.x=sx & comp_arr_out.y=sy
