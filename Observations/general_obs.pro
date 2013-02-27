@@ -67,7 +67,7 @@ WHILE fi LE end_fi DO BEGIN
     IF Keyword_Set(update_file_list) THEN BEGIN ;use this if simultaneously downloading and deconvolving observations
         vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
         fhd_file_list=fhd_path_setup(vis_file_list,version=version)
-        end_fi=n_files
+        end_fi=n_files-1
     ENDIF
 ENDWHILE
 

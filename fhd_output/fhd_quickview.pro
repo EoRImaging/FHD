@@ -94,12 +94,12 @@ ENDFOR
 
 ;write sources to a text file
 Ires=(*stokes_images[0])[source_array.x,source_array.y]
-Qres=(*stokes_images[1])[source_array.x,source_array.y]
+IF npol GT 1 THEN Qres=(*stokes_images[1])[source_array.x,source_array.y]
 radius=angle_difference(obs.obsdec,obs.obsra,source_array.dec,source_array.ra,/degree)
 source_array_export,source_array,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list'
 
 Ires=(*stokes_images[0])[comp_arr.x,comp_arr.y]
-Qres=(*stokes_images[1])[comp_arr.x,comp_arr.y]
+IF npol GT 1 THEN Qres=(*stokes_images[1])[comp_arr.x,comp_arr.y]
 radius=angle_difference(obs.obsdec,obs.obsra,comp_arr.dec,comp_arr.ra,/degree)
 source_array_export,comp_arr,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_component_list'
 
