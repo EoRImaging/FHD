@@ -34,8 +34,11 @@ freq_arr=(findgen(n_freq)-freq_ref_i)*freq_delt+freq_ref_val
 
 degpix=[beam_RA_delt,beam_Dec_delt]
 
-beam_slice=fltarr(naxis1,naxis2)
-FOR i=0,naxis1-1 DO FOR j=0,naxis2-1 DO beam_slice[i,j]=Interpol(beam_cube[i,j,*],freq_arr,frequency)
+
+freq_i_test=Min(abs(freq_arr-frequency),freq_i_use)
+beam_slice=Reform(beam_cube[*,*,freq_i_use])
+;beam_slice=fltarr(naxis1,naxis2)
+;FOR i=0,naxis1-1 DO FOR j=0,naxis2-1 DO beam_slice[i,j]=Interpol(beam_cube[i,j,*],freq_arr,frequency)
 
 IF Keyword_Set(polarization) THEN beam_slice=Rotate(beam_slice,1)
 

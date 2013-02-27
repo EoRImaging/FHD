@@ -34,8 +34,8 @@ IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 noise_calibrate=0
 align=0
 ;dimension=1024.
-kbinsize=0.5
-max_sources=10000.
+;kbinsize=0.5
+;max_sources=10000.
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 instrument='paper'
@@ -43,14 +43,16 @@ lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
 n_pol=1
 complex_beam=1
+FoV=160.
+freq_bin=5E5
 ;mirror_X=1
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,n_pol=n_pol,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,$
-    rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,lon=lon,lat=lat,$
-    complex_beam=complex_beam,double_precison_beam=double_precison_beam,instrument=instrument,_Extra=extra
+    rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,lon=lon,lat=lat,freq_bin=freq_bin,$
+    complex_beam=complex_beam,double_precison_beam=double_precison_beam,instrument=instrument,FoV=FoV,_Extra=extra
 
 !except=except
 END
