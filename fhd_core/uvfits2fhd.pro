@@ -135,7 +135,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
     kbinsize=obs.kpix
     degpix=obs.degpix
     dimension=obs.dimension
-    bandwidth=Round((Max(obs.freq)-Min(obs.freq))/1E5)/10.
+    IF Keyword_Set(freq_start) THEN bw_start=(freq_start*1E6)>Min(obs.freq) ELSE bw_start=Min(obs.freq)
+    IF Keyword_Set(freq_end) THEN bw_end=(freq_end*1E6)<Max(obs.freq) ELSE bw_end=Max(obs.freq)
+    bandwidth=Round((bw_end-bw_start)/1E5)/10.
     fov=dimension*degpix
     k_span=kbinsize*dimension
     print,String(format='("Image size used: ",A," pixels")',Strn(dimension))
