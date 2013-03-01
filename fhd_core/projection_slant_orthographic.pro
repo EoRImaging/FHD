@@ -1,7 +1,7 @@
 PRO projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr,valid_i=valid_i,$
     degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
     dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,$
-    zenx=zenx,zeny=zeny
+    zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec
 
 ;extract values from obs
 IF Keyword_Set(obs) THEN BEGIN
@@ -30,6 +30,8 @@ ENDIF ELSE BEGIN
 ;    IF N_Elements(rotation) EQ 0 THEN rotation=0.
     IF N_Elements(obsra) EQ 0 THEN obsra=0.
     IF N_Elements(obsdec) EQ 0 THEN obsdec=0.
+    IF N_Elements(phasera) EQ 0 THEN phasera=obsra
+    IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec
     IF N_Elements(zenra) EQ 0 THEN zenra=obsra
     IF N_Elements(zendec) EQ 0 THEN zendec=obsdec    
 ENDELSE
@@ -71,7 +73,23 @@ MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
     CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
     LATPOLE = 0., LONGPOLE = 180.
 
+IF (phasera NE obsra) OR (phasedec NE obsdec) THEN BEGIN
+    ad2xy,phasera,phasedec,astr,phasex,phasey
+    dx=obsx-phasex
+    dy=obsy-phasey
+    obsx-=dx
+    obsy-=dy
+    IF Keyword_Set(obs) THEN BEGIN
+        obs.obsx=obsx
+        obs.obsy=obsy
+    ENDIF
+    MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
+        CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
+        LATPOLE = 0., LONGPOLE = 180.
+ENDIF
+
 ad2xy,zenra,zendec,astr,zenx,zeny
+
 IF Keyword_Set(obs) THEN BEGIN
     obs.zenx=zenx
     obs.zeny=zeny

@@ -1,7 +1,7 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
-    zenra=zenra,zendec=zendec,nfreq_avg=nfreq_avg,freq_bin=freq_bin,_Extra=extra
+    zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,nfreq_avg=nfreq_avg,freq_bin=freq_bin,_Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
@@ -49,6 +49,8 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     obsra=header.obsra-ra_offset
     obsdec=header.obsdec-dec_offset
     IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
+    IF N_Elements(phasera) EQ 0 THEN phasera=obsra
+    IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec
 ;    Precess,obsra,obsdec,2000.,epoch
 
     IF Keyword_Set(zenra) THEN BEGIN
@@ -132,7 +134,7 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF Keyword_Set(mirror_X) THEN degpix[0]*=-1
     IF Keyword_Set(mirror_Y) THEN degpix[1]*=-1
     projection_slant_orthographic,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-        dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
+        dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec
 ;    vis_coordinates,astr=astr,degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
 ;        dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
 ENDIF 
@@ -155,6 +157,8 @@ IF N_Elements(zendec) EQ 0 THEN zendec=0. ;degrees
 ;IF N_Elements(rotation) EQ 0 THEN rotation=0. ;degrees
 IF N_Elements(obsra) EQ 0 THEN obsra=0. ;degrees
 IF N_Elements(obsdec) EQ 0 THEN obsdec=0. ;degrees
+IF N_Elements(phasera)EQ 0 THEN phasera=0.
+IF N_Elements(phasedec) EQ 0 THEN phasedec=0.
 IF N_Elements(calibration) EQ 0 THEN calibration=fltarr(4)+1.
 IF N_Elements(n_pol) EQ 0 THEN n_pol=0
 IF N_Elements(n_tile) EQ 0 THEN n_tile=0.
@@ -179,7 +183,7 @@ arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate}
 struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:Mean(Abs(degpix)),$
     obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,$
     pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,jd0:jd0,$
-    max_baseline:max_baseline,min_baseline:min_baseline,$
+    max_baseline:max_baseline,min_baseline:min_baseline,phasera:phasera,phasedec:phasedec,$
     freq:frequency_array,fbin_i:freq_bin_i,astr:astr,baseline_info:Ptr_new(arr)}    
 RETURN,struct
 END
