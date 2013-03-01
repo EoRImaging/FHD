@@ -27,6 +27,7 @@ FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,_Extra=extra
 t0_0=Systime(1)
 heap_gc
+IF N_Elements(complex) EQ 0 THEN complex=1
 
 pol_names=['xx','yy','xy','yx']
 
