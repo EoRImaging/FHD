@@ -157,19 +157,20 @@ IF Keyword_Set(data_flag) THEN BEGIN
     data_array=data_struct.array
     data_struct=0. ;free memory
     
+    flag_arr0=Reform(data_array[flag_index,*,*,*]) 
+    IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
+    
     IF Keyword_Set(freq_start) THEN BEGIN
         frequency_array_MHz=obs.freq/1E6
         freq_start_cut=where(frequency_array_MHz LT freq_start,nf_cut_start)
-        IF nf_cut_start GT 0 THEN flag_arr0[*,*,freq_start_cut,*]=0
+        IF nf_cut_start GT 0 THEN flag_arr0[*,freq_start_cut,*]=0
     ENDIF
     IF Keyword_Set(freq_end) THEN BEGIN
         frequency_array_MHz=obs.freq/1E6
         freq_end_cut=where(frequency_array_MHz GT freq_end,nf_cut_end)
-        IF nf_cut_end GT 0 THEN flag_arr0[*,*,freq_end_cut,*]=0
+        IF nf_cut_end GT 0 THEN flag_arr0[*,freq_end_cut,*]=0
     ENDIF
     
-    flag_arr0=Reform(data_array[flag_index,*,*,*])
-    IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr0
         SAVE,flag_arr0,filename=flags_filepath,/compress
