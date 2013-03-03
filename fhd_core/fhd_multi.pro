@@ -2,6 +2,7 @@ PRO fhd_multi,fhd_file_list,obs_arr,_Extra=extra
 except=!except
 !except=0
 compile_opt idl2,strictarrsubs  
+t00=Systime(1)
 
 IF N_Params() LT 2 THEN BEGIN
     n_obs=N_Elements(fhd_file_list)
@@ -15,8 +16,6 @@ ENDIF
 
 n_obs=N_Elements(obs_arr)
 fhd=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations
-
-;obs_arr2=Replicate(*obs_arr[0],n_obs) & FOR i=1,n_obs-1 DO obs_arr2[i]=*obs_arr[i]
 
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
@@ -119,7 +118,6 @@ degpix_hpx=Sqrt((4*!Pi*!Radeg^2.)/n_hpx_full)
 
 pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,dec_hpx,ra_hpx,/astro
-;pix_coords=0 ;free memory
     
 converge_check=Fltarr(Ceil(max_iter/check_iter))
 converge_check2=Fltarr(max_iter)
@@ -170,6 +168,8 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDIF
     ENDFOR
     
+    t2_0=Systime(1)
+    t1+=t2_0-t1_0
     ;NOTE healpix_map and smooth_hpx are in instrumental polarization, weighted by the beam squared
     
     ;convert to Stokes I
@@ -183,6 +183,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     flux_ref=Max(source_find_hpx*source_mask,max_i)
     flux_ref1=flux_ref*add_threshold
     source_i=where(source_find_hpx*source_mask GT flux_ref1,n_src)
+    IF (n_src<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-(si+1)
     IF n_src GT max_add_sources THEN BEGIN
         source_list=source_find_hpx[source_i]
         source_i=source_i[(Reverse(Sort(source_list)))[0:max_add_sources-1]]
@@ -202,15 +203,15 @@ FOR i=0L,max_iter-1 DO BEGIN
         ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
         dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
     ENDFOR
+    t3_0=Systime(1)
+    t2+=t3_0-t2_0
     
-    
-    
-    ;update models
-    
-    FOR src_i=0L,n_sources-1 DO BEGIN
-        FOR obs_i=0L,n_obs-1 DO BEGIN
-            ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
-            
+    ;update models    
+    FOR obs_i=0L,n_obs-1 DO BEGIN
+        ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
+        comp_arr1=*comp_arr[obs_i]
+        FOR src_i=0L,n_src-1 DO BEGIN
+            si1=si+src_i
             
             FOR pol_i=0,n_pol-1 DO BEGIN   
                 beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
@@ -223,30 +224,77 @@ FOR i=0L,max_iter-1 DO BEGIN
                 ENDIF ELSE IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]] ELSE flux_use=image_use_U[additional_i[src_i]]
                 
                 flux_use*=gain_factor_use/2.
-                comp_arr[si].flux.(pol_i)=flux_use*beam_src[pol_i];*ps_not_used ;Apparent brightness, instrumental polarization X gain (a scalar)
-    ;            comp_arr[si].flux.(pol_i)=flux_use*gain_factor_use*beam_src[pol_i]*(*p_map_simple[pol_i])[additional_i[src_i]]
-    ;            flux_use*=ps_not_used*(*beam_correction[pol_i])[additional_i[src_i]]
-                flux_arr[pol_i]=flux_use;*beam_corr_src[pol_i] ;"True sky" instrumental pol
+                comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
+                flux_arr[pol_i]=flux_use;"True sky" instrumental pol
             ENDFOR
             
-            comp_arr[si].flux.I=flux_arr[0]+flux_arr[1]
-            comp_arr[si].flux.Q=flux_arr[0]-flux_arr[1]
-            comp_arr[si].flux.U=flux_arr[2]+flux_arr[3]
-            comp_arr[si].flux.V=flux_arr[2]-flux_arr[3]
+            comp_arr1[si1].flux.I=flux_arr[0]+flux_arr[1]
+            comp_arr1[si1].flux.Q=flux_arr[0]-flux_arr[1]
+            comp_arr1[si1].flux.U=flux_arr[2]+flux_arr[3]
+            comp_arr1[si1].flux.V=flux_arr[2]-flux_arr[3]
             
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-            source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+            source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*xvals1+(comp_arr1[si1].y-elements/2.)*yvals1))
+            FOR pol_i=0,n_pol-1 DO $
+                (*model_uv_full[pol_i,obs_i])[uv_i_use]+=comp_arr1[si1].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
         ENDFOR
-        
-        si+=1
+        comp_arr1=*comp_arr[obs_i]
     ENDFOR
+    si+=n_src
+    t4_0=Systime(1)
+    t3+=t4_0-t3_0
+    
     ;apply HMF
+    FOR obs_i=0L,n_obs-1 DO BEGIN
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],_Extra=extra)*normalization
+        ENDFOR
+    ENDFOR
+    t4+=Systime(1)-t4_0
+    
+    IF si GE max_sources THEN BEGIN
+        i2+=1                                        
+        t10=Systime(1)-t0
+        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,Stddev((image_use*beam_avg)[where(source_mask)],/nan)))
+        converge_check[i2]=Stddev((image_use*beam_avg)[where(source_mask)],/nan)
+        BREAK
+    ENDIF
     
     ;check convergence
-    
+    IF (Round(i mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
+        i2+=1
+        t10=Systime(1)-t0
+        conv_chk=Stddev(source_find_hpx[where(source_find_hpx)],/nan)
+        IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
+        converge_check[i2]=conv_chk
+        IF 2.*converge_check[i2] GT image_use[source_i] THEN BEGIN
+            print,'Break after iteration',i,' from low signal to noise'
+            converge_check2=converge_check2[0:i]
+            converge_check=converge_check[0:i2]
+            BREAK
+        ENDIF
+        IF converge_check[i2] GT converge_check[i2-1] THEN BEGIN
+            print,'Break after iteration',i,' from lack of convergence'
+            converge_check2=converge_check2[0:i]
+            converge_check=converge_check[0:i2]
+            BREAK
+        ENDIF
+    ENDIF
 ENDFOR
+;condense clean components
+noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
+source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
 
+FOR pol_i=0,n_pol-1 DO BEGIN
+    *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
+ENDFOR  
+
+t00=Systime(1)-t00
+print,'Deconvolution timing [per iteration]'
+print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))
+print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
+print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.))
+print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
+timing=[t00,t1,t2,t3,t4]
 !except=except
 END
