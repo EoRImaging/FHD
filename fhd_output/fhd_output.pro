@@ -116,7 +116,7 @@ t0+=t1a-t0a
     beam_base_out=Ptrarr(npol,/allocate)
     beam_correction_out=Ptrarr(npol,/allocate)
     FOR pol_i=0,(npol<2)-1 DO BEGIN
-        *beam_base_out[pol_i]=beam_image(psf,pol_i=pol_i,dimension=dimension)
+        *beam_base_out[pol_i]=beam_image(psf,obs_out,pol_i=pol_i,dimension=dimension)
         *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold/2.)
         beam_mask_test=*beam_base_out[pol_i]
         beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold/2.,Max(beam_mask_test)])
@@ -148,7 +148,8 @@ t0+=t1a-t0a
     IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
     
     ;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
-    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
+;    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
+    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(Sqrt(2.*Alog(2.)))
     FOR pol_i=0,npol-1 DO BEGIN
         *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
             beam_correction=beam_correction,mask=source_uv_mask)
@@ -238,7 +239,7 @@ t0+=t1a-t0a
     IF n_mrc GT 0 THEN BEGIN
         mrc_cat=mrc_cat[mrc_i_use]
         mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
-            width=restored_beam_width,ring=6.*pad_uv_image)
+            width=pad_uv_image,ring=6.*pad_uv_image)
         mrc_image*=Median(source_arr_out.flux.I)/median(mrc_cat.flux.I)
     ENDIF
     

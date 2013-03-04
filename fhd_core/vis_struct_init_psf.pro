@@ -17,7 +17,8 @@
 ;
 ; :Author: isullivan May 6, 2012
 ;-
-FUNCTION vis_struct_init_psf,base=base,res_i=res_i,res_val=res_val,res_N=res_N,xvals=xvals,yvals=yvals,norm=norm
+FUNCTION vis_struct_init_psf,base=base,res_i=res_i,res_val=res_val,res_N=res_N,$
+    xvals=xvals,yvals=yvals,norm=norm,fbin_i=fbin_i
 ;
 
 IF N_Elements(base) EQ 0 THEN base=Ptrarr(1) ;will actually have dimensions (npol,nfreq,resolution,resolution)
@@ -27,7 +28,8 @@ IF N_Elements(res_val) EQ 0 THEN res_val=Ptrarr(1);will have the same dimensions
 IF N_Elements(res_n) EQ 0 THEN res_n=lon64arr(1) ;will have the same dimensions as base. Contains the number of pixels with values different from base
 IF N_Elements(xvals) EQ 0 THEN xvals=Ptrarr(1) ;will have dimensions of (resolution,resolution)
 IF N_Elements(norm) EQ 0 THEN norm=fltarr(2)+1.
+IF N_Elements(fbin_i) EQ 0 THEN fbin_i=Lonarr(1)
 
-struct={base:base,res_i:res_i,res_val:res_val,res_n:res_n,xvals:xvals,yvals:yvals,norm:norm}
+struct={base:base,res_i:res_i,res_val:res_val,res_n:res_n,xvals:xvals,yvals:yvals,norm:norm,fbin_i:fbin_i}
 RETURN,struct
 END

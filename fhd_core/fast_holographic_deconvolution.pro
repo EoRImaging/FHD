@@ -119,7 +119,7 @@ gain_array=fltarr(dimension,elements)+gain_factor
 beam_avg=fltarr(dimension,elements)
 nbeam_avg=0
 FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
-    *beam_base[pol_i]=beam_image(psf,pol_i=pol_i,dimension=dimension)
+    *beam_base[pol_i]=beam_image(psf,obs,pol_i=pol_i,dimension=dimension)
     *beam_mask[pol_i]=fltarr(dimension,elements)
     
     beam_mask_test=*beam_base[pol_i];*(*p_map_simple[pol_i]);*(ps_not_used*2.)

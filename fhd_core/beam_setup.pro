@@ -110,23 +110,6 @@ norm=Sqrt(2.)*[ex0,ey0]
 xvals2=meshgrid(psf_dim2,psf_dim2,1)
 yvals2=meshgrid(psf_dim2,psf_dim2,2)
 
-;xy2ad,xvals2,yvals2,zen_astr,ra_arr_use0,dec_arr_use0  
-;valid_i0=where(Finite(ra_arr_use0))
-;;vis_coordinates,0,ra_arr_use0,dec_arr_use0,degpix=degpix_use,obsra=zenra,obsdec=zendec,zenra=zenra,zendec=zendec,$
-;;    dimension=psf_dim2,rotation=0,valid_i=valid_i0
-;Eq2Hor,ra_arr_use0[valid_i0],dec_arr_use0[valid_i0],Jdate,alt_arr0,az_arr0a,lat=obs.lat,lon=obs.lon,alt=obs.alt
-;za_arr0=fltarr(psf_dim2,psf_dim2)+90. & za_arr0[valid_i0]=90.-alt_arr0
-;az_arr0=fltarr(psf_dim2,psf_dim2) & az_arr0[valid_i0]=az_arr0a
-;
-;intensity=stokes_off_zenith(az_arr0a, alt_arr0, [1.,0.,0.,0.], Ex_mag0, Ey_mag0,/intensity)
-;proj0=Ptrarr(2,/allocate)
-;proj0_x=fltarr(psf_dim2,psf_dim2) & proj0_x[valid_i0]=Ey_mag0
-;proj0_y=fltarr(psf_dim2,psf_dim2) & proj0_y[valid_i0]=Ex_mag0
-;;*proj0[0]=proj0_x^2.
-;;*proj0[1]=proj0_y^2.
-;*proj0[0]=proj0_x
-;*proj0[1]=proj0_y
-
 xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
 valid_i=where(Finite(ra_arr_use1))
 Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt
@@ -142,48 +125,6 @@ yvals3=za_arr*Cos(az_arr*!DtoR);/degpix_use3[1]
 el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0,0,0])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-
-;ad2xy,obsra,obsdec,astr,obsx,obsy
-;ad2xy,zenra,zendec,astr,zenx,zeny
-;dxc=obsx-zenx
-;dyc=obsy-zeny
-;IF Abs(obs.obsra-obs.zenra) GT 90. THEN lon_offset=obs.obsra-((obs.obsra GT obs.zenra) ? 360.:(-360.))-obs.zenra ELSE lon_offset=obs.obsra-obs.zenra
-;lat_offset=-(obs.zendec-obs.obsdec)
-;degpix_use2=[Cos(lon_offset*!DtoR*Cos(obs.obsdec*!DtoR)),Cos(lat_offset*!DtoR)]*degpix_use
-;xcvals2=((xvals2+dxc-psf_dim2/2.)*Cos(!DtoR*obs.rotation)*degpix_use2[0]+(yvals2+dyc-psf_dim2/2.)*degpix_use2[1]*Sin(!DtoR*obs.rotation));*degpix_use2[0]
-;ycvals2=((yvals2+dyc-psf_dim2/2.)*degpix_use2[1]*Cos(!DtoR*obs.rotation)-(xvals2+dxc-psf_dim2/2.)*degpix_use2[0]*Sin(!DtoR*obs.rotation));*degpix_use2[1]
-;;proj_x=Exp(Complex(0,1)*xcvals2*!DtoR/2.)/Sqrt(2.)
-;;proj_y=Exp(Complex(0,1)*ycvals2*!DtoR/2.)/Sqrt(2.)
-;proj_x=Cos(xcvals2*!DtoR)/Sqrt(2.)
-;proj_y=Cos(ycvals2*!DtoR)/Sqrt(2.)
-;xi_use=region_grow(proj_x,psf_dim2*(1.+psf_dim2)/2.,thresh=[0,1])
-;mask_x=fltarr(psf_dim2,psf_dim2) & mask_x[xi_use]=1. 
-;yi_use=region_grow(proj_y,psf_dim2*(1.+psf_dim2)/2.,thresh=[0,1])
-;mask_y=fltarr(psf_dim2,psf_dim2) & mask_y[yi_use]=1. 
-;proj=Ptrarr(2,/allocate)
-;*proj[0]=proj_x;*mask_x
-;*proj[1]=proj_y;*mask_y
-;
-;za_arr=angle_difference(0,0,xcvals2,ycvals2,/degree)
-;az_arr=Atan(-xcvals2,-ycvals2)*!Radeg+180.
-
-;xcvals2a=((xvals2-psf_dim2/2.)*Cos(!DtoR*obs.rotation)*degpix_use2[0]+(yvals2-psf_dim2/2.)*degpix_use2[1]*Sin(!DtoR*obs.rotation));*degpix_use2[0]
-;ycvals2a=((yvals2-psf_dim2/2.)*degpix_use2[1]*Cos(!DtoR*obs.rotation)-(xvals2-psf_dim2/2.)*degpix_use2[0]*Sin(!DtoR*obs.rotation));*degpix_use2[1]
-;;proj_x0=Exp(Complex(0,1)*xcvals2a*!DtoR/2.)/Sqrt(2.)
-;;proj_y0=Exp(Complex(0,1)*ycvals2a*!DtoR/2.)/Sqrt(2.)
-;;proj_y=Exp(Complex(0,1)*ycvals2*!DtoR/2.)/Sqrt(2.)
-;proj_x0=Cos(xcvals2a*!DtoR)/Sqrt(2.)
-;proj_y0=Cos(ycvals2a*!DtoR)/Sqrt(2.)
-;proj0=Ptrarr(2,/allocate)
-;*proj0[0]=proj_x0
-;*proj0[1]=proj_y0
-
-;;TEMPORARY ADDITION
-;;*proj0[0]=fltarr(psf_dim2,psf_dim2)+sqrt(2)
-;;*proj0[1]=fltarr(psf_dim2,psf_dim2)+sqrt(2)
-;*proj[0]=fltarr(psf_dim2,psf_dim2)+sqrt(2)
-;*proj[1]=fltarr(psf_dim2,psf_dim2)+sqrt(2)
-
 
 FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
     *psf_xvals[i,j]=xvals[xvals_i+i,yvals_i+j]
@@ -227,24 +168,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
             ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
         
-;;        psf_base0=dirty_image_generate((beam1_0*(*proj0[pol1]))*Conj(beam2_0*(*proj0[pol2])),/no_real)
 ;        psf_base1=dirty_image_generate((beam1_0*(*proj[pol1]))*Conj(beam2_0*(*proj[pol2])),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
 ;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
-;        psf_base1=abs(psf_base1)
-        
         uv_mask=fltarr(psf_dim2,psf_dim2)
         beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
         uv_mask[beam_i]=1.
-;        psf_base0*=uv_mask
         psf_base1*=uv_mask
 ;       
-;        gain_normalization=norm[pol1]*norm[pol2]/(Total(psf_base1)/psf_resolution^2.)
         gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base1))/psf_resolution^2.)
         psf_base1*=gain_normalization
-;        gain_normalization=1./(Total(psf_base0)/psf_resolution^2.)
-;        psf_base1*=gain_normalization
         
         FOR tile_i=0,n_tiles-1 DO BEGIN
             *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
@@ -262,17 +196,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 psf_residuals_n[pol_i,freq_i,bi]=0
                 CONTINUE
             ENDIF
-;;            beam1=Call_function(tile_beam_fn,gain1[*,tile_A[bi]],antenna_beam_arr1,$
-;;                frequency=freq_center[freq_i],angle_offset=ang_off,polarization=pol1,$
-;;                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,$
-;;                foreshorten_U=fshort_U,foreshorten_V=fshort_V)
-;;            beam2=Call_function(tile_beam_fn,gain2[*,tile_B[bi]],antenna_beam_arr2,$
-;;                frequency=freq_center[freq_i],angle_offset=ang_off,polarization=pol2,$
-;;                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,$
-;;                foreshorten_U=fshort_U,foreshorten_V=fshort_V)
-;            beam1=*beam1_arr[tile_A[bi]-1]
-;            beam2=*beam2_arr[tile_B[bi]-1]
-;            psf_single=Convolve2(*beam1_arr[tile_A[bi]-1],*beam2_arr[tile_B[bi]-1],pad=convolve_pad,/absolute)*gain_normalization
+            
             psf_single=dirty_image_generate(*beam1_arr[tile_A[bi]-1],*beam2_arr[tile_B[bi]-1])*uv_mask*gain_normalization
             residual_single=psf_single-psf_base1
             i_res=where(residual_single GE ((psf_base1*residual_tolerance)>residual_threshold),nres)
@@ -290,7 +214,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
-    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm)
+    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm,fbin_i=freq_bin_i)
 save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 RETURN,psf
 END

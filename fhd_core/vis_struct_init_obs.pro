@@ -90,6 +90,8 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF N_Elements(n_pol) EQ 0 THEN n_pol=header.n_pol
     n_tile=header.n_tile
     n_freq=header.n_freq
+    freq_use=Lindgen(n_freq)
+    tile_use=Lindgen(n_tile)
     n_vis=Float(N_Elements(time))*n_freq
     
     ;256 tile upper limit is hard-coded in CASA format
@@ -107,7 +109,7 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
         IF hist_A1[tile_i] GT 0 THEN tile_A[ria[ria[tile_i]:ria[tile_i+1]-1]]=i0+1
         IF hist_B1[tile_i] GT 0 THEN tile_B[rib[rib[tile_i]:rib[tile_i+1]-1]]=i0+1
     ENDFOR
-    
+    tile_names=tile_nums+1
     
     kx_arr=params.uu#frequency_array
     ky_arr=params.vv#frequency_array
@@ -160,10 +162,13 @@ IF N_Elements(obsdec) EQ 0 THEN obsdec=0. ;degrees
 IF N_Elements(phasera)EQ 0 THEN phasera=0.
 IF N_Elements(phasedec) EQ 0 THEN phasedec=0.
 IF N_Elements(calibration) EQ 0 THEN calibration=fltarr(4)+1.
-IF N_Elements(n_pol) EQ 0 THEN n_pol=0
-IF N_Elements(n_tile) EQ 0 THEN n_tile=0.
-IF N_Elements(n_freq) EQ 0 THEN n_freq=0.
-IF N_Elements(n_vis) EQ 0 THEN n_vis=0L
+IF N_Elements(n_pol) EQ 0 THEN n_pol=1
+IF N_Elements(n_tile) EQ 0 THEN n_tile=1.
+IF N_Elements(n_freq) EQ 0 THEN n_freq=1.
+IF N_Elements(n_vis) EQ 0 THEN n_vis=1L
+IF N_Elements(freq_use) EQ 0 THEN freq_use=Lindgen(n_freq)
+IF N_Elements(tile_use) EQ 0 THEN tile_use=Lindgen(n_tile)
+IF N_Elements(tile_names) EQ 0 THEN tile_names=Lindgen(n_tile)+1
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline=0.
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=0
 IF N_Elements(zenx) EQ 0 THEN zenx=obsx
@@ -179,7 +184,7 @@ ENDIF
 ;    pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,$
 ;    max_baseline:max_baseline,min_baseline:min_baseline,astr:astr}
 ;arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,astr:astr}
-arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate}
+arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq_use:freq_use,tile_use:tile_use,tile_names:tile_names}
 struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:Mean(Abs(degpix)),$
     obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,$
     pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,jd0:jd0,$

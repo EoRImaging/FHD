@@ -115,21 +115,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
     obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
     
     IF Keyword_Set(rephase_to_zenith) THEN BEGIN
-        print,"REPHASING VISIBILITIES TO POINT AT ZENITH!!"
-        dimension=obs.dimension
-        elements=obs.elements
-    ;    rotation=obs.rotation
-        frequency_array=obs.freq
-        kbinsize=obs.kpix
-        kx_arr=params.uu/kbinsize
-        ky_arr=params.vv/kbinsize
-        xcen=frequency_array#kx_arr
-        ycen=frequency_array#ky_arr
-        phase_shift=Exp(Complex(0,1)*(2.*!Pi/dimension)*((obs.obsx-obs.zenx)*xcen+(obs.obsy-obs.zeny)*ycen))
-        
+        phasera=obs.obsra
+        phasedec=obs.obsdec        
         hdr.obsra=obs.zenra
         hdr.obsdec=obs.zendec
-        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
+        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+        phase_shift=1.
     ENDIF ELSE phase_shift=1.
     
     kbinsize=obs.kpix
@@ -164,12 +155,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
         frequency_array_MHz=obs.freq/1E6
         freq_start_cut=where(frequency_array_MHz LT freq_start,nf_cut_start)
         IF nf_cut_start GT 0 THEN flag_arr0[*,freq_start_cut,*]=0
-    ENDIF
+    ENDIF ELSE nf_cut_start=0
     IF Keyword_Set(freq_end) THEN BEGIN
         frequency_array_MHz=obs.freq/1E6
         freq_end_cut=where(frequency_array_MHz GT freq_end,nf_cut_end)
         IF nf_cut_end GT 0 THEN flag_arr0[*,freq_end_cut,*]=0
-    ENDIF
+    ENDIF ELSE nf_cut_end=0
     
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr0
@@ -203,6 +194,25 @@ IF Keyword_Set(data_flag) THEN BEGIN
             SAVE,flag_arr0,filename=flags_filepath,/compress
     ENDELSE
     
+    flag_freq_test=intarr(obs.n_freq)
+    flag_tile_test=intarr(obs.n_tile)
+    FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(Reform(flag_arr0[pol_i,*,*]),dimension=2)>0
+    (*obs.baseline_info).freq_use=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
+    tile_A=(*obs.baseline_info).tile_A
+    tile_B=(*obs.baseline_info).tile_B
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        FOR tile_i=0,obs.n_tile-1 DO BEGIN
+            tA_i=where(tile_A EQ (tile_i+1),nA)
+            tB_i=where(tile_B EQ (tile_i+1),nB)
+            flag_tile_test+=nA+nB
+        ENDFOR
+    ENDFOR
+    (*obs.baseline_info).tile_use=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
+    print,String(format='(A," frequency channels used and ",A," in-band channels flagged")',$
+        number_formatter(n_freq_use),number_formatter(n_freq_cut-nf_cut_end-nf_cut_start))
+    print,String(format='(A," tiles used and ",A," tiles flagged")',$
+        number_formatter(n_tile_use),number_formatter(n_tile_cut))
+    
     save,obs,filename=obs_filepath
     save,params,filename=params_filepath
     save,hdr,filename=hdr_filepath
@@ -212,7 +222,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,_Extra=extra)
     
     beam=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
+    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i)
     
     beam_mask=fltarr(obs.dimension,obs.elements)+1
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
