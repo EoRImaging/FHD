@@ -77,7 +77,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     ENDFOR
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam[pol_i,obs_i]*beam_mask)
     
-    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,mask=beam_mask,radius=radius,restore_last=1)
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,mask=beam_mask,radius=radius,restore_last=1) ;supply beam_mask in case file is missing and needs to be generated
     
     source_comp_init,comp_arr0,n_sources=max_sources
     *comp_arr[obs_i]=comp_arr0
@@ -287,7 +287,7 @@ source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
-ENDFOR  
+ENDFOR
 
 t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'
