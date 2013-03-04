@@ -34,7 +34,7 @@ IF tag_exist(psf,'fbin_i') THEN freq_bin_i=psf.fbin_i
 IF Keyword_Set(obs) THEN BEGIN
     freq_bin_i=obs.fbin_i
     n_freq=obs.n_freq
-    IF tag_exist((*obs.baseline_info),'freq_use') THEN freq_i_use=(*obs.baseline_info).freq_use $
+    IF tag_exist((*obs.baseline_info),'freq_use') THEN freq_i_use=where((*obs.baseline_info).freq_use GT 0) $
         ELSE freq_i_use=findgen(n_freq)
 ENDIF
 

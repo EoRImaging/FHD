@@ -197,7 +197,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
     flag_freq_test=intarr(obs.n_freq)
     flag_tile_test=intarr(obs.n_tile)
     FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(Reform(flag_arr0[pol_i,*,*]),dimension=2)>0
-    (*obs.baseline_info).freq_use=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
+    flag_freq_use_i=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
+    IF n_freq_use EQ 0 THEN print,'All frequencies flagged!' ELSE BEGIN
+        (*obs.baseline_info).freq_use[*]=0
+        (*obs.baseline_info).freq_use[flag_freq_use_i]=1
+    ENDELSE
     tile_A=(*obs.baseline_info).tile_A
     tile_B=(*obs.baseline_info).tile_B
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -207,7 +211,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
             flag_tile_test+=nA+nB
         ENDFOR
     ENDFOR
-    (*obs.baseline_info).tile_use=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
+    flag_tile_use_i=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
+    IF n_tile_use EQ 0 THEN print,'All tiles flagged!' ELSE BEGIN
+        (*obs.baseline_info).tile_use[*]=0
+        (*obs.baseline_info).tile_use[flag_tile_use_i]=1
+    ENDELSE
     print,String(format='(A," frequency channels used and ",A," in-band channels flagged")',$
         number_formatter(n_freq_use),number_formatter(n_freq_cut-nf_cut_end-nf_cut_start))
     print,String(format='(A," tiles used and ",A," tiles flagged")',$

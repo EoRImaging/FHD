@@ -90,8 +90,8 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF N_Elements(n_pol) EQ 0 THEN n_pol=header.n_pol
     n_tile=header.n_tile
     n_freq=header.n_freq
-    freq_use=Lindgen(n_freq)
-    tile_use=Lindgen(n_tile)
+    freq_use=Lonarr(n_freq)+1
+    tile_use=Lonarr(n_tile)+1
     n_vis=Float(N_Elements(time))*n_freq
     
     ;256 tile upper limit is hard-coded in CASA format
@@ -166,8 +166,8 @@ IF N_Elements(n_pol) EQ 0 THEN n_pol=1
 IF N_Elements(n_tile) EQ 0 THEN n_tile=1.
 IF N_Elements(n_freq) EQ 0 THEN n_freq=1.
 IF N_Elements(n_vis) EQ 0 THEN n_vis=1L
-IF N_Elements(freq_use) EQ 0 THEN freq_use=Lindgen(n_freq)
-IF N_Elements(tile_use) EQ 0 THEN tile_use=Lindgen(n_tile)
+IF N_Elements(freq_use) EQ 0 THEN freq_use=Lonarr(n_freq)+1
+IF N_Elements(tile_use) EQ 0 THEN tile_use=Lonarr(n_tile)+1
 IF N_Elements(tile_names) EQ 0 THEN tile_names=Lindgen(n_tile)+1
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline=0.
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=0
