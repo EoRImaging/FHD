@@ -117,13 +117,16 @@ beam_mask=Ptrarr(n_pol,/allocate)
 source_mask=fltarr(dimension,elements)+1.; & source_mask[valid_radec_i]=1.
 gain_array=fltarr(dimension,elements)+gain_factor
 beam_avg=fltarr(dimension,elements)
+alias_mask=fltarr(dimension,elements) 
+alias_mask[dimension/4:3.*dimension/4.,elements/4:3.*elements/4.]=1
 nbeam_avg=0
 FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     *beam_base[pol_i]=beam_image(psf,obs,pol_i=pol_i,dimension=dimension)
     *beam_mask[pol_i]=fltarr(dimension,elements)
     
     beam_mask_test=*beam_base[pol_i];*(*p_map_simple[pol_i]);*(ps_not_used*2.)
-    *beam_i[pol_i]=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(beam_mask_test)])
+;    *beam_i[pol_i]=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(beam_mask_test)])
+    *beam_i[pol_i]=where(beam_mask_test*alias_mask GE beam_threshold)
     (*beam_mask[pol_i])[*beam_i[pol_i]]=1.
     IF pol_i LE 1 THEN BEGIN
         nbeam_avg+=1
@@ -135,7 +138,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     beam_max_i=where(abs(*beam_base[pol_i]) GT beam_max_threshold,complement=beam_under_i,ncomplement=n_beam_under)
     (*beam_correction[pol_i])[beam_max_i]=1./(*beam_base[pol_i])[beam_max_i]
 ENDFOR
-
+source_mask*=alias_mask
 beam_avg/=nbeam_avg
 beam_corr_avg=weight_invert(beam_avg,beam_threshold)
 ;gain_array*=Sqrt(beam_avg>0.)*source_mask
@@ -349,7 +352,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR addi=1,n_add-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
     additional_i_usei=where(add_dist LT 0,n_sources)
     
-    IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-(si+1)
+    IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     IF n_sources GT max_add_sources THEN BEGIN
         additional_i_usei=additional_i_usei[0:max_add_sources-1]
         n_sources=max_add_sources
