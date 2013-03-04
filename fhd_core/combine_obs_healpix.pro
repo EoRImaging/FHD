@@ -64,29 +64,21 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     sources_hpx=Ptrarr(npol,/allocate)
     restored_hpx=Ptrarr(npol,/allocate)
     dirty_hpx=Ptrarr(npol,/allocate)
-;    mrc_hpx=Ptrarr(npol,/allocate)
-;    smooth_hpx=Ptrarr(npol,/allocate)
     FOR pol_i=0,npol-1 DO BEGIN
       *residual_hpx[pol_i]=fltarr(n_hpx)
       *weights_hpx[pol_i]=fltarr(n_hpx)
       *sources_hpx[pol_i]=fltarr(n_hpx)
       *restored_hpx[pol_i]=fltarr(n_hpx)
       *dirty_hpx[pol_i]=fltarr(n_hpx)
-;      *smooth_hpx[pol_i]=fltarr(n_hpx)
     ENDFOR
     
     FOR obs_i=0,n_obs-1 DO BEGIN
         heap_gc
         obs=obs_arr[obs_i]
         file_path=file_list_use[obs_i]
-        restore,file_path+'_fhd_params.sav'
-        ;restores the fhd structure that contains the parameters used in deconvolution 
         restore,file_path+'_fhd.sav'
     ;   save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
-;        restore,file_path+'_output.sav'
-    ;    save,mrc_cat,mrc_image,beam_mask,beam_avg,instr_images,stokes_images,instr_sources,stokes_sources,$
-    ;        beam_est,model_uv_arr,model_holo_arr,calibration,p_map_simple,p_corr_simple,filename=file_path+'_output.sav'
         restore,file_path+'_obs.sav'
         
         hpx_cnv=healpix_cnv_generate(file_path_fhd=file_path,nside=nside,/restore_last,/silent)
