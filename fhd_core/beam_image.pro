@@ -38,10 +38,10 @@ IF Keyword_Set(obs) THEN BEGIN
         ELSE freq_i_use=findgen(n_freq)
 ENDIF
 
+n_bin_use=0.
 IF N_Elements(freq_bin_i) EQ 0 THEN BEGIN
     dims=Size(psf_base_ptr,/dimension)
     n_freq_bin=dims[1]
-    n_bin_use=0.
     FOR fi=0,n_freq_bin-1 DO BEGIN
 ;        IF N_Elements(freq_bin_i) GT 0 THEN IF Total(freq_bin_i EQ fi) EQ 0 THEN CONTINUE
         beam_base_uv=Complexarr(dimension,elements)
