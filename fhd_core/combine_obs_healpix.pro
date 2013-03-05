@@ -76,6 +76,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         heap_gc
         obs=obs_arr[obs_i]
         file_path=file_list_use[obs_i]
+        restore,file_path+'_fhd_params.sav'
         restore,file_path+'_fhd.sav'
     ;   save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
