@@ -168,7 +168,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
             ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
         
-;        psf_base1=dirty_image_generate((beam1_0*(*proj[pol1]))*Conj(beam2_0*(*proj[pol2])),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
 ;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
