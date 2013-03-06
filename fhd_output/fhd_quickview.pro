@@ -81,33 +81,34 @@ astr.crpix-=zoom_low
 putast, fits_header, astr
 
 FOR pol_i=0,npol-1 DO BEGIN
-    stokes_residual=(*stokes_images[pol_i])*beam_mask
-    stokes_source=(*stokes_sources[pol_i])*beam_mask
-    stokes_restored=stokes_residual+stokes_source
+    stokes_residual=((*stokes_images[pol_i])*beam_mask)[zoom_low:zoom_high,zoom_low:zoom_high]
+    stokes_residual_filtered=((*stokes_images_filtered[pol_i])*beam_mask)[zoom_low:zoom_high,zoom_low:zoom_high]
+    stokes_source=((*stokes_sources[pol_i])*beam_mask)[zoom_low:zoom_high,zoom_low:zoom_high]
+    stokes_restored=stokes_residual_filtered+stokes_source
     
     stokes_low=Min((stokes_residual*Sqrt(beam_avg>0))[where(beam_mask)])
     stokes_high=Max((stokes_residual*Sqrt(beam_avg>0))[where(beam_mask)])
     stokesS_high=Max(stokes_restored[where(beam_mask)])
     IF pol_i EQ 0 THEN log=1 ELSE log=0
-    IF pol_i EQ 1 THEN Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i+4],$
+    IF pol_i EQ 1 THEN Imagefast,stokes_residual_filtered,file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$
         lat_center=obs.obsdec,lon_center=obs.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs.degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,/no_ps
-    IF pol_i EQ 0 THEN Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i+4],$
+    IF pol_i EQ 0 THEN Imagefast,stokes_restored,file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokesS_high,$
         lat_center=obs.obsdec,lon_center=obs.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs.degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,/no_ps
-    FitsFast,(*stokes_images[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high],fits_header,/write,file_path=export_path+'_Residual_'+pol_names[pol_i+4]
+    FitsFast,stokes_residual,fits_header,/write,file_path=export_path+'_Residual_'+pol_names[pol_i+4]
 ENDFOR
 
 ;write sources to a text file
-Ires=(*stokes_images[0])[source_array.x,source_array.y]
-IF npol GT 1 THEN Qres=(*stokes_images[1])[source_array.x,source_array.y]
+Ires=(*stokes_images_filtered[0])[source_array.x,source_array.y]
+IF npol GT 1 THEN Qres=(*stokes_images_filtered[1])[source_array.x,source_array.y]
 radius=angle_difference(obs.obsdec,obs.obsra,source_array.dec,source_array.ra,/degree)
 source_array_export,source_array,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list'
 
-Ires=(*stokes_images[0])[comp_arr.x,comp_arr.y]
-IF npol GT 1 THEN Qres=(*stokes_images[1])[comp_arr.x,comp_arr.y]
+Ires=(*stokes_images_filtered[0])[comp_arr.x,comp_arr.y]
+IF npol GT 1 THEN Qres=(*stokes_images_filtered[1])[comp_arr.x,comp_arr.y]
 radius=angle_difference(obs.obsdec,obs.obsra,comp_arr.dec,comp_arr.ra,/degree)
 source_array_export,comp_arr,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_component_list'
 
