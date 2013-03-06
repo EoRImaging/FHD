@@ -393,7 +393,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                 IF pol_i GE 2 THEN flux_use=image_use_U[additional_i[src_i]]+sign*image_use_V[additional_i[src_i]]
             ENDIF ELSE IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]] ELSE flux_use=image_use_U[additional_i[src_i]]
             
-            flux_use*=gain_factor_use/2.
+            flux_use*=gain_factor_use
             comp_arr[si].flux.(pol_i)=flux_use*beam_src[pol_i];*ps_not_used ;Apparent brightness, instrumental polarization X gain (a scalar)
 ;            comp_arr[si].flux.(pol_i)=flux_use*gain_factor_use*beam_src[pol_i]*(*p_map_simple[pol_i])[additional_i[src_i]]
 ;            flux_use*=ps_not_used*(*beam_correction[pol_i])[additional_i[src_i]]
