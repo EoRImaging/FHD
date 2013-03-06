@@ -141,8 +141,8 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
 ;        dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
 ENDIF 
 
-IF N_Elements(dimension) EQ 0 THEN dimension=1024. ;dimension of the image in pixels; dimension = x direction
-IF N_Elements(elements) EQ 0 THEN elements=dimension ;elements = y direction
+IF N_Elements(dimension) EQ 0 THEN dimension=1024. ELSE dimension=Float(dimension) ;dimension of the image in pixels; dimension = x direction
+IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
 IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
 IF N_Elements(degpix) EQ 0 THEN degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
 IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
