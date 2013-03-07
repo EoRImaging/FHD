@@ -172,11 +172,12 @@ ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_cut[pol_i] THEN CONTINUE
-    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
-        *map_fn_arr[pol_i]=map_fn
-    ENDIF
+    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
+;    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+;;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
+;        *map_fn_arr[pol_i]=map_fn
+;    ENDIF
     weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],_Extra=extra))
     normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,baseline_threshold=baseline_threshold))[dimension/2.,elements/2.]
     normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.

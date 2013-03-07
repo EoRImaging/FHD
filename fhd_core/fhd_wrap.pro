@@ -48,10 +48,12 @@ IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,file_path_fhd,/restore_last)
 ;Otherwise they are fit to Stokes I and U only 
 
 image_uv_arr=Ptrarr(npol,/allocate)
-FOR pol_i=0,npol-1 DO BEGIN
-    restore,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid
-    *image_uv_arr[pol_i]=dirty_uv*obs.cal[pol_i]
-ENDFOR
+FOR pol_i=0,npol-1 DO *image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv')*obs.cal[pol_i]
+;FOR pol_i=0,npol-1 DO BEGIN
+;    restore,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid
+;    *image_uv_arr[pol_i]=dirty_uv*obs.cal[pol_i]
+;ENDFOR
+
 ;IF Keyword_Set(GPU_enable) THEN $    
 ;    GPU_fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
 ;        residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
