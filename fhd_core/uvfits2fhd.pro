@@ -233,9 +233,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i)
     
     beam_mask=fltarr(obs.dimension,obs.elements)+1
+    alias_mask=fltarr(obs.dimension,obs.elements) 
+    alias_mask[obs.dimension/4:3.*obs.dimension/4.,obs.elements/4:3.*obs.elements/4.]=1
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
         mask0=fltarr(obs.dimension,obs.elements)
-        mask_i=region_grow(*beam[pol_i],obs.obsx+obs.dimension*obs.obsy,thresh=[0.05,max(*beam[pol_i])])
+        mask_i=where(*beam[pol_i]*alias_mask GE 0.05)
+;        mask_i=region_grow(*beam[pol_i],Floor(obs.obsx)+obs.dimension*Floor(obs.obsy),thresh=[0.05,max(*beam[pol_i])])
         mask0[mask_i]=1
         beam_mask*=mask0
     ENDFOR
