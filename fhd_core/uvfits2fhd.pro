@@ -230,7 +230,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,_Extra=extra)
     
     beam=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i)
+    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)
     
     beam_mask=fltarr(obs.dimension,obs.elements)+1
     alias_mask=fltarr(obs.dimension,obs.elements) 

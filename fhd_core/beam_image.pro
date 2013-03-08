@@ -16,14 +16,16 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-FUNCTION beam_image,psf,obs,pol_i=pol_i,freq_i=freq_i,dimension=dimension,elements=elements,abs=abs
+FUNCTION beam_image,psf,obs,pol_i=pol_i,freq_i=freq_i,dimension=dimension,elements=elements,abs=abs,fast=fast
 compile_opt idl2,strictarrsubs  
 
 psf_base_ptr=psf.base
 IF N_Elements(dimension) EQ 0 THEN dimension=obs.dimension
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 beam_base=fltarr(dimension,elements)
-psf_dim=Sqrt((size(*psf_base_ptr[0,0,0,0],/dimension))[0])
+IF tag_exist(psf,'dim') THEN psf_dim=psf.dim ELSE psf_dim=Sqrt((size(*psf_base_ptr[0,0,0,0],/dimension))[0])
+IF tag_exist(psf,'resolution') THEN psf_res=psf.resolution ELSE psf_res=(size(psf_base_ptr,/dimension))[2]
+rbin=0;psf_res/2
 xl=dimension/2.-Floor(psf_dim/2.)
 xh=dimension/2.-Floor(psf_dim/2.)+psf_dim-1
 yl=elements/2.-Floor(psf_dim/2.)
@@ -43,9 +45,10 @@ IF N_Elements(freq_bin_i) EQ 0 THEN BEGIN
     dims=Size(psf_base_ptr,/dimension)
     n_freq_bin=dims[1]
     FOR fi=0,n_freq_bin-1 DO BEGIN
+        IF Keyword_Set(fast) THEN IF (fi mod (n_freq_bin-1)) NE 0 THEN CONTINUE
 ;        IF N_Elements(freq_bin_i) GT 0 THEN IF Total(freq_bin_i EQ fi) EQ 0 THEN CONTINUE
         beam_base_uv=Complexarr(dimension,elements)
-        beam_base_uv[xl:xh,yl:yh]=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fi,0,0]):*psf_base_ptr[pol_i,fi,0,0],psf_dim,psf_dim)
+        beam_base_uv[xl:xh,yl:yh]=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fi,rbin,rbin]):*psf_base_ptr[pol_i,fi,rbin,rbin],psf_dim,psf_dim)
         beam_base_uv+=Shift(Reverse(reverse(Conj(beam_base_uv),1),2),1,1)
         beam_base1=fft_shift(FFT(fft_shift(beam_base_uv),/inverse))/2.
         beam_base+=beam_base1
@@ -56,11 +59,12 @@ ENDIF ELSE BEGIN
     IF N_Elements(freq_i_use) EQ 0 THEN freq_i_use=findgen(n_freq)
     nf_use=N_Elements(freq_i_use)
     FOR fi0=0L,nf_use-1 DO BEGIN
+        IF Keyword_Set(fast) THEN IF (fi0 mod (nf_use-1)) NE 0 THEN CONTINUE 
         fi=freq_i_use[fi0]
         IF N_Elements(freq_i) GT 0 THEN IF Total(freq_i EQ fi) EQ 0 THEN CONTINUE
         fbin=freq_bin_i[fi]
         beam_base_uv=Complexarr(dimension,elements)
-        beam_base_uv[xl:xh,yl:yh]=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,0,0]):*psf_base_ptr[pol_i,fbin,0,0],psf_dim,psf_dim)
+        beam_base_uv[xl:xh,yl:yh]=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
         beam_base_uv+=Shift(Reverse(reverse(Conj(beam_base_uv),1),2),1,1)
         beam_base1=fft_shift(FFT(fft_shift(beam_base_uv),/inverse))/2.
         beam_base+=beam_base1

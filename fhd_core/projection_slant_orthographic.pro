@@ -77,8 +77,8 @@ IF (phasera NE obsra) OR (phasedec NE obsdec) THEN BEGIN
     ad2xy,phasera,phasedec,astr,phasex,phasey
     dx=obsx-phasex
     dy=obsy-phasey
-    obsx-=dx
-    obsy-=dy
+    obsx+=dx
+    obsy+=dy
     x_c=obsx
     y_c=obsy
     IF Keyword_Set(obs) THEN BEGIN

@@ -19,15 +19,23 @@ kbinsize_use=kbinsize/psf_resolution
 IF N_Elements(normalization) EQ 0 THEN normalization=1.
 psf_dim=Float(psf_dim)
 psf_dim2=psf_dim*psf_resolution
-za=za_arr[psf_dim2/2.,psf_dim2/2.]
-az=az_arr[psf_dim2/2.,psf_dim2/2.]
+degpix_use=!RaDeg/(kbinsize_use*psf_dim2) 
+IF N_Elements(xvals) EQ 0 THEN xvals=(meshgrid(psf_dim2,psf_dim2,1)-psf_dim2/2.)*degpix_use
+IF N_Elements(yvals) EQ 0 THEN yvals=(meshgrid(psf_dim2,psf_dim2,2)-psf_dim2/2.)*degpix_use
+x1=reform(xvals[*,psf_dim2/2.]) & x1i=where(x1)
+y1=reform(yvals[psf_dim2/2.,*]) & y1i=where(y1)
+x0=interpol(x1i,x1[x1i],0.)
+y0=interpol(y1i,y1[y1i],0.)
+za=Interpolate(za_arr,x0,y0,cubic=-0.5)
+az=Interpolate(az_arr,x0,y0,cubic=-0.5)
+;za=za_arr[psf_dim2/2.,psf_dim2/2.]
+;az=az_arr[psf_dim2/2.,psf_dim2/2.]
 
 antenna_spacing=1.1D ;meters (design) ;1.071
 antenna_length=29.125*2.54/100. ;meters (measured)
 antenna_height=0.35 ;meters (rumor)
 
-degpix_use=!RaDeg/(kbinsize_use*psf_dim2) 
-Kconv=(2*!Pi)*(frequency/299792458.) ;wavenumber (radians/meter)
+Kconv=(2.*!Pi)*(frequency/299792458.) ;wavenumber (radians/meter)
 ;Kconv=(frequency/299792458.) ;wavenumber (radians/meter)
 wavelength=299792458./frequency
 
@@ -43,8 +51,6 @@ xc_arr=Reform((meshgrid(4,4,1))*antenna_spacing,16) ;dipole east position (meter
 yc_arr=Reform((meshgrid(4,4,2))*antenna_spacing,16) ;dipole north position (meters)
 zc_arr=Dblarr(16)
 
-IF N_Elements(xvals) EQ 0 THEN xvals=(meshgrid(psf_dim2,psf_dim2,1)-psf_dim2/2.)*degpix_use
-IF N_Elements(yvals) EQ 0 THEN yvals=(meshgrid(psf_dim2,psf_dim2,2)-psf_dim2/2.)*degpix_use
 term_A=Tan(az*!DtoR)
 term_B=za*!DtoR
 xc=Sqrt((term_B^2.)/(1+term_A^2.))

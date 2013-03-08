@@ -79,8 +79,9 @@ obsra=obs.obsra
 obsdec=obs.obsdec
 zenra=obs.zenra
 zendec=obs.zendec
+phasera=obs.phasera
+phasedec=obs.phasedec
 Jdate=obs.Jd0
-;rotation=obs.rotation
 
 beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain
 
@@ -96,13 +97,14 @@ xvals_i=meshgrid(psf_dim,psf_dim,1)*psf_resolution
 yvals_i=meshgrid(psf_dim,psf_dim,2)*psf_resolution
 xvals=meshgrid(psf_dim2,psf_dim2,1)/psf_resolution-psf_dim/2.
 yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
-
-;vis_coordinates,degpix=degpix_use,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-;    dimension=psf_dim2,rotation=rotation,valid_i=valid_i,astr=astr,zen_astr=zen_astr
+FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
+    *psf_xvals[i,j]=xvals[xvals_i+i,yvals_i+j]
+    *psf_yvals[i,j]=yvals[xvals_i+i,yvals_i+j]
+ENDFOR
 
 projection_slant_orthographic,astr=astr,valid_i=valid_i,$
     degpix=degpix_use,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-    dimension=psf_dim2
+    dimension=psf_dim2,phasera=phasera,phasedec=phasedec
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
 norm=Sqrt(2.)*[ex0,ey0]
@@ -125,11 +127,6 @@ yvals3=za_arr*Cos(az_arr*!DtoR);/degpix_use3[1]
 el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0,0,0])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-
-FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
-    *psf_xvals[i,j]=xvals[xvals_i+i,yvals_i+j]
-    *psf_yvals[i,j]=yvals[xvals_i+i,yvals_i+j]
-ENDFOR
 
 ;polarization ids are 0:XX, 1:YY, 2:XY, 3:YX
 
@@ -161,13 +158,14 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
             frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings)
         IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
         beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$
             frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings)
         
+;        psf_base1=dirty_image_generate(beam1_0*beam2_0*(*proj[pol_i]),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
 ;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
@@ -213,7 +211,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
-    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm,fbin_i=freq_bin_i)
+    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm,fbin_i=freq_bin_i,$
+    psf_resolution=psf_resolution,psf_dim=psf_dim)
 save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 RETURN,psf
 END

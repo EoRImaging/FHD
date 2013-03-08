@@ -100,7 +100,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             
             residual_single=dirty_single-model_single
             
-            weights_single=(*beam_base[pol_i]^2.)            
+            weights_single=(*beam_base[pol_i]^2.)
             
             (*residual_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(residual_single,hpx_cnv)
             (*weights_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(weights_single,hpx_cnv)
