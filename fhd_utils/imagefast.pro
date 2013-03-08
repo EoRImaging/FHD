@@ -277,12 +277,12 @@ IF not Keyword_Set(no_colorbar) THEN BEGIN
         position=cb_position,title=colorbar_title,divisions=cb_divisions,ticknames=cb_labels;,/fit ;format default is '(I0)'
 ENDIF
 
-IF !version.os_family EQ 'unix' THEN BEGIN
-    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
-        ELSE PS_End,Density=300,Resize=25.,/png
-ENDIF ELSE BEGIN
-    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
-        ELSE PS_End,Density=300,Resize=25.,/png,/NoWait
-ENDELSE
+;IF !version.os_family EQ 'unix' THEN BEGIN
+    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
+        ELSE PS_End,Density=300,Resize=25.,/png,/allow_transparent,/nomessage
+;ENDIF ELSE BEGIN
+;    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
+;        ELSE PS_End,Density=300,Resize=25.,/png,/NoWait
+;ENDELSE
 
 END
