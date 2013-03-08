@@ -34,7 +34,7 @@ IF N_Elements(hpx_inds) EQ 0 THEN BEGIN
 ENDIF
 ;hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
 n_hpx=N_Elements(hpx_inds)
-hind0=histogram(hpx_inds,/bin,omin=hpx_ind_min,omax=hpx_ind_max)
+hind0=histogram(hpx_inds,/bin,omin=hpx_ind_min,omax=hpx_ind_max,reverse_ind=ri0)
 
 n_pol=Min(obs_arr.n_pol)
 n_freq=Min(obs_arr.n_freq)
@@ -89,31 +89,32 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     hind1=histogram(hpx_cnv.inds,/bin,min=hpx_ind_min,max=hpx_ind_max,reverse_ind=ri1)
     n_ref1=Total(hind1)
     
-    hpx_ind_map=where(hind0*hind1,n_ref)
-    IF n_ref EQ n_ref1 THEN BEGIN
+    hpx_ind_i=where(hind0*hind1,n_ref)
+;    IF n_ref EQ n_ref1 THEN BEGIN
+;        FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
+;            (*residual_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
+;                healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],hpx_cnv)
+;            (*dirty_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
+;                healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],hpx_cnv)
+;            (*model_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
+;                healpix_cnv_apply(*model_arr1[pol_i,freq_i],hpx_cnv)
+;            (*weights_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
+;                healpix_cnv_apply(*weights_arr1[pol_i,freq_i],hpx_cnv)
+;        ENDFOR
+;    ENDIF ELSE BEGIN
+        hpx_ind_map1=ri1[ri1[hpx_ind_i]]
+        hpx_ind_map0=ri0[ri0[hpx_ind_i]]
         FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-            (*residual_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
-                healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],hpx_cnv)
-            (*dirty_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
-                healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],hpx_cnv)
-            (*model_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
-                healpix_cnv_apply(*model_arr1[pol_i,freq_i],hpx_cnv)
-            (*weights_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
-                healpix_cnv_apply(*weights_arr1[pol_i,freq_i],hpx_cnv)
-        ENDFOR
-    ENDIF ELSE BEGIN
-        hpx_ind_map1=ri1[ri1[hpx_ind_map]]
-        FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-            (*residual_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
+            (*residual_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
                 (healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-            (*dirty_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
+            (*dirty_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
                 (healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-            (*model_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
+            (*model_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
                 (healpix_cnv_apply(*model_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-            (*weights_hpx_arr[pol_i,freq_i])[hpx_ind_map]+=$
+            (*weights_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
                 (healpix_cnv_apply(*weights_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
         ENDFOR
-    ENDELSE
+;    ENDELSE
 ENDFOR
 
 dirty_xx_cube=fltarr(n_hpx,n_freq_use)
