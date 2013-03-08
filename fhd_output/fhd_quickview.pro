@@ -63,9 +63,12 @@ stokes_sources=stokes_cnv(instr_sources,beam=beam_base)
 
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
+alias_mask=fltarr(dimension,elements) 
+alias_mask[dimension/4:3.*dimension/4.,elements/4:3.*elements/4.]=1
 FOR pol_i=0,(npol<2)-1 DO BEGIN
     beam_mask_test=fltarr(dimension,elements)
-    beam_i=region_grow(*beam_base[pol_i],dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold/2.,Max(*beam_base[pol_i])])
+    beam_i=where(*beam_base[pol_i]*alias_mask GE fhd.beam_threshold/2.)
+;    beam_i=region_grow(*beam_base[pol_i],dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold/2.,Max(*beam_base[pol_i])])
     beam_avg+=*beam_base[pol_i]/(2.<npol)
     beam_mask_test[beam_i]=1.
     beam_mask*=beam_mask_test
