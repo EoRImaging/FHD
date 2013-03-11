@@ -1,4 +1,4 @@
-FUNCTION mwa_tile_beam_generate,antenna_gain_arr,antenna_beam_arr,$
+FUNCTION mwa_tile_beam_generate,antenna_gain_arr,antenna_beam_arr,obsaz=obsaz,obsza=obsza,$
     frequency=frequency,polarization=polarization,$
     psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,$
     normalization=normalization,xvals=xvals,yvals=yvals,$
@@ -22,12 +22,17 @@ psf_dim2=psf_dim*psf_resolution
 degpix_use=!RaDeg/(kbinsize_use*psf_dim2) 
 IF N_Elements(xvals) EQ 0 THEN xvals=(meshgrid(psf_dim2,psf_dim2,1)-psf_dim2/2.)*degpix_use
 IF N_Elements(yvals) EQ 0 THEN yvals=(meshgrid(psf_dim2,psf_dim2,2)-psf_dim2/2.)*degpix_use
-x1=reform(xvals[*,psf_dim2/2.]) & x1i=where(x1)
-y1=reform(yvals[psf_dim2/2.,*]) & y1i=where(y1)
-x0=interpol(x1i,x1[x1i],0.)
-y0=interpol(y1i,y1[y1i],0.)
-za=Interpolate(za_arr,x0,y0,cubic=-0.5)
-az=Interpolate(az_arr,x0,y0,cubic=-0.5)
+IF (N_Elements(obsaz)EQ 0) OR (N_Elements(obsza) EQ 0) THEN BEGIN
+    x1=reform(xvals[*,psf_dim2/2.]) & x1i=where(x1)
+    y1=reform(yvals[psf_dim2/2.,*]) & y1i=where(y1)
+    x0=interpol(x1i,x1[x1i],0.)
+    y0=interpol(y1i,y1[y1i],0.)
+    za=Interpolate(za_arr,x0,y0,cubic=-0.5)
+    az=Interpolate(az_arr,x0,y0,cubic=-0.5)
+ENDIF ELSE BEGIN
+    za=obsza
+    az=obsaz
+ENDELSE
 ;za=za_arr[psf_dim2/2.,psf_dim2/2.]
 ;az=az_arr[psf_dim2/2.,psf_dim2/2.]
 

@@ -100,6 +100,7 @@ ENDIF
 IF arg_present(ra_arr) THEN BEGIN
     xvals=meshgrid(dimension,elements,1)
     yvals=meshgrid(dimension,elements,2)
+    xy2ad,xvals,yvals,astr,ra_arr,dec_arr
     valid_i=where(Finite(ra_arr),complement=invalid_i,ncomplement=n_invalid)
     IF n_invalid GT 0 THEN BEGIN
         ra_arr[invalid_i]=0

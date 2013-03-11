@@ -6,15 +6,6 @@
 ;    obs - structure containing details of the observation
 ;
 ; :Keywords:
-;    data_directory - working directory
-;    
-;    filename - uvfits filename, omitting the .uvfits extension. If the data is already calibrated, it should end with .cal.uvfits instead of just .uvfits
-;    
-;    restore_last - set to restore filename_beams(file_id).sav instead of recalculating
-;    
-;    residual_tolerance
-;    
-;    residual_threshold
 ;    
 ;
 ; :Author: isullivan
@@ -86,31 +77,27 @@ Jdate=obs.Jd0
 beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain
 
 ;begin forming psf
-psf_residuals_i=Ptrarr(n_pol,nfreq_bin,nbaselines,/allocate) ;contains arrays of pixel indices of pixels with modified psf for a given baseline id
-psf_residuals_val=Ptrarr(n_pol,nfreq_bin,nbaselines,/allocate) ;contains arrays of values corresponding to the pixel indices above
+psf_residuals_i=Ptrarr(n_pol,nfreq_bin,nbaselines) ;contains arrays of pixel indices of pixels with modified psf for a given baseline id
+psf_residuals_val=Ptrarr(n_pol,nfreq_bin,nbaselines) ;contains arrays of values corresponding to the pixel indices above
 psf_residuals_n=fltarr(n_pol,nfreq_bin,nbaselines) ;contains the total number of modified pixels for each baseline id
 
-psf_base=Ptrarr(n_pol,nfreq_bin,psf_resolution,psf_resolution,/allocate)
+psf_base=Ptrarr(n_pol,nfreq_bin,psf_resolution,psf_resolution)
 psf_xvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 psf_yvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 xvals_i=meshgrid(psf_dim,psf_dim,1)*psf_resolution
 yvals_i=meshgrid(psf_dim,psf_dim,2)*psf_resolution
-xvals=meshgrid(psf_dim2,psf_dim2,1)/psf_resolution-psf_dim/2.
-yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
+;xvals=meshgrid(psf_dim2,psf_dim2,1)/psf_resolution-psf_dim/2.
+;yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
 FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
-    *psf_xvals[i,j]=xvals[xvals_i+i,yvals_i+j]
-    *psf_yvals[i,j]=yvals[xvals_i+i,yvals_i+j]
+;    *psf_xvals[i,j]=xvals[xvals_i+i,yvals_i+j]
+;    *psf_yvals[i,j]=yvals[xvals_i+i,yvals_i+j]
+    *psf_xvals[i,j]=meshgrid(psf_dim,psf_dim,1)-psf_dim/2.+Float(i)/psf_resolution
+    *psf_yvals[i,j]=meshgrid(psf_dim,psf_dim,2)-psf_dim/2.+Float(j)/psf_resolution
 ENDFOR
 
-projection_slant_orthographic,astr=astr,valid_i=valid_i,$
-    degpix=degpix_use,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-    dimension=psf_dim2,phasera=phasera,phasedec=phasedec
-Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
-intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
-norm=Sqrt(2.)*[ex0,ey0]
-
-xvals2=meshgrid(psf_dim2,psf_dim2,1)
-yvals2=meshgrid(psf_dim2,psf_dim2,2)
+astr=obs.astr
+xvals2=meshgrid(psf_dim2,psf_dim2,1)*dimension/dim_use
+yvals2=meshgrid(psf_dim2,psf_dim2,2)*dimension/dim_use
 
 xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
 valid_i=where(Finite(ra_arr_use1))
@@ -128,7 +115,10 @@ el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0,0,0])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
 
-;polarization ids are 0:XX, 1:YY, 2:XY, 3:YX
+Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+obsza=90.-obsalt
+intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
+norm=Sqrt(2.)*[ex0,ey0]
 
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
@@ -156,12 +146,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
         ;mwa_tile_beam_generate.pro
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
-            frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,$
+            frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
             ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings)
         IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
         beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$
-            frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,$
+            frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
             ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings)
         
@@ -199,13 +189,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             i_res=where(residual_single GE ((psf_base1*residual_tolerance)>residual_threshold),nres)
             psf_residuals_n[pol_i,freq_i,bi]=nres
             IF nres GT 0 THEN BEGIN
-                *psf_residuals_i[pol_i,freq_i,bi]=i_res
-                *psf_residuals_val[pol_i,freq_i,bi]=residual_single[i_res]
+                psf_residuals_i[pol_i,freq_i,bi]=Ptr_new(i_res)
+                psf_residuals_val[pol_i,freq_i,bi]=Ptr_new(residual_single[i_res])
             ENDIF
         ENDFOR
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2,beam1_arr,beam2_arr
         FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-            *psf_base[pol_i,freq_i,i,j]=Reform(psf_base1[xvals_i+i,yvals_i+j],psf_dim*psf_dim) 
+            psf_base[pol_i,freq_i,i,j]=Ptr_new(Reform(psf_base1[xvals_i+i,yvals_i+j],psf_dim*psf_dim)) 
         breakpoint0=0
     ENDFOR
 ENDFOR
