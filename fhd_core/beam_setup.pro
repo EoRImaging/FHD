@@ -40,9 +40,15 @@ ky_span=kx_span
 degpix=obs.degpix
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=32. ;=32?
 IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) ;=16?
-psf_dim2=psf_dim*psf_resolution
+;psf_dim2=psf_dim*psf_resolution
+;
+;degpix_use=!RaDeg/(kbinsize*psf_dim)
+psf_dim2=dimension
+degpix_use=degpix
 
-degpix_use=!RaDeg/(kbinsize*psf_dim)
+psf_scale=degpix_use/degpix
+xvals2=meshgrid(psf_dim2,psf_dim2,1)*psf_scale-psf_dim2*psf_scale/2.+dimension/2.
+yvals2=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
 
 ;residual_tolerance is residual as fraction of psf_base above which to include 
 IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
@@ -86,6 +92,8 @@ psf_xvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 psf_yvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 xvals_i=meshgrid(psf_dim,psf_dim,1)*psf_resolution
 yvals_i=meshgrid(psf_dim,psf_dim,2)*psf_resolution
+psf_xvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,1)/Float(psf_resolution)-psf_dim/2.+dimension/2.
+psf_yvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,2)/Float(psf_resolution)-psf_dim/2.+elements/2.
 ;xvals=meshgrid(psf_dim2,psf_dim2,1)/psf_resolution-psf_dim/2.
 ;yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
 FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
@@ -96,8 +104,6 @@ FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN
 ENDFOR
 
 astr=obs.astr
-xvals2=meshgrid(psf_dim2,psf_dim2,1)*dimension/psf_dim-psf_dim2*dimension/psf_dim/2.+dimension/2.
-yvals2=meshgrid(psf_dim2,psf_dim2,2)*dimension/psf_dim-psf_dim2*elements/psf_dim/2.+elements/2.
 
 xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
 valid_i=where(Finite(ra_arr_use1))
@@ -148,12 +154,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
             frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings)
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
         IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
         beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$
             frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings)
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
         
 ;        psf_base1=dirty_image_generate(beam1_0*beam2_0*(*proj[pol_i]),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
@@ -163,39 +169,41 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
         uv_mask[beam_i]=1.
         psf_base1*=uv_mask
-;       
-        gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base1))/psf_resolution^2.)
-        psf_base1*=gain_normalization
         
-        FOR tile_i=0,n_tiles-1 DO BEGIN
-            *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
-                frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,$
-                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
-            *beam2_arr[tile_i]=Call_function(tile_beam_fn,gain2[*,tile_i],antenna_beam_arr2,$
-                frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,$
-                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1)
-        ENDFOR
+        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
+        gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
+        psf_base2*=gain_normalization
         
-        FOR bi=0,nbaselines-1 DO BEGIN
-            IF Min((gain1[*,tile_A[bi]-1]-gain1_avg EQ fltarr(N_Elements(base_gain))) AND (gain2[*,tile_B[bi]-1]-gain2_avg EQ fltarr(N_Elements(base_gain)))) THEN BEGIN
-                psf_residuals_n[pol_i,freq_i,bi]=0
-                CONTINUE
-            ENDIF
-            
-            psf_single=dirty_image_generate(*beam1_arr[tile_A[bi]-1],*beam2_arr[tile_B[bi]-1])*uv_mask*gain_normalization
-            residual_single=psf_single-psf_base1
-            i_res=where(residual_single GE ((psf_base1*residual_tolerance)>residual_threshold),nres)
-            psf_residuals_n[pol_i,freq_i,bi]=nres
-            IF nres GT 0 THEN BEGIN
-                psf_residuals_i[pol_i,freq_i,bi]=Ptr_new(i_res)
-                psf_residuals_val[pol_i,freq_i,bi]=Ptr_new(residual_single[i_res])
-            ENDIF
-        ENDFOR
+        
+;        FOR tile_i=0,n_tiles-1 DO BEGIN
+;            *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
+;                frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
+;                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
+;                ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
+;            *beam2_arr[tile_i]=Call_function(tile_beam_fn,gain2[*,tile_i],antenna_beam_arr2,$
+;                frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
+;                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
+;                ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
+;        ENDFOR
+;        
+;        FOR bi=0,nbaselines-1 DO BEGIN
+;            IF Min((gain1[*,tile_A[bi]-1]-gain1_avg EQ fltarr(N_Elements(base_gain))) AND (gain2[*,tile_B[bi]-1]-gain2_avg EQ fltarr(N_Elements(base_gain)))) THEN BEGIN
+;                psf_residuals_n[pol_i,freq_i,bi]=0
+;                CONTINUE
+;            ENDIF
+;            
+;            psf_single=dirty_image_generate(*beam1_arr[tile_A[bi]-1],*beam2_arr[tile_B[bi]-1])*uv_mask*gain_normalization
+;            residual_single=psf_single-psf_base2
+;            i_res=where(residual_single GE ((psf_base2*residual_tolerance)>residual_threshold),nres)
+;            psf_residuals_n[pol_i,freq_i,bi]=nres
+;            IF nres GT 0 THEN BEGIN
+;                psf_residuals_i[pol_i,freq_i,bi]=Ptr_new(i_res)
+;                psf_residuals_val[pol_i,freq_i,bi]=Ptr_new(residual_single[i_res])
+;            ENDIF
+;        ENDFOR
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2,beam1_arr,beam2_arr
         FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-            psf_base[pol_i,freq_i,i,j]=Ptr_new(Reform(psf_base1[xvals_i+i,yvals_i+j],psf_dim*psf_dim)) 
+            psf_base[pol_i,freq_i,i,j]=Ptr_new(Reform(psf_base2[xvals_i+i,yvals_i+j],psf_dim*psf_dim)) 
         breakpoint0=0
     ENDFOR
 ENDFOR

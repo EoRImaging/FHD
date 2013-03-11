@@ -148,8 +148,8 @@ t0+=t1a-t0a
     IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
     
     ;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
-;    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(Sqrt(2.*Alog(2.)))
+    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
+;    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(Sqrt(2.*Alog(2.)))
     FOR pol_i=0,npol-1 DO BEGIN
         *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
             beam_correction=beam_correction,mask=source_uv_mask)
@@ -309,17 +309,17 @@ FOR pol_i=0,npol-1 DO BEGIN
     instr_low=Min(instr_residual[where(beam_mask)])
     instr_high=Max(instr_residual[where(beam_mask)])
     instrS_high=Max(instr_restored[where(beam_mask)])
-    Imagefast,instr_dirty,file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
+    Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=instr_low,high=instrS_high
-    Imagefast,instr_residual,file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i],$
+    Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high
-    Imagefast,instr_source,file_path=image_path+'_Sources_'+pol_names[pol_i],$
+    Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+'_Sources_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=0,high=instrS_high,/invert_color
-    Imagefast,instr_restored,file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i],$
+    Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=instr_low,high=instrS_high
-    Imagefast,beam_use*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
+    Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
-        low=min(beam_use*100),high=max(beam_use*100),/invert
+        low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),/invert
     
     t8b=Systime(1)
     t9+=t8b-t9a

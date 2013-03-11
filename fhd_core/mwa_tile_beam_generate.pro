@@ -14,11 +14,12 @@ compile_opt idl2,strictarrsubs
 ;polarization 0: x, 1: y
 ;angle offset is the rotation of the entire tile in current coordinates in DEGREES
 ; (this should be the rotation between E-W or N-S and Ra-Dec)
-kbinsize_use=kbinsize/psf_resolution
+kbinsize_use=kbinsize;/psf_resolution
 
 IF N_Elements(normalization) EQ 0 THEN normalization=1.
 psf_dim=Float(psf_dim)
-psf_dim2=psf_dim*psf_resolution
+;psf_dim2=psf_dim*psf_resolution
+psf_dim2=dimension
 degpix_use=!RaDeg/(kbinsize_use*psf_dim2) 
 IF N_Elements(xvals) EQ 0 THEN xvals=(meshgrid(psf_dim2,psf_dim2,1)-psf_dim2/2.)*degpix_use
 IF N_Elements(yvals) EQ 0 THEN yvals=(meshgrid(psf_dim2,psf_dim2,2)-psf_dim2/2.)*degpix_use
