@@ -96,8 +96,8 @@ FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN
 ENDFOR
 
 astr=obs.astr
-xvals2=meshgrid(psf_dim2,psf_dim2,1)*dimension/dim_use
-yvals2=meshgrid(psf_dim2,psf_dim2,2)*dimension/dim_use
+xvals2=meshgrid(psf_dim2,psf_dim2,1)*dimension/psf_dim-psf_dim2*dimension/psf_dim/2.+dimension/2.
+yvals2=meshgrid(psf_dim2,psf_dim2,2)*dimension/psf_dim-psf_dim2*elements/psf_dim/2.+elements/2.
 
 xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
 valid_i=where(Finite(ra_arr_use1))
