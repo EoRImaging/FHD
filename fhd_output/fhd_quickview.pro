@@ -52,7 +52,7 @@ FOR pol_i=0,npol-1 DO BEGIN
 ;    *instr_images[pol_i]=dirty_image_generate(*residual_array[pol_i],image_filter_fn=image_filter_fn,$
 ;        _Extra=extra)*weight_invert(*beam_base[pol_i])
     *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*weight_invert(*beam_base[pol_i])
-    *instr_images_filtered[pol_i]=Median(*instr_images[pol_i],fhd.smooth_width,/even)
+    *instr_images_filtered[pol_i]=*instr_images[pol_i]-Median(*instr_images[pol_i],fhd.smooth_width,/even)
     *instr_sources[pol_i]=source_image_generate(source_array,obs,pol_i=pol_i,resolution=16,$
         dimension=dimension,width=restored_beam_width)
 ENDFOR
@@ -82,6 +82,8 @@ mkhdr,fits_header,(*stokes_images[0])[zoom_low:zoom_high,zoom_low:zoom_high]
 astr=obs.astr
 astr.crpix-=zoom_low
 putast, fits_header, astr
+beam_avg_use=beam_avg[zoom_low:zoom_high,zoom_low:zoom_high]
+beam_mask_use=beam_mask[zoom_low:zoom_high,zoom_low:zoom_high]
 
 FOR pol_i=0,npol-1 DO BEGIN
     stokes_residual=((*stokes_images[pol_i])*beam_mask)[zoom_low:zoom_high,zoom_low:zoom_high]
@@ -89,9 +91,9 @@ FOR pol_i=0,npol-1 DO BEGIN
     stokes_source=((*stokes_sources[pol_i])*beam_mask)[zoom_low:zoom_high,zoom_low:zoom_high]
     stokes_restored=stokes_residual_filtered+stokes_source
     
-    stokes_low=Min((stokes_residual*Sqrt(beam_avg>0))[where(beam_mask)])
-    stokes_high=Max((stokes_residual*Sqrt(beam_avg>0))[where(beam_mask)])
-    stokesS_high=Max(stokes_restored[where(beam_mask)])
+    stokes_low=Min((stokes_residual_filtered*Sqrt(beam_avg_use>0))[where(beam_mask_use)])
+    stokes_high=Max((stokes_residual_filtered*Sqrt(beam_avg_use>0))[where(beam_mask_use)])
+    stokesS_high=Max(stokes_restored[where(beam_mask_use)])
     IF pol_i EQ 0 THEN log=1 ELSE log=0
     IF pol_i EQ 1 THEN Imagefast,stokes_residual_filtered,file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$

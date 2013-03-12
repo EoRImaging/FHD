@@ -149,7 +149,8 @@ t0+=t1a-t0a
     IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
     
     ;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
-    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
+    IF Keyword_Set(pad_uv_image) THEN restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.))) $
+        ELSE restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
 ;    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(Sqrt(2.*Alog(2.)))
     FOR pol_i=0,npol-1 DO BEGIN
         *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
