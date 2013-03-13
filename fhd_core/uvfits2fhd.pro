@@ -194,8 +194,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
             SAVE,flag_arr0,filename=flags_filepath,/compress
     ENDELSE
     
-    flag_freq_test=intarr(obs.n_freq)
-    flag_tile_test=intarr(obs.n_tile)
+    flag_freq_test=fltarr(obs.n_freq)
+    flag_tile_test=fltarr(obs.n_tile)
     FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(Reform(flag_arr0[pol_i,*,*]),dimension=2)>0
     flag_freq_use_i=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
     IF n_freq_use EQ 0 THEN print,'All frequencies flagged!' ELSE BEGIN
