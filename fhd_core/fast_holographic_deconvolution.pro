@@ -237,6 +237,8 @@ sm_ymax=(Max(yvals[where(source_mask)])+elements/2.+smooth_width)<(elements-1)
 beam_avg_box=beam_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 
+source_fit_fn=(Hanning(local_max_radius*2.+2,local_max_radius*2.+2))[1:*,1:*]
+
 dirty_image_composite_smooth=fltarr(dimension,elements)
 dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
     Median(dirty_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even) *beam_corr_box
@@ -323,21 +325,24 @@ FOR i=0L,max_iter-1 DO BEGIN
     source_flux=Max(source_find_image*source_mask,source_i)
     sx=(source_i mod dimension)
     sy=Floor(source_i/dimension)
-    gcntrd,source_find_image,sx,sy,xcen,ycen,local_max_radius,/silent,/keepcenter
-    IF (xcen EQ -1) OR (ycen EQ -1) THEN BEGIN
-        source_mask[sx,sy]=0
-        unmask_i=where(source_mask GT 0,n_pix)
-        IF Float(n_pix)/Float(n_pix0) LE 0.75 THEN BEGIN
-            print,String(format='("Failure to centroid after",I," iterations")',i)
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
-            ENDFOR
-            converge_check2=converge_check2[0:i-1]
-            converge_check=converge_check[0:i2]
-            BREAK
-        ENDIF
-        CONTINUE
-    ENDIF    
+    source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+    xcen=sx+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1))/Total(source_box)-local_max_radius
+    ycen=sy+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2))/Total(source_box)-local_max_radius
+;    gcntrd,source_find_image,sx,sy,xcen,ycen,local_max_radius,/silent,/keepcenter
+;    IF (xcen EQ -1) OR (ycen EQ -1) THEN BEGIN
+;        source_mask[sx,sy]=0
+;        unmask_i=where(source_mask GT 0,n_pix)
+;        IF Float(n_pix)/Float(n_pix0) LE 0.75 THEN BEGIN
+;            print,String(format='("Failure to centroid after",I," iterations")',i)
+;            FOR pol_i=0,n_pol-1 DO BEGIN
+;                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
+;            ENDFOR
+;            converge_check2=converge_check2[0:i-1]
+;            converge_check=converge_check[0:i2]
+;            BREAK
+;        ENDIF
+;        CONTINUE
+;    ENDIF    
     
 ;    Find additional sources:
 ;       require that they be isolated ; This is local_max_radius
@@ -369,11 +374,14 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF src_i GT 0 THEN BEGIN
             sx=(additional_i[src_i] mod dimension)
             sy=Floor(additional_i[src_i]/dimension)
-            gcntrd,source_find_image,sx,sy,xcen,ycen,local_max_radius,/silent,/keepcenter
-            IF (xcen EQ -1) OR (ycen EQ -1) THEN BEGIN
-                source_mask[additional_i[src_i]]=0
-                CONTINUE
-            ENDIF 
+            source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]
+            xcen=sx+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1))/Total(source_box)-local_max_radius
+            ycen=sy+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2))/Total(source_box)-local_max_radius
+;            gcntrd,source_find_image,sx,sy,xcen,ycen,local_max_radius,/silent,/keepcenter
+;            IF (xcen EQ -1) OR (ycen EQ -1) THEN BEGIN
+;                source_mask[additional_i[src_i]]=0
+;                CONTINUE
+;            ENDIF 
         ENDIF
         xy2ad,xcen,ycen,astr,ra,dec
         comp_arr[si].x=xcen
