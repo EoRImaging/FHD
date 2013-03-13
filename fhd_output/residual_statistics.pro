@@ -88,11 +88,11 @@ Al_Legend,['Residual','Gaussian fit'],linestyle=[0,2],psym=[0,0],charsize=1.,col
 Al_Legend,[amp_str,center_str,sig_str],charsize=1.,color='black',/right
 
 ;IF !version.os_family EQ 'unix' THEN BEGIN
-    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
-        ELSE PS_End,Density=300,Resize=25.,/png
+    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
+        ELSE PS_End,Density=300,Resize=25.,/png,/allow_transparent,/nomessage
 ;ENDIF ELSE BEGIN
-;    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
-;        ELSE PS_End,Density=300,Resize=25.,/png,/NoWait
+;    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
+;        ELSE PS_End,Density=300,Resize=25.,/png,/NoWait,/allow_transparent,/nomessage
 ;ENDELSE
 
 END
