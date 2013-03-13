@@ -104,13 +104,13 @@ t0+=t1a-t0a
 
 ;IF not Keyword_Set(restore_last) THEN BEGIN
 
-    map_fn_arr=Ptrarr(npol,/allocate)
+;    map_fn_arr=Ptrarr(npol,/allocate)
     pol_names=['xx','yy','xy','yx','I','Q','U','V']
-    FOR pol_i=0,npol-1 DO BEGIN
-        file_name_base='_mapfn_'+pol_names[pol_i]
-        restore,file_path_fhd+file_name_base+'.sav' ;map_fn
-        *map_fn_arr[pol_i]=map_fn
-    ENDFOR
+;    FOR pol_i=0,npol-1 DO BEGIN
+;        file_name_base='_mapfn_'+pol_names[pol_i]
+;        restore,file_path_fhd+file_name_base+'.sav' ;map_fn
+;        *map_fn_arr[pol_i]=map_fn
+;    ENDFOR
     psf=beam_setup(obs_out,file_path_fhd,/restore_last,/silent)
     t2a=Systime(1)
     t1+=t2a-t1a
@@ -156,15 +156,16 @@ t0+=t1a-t0a
     IF Keyword_Set(pad_uv_image) THEN restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.))) $
         ELSE restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
 ;    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(Sqrt(2.*Alog(2.)))
+    model_holo_arr=model_uv_holo
     FOR pol_i=0,npol-1 DO BEGIN
-        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
-            beam_correction=beam_correction,mask=source_uv_mask)
-        *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
+;        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
+;            beam_correction=beam_correction,mask=source_uv_mask)
+;        *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
         *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
-        *instr_sources[pol_i]=source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
+        *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,width=restored_beam_width,pad_uv_image=pad_uv_image)
     ENDFOR
     
@@ -268,7 +269,7 @@ t0+=t1a-t0a
     t5+=t6a-t5a
     
     ;FREE MEMORY
-    Ptr_free,map_fn_arr
+;    Ptr_free,map_fn_arr
     Ptr_free,image_uv_arr
     Ptr_free,model_uv_full
     Ptr_free,model_uv_holo
