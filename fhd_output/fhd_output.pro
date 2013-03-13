@@ -77,17 +77,21 @@ astr=obs.astr
 si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]
 source_arr_out=source_arr
-
 ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
 source_arr_out.x=sx & source_arr_out.y=sy
+
+comp_arr_out=comp_arr
+ad2xy,comp_arr.ra,comp_arr.dec,astr_out,sx,sy
+comp_arr_out.x=sx & comp_arr_out.y=sy
+
 extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
 IF n_extend GT 0 THEN BEGIN
     FOR ext_i=0L,n_extend-1 DO BEGIN
-        comp_arr_out=*source_arr[extend_test[ext_i]].extend
-        ad2xy,comp_arr_out.ra,comp_arr_out.dec,astr_out,cx,cy
-        comp_arr_out.x=cx & comp_arr_out.y=cy
+        comp_arr_out1=*source_arr[extend_test[ext_i]].extend
+        ad2xy,comp_arr_out1.ra,comp_arr_out1.dec,astr_out,cx,cy
+        comp_arr_out1.x=cx & comp_arr_out1.y=cy
         source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)
-        *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
+        *source_arr_out[extend_test[ext_i]].extend=comp_arr_out1
     ENDFOR
 ENDIF
 
@@ -370,9 +374,6 @@ Ires=(*stokes_images[0])[source_arr_out.x,source_arr_out.y]
 IF npol GT 1 THEN Qres=(*stokes_images[1])[source_arr_out.x,source_arr_out.y]
 source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list2'
 
-comp_arr_out=comp_arr
-ad2xy,comp_arr.ra,comp_arr.dec,astr_out,sx,sy
-comp_arr_out.x=sx & comp_arr_out.y=sy
 radius=angle_difference(obs_out.obsdec,obs_out.obsra,comp_arr.dec,comp_arr.ra,/degree)
 Ires=(*stokes_images[0])[comp_arr_out.x,comp_arr_out.y]
 IF npol GT 1 THEN Qres=(*stokes_images[1])[comp_arr_out.x,comp_arr_out.y]

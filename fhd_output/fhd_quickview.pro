@@ -53,7 +53,7 @@ FOR pol_i=0,npol-1 DO BEGIN
 ;        _Extra=extra)*weight_invert(*beam_base[pol_i])
     *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*weight_invert(*beam_base[pol_i])
     *instr_images_filtered[pol_i]=*instr_images[pol_i]-Median(*instr_images[pol_i],fhd.smooth_width,/even)
-    *instr_sources[pol_i]=source_image_generate(source_array,obs,pol_i=pol_i,resolution=16,$
+    *instr_sources[pol_i]=source_image_generate(comp_arr,obs,pol_i=pol_i,resolution=16,$
         dimension=dimension,width=restored_beam_width)
 ENDFOR
 

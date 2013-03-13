@@ -238,6 +238,8 @@ beam_avg_box=beam_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 
 source_fit_fn=(Hanning(local_max_radius*2.+2,local_max_radius*2.+2))[1:*,1:*]
+source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
+source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
 
 dirty_image_composite_smooth=fltarr(dimension,elements)
 dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
@@ -323,11 +325,11 @@ FOR i=0L,max_iter-1 DO BEGIN
    
     ;use the composite image to locate sources, but then fit for flux independently
     source_flux=Max(source_find_image*source_mask,source_i)
-    sx=(source_i mod dimension)
-    sy=Floor(source_i/dimension)
-    source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
-    xcen=sx+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1))/Total(source_box)-local_max_radius
-    ycen=sy+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2))/Total(source_box)-local_max_radius
+;    sx=(source_i mod dimension)
+;    sy=Floor(source_i/dimension)
+;    source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+;    xcen=sx-local_max_radius+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1))/Total(abs(source_box))
+;    ycen=sy-local_max_radius+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2))/Total(abs(source_box))
 ;    gcntrd,source_find_image,sx,sy,xcen,ycen,local_max_radius,/silent,/keepcenter
 ;    IF (xcen EQ -1) OR (ycen EQ -1) THEN BEGIN
 ;        source_mask[sx,sy]=0
@@ -349,6 +351,7 @@ FOR i=0L,max_iter-1 DO BEGIN
 ;       should put some cap on the absolute number of them ; This is max_add_sources
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 ;    
+
     flux_ref1=source_find_image[source_i]*add_threshold
     additional_i=where(source_find_image*source_mask GT flux_ref1,n_add)
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
@@ -371,18 +374,23 @@ FOR i=0L,max_iter-1 DO BEGIN
     t2+=t3_0-t2_0
     flux_arr=fltarr(4)
     FOR src_i=0L,n_sources-1 DO BEGIN
-        IF src_i GT 0 THEN BEGIN
+;        IF src_i GT 0 THEN BEGIN
             sx=(additional_i[src_i] mod dimension)
             sy=Floor(additional_i[src_i]/dimension)
-            source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]
-            xcen=sx+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1))/Total(source_box)-local_max_radius
-            ycen=sy+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2))/Total(source_box)-local_max_radius
+            source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+            source_box=source_box>(-Abs(converge_check2[i]))
+            source_box-=Min(source_box)
+            xcen0=Total(source_box*source_box_xvals)/Total(source_box)
+            ycen0=Total(source_box*source_box_yvals)/Total(source_box)
+            xcen=sx-local_max_radius+xcen0
+            ycen=sy-local_max_radius+ycen0
+            IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius THEN CONTINUE
 ;            gcntrd,source_find_image,sx,sy,xcen,ycen,local_max_radius,/silent,/keepcenter
 ;            IF (xcen EQ -1) OR (ycen EQ -1) THEN BEGIN
 ;                source_mask[additional_i[src_i]]=0
 ;                CONTINUE
 ;            ENDIF 
-        ENDIF
+;        ENDIF
         xy2ad,xcen,ycen,astr,ra,dec
         comp_arr[si].x=xcen
         comp_arr[si].y=ycen
@@ -396,11 +404,22 @@ FOR i=0L,max_iter-1 DO BEGIN
             beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
             beam_src[pol_i]=(*beam_base[pol_i])[additional_i[src_i]]
             
+;            IF Keyword_Set(independent_fit) THEN BEGIN
+;                sign=(pol_i mod 2) ? -1:1
+;                IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]]+sign*image_use_Q[additional_i[src_i]]
+;                IF pol_i GE 2 THEN flux_use=image_use_U[additional_i[src_i]]+sign*image_use_V[additional_i[src_i]]
+;            ENDIF ELSE IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]] ELSE flux_use=image_use_U[additional_i[src_i]]
             IF Keyword_Set(independent_fit) THEN BEGIN
                 sign=(pol_i mod 2) ? -1:1
-                IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]]+sign*image_use_Q[additional_i[src_i]]
-                IF pol_i GE 2 THEN flux_use=image_use_U[additional_i[src_i]]+sign*image_use_V[additional_i[src_i]]
-            ENDIF ELSE IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]] ELSE flux_use=image_use_U[additional_i[src_i]]
+                IF pol_i EQ 0 THEN sbQ=image_use_Q[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+                IF pol_i EQ 2 THEN BEGIN
+                    sbU=image_use_U[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+                    sbV=image_use_V[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+                ENDIF
+                IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbQ,xcen0,ycen0,cubic=-0.5)
+                IF pol_i GE 2 THEN flux_use=Interpolate(sbU,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbV,xcen0,ycen0,cubic=-0.5)
+            ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5) $
+                ELSE flux_use=Interpolate(image_use_U[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius],xcen0,ycen0,cubic=-0.5)
             
             flux_use*=gain_factor_use
             comp_arr[si].flux.(pol_i)=flux_use*beam_src[pol_i];*ps_not_used ;Apparent brightness, instrumental polarization X gain (a scalar)
