@@ -208,7 +208,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
         FOR tile_i=0,obs.n_tile-1 DO BEGIN
             tA_i=where(tile_A EQ (tile_i+1),nA)
             tB_i=where(tile_B EQ (tile_i+1),nB)
-            flag_tile_test+=nA+nB
+            
+            IF nA GT 0 THEN flag_tile_test[tile_i]+=Max(Reform(flag_arr0[pol_i,*,tA_i]))>0
+            IF nB GT 0 THEN flag_tile_test[tile_i]+=Max(Reform(flag_arr0[pol_i,*,tB_i]))>0
         ENDFOR
     ENDFOR
     flag_tile_use_i=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
