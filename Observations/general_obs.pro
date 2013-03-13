@@ -73,7 +73,8 @@ WHILE fi LE end_fi DO BEGIN
 ENDWHILE
 
 map_projection='orth'
-IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=recalculate_all*(n_files GT 1)
+n_files_use=end_fi-start_fi+1
+IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=recalculate_all*(n_files_use GT 1)
 IF Keyword_Set(combine_healpix) THEN BEGIN
     combine_obs_sources,fhd_file_list,calibration,source_list,restore_last=0,output_path=healpix_path
     combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,obs_arr=obs_arr,$
@@ -90,7 +91,7 @@ IF Keyword_Set(ps_export) THEN BEGIN
         vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,/odd,_Extra=extra
     ENDIF ELSE vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,_Extra=extra
 ENDIF
-IF Keyword_Set(cleanup) THEN FOR fi=0,n_files-1 DO fhd_cleanup,fhd_file_list[fi]
+IF Keyword_Set(cleanup) THEN FOR fi=start_fi,end_fi DO fhd_cleanup,fhd_file_list[fi]
 
 !except=except
 END
