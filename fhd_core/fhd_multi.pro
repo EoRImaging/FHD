@@ -76,8 +76,9 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         beam_mask*=mask0
     ENDFOR
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam[pol_i,obs_i]*beam_mask)
-    
-    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,mask=beam_mask,radius=radius,restore_last=1) ;supply beam_mask in case file is missing and needs to be generated
+
+    ;supply beam_mask in case file is missing and needs to be generated
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,mask=beam_mask,radius=radius,restore_last=1) 
     
     source_comp_init,comp_arr0,n_sources=max_sources
     *comp_arr[obs_i]=comp_arr0
@@ -141,6 +142,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
     *weights_corr_map[pol_i]=weight_invert(*weights_map[pol_i])
 ENDFOR
+FOR pol_i=0,n_pol-1 DO source_mask[where(*weights_map[pol_i] EQ 0)]=0
 
 FOR i=0L,max_iter-1 DO BEGIN 
     t1_0=Systime(1)
@@ -178,6 +180,8 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     residual_I=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])^2.
     IF n_pol GT 1 THEN residual_I+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])^2.
+    
+    converge_check2[i]=Stddev(source_find_hpx[where(source_mask)],/nan)
     
     ;detect sources
     flux_ref=Max(source_find_hpx*source_mask,max_i)
