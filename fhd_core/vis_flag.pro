@@ -24,6 +24,8 @@ max_baseline=obs.max_baseline
 IF N_Elements(flag_nsigma) EQ 0 THEN flag_nsigma=3.
 
 data_abs=Sqrt(Reform((data_array[0,*,*,*]))^2.+Reform((data_array[1,*,*,*]))^2.)
+IF (size(data_array,/dimension))[1] EQ 1 THEN data_abs=Reform(data_abs,1,(size(data_abs,/dimension))[0],(size(data_abs,/dimension))[1])
+
 n_frequencies=obs.n_freq
 n_pol=(size(data_array,/dimension))[1]
 tile_A=(*obs.baseline_info).tile_A

@@ -1,4 +1,7 @@
-PRO fhd_multi,fhd_file_list,obs_arr,_Extra=extra
+PRO fhd_multi,fhd_file_list,obs_arr,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
+    residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
+    ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,transfer_mapfn=transfer_mapfn,$
+    beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,_Extra=extra
 except=!except
 !except=0
 compile_opt idl2,strictarrsubs  
