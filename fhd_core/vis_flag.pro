@@ -26,7 +26,7 @@ IF N_Elements(flag_nsigma) EQ 0 THEN flag_nsigma=3.
 nbt=(size(data_array,/dimension))[3]
 nf=(size(data_array,/dimension))[2]
 np=(size(data_array,/dimension))[1]
-data_abs=Sqrt(Reform(data_array[0,*,*,*],1,np,nf,nbt)^2.+Reform(data_array[1,*,*,*],1,np,nf,nbt)^2.)
+data_abs=Sqrt(Reform(data_array[0,*,*,*],np,nf,nbt)^2.+Reform(data_array[1,*,*,*],np,nf,nbt)^2.)
 ;IF (size(data_array,/dimension))[1] EQ 1 THEN data_abs=Reform(data_abs,1,(size(data_abs,/dimension))[0],(size(data_abs,/dimension))[1])
 
 n_frequencies=obs.n_freq
@@ -50,7 +50,9 @@ IF N_baselines_cut GT 0 THEN flag_arr[*,*,cut_baselines_i]=0
 
 tile_fom=fltarr(n_tiles)
 FOR tile_i=0,n_tiles-1 DO BEGIN
-    tile_ABi=[where((tile_A-1) EQ tile_i,nA),where((tile_B-1) EQ tile_i,nB)];2442
+    tile_Ai=where((tile_A-1) EQ tile_i,nA)
+    tile_Bi=where((tile_B-1) EQ tile_i,nB)
+    IF nB GT 0 THEN IF nA GT 0 THEN tile_ABi=[tile_Ai,tile_Bi] ELSE tile_ABi=tile_Bi ELSE IF nA GT 0 THEN tile_ABi=tile_Ai 
     data_subset=Reform(data_abs[*,*,tile_ABi],np,nf,nA+nB)
     FOR pol_i=0,n_pol-1 DO BEGIN
         i_use=where((flag_arr[pol_i,*,tile_ABi] GT 0) AND (data_subset[pol_i,*,tile_ABi] GT 0),n_use)
