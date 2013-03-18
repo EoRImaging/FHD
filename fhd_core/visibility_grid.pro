@@ -65,7 +65,7 @@ psf_dim2=2*psf_dim
 ;vis_dimension=Float(nbaselines*n_samples)
 
 image_uv=Complexarr(dimension,elements)
-weights=fltarr(dimension,elements)
+weights=Complexarr(dimension,elements)
 
 IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_flag=1
@@ -227,7 +227,7 @@ image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
 image_uv=(image_uv+image_uv_conj)/2.
 
 IF Arg_present(weights) THEN BEGIN
-    weights=(weights+Shift(Reverse(reverse(weights,1),2),1,1));/2.
+    weights=(weights+Shift(Reverse(reverse(Conj(weights),1),2),1,1));/2.
 ENDIF
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
