@@ -4,7 +4,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,flag=flag,$
-    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,_Extra=extra
+    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -31,6 +31,7 @@ IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag) EQ 0 THEN flag=0
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
+IF Keyword_Set(simultaneous) THEN deconvolve=0
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
@@ -71,6 +72,11 @@ WHILE fi LE end_fi DO BEGIN
         end_fi=n_files-1
     ENDIF
 ENDWHILE
+
+IF Keyword_Set(simultaneous) THEN BEGIN
+    IF Total(simultaneous) GT 1 THEN N_simultaneous=simultaneous
+    fhd_multi_wrap,fhd_file_list,obs_arr,N_simultaneous=N_simultaneous,_Extra=extra    
+ENDIF
 
 map_projection='orth'
 n_files_use=end_fi-start_fi+1

@@ -108,7 +108,7 @@ pc_not_used=1.
 
 ;the particular set of beams read will be the ones specified by file_path_fhd.
 ;that will include all polarizations and frequencies, at ONE time snapshot
-IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last) 
+IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last,/silent) 
 nfreq_beam=(size(psf.base,/dimension))[1]
 beam_base=Ptrarr(n_pol,/allocate)
 beam_correction=Ptrarr(n_pol,/allocate)

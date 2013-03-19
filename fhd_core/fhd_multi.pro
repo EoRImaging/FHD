@@ -7,7 +7,7 @@ except=!except
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
 
-IF N_Params() LT 2 THEN BEGIN
+IF N_Elements(obs_arr) EQ 0 THEN BEGIN
     n_obs=N_Elements(fhd_file_list)
     FOR obs_i=0,n_obs-1 DO BEGIN
         file_path=fhd_file_list[obs_i]
@@ -57,6 +57,7 @@ ind_arr=Ptrarr(n_obs,/allocate)
 hpx_cnv=Ptrarr(n_obs,/allocate)
 xv_arr=Ptrarr(n_obs,/allocate)
 yv_arr=Ptrarr(n_obs,/allocate)
+uv_i_arr=Ptrarr(n_obs,/allocate)
 
 box_coords=Lonarr(n_obs,4)
 
@@ -81,14 +82,14 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
-    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,nside=nside,mask=beam_mask,radius=radius,restore_last=1) 
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,radius=radius,restore_last=1) 
     
     source_comp_init,comp_arr0,n_sources=max_sources
     *comp_arr[obs_i]=comp_arr0
     
     FOR pol_i=0,n_pol-1 DO BEGIN
-        restore,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid
-        *dirty_uv_arr[pol_i,obs_i]=dirty_uv*obs.cal[pol_i]
+;        restore,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid
+        *dirty_uv_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv')*obs.cal[pol_i];dirty_uv*obs.cal[pol_i]
         *model_uv_full[pol_i,obs_i]=Complexarr(dimension,elements)
         *model_uv_holo[pol_i,obs_i]=Complexarr(dimension,elements)
         *weights_arr[pol_i,obs_i]=healpix_cnv_apply(*beam[pol_i,obs_i],*hpx_cnv[obs_i])
@@ -96,23 +97,23 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     
     source_uv_mask=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
-        *map_fn_arr[pol_i,obs_i]=map_fn
+;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
+        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
         weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i,obs_i]))
         source_uv_mask[where(weights_single)]=1.
     ENDFOR
     *uv_mask_arr[obs_i]=source_uv_mask
     
-    uv_i_use=where(source_uv_mask,n_uv_use)
+    *uv_i_arr[obs_i]=where(source_uv_mask,n_uv_use)
     uv_use_frac=Float(n_uv_use)/(dimension*elements)
 ;    print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
-    *xv_arr[obs_i]=xvals[uv_i_use]
-    *yv_arr[obs_i]=yvals[uv_i_use]
+    *xv_arr[obs_i]=xvals[*uv_i_arr[obs_i]]
+    *yv_arr[obs_i]=yvals[*uv_i_arr[obs_i]]
     
-    box_coords[obs_i,0]=(Min((*xv_arr[obs_i])[where(beam_mask)])+dimension/2.-smooth_width)>0
-    box_coords[obs_i,1]=(Max((*xv_arr[obs_i])[where(beam_mask)])+dimension/2.+smooth_width)<(dimension-1)
-    box_coords[obs_i,2]=(Min((*yv_arr[obs_i])[where(beam_mask)])+elements/2.-smooth_width)>0
-    box_coords[obs_i,3]=(Max((*yv_arr[obs_i])[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
+    box_coords[obs_i,0]=(Min(xvals[where(beam_mask)])+dimension/2.-smooth_width)>0
+    box_coords[obs_i,1]=(Max(xvals[where(beam_mask)])+dimension/2.+smooth_width)<(dimension-1)
+    box_coords[obs_i,2]=(Min(yvals[where(beam_mask)])+elements/2.-smooth_width)>0
+    box_coords[obs_i,3]=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
 ENDFOR
 
 ;healpix indices are in sparse format. Need to combine them
@@ -138,7 +139,7 @@ healpix_map=Ptrarr(n_pol,/allocate)
 weights_map=Ptrarr(n_pol,/allocate)
 weights_corr_map=Ptrarr(n_pol,/allocate)
 smooth_map=Ptrarr(n_pol,/allocate)
-source_mask=Fltarr(n_hpx)+1.
+source_mask=Fltarr(n_hpx_full)+1.
 FOR pol_i=0,n_pol-1 DO BEGIN
     FOR obs_i=0,n_obs-1 DO BEGIN
         (*weights_map[pol_i])[*hpx_ind_map[obs_i]]+=*weights_arr[pol_i,obs_i]
@@ -150,12 +151,12 @@ FOR pol_i=0,n_pol-1 DO source_mask[where(*weights_map[pol_i] EQ 0)]=0
 FOR i=0L,max_iter-1 DO BEGIN 
     t1_0=Systime(1)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *healpix_map[pol_i]=Fltarr(n_hpx)
+        *healpix_map[pol_i]=Fltarr(n_hpx_full)
     ENDFOR
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
-            *smooth_map[pol_i]=Fltarr(n_hpx)
+            *smooth_map[pol_i]=Fltarr(n_hpx_full)
             FOR obs_i=0,n_obs-1 DO BEGIN
                 residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
                 residual_hpx=healpix_cnv_apply(residual,*hpx_cnv[obs_i])
@@ -241,9 +242,9 @@ FOR i=0L,max_iter-1 DO BEGIN
             comp_arr1[si1].flux.V=flux_arr[2]-flux_arr[3]
             
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-            source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*xvals1+(comp_arr1[si1].y-elements/2.)*yvals1))
+            source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
             FOR pol_i=0,n_pol-1 DO $
-                (*model_uv_full[pol_i,obs_i])[uv_i_use]+=comp_arr1[si1].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+                (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=comp_arr1[si1].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
         ENDFOR
         comp_arr1=*comp_arr[obs_i]
     ENDFOR

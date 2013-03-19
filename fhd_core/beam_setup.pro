@@ -18,11 +18,11 @@ compile_opt idl2,strictarrsubs
 
 ;vis_path_default,data_directory,filename,file_path,obs=obs,version=version
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_beams'+'.sav') EQ 0) THEN BEGIN 
-    print,file_path_fhd+'_beams'+'.sav' +' Not found. Recalculating.' 
+    IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_beams'+'.sav' +' Not found. Recalculating.' 
     restore_last=0
 ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
-    print,'Saved beam model restored'
+    IF ~Keyword_Set(silent) THEN print,'Saved beam model restored'
     restore,file_path_fhd+'_beams'+'.sav'
     RETURN,psf
 ENDIF
@@ -131,7 +131,7 @@ gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
 pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 t1=Systime(1)
 
-IF not Keyword_Set(silent) THEN print,'Building beam model. Time elapsed: estimated time remaining'
+IF ~Keyword_Set(silent) THEN print,'Building beam model. Time elapsed: estimated time remaining'
 FOR pol_i=0,n_pol-1 DO BEGIN
 
     pol1=pol_arr[0,pol_i]
