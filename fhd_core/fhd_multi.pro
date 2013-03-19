@@ -117,13 +117,14 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
 ENDFOR
 
 ;healpix indices are in sparse format. Need to combine them
-hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,full_ind_reference=full_ind_reference)
+hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_inds)
+n_hpx=N_Elements(hpx_inds)
 n_hpx_full=nside2npix(nside)
 degpix_hpx=Sqrt((4*!Pi*!Radeg^2.)/n_hpx_full)
 
 pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,dec_hpx,ra_hpx,/astro
-    
+
 converge_check=Fltarr(Ceil(max_iter/check_iter))
 converge_check2=Fltarr(max_iter)
 
@@ -139,8 +140,9 @@ healpix_map=Ptrarr(n_pol,/allocate)
 weights_map=Ptrarr(n_pol,/allocate)
 weights_corr_map=Ptrarr(n_pol,/allocate)
 smooth_map=Ptrarr(n_pol,/allocate)
-source_mask=Fltarr(n_hpx_full)+1.
+source_mask=Fltarr(n_hpx)+1.
 FOR pol_i=0,n_pol-1 DO BEGIN
+    *weights_map[pol_i]=Fltarr(n_hpx)
     FOR obs_i=0,n_obs-1 DO BEGIN
         (*weights_map[pol_i])[*hpx_ind_map[obs_i]]+=*weights_arr[pol_i,obs_i]
     ENDFOR
@@ -151,28 +153,30 @@ FOR pol_i=0,n_pol-1 DO source_mask[where(*weights_map[pol_i] EQ 0)]=0
 FOR i=0L,max_iter-1 DO BEGIN 
     t1_0=Systime(1)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *healpix_map[pol_i]=Fltarr(n_hpx_full)
+        *healpix_map[pol_i]=Fltarr(n_hpx)
     ENDFOR
     
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
-            *smooth_map[pol_i]=Fltarr(n_hpx_full)
+    IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *smooth_map[pol_i]=Fltarr(n_hpx)
             FOR obs_i=0,n_obs-1 DO BEGIN
                 residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
                 residual_hpx=healpix_cnv_apply(residual,*hpx_cnv[obs_i])
                 (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
                 IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
                     ;smooth image changes slowly and the median function takes a lot of time, so only re-calculate every few iterations
-                    image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]*$
-                        (*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)*$
-                        (*beam[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
-                    residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]-=image_smooth
-                    smooth_hpx=healpix_cnv_apply(residual,*hpx_cnv[obs_i])
+                    res0=fltarr(size(residual,/dimension))
+                    image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
+                        *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
+                        *(*beam[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
+                    res0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=$
+                        residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]-image_smooth
+                    smooth_hpx=healpix_cnv_apply(res0,*hpx_cnv[obs_i])
                     (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
                 ENDIF
             ENDFOR
-        ENDIF
-    ENDFOR
+        ENDFOR
+    ENDIF
     
     t2_0=Systime(1)
     t1+=t2_0-t1_0
@@ -184,6 +188,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     residual_I=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])^2.
     IF n_pol GT 1 THEN residual_I+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])^2.
+    
     
     converge_check2[i]=Stddev(source_find_hpx[where(source_mask)],/nan)
     
@@ -202,7 +207,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     dec_arr=fltarr(n_src)
     FOR src_i=0L,n_src-1 DO BEGIN
         Query_disc,nside,pix_coords[source_i[src_i],*],local_radius,region_inds,ninds,/deg
-        region_i=full_ind_reference[region_inds]
+        region_i=reverse_inds[region_inds]
         region_i=region_i[where(region_i GE 0)] ;guaranteed at least the center pixel
         ra1=ra_hpx[region_i]
         dec1=dec_hpx[region_i]
