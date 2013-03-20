@@ -250,7 +250,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                     IF pol_i GE 2 THEN flux_use=residual_U[source_i[src_i]]+sign*residual_V[source_i[src_i]]
                 ENDIF ELSE IF pol_i LE 1 THEN flux_use=residual_I[source_i[src_i]] ELSE flux_use=residual_U[source_i[src_i]]
                 
-                flux_use*=gain_factor_use/2.
+                flux_use*=gain_factor
                 comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
                 flux_arr[pol_i]=flux_use;"True sky" instrumental pol
             ENDFOR
@@ -259,6 +259,11 @@ FOR i=0L,max_iter-1 DO BEGIN
             comp_arr1[si1].flux.Q=flux_arr[0]-flux_arr[1]
             comp_arr1[si1].flux.U=flux_arr[2]+flux_arr[3]
             comp_arr1[si1].flux.V=flux_arr[2]-flux_arr[3]
+
+            comp_arr1[si1].x=x_arr[src_i]
+            comp_arr1[si1].y=y_arr[src_i]
+            comp_arr1[si1].ra=ra_arr[src_i]
+            comp_arr1[si1].dec=dec_arr[src_i]
             
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
             source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
