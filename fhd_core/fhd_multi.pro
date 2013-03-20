@@ -148,7 +148,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
     *weights_corr_map[pol_i]=weight_invert(*weights_map[pol_i])
 ENDFOR
-FOR pol_i=0,n_pol-1 DO source_mask[where(*weights_map[pol_i] EQ 0)]=0
+FOR pol_i=0,n_pol-1 DO BEGIN
+    zero_ind=where(*weights_map[pol_i] EQ 0,n_zero)
+    IF n_zero GT 0 THEN source_mask[zero_ind]=0
+ENDFOR
 
 FOR i=0L,max_iter-1 DO BEGIN 
     t1_0=Systime(1)

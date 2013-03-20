@@ -11,7 +11,7 @@ ENDFOR
 hpx_min=Min(hpx_min)
 hpx_max=Max(hpx_max)
 n_hpx=hpx_max-hpx_min+1
-n_hpx_full=nside2npix((*hpx_cnv[obs_i]).nside)
+n_hpx_full=nside2npix((*hpx_cnv[0]).nside)
 
 ind_hist=lonarr(n_hpx)
 hist_arr=Ptrarr(n_obs)
