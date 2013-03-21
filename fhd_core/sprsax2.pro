@@ -29,14 +29,14 @@ IF tag_exist(A,'i_use') THEN BEGIN
     IF Keyword_Set(mask) THEN mask_flag=1 ELSE mask_flag=0
     
     IF Keyword_Set(transpose) THEN BEGIN
-        FOR i0=0.,n-1 DO BEGIN
+        FOR i0=0L,n-1 DO BEGIN
             i=i_use[i0]
-            IF mask_flag THEN IF mask[i] EQ 0 THEN CONTINUE
+            IF mask_flag THEN IF mask[i] EQ 0 THEN CONTINUE 
             B[*ija[i0]]+=*sa[i0]*X[i]
             IF b2_flag THEN B2[*ija[i0]]+=*sa[i0]*X2[i]
         ENDFOR
     ENDIF ELSE BEGIN
-        FOR i0=0.,n-1 DO BEGIN
+        FOR i0=0L,n-1 DO BEGIN
             i=i_use[i0]
             B[i]=Total(*sa[i0]*X[*ija[i0]])
             IF b2_flag THEN B2[i]=Total(*sa[i0]*X2[*ija[i0]])
@@ -44,32 +44,17 @@ IF tag_exist(A,'i_use') THEN BEGIN
 ;            IF b2_flag THEN B2[i]=matrix_multiply(*sa[i0],X2[*ija[i0]],/atranspose)
         ENDFOR
     ENDELSE
-;    
-;    IF N_Params() LE 3 THEN BEGIN
-;        FOR i0=0.,n-1 DO BEGIN
-;            i=i_use[i0]
-;;            B[i]=Total((*sa[i0])*X[*ija[i0]],/double)
-;            B[i]=matrix_multiply(*sa[i0],X[*ija[i0]],/atranspose)
-;        ENDFOR
-;    ENDIF ELSE BEGIN
-;        B2=B
-;        FOR i0=0.,n-1 DO BEGIN
-;            i=i_use[i0]
-;            B[i]=matrix_multiply(*sa[i0],X[*ija[i0]],/atranspose)
-;            B2[i]=matrix_multiply(*sa[i0],X2[*ija[i0]],/atranspose)
-;        ENDFOR
-;    ENDELSE
 ENDIF ELSE BEGIN
 
     sa=A.sa
     ija=A.ija-1
     
-    n=A.ija[0]-2. ;DO NOT include an extra -1 here. It MUST be ija[0]-2.
+    n=A.ija[0]-2L ;DO NOT include an extra -1 here. It MUST be ija[0]-2.
     IF Keyword_Set(double) THEN B=dblarr(N_Elements(X)) ELSE B=Fltarr(N_Elements(X))
 ;    IF Keyword_Set(double) THEN B=Dcomplexarr(N_Elements(X)) ELSE B=Complexarr(N_Elements(X))
     
     IF N_Params() LE 3 THEN BEGIN
-        FOR i=0.,n-1 DO BEGIN
+        FOR i=0L,n-1 DO BEGIN
             B[i]=sa[i]*X[i]
             i2=ija[i+1]-1
             i1=ija[i]
@@ -80,7 +65,7 @@ ENDIF ELSE BEGIN
         ENDFOR
     ENDIF ELSE BEGIN
         B2=B
-        FOR i=0.,n-1 DO BEGIN
+        FOR i=0L,n-1 DO BEGIN
             B[i]=sa[i]*X[i]
             B2[i]=sa[i]*X2[i]
             i2=ija[i+1]-1
@@ -97,49 +82,3 @@ ENDIF ELSE BEGIN
     ENDELSE
 ENDELSE
 END
-
-;;FOR i=0.,n-1 DO BEGIN
-;;    B[i]=A.sa[i]*x[i]
-;;    FOR k=A.ija[i]-1,A.ija[i+1]-1-1 DO B[i]+=A.sa[k]*x[A.ija[k]-1]
-;;ENDFOR
-;
-;IF N_Elements(mask) EQ N_Elements(x) THEN BEGIN
-;    i_use=where(mask,n_use)
-;    IF Keyword_Set(transpose) THEN BEGIN
-;        FOR i1=0.,n_use-1 DO BEGIN
-;            i=i_use[i1]
-;            B[i]=sa[i]*x[i]
-;            FOR k=ija[i],ija[i+1]-1 DO B[ija[k]]+=sa[k]*x[i]
-;        ENDFOR
-;    ENDIF ELSE BEGIN
-;        FOR i=0.,n-1 DO BEGIN
-;            B[i]=sa[i]*x[i]
-;            FOR k=ija[i],ija[i+1]-1 DO B[i]+=sa[k]*x[ija[k]]
-;        ENDFOR
-;    ENDELSE
-;ENDIF ELSE BEGIN
-;    IF Keyword_Set(transpose) THEN BEGIN
-;        FOR i=0.,n-1 DO BEGIN
-;            B[i]=sa[i]*x[i]
-;            FOR k=ija[i],ija[i+1]-1 DO B[ija[k]]+=sa[k]*x[i]
-;        ENDFOR
-;    ENDIF ELSE BEGIN
-;        FOR i=0.,n-1 DO BEGIN
-;            B[i]=sa[i]*x[i]
-;            FOR k=ija[i],ija[i+1]-1 DO B[i]+=sa[k]*x[ija[k]]
-;        ENDFOR
-;    ENDELSE
-;ENDELSE
-;IF Keyword_Set(transpose) THEN BEGIN
-;    FOR i=0.,n-1 DO BEGIN
-;        B[i]=sa[i]*x[i]
-;        FOR k=ija[i],ija[i+1]-1 DO B[ija[k]]+=sa[k]*x[i]
-;    ENDFOR
-;ENDIF ELSE BEGIN
-;    FOR i=0.,n-1 DO BEGIN
-;        B[i]=sa[i]*x[i]
-;        FOR k=ija[i],ija[i+1]-1 DO B[i]+=sa[k]*x[ija[k]]
-;    ENDFOR
-;ENDELSE
-;RETURN,B
-;END

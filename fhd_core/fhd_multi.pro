@@ -172,8 +172,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                     image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
                         *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
                         *(*beam[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
-                    res0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=$
-                        residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]-image_smooth
+                    res0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
                     smooth_hpx=healpix_cnv_apply(res0,*hpx_cnv[obs_i])
                     (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
                 ENDIF
@@ -208,11 +207,21 @@ FOR i=0L,max_iter-1 DO BEGIN
     flux_ref=Max(source_find_hpx*source_mask,max_i)
     flux_ref1=flux_ref*add_threshold
     source_i=where(source_find_hpx*source_mask GT flux_ref1,n_src)
+    source_list=source_find_hpx[source_i]
+    source_i=source_i[Reverse(Sort(source_list))]
+    
+    source_ra=ra_hpx[source_i]
+    source_dec=dec_hpx[source_i]
+    source_i_use=lonarr(n_src) & source_i_use[0]=1
+    FOR src_i=1L,n_src-1 DO BEGIN
+        dist_test=angle_difference(source_dec[src_i],source_ra[src_i],source_dec[0:src_i-1],source_ra[0:src_i-1],/degree)
+        dist_test=Min(dist_test)
+        IF dist_test GT local_radius THEN source_i_use[src_i]=1
+    ENDFOR
+    source_i=source_i[where(source_i_use,n_src)]
+    
     IF (n_src<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-(si+1)
-    IF n_src GT max_add_sources THEN BEGIN
-        source_list=source_find_hpx[source_i]
-        source_i=source_i[(Reverse(Sort(source_list)))[0:max_add_sources-1]]
-    ENDIF
+    IF n_src GT max_add_sources THEN source_i=source_i[0:max_add_sources-1]
     
     flux_arr=residual_I[source_i]
     ra_arr=fltarr(n_src)
@@ -231,12 +240,12 @@ FOR i=0L,max_iter-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t2_0
     
-    ;update models    
-    flux_arr=fltarr(n_src)
+    ;update models
     FOR obs_i=0L,n_obs-1 DO BEGIN
         ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
         comp_arr1=*comp_arr[obs_i]
-        FOR src_i=0L,n_src-1 DO BEGIN
+        FOR src_i=0L,n_src-1 DO BEGIN    
+            flux_arr=fltarr(n_pol)
             si1=si+src_i
             beam_corr_src=fltarr(n_pol)
             beam_src=fltarr(n_pol)
