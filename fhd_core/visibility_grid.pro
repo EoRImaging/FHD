@@ -22,7 +22,7 @@
 ;
 ; :Author: Ian Sullivan
 ;-
-FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,$
+FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,_Extra=extra
 t0_0=Systime(1)
@@ -66,6 +66,7 @@ psf_dim2=2*psf_dim
 
 image_uv=Complexarr(dimension,elements)
 weights=Complexarr(dimension,elements)
+variance=Fltarr(dimension,elements)
 
 IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_flag=1
@@ -201,6 +202,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
     IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
         Replicate(1./vis_density,vis_n)#box_matrix
+    IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+        Replicate(1./vis_density,vis_n)#(Abs(box_matrix)^2.)
     
     t6_0=Systime(1)
     t5+=t6_0-t5_0
@@ -228,6 +231,9 @@ image_uv=(image_uv+image_uv_conj)/2.
 
 IF Arg_present(weights) THEN BEGIN
     weights=(weights+Shift(Reverse(reverse(Conj(weights),1),2),1,1));/2.
+ENDIF
+IF Arg_present(variance) THEN BEGIN
+    variance=(variance+Shift(Reverse(reverse(Conj(variance),1),2),1,1));/2.
 ENDIF
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
