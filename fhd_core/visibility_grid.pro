@@ -149,6 +149,14 @@ IF map_flag THEN BEGIN
     ENDFOR
 ENDIF
 
+;;pre-compute indices:
+;ind_map_base=lindgen(psf_dim^2.,psf_dim^2.)
+;ind_map=Ptrarr(psf_dim,psf_dim)
+;FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
+;    ij=i+j*psf_dim
+;    ind_map[i,j]=Ptr_new(Reform(ind_map_base[*,ij],psf_dim,psf_dim))
+;ENDFOR
+
 t0=Systime(1)-t0_0
 time_check_interval=Ceil(n_bin_use/10.)
 t1=0
@@ -209,6 +217,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
         box_arr_map=matrix_multiply(box_matrix,box_matrix_dag,/atranspose)/vis_density
+        ;alternate indexing approach. Does not appear to be any faster.
+;        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO $
+;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*ind_map[i,j]]
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
             (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
