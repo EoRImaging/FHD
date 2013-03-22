@@ -44,6 +44,7 @@ pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
 beam=Ptrarr(n_pol,n_obs,/allocate)
 beam_corr=Ptrarr(n_pol,n_obs,/allocate)
+beam_mask_arr=Ptrarr(n_obs,/allocate)
 weights_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 ;weights_inv_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 map_fn_arr=Ptrarr(n_pol,n_obs,/allocate)
@@ -79,6 +80,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         mask0[mask_i]=1
         beam_mask*=mask0
     ENDFOR
+    *beam_mask_arr[obs_i]=beam_mask
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
@@ -164,16 +166,17 @@ FOR i=0L,max_iter-1 DO BEGIN
             *smooth_map[pol_i]=Fltarr(n_hpx)
             FOR obs_i=0,n_obs-1 DO BEGIN
                 residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
-                residual_hpx=healpix_cnv_apply(residual,*hpx_cnv[obs_i])
+                residual_hpx=healpix_cnv_apply(residual*(*beam_mask_arr[obs_i]),*hpx_cnv[obs_i])
                 (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
                 IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
                     ;smooth image changes slowly and the median function takes a lot of time, so only re-calculate every few iterations
-                    res0=fltarr(size(residual,/dimension))
+                    smooth0=residual
                     image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
                         *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
                         *(*beam[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
-                    res0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
-                    smooth_hpx=healpix_cnv_apply(res0,*hpx_cnv[obs_i])
+                    smooth0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
+                    smooth0*=*beam_mask_arr[obs_i]
+                    smooth_hpx=healpix_cnv_apply(smooth0,*hpx_cnv[obs_i])
                     (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
                 ENDIF
             ENDFOR
@@ -188,6 +191,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     source_find_hpx=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])
     IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])
     
+    source_find_hpx*=source_mask
     residual_I=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])^2.
     IF n_pol GT 1 THEN residual_I+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])^2.
     IF n_pol GT 2 THEN residual_U=(*healpix_map[2]-*smooth_map[2])*(*weights_corr_map[2])^2.$
