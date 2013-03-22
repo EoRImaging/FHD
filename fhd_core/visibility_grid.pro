@@ -230,10 +230,12 @@ image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
 image_uv=(image_uv+image_uv_conj)/2.
 
 IF Arg_present(weights) THEN BEGIN
-    weights=(weights+Shift(Reverse(reverse(Conj(weights),1),2),1,1));/2.
+    weights_conj=Shift(Reverse(reverse(Conj(weights),1),2),1,1)
+    weights=(weights+weights_conj)/2.
 ENDIF
 IF Arg_present(variance) THEN BEGIN
-    variance=(variance+Shift(Reverse(reverse(Conj(variance),1),2),1,1));/2.
+    variance_mirror=Shift(Reverse(reverse(variance,1),2),1,1)
+    variance=(variance+variance_mirror)/2.
 ENDIF
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
