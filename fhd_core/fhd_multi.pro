@@ -61,6 +61,7 @@ yv_arr=Ptrarr(n_obs,/allocate)
 uv_i_arr=Ptrarr(n_obs,/allocate)
 
 box_coords=Lonarr(n_obs,4)
+norm_arr=Fltarr(n_obs)
 
 FOR obs_i=0.,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
@@ -98,13 +99,16 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     ENDFOR
     
     source_uv_mask=fltarr(dimension,elements)
+    normalization_arr=fltarr(n_pol<2)
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
         weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i,obs_i]))
+        IF pol_i LE 2 THEN normalization_arr[pol_i]=1./mean(weights_single)
         source_uv_mask[where(weights_single)]=1.
     ENDFOR
     *uv_mask_arr[obs_i]=source_uv_mask
+    norm_arr[obs_i]=Mean(normalization_arr)
     
     *uv_i_arr[obs_i]=where(source_uv_mask,n_uv_use)
     uv_use_frac=Float(n_uv_use)/(dimension*elements)
@@ -155,30 +159,33 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF n_zero GT 0 THEN source_mask[zero_ind]=0
 ENDFOR
 
+res_arr=Ptrarr(n_pol,n_obs,/allocate)
 FOR i=0L,max_iter-1 DO BEGIN 
     t1_0=Systime(1)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *healpix_map[pol_i]=Fltarr(n_hpx)
+        FOR obs_i=0,n_obs-1 DO BEGIN
+            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
+            *res_arr[pol_i,obs_i]=residual
+            residual_hpx=healpix_cnv_apply(residual*(*beam_mask_arr[obs_i]),*hpx_cnv[obs_i])
+            (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
+        ENDFOR
     ENDFOR
     
     IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             *smooth_map[pol_i]=Fltarr(n_hpx)
             FOR obs_i=0,n_obs-1 DO BEGIN
-                residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
-                residual_hpx=healpix_cnv_apply(residual*(*beam_mask_arr[obs_i]),*hpx_cnv[obs_i])
-                (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
-                IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
-                    ;smooth image changes slowly and the median function takes a lot of time, so only re-calculate every few iterations
-                    smooth0=residual
-                    image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
-                        *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
-                        *(*beam[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
-                    smooth0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
-                    smooth0*=*beam_mask_arr[obs_i]
-                    smooth_hpx=healpix_cnv_apply(smooth0,*hpx_cnv[obs_i])
-                    (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
-                ENDIF
+                ;smooth image changes slowly and the median function takes a lot of time, so only re-calculate every few iterations
+                residual=*res_arr[pol_i,obs_i]
+                smooth0=fltarr(size(residual,/dimension))
+                image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
+                    *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
+                    *(*beam[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
+                smooth0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
+                smooth_hpx=healpix_cnv_apply(smooth0*(*beam_mask_arr[obs_i]),*hpx_cnv[obs_i])
+                (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
+                
             ENDFOR
         ENDFOR
     ENDIF
@@ -206,6 +213,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDELSE
     
     converge_check2[i]=Stddev(source_find_hpx[where(source_mask)],/nan)
+    IF i EQ 0 THEN converge_check[0]=converge_check2[0]
     
     ;detect sources
     flux_ref=Max(source_find_hpx*source_mask,max_i)
@@ -223,6 +231,8 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF dist_test GT local_radius THEN source_i_use[src_i]=1
     ENDFOR
     source_i=source_i[where(source_i_use,n_src)]
+    source_ra=ra_hpx[source_i]
+    source_dec=dec_hpx[source_i]
     
     IF (n_src<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-(si+1)
     IF n_src GT max_add_sources THEN source_i=source_i[0:max_add_sources-1]
@@ -236,6 +246,8 @@ FOR i=0L,max_iter-1 DO BEGIN
         region_i=region_i[where(region_i GE 0)] ;guaranteed at least the center pixel
         ra1=ra_hpx[region_i]
         dec1=dec_hpx[region_i]
+        dist_test=angle_difference(source_dec[src_i],source_ra[src_i],dec1,ra1,/degree)>(2.*degpix_hpx)
+        dist_weights=(local_radius/dist_test)^2.
         simg1=source_find_hpx[region_i]
         
         ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
@@ -249,13 +261,13 @@ FOR i=0L,max_iter-1 DO BEGIN
         ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
         comp_arr1=*comp_arr[obs_i]
         FOR src_i=0L,n_src-1 DO BEGIN    
-            flux_arr=fltarr(n_pol)
+            flux_arr=fltarr(4)
             si1=si+src_i
             beam_corr_src=fltarr(n_pol)
             beam_src=fltarr(n_pol)
             FOR pol_i=0,n_pol-1 DO BEGIN   
-                beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[source_i[src_i]]
-                beam_src[pol_i]=(*beam[pol_i,obs_i])[source_i[src_i]]
+                beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[x_arr[src_i],y_arr[src_i]]
+                beam_src[pol_i]=(*beam[pol_i,obs_i])[x_arr[src_i],y_arr[src_i]]
                 
                 IF Keyword_Set(independent_fit) THEN BEGIN
                     sign=(pol_i mod 2) ? -1:1
@@ -292,7 +304,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     ;apply HMF
     FOR obs_i=0L,n_obs-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],_Extra=extra)*normalization
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],_Extra=extra)*norm_arr[obs_i]
         ENDFOR
     ENDFOR
     t4+=Systime(1)-t4_0
@@ -300,8 +312,9 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF si GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
-        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,Stddev((image_use*beam_avg)[where(source_mask)],/nan)))
-        converge_check[i2]=Stddev((image_use*beam_avg)[where(source_mask)],/nan)
+        conv_chk=Stddev(source_find_hpx[where(source_find_hpx)],/nan)
+        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
+        converge_check[i2]=conv_chk
         BREAK
     ENDIF
     
@@ -312,7 +325,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         conv_chk=Stddev(source_find_hpx[where(source_find_hpx)],/nan)
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
         converge_check[i2]=conv_chk
-        IF 2.*converge_check[i2] GT image_use[source_i] THEN BEGIN
+        IF 2.*converge_check[i2] GT flux_ref THEN BEGIN
             print,'Break after iteration',i,' from low signal to noise'
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
@@ -327,8 +340,10 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDIF
 ENDFOR
 ;condense clean components
-noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
-source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
+FOR obs_i=0L,n_obs-1 DO BEGIN
+    noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
+    source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
+ENDFOR
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
