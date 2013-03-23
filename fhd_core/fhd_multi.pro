@@ -340,14 +340,14 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDIF
 ENDFOR
 ;condense clean components
-FOR obs_i=0L,n_obs-1 DO BEGIN
-    noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
-    source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
-ENDFOR
-
-FOR pol_i=0,n_pol-1 DO BEGIN
-    *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
-ENDFOR
+;FOR obs_i=0L,n_obs-1 DO BEGIN
+;    noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
+;    source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
+;ENDFOR
+;
+;FOR pol_i=0,n_pol-1 DO BEGIN
+;    *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
+;ENDFOR
 
 t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'

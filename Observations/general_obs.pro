@@ -73,13 +73,15 @@ WHILE fi LE end_fi DO BEGIN
     ENDIF
 ENDWHILE
 
+n_files_use=end_fi-start_fi+1
+vis_file_list=vis_file_list[start_fi:end_fi]
+fhd_file_list=fhd_file_list[start_fi:end_fi]
 IF Keyword_Set(simultaneous) THEN BEGIN
     IF Total(simultaneous) GT 1 THEN N_simultaneous=simultaneous
     fhd_multi_wrap,fhd_file_list,obs_arr,N_simultaneous=N_simultaneous,_Extra=extra    
 ENDIF
 
 map_projection='orth'
-n_files_use=end_fi-start_fi+1
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=recalculate_all*(n_files_use GT 1)
 IF Keyword_Set(combine_healpix) THEN BEGIN
     combine_obs_sources,fhd_file_list,calibration,source_list,restore_last=0,output_path=healpix_path
@@ -97,7 +99,7 @@ IF Keyword_Set(ps_export) THEN BEGIN
         vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,/odd,_Extra=extra
     ENDIF ELSE vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,_Extra=extra
 ENDIF
-IF Keyword_Set(cleanup) THEN FOR fi=start_fi,end_fi DO fhd_cleanup,fhd_file_list[fi]
+IF Keyword_Set(cleanup) THEN FOR fi=0L,n_files_use-1 DO fhd_cleanup,fhd_file_list[fi]
 
 !except=except
 END
