@@ -260,33 +260,39 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR obs_i=0L,n_obs-1 DO BEGIN
         ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
         comp_arr1=*comp_arr[obs_i]
+        dimension=obs_arr[obs_i].dimension
+        elements=obs_arr[obs_i].elements
         FOR src_i=0L,n_src-1 DO BEGIN    
             flux_arr=fltarr(4)
             si1=si+src_i
             beam_corr_src=fltarr(n_pol)
             beam_src=fltarr(n_pol)
-            FOR pol_i=0,n_pol-1 DO BEGIN   
-                beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[x_arr[src_i],y_arr[src_i]]
-                beam_src[pol_i]=(*beam[pol_i,obs_i])[x_arr[src_i],y_arr[src_i]]
-                
-                IF Keyword_Set(independent_fit) THEN BEGIN
-                    sign=(pol_i mod 2) ? -1:1
-                    IF pol_i LE 1 THEN flux_use=residual_I[source_i[src_i]]+sign*residual_Q[source_i[src_i]]
-                    IF pol_i GE 2 THEN flux_use=residual_U[source_i[src_i]]+sign*residual_V[source_i[src_i]]
-                ENDIF ELSE IF pol_i LE 1 THEN flux_use=residual_I[source_i[src_i]] ELSE flux_use=residual_U[source_i[src_i]]
-                
-                flux_use*=gain_factor
-                comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
-                flux_arr[pol_i]=flux_use;"True sky" instrumental pol
-            ENDFOR
+            xv=x_arr[src_i]
+            yv=y_arr[src_i]
+            IF xv<yv GE 0 AND xv>yv LE (dimension<elements)-1 THEN BEGIN 
+              FOR pol_i=0,n_pol-1 DO BEGIN   
+                  beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[xv,yv]
+                  beam_src[pol_i]=(*beam[pol_i,obs_i])[xv,yv]
+                  
+                  IF Keyword_Set(independent_fit) THEN BEGIN
+                      sign=(pol_i mod 2) ? -1:1
+                      IF pol_i LE 1 THEN flux_use=residual_I[source_i[src_i]]+sign*residual_Q[source_i[src_i]]
+                      IF pol_i GE 2 THEN flux_use=residual_U[source_i[src_i]]+sign*residual_V[source_i[src_i]]
+                  ENDIF ELSE IF pol_i LE 1 THEN flux_use=residual_I[source_i[src_i]] ELSE flux_use=residual_U[source_i[src_i]]
+                  
+                  flux_use*=gain_factor
+                  comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
+                  flux_arr[pol_i]=flux_use;"True sky" instrumental pol
+              ENDFOR
+            ENDIF
             
             comp_arr1[si1].flux.I=flux_arr[0]+flux_arr[1]
             comp_arr1[si1].flux.Q=flux_arr[0]-flux_arr[1]
             comp_arr1[si1].flux.U=flux_arr[2]+flux_arr[3]
             comp_arr1[si1].flux.V=flux_arr[2]-flux_arr[3]
 
-            comp_arr1[si1].x=x_arr[src_i]
-            comp_arr1[si1].y=y_arr[src_i]
+            comp_arr1[si1].x=xv
+            comp_arr1[si1].y=yv
             comp_arr1[si1].ra=ra_arr[src_i]
             comp_arr1[si1].dec=dec_arr[src_i]
             
