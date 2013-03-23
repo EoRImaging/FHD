@@ -349,6 +349,7 @@ ENDFOR
 ;    *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
 ;ENDFOR
 
+Ptr_free,map_fn_arr
 t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'
 print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))

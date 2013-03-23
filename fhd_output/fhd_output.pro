@@ -77,11 +77,15 @@ astr=obs.astr
 si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]
 source_arr_out=source_arr
-ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
+sx=(source_arr.x-obs.dimension/2.)*2.+obs_out.dimension/2.
+sy=(source_arr.y-obs.elements/2.)*2.+obs_out.elements/2.
+;ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
 source_arr_out.x=sx & source_arr_out.y=sy
 
 comp_arr_out=comp_arr
-ad2xy,comp_arr.ra,comp_arr.dec,astr_out,sx,sy
+sx=(comp_arr.x-obs.dimension/2.)*2.+obs_out.dimension/2.
+sy=(comp_arr.y-obs.elements/2.)*2.+obs_out.elements/2.
+;ad2xy,comp_arr.ra,comp_arr.dec,astr_out,sx,sy
 comp_arr_out.x=sx & comp_arr_out.y=sy
 
 extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
