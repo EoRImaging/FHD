@@ -1,5 +1,5 @@
 FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
-    weights_arr=weights_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
+    weights_arr=weights_arr,variance_arr=variance_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
     fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,_Extra=extra
 ;no need to specify data_directory or filename if obs exists
 ;vis_path_default,data_directory,filename,file_path,obs=obs
@@ -83,6 +83,7 @@ IF model_flag THEN BEGIN
 ENDIF
 residual_arr=Ptrarr(n_pol,nf,/allocate)
 weights_arr=Ptrarr(n_pol,nf,/allocate)
+variance_arr=Ptrarr(n_pol,nf,/allocate)
 
 t_grid=0
 tarr=fltarr(8)
@@ -99,13 +100,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        freq_cut=where(freq_bin_i2 NE fi,n_cut)
 ;        IF n_cut GT 0 THEN flags_use[freq_cut,*]=0
         dirty_UV=visibility_grid(vis_use1,flags_use1,obs,psf,params,timing=t_grid0,fi_use=fi_use,$
-            polarization=pol_i,weights=weights_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,_Extra=extra)
+            polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,_Extra=extra)
         IF Keyword_Set(fft) THEN BEGIN
             *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra)
             *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,_Extra=extra)
+            *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo,_Extra=extra)
         ENDIF ELSE BEGIN
             *residual_arr[pol_i,fi]=dirty_uv
             *weights_arr[pol_i,fi]=weights_holo
+            *variance_arr[pol_i,fi]=variance_holo
         ENDELSE
         IF Keyword_Set(tarr0) THEN tarr+=tarr0
         IF Keyword_Set(t_grid0) THEN t_grid+=t_grid0

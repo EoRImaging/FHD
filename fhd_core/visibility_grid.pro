@@ -24,7 +24,8 @@
 ;-
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
-    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,_Extra=extra
+    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,$
+    visibility_list=visibility_list,image_list=image_list,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 IF N_Elements(complex) EQ 0 THEN complex=1
@@ -67,6 +68,12 @@ psf_dim2=2*psf_dim
 image_uv=Complexarr(dimension,elements)
 weights=Complexarr(dimension,elements)
 variance=Fltarr(dimension,elements)
+
+;IF Keyword_Set(visibility_list) THEN BEGIN
+;    n_additional=N_Elements(visibility_list)
+;    image_list=Ptrarr(size(visibility_list,/dimension))
+;    FOR vi=0L,n_additional-1 DO image_list[vi]=Ptr_new(Complexarr(dimension,elements))
+;ENDIF ELSE n_additional=0
 
 IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_flag=1
@@ -149,6 +156,14 @@ IF map_flag THEN BEGIN
     ENDFOR
 ENDIF
 
+;;pre-compute indices:
+;ind_map_base=lindgen(psf_dim^2.,psf_dim^2.)
+;ind_map=Ptrarr(psf_dim,psf_dim)
+;FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
+;    ij=i+j*psf_dim
+;    ind_map[i,j]=Ptr_new(Reform(ind_map_base[*,ij],psf_dim,psf_dim))
+;ENDFOR
+
 t0=Systime(1)-t0_0
 time_check_interval=Ceil(n_bin_use/10.)
 t1=0
@@ -185,12 +200,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO BEGIN
-;        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
-;;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
-;        box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)  
-        box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]         
-    ENDFOR
+    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
     box_matrix_dag=Conj(box_matrix)
 
     t4_0=Systime(1)
@@ -200,6 +210,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t4+=t5_0-t4_0
     
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
+;    FOR addv_i=0L,n_additional-1 DO (*image_list[addv_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]$
+;        +=(*visibility_list[addv_i])[inds]#box_matrix_dag/vis_density
     IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
         Replicate(1./vis_density,vis_n)#box_matrix
     IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
@@ -209,6 +221,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
         box_arr_map=matrix_multiply(box_matrix,box_matrix_dag,/atranspose)/vis_density
+        ;alternate indexing approach. Does not appear to be any faster.
+;        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO $
+;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*ind_map[i,j]]
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
             (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
@@ -228,6 +243,7 @@ t7=Systime(1)-t7_0
 
 image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
 image_uv=(image_uv+image_uv_conj)/2.
+;FOR addv_i=0L,n_additional-1 DO *image_list[addv_i]=(*image_list[addv_i]+Shift(Reverse(reverse(Conj(*image_list[addv_i]),1),2),1,1))/2.
 
 IF Arg_present(weights) THEN BEGIN
     weights_conj=Shift(Reverse(reverse(Conj(weights),1),2),1,1)

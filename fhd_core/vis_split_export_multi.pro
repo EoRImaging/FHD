@@ -45,12 +45,14 @@ residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 dirty_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 weights_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+variance_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     FOR freq_i=0,n_freq_use-1 DO BEGIN
         *residual_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *model_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *dirty_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *weights_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
+        *variance_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
     ENDFOR
 ENDFOR    
 FOR obs_i=0,n_obs-1 DO BEGIN 
@@ -72,10 +74,10 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     uv_mask=fltarr(dimension,elements)
     uv_mask[where(*weights_arr[0] OR *weights_arr[1])]=1
     dirty_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1,even_only=even_only,odd_only=odd_only,_Extra=extra) 
+        n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1,variance=variance_arr1,even_only=even_only,odd_only=odd_only,_Extra=extra) 
         
     model_arr1=vis_model_freq_split(source_array,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
-        weights_arr=weights_arr0,n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask,even_only=even_only,odd_only=odd_only,_Extra=extra)
+        n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask,even_only=even_only,odd_only=odd_only,_Extra=extra)
        
     
 ;    n_pol=(size(model_arr1,/dimension))[0]
@@ -113,6 +115,8 @@ FOR obs_i=0,n_obs-1 DO BEGIN
                 (healpix_cnv_apply(*model_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
             (*weights_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
                 (healpix_cnv_apply(*weights_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
+            (*variance_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
+                (healpix_cnv_apply(*variance_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
         ENDFOR
 ;    ENDELSE
 ENDFOR
@@ -149,6 +153,14 @@ FOR fi=0L,n_freq_use-1 DO BEGIN
 ENDFOR
 Ptr_free,weights_hpx_arr
 
-save,filename=cube_filepath,dirty_xx_cube,res_xx_cube,model_xx_cube,weights_xx_cube,$
-    dirty_yy_cube,res_yy_cube,model_yy_cube,weights_yy_cube,obs_arr,nside,hpx_inds,n_avg,/compress
+variance_xx_cube=fltarr(n_hpx,n_freq_use)
+variance_yy_cube=fltarr(n_hpx,n_freq_use)
+FOR fi=0L,n_freq_use-1 DO BEGIN
+    variance_xx_cube[*,fi]=*variance_hpx_arr[0,fi]
+    variance_yy_cube[*,fi]=*variance_hpx_arr[1,fi]
+ENDFOR
+Ptr_free,variance_hpx_arr
+
+save,filename=cube_filepath,dirty_xx_cube,res_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,$
+    dirty_yy_cube,res_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,obs_arr,nside,hpx_inds,n_avg,/compress
 END
