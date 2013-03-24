@@ -78,7 +78,10 @@ vis_file_list=vis_file_list[start_fi:end_fi]
 fhd_file_list=fhd_file_list[start_fi:end_fi]
 IF Keyword_Set(simultaneous) THEN BEGIN
     IF Total(simultaneous) GT 1 THEN N_simultaneous=simultaneous
-    fhd_multi_wrap,fhd_file_list,obs_arr,N_simultaneous=N_simultaneous,_Extra=extra    
+    fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,n_pol=n_pol,$
+        independent_fit=independent_fit,/silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
+        export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
+        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,_Extra=extra    
 ENDIF
 
 map_projection='orth'

@@ -1,7 +1,6 @@
-PRO fhd_multi,fhd_file_list,obs_arr,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
-    residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
-    ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,transfer_mapfn=transfer_mapfn,$
-    beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,_Extra=extra
+PRO fhd_multi,fhd_file_list,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
+    residual_array=residual_array,dirty_uv_arr=dirty_uv_arr,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
+    silent=silent,beam_model=beam_model,beam_corr=beam_corr,normalization=normalization,source_mask=source_mask,hpx_inds=hpx_inds,_Extra=extra
 except=!except
 !except=0
 compile_opt idl2,strictarrsubs  
@@ -42,7 +41,7 @@ beam_max_threshold=fhd.beam_max_threshold
 smooth_width=fhd.smooth_width
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
-beam=Ptrarr(n_pol,n_obs,/allocate)
+beam_model=Ptrarr(n_pol,n_obs,/allocate)
 beam_corr=Ptrarr(n_pol,n_obs,/allocate)
 beam_mask_arr=Ptrarr(n_obs,/allocate)
 weights_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
@@ -72,17 +71,17 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     yvals=meshgrid(dimension,elements,2)-elements/2
     
     psf=beam_setup(obs,file_path_fhd,restore_last=1,silent=1)
-    FOR pol_i=0,n_pol-1 DO *beam[pol_i,obs_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
+    FOR pol_i=0,n_pol-1 DO *beam_model[pol_i,obs_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
     
     beam_mask=fltarr(obs.dimension,obs.elements)+1
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
         mask0=fltarr(obs.dimension,obs.elements)
-        mask_i=region_grow(*beam[pol_i,obs_i],obs.obsx+obs.dimension*obs.obsy,thresh=[0.05,max(*beam[pol_i,obs_i])])
+        mask_i=region_grow(*beam_model[pol_i,obs_i],obs.obsx+obs.dimension*obs.obsy,thresh=[0.05,max(*beam_model[pol_i,obs_i])])
         mask0[mask_i]=1
         beam_mask*=mask0
     ENDFOR
     *beam_mask_arr[obs_i]=beam_mask
-    FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam[pol_i,obs_i]*beam_mask)
+    FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
     *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,radius=radius,restore_last=1) 
@@ -95,7 +94,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         *dirty_uv_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv')*obs.cal[pol_i];dirty_uv*obs.cal[pol_i]
         *model_uv_full[pol_i,obs_i]=Complexarr(dimension,elements)
         *model_uv_holo[pol_i,obs_i]=Complexarr(dimension,elements)
-        *weights_arr[pol_i,obs_i]=healpix_cnv_apply(*beam[pol_i,obs_i],*hpx_cnv[obs_i])
+        *weights_arr[pol_i,obs_i]=healpix_cnv_apply(*beam_model[pol_i,obs_i],*hpx_cnv[obs_i])
     ENDFOR
     
     source_uv_mask=fltarr(dimension,elements)
@@ -184,7 +183,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                 smooth0=fltarr(size(residual,/dimension))
                 image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
                     *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
-                    *(*beam[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
+                    *(*beam_model[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
                 smooth0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
                 smooth_hpx=healpix_cnv_apply(smooth0*(*beam_mask_arr[obs_i]),*hpx_cnv[obs_i])
                 (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
@@ -303,7 +302,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             IF xv<yv GE 0 AND xv>yv LE (dimension<elements)-1 THEN BEGIN 
               FOR pol_i=0,n_pol-1 DO BEGIN   
                   beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[xv,yv]
-                  beam_src[pol_i]=(*beam[pol_i,obs_i])[xv,yv]
+                  beam_src[pol_i]=(*beam_model[pol_i,obs_i])[xv,yv]
                   
                   IF Keyword_Set(independent_fit) THEN BEGIN
                       sign=(pol_i mod 2) ? -1:1
@@ -381,17 +380,18 @@ ENDFOR
 
 ;condense clean components
 residual_array=Ptrarr(n_pol,n_obs,/allocate)
+source_array=Ptrarr(n_obs)
 FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])*(*beam_corr[pol_i,obs_i])
     ENDFOR
     image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]
-    beam_avg=*beam[0,obs_i] & IF n_pol GT 1 THEN beam_avg=(beam_avg+*beam[1,obs_i])/2.
+    beam_avg=*beam_model[0,obs_i] & IF n_pol GT 1 THEN beam_avg=(beam_avg+*beam_model[1,obs_i])/2.
     noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
     comp_arr1=*comp_arr[obs_i]
     source_array1=Components2Sources(comp_arr1,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
+    source_array[obs_i]=Ptr_new(source_array1)
 ENDFOR
-
 
 Ptr_free,map_fn_arr,hpx_cnv,hpx_ind_map
 t00=Systime(1)-t00
