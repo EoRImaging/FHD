@@ -18,7 +18,7 @@ IF N_Elements(obs_arr) EQ 0 THEN BEGIN
 ENDIF
 
 n_obs=N_Elements(obs_arr)
-fhd=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations
+fhd=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little here!
 
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
@@ -236,8 +236,9 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     IF (n_src<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-(si+1)
     IF n_src GT max_add_sources THEN source_i=source_i[0:max_add_sources-1]
+    n_src=Long(N_Elements(source_i))
     
-    flux_arr=residual_I[source_i]
+    flux_src_arr=residual_I[source_i]
     ra_arr=fltarr(n_src)
     dec_arr=fltarr(n_src)
     FOR src_i=0L,n_src-1 DO BEGIN
@@ -297,9 +298,11 @@ FOR i=0L,max_iter-1 DO BEGIN
             comp_arr1[si1].dec=dec_arr[src_i]
             
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-            source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
-            FOR pol_i=0,n_pol-1 DO $
-                (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=comp_arr1[si1].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+            IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
+                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
+                FOR pol_i=0,n_pol-1 DO $
+                    (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=comp_arr1[si1].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+            ENDIF
         ENDFOR
         *comp_arr[obs_i]=comp_arr1
     ENDFOR
@@ -345,17 +348,22 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDIF
     ENDIF
 ENDFOR
-;condense clean components
-;FOR obs_i=0L,n_obs-1 DO BEGIN
-;    noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
-;    source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
-;ENDFOR
-;
-;FOR pol_i=0,n_pol-1 DO BEGIN
-;    *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
-;ENDFOR
 
-Ptr_free,map_fn_arr
+;condense clean components
+residual_array=Ptrarr(n_pol,n_obs,/allocate)
+FOR obs_i=0L,n_obs-1 DO BEGIN
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])*(*beam_corr[pol_i,obs_i])
+    ENDFOR
+    image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]
+    beam_avg=*beam[0,obs_i] & IF n_pol GT 1 THEN beam_avg=(beam_avg+*beam[1,obs_i])/2.
+    noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
+    comp_arr1=*comp_arr[obs_i]
+    source_array1=Components2Sources(comp_arr1,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
+ENDFOR
+
+
+Ptr_free,map_fn_arr,hpx_cnv,hpx_ind_map
 t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'
 print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))
