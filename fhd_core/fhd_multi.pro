@@ -172,6 +172,9 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDFOR
     ENDFOR
     
+    
+    t2_0=Systime(1)
+    t1+=t2_0-t1_0
     IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             *smooth_map[pol_i]=Fltarr(n_hpx)
@@ -189,14 +192,41 @@ FOR i=0L,max_iter-1 DO BEGIN
             ENDFOR
         ENDFOR
     ENDIF
-    
-    t2_0=Systime(1)
-    t1+=t2_0-t1_0
     ;NOTE healpix_map and smooth_hpx are in instrumental polarization, weighted by the beam squared
     
     ;convert to Stokes I
     source_find_hpx=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])
     IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])
+    
+    IF i GT 0 THEN BEGIN
+        diverge_check1=(source_find_hpx*source_mask)<0.
+        diverge_tolerance=1.+gain_factor/10. ;somewhat arbitrary
+        diverge_test=where(diverge_check1 LT diverge_check0*diverge_tolerance,n_diverge) ;note that both are strictly negative!
+        
+        IF n_diverge GT 0 THEN BEGIN
+            src_list=Reverse(si-lindgen(n_src)) ;n_src is still around from last iteration
+            FOR div_i=0L,n_diverge-1 DO BEGIN
+                ra_div=ra_hpx[div_i]
+                dec_div=dec_hpx[div_i]
+                dist_test=min(abs(angle_difference(dec_div,ra_div,dec_arr,ra_arr,/degree)),min_i) ;dec_arr,ra_arr are still around from last iteration
+                
+                Query_disc,nside,pix_coords[source_i[min_i],*],local_radius/4.,region_inds,ninds,/deg ;source_i is still around from last iteration
+                region_i=reverse_inds[region_inds]
+                reg_i_i=where(region_i GE 0,n_reg)
+                IF n_reg GT 0 THEN region_i=region_i[reg_i_i] ELSE region_i=source_i[min_i]
+                source_mask[region_i]=0
+            ENDFOR
+        ENDIF
+        
+        IF i mod Floor(1./gain_factor) EQ 0 THEN diverge_check0=Temporary(diverge_check1)
+    ENDIF ELSE diverge_check0=(source_find_hpx*source_mask)<0.
+    
+    IF Mean(source_mask) LT 0.75 THEN BEGIN
+        print,String(format='("Failure to centroid after",I," iterations")',i)
+        converge_check2=converge_check2[0:i-1]
+        converge_check=converge_check[0:i2]
+        BREAK
+    ENDIF
     
     source_find_hpx*=source_mask
     residual_I=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])^2.
@@ -321,7 +351,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF si GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
-        conv_chk=Stddev(source_find_hpx[where(source_find_hpx)],/nan)
+        conv_chk=Stddev(source_find_hpx[where(source_mask)],/nan)
         print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
         converge_check[i2]=conv_chk
         BREAK
@@ -331,7 +361,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF (Round(i mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
         i2+=1
         t10=Systime(1)-t0
-        conv_chk=Stddev(source_find_hpx[where(source_find_hpx)],/nan)
+        conv_chk=Stddev(source_find_hpx[where(source_mask)],/nan)
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
         converge_check[i2]=conv_chk
         IF 2.*converge_check[i2] GT flux_ref THEN BEGIN
