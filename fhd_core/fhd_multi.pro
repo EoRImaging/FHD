@@ -264,7 +264,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     source_ra=ra_hpx[source_i]
     source_dec=dec_hpx[source_i]
     
-    IF (n_src<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-(si+1)
+    IF (n_src<max_add_sources)+si GE max_sources THEN max_add_sources=max_sources-(si+1)
     IF n_src GT max_add_sources THEN source_i=source_i[0:max_add_sources-1]
     n_src=Long(N_Elements(source_i))
     
@@ -348,7 +348,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDFOR
     t4+=Systime(1)-t4_0
     
-    IF si GE max_sources THEN BEGIN
+    IF (si+1) GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
         conv_chk=Stddev(source_find_hpx[where(source_mask)],/nan)
@@ -365,13 +365,13 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
         converge_check[i2]=conv_chk
         IF 2.*converge_check[i2] GT flux_ref THEN BEGIN
-            print,'Break after iteration',i,' from low signal to noise'
+            print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
         IF converge_check[i2] GT converge_check[i2-1] THEN BEGIN
-            print,'Break after iteration',i,' from lack of convergence'
+            print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
