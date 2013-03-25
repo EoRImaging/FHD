@@ -157,6 +157,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     zero_ind=where(*weights_map[pol_i] EQ 0,n_zero)
     IF n_zero GT 0 THEN source_mask[zero_ind]=0
 ENDFOR
+weights_avg=*weights_map[0]
+weights_corr_avg=*weights_corr_map[0]
+IF n_pol GT 1 THEN BEGIN
+    weights_avg=(weights_avg+*weights_map[1])/2.
+    weights_corr_avg=(weights_corr_avg+*weights_corr_map[1])/2.
+ENDIF
 
 res_arr=Ptrarr(n_pol,n_obs,/allocate)
 FOR i=0L,max_iter-1 DO BEGIN 
@@ -170,7 +176,6 @@ FOR i=0L,max_iter-1 DO BEGIN
             (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
         ENDFOR
     ENDFOR
-    
     
     t2_0=Systime(1)
     t1+=t2_0-t1_0
@@ -198,17 +203,19 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])
     
     IF i GT 0 THEN BEGIN
-        diverge_check1=(source_find_hpx*source_mask)<0.
-        diverge_tolerance=1.+gain_factor/2. ;somewhat arbitrary
-        diverge_test=where(diverge_check1 LT diverge_check0*diverge_tolerance,n_diverge) ;note that both are strictly negative!
+        diverge_check1=source_find_hpx
+        diverge_tolerance=gain_factor/2. ;somewhat arbitrary
+        
+        diverge_check=Abs(diverge_check1)-Abs(diverge_check0)
+        diverge_test=where(diverge_check*source_mask GT flux_ref*diverge_tolerance,n_diverge) 
         
         IF n_diverge GT 0 THEN BEGIN
             src_list=Reverse(si-lindgen(n_src)) ;n_src is still around from last iteration
             FOR div_i=0L,n_diverge-1 DO BEGIN
-                ra_div=ra_hpx[div_i]
-                dec_div=dec_hpx[div_i]
+                ra_div=ra_hpx[diverge_test[div_i]]
+                dec_div=dec_hpx[diverge_test[div_i]]
                 dist_test=min(abs(angle_difference(dec_div,ra_div,dec_arr,ra_arr,/degree)),min_i) ;dec_arr,ra_arr are still around from last iteration
-                
+                IF dist_test GT 2.*local_radius THEN CONTINUE
                 Query_disc,nside,pix_coords[source_i[min_i],*],local_radius/4.,region_inds,ninds,/deg ;source_i is still around from last iteration
                 region_i=reverse_inds[region_inds]
                 reg_i_i=where(region_i GE 0,n_reg)
@@ -217,8 +224,8 @@ FOR i=0L,max_iter-1 DO BEGIN
             ENDFOR
         ENDIF
         
-        IF i mod Floor(1./gain_factor) EQ 0 THEN diverge_check0=Temporary(diverge_check1)
-    ENDIF ELSE diverge_check0=(source_find_hpx*source_mask)<0.
+        diverge_check0=diverge_check1
+    ENDIF ELSE diverge_check0=source_find_hpx
     
     IF Mean(source_mask) LT 0.75 THEN BEGIN
         print,String(format='("Failure to centroid after",I," iterations")',i)
