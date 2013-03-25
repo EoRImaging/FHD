@@ -199,7 +199,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     IF i GT 0 THEN BEGIN
         diverge_check1=(source_find_hpx*source_mask)<0.
-        diverge_tolerance=1.+gain_factor/10. ;somewhat arbitrary
+        diverge_tolerance=1.+gain_factor/2. ;somewhat arbitrary
         diverge_test=where(diverge_check1 LT diverge_check0*diverge_tolerance,n_diverge) ;note that both are strictly negative!
         
         IF n_diverge GT 0 THEN BEGIN
