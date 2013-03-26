@@ -1,4 +1,4 @@
-PRO fhd_multi,fhd_file_list,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
+PRO fhd_multi,fhd_file_list,source_array,comp_arr,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
     residual_array=residual_array,dirty_uv_arr=dirty_uv_arr,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     silent=silent,beam_model=beam_model,beam_corr=beam_corr,normalization=normalization,source_mask=source_mask,hpx_inds=hpx_inds,_Extra=extra
 except=!except
@@ -84,7 +84,9 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
-    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,radius=radius,restore_last=1) 
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_chk,mask=beam_mask,radius=radius,restore_last=1) 
+    IF N_Elements(nside) EQ 0 THEN nside=nside_chk
+    IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,radius=radius,restore_last=0)
     
     source_comp_init,comp_arr0,n_sources=max_sources
     *comp_arr[obs_i]=comp_arr0
