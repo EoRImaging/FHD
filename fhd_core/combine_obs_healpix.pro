@@ -76,11 +76,15 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         heap_gc
         obs=obs_arr[obs_i]
         file_path=file_list_use[obs_i]
-        restore,file_path+'_fhd_params.sav'
-        restore,file_path+'_fhd.sav'
+;        restore,file_path+'_fhd_params.sav'
+;        restore,file_path+'_fhd.sav'
+        fhd=getvar_savefile(file_path+'_fhd_params.sav','fhd')
+        image_uv_arr=getvar_savefile(file_path+'_fhd.sav','image_uv_arr')
+        source_array=getvar_savefile(file_path+'_fhd.sav','source_array')
+        model_uv_holo=getvar_savefile(file_path+'_fhd.sav','model_uv_holo')
+        beam_base=getvar_savefile(file_path+'_fhd.sav','beam_base')
     ;   save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
-        restore,file_path+'_obs.sav'
         
         hpx_cnv=healpix_cnv_generate(file_path_fhd=file_path,nside=nside,/restore_last,/silent)
         

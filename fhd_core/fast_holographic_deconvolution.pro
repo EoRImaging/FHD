@@ -190,7 +190,7 @@ normalization=.25
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])^2.
-    
+    *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])
 ;    ;TEMPORARY!
 ;    dirty_image_single*=normalization
     

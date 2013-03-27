@@ -1,6 +1,6 @@
-PRO fhd_multi,fhd_file_list,source_array,comp_arr,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
+PRO fhd_multi,fhd_file_list,source_array,comp_arr,fhd=fhd,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
     residual_array=residual_array,dirty_uv_arr=dirty_uv_arr,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
-    silent=silent,beam_model=beam_model,beam_corr=beam_corr,normalization=normalization,source_mask=source_mask,hpx_inds=hpx_inds,_Extra=extra
+    silent=silent,beam_model=beam_model,beam_corr=beam_corr,norm_arr=norm_arr,source_mask=source_mask,hpx_inds=hpx_inds,_Extra=extra
 except=!except
 !except=0
 compile_opt idl2,strictarrsubs  
