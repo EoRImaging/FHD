@@ -43,8 +43,6 @@ IF not Keyword_Set(restore_last) THEN BEGIN
 ;    ENDIF
     cal_use*=flux_scale 
     
-    hpx_cnv=Ptrarr(n_obs,/allocate)     
-    
     FOR obs_i=0,n_obs-1 DO BEGIN
         file_path=file_list_use[obs_i]
         restore,file_path+'_obs.sav'
@@ -52,12 +50,13 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         obs_arr[obs_i]=obs
         astr=obs.astr
         pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(astr.cdelt))
-        Nside=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
-        IF obs_i EQ 0 THEN nside_check=nside ELSE IF nside NE nside_check THEN $
-            message,String(format='("Mismatched HEALPix NSIDE for ",A)',file_basename(file_list_use[obs_i])) 
+        Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
         
+        IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
+        nside_use=nside_use>Nside_chk
     ENDFOR
-    n_hpx=nside2npix(nside)
+    IF Keyword_Set(nside) THEN nside_use=nside
+    n_hpx=nside2npix(nside_use)
     
     residual_hpx=Ptrarr(npol,/allocate)
     weights_hpx=Ptrarr(npol,/allocate)
@@ -86,7 +85,9 @@ IF not Keyword_Set(restore_last) THEN BEGIN
     ;   save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
         
-        hpx_cnv=healpix_cnv_generate(file_path_fhd=file_path,nside=nside,/restore_last,/silent)
+        hpx_cnv=healpix_cnv_generate(file_path_fhd=file_path,nside=nside_chk,/restore_last,/silent)
+        IF nside_chk NE nside_use THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
+            mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
         
         astr=obs.astr            
         si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)

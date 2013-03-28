@@ -219,9 +219,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
         (*obs.baseline_info).tile_use[flag_tile_use_i]=1
     ENDELSE
     print,String(format='(A," frequency channels used and ",A," in-band channels flagged")',$
-        number_formatter(n_freq_use),number_formatter(n_freq_cut-nf_cut_end-nf_cut_start))
+        Strn(n_freq_use),Strn(n_freq_cut-nf_cut_end-nf_cut_start))
     print,String(format='(A," tiles used and ",A," tiles flagged")',$
-        number_formatter(n_tile_use),number_formatter(n_tile_cut))
+        Strn(n_tile_use),Strn(n_tile_cut))
     
     save,obs,filename=obs_filepath
     save,params,filename=params_filepath
