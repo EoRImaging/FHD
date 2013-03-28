@@ -73,7 +73,7 @@ obs_filepath=file_path_fhd+'_obs.sav'
 params_filepath=file_path_fhd+'_params.sav'
 hdr_filepath=file_path_fhd+'_hdr.sav'
 fhd_filepath=file_path_fhd+'_fhd.sav'
-IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
+IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
