@@ -30,7 +30,7 @@ hsize_cm=26.
 IF Keyword_Set(png_write) THEN png_filename=file_path+'.png' ELSE png_filename=0
 IF Keyword_Set(ps_write) THEN ps_filename=file_path+'.ps' ELSE ps_filename=0
 Call_procedure,proj_routine,file_path+'.fits',_Extra=extra,max=max,min=min,png=png_filename,ps=ps_filename,$
-    retain=1,silent=silent,transparent=1,title=title,asinh=logplot,hist_equal=hist_equal,$
+    retain=1,silent=silent,transparent=1,title=title,asinh=logplot,hist_equal=hist_equal,preview=0,$
     rot=rot,graticule=20.,charsize=charsize,pxsize=pxsize,glsize=1.,window=-1,units='Jy',colt=color_table;,Coord=['C'];,hxsize=hsize_cm
 
 END

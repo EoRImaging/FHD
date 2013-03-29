@@ -27,7 +27,7 @@ n_files=N_Elements(vis_file_list)
 ;Set which files to restore or recalculate (if the file is not found, it will be recalculated regardless)
 IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
-IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
+IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag) EQ 0 THEN flag=0
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all

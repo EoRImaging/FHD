@@ -47,7 +47,7 @@ IF N_Elements(min_baseline) EQ 0 THEN min_baseline=12.
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
-IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=1
+IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag) EQ 0 THEN flag=0.
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=1
 IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
@@ -245,7 +245,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         beam_mask*=mask0
     ENDFOR
     
-    IF Keyword_Set(healpix_recalculate) OR (file_test(file_path_fhd+'_hpxcnv.sav') EQ 0) THEN $
+    IF Keyword_Set(healpix_recalculate) THEN $
         hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
             mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     hpx_cnv=0

@@ -185,8 +185,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *weights_arr[pol_i]=weights_single
     source_uv_mask[where(weights_single)]=1.
 ENDFOR
-;normalization=mean(normalization_arr[0:n_pol-1])/2. ;factor of two accounts for complex conjugate
-normalization=.25
+normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+;normalization=.25
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])^2.
