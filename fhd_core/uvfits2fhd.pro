@@ -230,6 +230,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,_Extra=extra)
+    vis_flag_update,flag_arr0,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
+    save,obs,filename=obs_filepath
     
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)
@@ -279,7 +281,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
     ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
     ;        ELSE $
-            dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,file_path_fhd,timing=t_grid0,$
+            dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,file_path_fhd,timing=t_grid0,fi_use=fi_use,$
                 polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate,_Extra=extra)
             t_grid[pol_i]=t_grid0
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0)

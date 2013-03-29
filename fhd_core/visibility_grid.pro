@@ -42,7 +42,8 @@ min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
 freq_bin_i=obs.fbin_i
-IF N_Elements(fi_use) GT 0 THEN freq_bin_i=freq_bin_i[fi_use] ELSE fi_use=Lindgen(N_Elements(freq_bin_i))
+fi_use=where((*obs.baseline_info).freq_use)
+freq_bin_i=freq_bin_i[fi_use]
 
 ;n_freq_bin=N_Elements(freq_bin_i)
 ;
