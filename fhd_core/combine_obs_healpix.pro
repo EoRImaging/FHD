@@ -59,7 +59,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
     nside_use=nside_use>Nside_chk
 ENDFOR
-IF Keyword_Set(nside) THEN nside_use=nside
+IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 n_hpx=nside2npix(nside_use)
 
 residual_hpx=Ptrarr(npol,/allocate)
