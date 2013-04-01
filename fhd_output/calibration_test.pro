@@ -30,7 +30,7 @@ FOR fi0=0,n_use-1 DO BEGIN
     restore,file_path+'_obs.sav'
     
     source_uv_mask=fltarr(obs.dimension,obs.elements)
-    FOR pol_i=0,1 DO source_uv_mask[where(*weights_arr[pol_i])]=1.
+    FOR pol_i=0,1 DO source_uv_mask[where(*image_uv_arr[pol_i])]=1.
     uv_use_frac=Mean(source_uv_mask)
     
     cx=obs.obsx
