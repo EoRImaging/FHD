@@ -119,7 +119,7 @@ ENDIF
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
 bin_i=where(bin_n,n_bin_use);+bin_min
-obs.n_vis=Total(bin_n)
+;obs.n_vis=Total(bin_n)
 
 vis_density=Float(Total(bin_n))/(dimension*elements)
 

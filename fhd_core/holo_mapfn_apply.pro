@@ -51,7 +51,7 @@ ENDELSE
 result_image=reform(result_image,dimension,elements)
 result_image_conj=Shift(Reverse(reverse(Conj(result_image),1),2),1,1)
 result_image+=result_image_conj
-
+result_image/=2.
 
 ;;normalization=2.*!Pi*!Radeg^2.
 ;normalization=((dimension*elements)/(2.*!Pi));^2.

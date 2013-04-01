@@ -81,7 +81,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     file_path=file_list_use[obs_i]
 ;        restore,file_path+'_fhd_params.sav'
 ;        restore,file_path+'_fhd.sav'
-    fhd=getvar_savefile(file_path+'_fhd_params.sav','fhd')
+;    fhd=getvar_savefile(file_path+'_fhd_params.sav','fhd')
     image_uv_arr=getvar_savefile(file_path+'_fhd.sav','image_uv_arr')
     source_array=getvar_savefile(file_path+'_fhd.sav','source_array')
     model_uv_holo=getvar_savefile(file_path+'_fhd.sav','model_uv_holo')
@@ -94,7 +94,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     
     astr=obs.astr            
-    si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
+    si_use=where(source_array.ston GE 2.,ns_use)
     source_arr=source_array[si_use]
     
     IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT ston_cut THEN CONTINUE

@@ -51,7 +51,7 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
+PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,timing=timing,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,_Extra=extra
@@ -88,23 +88,9 @@ elements=obs.elements
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 rvals=Sqrt(xvals^2.+yvals^2.)
+xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),obs.astr,ra_arr,dec_arr
 
-projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr
-
-ps_not_used=1./2.
-pc_not_used=1.
-
-
-;;TEMPORARY addition to fix polarization for off-zenith pointings
-;polarization_map=vis_jones_matrix(obs,polarization_correction,ra_arr=ra_arr,dec_arr=dec_arr)
-;p_map_simple=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-;p_corr_simple=[polarization_correction[0,0],polarization_correction[0,1],polarization_correction[2,2],polarization_correction[2,3]]
-;;FOR pol_i=0,1 DO BEGIN
-;;    *p_map_simple[pol_i]*=0.5/(*p_map_simple[pol_i])[dimension/2,elements/2.]
-;;    *p_corr_simple[pol_i]*=1.0/(*p_corr_simple[pol_i])[dimension/2,elements/2.]
-;;;    *p_map_simple[pol_i]*=0.5/(*p_map_simple[pol_i])[obs.zenx,obs.zeny]
-;;;    *p_corr_simple[pol_i]*=1.0/(*p_corr_simple[pol_i])[obs.zenx,obs.zeny]    
-;;ENDFOR
+;projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr
 
 ;the particular set of beams read will be the ones specified by file_path_fhd.
 ;that will include all polarizations and frequencies, at ONE time snapshot
@@ -124,14 +110,14 @@ FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     *beam_base[pol_i]=beam_image(psf,obs,pol_i=pol_i,dimension=dimension)
     *beam_mask[pol_i]=fltarr(dimension,elements)
     
-    beam_mask_test=*beam_base[pol_i];*(*p_map_simple[pol_i]);*(ps_not_used*2.)
+    beam_mask_test=*beam_base[pol_i];*(*p_map_simple[pol_i])
 ;    *beam_i[pol_i]=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(beam_mask_test)])
     *beam_i[pol_i]=where(beam_mask_test*alias_mask GE beam_threshold)
     (*beam_mask[pol_i])[*beam_i[pol_i]]=1.
     IF pol_i LE 1 THEN BEGIN
         nbeam_avg+=1
         source_mask*=*beam_mask[pol_i]
-        beam_avg+=*beam_base[pol_i];*(*p_map_simple[pol_i]);*(ps_not_used*2.)
+        beam_avg+=*beam_base[pol_i];*(*p_map_simple[pol_i])
     ENDIF
     
     *beam_correction[pol_i]=fltarr(dimension,elements)
@@ -145,7 +131,7 @@ beam_corr_avg=weight_invert(beam_avg,beam_threshold)
 
 
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
-weights_arr=Ptrarr(n_pol,/allocate)
+;weights_arr=Ptrarr(n_pol,/allocate)
 dirty_array=Ptrarr(n_pol,/allocate)
 residual_array=Ptrarr(n_pol,/allocate)
 model_arr=Ptrarr(n_pol,/allocate)
@@ -173,30 +159,25 @@ ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_cut[pol_i] THEN CONTINUE
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
-;    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-;;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
-;        *map_fn_arr[pol_i]=map_fn
-;    ENDIF
-    weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],_Extra=extra))
-    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,baseline_threshold=baseline_threshold))[dimension/2.,elements/2.]
-    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
-    
-    *weights_arr[pol_i]=weights_single
-    source_uv_mask[where(weights_single)]=1.
+;;    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+;;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+;;;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
+;;        *map_fn_arr[pol_i]=map_fn
+;;    ENDIF
+;    weights_single=(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],_Extra=extra))
+;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,baseline_threshold=baseline_threshold))[dimension/2.,elements/2.]
+;    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
+;    
+;    *weights_arr[pol_i]=weights_single
+    source_uv_mask[where(*image_uv_arr[pol_i])]=1.
 ENDFOR
-normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+;normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
 ;normalization=.25
+normalization=1.
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])
-;    ;TEMPORARY!
-;    dirty_image_single*=normalization
-    
-    ;THIS IS THE ONE LINE TO UNCOMMENT IF RE-INSERTING POLARIZATION CORRECTION EFFECTS
-;    ;TEMPORARY addition to fix polarization for off-zenith pointings
-;    dirty_image_single*=*p_corr_simple[pol_i]
     
     ;xx, yy and xy, yx polarizations are treated seperately
     IF pol_i LE 1 THEN dirty_image_composite+=dirty_image_single
@@ -212,12 +193,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
 
-;;TEMPORARY!
-;normalization=normalization^2.
-
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
-print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
+print,"Fractional uv coverage: ",uv_use_frac;,"normalization: ",normalization
 xvals1=xvals[uv_i_use]
 yvals1=yvals[uv_i_use]
 
@@ -262,9 +240,6 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF pol_cut[pol_i] THEN CONTINUE
         model_image_holo=dirty_image_generate(*model_uv_holo[pol_i])
         model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
-        
-;        ;TEMPORARY addition to fix polarization for off-zenith pointings
-;        model_image*=*p_corr_simple[pol_i]
         
         *model_arr[pol_i]=model_image
         IF pol_i LE 1 THEN model_image_composite+=model_image $
@@ -321,36 +296,14 @@ FOR i=0L,max_iter-1 DO BEGIN
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
         ENDIF    
     ENDELSE
-        
    
     ;use the composite image to locate sources, but then fit for flux independently
     source_flux=Max(source_find_image*source_mask,source_i)
-;    sx=(source_i mod dimension)
-;    sy=Floor(source_i/dimension)
-;    source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
-;    xcen=sx-local_max_radius+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1))/Total(abs(source_box))
-;    ycen=sy-local_max_radius+Total(source_box*meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2))/Total(abs(source_box))
-;    gcntrd,source_find_image,sx,sy,xcen,ycen,local_max_radius,/silent,/keepcenter
-;    IF (xcen EQ -1) OR (ycen EQ -1) THEN BEGIN
-;        source_mask[sx,sy]=0
-;        unmask_i=where(source_mask GT 0,n_pix)
-;        IF Float(n_pix)/Float(n_pix0) LE 0.75 THEN BEGIN
-;            print,String(format='("Failure to centroid after",I," iterations")',i)
-;            FOR pol_i=0,n_pol-1 DO BEGIN
-;                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
-;            ENDFOR
-;            converge_check2=converge_check2[0:i-1]
-;            converge_check=converge_check[0:i2]
-;            BREAK
-;        ENDIF
-;        CONTINUE
-;    ENDIF    
     
 ;    Find additional sources:
 ;       require that they be isolated ; This is local_max_radius
 ;       should put some cap on the absolute number of them ; This is max_add_sources
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
-;    
 
     flux_ref1=source_find_image[source_i]*add_threshold
     additional_i=where(source_find_image*source_mask GT flux_ref1,n_add)
@@ -374,23 +327,16 @@ FOR i=0L,max_iter-1 DO BEGIN
     t2+=t3_0-t2_0
     flux_arr=fltarr(4)
     FOR src_i=0L,n_sources-1 DO BEGIN
-;        IF src_i GT 0 THEN BEGIN
-            sx=(additional_i[src_i] mod dimension)
-            sy=Floor(additional_i[src_i]/dimension)
-            source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
-            source_box=source_box>(-Abs(converge_check2[i]))
-            source_box-=Min(source_box)
-            xcen0=Total(source_box*source_box_xvals)/Total(source_box)
-            ycen0=Total(source_box*source_box_yvals)/Total(source_box)
-            xcen=sx-local_max_radius+xcen0
-            ycen=sy-local_max_radius+ycen0
-            IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius THEN CONTINUE
-;            gcntrd,source_find_image,sx,sy,xcen,ycen,local_max_radius,/silent,/keepcenter
-;            IF (xcen EQ -1) OR (ycen EQ -1) THEN BEGIN
-;                source_mask[additional_i[src_i]]=0
-;                CONTINUE
-;            ENDIF 
-;        ENDIF
+        sx=(additional_i[src_i] mod dimension)
+        sy=Floor(additional_i[src_i]/dimension)
+        source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+        source_box=source_box>(-Abs(converge_check2[i]))
+        source_box-=Min(source_box)
+        xcen0=Total(source_box*source_box_xvals)/Total(source_box)
+        ycen0=Total(source_box*source_box_yvals)/Total(source_box)
+        xcen=sx-local_max_radius+xcen0
+        ycen=sy-local_max_radius+ycen0
+        IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius THEN CONTINUE
         xy2ad,xcen,ycen,astr,ra,dec
         comp_arr[si].x=xcen
         comp_arr[si].y=ycen
@@ -404,11 +350,6 @@ FOR i=0L,max_iter-1 DO BEGIN
             beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
             beam_src[pol_i]=(*beam_base[pol_i])[additional_i[src_i]]
             
-;            IF Keyword_Set(independent_fit) THEN BEGIN
-;                sign=(pol_i mod 2) ? -1:1
-;                IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]]+sign*image_use_Q[additional_i[src_i]]
-;                IF pol_i GE 2 THEN flux_use=image_use_U[additional_i[src_i]]+sign*image_use_V[additional_i[src_i]]
-;            ENDIF ELSE IF pol_i LE 1 THEN flux_use=image_use[additional_i[src_i]] ELSE flux_use=image_use_U[additional_i[src_i]]
             IF Keyword_Set(independent_fit) THEN BEGIN
                 sign=(pol_i mod 2) ? -1:1
                 IF pol_i EQ 0 THEN sbQ=image_use_Q[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
@@ -446,7 +387,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             t4_0=Systime(1)
             t3+=t4_0-t3_0
             FOR pol_i=0,n_pol-1 DO BEGIN
-                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
+                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra);*normalization
             ENDFOR
             i3=0    
             t4+=Systime(1)-t4_0
@@ -463,7 +404,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF i3 EQ 0 THEN flux_ref=Median(flux_arr[0:(n_pol<2)-1,*,*]) ;replace with median across all pol/freq/time
     IF (i3 GE mapfn_interval) OR (Median(flux_arr[0:(n_pol<2)-1,*,*]) LT flux_ref*mapfn_threshold) OR ((i+1) mod check_iter EQ 0) THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
+            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra);*normalization
         ENDFOR
         i3=0
     ENDIF ELSE i3+=1

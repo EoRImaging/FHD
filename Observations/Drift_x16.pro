@@ -19,12 +19,6 @@ fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 
-IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
-IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
-IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
-flag=0
-IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
-IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 ;noise_calibrate=0
 ;align=0
 dimension=1024.
