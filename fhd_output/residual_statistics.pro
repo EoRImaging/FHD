@@ -4,6 +4,11 @@ PRO residual_statistics,residual_image,obs,fhd,radius_inc=radius_inc,beam_base=b
 
 compile_opt idl2,strictarrsubs  
 
+IF cgHasImageMagick() EQ 0 THEN BEGIN
+    print,"Imagemagick not found! Install from http://www.imagemagick.org/ to use this program."
+    RETURN
+ENDIF
+
 dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix

@@ -41,6 +41,11 @@ PRO imagefast,Image,file_path=file_path,no_ps=no_ps,$
 ;7: Satellite 8: Cylindrical 9: Mercator 10: Mollweide 11: Sinusoidal 12: Aitoff 
 
 ;
+IF cgHasImageMagick() EQ 0 THEN BEGIN
+    print,"Imagemagick not found! Install from http://www.imagemagick.org/ to use this program."
+    RETURN
+ENDIF
+
 IF N_Elements(file_path) EQ 0 THEN BEGIN
     file_path_use=expand_path('ImageFast')
     print,"Path not specified. File put here: ", file_path_use 
