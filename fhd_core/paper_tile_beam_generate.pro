@@ -40,7 +40,7 @@ beam_slice=Reform(beam_cube[*,*,freq_i_use])
 ;beam_slice=fltarr(naxis1,naxis2)
 ;FOR i=0,naxis1-1 DO FOR j=0,naxis2-1 DO beam_slice[i,j]=Interpol(beam_cube[i,j,*],freq_arr,frequency)
 
-IF Keyword_Set(polarization) THEN beam_slice=Rotate(beam_slice,1)
+IF polarization EQ 0 THEN beam_slice=Rotate(beam_slice,1)
 
 ;IF polarization EQ 0 THEN BEGIN
 ;    ra_arr=(meshgrid(naxis1,naxis2,1)-beam_RA_pix0)*beam_RA_delt+beam_RA0
