@@ -18,6 +18,10 @@ ENDIF
 
 n_obs=N_Elements(obs_arr)
 fhd=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little here!
+FOR obs_i=0,n_obs-1 DO BEGIN
+    file_path=fhd_file_list[obs_i]
+    save,fhd,filename=file_path+'_fhd_params.sav'
+ENDFOR
 
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold

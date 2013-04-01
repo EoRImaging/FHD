@@ -7,6 +7,7 @@ FUNCTION fhd_init,obs,restore=restore,pol_use=pol_use,freq_use=freq_use,time_i_u
     beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius
 
 
+IF N_Elements(obs) EQ 0 THEN obs=vis_struct_init_obs()
 npol=obs.n_pol
 ext='.UVFITS'
 
@@ -27,7 +28,6 @@ IF N_Elements(max_iter) EQ 0 THEN IF max_add_sources EQ 1 THEN max_iter=max_sour
 IF N_Elements(check_iter) EQ 0 THEN IF max_add_sources EQ 1 THEN check_iter=Round(5./gain_factor) ELSE check_iter=Round(1./gain_factor)
 IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q, (U, V) seperately. Otherwise, only I (and U) is fit
 IF N_Elements(reject_pol_sources) EQ 0 THEN reject_pol_sources=0 ;set to exclude source candidates with high Stokes Q/I
-
 
 fhd={npol:npol,baseline_threshold:baseline_threshold,$
     beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
