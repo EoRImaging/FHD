@@ -305,11 +305,16 @@ FOR i=0L,max_iter-1 DO BEGIN
     t2+=t3_0-t2_0
     
     ;update models
+    flux_I=residual_I[source_i]
+    flux_Q=residual_Q[source_i]
+    flux_U=residual_U[source_i]
+    flux_V=residual_V[source_i]
     FOR obs_i=0L,n_obs-1 DO BEGIN
         ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
         comp_arr1=*comp_arr[obs_i]
         dimension=obs_arr[obs_i].dimension
         elements=obs_arr[obs_i].elements
+        beam_mask=*beam_mask_arr[obs_i]
         FOR src_i=0L,n_src-1 DO BEGIN    
             flux_arr=fltarr(4)
             si1=si+src_i
@@ -318,15 +323,16 @@ FOR i=0L,max_iter-1 DO BEGIN
             xv=x_arr[src_i]
             yv=y_arr[src_i]
             IF xv<yv GE 0 AND xv>yv LE (dimension<elements)-1 THEN BEGIN 
+              IF beam_mask[xv,yv] EQ 0 THEN BREAK
               FOR pol_i=0,n_pol-1 DO BEGIN   
                   beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[xv,yv]
                   beam_src[pol_i]=(*beam_model[pol_i,obs_i])[xv,yv]
                   
                   IF Keyword_Set(independent_fit) THEN BEGIN
                       sign=(pol_i mod 2) ? -1:1
-                      IF pol_i LE 1 THEN flux_use=residual_I[source_i[src_i]]+sign*residual_Q[source_i[src_i]]
-                      IF pol_i GE 2 THEN flux_use=residual_U[source_i[src_i]]+sign*residual_V[source_i[src_i]]
-                  ENDIF ELSE IF pol_i LE 1 THEN flux_use=residual_I[source_i[src_i]] ELSE flux_use=residual_U[source_i[src_i]]
+                      IF pol_i LE 1 THEN flux_use=flux_I[src_i]+sign*flux_Q[src_i]
+                      IF pol_i GE 2 THEN flux_use=flux_U[src_i]+sign*flux_V[src_i]
+                  ENDIF ELSE IF pol_i LE 1 THEN flux_use=flux_I[src_i] ELSE flux_use=flux_U[src_i]
                   
                   flux_use*=gain_factor
                   comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
@@ -338,7 +344,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             comp_arr1[si1].flux.Q=flux_arr[0]-flux_arr[1]
             comp_arr1[si1].flux.U=flux_arr[2]+flux_arr[3]
             comp_arr1[si1].flux.V=flux_arr[2]-flux_arr[3]
-
+            
             comp_arr1[si1].x=xv
             comp_arr1[si1].y=yv
             comp_arr1[si1].ra=ra_arr[src_i]
@@ -348,7 +354,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
                 source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
                 FOR pol_i=0,n_pol-1 DO $
-                    (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=comp_arr1[si1].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+                    (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
             ENDIF
         ENDFOR
         *comp_arr[obs_i]=comp_arr1
