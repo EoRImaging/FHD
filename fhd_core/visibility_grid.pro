@@ -121,7 +121,8 @@ bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should 
 bin_i=where(bin_n,n_bin_use);+bin_min
 ;obs.n_vis=Total(bin_n)
 
-vis_density=Float(Total(bin_n))/(dimension*elements)
+;vis_density=Float(Total(bin_n))/(dimension*elements)
+vis_density=Float(Total(bin_n))*(obs.degpix*!DtoR)^2.
 
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
