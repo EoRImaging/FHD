@@ -213,30 +213,30 @@ FOR i=0L,max_iter-1 DO BEGIN
     source_find_hpx=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])
     IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])
     
-    IF i GT 0 THEN BEGIN
-        diverge_check1=source_find_hpx
-        diverge_tolerance=gain_factor/2. ;somewhat arbitrary
-        
-        diverge_check=Abs(diverge_check1)-Abs(diverge_check0)
-        diverge_test=where(diverge_check*source_mask GT flux_ref*diverge_tolerance,n_diverge) 
-        
-        IF n_diverge GT 0 THEN BEGIN
-            src_list=Reverse(si-lindgen(n_src)) ;n_src is still around from last iteration
-            FOR div_i=0L,n_diverge-1 DO BEGIN
-                ra_div=ra_hpx[diverge_test[div_i]]
-                dec_div=dec_hpx[diverge_test[div_i]]
-                dist_test=min(abs(angle_difference(dec_div,ra_div,dec_arr,ra_arr,/degree)),min_i) ;dec_arr,ra_arr are still around from last iteration
-                IF dist_test GT 2.*local_radius THEN CONTINUE
-                Query_disc,nside,pix_coords[source_i[min_i],*],local_radius/4.,region_inds,ninds,/deg ;source_i is still around from last iteration
-                region_i=reverse_inds[region_inds]
-                reg_i_i=where(region_i GE 0,n_reg)
-                IF n_reg GT 0 THEN region_i=region_i[reg_i_i] ELSE region_i=source_i[min_i]
-                source_mask[region_i]=0
-            ENDFOR
-        ENDIF
-        
-        diverge_check0=diverge_check1
-    ENDIF ELSE diverge_check0=source_find_hpx
+;    IF i GT 0 THEN BEGIN
+;        diverge_check1=source_find_hpx
+;        diverge_tolerance=gain_factor/2. ;somewhat arbitrary
+;        
+;        diverge_check=Abs(diverge_check1)-Abs(diverge_check0)
+;        diverge_test=where(diverge_check*source_mask GT flux_ref*diverge_tolerance,n_diverge) 
+;        
+;        IF n_diverge GT 0 THEN BEGIN
+;            src_list=Reverse(si-lindgen(n_src)) ;n_src is still around from last iteration
+;            FOR div_i=0L,n_diverge-1 DO BEGIN
+;                ra_div=ra_hpx[diverge_test[div_i]]
+;                dec_div=dec_hpx[diverge_test[div_i]]
+;                dist_test=min(abs(angle_difference(dec_div,ra_div,dec_arr,ra_arr,/degree)),min_i) ;dec_arr,ra_arr are still around from last iteration
+;                IF dist_test GT 2.*local_radius THEN CONTINUE
+;                Query_disc,nside,pix_coords[source_i[min_i],*],local_radius/4.,region_inds,ninds,/deg ;source_i is still around from last iteration
+;                region_i=reverse_inds[region_inds]
+;                reg_i_i=where(region_i GE 0,n_reg)
+;                IF n_reg GT 0 THEN region_i=region_i[reg_i_i] ELSE region_i=source_i[min_i]
+;                source_mask[region_i]=0
+;            ENDFOR
+;        ENDIF
+;        
+;        diverge_check0=diverge_check1
+;    ENDIF ELSE diverge_check0=source_find_hpx
     
     IF Mean(source_mask) LT 0.75 THEN BEGIN
         print,String(format='("Failure to centroid after",I," iterations")',i)
