@@ -94,10 +94,11 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     
     astr=obs.astr            
-    si_use=where(source_array.ston GE sigma_cut,ns_use)
+    si_use=where(source_array.ston GE fhd.ston_cut,ns_use)
+    IF ns_use EQ 0 THEN CONTINUE
     source_arr=source_array[si_use]
     
-    IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT fhd.ston_cut THEN CONTINUE
+;    IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT fhd.ston_cut THEN CONTINUE
     
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
     FOR pol_i=0,npol-1 DO BEGIN
