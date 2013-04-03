@@ -307,8 +307,10 @@ FOR i=0L,max_iter-1 DO BEGIN
     ;update models
     flux_I=residual_I[source_i]
     flux_Q=residual_Q[source_i]
-    flux_U=residual_U[source_i]
-    flux_V=residual_V[source_i]
+    IF n_pol GT 2 THEN BEGIN
+        flux_U=residual_U[source_i]
+        flux_V=residual_V[source_i]
+    ENDIF
     FOR obs_i=0L,n_obs-1 DO BEGIN
         ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
         comp_arr1=*comp_arr[obs_i]
