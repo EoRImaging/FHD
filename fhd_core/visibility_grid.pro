@@ -44,6 +44,7 @@ max_baseline=obs.max_baseline
 freq_bin_i=obs.fbin_i
 fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
+visibility_array=Temporary(visibility_array[fi_use,*])
 
 ;n_freq_bin=N_Elements(freq_bin_i)
 ;
@@ -104,6 +105,7 @@ IF n_dist_flag GT 0 THEN BEGIN
 ENDIF
 
 IF Keyword_Set(flag_arr) THEN BEGIN
+    flag_arr=Temporary(flag_arr[fi_use,*])
     flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
     IF n_unflag EQ 0 THEN BEGIN
         timing=Systime(1)-t0_0
@@ -121,8 +123,8 @@ bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should 
 bin_i=where(bin_n,n_bin_use);+bin_min
 ;obs.n_vis=Total(bin_n)
 
-;vis_density=Float(Total(bin_n))/(dimension*elements)
-vis_density=Float(Total(bin_n))*(obs.degpix*!DtoR)^2.
+vis_density=Float(Total(bin_n))/(dimension*elements)
+;vis_density=Float(Total(bin_n))*(obs.degpix*!DtoR)^2.
 
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)

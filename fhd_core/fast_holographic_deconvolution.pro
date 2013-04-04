@@ -85,10 +85,11 @@ smooth_width=fhd.smooth_width
 
 dimension=obs.dimension
 elements=obs.elements
+astr=obs.astr
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 rvals=Sqrt(xvals^2.+yvals^2.)
-xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),obs.astr,ra_arr,dec_arr
+xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
 
 ;projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr
 
