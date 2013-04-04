@@ -48,12 +48,13 @@ pol_names=['xx','yy','xy','yx','I','Q','U','V']
 beam_model=Ptrarr(n_pol,n_obs,/allocate)
 beam_corr=Ptrarr(n_pol,n_obs,/allocate)
 beam_mask_arr=Ptrarr(n_obs,/allocate)
-weights_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
+beam_model_hpx_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 ;weights_inv_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 map_fn_arr=Ptrarr(n_pol,n_obs,/allocate)
 dirty_uv_arr=Ptrarr(n_pol,n_obs,/allocate) 
 model_uv_holo=Ptrarr(n_pol,n_obs,/allocate)
 model_uv_full=Ptrarr(n_pol,n_obs,/allocate)
+weights_arr=Ptrarr(n_pol,n_obs,/allocate)
 
 uv_mask_arr=Ptrarr(n_obs,/allocate)
 comp_arr=Ptrarr(n_obs,/allocate)
@@ -100,7 +101,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         *dirty_uv_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv')*obs.cal[pol_i];dirty_uv*obs.cal[pol_i]
         *model_uv_full[pol_i,obs_i]=Complexarr(dimension,elements)
         *model_uv_holo[pol_i,obs_i]=Complexarr(dimension,elements)
-        *weights_arr[pol_i,obs_i]=healpix_cnv_apply(*beam_model[pol_i,obs_i],*hpx_cnv[obs_i])
+        *beam_model_hpx_arr[pol_i,obs_i]=healpix_cnv_apply(*beam_model[pol_i,obs_i],*hpx_cnv[obs_i])
     ENDFOR
     
     source_uv_mask=fltarr(dimension,elements)
@@ -127,6 +128,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     box_coords[obs_i,3]=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
 ENDFOR
 
+print,"Normalization factors used: ",norm_arr
 ;healpix indices are in sparse format. Need to combine them
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_inds)
 n_hpx=N_Elements(hpx_inds)
@@ -148,31 +150,31 @@ t0=Systime(1)
 
 si=0L
 healpix_map=Ptrarr(n_pol,/allocate)
-weights_map=Ptrarr(n_pol,/allocate)
-weights_map2=Ptrarr(n_pol,/allocate)
-weights_corr_map=Ptrarr(n_pol,/allocate)
-weights_corr_map2=Ptrarr(n_pol,/allocate)
+beam_map=Ptrarr(n_pol,/allocate)
+beam_map2=Ptrarr(n_pol,/allocate)
+beam_corr_map=Ptrarr(n_pol,/allocate)
+beam_corr_map2=Ptrarr(n_pol,/allocate)
 smooth_map=Ptrarr(n_pol,/allocate)
 source_mask=Fltarr(n_hpx)+1.
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *weights_map[pol_i]=Fltarr(n_hpx)
-    *weights_map2[pol_i]=Fltarr(n_hpx)
+    *beam_map[pol_i]=Fltarr(n_hpx)
+    *beam_map2[pol_i]=Fltarr(n_hpx)
     FOR obs_i=0,n_obs-1 DO BEGIN
-        (*weights_map[pol_i])[*hpx_ind_map[obs_i]]+=*weights_arr[pol_i,obs_i]
-        (*weights_map2[pol_i])[*hpx_ind_map[obs_i]]+=*weights_arr[pol_i,obs_i]^2.
+        (*beam_map[pol_i])[*hpx_ind_map[obs_i]]+=*beam_model_hpx_arr[pol_i,obs_i]
+        (*beam_map2[pol_i])[*hpx_ind_map[obs_i]]+=*beam_model_hpx_arr[pol_i,obs_i]^2.
     ENDFOR
-    *weights_corr_map[pol_i]=weight_invert(*weights_map[pol_i])
-    *weights_corr_map2[pol_i]=weight_invert(*weights_map2[pol_i])
+    *beam_corr_map[pol_i]=weight_invert(*beam_map[pol_i])
+    *beam_corr_map2[pol_i]=weight_invert(*beam_map2[pol_i])
 ENDFOR
 FOR pol_i=0,n_pol-1 DO BEGIN
-    zero_ind=where(*weights_map[pol_i] EQ 0,n_zero)
+    zero_ind=where(*beam_map[pol_i] EQ 0,n_zero)
     IF n_zero GT 0 THEN source_mask[zero_ind]=0
 ENDFOR
-weights_avg=*weights_map[0]
-weights_corr_avg=*weights_corr_map[0]
+beam_map_avg=*beam_map[0]
+beam_corr_avg=*beam_corr_map[0]
 IF n_pol GT 1 THEN BEGIN
-    weights_avg=(weights_avg+*weights_map[1])/2.
-    weights_corr_avg=(weights_corr_avg+*weights_corr_map[1])/2.
+    beam_map_avg=(beam_map_avg+*beam_map[1])/2.
+    beam_corr_avg=(beam_corr_avg+*beam_corr_map[1])/2.
 ENDIF
 
 res_arr=Ptrarr(n_pol,n_obs,/allocate)
@@ -210,8 +212,8 @@ FOR i=0L,max_iter-1 DO BEGIN
     ;NOTE healpix_map and smooth_hpx are in instrumental polarization, weighted by the beam squared
     
     ;convert to Stokes I
-    source_find_hpx=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map[0])
-    IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map[1])
+    source_find_hpx=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map[0])
+    IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map[1])
     
 ;    IF i GT 0 THEN BEGIN
 ;        diverge_check1=source_find_hpx
@@ -246,14 +248,14 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDIF
     
     source_find_hpx*=source_mask
-    residual_I=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map2[0])
-    IF n_pol GT 1 THEN residual_I+=(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map2[1])
-    IF n_pol GT 2 THEN residual_U=(*healpix_map[2]-*smooth_map[2])*(*weights_corr_map2[2])$
-        +(*healpix_map[3]-*smooth_map[3])*(*weights_corr_map2[3])
+    residual_I=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map2[0])
+    IF n_pol GT 1 THEN residual_I+=(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map2[1])
+    IF n_pol GT 2 THEN residual_U=(*healpix_map[2]-*smooth_map[2])*(*beam_corr_map2[2])$
+        +(*healpix_map[3]-*smooth_map[3])*(*beam_corr_map2[3])
     IF Keyword_Set(independent_fit) AND (n_pol GT 1) THEN BEGIN
-        residual_Q=(*healpix_map[0]-*smooth_map[0])*(*weights_corr_map2[0])-(*healpix_map[1]-*smooth_map[1])*(*weights_corr_map2[1])
-        IF n_pol GT 3 THEN residual_V=(*healpix_map[2]-*smooth_map[2])*(*weights_corr_map2[2])$
-            -(*healpix_map[3]-*smooth_map[3])*(*weights_corr_map2[3])
+        residual_Q=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map2[0])-(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map2[1])
+        IF n_pol GT 3 THEN residual_V=(*healpix_map[2]-*smooth_map[2])*(*beam_corr_map2[2])$
+            -(*healpix_map[3]-*smooth_map[3])*(*beam_corr_map2[3])
     ENDIF ELSE BEGIN
         residual_Q=fltarr(n_hpx)
         IF n_pol GT 2 THEN residual_V=fltarr(n_hpx)

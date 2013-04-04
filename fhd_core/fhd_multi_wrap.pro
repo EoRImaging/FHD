@@ -37,7 +37,7 @@ FOR j=0L,n_rep-1 DO BEGIN
             astr=obs.astr
             xy2ad,meshgrid(obs.dimension,obs.elements,1),meshgrid(obs.dimension,obs.elements,2),astr,ra_arr,dec_arr
             dirty_array=Ptrarr(n_pol)
-            weights_arr=Ptrarr(n_pol)
+            weights_arr=Reform(weights_arr2[*,fi])
             FOR pol_i=0,n_pol-1 DO BEGIN
                 dirty_array[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i])*(*beam_correction[pol_i]))
             ENDFOR

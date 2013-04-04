@@ -94,7 +94,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     
     astr=obs.astr            
-    si_use=where(source_array.ston GE fhd.ston_cut,ns_use)
+    si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
     IF ns_use EQ 0 THEN CONTINUE
     source_arr=source_array[si_use]
     
