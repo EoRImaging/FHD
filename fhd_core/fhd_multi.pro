@@ -128,7 +128,11 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     box_coords[obs_i,3]=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
 ENDFOR
 
-print,"Normalization factors used: ",norm_arr
+;print,"Normalization factors used: ",norm_arr
+print,"Normalization factors (ignored!): ",norm_arr 
+;FFT normalization factors:
+norm_arr=(obs_arr.degpix*!DtoR)^2.*(obs_arr.dimension*obs_arr.elements)
+print,"FFT Normalization factors used: ",norm_arr
 ;healpix indices are in sparse format. Need to combine them
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_inds)
 n_hpx=N_Elements(hpx_inds)
