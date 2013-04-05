@@ -2,6 +2,7 @@ PRO fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,quickview=quickvi
 except=!except
 !except=0
 compile_opt idl2,strictarrsubs  
+individual_save=1
 
 nd=size(fhd_file_list,/n_dim)
 IF nd EQ 2 THEN BEGIN
