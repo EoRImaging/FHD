@@ -151,6 +151,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     flag_arr0=Reform(data_array[flag_index,*,*,*]) 
     IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
     
+    flag_arr0=vis_flag_basic(flag_arr0,obs,_Extra=extra)
+    
     IF Keyword_Set(freq_start) THEN BEGIN
         frequency_array_MHz=obs.freq/1E6
         freq_start_cut=where(frequency_array_MHz LT freq_start,nf_cut_start)
