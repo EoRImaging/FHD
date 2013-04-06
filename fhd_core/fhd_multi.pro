@@ -30,7 +30,6 @@ mapfn_interval=fhd.mapfn_interval
 max_iter=fhd.max_iter
 max_sources=fhd.max_sources
 check_iter=fhd.check_iter
-mapfn_threshold=fhd.mapfn_threshold
 beam_threshold=fhd.beam_threshold
 add_threshold=fhd.add_threshold
 max_add_sources=fhd.max_add_sources
@@ -81,7 +80,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     beam_mask=fltarr(obs.dimension,obs.elements)+1
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
         mask0=fltarr(obs.dimension,obs.elements)
-        mask_i=region_grow(*beam_model[pol_i,obs_i],obs.obsx+obs.dimension*obs.obsy,thresh=[0.05,max(*beam_model[pol_i,obs_i])])
+        mask_i=region_grow(*beam_model[pol_i,obs_i],obs.obsx+obs.dimension*obs.obsy,thresh=[beam_threshold,max(*beam_model[pol_i,obs_i])])
         mask0[mask_i]=1
         beam_mask*=mask0
     ENDFOR
@@ -425,13 +424,13 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     source_array[obs_i]=Ptr_new(source_array1)
 ENDFOR
 
-Ptr_free,map_fn_arr,hpx_cnv,hpx_ind_map
 t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'
 print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))
 print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
 print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.))
 print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
+Ptr_free,map_fn_arr,hpx_cnv,hpx_ind_map
 timing=[t00,t1,t2,t3,t4]
 !except=except
 END
