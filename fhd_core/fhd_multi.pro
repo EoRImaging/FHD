@@ -31,6 +31,7 @@ max_iter=fhd.max_iter
 max_sources=fhd.max_sources
 check_iter=fhd.check_iter
 beam_threshold=fhd.beam_threshold
+beam_model_threshold=0.05
 add_threshold=fhd.add_threshold
 max_add_sources=fhd.max_add_sources
 local_max_radius=fhd.local_max_radius
@@ -47,6 +48,7 @@ pol_names=['xx','yy','xy','yx','I','Q','U','V']
 beam_model=Ptrarr(n_pol,n_obs,/allocate)
 beam_corr=Ptrarr(n_pol,n_obs,/allocate)
 beam_mask_arr=Ptrarr(n_obs,/allocate)
+beam_sourcefind_mask_arr=Ptrarr(n_obs,/allocate)
 beam_model_hpx_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 ;weights_inv_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 map_fn_arr=Ptrarr(n_pol,n_obs,/allocate)
@@ -77,20 +79,25 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     psf=beam_setup(obs,file_path_fhd,restore_last=1,silent=1)
     FOR pol_i=0,n_pol-1 DO *beam_model[pol_i,obs_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
     
-    beam_mask=fltarr(obs.dimension,obs.elements)+1
+    beam_sourcefind_mask=(beam_mask=fltarr(obs.dimension,obs.elements)+1)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
-        mask0=fltarr(obs.dimension,obs.elements)
+        mask0=(mask1=fltarr(obs.dimension,obs.elements))
         mask_i=region_grow(*beam_model[pol_i,obs_i],obs.obsx+obs.dimension*obs.obsy,thresh=[beam_threshold,max(*beam_model[pol_i,obs_i])])
         mask0[mask_i]=1
-        beam_mask*=mask0
+        beam_sourcefind_mask*=mask0
+                
+        mask_i=where(*beam_model[pol_i,obs_i] GE beam_model_threshold)
+        mask1[mask_i]=1
+        beam_mask*=mask1
     ENDFOR
+    *beam_sourcefind_mask_arr[obs_i]=beam_sourcefind_mask
     *beam_mask_arr[obs_i]=beam_mask
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
-    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_chk,mask=beam_mask,radius=radius,restore_last=1) 
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_chk,mask=beam_sourcefind_mask,radius=radius,restore_last=0) 
     IF N_Elements(nside) EQ 0 THEN nside=nside_chk
-    IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,radius=radius,restore_last=0)
+    IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_sourcefind_mask,radius=radius,restore_last=0)
     
     source_comp_init,comp_arr0,n_sources=max_sources
     *comp_arr[obs_i]=comp_arr0
@@ -121,10 +128,10 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     *xv_arr[obs_i]=xvals[*uv_i_arr[obs_i]]
     *yv_arr[obs_i]=yvals[*uv_i_arr[obs_i]]
     
-    box_coords[obs_i,0]=(Min(xvals[where(beam_mask)])+dimension/2.-smooth_width)>0
-    box_coords[obs_i,1]=(Max(xvals[where(beam_mask)])+dimension/2.+smooth_width)<(dimension-1)
-    box_coords[obs_i,2]=(Min(yvals[where(beam_mask)])+elements/2.-smooth_width)>0
-    box_coords[obs_i,3]=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
+    box_coords[obs_i,0]=(Min(xvals[where(beam_sourcefind_mask)])+dimension/2.-smooth_width)>0
+    box_coords[obs_i,1]=(Max(xvals[where(beam_sourcefind_mask)])+dimension/2.+smooth_width)<(dimension-1)
+    box_coords[obs_i,2]=(Min(yvals[where(beam_sourcefind_mask)])+elements/2.-smooth_width)>0
+    box_coords[obs_i,3]=(Max(yvals[where(beam_sourcefind_mask)])+elements/2.+smooth_width)<(elements-1)
 ENDFOR
 
 ;print,"Normalization factors used: ",norm_arr
@@ -188,7 +195,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         FOR obs_i=0,n_obs-1 DO BEGIN
             residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
             *res_arr[pol_i,obs_i]=residual
-            residual_hpx=healpix_cnv_apply(residual*(*beam_mask_arr[obs_i]),*hpx_cnv[obs_i])
+            residual_hpx=healpix_cnv_apply(residual*(*beam_sourcefind_mask_arr[obs_i]),*hpx_cnv[obs_i])
             (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
         ENDFOR
     ENDFOR
@@ -206,7 +213,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                     *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
                     *(*beam_model[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
                 smooth0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
-                smooth_hpx=healpix_cnv_apply(smooth0*(*beam_mask_arr[obs_i]),*hpx_cnv[obs_i])
+                smooth_hpx=healpix_cnv_apply(smooth0*(*beam_sourcefind_mask_arr[obs_i]),*hpx_cnv[obs_i])
                 (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
                 
             ENDFOR
@@ -418,7 +425,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     ENDFOR
     image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]
     beam_avg=*beam_model[0,obs_i] & IF n_pol GT 1 THEN beam_avg=(beam_avg+*beam_model[1,obs_i])/2.
-    noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
+    noise_map=Stddev(image_use[where(*beam_sourcefind_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
     comp_arr1=*comp_arr[obs_i]
     source_array1=Components2Sources(comp_arr1,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
     source_array[obs_i]=Ptr_new(source_array1)
