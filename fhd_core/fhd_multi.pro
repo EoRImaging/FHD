@@ -48,6 +48,7 @@ pol_names=['xx','yy','xy','yx','I','Q','U','V']
 beam_model=Ptrarr(n_pol,n_obs,/allocate)
 beam_corr=Ptrarr(n_pol,n_obs,/allocate)
 beam_mask_arr=Ptrarr(n_obs,/allocate)
+source_mask_arr=Ptrarr(n_obs,/allocate)
 beam_sourcefind_mask_arr=Ptrarr(n_obs,/allocate)
 beam_model_hpx_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 ;weights_inv_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
@@ -92,6 +93,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     ENDFOR
     *beam_sourcefind_mask_arr[obs_i]=beam_sourcefind_mask
     *beam_mask_arr[obs_i]=beam_mask
+    *source_mask_arr[obs_i]=beam_mask
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
@@ -329,6 +331,8 @@ FOR i=0L,max_iter-1 DO BEGIN
         dimension=obs_arr[obs_i].dimension
         elements=obs_arr[obs_i].elements
         beam_mask=*beam_mask_arr[obs_i]
+        
+        residual_test=*res_arr[0,obs_i] & IF n_pol GT 1 THEN residual_test=residual_test<*res_arr[1,obs_i]
         FOR src_i=0L,n_src-1 DO BEGIN    
             flux_arr=fltarr(4)
             si1=si+src_i
@@ -336,22 +340,29 @@ FOR i=0L,max_iter-1 DO BEGIN
             beam_src=fltarr(n_pol)
             xv=x_arr[src_i]
             yv=y_arr[src_i]
+            flag=1
             IF xv<yv GE 0 AND xv>yv LE (dimension<elements)-1 THEN BEGIN 
-              IF beam_mask[xv,yv] EQ 0 THEN BREAK
-              FOR pol_i=0,n_pol-1 DO BEGIN   
-                  beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[xv,yv]
-                  beam_src[pol_i]=(*beam_model[pol_i,obs_i])[xv,yv]
-                  
-                  IF Keyword_Set(independent_fit) THEN BEGIN
-                      sign=(pol_i mod 2) ? -1:1
-                      IF pol_i LE 1 THEN flux_use=flux_I[src_i]+sign*flux_Q[src_i]
-                      IF pol_i GE 2 THEN flux_use=flux_U[src_i]+sign*flux_V[src_i]
-                  ENDIF ELSE IF pol_i LE 1 THEN flux_use=flux_I[src_i] ELSE flux_use=flux_U[src_i]
-                  
-                  flux_use*=gain_factor
-                  comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
-                  flux_arr[pol_i]=flux_use;"True sky" instrumental pol
-              ENDFOR
+                IF beam_mask[xv,yv] EQ 0 THEN flag=0
+                IF residual_test[xv,yv] LE 0 THEN BEGIN
+                  (*source_mask_arr[obs_i])[xv,yv]=0
+                  flag=0
+                ENDIF
+                IF flag GT 0 THEN BEGIN
+                    FOR pol_i=0,n_pol-1 DO BEGIN   
+                        beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[xv,yv]
+                        beam_src[pol_i]=(*beam_model[pol_i,obs_i])[xv,yv]
+                        
+                         IF Keyword_Set(independent_fit) THEN BEGIN
+                            sign=(pol_i mod 2) ? -1:1
+                            IF pol_i LE 1 THEN flux_use=flux_I[src_i]+sign*flux_Q[src_i]
+                            IF pol_i GE 2 THEN flux_use=flux_U[src_i]+sign*flux_V[src_i]
+                        ENDIF ELSE IF pol_i LE 1 THEN flux_use=flux_I[src_i] ELSE flux_use=flux_U[src_i]
+                        
+                        flux_use*=gain_factor
+                        comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
+                        flux_arr[pol_i]=flux_use;"True sky" instrumental pol
+                    ENDFOR
+                ENDIF
             ENDIF
             
             comp_arr1[si1].flux.I=flux_arr[0]+flux_arr[1]
