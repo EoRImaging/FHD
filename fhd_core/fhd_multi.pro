@@ -377,7 +377,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
             IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
-                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
+                source_uv_vals=norm_arr[obs_i]*Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
                 FOR pol_i=0,n_pol-1 DO $
                     (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
             ENDIF
@@ -391,7 +391,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     ;apply HMF
     FOR obs_i=0L,n_obs-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],_Extra=extra)*norm_arr[obs_i]
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],_Extra=extra)
         ENDFOR
     ENDFOR
     t4+=Systime(1)-t4_0
