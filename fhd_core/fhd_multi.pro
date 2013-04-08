@@ -197,7 +197,8 @@ FOR i=0L,max_iter-1 DO BEGIN
         FOR obs_i=0,n_obs-1 DO BEGIN
             residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
             *res_arr[pol_i,obs_i]=residual
-            residual_hpx=healpix_cnv_apply(residual*(*beam_sourcefind_mask_arr[obs_i]),*hpx_cnv[obs_i])
+            residual_use=residual*(*beam_sourcefind_mask_arr[obs_i]);l*(*source_mask_arr[obs_i])
+            residual_hpx=healpix_cnv_apply(residual_use,*hpx_cnv[obs_i])
             (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
         ENDFOR
     ENDFOR
@@ -251,13 +252,13 @@ FOR i=0L,max_iter-1 DO BEGIN
 ;        
 ;        diverge_check0=diverge_check1
 ;    ENDIF ELSE diverge_check0=source_find_hpx
-    
-    IF Mean(source_mask) LT 0.75 THEN BEGIN
-        print,String(format='("Failure to centroid after",I," iterations")',i)
-        converge_check2=converge_check2[0:i-1]
-        converge_check=converge_check[0:i2]
-        BREAK
-    ENDIF
+;    
+;    IF Mean(source_mask) LT 0.75 THEN BEGIN
+;        print,String(format='("Failure to centroid after",I," iterations")',i)
+;        converge_check2=converge_check2[0:i-1]
+;        converge_check=converge_check[0:i2]
+;        BREAK
+;    ENDIF
     
     source_find_hpx*=source_mask
     residual_I=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map2[0])
@@ -340,14 +341,16 @@ FOR i=0L,max_iter-1 DO BEGIN
             beam_src=fltarr(n_pol)
             xv=x_arr[src_i]
             yv=y_arr[src_i]
-            flag=1
+            source_use_flag=1
             IF xv<yv GE 0 AND xv>yv LE (dimension<elements)-1 THEN BEGIN 
-                IF beam_mask[xv,yv] EQ 0 THEN flag=0
-                IF residual_test[xv,yv] LE 0 THEN BEGIN
+                IF beam_mask[xv,yv] EQ 0 THEN source_use_flag=0
+                residual_test_val=residual_test[xv,yv]-$
+                    Median(residual_test[(xv-smooth_width/2.)>0:(xv+smooth_width/2.)<(dimension-1),(yv-smooth_width/2.)>0:(yv+smooth_width/2.)<(elements-1)])
+                IF residual_test_val LE 0 THEN BEGIN
                   (*source_mask_arr[obs_i])[xv,yv]=0
-                  flag=0
+                  source_use_flag=0
                 ENDIF
-                IF flag GT 0 THEN BEGIN
+                IF Keyword_Set(source_use_flag) THEN BEGIN
                     FOR pol_i=0,n_pol-1 DO BEGIN   
                         beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[xv,yv]
                         beam_src[pol_i]=(*beam_model[pol_i,obs_i])[xv,yv]
@@ -377,7 +380,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
             IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
-                source_uv_vals=norm_arr[obs_i]*Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
+                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
                 FOR pol_i=0,n_pol-1 DO $
                     (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
             ENDIF
@@ -391,7 +394,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     ;apply HMF
     FOR obs_i=0L,n_obs-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],_Extra=extra)
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],_Extra=extra)*norm_arr[obs_i]
         ENDFOR
     ENDFOR
     t4+=Systime(1)-t4_0
@@ -418,7 +421,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
-        IF converge_check[i2] GT converge_check[i2-1] THEN BEGIN
+        IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]

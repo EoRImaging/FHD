@@ -242,7 +242,7 @@ t0+=t1a-t0a
     ;           obs_out.obsy,obs_out.zenx,obs_out.zeny,obs_out.rotation,'NAN','NAN','NAN','NAN']
     ;        textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
         ENDELSE
-    ENDIF
+    ENDIF ELSE n_mrc=0
     
     t5a=Systime(1)
     t4+=t5a-t4a
