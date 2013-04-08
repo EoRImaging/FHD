@@ -360,7 +360,6 @@ FOR pol_i=0,npol-1 DO BEGIN
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
     
     IF pol_i EQ 0 THEN BEGIN
-        n_mrc=(size(mrc_cat,/dimension))[0]
         IF n_mrc GT 0 THEN BEGIN
             mrc_comp=(stokes_source+mrc_image)[zoom_low:zoom_high,zoom_low:zoom_high]
             Imagefast,mrc_comp,file_path=image_path+'_Sources_MRCrings_'+pol_names[pol_i+4],$
