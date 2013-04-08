@@ -130,10 +130,10 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     *xv_arr[obs_i]=xvals[*uv_i_arr[obs_i]]
     *yv_arr[obs_i]=yvals[*uv_i_arr[obs_i]]
     
-    box_coords[obs_i,0]=(Min(xvals[where(beam_sourcefind_mask)])+dimension/2.-smooth_width)>0
-    box_coords[obs_i,1]=(Max(xvals[where(beam_sourcefind_mask)])+dimension/2.+smooth_width)<(dimension-1)
-    box_coords[obs_i,2]=(Min(yvals[where(beam_sourcefind_mask)])+elements/2.-smooth_width)>0
-    box_coords[obs_i,3]=(Max(yvals[where(beam_sourcefind_mask)])+elements/2.+smooth_width)<(elements-1)
+    box_coords[obs_i,0]=(Min(xvals[where(beam_mask)])+dimension/2.-smooth_width)>0
+    box_coords[obs_i,1]=(Max(xvals[where(beam_mask)])+dimension/2.+smooth_width)<(dimension-1)
+    box_coords[obs_i,2]=(Min(yvals[where(beam_mask)])+elements/2.-smooth_width)>0
+    box_coords[obs_i,3]=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
 ENDFOR
 
 ;print,"Normalization factors used: ",norm_arr
@@ -182,46 +182,63 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     zero_ind=where(*beam_map[pol_i] EQ 0,n_zero)
     IF n_zero GT 0 THEN source_mask[zero_ind]=0
 ENDFOR
-beam_map_avg=*beam_map[0]
-beam_corr_avg=*beam_corr_map[0]
-IF n_pol GT 1 THEN BEGIN
-    beam_map_avg=(beam_map_avg+*beam_map[1])/2.
-    beam_corr_avg=(beam_corr_avg+*beam_corr_map[1])/2.
-ENDIF
+;beam_map_avg=*beam_map[0]
+;beam_corr_avg=*beam_corr_map[0]
+;IF n_pol GT 1 THEN BEGIN
+;    beam_map_avg=(beam_map_avg+*beam_map[1])/2.
+;    beam_corr_avg=(beam_corr_avg+*beam_corr_map[1])/2.
+;ENDIF
 
 res_arr=Ptrarr(n_pol,n_obs,/allocate)
+smooth_arr=Ptrarr(n_pol,n_obs,/allocate)
 FOR i=0L,max_iter-1 DO BEGIN 
-    t1_0=Systime(1)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *healpix_map[pol_i]=Fltarr(n_hpx)
+        IF i mod Floor(1./gain_factor) EQ 0 THEN *smooth_map[pol_i]=Fltarr(n_hpx)
         FOR obs_i=0,n_obs-1 DO BEGIN
+            t1_0=Systime(1)
             residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
-            *res_arr[pol_i,obs_i]=residual
-            residual_use=residual*(*beam_sourcefind_mask_arr[obs_i]);l*(*source_mask_arr[obs_i])
-            residual_hpx=healpix_cnv_apply(residual_use,*hpx_cnv[obs_i])
-            (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
-        ENDFOR
-    ENDFOR
-    
-    t2_0=Systime(1)
-    t1+=t2_0-t1_0
-    IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            *smooth_map[pol_i]=Fltarr(n_hpx)
-            FOR obs_i=0,n_obs-1 DO BEGIN
-                ;smooth image changes slowly and the median function takes a lot of time, so only re-calculate every few iterations
-                residual=*res_arr[pol_i,obs_i]
+            
+            t2_0a=Systime(1)
+            t1+=t2_0a-t1_0
+            IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
                 smooth0=fltarr(size(residual,/dimension))
                 image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
                     *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
                     *(*beam_model[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
                 smooth0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
+                
+                *smooth_arr[pol_i,obs_i]=smooth0
                 smooth_hpx=healpix_cnv_apply(smooth0*(*beam_sourcefind_mask_arr[obs_i]),*hpx_cnv[obs_i])
                 (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
-                
-            ENDFOR
+            ENDIF
+            
+            *res_arr[pol_i,obs_i]=residual-*smooth_arr[pol_i,obs_i]
+            residual_use=residual*(*beam_sourcefind_mask_arr[obs_i]);l*(*source_mask_arr[obs_i])
+            residual_hpx=healpix_cnv_apply(residual_use,*hpx_cnv[obs_i])
+            (*healpix_map[pol_i])[*hpx_ind_map[obs_i]]+=residual_hpx
+            t2_0b=Systime(1)
+            t2+=t2_0b-t2_0a
         ENDFOR
-    ENDIF
+    ENDFOR
+    
+;    IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
+;        FOR pol_i=0,n_pol-1 DO BEGIN
+;            *smooth_map[pol_i]=Fltarr(n_hpx)
+;            FOR obs_i=0,n_obs-1 DO BEGIN
+;                ;smooth image changes slowly and the median function takes a lot of time, so only re-calculate every few iterations
+;                residual=*res_arr[pol_i,obs_i]
+;                smooth0=fltarr(size(residual,/dimension))
+;                image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
+;                    *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
+;                    *(*beam_model[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
+;                smooth0[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=image_smooth
+;                smooth_hpx=healpix_cnv_apply(smooth0*(*beam_sourcefind_mask_arr[obs_i]),*hpx_cnv[obs_i])
+;                (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
+;                
+;            ENDFOR
+;        ENDFOR
+;    ENDIF
     ;NOTE healpix_map and smooth_hpx are in instrumental polarization, weighted by the beam squared
     
     ;convert to Stokes I
@@ -317,7 +334,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
     ENDFOR
     t3_0=Systime(1)
-    t2+=t3_0-t2_0
+    t2+=t3_0-t2_0b
     
     ;update models
     flux_I=residual_I[source_i]
@@ -437,9 +454,11 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])*(*beam_corr[pol_i,obs_i])
     ENDFOR
+    
     image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]
+    image_use-=Median(image_use,smooth_width)
     beam_avg=*beam_model[0,obs_i] & IF n_pol GT 1 THEN beam_avg=(beam_avg+*beam_model[1,obs_i])/2.
-    noise_map=Stddev(image_use[where(*beam_sourcefind_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
+    noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
     comp_arr1=*comp_arr[obs_i]
     source_array1=Components2Sources(comp_arr1,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
     source_array[obs_i]=Ptr_new(source_array1)
@@ -451,7 +470,7 @@ print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/
 print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
 print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.))
 print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
-Ptr_free,map_fn_arr,hpx_cnv,hpx_ind_map
+Ptr_free,map_fn_arr,hpx_cnv,hpx_ind_map,res_arr,smooth_arr,healpix_map
 timing=[t00,t1,t2,t3,t4]
 !except=except
 END
