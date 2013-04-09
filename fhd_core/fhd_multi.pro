@@ -118,6 +118,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
         weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i,obs_i]))
+        *weights_arr[pol_i,obs_i]=weights_single
         IF pol_i LE 2 THEN normalization_arr[pol_i]=1./mean(weights_single)
         source_uv_mask[where(weights_single)]=1.
     ENDFOR
@@ -139,8 +140,8 @@ ENDFOR
 ;print,"Normalization factors used: ",norm_arr
 print,"Normalization factors (ignored!): ",norm_arr 
 ;FFT normalization factors:
-norm_arr=(obs_arr.degpix*!DtoR)^2.*(obs_arr.dimension*obs_arr.elements)
-print,"FFT Normalization factors used: ",norm_arr
+;norm_arr=(obs_arr.degpix*!DtoR)^2.*(obs_arr.dimension*obs_arr.elements)
+;print,"FFT Normalization factors used: ",norm_arr
 ;healpix indices are in sparse format. Need to combine them
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_inds)
 n_hpx=N_Elements(hpx_inds)
@@ -438,7 +439,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
-        IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
+        IF converge_check[i2] GE converge_check[(i2-Ceil(Alog10(i)))>0] THEN BEGIN ;add more tolerance for small variations
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
