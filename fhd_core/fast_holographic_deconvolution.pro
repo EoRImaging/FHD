@@ -175,6 +175,7 @@ ENDFOR
 ;normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
 ;normalization=.25
 normalization=1.
+;normalization=(degpix*!DtoR)^2.*(dimension*elements)
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])^2.
@@ -196,7 +197,7 @@ ENDFOR
 
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
-print,"Fractional uv coverage: ",uv_use_frac;,"normalization: ",normalization
+print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
 xvals1=xvals[uv_i_use]
 yvals1=yvals[uv_i_use]
 
@@ -388,7 +389,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             t4_0=Systime(1)
             t3+=t4_0-t3_0
             FOR pol_i=0,n_pol-1 DO BEGIN
-                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra);*normalization
+                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
             ENDFOR
             i3=0    
             t4+=Systime(1)-t4_0
@@ -405,7 +406,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF i3 EQ 0 THEN flux_ref=Median(flux_arr[0:(n_pol<2)-1,*,*]) ;replace with median across all pol/freq/time
     IF (i3 GE mapfn_interval) OR (Median(flux_arr[0:(n_pol<2)-1,*,*]) LT flux_ref*mapfn_threshold) OR ((i+1) mod check_iter EQ 0) THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra);*normalization
+            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
         ENDFOR
         i3=0
     ENDIF ELSE i3+=1
