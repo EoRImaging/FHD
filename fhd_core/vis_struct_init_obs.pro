@@ -64,7 +64,7 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
                 Precess,zenra0,zendec,epoch,2000. ;slight error, since zenra0 is NOT in J2000, but assume the effect on zendec is small
             ENDIF
         ENDELSE
-    ENDIF ELSE zenpos2,Median(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
+    ENDIF ELSE zenpos2,Min(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
     
     IF Keyword_Set(scale_uv) THEN BEGIN
         params.uu*=scale_uv
