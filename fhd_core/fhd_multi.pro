@@ -321,6 +321,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     flux_src_arr=residual_I[source_i]
     ra_arr=fltarr(n_src)
     dec_arr=fltarr(n_src)
+    source_cut_arr=fltarr(n_src)
     FOR src_i=0L,n_src-1 DO BEGIN
         Query_disc,nside,pix_coords[source_i[src_i],*],local_radius/2.,region_inds,ninds,/deg
         region_i=reverse_inds[region_inds]
@@ -369,6 +370,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                   source_use_flag=0
                 ENDIF
                 IF Keyword_Set(source_use_flag) THEN BEGIN
+                    source_cut_arr[src_i]+=1.
                     FOR pol_i=0,n_pol-1 DO BEGIN   
                         beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[xv,yv]
                         beam_src[pol_i]=(*beam_model[pol_i,obs_i])[xv,yv]
@@ -405,7 +407,10 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDFOR
         *comp_arr[obs_i]=comp_arr1
     ENDFOR
-    si+=n_src
+    si_use=where(source_cut_arr,n_src_use,complement=si_mask,ncomplement=n_si_mask)
+    IF n_si_mask GT 0 THEN source_mask[source_i[si_mask]]=0.
+    
+    si+=n_src_use
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     
