@@ -139,6 +139,7 @@ ENDFOR
 
 ;print,"Normalization factors used: ",norm_arr
 print,"Normalization factors (ignored!): ",norm_arr 
+norm_arr[*]=1.
 ;FFT normalization factors:
 ;norm_arr=(obs_arr.degpix*!DtoR)^2.*(obs_arr.dimension*obs_arr.elements)
 ;print,"FFT Normalization factors used: ",norm_arr
@@ -456,6 +457,7 @@ ENDFOR
 ;condense clean components
 residual_array=Ptrarr(n_pol,n_obs,/allocate)
 source_array=Ptrarr(n_obs)
+FOR obs_i=0L,n_obs-1 DO *comp_arr[obs_i]=(*comp_arr[obs_i])[0:si-1] ;truncate component list to include only components actually deconvolved
 FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])*(*beam_corr[pol_i,obs_i])
@@ -465,7 +467,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     image_use-=Median(image_use,smooth_width)
     beam_avg=*beam_model[0,obs_i] & IF n_pol GT 1 THEN beam_avg=(beam_avg+*beam_model[1,obs_i])/2.
     noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
-    comp_arr1=*comp_arr[obs_i]
+    comp_arr1=(*comp_arr[obs_i])
     source_array1=Components2Sources(comp_arr1,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
     source_array[obs_i]=Ptr_new(source_array1)
 ENDFOR
