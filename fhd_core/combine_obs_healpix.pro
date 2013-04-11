@@ -90,7 +90,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
     
     hpx_cnv=healpix_cnv_generate(file_path_fhd=file_path,nside=nside_chk,/restore_last,/silent)
-    IF nside_chk NE nside_use THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
+    IF nside_chk NE nside_use THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path,nside=nside,$
         mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     
     astr=obs.astr            
