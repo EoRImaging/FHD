@@ -321,7 +321,7 @@ FOR pol_i=0,npol-1 DO BEGIN
     instr_high=Max(instr_residual[where(beam_mask)])
     instrS_high=Max(instr_restored[where(beam_mask)])
     Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=instr_low,high=instrS_high
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=instr_low,high=instr_high
     Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high
     Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+'_Sources_'+pol_names[pol_i],$
