@@ -62,9 +62,11 @@ IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
     even_bi_use=where(bin_i mod 2 EQ 0)
     odd_bi_use=where(bin_i mod 2 EQ 1)
     flag_arr1=fltarr(size(*flag_arr[0],/dimension))
-    IF Keyword_Set(even_only) THEN flag_arr1[*,even_bi_use]=1
-    IF Keyword_Set(odd_only) THEN flag_arr1[*,odd_bi_use]=1
-    FOR pol_i=0,n_pol-1 DO *flag_arr[pol_i]*=flag_arr1
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        IF Keyword_Set(even_only) THEN flag_arr1[*,even_bi_use]=flag_arr0[pol_i,*,even_bi_use]
+        IF Keyword_Set(odd_only) THEN flag_arr1[*,odd_bi_use]=flag_arr0[pol_i,*,odd_bi_use]
+        *flag_arr[pol_i]*=flag_arr1
+    ENDFOR
 ENDIF
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
@@ -93,13 +95,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         data_flag:vis_use=*vis_data_arr[pol_i]
         model_flag:vis_use=*vis_model_arr[pol_i];/n_avg
     ENDCASE
+    freq_use=(*obs.baseline_info).freq_use
     FOR fi=0L,nf-1 DO BEGIN
-        fi_use=where(freq_bin_i2 EQ fi,nf_use)
-        flags_use1=(*flag_arr[pol_i])[fi_use,*]
-        vis_use1=vis_use[fi_use,*]
-;        freq_cut=where(freq_bin_i2 NE fi,n_cut)
-;        IF n_cut GT 0 THEN flags_use[freq_cut,*]=0
-        dirty_UV=visibility_grid(vis_use1,flags_use1,obs,psf,params,timing=t_grid0,fi_use=fi_use,$
+        fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
+;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
+;        vis_use1=vis_use[fi_use,*]
+        dirty_UV=visibility_grid(vis_use,*flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,/preserve_visibilities,$
             polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,_Extra=extra)
         IF Keyword_Set(fft) THEN BEGIN
             *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra)

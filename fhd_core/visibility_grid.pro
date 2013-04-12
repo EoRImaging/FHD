@@ -24,7 +24,7 @@
 ;-
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
-    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,$
+    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
     visibility_list=visibility_list,image_list=image_list,_Extra=extra
 t0_0=Systime(1)
 heap_gc
@@ -42,9 +42,9 @@ min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
 freq_bin_i=obs.fbin_i
-fi_use=where((*obs.baseline_info).freq_use)
+IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
-visibility_array=Temporary(visibility_array[fi_use,*])
+IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=visibility_array[fi_use,*] ELSE vis_arr_use=Temporary(visibility_array[fi_use,*])
 
 ;n_freq_bin=N_Elements(freq_bin_i)
 ;
@@ -105,8 +105,9 @@ IF n_dist_flag GT 0 THEN BEGIN
 ENDIF
 
 IF Keyword_Set(flag_arr) THEN BEGIN
-    flag_arr=Temporary(flag_arr[fi_use,*])
-    flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
+;    IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=flag_arr[fi_use,*] ELSE flag_arr_use=Temporary(flag_arr[fi_use,*])
+    
+    flag_i=where((flag_arr[fi_use,*]) LE 0,n_flag,ncomplement=n_unflag)
     IF n_unflag EQ 0 THEN BEGIN
         timing=Systime(1)-t0_0
         image_uv=Complexarr(dimension,elements)
@@ -185,7 +186,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     x_off1=x_offset[inds]
     y_off1=y_offset[inds]
-    vis_box=visibility_array[inds]
+    vis_box=vis_arr_use[inds]
         
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
