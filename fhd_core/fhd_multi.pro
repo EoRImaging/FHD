@@ -401,7 +401,8 @@ FOR i=0L,max_iter-1 DO BEGIN
             
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
             IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
-                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
+;                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
+                source_uv_vals=source_dft(comp_arr1[si1].x,comp_arr1[si1].y,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements)
                 FOR pol_i=0,n_pol-1 DO $
                     (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
             ENDIF
