@@ -78,7 +78,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     yvals=meshgrid(dimension,elements,2)-elements/2
     
     psf=beam_setup(obs,file_path_fhd,restore_last=1,silent=1)
-    FOR pol_i=0,n_pol-1 DO *beam_model[pol_i,obs_i]=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
+    FOR pol_i=0,n_pol-1 DO *beam_model[pol_i,obs_i]=Sqrt(beam_image(psf,pol_i=pol_i,dimension=obs.dimension,/square))
     
     beam_sourcefind_mask=(beam_mask=fltarr(obs.dimension,obs.elements)+1)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN

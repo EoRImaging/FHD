@@ -51,7 +51,8 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
-            beam_base+=(fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.)^2.
+            beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
+            beam_base+=beam_base_single*Conj(beam_base_single)
             n_bin_use+=1.
         ENDFOR
     ENDIF ELSE BEGIN
@@ -71,7 +72,8 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
-            beam_base+=nf_bin*(fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.)^2.
+            beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
+            beam_base+=nf_bin*beam_base_single*Conj(beam_base_single)
             n_bin_use+=nf_bin
         ENDFOR
     ENDELSE
