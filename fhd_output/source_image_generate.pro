@@ -37,9 +37,11 @@ ELSE beam_useR=Exp(-Abs(((x_valsR)/(width*resolution))^2.+((y_valsR)/(width*reso
 ;beam_useR/=Max(beam_useR) ;make sure it is normalized to 1
 IF Keyword_Set(ring_radius) THEN beam_useR*=ring_radius
 beam_useR_arr=Ptrarr(resolution,resolution,/allocate)
+;FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
+;    *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Total(beam_useR[xvals_i+i,yvals_i+j])
 FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-    *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Total(beam_useR[xvals_i+i,yvals_i+j])
-
+    *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Max(beam_useR[xvals_i+i,yvals_i+j])
+    
 sx=source_array[0:ns-1].x
 sy=source_array[0:ns-1].y
 flux=source_array[0:ns-1].flux.(pol_i)
