@@ -1,4 +1,4 @@
-PRO combine_obs_sources,file_list,calibration,source_list,no_align=no_align,restore_last=restore_last,output_path=output_path
+PRO combine_obs_sources,file_list,calibration,source_list,restore_last=restore_last,output_path=output_path
 
 except=!except
 !except=0 
@@ -22,30 +22,28 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF
 
 n_files=N_Elements(file_list)
-source_array_raw=Ptrarr(n_files,/allocate)
-;columns of THIS source array:  0:#id 1:x_loc 2:y_loc 3:RA 4:Dec 5:S/N 6:radius 7:avg_beam 
-;                               8:XX_apparent 9:YY_apparent 10:Stokes_I 11:Stokes_Q 
+source_array2=Ptrarr(n_files,/allocate)
+beam_arr=Ptrarr(n_files,2)
 
 n_src=fltarr(n_files)
 src_i=Ptrarr(n_files,/allocate)
 fi_c=-1
 FOR fi=0,n_files-1 DO BEGIN
     file_path=file_list[fi]
-    sa_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list'
-    IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(sa_path+'.txt') EQ 0) THEN CONTINUE ELSE fi_c+=1
+    IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(file_path+'_fhd.sav') EQ 0) THEN CONTINUE ELSE fi_c+=1
+    sa=getvar_savefile(file_path+'_fhd.sav','source_array')
+    beam_arr[fi,*]=getvar_savefile(file_path+'_fhd.sav','beam_base')
+;    sa_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list'
     restore,file_path+'_obs.sav'
     IF fi_c EQ 0 THEN obs_arr=Replicate(obs,n_files)
     obs_arr[fi]=obs
     
-    textfast,sa,/read,file_path=sa_path,first_line=1
+;    textfast,sa,/read,file_path=sa_path,first_line=1
     
-    IF N_Elements(sa) GT 0 THEN BEGIN
-        ston0=reform(sa[5,*])
-        src_i0=where(ston0 GE StoN,n_src0) 
-        n_src[fi]=n_src0
-        IF n_src0 GT 0 THEN *src_i[fi]=src_i0
-        *source_array_raw[fi]=sa
-    ENDIF
+    src_i0=where(sa.ston GE StoN,n_src0)
+    n_src[fi]+=n_src0
+    *src_i[fi]=src_i0
+    *source_array2[fi]=sa
 ENDFOR
 degpix=Median(obs_arr.degpix)
 
@@ -64,18 +62,18 @@ sa_radius=fltarr(ns)
 
 FOR fi=0,n_files-1 DO BEGIN
     IF n_src[fi] EQ 0 THEN CONTINUE
-    sa=*source_array_raw[fi]
-    sa=sa[*,*src_i[fi]]
-    sa_x[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[1,*])
-    sa_y[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[2,*])
-    sa_ra[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[3,*])
-    sa_dec[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[4,*])
-    sa_I[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[10,*])
+    sa=*source_array2[fi]
+    sa=sa[*src_i[fi]]
+    sa_x[ns_i[fi]:ns_i[fi+1]-1]=sa.x
+    sa_y[ns_i[fi]:ns_i[fi+1]-1]=sa.y
+    sa_ra[ns_i[fi]:ns_i[fi+1]-1]=sa.ra
+    sa_dec[ns_i[fi]:ns_i[fi+1]-1]=sa.dec
+    sa_I[ns_i[fi]:ns_i[fi+1]-1]=sa.flux.I
     sa_bin[ns_i[fi]:ns_i[fi+1]-1]=fi
-    sa_id[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[0,*])
-    sa_ston[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[5,*])
-    sa_radius[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[6,*])
-    sa_beam[ns_i[fi]:ns_i[fi+1]-1]=Reform(sa[7,*])
+    sa_id[ns_i[fi]:ns_i[fi+1]-1]=sa.id
+    sa_ston[ns_i[fi]:ns_i[fi+1]-1]=sa.ston
+    sa_radius[ns_i[fi]:ns_i[fi+1]-1]=
+    sa_beam[ns_i[fi]:ns_i[fi+1]-1]=(*beam_arr[fi])[sa.x,sa.y]
     
 ENDFOR
 
