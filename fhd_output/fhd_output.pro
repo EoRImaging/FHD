@@ -248,7 +248,7 @@ t0+=t1a-t0a
     t5a=Systime(1)
     t4+=t5a-t4a
     
-    IF n_mrc GT 0 THEN BEGIN
+    IF n_mrc GT 2 THEN BEGIN
         mrc_cat=mrc_cat[mrc_i_use]
         mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
             width=pad_uv_image,ring=6.*pad_uv_image)

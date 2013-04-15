@@ -14,14 +14,13 @@ IF Keyword_Set(restore_last) THEN BEGIN
     RETURN
 ENDIF
 
-
 ;color_table=0.1
 dimension=1024.
 elements=dimension
 npol=2
 cal_ref_i=2
 fix_flux=1
-combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
+;combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
 
 n_files=N_Elements(file_list)
 
@@ -30,22 +29,23 @@ FOR file_i=0,n_files-1 DO ftest[file_i]=file_test(file_list[file_i]+'_obs.sav')
 file_i_use=where(ftest,n_files) 
 file_list_use=file_list[file_i_use]
 
-cal_use=calibration[file_i_use]
-
-cal_thresh=[0.5,2.]
-obs_i_use=where((cal_use GT min(cal_thresh)) AND (cal_use LT max(cal_thresh)) AND ftest,$
-    n_obs,complement=fi_cut,ncomp=n_cut)
-cal_use[obs_i_use]=1./cal_use[obs_i_use]
-IF n_cut GT 0 THEN cal_use[fi_cut]=0
-
-cal_use[obs_i_use]=1.
-
-;    IF n_cut NE 0 THEN BEGIN
-;        cal_use[fi_cut]=1.
-;        n_obs=n_files
-;        obs_i_use=file_i_use
-;    ENDIF
-cal_use*=flux_scale 
+;cal_use=calibration[file_i_use]
+;
+;cal_thresh=[0.5,2.]
+;obs_i_use=where((cal_use GT min(cal_thresh)) AND (cal_use LT max(cal_thresh)) AND ftest,$
+;    n_obs,complement=fi_cut,ncomp=n_cut)
+;cal_use[obs_i_use]=1./cal_use[obs_i_use]
+;IF n_cut GT 0 THEN cal_use[fi_cut]=0
+;
+;cal_use[obs_i_use]=1.
+;
+;;    IF n_cut NE 0 THEN BEGIN
+;;        cal_use[fi_cut]=1.
+;;        n_obs=n_files
+;;        obs_i_use=file_i_use
+;;    ENDIF
+;cal_use*=flux_scale 
+cal_use=replicate(flux_scale,n_files)
 
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path=file_list_use[obs_i]
