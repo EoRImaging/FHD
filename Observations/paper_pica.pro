@@ -21,12 +21,10 @@ healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_fi
 
 catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 
-complex_beam=0
-double_precison_beam=0
 n_files=N_Elements(vis_file_list)
 
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
-IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
+IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 flag=0
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
@@ -45,8 +43,8 @@ n_pol=1
 complex_beam=1
 FoV=150.
 freq_bin=1E6
-freq_start=155.
-freq_end=175.
+;freq_start=155.
+;freq_end=175.
 ;mirror_X=1
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
