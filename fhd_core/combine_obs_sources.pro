@@ -136,10 +136,15 @@ FOR gi=0L,ng-1 DO BEGIN
     source_sub.fii=sa_id[si_g_use]
     source_sub.x=sa_x[si_g_use]
     source_sub.y=sa_y[si_g_use]
+    source_sub.filename=file_basename(file_list[source_sub.fi])
     
     source_list[gi].sources=Ptr_new(source_sub)
 ENDFOR
 
+save,source_list,filename=save_path
+print,Strn(ns_use)+" sources detected in at least "+Strn(min_detect)+" observations."
+
+END
 ;source_matrix=fltarr(n_files,ng)
 ;FOR gi=0L,ng-1 DO source_matrix[(*source_list[gi].sources).fi,gi]=(*source_list[gi].sources).flux
 ;beam_matrix=fltarr(n_files,ng)
@@ -260,7 +265,7 @@ ENDFOR
 ;    ENDFOR
 ;ENDFOR 
 ;save,filename=save_path,source_list,source_matrix,sigma_matrix,cal_matrix,calibration,file_list,degpix
-save,source_list,filename=save_path
-print,Strn(ns_use)+" sources detected in at least "+Strn(min_detect)+" observations."
-
-END
+;save,source_list,filename=save_path
+;print,Strn(ns_use)+" sources detected in at least "+Strn(min_detect)+" observations."
+;
+;END

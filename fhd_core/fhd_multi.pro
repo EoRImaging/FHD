@@ -446,7 +446,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
-        IF converge_check[i2] GE converge_check[(i2-Ceil(Alog10(i)))>0] THEN BEGIN ;add more tolerance for small variations
+        IF converge_check[i2] GE Max(converge_check[((i2-Ceil(Alog10(i)))>0):i2-1]) THEN BEGIN ;add more tolerance for small variations
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
