@@ -1,11 +1,11 @@
-FUNCTION globalskymodel_read,frequency,gl=gl,gb=gb,celestial_coord=celestial_coord
+FUNCTION globalskymodel_read,frequency,ra_arr=ra_arr,dec_arr=dec_arr
 ;gl supplied galactic longitude (or RA if celestial_coord is set)
 ;gb supplied galactic latitude (or Dec if celestial_coord is set)
 ;returns the model temperatures from the Global Sky Model at the specified galactic longitude and latitude
 IF N_Elements(frequency) EQ 0 THEN frequency=300. ;MHz
 file_path_base=filepath('',root=rootdir('mwa'),sub=['DATA','Galaxy model','gsm'])
 ;the first time the file is read in, convert it to FITS format (MUCH faster to read when called again later!)
-IF file_test(file_path_base+'.fits') EQ 0 THEN BEGIN
+IF file_test(file_path_base+'components.fits') EQ 0 THEN BEGIN
     textfast,component_list,/read,file_path=file_path_base+'components.dat',extension=0
     textfast,maps_408,/read,file_path=file_path_base+'component_maps_408locked.dat',extension=0
     Fitsfast,component_list,/write,file_path=file_path_base+'components'
@@ -28,17 +28,19 @@ npix=(size(maps_408,/dimension))[1] ;should equal 12.*512^2.
 nside=Sqrt(npix/12.)
 Temperature=Reform(components#maps_408)*norm
 
-;ipring=lindgen(npix)
-;pix2ang_ring, nside, ipring, theta, phi
-;
-;gl0=theta*!RaDeg-90.
-;gb0=phi*!RaDeg
-
-IF Keyword_Set(celestial_coord) THEN GlactC,gl,gb,2000.,gl_use,gb_use,1,/degree ELSE BEGIN gl_use=gl & gb_use=gb & ENDELSE
+radec_i=where(Finite(ra_arr))
+ra_use=ra_arr[radec_i]
+dec_use=dec_arr[radec_i]
+GlactC,ra_use,dec_use,2000.,gl_use,gb_use,1,/degree
 
 theta=(gb_use+90.)*!DtoR
 phi=gl_use*!DtoR
 ang2pix_ring, nside, theta, phi, ipring
-model=Temperature[*,ipring]
+model=Ptrarr(n_freq)
+FOR fi=0L,n_freq-1 DO BEGIN
+    model0=fltarr(size(ra_arr,/dimension))
+    model0[radec_i]=Temperature[fi,ipring]
+    model[fi]=Ptr_new(model0)
+ENDFOR
 RETURN,model
 END
