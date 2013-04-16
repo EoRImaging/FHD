@@ -59,9 +59,11 @@ sa_id=fltarr(ns)
 sa_ston=fltarr(ns)
 sa_beam=fltarr(ns)
 sa_radius=fltarr(ns)
+sa_extend=fltarr(ns)
 
 FOR fi=0,n_files-1 DO BEGIN
     IF n_src[fi] EQ 0 THEN CONTINUE
+    
     sa=*source_array2[fi]
     sa=sa[*src_i[fi]]
     sa_x[ns_i[fi]:ns_i[fi+1]-1]=sa.x
@@ -72,9 +74,9 @@ FOR fi=0,n_files-1 DO BEGIN
     sa_bin[ns_i[fi]:ns_i[fi+1]-1]=fi
     sa_id[ns_i[fi]:ns_i[fi+1]-1]=sa.id
     sa_ston[ns_i[fi]:ns_i[fi+1]-1]=sa.ston
-    sa_radius[ns_i[fi]:ns_i[fi+1]-1]=
+    sa_radius[ns_i[fi]:ns_i[fi+1]-1]=angle_difference(obs_arr[fi].obsdec,obs_arr[fi].obsra,sa.dec,sa.ra,/degree)
     sa_beam[ns_i[fi]:ns_i[fi+1]-1]=(*beam_arr[fi])[sa.x,sa.y]
-    
+    sa_extend[ns_i[fi]:ns_i[fi+1]-1]=Ptr_valid(sa.extend)
 ENDFOR
 
 group_id=fltarr(ns)-1
@@ -98,9 +100,9 @@ hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
 ng=max(group_id)
 
 
-source_list_base={id:-1,ra:0.,dec:0.,ston_max:0.,flux_max:0.,n_detect:0.,sources:Ptr_new()}
+source_list_base={id:-1,ra:0.,dec:0.,ston_max:0.,flux_max:0.,n_detect:0.,extend:0,sources:Ptr_new()}
 
-source_sub_base={filename:'XXX',extend:0.,alpha:0.,ston:0.,flux:0.,beam:0.,fi:-1.,fii:-1.,x:-1.,y:-1.}
+source_sub_base={filename:'XXX',extend:0.,radius:0.,alpha:0.,ston:0.,flux:0.,beam:0.,fi:-1.,fii:-1.,x:-1.,y:-1.}
 
 source_list=Replicate(source_list_base,ng)
 FOR gi=0L,ng-1 DO BEGIN
@@ -135,6 +137,9 @@ FOR gi=0L,ng-1 DO BEGIN
     source_sub.x=sa_x[si_g_use]
     source_sub.y=sa_y[si_g_use]
     source_sub.filename=file_basename(file_list[source_sub.fi])
+    source_sub.extend=sa_extend[si_g_use]
+    source_sub.radius=sa_radius[si_g_use]
+    source_list[gi].extend=median(sa_extend[si_g_use])
     
     source_list[gi].sources=Ptr_new(source_sub)
 ENDFOR

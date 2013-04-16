@@ -22,11 +22,11 @@ cal_ref_i=2
 fix_flux=1
 ;combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
 
-n_files=N_Elements(file_list)
+n_obs=N_Elements(file_list)
 
-ftest=intarr(n_files)
-FOR file_i=0,n_files-1 DO ftest[file_i]=file_test(file_list[file_i]+'_obs.sav')   
-file_i_use=where(ftest,n_files) 
+ftest=intarr(n_obs)
+FOR file_i=0,n_obs-1 DO ftest[file_i]=file_test(file_list[file_i]+'_obs.sav')   
+file_i_use=where(ftest,n_obs) 
 file_list_use=file_list[file_i_use]
 
 ;cal_use=calibration[file_i_use]
@@ -41,11 +41,11 @@ file_list_use=file_list[file_i_use]
 ;
 ;;    IF n_cut NE 0 THEN BEGIN
 ;;        cal_use[fi_cut]=1.
-;;        n_obs=n_files
+;;        n_obs=n_obs
 ;;        obs_i_use=file_i_use
 ;;    ENDIF
 ;cal_use*=flux_scale 
-cal_use=replicate(flux_scale,n_files)
+cal_use=replicate(flux_scale,n_obs)
 
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path=file_list_use[obs_i]
