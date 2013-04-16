@@ -13,7 +13,7 @@ IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(channel) EQ 0 THEN channel=121
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 
-data_directory=filepath('',root='DATA',subdir=['Alpha','galaxy'])
+data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['Alpha','galaxy'])
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
@@ -21,7 +21,7 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 
 ;noise_calibrate=0
 ;align=0
-dimension=1024.
+;dimension=1024.
 max_sources=10000.
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
