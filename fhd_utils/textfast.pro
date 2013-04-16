@@ -5,6 +5,7 @@ ON_ERROR,2
 
 UPNAME=StrUpCase(file_path)
 ptxt=strpos(UPNAME,'.TXT')
+IF N_Elements(extension) NE 0 THEN IF extension EQ 0 THEN ptxt=0
 IF ptxt EQ -1 THEN file_path_use=file_path+'.txt' ELSE file_path_use=file_path
 IF Keyword_Set(write) THEN action='write'
 IF Keyword_Set(read) THEN action='read'
