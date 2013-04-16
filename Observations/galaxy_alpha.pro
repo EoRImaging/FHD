@@ -1,54 +1,38 @@
-PRO galaxy_alpha
+PRO galaxy_alpha,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
+    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
+    grid=grid,deconvolve=deconvolve,channel=channel,_Extra=extra
 except=!except
 !except=0 
 heap_gc
 
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
+IF N_Elements(export_images) EQ 0 THEN export_images=1
+IF N_Elements(cleanup) EQ 0 THEN cleanup=0
+IF N_Elements(ps_export) EQ 0 THEN ps_export=0
+IF N_Elements(version) EQ 0 THEN version=0
+IF N_Elements(channel) EQ 0 THEN channel=121
+image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
+
 data_directory=filepath('',root='DATA',subdir=['Alpha','galaxy'])
-filename_list=file_search(rootdir('mwa')+data_directory,'*_cal.uvfits',count=n_files)
+vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
+fhd_file_list=fhd_path_setup(vis_file_list,version=version)
+healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
+catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 
-filename_list=Strmid(filename_list,Strlen(rootdir('mwa')+data_directory))
-FOR fi=0,n_files-1 DO filename_list[fi]=Strmid(filename_list[fi],0,Strpos(filename_list[fi],'.'))
+;noise_calibrate=0
+;align=0
+dimension=1024.
+max_sources=10000.
+pad_uv_image=2.
+precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
+complex_beam=1
+FoV=90.
 
-version=0
-alignment_file_header=['filename','degpix','obsra',' obsdec','zenra',' zendec','obsx','','obsy','zenx','zeny','obs_rotation','dx','dy','theta','scale']
-textfast,alignment_file_header,filename='alignment'+'v'+strn(version),data_dir=data_directory,/write
-;FOR fi=0,n_files-1 DO BEGIN
-;;IF fi LT 9 THEN CONTINUE
-;    filename=filename_list[fi]
-;    UPNAME=StrUpCase(filename)
-;    pcal=strpos(UPNAME,'_CAL')
-;    filename_use=StrMid(filename,0,pcal)
-;    
-;;    vis_path_default,data_directory,filename,file_path,version=version
-;;    RESTORE,file_path+'_obs.sav'
-;;    obs.data_directory=data_directory
-;;    SAVE,obs,filename=file_path+'_obs.sav'
-;    
-;    beam_recalculate=1
-;    mapfn=1
-;    flag=1
-;    grid=1
-;    noise_calibrate=0
-;    fluxfix=0
-;    align=1
-;    GPU_enable=0
-;    max_sources=20000.
-;    uvfits2fhd,data_directory=data_directory,filename=filename,n_pol=2,version=version,$
-;        independent_fit=0,/reject_pol_sources,beam_recalculate=beam_recalculate,$
-;        mapfn_recalculate=mapfn,flag=flag,grid=grid,GPU_enable=GPU_enable,$
-;        /silent,noise_calibrate=noise_calibrate,/no_output,max_sources=max_sources,cut_baselines=0.
-;    fhd_output,filename=filename,data_directory=data_directory,version=version,$
-;        noise_calibrate=noise_calibrate,fluxfix=fluxfix,align=align;,/restore
-;ENDFOR
-
-combine_obs_sources,calibration,source_list,filename_list,restore_last=1,version=version,data_directory=data_directory,/no_align
-combine_obs_healpix,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx,smooth_hpx,$
-    nside=nside,restore_last=1,version=version,data_directory=data_directory,$
-    lon_arr=lon_arr,lat_arr=lat_arr
-combine_obs_hpx_image,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx,smooth_hpx,$
-    nside=nside,restore_last=1,weight_threshold=0.5,version=version,data_directory=data_directory,$
-    lon_arr=lon_arr,lat_arr=lat_arr,high_dirty=10000.,high_residual=100,high_source=1000.,$
-    fraction_polarized=0.25
-
+general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
+    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
+    grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,$
+    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
+    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,$
+    complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,_Extra=extra
 !except=except
 END

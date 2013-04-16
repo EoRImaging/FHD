@@ -1,4 +1,4 @@
-FUNCTION GlobalSkyModel_read,frequency,gl=gl,gb=gb,celestial_coord=celestial_coord
+FUNCTION globalskymodel_read,frequency,gl=gl,gb=gb,celestial_coord=celestial_coord
 ;gl supplied galactic longitude (or RA if celestial_coord is set)
 ;gb supplied galactic latitude (or Dec if celestial_coord is set)
 ;returns the model temperatures from the Global Sky Model at the specified galactic longitude and latitude
