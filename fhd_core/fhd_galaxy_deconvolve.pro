@@ -19,7 +19,7 @@ model=fltarr(dimension,elements)
 FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]
 Ptr_free,model_arr
 
-model_uv=fft_shift(FFT(fft_shift(model,/inverse)))
+model_uv=fft_shift(FFT(fft_shift(model),/inverse))
 model_uv_holo=Ptrarr(n_pol)
 model_img_holo=Ptrarr(n_pol)
 dirty_img=Ptrarr(n_pol)

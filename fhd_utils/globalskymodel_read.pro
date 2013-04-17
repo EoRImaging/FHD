@@ -14,6 +14,26 @@ ENDIF
 Fitsfast,component_list,/read,file_path=file_path_base+'components'
 Fitsfast,maps_408,/read,file_path=file_path_base+'component_maps_408locked'
 
+npix=(size(maps_408,/dimension))[1] ;should equal 12.*512^2.
+nside=npix2nside(npix)
+
+radec_i=where(Finite(ra_arr))
+ra_use=ra_arr[radec_i]
+dec_use=dec_arr[radec_i]
+
+GlactC,ra_use,dec_use,2000.,gl_use,gb_use,1,/degree
+ang2vec,gb_use,gl_use,vec_use,/astro
+;ang2vec,dec_use,ra_use,vec_use,/astro
+vec2pix_ring,nside,vec_use,ipring
+
+;GlactC,ra_use,dec_use,2000.,gl_use,gb_use,1,/degree
+;
+;theta=(gb_use+90.)*!DtoR
+;phi=gl_use*!DtoR
+;ang2pix_ring, nside, theta, phi, ipring
+
+maps_408=maps_408[*,ipring]
+
 n_freq=N_Elements(frequency)
 ncomp=3.
 freq10_list=ALOG10(reform(component_list[0,*]))
@@ -24,22 +44,12 @@ norm=(interpol(norm_arr,freq10_list,freq10,/spline))[0]
 components=fltarr(n_freq,ncomp)
 FOR j=0L,ncomp-1 DO FOR fi=0L,n_freq-1 DO components[fi,j]=interpol(component_arr[j,*],freq10_list,freq10[fi],/spline)
 
-npix=(size(maps_408,/dimension))[1] ;should equal 12.*512^2.
-nside=Sqrt(npix/12.)
 Temperature=Reform(components#maps_408)*norm
 
-radec_i=where(Finite(ra_arr))
-ra_use=ra_arr[radec_i]
-dec_use=dec_arr[radec_i]
-GlactC,ra_use,dec_use,2000.,gl_use,gb_use,1,/degree
-
-theta=(gb_use+90.)*!DtoR
-phi=gl_use*!DtoR
-ang2pix_ring, nside, theta, phi, ipring
 model=Ptrarr(n_freq)
 FOR fi=0L,n_freq-1 DO BEGIN
     model0=fltarr(size(ra_arr,/dimension))
-    model0[radec_i]=Temperature[fi,ipring]
+    model0[radec_i]=Temperature[fi,*]
     model[fi]=Ptr_new(model0)
 ENDFOR
 RETURN,model
