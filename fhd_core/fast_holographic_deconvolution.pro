@@ -96,7 +96,7 @@ xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,
 
 ;the particular set of beams read will be the ones specified by file_path_fhd.
 ;that will include all polarizations and frequencies, at ONE time snapshot
-IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last,/silent) 
+IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last,/silent)
 nfreq_beam=(size(psf.base,/dimension))[1]
 beam_base=Ptrarr(n_pol,/allocate)
 beam_correction=Ptrarr(n_pol,/allocate)
@@ -138,7 +138,6 @@ dirty_array=Ptrarr(n_pol,/allocate)
 residual_array=Ptrarr(n_pol,/allocate)
 model_arr=Ptrarr(n_pol,/allocate)
 normalization_arr=fltarr(n_pol) ;factor to normalize holo_mapfn_apply
-;model_uv=Ptrarr(n_pol,/allocate)
 model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
 
@@ -167,7 +166,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;;        *map_fn_arr[pol_i]=map_fn
 ;;    ENDIF
 ;    weights_single=(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],_Extra=extra))
-;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,baseline_threshold=baseline_threshold))[dimension/2.,elements/2.]
+;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single))[dimension/2.,elements/2.]
 ;    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
 ;    
 ;    *weights_arr[pol_i]=weights_single
@@ -179,8 +178,8 @@ normalization=1.
 ;normalization=(degpix*!DtoR)^2.*(dimension*elements)
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
-    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])^2.
-    *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],baseline=baseline_threshold)*(*beam_correction[pol_i])
+    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i])*(*beam_correction[pol_i])^2.
+    *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i])*(*beam_correction[pol_i])
     
     ;xx, yy and xy, yx polarizations are treated seperately
     IF pol_i LE 1 THEN dirty_image_composite+=dirty_image_single
@@ -191,7 +190,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         2:dirty_image_composite_V+=dirty_image_single
         3:dirty_image_composite_V-=dirty_image_single
     ENDCASE
-;    *model_uv[pol_i]=complexarr(dimension,elements)
     *model_uv_full[pol_i]=complexarr(dimension,elements)
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
@@ -210,7 +208,7 @@ i2=0. & i3=0.
 t0=Systime(1)
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,galaxy_model=galaxy_model)
+    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,galaxy_model_uv=galaxy_model_uv)
     gal_model_composite=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO gal_model_composite+=dirty_image_generate(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
 ENDIF 
@@ -231,10 +229,17 @@ source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
 
 dirty_image_composite_smooth=fltarr(dimension,elements)
 dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
-    Median(dirty_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even) *beam_corr_box
+    Median(dirty_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
 converge_check[0]=(converge_check2[0]=$
     Stddev(((dirty_image_composite-dirty_image_composite_smooth)*beam_avg)[where(source_mask,n_pix0)],/nan))
 print,"Initial convergence:",converge_check[0]
+IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+    dirty_image_composite_smooth_gal=fltarr(dimension,elements)
+    dirty_image_composite_smooth_gal[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
+        Median((dirty_image_composite-gal_model_composite)[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+    converge_check_gal=Stddev(((dirty_image_composite-gal_model_composite-dirty_image_composite_smooth_gal)*beam_avg)[where(source_mask,n_pix0)],/nan)
+    print,"Convergence after subtracting model diffuse galactic emission:",converge_check_gal 
+ENDIF
 print,"Gain factor used:",fhd.gain_factor
 
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
@@ -269,6 +274,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
         image_use=dirty_image_composite-model_image_composite
+        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
         image_smooth=Median(image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
         image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
         
@@ -291,6 +297,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDIF    
     ENDIF ELSE BEGIN
         image_use=dirty_image_composite-model_image_composite
+        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
         image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
         source_find_image=image_use*beam_avg
 

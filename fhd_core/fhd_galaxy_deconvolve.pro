@@ -1,5 +1,5 @@
 FUNCTION fhd_galaxy_deconvolve,obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
-    galaxy_model_img=galaxy_model_img,model_uv_holo=model_uv_holo
+    galaxy_model_img=galaxy_model_img,galaxy_model_uv=galaxy_model_uv
 
 dimension=obs.dimension
 elements=obs.elements
@@ -40,9 +40,11 @@ ENDFOR
 scale=Mean(scale_arr)
 model*=scale
 FOR pol_i=0,n_pol-1 DO BEGIN
+    model_uv*=scale
     *model_uv_holo[pol_i]*=scale
     *model_img_holo[pol_i]*=scale
 ENDFOR
 IF Arg_present(galaxy_model_img) THEN galaxy_model_img=Temporary(model)
+galaxy_model_uv=model_uv
 RETURN,model_img_holo 
 END
