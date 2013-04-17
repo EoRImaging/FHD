@@ -1,4 +1,5 @@
-FUNCTION fhd_galaxy_deconvolve,obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base
+FUNCTION fhd_galaxy_deconvolve,obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
+    galaxy_model_img=galaxy_model_img,model_uv_holo=model_uv_holo
 
 dimension=obs.dimension
 elements=obs.elements
@@ -17,6 +18,7 @@ nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr)
 model=fltarr(dimension,elements)
 FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]
+model/=Total(nf_arr)
 Ptr_free,model_arr
 
 model_uv=fft_shift(FFT(fft_shift(model),/inverse))
@@ -35,5 +37,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     image_vals=(*dirty_img[pol_i])[beam_i]
     scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
 ENDFOR   
+scale=Mean(scale_arr)
+model*=scale
+FOR pol_i=0,n_pol-1 DO BEGIN
+    *model_uv_holo[pol_i]*=scale
+    *model_img_holo[pol_i]*=scale
+ENDFOR
+IF Arg_present(galaxy_model_img) THEN galaxy_model_img=Temporary(model)
 RETURN,model_img_holo 
 END

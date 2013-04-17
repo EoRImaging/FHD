@@ -54,7 +54,8 @@
 PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,timing=timing,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
-    beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,_Extra=extra
+    beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,$
+    galaxy_model_fit=galaxy_model_fit,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 
@@ -207,6 +208,13 @@ t3=0 ;fit the brightest source(s) to each polarization/etc...
 t4=0 ;update model and run Holo mapping function
 i2=0. & i3=0.
 t0=Systime(1)
+
+IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,galaxy_model=galaxy_model)
+    gal_model_composite=fltarr(dimension,elements)
+    FOR pol_i=0,n_pol-1 DO gal_model_composite+=dirty_image_generate(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
+ENDIF 
+
 converge_check=Fltarr(Ceil(max_iter/check_iter))
 converge_check2=Fltarr(max_iter)
 
