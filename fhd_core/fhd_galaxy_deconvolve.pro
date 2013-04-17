@@ -40,7 +40,7 @@ ENDFOR
 scale=Mean(scale_arr)
 model*=scale
 FOR pol_i=0,n_pol-1 DO BEGIN
-    model_uv*=scale
+    model_uv*=scale*dimension*elements
     *model_uv_holo[pol_i]*=scale
     *model_img_holo[pol_i]*=scale
 ENDFOR

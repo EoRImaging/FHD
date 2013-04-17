@@ -210,7 +210,7 @@ t0=Systime(1)
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,galaxy_model_uv=galaxy_model_uv)
     gal_model_composite=fltarr(dimension,elements)
-    FOR pol_i=0,n_pol-1 DO gal_model_composite+=dirty_image_generate(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
+    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
 ENDIF 
 
 converge_check=Fltarr(Ceil(max_iter/check_iter))
