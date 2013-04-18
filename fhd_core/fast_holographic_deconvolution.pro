@@ -114,7 +114,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     
     beam_mask_test=*beam_base[pol_i];*(*p_map_simple[pol_i])
 ;    *beam_i[pol_i]=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(beam_mask_test)])
-    *beam_i[pol_i]=where(beam_mask_test*alias_mask GE beam_threshold)
+    *beam_i[pol_i]=where(beam_mask_test GE beam_threshold)
     (*beam_mask[pol_i])[*beam_i[pol_i]]=1.
     IF pol_i LE 1 THEN BEGIN
         nbeam_avg+=1

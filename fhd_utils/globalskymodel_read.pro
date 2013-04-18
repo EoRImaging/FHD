@@ -1,4 +1,4 @@
-FUNCTION globalskymodel_read,frequency,ra_arr=ra_arr,dec_arr=dec_arr
+FUNCTION globalskymodel_read,frequency,ra_arr=ra_arr,dec_arr=dec_arr,components=components
 ;gl supplied galactic longitude (or RA if celestial_coord is set)
 ;gb supplied galactic latitude (or Dec if celestial_coord is set)
 ;returns the model temperatures from the Global Sky Model at the specified galactic longitude and latitude
@@ -33,6 +33,17 @@ vec2pix_ring,nside,vec_use,ipring
 ;ang2pix_ring, nside, theta, phi, ipring
 
 maps_408=maps_408[*,ipring]
+n_comp=(size(maps_408,/dimension))[0]
+IF Keyword_Set(components) THEN BEGIN
+    comp_arr=Ptrarr(n_comp)
+    
+    FOR ci=0,n_comp-1 DO BEGIN
+        comp0=fltarr(size(ra_arr,/dimension))
+        comp0[radec_i]=Reform(maps_408[ci,*])
+        comp_arr[ci]=Ptr_new(comp0)
+    ENDFOR
+    RETURN,comp_arr
+ENDIF
 
 n_freq=N_Elements(frequency)
 ncomp=3.
