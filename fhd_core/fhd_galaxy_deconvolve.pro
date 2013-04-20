@@ -1,10 +1,10 @@
 FUNCTION fhd_galaxy_deconvolve,obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,model_uv_holo=model_uv_holo,$
-    galaxy_model_img=galaxy_model_img,galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=restore
+    galaxy_model_img=galaxy_model_img,galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=restore,uv_return=uv_return
 
 IF Keyword_Set(file_path_fhd) THEN file_path_galmodel=file_path_fhd+'_GalaxyModel.sav' ELSE file_path_galmodel=''
 IF Keyword_Set(restore) AND file_test(file_path_galmodel) THEN BEGIN
     restore,file_path_galmodel
-    RETURN,model_img_holo 
+    IF Keyword_Set(uv_return) THEN RETURN,model_uv_holo ELSE RETURN,model_img_holo 
 ENDIF
 
 n_pol=N_Elements(image_uv_arr)
@@ -85,5 +85,5 @@ galaxy_model_uv=model_uv
 ;ENDFOR
   
 IF Keyword_Set(file_path_galmodel) THEN save,model_img_holo,galaxy_model_img,galaxy_model_uv,model_uv_holo,filename=file_path_galmodel
-RETURN,model_img_holo 
+IF Keyword_Set(uv_return) THEN RETURN,model_uv_holo ELSE RETURN,model_img_holo 
 END

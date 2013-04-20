@@ -163,11 +163,15 @@ t0+=t1a-t0a
 ;    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(Sqrt(2.*Alog(2.)))
     model_holo_arr=model_uv_holo
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-        gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
-            model_uv_holo=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1)
+        gal_holo_uv=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
+            model_uv_holo=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1,uv_return=1)
         gal_name='_galfit'
         gal_model_img=Ptrarr(npol)
-        FOR pol_i=0,npol-1 DO gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image)*(*beam_correction_out[pol_i]))
+        gal_holo_img=Ptrarr(npol)
+        FOR pol_i=0,npol-1 DO BEGIN
+            gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image)*(*beam_correction_out[pol_i]))
+            gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image)*(*beam_correction_out[pol_i]))
+        ENDFOR
     ENDIF ELSE gal_name=''
     FOR pol_i=0,npol-1 DO BEGIN
 ;        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
@@ -181,7 +185,7 @@ t0+=t1a-t0a
             dimension=dimension,width=restored_beam_width,pad_uv_image=pad_uv_image)
         IF Keyword_Set(galaxy_model_fit) THEN BEGIN
             *instr_sources[pol_i]+=*gal_model_img[pol_i]
-            *instr_images[pol_i]-=*gal_model_holo[pol_i]
+            *instr_images[pol_i]-=*gal_holo_img[pol_i]
         ENDIF
     ENDFOR
     
