@@ -289,7 +289,7 @@ t0+=t1a-t0a
     t5+=t6a-t5a
     
     ;FREE MEMORY
-    IF Ptr_valid(map_fn_arr) THEN Ptr_free,map_fn_arr
+    IF Max(Ptr_valid(map_fn_arr)) THEN Ptr_free,map_fn_arr
     Ptr_free,image_uv_arr
     Ptr_free,model_uv_full
     Ptr_free,model_uv_holo
