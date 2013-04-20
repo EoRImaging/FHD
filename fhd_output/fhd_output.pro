@@ -166,7 +166,7 @@ t0+=t1a-t0a
         gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
             model_uv_holo=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1)
         gal_name='_galfit'
-        gal_model=Ptrarr(n_pol)
+        gal_model_img=Ptrarr(npol)
         FOR pol_i=0,npol-1 DO gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image)*(*beam_correction_out[pol_i]))
     ENDIF ELSE gal_name=''
     FOR pol_i=0,npol-1 DO BEGIN
@@ -285,7 +285,7 @@ t0+=t1a-t0a
     t5+=t6a-t5a
     
     ;FREE MEMORY
-;    Ptr_free,map_fn_arr
+    IF Ptr_valid(map_fn_arr) THEN Ptr_free,map_fn_arr
     Ptr_free,image_uv_arr
     Ptr_free,model_uv_full
     Ptr_free,model_uv_holo
