@@ -208,7 +208,8 @@ i2=0. & i3=0.
 t0=Systime(1)
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,galaxy_model_uv=galaxy_model_uv)
+    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
+        galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0)
     gal_model_composite=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
 ENDIF 
@@ -239,6 +240,10 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
         Median((dirty_image_composite-gal_model_composite)[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
     converge_check_gal=Stddev(((dirty_image_composite-gal_model_composite-dirty_image_composite_smooth_gal)*beam_avg)[where(source_mask,n_pix0)],/nan)
     print,"Convergence after subtracting model diffuse galactic emission:",converge_check_gal 
+    IF converge_check_gal GT converge_check[0] THEN BEGIN
+        print,"Galactic model not used due to bad fit"
+        gal_model_composite[*]=0.
+    ENDIF
 ENDIF
 print,"Gain factor used:",fhd.gain_factor
 
