@@ -172,20 +172,24 @@ t0+=t1a-t0a
             gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image)*(*beam_correction_out[pol_i]))
             gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image)*(*beam_correction_out[pol_i]))
         ENDFOR
-    ENDIF ELSE gal_name=''
+    ENDIF ELSE BEGIN
+        gal_name=''
+        gal_holo_uv=Ptrarr(npol)
+        FOR pol_i=0,npol-1 DO gal_holo_uv[pol_i]=Ptr_new(0.)
+    ENDELSE
     FOR pol_i=0,npol-1 DO BEGIN
 ;        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
 ;            beam_correction=beam_correction,mask=source_uv_mask)
 ;        *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
         *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
-        *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i],$
+        *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i]-*gal_holo_uv[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,width=restored_beam_width,pad_uv_image=pad_uv_image)
         IF Keyword_Set(galaxy_model_fit) THEN BEGIN
             *instr_sources[pol_i]+=*gal_model_img[pol_i]
-            *instr_images[pol_i]-=*gal_holo_img[pol_i]
+;            *instr_images[pol_i]-=*gal_holo_img[pol_i]
         ENDIF
     ENDFOR
     
