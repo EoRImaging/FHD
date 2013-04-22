@@ -169,8 +169,10 @@ t0+=t1a-t0a
         gal_model_img=Ptrarr(npol)
         gal_holo_img=Ptrarr(npol)
         FOR pol_i=0,npol-1 DO BEGIN
-            gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image)*(*beam_correction_out[pol_i]))
-            gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image)*(*beam_correction_out[pol_i]))
+            gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
+                image_filter_fn=image_filter_fn,_Extra=extra)*(*beam_correction_out[pol_i]))
+            gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,$
+                image_filter_fn=image_filter_fn,_Extra=extra)*(*beam_correction_out[pol_i]))
         ENDFOR
     ENDIF ELSE BEGIN
         gal_name=''
