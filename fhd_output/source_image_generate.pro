@@ -81,6 +81,6 @@ ENDFOR
 ;ELSE FOR si=0.,ns-1 DO $
 ;    source_image+=sf[si]*Exp(-(((x_vals-sx[si])/width)^2.+((y_vals-sy[si])/width)^2.)/2.) 
 Ptr_free,beam_useR_arr
-IF Keyword_set(pad_uv_image) THEN source_image*=pad_uv_image^2.
+;IF Keyword_set(pad_uv_image) THEN source_image*=pad_uv_image^2.
 RETURN,source_image
 END
