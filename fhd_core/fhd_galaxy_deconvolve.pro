@@ -7,14 +7,6 @@ IF Keyword_Set(restore) AND file_test(file_path_galmodel) THEN BEGIN
     IF Keyword_Set(uv_return) THEN RETURN,model_uv_holo ELSE RETURN,model_img_holo 
 ENDIF
 
-n_pol=N_Elements(image_uv_arr)
-IF N_Elements(map_fn_arr) EQ 0 THEN BEGIN
-    map_fn_arr=Ptrarr(n_pol,/allocate)
-    file_path_mapfn=file_path_fhd+'_mapfn_'
-    pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
-    FOR pol_i=0,n_pol-1 DO *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
-ENDIF
-
 dimension=obs.dimension
 elements=obs.elements
 astr=obs.astr
@@ -24,7 +16,7 @@ freq_use=where((*obs.baseline_info).freq_use,nf_use)
 f_bin=obs.fbin_i
 fb_use=Uniq(f_bin[freq_use])
 nbin=N_Elements(fb_use)
-freq_arr=(obs.freq)[freq_use[fb_use]]
+freq_arr=(obs.freq)[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
@@ -34,6 +26,14 @@ model=fltarr(dimension,elements)
 FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]
 model/=Total(nf_arr)
 Ptr_free,model_arr
+
+n_pol=N_Elements(image_uv_arr)
+IF N_Elements(map_fn_arr) EQ 0 THEN BEGIN
+    map_fn_arr=Ptrarr(n_pol,/allocate)
+    file_path_mapfn=file_path_fhd+'_mapfn_'
+    pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
+    FOR pol_i=0,n_pol-1 DO *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
+ENDIF
 
 model_uv=fft_shift(FFT(fft_shift(model),/inverse))
 model_uv_holo=Ptrarr(n_pol)

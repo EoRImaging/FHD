@@ -234,17 +234,17 @@ dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
 converge_check[0]=(converge_check2[0]=$
     Stddev(((dirty_image_composite-dirty_image_composite_smooth)*beam_avg)[where(source_mask,n_pix0)],/nan))
 print,"Initial convergence:",converge_check[0]
-IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    dirty_image_composite_smooth_gal=fltarr(dimension,elements)
-    dirty_image_composite_smooth_gal[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
-        Median((dirty_image_composite-gal_model_composite)[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-    converge_check_gal=Stddev(((dirty_image_composite-gal_model_composite-dirty_image_composite_smooth_gal)*beam_avg)[where(source_mask,n_pix0)],/nan)
-    print,"Convergence after subtracting model diffuse galactic emission:",converge_check_gal 
-    IF converge_check_gal GT converge_check[0] THEN BEGIN
-        print,"Galactic model not used due to bad fit"
-        gal_model_composite[*]=0.
-    ENDIF
-ENDIF
+;IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+;    dirty_image_composite_smooth_gal=fltarr(dimension,elements)
+;    dirty_image_composite_smooth_gal[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
+;        Median((dirty_image_composite-gal_model_composite)[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+;    converge_check_gal=Stddev(((dirty_image_composite-gal_model_composite-dirty_image_composite_smooth_gal)*beam_avg)[where(source_mask,n_pix0)],/nan)
+;    print,"Convergence after subtracting model diffuse galactic emission:",converge_check_gal 
+;    IF converge_check_gal GT converge_check[0] THEN BEGIN
+;        print,"Galactic model not used due to bad fit"
+;        gal_model_composite[*]=0.
+;    ENDIF
+;ENDIF
 print,"Gain factor used:",fhd.gain_factor
 
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
