@@ -10,5 +10,7 @@ ENDIF ELSE BEGIN
     IF n_use GT 0 THEN result[i_use]=1./weights[i_use]
 ENDELSE
 
+IF nan_test(result) NE 0 THEN result[where(Finite(result,/nan))]=0.
+IF inf_test(result) NE 0 THEN result[where(Finite(result,/inf))]=0.
 RETURN,result
 END

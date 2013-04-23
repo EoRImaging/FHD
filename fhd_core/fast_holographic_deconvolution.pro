@@ -177,9 +177,17 @@ ENDFOR
 normalization=1.
 ;normalization=(degpix*!DtoR)^2.*(dimension*elements)
 
+IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
+        galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0)
+;    gal_model_composite=fltarr(dimension,elements)
+;    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
+ENDIF 
+
 FOR pol_i=0,n_pol-1 DO BEGIN    
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i])*(*beam_correction[pol_i])^2.
-    *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i])*(*beam_correction[pol_i])
+    IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
+    *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
     
     ;xx, yy and xy, yx polarizations are treated seperately
     IF pol_i LE 1 THEN dirty_image_composite+=dirty_image_single
@@ -206,13 +214,6 @@ t3=0 ;fit the brightest source(s) to each polarization/etc...
 t4=0 ;update model and run Holo mapping function
 i2=0. & i3=0.
 t0=Systime(1)
-
-IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
-        galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0)
-    gal_model_composite=fltarr(dimension,elements)
-    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
-ENDIF 
 
 converge_check=Fltarr(Ceil(max_iter/check_iter))
 converge_check2=Fltarr(max_iter)
@@ -279,7 +280,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
         image_use=dirty_image_composite-model_image_composite
-        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
+;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
         image_smooth=Median(image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
         image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
         
@@ -302,7 +303,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDIF    
     ENDIF ELSE BEGIN
         image_use=dirty_image_composite-model_image_composite
-        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
+;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
         image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
         source_find_image=image_use*beam_avg
 
