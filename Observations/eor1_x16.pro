@@ -10,7 +10,7 @@ IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=0
-IF N_Elements(channel) EQ 0 THEN channel=121
+IF N_Elements(channel) EQ 0 THEN channel=145
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 
 IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))]) $
