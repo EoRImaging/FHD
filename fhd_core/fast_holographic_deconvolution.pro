@@ -207,12 +207,15 @@ uv_use_frac=Float(n_uv_use)/(dimension*elements)
 print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
 xvals1=xvals[uv_i_use]
 yvals1=yvals[uv_i_use]
+;uv_i_use2=where(source_uv_mask[*,0:elements/2-1])
+;xvals2=xvals[uv_i_use2]
+;yvals2=yvals[uv_i_use2]
 
 t1=0 ;generation of model_images and image_use for source detection
 t2=0 ;source extraction
 t3=0 ;fit the brightest source(s) to each polarization/etc...
 t4=0 ;update model and run Holo mapping function
-i2=0. & i3=0.
+i2=0. 
 t0=Systime(1)
 
 converge_check=Fltarr(Ceil(max_iter/check_iter))
@@ -328,8 +331,8 @@ FOR i=0L,max_iter-1 DO BEGIN
 ;       should put some cap on the absolute number of them ; This is max_add_sources
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 
-    flux_ref1=source_find_image[source_i]*add_threshold
-    additional_i=where(source_find_image*source_mask GT flux_ref1,n_add)
+    flux_ref=source_find_image[source_i]*add_threshold
+    additional_i=where(source_find_image*source_mask GT flux_ref,n_add)
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod dimension
     add_y=Floor(additional_i/dimension)
@@ -337,7 +340,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR addi=1,n_add-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
     additional_i_usei=where(add_dist LT 0,n_sources)
     
-    IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
+    IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-(si+1)
     IF n_sources GT max_add_sources THEN BEGIN
         additional_i_usei=additional_i_usei[0:max_add_sources-1]
         n_sources=max_add_sources
@@ -399,7 +402,7 @@ FOR i=0L,max_iter-1 DO BEGIN
 
         ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
 ;        source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
-        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals1,yvals1,dimension=dimension,elements=elements)
+        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals1,yvals1,dimension=dimension,elements=elements,/mirror)
         FOR pol_i=0,n_pol-1 DO BEGIN
             (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
 ;            (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*source_uv_vals
@@ -407,32 +410,21 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDFOR
         
         si+=1
-        IF si GE max_sources THEN BEGIN
-            t4_0=Systime(1)
-            t3+=t4_0-t3_0
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
-            ENDFOR
-            i3=0    
-            t4+=Systime(1)-t4_0
-            i2+=1                                        
-            t10=Systime(1)-t0
-            print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,Stddev((image_use*beam_avg)[where(source_mask)],/nan)))
-            converge_check[i2]=Stddev((image_use*beam_avg)[where(source_mask)],/nan)
-            BREAK
-        ENDIF
     ENDFOR
-    IF si GE max_sources THEN BREAK
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    IF i3 EQ 0 THEN flux_ref=Median(flux_arr[0:(n_pol<2)-1,*,*]) ;replace with median across all pol/freq/time
-    IF (i3 GE mapfn_interval) OR (Median(flux_arr[0:(n_pol<2)-1,*,*]) LT flux_ref*mapfn_threshold) OR ((i+1) mod check_iter EQ 0) THEN BEGIN
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
-        ENDFOR
-        i3=0
-    ENDIF ELSE i3+=1
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
+    ENDFOR
     t4+=Systime(1)-t4_0
+    
+    IF si GE max_sources THEN BEGIN
+        i2+=1                                        
+        t10=Systime(1)-t0
+        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,Stddev((image_use*beam_avg)[where(source_mask)],/nan)))
+        converge_check[i2]=Stddev((image_use*beam_avg)[where(source_mask)],/nan)
+        BREAK
+    ENDIF
     
     IF (Round(i mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
         i2+=1
