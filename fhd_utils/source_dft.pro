@@ -20,7 +20,7 @@ IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF Keyword_Set(mirror_inds) THEN BEGIN
     dims=size(xvals,/dimension)
     IF N_Elements(dims) EQ 1 THEN BEGIN
-        source_uv_vals=Complexarr(2.*dims)
+        source_uv_vals=Complexarr(Max(mirror_inds)+1)
         dft_vals=fft_norm*Exp(icomp*(2.*!Pi/dimension)*((x_loc-dimension/2.)*xvals+(y_loc-elements/2.)*yvals))
         source_uv_vals[0:dims-1]=dft_vals
         source_uv_vals[mirror_inds]=Conj(dft_vals)
