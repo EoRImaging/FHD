@@ -213,8 +213,7 @@ yvals_mirror=Shift(Reverse(reverse(yvals,1),2),1,1)
 uv_i_use2=where(source_uv_mask[*,0:elements/2-1])
 xvals2=xvals[uv_i_use2]
 yvals2=yvals[uv_i_use2]
-xvals2_mirror=xvals_mirror[uv_i_use2]
-yvals2_mirror=yvals_mirror[uv_i_use2]
+mirror_inds=xvals2+yvals2*dimension
 
 t1=0 ;generation of model_images and image_use for source detection
 t2=0 ;source extraction
@@ -408,7 +407,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
 ;        source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
         source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals1,yvals1,$
-            dimension=dimension,elements=elements,xvals_mirror=xvals2_mirror,yvals_mirror=yvals2_mirror)
+            dimension=dimension,elements=elements,mirror_inds=mirror_inds)
         FOR pol_i=0,n_pol-1 DO BEGIN
             (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
 ;            (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*source_uv_vals
