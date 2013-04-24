@@ -212,9 +212,11 @@ xvals_mirror=Shift(Reverse(reverse(xvals,1),2),1,1)
 yvals_mirror=Shift(Reverse(reverse(yvals,1),2),1,1)
 uv_i_use2=where(source_uv_mask[0:dimension*elements/2+dimension/2],n_uv_use2)
 IF source_uv_mask[dimension*elements/2+dimension/2] NE 0 THEN n_uv_use2-=1
-xvals2=xvals_mirror[uv_i_use2]
-yvals2=yvals_mirror[uv_i_use2]
-mirror_inds0=(xvals2+dimension/2.)+(yvals2+elements/2.)*dimension
+xvals2=xvals[uv_i_use2]
+yvals2=yvals[uv_i_use2]
+xvals3=xvals_mirror[uv_i_use2]
+yvals3=yvals_mirror[uv_i_use2]
+mirror_inds0=(xvals3+dimension/2.)+(yvals3+elements/2.)*dimension
 mirror_inds=Sort(mirror_inds0)+n_uv_use2
 
 t1=0 ;generation of model_images and image_use for source detection
