@@ -15,7 +15,7 @@ image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 
 IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['128T','test']) $
     ELSE data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','test'])
-vis_file_list=reverse(file_search(data_directory,'*_cal.uvfits',count=n_files))
+vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
