@@ -51,7 +51,7 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,timing=timing,$
+PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,$
@@ -133,7 +133,7 @@ beam_corr_avg=weight_invert(beam_avg,beam_threshold)
 
 
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
-;weights_arr=Ptrarr(n_pol,/allocate)
+weights_arr=Ptrarr(n_pol,/allocate)
 dirty_array=Ptrarr(n_pol,/allocate)
 residual_array=Ptrarr(n_pol,/allocate)
 model_arr=Ptrarr(n_pol,/allocate)
@@ -152,6 +152,7 @@ dirty_image_composite_Q=fltarr(dimension,elements)
 dirty_image_composite_U=fltarr(dimension,elements)
 dirty_image_composite_V=fltarr(dimension,elements)
 source_uv_mask=fltarr(dimension,elements)
+source_uv_mask2=fltarr(dimension,elements)
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
     file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) 
     print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
@@ -165,12 +166,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;;;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
 ;;        *map_fn_arr[pol_i]=map_fn
 ;;    ENDIF
-;    weights_single=(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],_Extra=extra))
+    weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],/no_conj,_Extra=extra)
 ;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single))[dimension/2.,elements/2.]
 ;    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
-;    
-;    *weights_arr[pol_i]=weights_single
+    weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
+    *weights_arr[pol_i]=(weights_single+weights_single_conj)
     source_uv_mask[where(*image_uv_arr[pol_i])]=1.
+    source_uv_mask2[where(weights_single)]=1
 ENDFOR
 ;normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
 ;normalization=.25
@@ -205,19 +207,17 @@ ENDFOR
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
 print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
-xvals1=xvals[uv_i_use]
-yvals1=yvals[uv_i_use]
+;xvals1=xvals[uv_i_use]
+;yvals1=yvals[uv_i_use]
 
-xvals_mirror=Shift(Reverse(reverse(xvals,1),2),1,1)
-yvals_mirror=Shift(Reverse(reverse(yvals,1),2),1,1)
-uv_i_use2=where(source_uv_mask[0:dimension*elements/2+dimension/2],n_uv_use2)
-IF source_uv_mask[dimension*elements/2+dimension/2] NE 0 THEN n_uv_use2-=1
+uv_i_use2=where(source_uv_mask2,n_uv_use2)
+;IF source_uv_mask[dimension*elements/2+dimension/2] NE 0 THEN n_uv_use2-=1
 xvals2=xvals[uv_i_use2]
 yvals2=yvals[uv_i_use2]
-xvals3=xvals_mirror[uv_i_use2]
-yvals3=yvals_mirror[uv_i_use2]
-mirror_inds0=(xvals3+dimension/2.)+(yvals3+elements/2.)*dimension
-mirror_inds=Sort(mirror_inds0)+n_uv_use2
+;xvals3=xvals_mirror[uv_i_use2]
+;yvals3=yvals_mirror[uv_i_use2]
+;mirror_inds0=(xvals3+dimension/2.)+(yvals3+elements/2.)*dimension
+;mirror_inds=Sort(mirror_inds0)+n_uv_use2
 
 t1=0 ;generation of model_images and image_use for source detection
 t2=0 ;source extraction
@@ -348,7 +348,8 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR addi=1,n_add-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
     additional_i_usei=where(add_dist LT 0,n_sources)
     
-    IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-(si+1)
+    IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
+    IF max_add_sources EQ 0 THEN BREAK
     IF n_sources GT max_add_sources THEN BEGIN
         additional_i_usei=additional_i_usei[0:max_add_sources-1]
         n_sources=max_add_sources
@@ -410,10 +411,14 @@ FOR i=0L,max_iter-1 DO BEGIN
 
         ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
 ;        source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
-        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals2,yvals2,$
-            dimension=dimension,elements=elements,mirror_inds=mirror_inds)
+;        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals1,yvals1,dimension=dimension,elements=elements)
+        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals2,yvals2,dimension=dimension,elements=elements)
+;        source_uv=Complexarr(dimension,elements) & source_uv[uv_i_use2]=source_uv_vals
+;        source_uv+=Conj(Shift(Reverse(reverse(source_uv,1),2),1,1))
+
         FOR pol_i=0,n_pol-1 DO BEGIN
-            (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+            (*model_uv_full[pol_i])[uv_i_use2]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+;            *model_uv_full[pol_i]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv
 ;            (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*source_uv_vals
 ;            (*model_uv_full[pol_i])[uv_i_use]+=flux_arr[pol_i]*source_uv_vals
         ENDFOR

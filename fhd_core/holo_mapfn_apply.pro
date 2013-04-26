@@ -16,7 +16,8 @@
 ;
 ; :Author: isullivan May 6, 2012
 ;-
-FUNCTION holo_mapfn_apply,image,map_fn,mask,timing=timing,transpose=transpose,complex=complex,double=double,_Extra=extra
+FUNCTION holo_mapfn_apply,image,map_fn,mask,timing=timing,transpose=transpose,complex=complex,double=double,$
+    no_conjugate=no_conjugate,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(complex) EQ 0 THEN complex=1
@@ -49,6 +50,11 @@ ENDIF ELSE BEGIN
     ENDELSE
 ENDELSE
 result_image=reform(result_image,dimension,elements)
+
+IF Keyword_Set(no_conjugate) THEN BEGIN
+    timing=Systime(1)-t0
+    RETURN,result_image
+ENDIF
 result_image_conj=Shift(Reverse(reverse(Conj(result_image),1),2),1,1)
 result_image+=result_image_conj
 result_image/=2.
