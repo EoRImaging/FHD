@@ -335,9 +335,9 @@ FOR pol_i=0,npol-1 DO BEGIN
     t9a=Systime(1)
     t8+=t9a-t8a
     
-    Imagefast,*weights_arr[pol_i],file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
+    Imagefast,Abs(*weights_arr[pol_i]),file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
-        low=Min(*weights_arr[pol_i]),high=Max(*weights_arr[pol_i])
+        low=Min(Abs(*weights_arr[pol_i])),high=Max(Abs(*weights_arr[pol_i]))
     
     instr_low=Min(instr_residual[where(beam_mask)])
     instr_high=Max(instr_residual[where(beam_mask)])
