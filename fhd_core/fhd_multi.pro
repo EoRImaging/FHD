@@ -203,7 +203,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF i mod Floor(1./gain_factor) EQ 0 THEN *smooth_map[pol_i]=Fltarr(n_hpx)
         FOR obs_i=0,n_obs-1 DO BEGIN
             t1_0=Systime(1)
-            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
+            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],degpix=obs_arr[obs_i].degpix)
             
             t2_0a=Systime(1)
             t1+=t2_0a-t1_0
@@ -406,7 +406,8 @@ FOR i=0L,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
             IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
 ;                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
-                source_uv_vals=source_dft(comp_arr1[si1].x,comp_arr1[si1].y,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements)
+                source_uv_vals=source_dft(comp_arr1[si1].x,comp_arr1[si1].y,*xv_arr[obs_i],*yv_arr[obs_i],$
+                    dimension=dimension,elements=elements,degpix=obs_arr[obs_i].degpix)
                 FOR pol_i=0,n_pol-1 DO $
                     (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
             ENDIF
@@ -465,7 +466,8 @@ source_array=Ptrarr(n_obs)
 FOR obs_i=0L,n_obs-1 DO *comp_arr[obs_i]=(*comp_arr[obs_i])[0:si-1] ;truncate component list to include only components actually deconvolved
 FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])*(*beam_corr[pol_i,obs_i])
+        *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
+            degpix=obs_arr[obs_i].degpix)*(*beam_corr[pol_i,obs_i])
     ENDFOR
     
     image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]

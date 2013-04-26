@@ -1,5 +1,5 @@
 FUNCTION dirty_image_generate,dirty_image_uv,baseline_threshold=baseline_threshold,mask=mask,$
-    normalization=normalization,resize=resize,width_smooth=width_smooth,$
+    normalization=normalization,resize=resize,width_smooth=width_smooth,degpix=degpix,$
     hanning_filter=hanning_filter,no_real=no_real,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
     _Extra=extra
 
@@ -55,6 +55,7 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
     di_uv_use=di_uv1*pad_uv_image^2.
 ENDIF
 
+IF Keyword_Set(degpix) THEN di_uv_use/=(degpix*!DtoR)^2. ;FFT normalization
 IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use))) $
     ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use))))
 RETURN,dirty_image

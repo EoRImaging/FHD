@@ -93,7 +93,7 @@ IF Keyword_Set(combine_healpix) THEN BEGIN
     combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,$
         weight_threshold=0.5,fraction_pol=0.5,high_dirty=6.0,low_dirty=-1.5,high_residual=3.0,high_source=3.0,$
         nside=nside,output_path=healpix_path,restore_last=0,obs_arr=obs_arr,map_projection=map_projection,_Extra=extra
-    calibration_test,fhd_file_list,output_path=healpix_path
+;    calibration_test,fhd_file_list,output_path=healpix_path ;currently broken!
 ENDIF
 
 IF Keyword_Set(ps_export) THEN BEGIN

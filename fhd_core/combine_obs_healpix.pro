@@ -78,6 +78,7 @@ ENDFOR
 FOR obs_i=0,n_obs-1 DO BEGIN
     heap_gc
     obs=obs_arr[obs_i]
+    n_vis=obs.n_vis
     file_path=file_list_use[obs_i]
 ;        restore,file_path+'_fhd_params.sav'
 ;        restore,file_path+'_fhd.sav'
@@ -102,15 +103,15 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
     FOR pol_i=0,npol-1 DO BEGIN
-        dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn)*cal_use[obs_i]
-        model_single=dirty_image_generate(*model_uv_holo[pol_i],image_filter_fn=image_filter_fn)*cal_use[obs_i]
+        dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis
+        model_single=dirty_image_generate(*model_uv_holo[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis
 
         sources_single=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=16,dimension=dimension,width=restored_beam_width)*$
-            cal_use[obs_i]*(*beam_base[pol_i]) ;source_arr is already in instrumental pol (x beam once)
+            cal_use[obs_i]*(*beam_base[pol_i])*n_vis ;source_arr is already in instrumental pol (x beam once)
         
         residual_single=dirty_single-model_single
         
-        weights_single=(*beam_base[pol_i]^2.)
+        weights_single=(*beam_base[pol_i]^2.)*n_vis
         
         (*residual_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(residual_single,hpx_cnv)
         (*weights_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(weights_single,hpx_cnv)

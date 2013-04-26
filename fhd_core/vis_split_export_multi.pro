@@ -75,7 +75,9 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     uv_mask[where(*weights_arr[0] OR *weights_arr[1])]=1
     dirty_arr1=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_path,vis_file_path=vis_path,$
         n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1,variance=variance_arr1,even_only=even_only,odd_only=odd_only,_Extra=extra) 
-        
+    
+    obs_arr[obs_i]=obs
+    
     model_arr1=vis_model_freq_split(source_array,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
         n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask,even_only=even_only,odd_only=odd_only,_Extra=extra)
        

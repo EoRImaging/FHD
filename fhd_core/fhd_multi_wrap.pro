@@ -25,6 +25,7 @@ FOR j=0L,n_rep-1 DO BEGIN
         FOR fi=0,nsub-1 DO BEGIN
             file_path_fhd=fhd_file_list_sub[fi]
             obs=obs_arr[fi]
+            degpix=obs.degpix
             residual_array=Reform(residual_array2[*,fi])
             image_uv_arr=Reform(dirty_uv_arr2[*,fi])
             source_array=*source_array2[fi]
@@ -40,7 +41,7 @@ FOR j=0L,n_rep-1 DO BEGIN
             dirty_array=Ptrarr(n_pol)
             weights_arr=Reform(weights_arr2[*,fi])
             FOR pol_i=0,n_pol-1 DO BEGIN
-                dirty_array[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i])*(*beam_correction[pol_i]))
+                dirty_array[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix)*(*beam_correction[pol_i]))
             ENDFOR
             IF N_Elements(quickview) EQ 0 THEN quickview=1
             IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
