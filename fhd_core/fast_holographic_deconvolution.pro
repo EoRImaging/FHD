@@ -170,7 +170,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single))[dimension/2.,elements/2.]
 ;    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
     weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
-    *weights_arr[pol_i]=(weights_single+weights_single_conj)
+    *weights_arr[pol_i]=(weights_single+weights_single_conj)/2.
     source_uv_mask[where(*image_uv_arr[pol_i])]=1.
     source_uv_mask2[where(weights_single)]=1
 ENDFOR
