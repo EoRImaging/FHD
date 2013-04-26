@@ -166,7 +166,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;;;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
 ;;        *map_fn_arr[pol_i]=map_fn
 ;;    ENDIF
-    weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],/no_conj,_Extra=extra)
+    weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
 ;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single))[dimension/2.,elements/2.]
 ;    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
     weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
@@ -428,7 +428,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
     ENDFOR
     t4+=Systime(1)-t4_0
     

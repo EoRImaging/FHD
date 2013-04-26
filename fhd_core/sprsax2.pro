@@ -1,4 +1,4 @@
-PRO sprsax2,A,X,B,X2,B2,double=double,transpose=transpose,mask=mask,complex=complex
+PRO sprsax2,A,X,B,X2,B2,double=double,transpose=transpose,mask=mask,complex=complex,indexed=indexed
 ;Major modification in the storage format of ija and sa which allows for much faster extraction of sub-arrays. The older format is still supported temporarily
 ;slight modification to sprsax to allow much larger arrays
 ;also modified to more efficiently use sparse vectors if mask is supplied 
@@ -11,6 +11,13 @@ IF tag_exist(A,'i_use') THEN BEGIN
     ija=A.ija
     i_use=A.i_use
     n=N_Elements(i_use)
+    IF Keyword_Set(indexed) THEN BEGIN
+        X_use=X[i_use]
+        IF Keyword_Set(X2) THEN X2_use=X2[i_use]
+    ENDIF ELSE BEGIN
+        X_use=X
+        IF Keyword_Set(X2) THEN X2_use=X2
+    ENDELSE
     
     ;To use a douple precision or complex B, supply it from the calling program
 ;    IF N_Elements(B) EQ 0 THEN B=Fltarr(N_Elements(X))
@@ -30,20 +37,21 @@ IF tag_exist(A,'i_use') THEN BEGIN
     
     IF Keyword_Set(transpose) THEN BEGIN
         FOR i0=0L,n-1 DO BEGIN
-            i=i_use[i0]
+            IF Keyword_Set(indexed) THEN i=i0 ELSE i=i_use[i0]
             IF mask_flag THEN IF mask[i] EQ 0 THEN CONTINUE 
-            B[*ija[i0]]+=*sa[i0]*X[i]
-            IF b2_flag THEN B2[*ija[i0]]+=*sa[i0]*X2[i]
+            IF Keyword_Set(indexed) THEN B[i_use[*ija[i0]]]+=*sa[i0]*X_use[i] ELSE B[*ija[i0]]+=*sa[i0]*X_use[i]
+            IF b2_flag THEN B2[*ija[i0]]+=*sa[i0]*X2_use[i]
         ENDFOR
     ENDIF ELSE BEGIN
         FOR i0=0L,n-1 DO BEGIN
             i=i_use[i0]
-            B[i]=Total(*sa[i0]*X[*ija[i0]])
-            IF b2_flag THEN B2[i]=Total(*sa[i0]*X2[*ija[i0]])
-;            B[i]=matrix_multiply(*sa[i0],X[*ija[i0]],/atranspose)
-;            IF b2_flag THEN B2[i]=matrix_multiply(*sa[i0],X2[*ija[i0]],/atranspose)
+            B[i]=Total(*sa[i0]*X_use[*ija[i0]])
+            IF b2_flag THEN B2[i]=Total(*sa[i0]*X2_use[*ija[i0]])
+;            B[i]=matrix_multiply(*sa[i0],X_use[*ija[i0]],/atranspose)
+;            IF b2_flag THEN B2[i]=matrix_multiply(*sa[i0],X2_use[*ija[i0]],/atranspose)
         ENDFOR
     ENDELSE
+    
 ENDIF ELSE BEGIN
 
     sa=A.sa

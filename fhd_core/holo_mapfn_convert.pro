@@ -36,6 +36,8 @@ FOR xi=1,dimension-2 DO BEGIN
 ENDFOR
 
 i_use=where(n_arr,n_use)
+
+i_use_hist=histogram(i_use,min=0,bin=1,reverse_ind=ri_use)
 sa=Ptrarr(n_use,/allocate)
 ija=Ptrarr(n_use,/allocate)
 
@@ -50,7 +52,7 @@ FOR i0=0.,n_use-1 DO BEGIN
     xii_arr=sub_xv[j_use]+xi
     yii_arr=sub_yv[j_use]+yi    
     *sa[i0]=map_fn_sub[j_use]
-    *ija[i0]=xii_arr+yii_arr*dimension
+    *ija[i0]=ri_use[ri_use[xii_arr+yii_arr*dimension]]
 ENDFOR
 
 Ptr_free,map_fn

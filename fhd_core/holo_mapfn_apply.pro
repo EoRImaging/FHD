@@ -17,7 +17,7 @@
 ; :Author: isullivan May 6, 2012
 ;-
 FUNCTION holo_mapfn_apply,image,map_fn,mask,timing=timing,transpose=transpose,complex=complex,double=double,$
-    no_conjugate=no_conjugate,_Extra=extra
+    no_conjugate=no_conjugate,indexed=indexed,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(complex) EQ 0 THEN complex=1
@@ -29,23 +29,27 @@ IF size(map_fn,/type) EQ 7 THEN BEGIN ;IF map_fn is a string, assume it is a ful
     map_fn_use=getvar_savefile(map_fn,'map_fn')
     IF Keyword_Set(complex) THEN BEGIN
         image_complex_vector=reform(image,dimension*elements)
-        SPRSAX2,map_fn_use,image_complex_vector,result_image_complex,complex=complex,double=double,transpose=0,mask=0
+        SPRSAX2,map_fn_use,image_complex_vector,result_image_complex,$
+            complex=complex,double=double,transpose=0,mask=0,indexed=indexed
         result_image=reform(result_image_complex,dimension,elements)
     ENDIF ELSE BEGIN
         image_real_vector=reform(Real_part(image),dimension*elements)
         image_comp_vector=reform(Imaginary(image),dimension*elements)
-        SPRSAX2,map_fn_use,image_real_vector,result_image_real,image_comp_vector,result_image_comp,complex=complex,double=double,transpose=0,mask=0
+        SPRSAX2,map_fn_use,image_real_vector,result_image_real,image_comp_vector,result_image_comp,$
+            complex=complex,double=double,transpose=0,mask=0,indexed=indexed
         result_image=Complex(result_image_real,result_image_comp)
     ENDELSE
 ENDIF ELSE BEGIN
     IF Keyword_Set(complex) THEN BEGIN
         image_complex_vector=reform(image,dimension*elements)
-        SPRSAX2,map_fn,image_complex_vector,result_image_complex,complex=complex,double=double,transpose=0,mask=0
+        SPRSAX2,map_fn,image_complex_vector,result_image_complex,$
+            complex=complex,double=double,transpose=0,mask=0,indexed=indexed
         result_image=reform(result_image_complex,dimension,elements)
     ENDIF ELSE BEGIN
         image_real_vector=reform(Real_part(image),dimension*elements)
         image_comp_vector=reform(Imaginary(image),dimension*elements)
-        SPRSAX2,map_fn,image_real_vector,result_image_real,image_comp_vector,result_image_comp,complex=complex,double=double,transpose=0,mask=0
+        SPRSAX2,map_fn,image_real_vector,result_image_real,image_comp_vector,result_image_comp,$
+            complex=complex,double=double,transpose=0,mask=0,indexed=indexed
         result_image=Complex(result_image_real,result_image_comp)
     ENDELSE
 ENDELSE
