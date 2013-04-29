@@ -294,7 +294,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
-     
+    Ptr_free,vis_arr,flag_arr
 ENDIF
 
 IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 THEN deconvolve=1
