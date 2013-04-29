@@ -59,6 +59,13 @@ psf_resolution=(Size(psf_base,/dimension))[2]
 flag_switch=Keyword_Set(flag_arr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
+
+conj_i=where(ky_arr GT 0,n_conj)
+IF n_conj GT 0 THEN BEGIN
+    ky_arr[conj_i]=-ky_arr[conj_i]
+    kx_arr[conj_i]=-kx_arr[conj_i]
+    vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
+ENDIF
 ;baseline_i=params.baseline_arr
 ;nbaselines=bin_offset[1]
 ;n_samples=N_Elements(bin_offset)

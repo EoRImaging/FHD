@@ -45,10 +45,10 @@ IF tag_exist(A,'i_use') THEN BEGIN
     ENDIF ELSE BEGIN
         FOR i0=0L,n-1 DO BEGIN
             i=i_use[i0]
-            B[i]=Total(*sa[i0]*X_use[*ija[i0]])
-            IF b2_flag THEN B2[i]=Total(*sa[i0]*X2_use[*ija[i0]])
-;            B[i]=matrix_multiply(*sa[i0],X_use[*ija[i0]],/atranspose)
-;            IF b2_flag THEN B2[i]=matrix_multiply(*sa[i0],X2_use[*ija[i0]],/atranspose)
+;            B[i]=Total(*sa[i0]*X_use[*ija[i0]])
+;            IF b2_flag THEN B2[i]=Total(*sa[i0]*X2_use[*ija[i0]])
+            B[i]=matrix_multiply(*sa[i0],X_use[*ija[i0]],/atranspose)
+            IF b2_flag THEN B2[i]=matrix_multiply(*sa[i0],X2_use[*ija[i0]],/atranspose)
         ENDFOR
     ENDELSE
     
