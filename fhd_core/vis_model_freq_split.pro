@@ -24,6 +24,7 @@ ENDSWITCH
 n_freq=obs.n_freq
 n_pol=obs.n_pol
 dimension=obs.dimension
+degpix=obs.degpix
 real_index=0
 imaginary_index=1
 
@@ -96,26 +97,30 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         model_flag:vis_use=*vis_model_arr[pol_i];/n_avg
     ENDCASE
     freq_use=(*obs.baseline_info).freq_use
+    n_vis_use=0.
     FOR fi=0L,nf-1 DO BEGIN
         fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
 ;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
 ;        vis_use1=vis_use[fi_use,*]
         dirty_UV=visibility_grid(vis_use,*flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,/preserve_visibilities,$
-            polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,_Extra=extra)
+            polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,n_vis=n_vis,_Extra=extra)
+        n_vis_use+=n_vis
         IF Keyword_Set(fft) THEN BEGIN
-            *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra)
-            *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,_Extra=extra)
-            *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo,_Extra=extra)
+            *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra,degpix=degpix)*n_vis
+            *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,_Extra=extra,degpix=degpix)*n_vis
+            *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo,_Extra=extra,degpix=degpix)*n_vis
         ENDIF ELSE BEGIN
-            *residual_arr[pol_i,fi]=dirty_uv
-            *weights_arr[pol_i,fi]=weights_holo
-            *variance_arr[pol_i,fi]=variance_holo
+            *residual_arr[pol_i,fi]=dirty_uv*n_vis
+            *weights_arr[pol_i,fi]=weights_holo*n_vis
+            *variance_arr[pol_i,fi]=variance_holo*n_vis
         ENDELSE
         IF Keyword_Set(tarr0) THEN tarr+=tarr0
         IF Keyword_Set(t_grid0) THEN t_grid+=t_grid0
     ENDFOR  
 ;    vis_use=0 ;free memory  
 ENDFOR
+obs.n_vis=n_vis_use
+    
 IF ~Keyword_Set(silent) THEN print,"Gridding timing: ",strn(t_grid)
 IF ~Keyword_Set(silent) THEN print,tarr
 timing=Systime(1)-t0

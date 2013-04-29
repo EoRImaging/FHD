@@ -1,6 +1,7 @@
-FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,mirror_inds=mirror_inds
+FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,mirror_inds=mirror_inds,degpix=degpix
 icomp=Complex(0,1)
 fft_norm=1.
+;IF Keyword_Set(degpix) THEN fft_norm=(degpix*!DtoR)^2. ELSE fft_norm=1.
 
 IF N_Elements(xvals) EQ 0 THEN BEGIN
     IF N_Elements(elements) EQ 0 THEN elements=dimension

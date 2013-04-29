@@ -113,21 +113,25 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     ENDFOR
     
     source_uv_mask=fltarr(dimension,elements)
+    source_uv_mask2=fltarr(dimension,elements)
     normalization_arr=fltarr(n_pol<2)
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
-        weights_single=real_part(holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i,obs_i]))
-        *weights_arr[pol_i,obs_i]=weights_single
+        weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
+        weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
+        *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
         IF pol_i LE 2 THEN normalization_arr[pol_i]=1./mean(weights_single)
-        source_uv_mask[where(weights_single)]=1.
+        source_uv_mask[where(*weights_arr[pol_i,obs_i])]=1.
+        source_uv_mask2[where(weights_single)]=1.
     ENDFOR
     *uv_mask_arr[obs_i]=source_uv_mask
     norm_arr[obs_i]=Mean(normalization_arr)
     
-    *uv_i_arr[obs_i]=where(source_uv_mask,n_uv_use)
+    uv_i_use=where(source_uv_mask,n_uv_use)
     uv_use_frac=Float(n_uv_use)/(dimension*elements)
 ;    print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
+    *uv_i_arr[obs_i]=where(source_uv_mask2,n_uv_use2)
     *xv_arr[obs_i]=xvals[*uv_i_arr[obs_i]]
     *yv_arr[obs_i]=yvals[*uv_i_arr[obs_i]]
     
@@ -199,7 +203,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF i mod Floor(1./gain_factor) EQ 0 THEN *smooth_map[pol_i]=Fltarr(n_hpx)
         FOR obs_i=0,n_obs-1 DO BEGIN
             t1_0=Systime(1)
-            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])
+            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],degpix=obs_arr[obs_i].degpix)
             
             t2_0a=Systime(1)
             t1+=t2_0a-t1_0
@@ -402,7 +406,8 @@ FOR i=0L,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
             IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
 ;                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
-                source_uv_vals=source_dft(comp_arr1[si1].x,comp_arr1[si1].y,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements)
+                source_uv_vals=source_dft(comp_arr1[si1].x,comp_arr1[si1].y,*xv_arr[obs_i],*yv_arr[obs_i],$
+                    dimension=dimension,elements=elements,degpix=obs_arr[obs_i].degpix)
                 FOR pol_i=0,n_pol-1 DO $
                     (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
             ENDIF
@@ -461,7 +466,8 @@ source_array=Ptrarr(n_obs)
 FOR obs_i=0L,n_obs-1 DO *comp_arr[obs_i]=(*comp_arr[obs_i])[0:si-1] ;truncate component list to include only components actually deconvolved
 FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i])*(*beam_corr[pol_i,obs_i])
+        *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
+            degpix=obs_arr[obs_i].degpix)*(*beam_corr[pol_i,obs_i])
     ENDFOR
     
     image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]

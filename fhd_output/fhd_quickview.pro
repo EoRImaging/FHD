@@ -33,6 +33,7 @@ filter_name=''
 npol=fhd.npol
 dimension=obs.dimension
 elements=obs.elements
+degpix=obs.degpix
 
 stats_radius=10. ;degrees
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
@@ -47,11 +48,11 @@ label_spacing=1.
 instr_images_filtered=Ptrarr(npol,/allocate)
 instr_images=Ptrarr(npol,/allocate)
 instr_sources=Ptrarr(npol,/allocate)
-restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/2.
+restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/degpix)/2.
 FOR pol_i=0,npol-1 DO BEGIN
-;    *instr_images[pol_i]=dirty_image_generate(*residual_array[pol_i],image_filter_fn=image_filter_fn,$
+;    *instr_images[pol_i]=dirty_image_generate(*residual_array[pol_i],image_filter_fn=image_filter_fn,degpix=degpix,$
 ;        _Extra=extra)*weight_invert(*beam_base[pol_i])
-    *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*weight_invert(*beam_base[pol_i])
+    *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix)*weight_invert(*beam_base[pol_i])
     *instr_images_filtered[pol_i]=*instr_images[pol_i]-Median(*instr_images[pol_i],fhd.smooth_width,/even)
     *instr_sources[pol_i]=source_image_generate(comp_arr,obs,pol_i=pol_i,resolution=16,$
         dimension=dimension,width=restored_beam_width)

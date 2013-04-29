@@ -58,8 +58,9 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
 ENDIF ELSE obs_out=obs
 dimension=obs_out.dimension
 elements=obs_out.elements
+degpix=obs_out.degpix
 
-zoom_radius=Round(18./(obs_out.degpix)/16.)*16.
+zoom_radius=Round(18./(degpix)/16.)*16.
 zoom_low=dimension/2.-zoom_radius
 zoom_high=dimension/2.+zoom_radius-1
 stats_radius=10. ;degrees
@@ -170,9 +171,9 @@ t0+=t1a-t0a
         gal_holo_img=Ptrarr(npol)
         FOR pol_i=0,npol-1 DO BEGIN
             gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
-                image_filter_fn=image_filter_fn,_Extra=extra)*(*beam_correction_out[pol_i]))
+                image_filter_fn=image_filter_fn,degpix=degpix,_Extra=extra)*(*beam_correction_out[pol_i]))
             gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,$
-                image_filter_fn=image_filter_fn,_Extra=extra)*(*beam_correction_out[pol_i]))
+                image_filter_fn=image_filter_fn,degpix=degpix,_Extra=extra)*(*beam_correction_out[pol_i]))
         ENDFOR
     ENDIF ELSE BEGIN
         gal_name=''
@@ -183,9 +184,9 @@ t0+=t1a-t0a
 ;        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
 ;            beam_correction=beam_correction,mask=source_uv_mask)
 ;        *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
-        *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],$
+        *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
-        *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i]-*gal_holo_uv[pol_i],$
+        *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_holo_arr[pol_i]-*gal_holo_uv[pol_i],degpix=degpix,$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,width=restored_beam_width,pad_uv_image=pad_uv_image)
@@ -226,7 +227,7 @@ t0+=t1a-t0a
                 print,"Alignment success. Dx:",dx,' Dy:',dy,' Theta:',theta,' Scale:',scale
     ;            temp_out=Strarr(15)
     ;            temp_out[0]=filename
-    ;            temp_out[1:*]=[obs_out.degpix,obs_out.obs_outra,obs_out.obs_outdec,obs_out.zenra,obs_out.zendec,$
+    ;            temp_out[1:*]=[degpix,obs_out.obs_outra,obs_out.obs_outdec,obs_out.zenra,obs_out.zendec,$
     ;               obs_out.obsx,obs_out.obsy,obs_out.zenx,obs_out.zeny,obs_out.rotation,dx,dy,theta,scale]
     ;            textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
                 
@@ -253,14 +254,14 @@ t0+=t1a-t0a
                 print,'Alignment failure on:',filename
     ;            temp_out=Strarr(15)
     ;            temp_out[0]=filename
-    ;            temp_out[1:*]=[obs_out.degpix,obs_out.obsra,obs_out.obsdec,obs_out.zenra,obs_out.zendec,obs_out.obsx,$
+    ;            temp_out[1:*]=[degpix,obs_out.obsra,obs_out.obsdec,obs_out.zenra,obs_out.zendec,obs_out.obsx,$
     ;               obs_out.obsy,obs_out.zenx,obs_out.zeny,obs_out.rotation,'NAN','NAN','NAN','NAN']
     ;            textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
             ENDELSE
         ENDIF ELSE BEGIN
     ;        temp_out=Strarr(15)
     ;        temp_out[0]=filename
-    ;        temp_out[1:*]=[obs_out.degpix,obs_out.obsra,obs_out.obsdec,obs_out.zenra,obs_out.zendec,obs_out.obsx,$
+    ;        temp_out[1:*]=[degpix,obs_out.obsra,obs_out.obsdec,obs_out.zenra,obs_out.zendec,obs_out.obsx,$
     ;           obs_out.obsy,obs_out.zenx,obs_out.zeny,obs_out.rotation,'NAN','NAN','NAN','NAN']
     ;        textfast,temp_out,filename='alignment'+'v'+strn(version),data_dir=data_directory,/append,/write
         ENDELSE
@@ -370,15 +371,15 @@ FOR pol_i=0,npol-1 DO BEGIN
     IF pol_i EQ 0 THEN log=1 ELSE log=0
     Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Residual_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$
-        lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs_out.degpix,$
+        lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
     Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+'_Sources_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokesS_high,/invert_color,$
-        lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs_out.degpix,$
+        lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
     Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Restored_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokesS_high,$
-        lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=obs_out.degpix,$
+        lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
     
     IF pol_i EQ 0 THEN BEGIN

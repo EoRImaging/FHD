@@ -46,10 +46,10 @@ scale_arr=fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
 ;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*weight*(*beam_base[pol_i])),/inverse)))
 ;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*hanning(dimension,elements)),/inverse)))
-    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model),/inverse)))
-    dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i]))
+    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model),/inverse)*(degpix*!DtoR)^2.))
+    dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
     model_uv_holo[pol_i]=Ptr_new(holo_mapfn_apply(*model_uv[pol_i],*map_fn_arr[pol_i]))
-    model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i]))
+    model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix))
     beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
     beam_vals=(*beam_base[pol_i])[beam_i]
     model_vals=(*model_img_holo[pol_i])[beam_i]
@@ -79,10 +79,10 @@ galaxy_model_uv=model_uv
 ;scale_arr=fltarr(n_comp,n_pol)
 ;
 ;FOR pol_i=0,n_pol-1 DO BEGIN
-;    dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i]))
+;    dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
 ;    FOR ci=0,n_comp-1 DO BEGIN
 ;        model_uv_holo[ci,pol_i]=Ptr_new(holo_mapfn_apply(model_uv[ci],*map_fn_arr[pol_i]))
-;        model_img_holo[ci,pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[ci,pol_i]))
+;        model_img_holo[ci,pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[ci,pol_i],degpix=degpix))
 ;    ENDFOR
 ;    beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.2,Max(*beam_base[pol_i])])
 ;    beam_vals=(*beam_base[pol_i])[beam_i]

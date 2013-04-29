@@ -86,6 +86,7 @@ smooth_width=fhd.smooth_width
 
 dimension=obs.dimension
 elements=obs.elements
+degpix=obs.degpix
 astr=obs.astr
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
@@ -167,10 +168,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;;        *map_fn_arr[pol_i]=map_fn
 ;;    ENDIF
     weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
-;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single))[dimension/2.,elements/2.]
+;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix))[dimension/2.,elements/2.]
 ;    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
     weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
-    *weights_arr[pol_i]=(weights_single+weights_single_conj)
+    *weights_arr[pol_i]=(weights_single+weights_single_conj)/2.
     source_uv_mask[where(*image_uv_arr[pol_i])]=1.
     source_uv_mask2[where(weights_single)]=1
 ENDFOR
@@ -187,7 +188,7 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ENDIF 
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
-    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i])*(*beam_correction[pol_i])^2.
+    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix)*(*beam_correction[pol_i])^2.
     IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
     
@@ -270,7 +271,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     model_image_composite_V=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO BEGIN 
         IF pol_cut[pol_i] THEN CONTINUE
-        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i])
+        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix)
         model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
         
         *model_arr[pol_i]=model_image
@@ -412,7 +413,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
 ;        source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
 ;        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals1,yvals1,dimension=dimension,elements=elements)
-        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals2,yvals2,dimension=dimension,elements=elements)
+        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix)
 ;        source_uv=Complexarr(dimension,elements) & source_uv[uv_i_use2]=source_uv_vals
 ;        source_uv+=Conj(Shift(Reverse(reverse(source_uv,1),2),1,1))
 
@@ -467,7 +468,7 @@ comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i])*(*beam_correction[pol_i])
+    *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix)*(*beam_correction[pol_i])
 ENDFOR  
 
 t00=Systime(1)-t00

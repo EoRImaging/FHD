@@ -25,7 +25,7 @@
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
-    visibility_list=visibility_list,image_list=image_list,_Extra=extra
+    visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 IF N_Elements(complex) EQ 0 THEN complex=1
@@ -132,7 +132,8 @@ bin_i=where(bin_n,n_bin_use);+bin_min
 ;obs.n_vis=Total(bin_n)
 
 ;vis_density=Float(Total(bin_n))/(dimension*elements)
-vis_density=Float(Total(bin_n))*(obs.degpix*!DtoR)^2.
+n_vis=Float(Total(bin_n))
+;vis_density=n_vis*(obs.degpix*!DtoR)^2.
 
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
@@ -218,22 +219,22 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    box_arr=vis_box#box_matrix_dag/vis_density
+    box_arr=vis_box#box_matrix_dag/n_vis
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
 ;    FOR addv_i=0L,n_additional-1 DO (*image_list[addv_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]$
-;        +=(*visibility_list[addv_i])[inds]#box_matrix_dag/vis_density
+;        +=(*visibility_list[addv_i])[inds]#box_matrix_dag/n_vis
     IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        Replicate(1./vis_density,vis_n)#box_matrix
+        Replicate(1./n_vis,vis_n)#box_matrix
     IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        Replicate(1./vis_density,vis_n)#(Abs(box_matrix)^2.)
+        Replicate(1./n_vis,vis_n)#(Abs(box_matrix)^2.)
     
     t6_0=Systime(1)
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
-        box_arr_map=matrix_multiply(box_matrix,box_matrix_dag,/atranspose)/vis_density
+        box_arr_map=matrix_multiply(box_matrix,box_matrix_dag,/atranspose)/n_vis
         ;alternate indexing approach. Does not appear to be any faster.
 ;        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO $
 ;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*ind_map[i,j]]
