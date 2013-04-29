@@ -168,14 +168,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;;        *map_fn_arr[pol_i]=map_fn
 ;;    ENDIF
     weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
-;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix))[dimension/2.,elements/2.]
-;    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
     weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
-    *weights_arr[pol_i]=(weights_single+weights_single_conj)/2.
     source_uv_mask[where(*image_uv_arr[pol_i])]=1.
     source_uv_mask2[where(weights_single)]=1
+    weights_single=(weights_single+weights_single_conj)/2.
+    *weights_arr[pol_i]=weights_single
+    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix))[dimension/2.,elements/2.]
+    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
 ENDFOR
-;normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+gain_array*=gain_normalization
 ;normalization=.25
 normalization=1.
 ;normalization=(degpix*!DtoR)^2.*(dimension*elements)
