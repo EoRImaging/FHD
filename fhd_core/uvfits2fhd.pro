@@ -113,19 +113,25 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     params=vis_param_extract(data_struct.params,hdr)
     obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
+    kbinsize=obs.kpix
+    degpix=obs.degpix
+    dimension=obs.dimension
     
     IF Keyword_Set(rephase_to_zenith) THEN BEGIN
         phasera=obs.obsra
         phasedec=obs.obsdec        
         hdr.obsra=obs.zenra
         hdr.obsdec=obs.zendec
-        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
-        phase_shift=1.
+        obs1=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+        kx_arr=params.uu/kbinsize
+        ky_arr=params.vv/kbinsize
+        xcen=frequency_array#kx_arr
+        ycen=frequency_array#ky_arr
+        xvals=obs.freq#params.uu
+        yvals=meshgrid(dimension,elements,2)
+        phase_shift=Exp(-(2.*!Pi/dimension)*((obs.obsx-obs1.obsx)*xvals+(obs.obsy-obs1.obsy)*yvals))
     ENDIF ELSE phase_shift=1.
     
-    kbinsize=obs.kpix
-    degpix=obs.degpix
-    dimension=obs.dimension
     IF Keyword_Set(freq_start) THEN bw_start=(freq_start*1E6)>Min(obs.freq) ELSE bw_start=Min(obs.freq)
     IF Keyword_Set(freq_end) THEN bw_end=(freq_end*1E6)<Max(obs.freq) ELSE bw_end=Max(obs.freq)
     bandwidth=Round((bw_end-bw_start)/1E5)/10.
