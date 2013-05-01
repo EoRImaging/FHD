@@ -331,14 +331,14 @@ FOR pol_i=0,npol-1 DO BEGIN
     FitsFast,instr_source,fits_header,/write,file_path=export_path+'_Sources_'+pol_names[pol_i]
     FitsFast,instr_restored,fits_header,/write,file_path=export_path+filter_name+gal_name+'_Restored_'+pol_names[pol_i]
     FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
-    FitsFast,*weights_arr[pol_i],fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
+    FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
     
     t9a=Systime(1)
     t8+=t9a-t8a
     
-    Imagefast,Abs(*weights_arr[pol_i]),file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
+    Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
-        low=Min(Abs(*weights_arr[pol_i])),high=Max(Abs(*weights_arr[pol_i]))
+        low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis)
     
     instr_low=Min(instr_residual[where(beam_mask)])
     instr_high=Max(instr_residual[where(beam_mask)])
