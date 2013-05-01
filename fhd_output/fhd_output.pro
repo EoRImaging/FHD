@@ -368,17 +368,18 @@ FOR pol_i=0,npol-1 DO BEGIN
     stokes_low=Min((stokes_residual*Sqrt(beam_avg>0))[where(beam_mask)])
     stokes_high=Max((stokes_residual*Sqrt(beam_avg>0))[where(beam_mask)])
     stokesS_high=Max(stokes_restored[where(beam_mask)])
-    IF pol_i EQ 0 THEN log=1 ELSE log=0
+    IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
+    IF pol_i EQ 0 THEN log=0 ELSE log=0
     Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Residual_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
     Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+'_Sources_'+pol_names[pol_i+4],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokesS_high,/invert_color,$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
     Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Restored_'+pol_names[pol_i+4],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokesS_high,$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokes_high,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere
     

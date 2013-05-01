@@ -117,7 +117,10 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     normalization_arr=fltarr(n_pol<2)
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
-        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
+;        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
+        file_path_mapfn=file_path_fhd+'_mapfn_'
+        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+        *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
         *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.

@@ -12,42 +12,6 @@
 ;    
 ;    image_uv_arr - pointer array to the gridded visibility data 
 ;    
-;    source_array - condensed source list. Columns are 0:x, 1:y, 2:RA (degrees), 3:Dec(degrees), 4: flux density (image), 5: pixel index, 6: u,v plane amplitude
-;    
-;    comp_arr - uncondensed source list
-;
-; :Keywords:
-;    weights_arr
-;    pol_use
-;    freq_use
-;    time_i_use
-;    gain_factor
-;    mapfn_interval
-;    max_iter
-;    check_iter
-;    max_add_sources
-;    max_sources
-;    mapfn_threshold
-;    baseline_threshold
-;    beam_threshold
-;    add_threshold
-;    data_directory
-;    filename
-;    timing
-;    residual_array
-;    dirty_array
-;    model_uv_full
-;    model_uv_holo
-;    polarization_map
-;    polarization_correction
-;    ra_arr
-;    dec_arr
-;    astr
-;    beam_base
-;    beam_correction
-;    normalization_arr
-;    independent_fit
-;    reject_pol_sources
 ;
 ; :Author: isullivan May 4, 2012
 ;-
@@ -130,7 +94,6 @@ ENDFOR
 source_mask*=alias_mask
 beam_avg/=nbeam_avg
 beam_corr_avg=weight_invert(beam_avg,beam_threshold)
-;gain_array*=Sqrt(beam_avg>0.)*source_mask
 
 
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
@@ -161,12 +124,11 @@ ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_cut[pol_i] THEN CONTINUE
-    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
-;;    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-;;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-;;;        holo_mapfn_generate,obs,/restore_last,map_fn=map_fn_single,polarization=pol_i
-;;        *map_fn_arr[pol_i]=map_fn
-;;    ENDIF
+;    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
+    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+        *map_fn_arr[pol_i]=Temporary(map_fn)
+    ENDIF
     weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
     weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
     source_uv_mask[where(*image_uv_arr[pol_i])]=1.
@@ -174,7 +136,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     weights_single=(weights_single+weights_single_conj)/2.
     *weights_arr[pol_i]=weights_single
     normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix))[dimension/2.,elements/2.]
-    normalization_arr[pol_i]*=((*beam_base[pol_i])[dimension/2.,elements/2.])^2.
+    normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
 gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
 gain_array*=gain_normalization

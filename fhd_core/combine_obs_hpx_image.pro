@@ -26,6 +26,8 @@ IF n_match_proj EQ 0 THEN proj_routine='orthview' ELSE proj_routine=proj_name_li
 
 save_path_base=output_path+'_maps'
 
+IF N_Elements(weight_threshold) EQ 0 THEN weight_threshold_use=Median(obs_arr.n_vis)*0.2 $
+    ELSE weight_threshold_use=weight_threshold*Median(obs_arr.n_vis)
 
 Stokes_images=Ptrarr(2,/allocate)
 Stokes_weights=Ptrarr(2,/allocate)
@@ -65,7 +67,7 @@ IF not Keyword_Set(restore_last) THEN BEGIN
             Stokes_dirty+=*dirty_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*sign[stk_i,pol_i]
         ENDFOR
         
-        hpx_ind_use=where(Stokes_weights_single GT weight_threshold,n_hpx,complement=i_cut,ncomplement=n_cut)
+        hpx_ind_use=where(Stokes_weights_single GT weight_threshold_use,n_hpx,complement=i_cut,ncomplement=n_cut)
         IF stk_i EQ 0 THEN BEGIN      
             area=4.*!Pi*(!RaDeg^2.)*(Float(n_hpx)/npix)
             print,"Observed area: "+Strn(area)+" degrees from "+Strn(n_files)+" snapshot observations."

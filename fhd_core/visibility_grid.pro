@@ -226,6 +226,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
 ;    FOR addv_i=0L,n_additional-1 DO (*image_list[addv_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]$
 ;        +=(*visibility_list[addv_i])[inds]#box_matrix_dag/n_vis
+    
+;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+;        Replicate(1./n_vis,vis_n)#Abs(box_matrix)
     IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
         Replicate(1./n_vis,vis_n)#box_matrix
     IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$

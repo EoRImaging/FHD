@@ -46,8 +46,8 @@ IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,file_path_fhd,/restore_last)
 
 image_uv_arr=Ptrarr(npol,/allocate)
 FOR pol_i=0,npol-1 DO *image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv')*obs.cal[pol_i]
-;weights_arr=Ptrarr(npol,/allocate)
-;FOR pol_i=0,npol-1 DO *weights_arr[pol_i]=real_part(getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid'))
+weights_arr=Ptrarr(npol,/allocate)
+FOR pol_i=0,npol-1 DO *weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid')
 
 ;IF Keyword_Set(GPU_enable) THEN $    
 ;    GPU_fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,weights_arr=weights_arr,timing=timing,$
