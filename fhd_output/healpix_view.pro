@@ -7,6 +7,8 @@ IF Keyword_Set(hpx_cnv) THEN BEGIN
     hpx_inds=hpx_cnv.inds
 ;    IF size(hpx_vals,/n_dimension) EQ 2 THEN hpx_vals_use=healpix_cnv_apply(hpx_vals,hpx_cnv)
 ENDIF
+IF N_Elements(nside) EQ 0 THEN nside=npix2nside(N_Elements(hpx_vals))
+IF N_Elements(hpx_inds) EQ 0 THEN hpx_inds=L64indgen(N_Elements(hpx_vals))
 
 IF (N_Elements(lon) EQ 0) OR (N_Elements(lat) EQ 0) THEN BEGIN
     pix2vec_ring,nside,hpx_inds,pix_coords

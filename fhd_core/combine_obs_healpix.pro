@@ -91,7 +91,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
     
     hpx_cnv=healpix_cnv_generate(file_path_fhd=file_path,nside=nside_chk,/restore_last,/silent)
-    IF nside_chk NE nside_use THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path,nside=nside,$
+    IF nside_chk NE nside_use THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path,nside=nside_use,$
         mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     
     astr=obs.astr            
@@ -101,6 +101,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     
 ;    IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT fhd.ston_cut THEN CONTINUE
     
+    n_vis=1.
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
     FOR pol_i=0,npol-1 DO BEGIN
         dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis
