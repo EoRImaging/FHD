@@ -127,7 +127,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         ky_arr=params.vv/kbinsize
         xcen=Float(obs.freq#kx_arr)
         ycen=Float(obs.freq#ky_arr)
-        phase_shift=Exp(-(2.*!Pi*Complex(0,1)/dimension)*((obs.obsx-obs1.obsx)*xcen+(obs.obsy-obs1.obsy)*ycen))
+        phase_shift=Exp((2.*!Pi*Complex(0,1)/dimension)*((obs.obsx-obs1.obsx)*xcen+(obs.obsy-obs1.obsy)*ycen))
         obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
     ENDIF ELSE phase_shift=1.
     
