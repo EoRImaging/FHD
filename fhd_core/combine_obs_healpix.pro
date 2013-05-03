@@ -1,12 +1,13 @@
 PRO combine_obs_healpix,file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,$
-    nside=nside,restore_last=restore_last,version=version,output_path=output_path,$
-    flux_scale=flux_scale,obs_arr=obs_arr,image_filter_fn=image_filter_fn,ston_cut=ston_cut,_Extra=extra
+    nside=nside,restore_last=restore_last,version=version,output_path=output_path,beam_threshold=beam_threshold,$
+    flux_scale=flux_scale,obs_arr=obs_arr,image_filter_fn=image_filter_fn,ston_cut=ston_cut,silent=silent,_Extra=extra
 
 except=!except
 !except=0 
 heap_gc
 
 IF N_Elements(flux_scale) EQ 0 THEN flux_scale=1.
+IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 save_path=output_path+'_maps.sav'
 
 IF Keyword_Set(restore_last) THEN BEGIN
@@ -17,7 +18,7 @@ ENDIF
 ;color_table=0.1
 dimension=1024.
 elements=dimension
-npol=2
+n_pol=2
 cal_ref_i=2
 fix_flux=1
 ;combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
@@ -47,6 +48,7 @@ file_list_use=file_list[file_i_use]
 ;cal_use*=flux_scale 
 cal_use=replicate(flux_scale,n_obs)
 
+IF ~Keyword_Set(silent) THEN print,'Initializing HEALPix maps'
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path=file_list_use[obs_i]
     restore,file_path+'_obs.sav'
@@ -60,14 +62,39 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     nside_use=nside_use>Nside_chk
 ENDFOR
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
-n_hpx=nside2npix(nside_use)
+hpx_cnv=Ptrarr(n_obs,/allocate)
+FOR obs_i=0.,n_obs-1 DO BEGIN
+    file_path_fhd=file_list_use[obs_i]
+    obs=obs_arr[obs_i]
+    dimension=obs.dimension
+    elements=obs.elements
+    xvals=meshgrid(dimension,elements,1)-dimension/2
+    yvals=meshgrid(dimension,elements,2)-elements/2
+    
+    beam_base=getvar_savefile(file_path_fhd+'_fhd.sav','beam_base')
+    beam_mask=fltarr(dimension,elements)+1.
+    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
+        mask0=fltarr(dimension,elements)
+        mask_i=region_grow(*beam_base[pol_i],obs.obsx+dimension*obs.obsy,thresh=[beam_threshold,max(*beam_base[pol_i])])
+        mask0[mask_i]=1
+        beam_mask*=mask0
+    ENDFOR
 
-residual_hpx=Ptrarr(npol,/allocate)
-weights_hpx=Ptrarr(npol,/allocate)
-sources_hpx=Ptrarr(npol,/allocate)
-restored_hpx=Ptrarr(npol,/allocate)
-dirty_hpx=Ptrarr(npol,/allocate)
-FOR pol_i=0,npol-1 DO BEGIN
+    ;supply beam_mask in case file is missing and needs to be generated
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_chk,mask=beam_mask,radius=radius,restore_last=0) 
+    IF N_Elements(nside) EQ 0 THEN nside=nside_chk
+    IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,radius=radius,restore_last=0)
+ENDFOR
+hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds);,reverse_ind=reverse_inds)
+
+n_hpx=N_Elements(hpx_inds)
+
+residual_hpx=Ptrarr(n_pol,/allocate)
+weights_hpx=Ptrarr(n_pol,/allocate)
+sources_hpx=Ptrarr(n_pol,/allocate)
+restored_hpx=Ptrarr(n_pol,/allocate)
+dirty_hpx=Ptrarr(n_pol,/allocate)
+FOR pol_i=0,n_pol-1 DO BEGIN
   *residual_hpx[pol_i]=fltarr(n_hpx)
   *weights_hpx[pol_i]=fltarr(n_hpx)
   *sources_hpx[pol_i]=fltarr(n_hpx)
@@ -76,9 +103,10 @@ FOR pol_i=0,npol-1 DO BEGIN
 ENDFOR
 
 FOR obs_i=0,n_obs-1 DO BEGIN
+    IF ~Keyword_Set(silent) THEN print,StrCompress('Converting snapshot '+Strn(obs_i+1)+' of '+Strn(n_obs)+' to common HEALPix coordinates')
     heap_gc
     obs=obs_arr[obs_i]
-    n_vis=obs.n_vis
+    n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
     file_path=file_list_use[obs_i]
 ;        restore,file_path+'_fhd_params.sav'
 ;        restore,file_path+'_fhd.sav'
@@ -90,9 +118,9 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;   save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
 ;       beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path+'_fhd.sav'
     
-    hpx_cnv=healpix_cnv_generate(file_path_fhd=file_path,nside=nside_chk,/restore_last,/silent)
-    IF nside_chk NE nside_use THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path,nside=nside_use,$
-        mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
+;    hpx_cnv=healpix_cnv_generate(file_path_fhd=file_path,nside=nside_chk,/restore_last,/silent)
+;    IF nside_chk NE nside_use THEN hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path,nside=nside_use,$
+;        mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     
     astr=obs.astr            
     si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
@@ -101,28 +129,29 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     
 ;    IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT fhd.ston_cut THEN CONTINUE
     
-    n_vis=1.
+;    n_vis_rel=1.
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-    FOR pol_i=0,npol-1 DO BEGIN
-        dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis
-        model_single=dirty_image_generate(*model_uv_holo[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis_rel
+        model_single=dirty_image_generate(*model_uv_holo[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis_rel
 
         sources_single=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=16,dimension=dimension,width=restored_beam_width)*$
-            cal_use[obs_i]*(*beam_base[pol_i])*n_vis ;source_arr is already in instrumental pol (x beam once)
+            cal_use[obs_i]*(*beam_base[pol_i])*n_vis_rel ;source_arr is already in instrumental pol (x beam once)
         
         residual_single=dirty_single-model_single
         
-        weights_single=(*beam_base[pol_i]^2.)*n_vis
+        weights_single=(*beam_base[pol_i]^2.)*n_vis_rel
         
-        (*residual_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(residual_single,hpx_cnv)
-        (*weights_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(weights_single,hpx_cnv)
-        (*sources_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(sources_single,hpx_cnv)
-        (*restored_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(residual_single+sources_single,hpx_cnv)
-        (*dirty_hpx[pol_i])[hpx_cnv.inds]+=healpix_cnv_apply(dirty_single,hpx_cnv)
+        (*residual_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(residual_single,*hpx_cnv[obs_i])
+        (*weights_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(weights_single,*hpx_cnv[obs_i])
+        (*sources_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(sources_single,*hpx_cnv[obs_i])
+        (*restored_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(residual_single+sources_single,*hpx_cnv[obs_i])
+        (*dirty_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(dirty_single,*hpx_cnv[obs_i])
         
     ENDFOR
+    dv=1
 ENDFOR
 
-save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,hpx_inds,nside,obs_arr,filename=save_path
+save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,hpx_inds,nside,obs_arr,filename=save_path,/compress
 
 END

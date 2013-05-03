@@ -88,7 +88,7 @@ map_projection='orth'
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=recalculate_all*(n_files_use GT 1)
 IF Keyword_Set(combine_healpix) THEN BEGIN
     IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
-    combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path
+    combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
     combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,obs_arr=obs_arr,$
         nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,image_filter_fn=image_filter_fn,_Extra=extra
     combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,$

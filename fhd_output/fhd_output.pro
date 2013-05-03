@@ -159,8 +159,8 @@ t0+=t1a-t0a
     IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
     
     ;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
-    IF Keyword_Set(pad_uv_image) THEN restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.))) $
-        ELSE restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
+    restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
+    IF Keyword_Set(pad_uv_image) THEN restored_beam_width*=pad_uv_image
 ;    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(Sqrt(2.*Alog(2.)))
     model_holo_arr=model_uv_holo
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN

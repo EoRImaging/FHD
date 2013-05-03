@@ -10,13 +10,6 @@ heap_gc
 
 IF not Keyword_Set(color_table) THEN color_table=0.1 ;written intentionally to overwrite color_table=0
 
-IF N_Elements(high_dirty) EQ 0 THEN high_dirty=20.
-IF N_Elements(high_source) EQ 0 THEN high_source=20.
-IF N_Elements(high_residual) EQ 0 THEN high_residual=3.
-IF N_Elements(low_dirty) EQ 0 THEN low_dirty=-high_dirty/2.
-IF N_Elements(low_source) EQ 0 THEN low_source=0.
-IF N_Elements(low_residual) EQ 0 THEN low_residual=-high_residual
-IF N_Elements(fraction_polarized) EQ 0 THEN fraction_polarized=0.5
 IF N_Elements(map_projection) EQ 0 THEN map_projection='orth' ELSE map_projection=StrLowCase(map_projection)
 proj_list=['mollweide','orthographic','gnomic','cartesian']
 proj_name_list=['MOLLVIEW', 'GNOMVIEW', 'CARTVIEW', 'ORTHVIEW']
@@ -26,8 +19,8 @@ IF n_match_proj EQ 0 THEN proj_routine='orthview' ELSE proj_routine=proj_name_li
 
 save_path_base=output_path+'_maps'
 
-IF N_Elements(weight_threshold) EQ 0 THEN weight_threshold_use=Median(obs_arr.n_vis)*0.2 $
-    ELSE weight_threshold_use=weight_threshold*Median(obs_arr.n_vis)
+IF N_Elements(weight_threshold) EQ 0 THEN weight_threshold_use=0.2 $
+    ELSE weight_threshold_use=weight_threshold
 
 Stokes_images=Ptrarr(2,/allocate)
 Stokes_weights=Ptrarr(2,/allocate)
@@ -48,7 +41,7 @@ IF n_branch GT 0 THEN lon_use[lon_mod_i]+=360.
 lon_avg=Median(lon_use) & IF lon_avg GE 360. THEN lon_avg-=360.
 IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
 
-IF not Keyword_Set(restore_last) THEN BEGIN
+;IF not Keyword_Set(restore_last) THEN BEGIN
     FOR stk_i=0,1 DO BEGIN
         Stokes_single=fltarr(npix)
         Stokes_weights_single=fltarr(npix)
@@ -58,13 +51,13 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         Stokes_smooth=fltarr(npix)
         FOR pol_i=0,1 DO BEGIN
             stk_res0=*residual_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])
-            Stokes_single+=stk_res0*sign[stk_i,pol_i]
+            Stokes_single[hpx_inds]+=stk_res0*sign[stk_i,pol_i]
 ;            Stokes_smooth+=*smooth_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*sign[stk_i,pol_i]
-            Stokes_weights_single+=*weights_hpx[pol_i]
+            Stokes_weights_single[hpx_inds]+=*weights_hpx[pol_i]
             stk_src0=*sources_hpx[pol_i]*weight_invert(*weights_hpx[pol_i]);*2.
-            Stokes_sources+=stk_src0*sign[stk_i,pol_i]
-            Stokes_restored+=(stk_res0+stk_src0)*sign[stk_i,pol_i]
-            Stokes_dirty+=*dirty_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*sign[stk_i,pol_i]
+            Stokes_sources[hpx_inds]+=stk_src0*sign[stk_i,pol_i]
+            Stokes_restored[hpx_inds]+=(stk_res0+stk_src0)*sign[stk_i,pol_i]
+            Stokes_dirty[hpx_inds]+=*dirty_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*sign[stk_i,pol_i]
         ENDFOR
         
         hpx_ind_use=where(Stokes_weights_single GT weight_threshold_use,n_hpx,complement=i_cut,ncomplement=n_cut)
@@ -104,7 +97,21 @@ IF not Keyword_Set(restore_last) THEN BEGIN
         
 ;        write_fits_cut4,file_path_smt+'.fits',*Stokes_inds[stk_i],Stokes_smooth,/ring,Coords='C',nside=nside
     ENDFOR    
+;ENDIF
+
+image_scale=Sqrt(*Stokes_weights[0]/Mean(*Stokes_weights[0]))
+IF N_Elements(high_residual) EQ 0 THEN BEGIN
+    high_residual=Max(*Stokes_images[0]*image_scale)<(-Min(*Stokes_images[0]*image_scale))
+    dec_test=Alog10(high_residual)
+    high_residual=Ceil(high_residual/10.^Floor(dec_test))*10.^Floor(dec_test)
 ENDIF
+IF N_Elements(low_residual) EQ 0 THEN low_residual=-high_residual
+
+IF N_Elements(high_dirty) EQ 0 THEN high_dirty=8.*high_residual
+IF N_Elements(high_source) EQ 0 THEN high_source=high_dirty
+IF N_Elements(low_dirty) EQ 0 THEN low_dirty=-high_dirty/2.
+IF N_Elements(low_source) EQ 0 THEN low_source=0.
+IF N_Elements(fraction_polarized) EQ 0 THEN fraction_polarized=0.5
 
 FOR stk_i=0,1 DO BEGIN
     CASE stk_i OF

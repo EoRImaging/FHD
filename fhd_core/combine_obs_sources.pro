@@ -1,4 +1,4 @@
-PRO combine_obs_sources,file_list,calibration,source_list,restore_last=restore_last,output_path=output_path
+PRO combine_obs_sources,file_list,calibration,source_list,restore_last=restore_last,output_path=output_path,_Extra=extra
 
 except=!except
 !except=0 
