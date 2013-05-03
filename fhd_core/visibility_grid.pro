@@ -230,7 +230,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
 ;        Replicate(1./n_vis,vis_n)#Abs(box_matrix)
     IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        Replicate(1./n_vis,vis_n)#box_matrix
+        Replicate(1./n_vis,vis_n)#box_matrix_dag
     IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
         Replicate(1./n_vis,vis_n)#(Abs(box_matrix)^2.)
     
