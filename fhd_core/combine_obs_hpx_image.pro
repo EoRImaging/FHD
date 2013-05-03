@@ -69,7 +69,7 @@ IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
 ;        
         *Stokes_images[stk_i]=Stokes_single[hpx_ind_use]*norm
         *Stokes_weights[stk_i]=Stokes_weights_single[hpx_ind_use]
-        *Stokes_inds[stk_i]=hpx_inds[hpx_ind_use]
+        *Stokes_inds[stk_i]=hpx_ind_use
         Stokes_restored=Stokes_restored[hpx_ind_use]*norm
         Stokes_sources=Stokes_sources[hpx_ind_use]*norm
         Stokes_dirty=Stokes_dirty[hpx_ind_use]*norm
