@@ -75,7 +75,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     beam_mask=fltarr(dimension,elements)+1.
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
         mask0=fltarr(dimension,elements)
-        mask_i=region_grow(*beam_base[pol_i],obs.obsx+dimension*obs.obsy,thresh=[beam_threshold,max(*beam_base[pol_i])])
+        mask_i=region_grow(*beam_base[pol_i],Floor(obs.obsx)+dimension*Floor(obs.obsy),thresh=[beam_threshold,max(*beam_base[pol_i])])
         mask0[mask_i]=1
         beam_mask*=mask0
     ENDFOR

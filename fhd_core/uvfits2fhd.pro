@@ -122,13 +122,15 @@ IF Keyword_Set(data_flag) THEN BEGIN
         phasedec=obs.obsdec        
         hdr.obsra=obs.zenra
         hdr.obsdec=obs.zendec
-        obs1=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
-        kx_arr=params.uu/kbinsize
-        ky_arr=params.vv/kbinsize
-        xcen=Float(obs.freq#kx_arr)
-        ycen=Float(obs.freq#ky_arr)
-        phase_shift=Exp((2.*!Pi*Complex(0,1)/dimension)*((obs.obsx-obs1.obsx)*xcen+(obs.obsy-obs1.obsy)*ycen))
-        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
+        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+        phase_shift=1.
+;        obs1=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+;        kx_arr=params.uu/kbinsize
+;        ky_arr=params.vv/kbinsize
+;        xcen=Float(obs.freq#kx_arr)
+;        ycen=Float(obs.freq#ky_arr)
+;        phase_shift=Exp((2.*!Pi*Complex(0,1)/dimension)*((obs.obsx-obs1.obsx)*xcen+(obs.obsy-obs1.obsy)*ycen))
+;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
     ENDIF ELSE phase_shift=1.
     
     IF Keyword_Set(freq_start) THEN bw_start=(freq_start*1E6)>Min(obs.freq) ELSE bw_start=Min(obs.freq)

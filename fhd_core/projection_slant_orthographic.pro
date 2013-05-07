@@ -36,17 +36,17 @@ ENDIF ELSE BEGIN
     IF N_Elements(zendec) EQ 0 THEN zendec=obsdec    
 ENDELSE
 
-IF Abs(obsra-zenra) GT 90. THEN lon_offset=obsra-((obsra GT zenra) ? 360.:(-360.))-zenra ELSE lon_offset=obsra-zenra
+IF Abs(phasera-zenra) GT 90. THEN lon_offset=phasera-((phasera GT zenra) ? 360.:(-360.))-zenra ELSE lon_offset=phasera-zenra
 
-lat_offset=-(zendec-obsdec)
+lat_offset=-(zendec-phasedec)
 
-zenith_ang=angle_difference(obsdec,obsra,zendec,zenra,/degree)
-;parallactic_ang_argument=((Sin(zendec*!DtoR)-Sin(obsdec*!DtoR))*Cos(zenith_ang*!DtoR))/(Cos(obsdec*!DtoR)*Sin(zenith_ang*!DtoR))
+zenith_ang=angle_difference(phasedec,phasera,zendec,zenra,/degree)
+;parallactic_ang_argument=((Sin(zendec*!DtoR)-Sin(phasedec*!DtoR))*Cos(zenith_ang*!DtoR))/(Cos(phasedec*!DtoR)*Sin(zenith_ang*!DtoR))
 ;IF parallactic_ang_argument GT 1 THEN parallactic_ang_argument=1.-(parallactic_ang_argument-1.)
 hour_angle=lon_offset
-;parallactic angle from http://www.astron.nl/aips++/docs/glossary/p.html#parallactic_angle with lambda=zendec, h=hour_angle, delta=obsdec
+;parallactic angle from http://www.astron.nl/aips++/docs/glossary/p.html#parallactic_angle with lambda=zendec, h=hour_angle, delta=phasedec
 ;minus sign??
-parallactic_ang=-!Radeg*atan(-sin(!DtoR*hour_angle),cos(!DtoR*obsdec)*tan(!DtoR*zendec)-sin(!DtoR*obsdec)*cos(!DtoR*hour_angle))
+parallactic_ang=-!Radeg*atan(-sin(!DtoR*hour_angle),cos(!DtoR*phasedec)*tan(!DtoR*zendec)-sin(!DtoR*phasedec)*cos(!DtoR*hour_angle))
 ;parallactic_ang=Atan(parallactic_ang_argument<1)*!RaDeg ;
 
 ;rotation=0.;parallactic_ang;*2.;(parallactic_ang-90.);*2
@@ -67,34 +67,37 @@ PV2_2=eta
 ;PV2_2=xi
 x_c=obsx
 y_c=obsy
-lon_c=obsra
-lat_c=obsdec
+lon_c=phasera
+lat_c=phasedec
 MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
     CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
     LATPOLE = 0., LONGPOLE = 180.
 
-IF (phasera NE obsra) OR (phasedec NE obsdec) THEN BEGIN
-    ad2xy,phasera,phasedec,astr,phasex,phasey
-    dx=obsx-phasex
-    dy=obsy-phasey
-    obsx+=dx
-    obsy+=dy
-    x_c=obsx
-    y_c=obsy
-    IF Keyword_Set(obs) THEN BEGIN
-        obs.obsx=obsx
-        obs.obsy=obsy
-    ENDIF
-    MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
-        CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
-        LATPOLE = 0., LONGPOLE = 180.
-ENDIF
+;IF (phasera NE obsra) OR (phasedec NE obsdec) THEN BEGIN
+;    ad2xy,phasera,phasedec,astr,phasex,phasey
+;    dx=obsx-phasex
+;    dy=obsy-phasey
+;    obsx+=dx
+;    obsy+=dy
+;    x_c=obsx
+;    y_c=obsy
+;;    IF Keyword_Set(obs) THEN BEGIN
+;;        obs.obsx=obsx
+;;        obs.obsy=obsy
+;;    ENDIF
+;    MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
+;        CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
+;        LATPOLE = 0., LONGPOLE = 180.
+;ENDIF
 
 ad2xy,zenra,zendec,astr,zenx,zeny
+ad2xy,obsra,obsdec,astr,obsx,obsy
 
 IF Keyword_Set(obs) THEN BEGIN
     obs.zenx=zenx
     obs.zeny=zeny
+    obs.obsx=obsx
+    obs.obsy=obsy
 ENDIF
 
 IF arg_present(ra_arr) THEN BEGIN
