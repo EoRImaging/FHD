@@ -60,12 +60,6 @@ flag_switch=Keyword_Set(flag_arr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 
-conj_i=where(ky_arr GT 0,n_conj)
-IF n_conj GT 0 THEN BEGIN
-    ky_arr[conj_i]=-ky_arr[conj_i]
-    kx_arr[conj_i]=-kx_arr[conj_i]
-    vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
-ENDIF
 ;baseline_i=params.baseline_arr
 ;nbaselines=bin_offset[1]
 ;n_samples=N_Elements(bin_offset)
@@ -91,10 +85,18 @@ ENDIF ELSE map_flag=0
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
+
+conj_i=where(ky_arr GT 0,n_conj)
+;IF n_conj GT 0 THEN BEGIN
+;    xcen[*,conj_i]=-xcen[*,conj_i]
+;    ycen[*,conj_i]=-ycen[*,conj_i]
+;    vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
+;ENDIF
+
 x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
 y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
-xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.) 
-ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.) 
+xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.)+1 
+ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.)+1 
 xmax=xmin+psf_dim-1
 ymax=ymin+psf_dim-1
 
@@ -124,6 +126,11 @@ IF Keyword_Set(flag_arr) THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
     ENDIF
+    
+;    IF n_conj GT 0 THEN BEGIN
+;        xmin[*,conj_i]=-1
+;        ymin[*,conj_i]=-1
+;    ENDIF
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
@@ -186,6 +193,8 @@ t3=0
 t4=0
 t5=0
 t6=0
+t6a=0
+t6b=0
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
 ;    ;MUST use double precision!
@@ -237,14 +246,18 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t6_0=Systime(1)
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
+        t6a_0=Systime(1)
         box_arr_map=matrix_multiply(box_matrix,box_matrix_dag,/atranspose)/n_vis
         ;alternate indexing approach. Does not appear to be any faster.
 ;        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO $
 ;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*ind_map[i,j]]
+        t6b_0=Systime(1)
+        t6a+=t6b_0-t6a_0
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
             (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
         ENDFOR
+        t6b+=Systime(1)-t6b_0
     ENDIF
     t6_1=Systime(1)
     t6+=t6_1-t6_0
@@ -273,7 +286,8 @@ ENDIF
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
 
-IF not Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4,t5,t6,t7
+IF ~Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4,t5,t6,t7
+IF ~Keyword_Set(silent) THEN print,t6a,t6b
 time_arr=[t0,t1,t2,t3,t4,t5,t6,t7]
 timing=Systime(1)-t0_0
 RETURN,image_uv
