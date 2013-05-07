@@ -25,7 +25,7 @@
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
-    visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,_Extra=extra
+    visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 IF N_Elements(complex) EQ 0 THEN complex=1
@@ -86,12 +86,13 @@ ENDIF ELSE map_flag=0
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 
-conj_i=where(ky_arr GT 0,n_conj)
-;IF n_conj GT 0 THEN BEGIN
-;    xcen[*,conj_i]=-xcen[*,conj_i]
-;    ycen[*,conj_i]=-ycen[*,conj_i]
-;    vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
-;ENDIF
+;conj_i=where(ycen+xcen GT 0,n_conj) 
+conj_i=where(ky_arr LT 0,n_conj)
+IF n_conj GT 0 THEN BEGIN
+    xcen[*,conj_i]=-xcen[*,conj_i]
+    ycen[*,conj_i]=-ycen[*,conj_i]
+    vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
+ENDIF
 
 x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
 y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
@@ -127,10 +128,10 @@ IF Keyword_Set(flag_arr) THEN BEGIN
         ymin[flag_i]=-1
     ENDIF
     
-;    IF n_conj GT 0 THEN BEGIN
-;        xmin[*,conj_i]=-1
-;        ymin[*,conj_i]=-1
-;    ENDIF
+    IF n_conj GT 0 THEN BEGIN
+        xmin[*,conj_i]=-1
+        ymin[*,conj_i]=-1
+    ENDIF
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
@@ -271,17 +272,19 @@ IF map_flag THEN BEGIN
 ENDIF
 t7=Systime(1)-t7_0
 
-image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
-image_uv=(image_uv+image_uv_conj)/2.
-;FOR addv_i=0L,n_additional-1 DO *image_list[addv_i]=(*image_list[addv_i]+Shift(Reverse(reverse(Conj(*image_list[addv_i]),1),2),1,1))/2.
-
-IF Arg_present(weights) THEN BEGIN
-    weights_conj=Shift(Reverse(reverse(Conj(weights),1),2),1,1)
-    weights=(weights+weights_conj)/2.
-ENDIF
-IF Arg_present(variance) THEN BEGIN
-    variance_mirror=Shift(Reverse(reverse(variance,1),2),1,1)
-    variance=(variance+variance_mirror)/2.
+IF ~Keyword_Set(no_conjugate) THEN BEGIN
+    image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
+    image_uv=(image_uv+image_uv_conj)/2.
+    ;FOR addv_i=0L,n_additional-1 DO *image_list[addv_i]=(*image_list[addv_i]+Shift(Reverse(reverse(Conj(*image_list[addv_i]),1),2),1,1))/2.
+    
+    IF Arg_present(weights) THEN BEGIN
+        weights_conj=Shift(Reverse(reverse(Conj(weights),1),2),1,1)
+        weights=(weights+weights_conj)/2.
+    ENDIF
+    IF Arg_present(variance) THEN BEGIN
+        variance_mirror=Shift(Reverse(reverse(variance,1),2),1,1)
+        variance=(variance+variance_mirror)/2.
+    ENDIF
 ENDIF
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
