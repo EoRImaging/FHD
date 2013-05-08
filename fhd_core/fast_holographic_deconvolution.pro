@@ -255,12 +255,13 @@ FOR i=0L,max_iter-1 DO BEGIN
     t1+=t2_0-t1_0 
     
     IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
-        image_use=dirty_image_composite-model_image_composite
+        image_filtered=dirty_image_composite-model_image_composite
 ;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
-        image_smooth=Median(image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
-        image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
+        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+        image_filtered*=source_mask
         
-        source_find_image=image_use*beam_avg
+        source_find_image=image_filtered*beam_avg
         
         IF Keyword_Set(independent_fit) THEN BEGIN
             image_use_Q=dirty_image_composite_Q-model_image_composite_Q
@@ -278,10 +279,11 @@ FOR i=0L,max_iter-1 DO BEGIN
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF    
     ENDIF ELSE BEGIN
-        image_use=dirty_image_composite-model_image_composite
+        image_filtered=dirty_image_composite-model_image_composite
 ;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
-        image_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
-        source_find_image=image_use*beam_avg
+        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
+        image_filtered*=source_mask
+        source_find_image=image_filtered*beam_avg
 
         IF Keyword_Set(independent_fit) THEN BEGIN
             image_use_Q=dirty_image_composite_Q-model_image_composite_Q
@@ -295,9 +297,11 @@ FOR i=0L,max_iter-1 DO BEGIN
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
         ENDIF    
     ENDELSE
+   image_unfiltered=dirty_image_composite-model_image_composite
+   image_use=image_filtered
    
     ;use the composite image to locate sources, but then fit for flux independently
-    source_flux=Max(source_find_image*source_mask,source_i)
+    source_flux=Max(source_find_image,source_i)
     
 ;    Find additional sources:
 ;       require that they be isolated ; This is local_max_radius
@@ -305,7 +309,7 @@ FOR i=0L,max_iter-1 DO BEGIN
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 
     flux_ref=source_find_image[source_i]*add_threshold
-    additional_i=where(source_find_image*source_mask GT flux_ref,n_add)
+    additional_i=where(source_find_image GT flux_ref,n_add)
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod dimension
     add_y=Floor(additional_i/dimension)
@@ -321,27 +325,35 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDIF
     additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     
-    converge_check2[i]=Stddev((image_use*beam_avg)[where(source_mask)],/nan)
+    converge_check2[i]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)
     ;fit flux here, and fill comp_arr for each pol
     t3_0=Systime(1)
     t2+=t3_0-t2_0
     flux_arr=fltarr(4)
+    fit_threshold=-2.*converge_check2[i]
+    source_fit_fn_ref=Total(source_fit_fn)/2.
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=(additional_i[src_i] mod dimension)
         sy=Floor(additional_i[src_i]/dimension)
         source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
-        source_box=source_box>(-Abs(converge_check2[i]))
-        source_box-=Min(source_box)
-        xcen0=Total(source_box*source_box_xvals)/Total(source_box)
-        ycen0=Total(source_box*source_box_yvals)/Total(source_box)
+        box_i=where(source_box GT fit_threshold,n_fit)
+        IF n_fit EQ 0 THEN BEGIN
+            source_mask[sx,sy]=0
+            CONTINUE
+        ENDIF
+        IF Total(source_fit_fn[box_i]) LT source_fit_fn_ref THEN BEGIN
+            source_mask[sx,sy]=0
+            CONTINUE
+        ENDIF
+        
+;        source_box=source_box>(-Abs(converge_check2[i]))
+;        source_box-=Min(source_box)
+        xcen0=Total(source_box[box_i]*source_box_xvals[box_i])/Total(source_box[box_i])
+        ycen0=Total(source_box[box_i]*source_box_yvals[box_i])/Total(source_box[box_i])
         xcen=sx-local_max_radius+xcen0
         ycen=sy-local_max_radius+ycen0
         IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius THEN CONTINUE
         xy2ad,xcen,ycen,astr,ra,dec
-        comp_arr[si].x=xcen
-        comp_arr[si].y=ycen
-        comp_arr[si].ra=ra
-        comp_arr[si].dec=dec
         
         beam_corr_src=fltarr(n_pol)
         beam_src=fltarr(n_pol)
@@ -362,13 +374,23 @@ FOR i=0L,max_iter-1 DO BEGIN
             ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5) $
                 ELSE flux_use=Interpolate(image_use_U[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius],xcen0,ycen0,cubic=-0.5)
             
-            flux_use*=gain_factor_use
-            comp_arr[si].flux.(pol_i)=flux_use*beam_src[pol_i];*ps_not_used ;Apparent brightness, instrumental polarization X gain (a scalar)
+            flux_use=(flux_use*gain_factor_use)>0
+            
 ;            comp_arr[si].flux.(pol_i)=flux_use*gain_factor_use*beam_src[pol_i]*(*p_map_simple[pol_i])[additional_i[src_i]]
 ;            flux_use*=ps_not_used*(*beam_correction[pol_i])[additional_i[src_i]]
             flux_arr[pol_i]=flux_use;*beam_corr_src[pol_i] ;"True sky" instrumental pol
         ENDFOR
         
+        IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
+            source_mask[sx,sy]=0
+            CONTINUE
+        ENDIF
+        
+        FOR pol_i=0,n_pol-1 DO comp_arr[si].flux.(pol_i)=flux_arr[pol_i]*beam_src[pol_i];*ps_not_used ;Apparent brightness, instrumental polarization X gain (a scalar)
+        comp_arr[si].x=xcen
+        comp_arr[si].y=ycen
+        comp_arr[si].ra=ra
+        comp_arr[si].dec=dec
         comp_arr[si].flux.I=flux_arr[0]+flux_arr[1]
         comp_arr[si].flux.Q=flux_arr[0]-flux_arr[1]
         comp_arr[si].flux.U=flux_arr[2]+flux_arr[3]
@@ -400,18 +422,18 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF si GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
-        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,Stddev((image_use*beam_avg)[where(source_mask)],/nan)))
-        converge_check[i2]=Stddev((image_use*beam_avg)[where(source_mask)],/nan)
+        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
+        converge_check[i2]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)
         BREAK
     ENDIF
     
     IF (Round(i mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
         i2+=1
         t10=Systime(1)-t0
-        IF not Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,Stddev((image_use*beam_avg)[where(source_mask)],/nan)))
-;        print,StrCompress(String(format='("At iteration ",I," with ",I," components after ",I," seconds (convergence:",F,")")',i,si,t10,Stddev(image_use[where(source_mask)],/nan)))
-        converge_check[i2]=Stddev((image_use*beam_avg)[where(source_mask)],/nan)
-        IF 2.*converge_check[i2] GT image_use[source_i] THEN BEGIN
+        IF not Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
+;        print,StrCompress(String(format='("At iteration ",I," with ",I," components after ",I," seconds (convergence:",F,")")',i,si,t10,Stddev(image_filtered[where(source_mask)],/nan)))
+        converge_check[i2]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)
+        IF 2.*converge_check[i2] GT image_filtered[source_i] THEN BEGIN
             print,'Break after iteration',i,' from low signal to noise'
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
@@ -427,7 +449,7 @@ FOR i=0L,max_iter-1 DO BEGIN
 ENDFOR
 
 ;condense clean components
-noise_map=Stddev((image_use*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
+noise_map=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
 comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
 
