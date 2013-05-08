@@ -83,17 +83,21 @@ IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_fn=Ptrarr(dimension,elements)
 ENDIF ELSE map_flag=0
 
-xcen=frequency_array#kx_arr
-ycen=frequency_array#ky_arr
+xcen=(xcen0=frequency_array#kx_arr)
+ycen=(ycen0=frequency_array#ky_arr)
 
 ;conj_i=where(ycen+xcen GT 0,n_conj) 
-conj_i=where(ky_arr LT 0,n_conj)
+conj_i=where(ky_arr GT 0,n_conj)
+conj_flag=intarr(size(xcen,/dimension))
 IF n_conj GT 0 THEN BEGIN
+    conj_flag[*,conj_i]=1
     xcen[*,conj_i]=-xcen[*,conj_i]
     ycen[*,conj_i]=-ycen[*,conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
 ENDIF
 
+x_offset0=Round((Ceil(xcen0)-xcen0)*psf_resolution) mod psf_resolution    
+y_offset0=Round((Ceil(ycen0)-ycen0)*psf_resolution) mod psf_resolution
 x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
 y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
 xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.)+1 
@@ -137,6 +141,10 @@ ENDIF
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
 bin_i=where(bin_n,n_bin_use);+bin_min
+
+IF n_conj GT 0 THEN BEGIN
+
+ENDIF
 ;obs.n_vis=Total(bin_n)
 
 ;vis_density=Float(Total(bin_n))/(dimension*elements)
@@ -202,9 +210,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     
-    x_off1=x_offset[inds]
-    y_off1=y_offset[inds]
+    x_off1=x_offset0[inds]
+    y_off1=y_offset0[inds]
     vis_box=vis_arr_use[inds]
+    conj_box=conj_flag[inds]
         
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
@@ -224,7 +233,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
+    FOR ii=0L,vis_n-1 DO BEGIN
+        IF conj_box[ii] THEN box_matrix[ii,*]=Reverse(Conj(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]])) $
+            ELSE box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
+    ENDFOR    
     box_matrix_dag=Conj(box_matrix)
 
     t4_0=Systime(1)
