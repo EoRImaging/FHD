@@ -139,10 +139,10 @@ IF Keyword_Set(flag_arr) THEN BEGIN
         ymin[flag_i]=-1
     ENDIF
     
-    IF n_conj GT 0 THEN BEGIN
-        xmin[*,conj_i]=-1
-        ymin[*,conj_i]=-1
-    ENDIF
+;    IF n_conj GT 0 THEN BEGIN
+;        xmin[*,conj_i]=-1
+;        ymin[*,conj_i]=-1
+;    ENDIF
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
