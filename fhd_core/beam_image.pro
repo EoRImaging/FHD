@@ -8,7 +8,7 @@
 ; :Keywords:
 ;    pol_i - polarization index. 0:XX, 1:YY, 2:XY, 3:YX
 ;    
-;    freq_bin_i - If set, returns the beam of a specific frequency bin instead of the average beam.
+;    freq_i - If set, returns the beam of a specific frequency bin instead of the average beam.
 ;    
 ;    dimension - size of image in pixels. If elements is also set, this refers to the size of the first dimension
 ;    
@@ -25,10 +25,10 @@ IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF tag_exist(psf,'dim') THEN psf_dim=psf.dim ELSE psf_dim=Sqrt((size(*psf_base_ptr[0,0,0,0],/dimension))[0])
 IF tag_exist(psf,'resolution') THEN psf_res=psf.resolution ELSE psf_res=(size(psf_base_ptr,/dimension))[2]
 rbin=0;psf_res/2
-xl=dimension/2.-Floor(psf_dim/2.)
-xh=dimension/2.-Floor(psf_dim/2.)+psf_dim-1
-yl=elements/2.-Floor(psf_dim/2.)
-yh=elements/2.-Floor(psf_dim/2.)+psf_dim-1
+xl=dimension/2.-Floor(psf_dim/2.)+1
+xh=dimension/2.-Floor(psf_dim/2.)+psf_dim
+yl=elements/2.-Floor(psf_dim/2.)+1
+yh=elements/2.-Floor(psf_dim/2.)+psf_dim
 
 IF tag_exist(psf,'fbin_i') THEN freq_bin_i=psf.fbin_i
 

@@ -325,6 +325,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDIF
     additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     
+    IF i EQ 0 THEN converge_check[i]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)
     converge_check2[i]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)
     ;fit flux here, and fill comp_arr for each pol
     t3_0=Systime(1)
