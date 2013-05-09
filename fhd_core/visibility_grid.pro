@@ -97,10 +97,14 @@ IF n_conj GT 0 THEN BEGIN
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
 ENDIF
 
-x_offset0=Round((Ceil(xcen0)-xcen0+0.5)*psf_resolution) mod psf_resolution    
-y_offset0=Round((Ceil(ycen0)-ycen0+0.5)*psf_resolution) mod psf_resolution
-x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
-y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
+;x_offset0=Round((Ceil(xcen0)-xcen0)*psf_resolution) mod psf_resolution    
+;y_offset0=Round((Ceil(ycen0)-ycen0)*psf_resolution) mod psf_resolution
+;x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
+;y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
+x_offset0=Floor((xcen0-Floor(xcen0))*psf_resolution) mod psf_resolution    
+y_offset0=Floor((ycen0-Floor(ycen0))*psf_resolution) mod psf_resolution    
+x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
+y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
 xmin=Floor(xcen)+dimension/2.-(psf_dim/2.-1)
 ymin=Floor(ycen)+elements/2.-(psf_dim/2.-1)
 ;xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.)+1 
