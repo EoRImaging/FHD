@@ -88,6 +88,7 @@ ycen=(ycen0=frequency_array#ky_arr)
 
 ;conj_i=where(ycen+xcen GT 0,n_conj) 
 conj_i=where(ky_arr GT 0,n_conj)
+;n_conj=0
 conj_flag=intarr(size(xcen,/dimension))
 IF n_conj GT 0 THEN BEGIN
     conj_flag[*,conj_i]=1
@@ -96,12 +97,14 @@ IF n_conj GT 0 THEN BEGIN
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
 ENDIF
 
-x_offset0=Round((Ceil(xcen0)-xcen0)*psf_resolution) mod psf_resolution    
-y_offset0=Round((Ceil(ycen0)-ycen0)*psf_resolution) mod psf_resolution
+x_offset0=Round((Ceil(xcen0)-xcen0+0.5)*psf_resolution) mod psf_resolution    
+y_offset0=Round((Ceil(ycen0)-ycen0+0.5)*psf_resolution) mod psf_resolution
 x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
 y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
-xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.)+1 
-ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.)+1 
+xmin=Floor(xcen)+dimension/2.-(psf_dim/2.-1)
+ymin=Floor(ycen)+elements/2.-(psf_dim/2.-1)
+;xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.)+1 
+;ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.)+1 
 xmax=xmin+psf_dim-1
 ymax=ymin+psf_dim-1
 
