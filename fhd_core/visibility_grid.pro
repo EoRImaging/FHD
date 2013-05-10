@@ -46,10 +46,6 @@ IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
 IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=visibility_array[fi_use,*] ELSE vis_arr_use=Temporary(visibility_array[fi_use,*])
 
-;n_freq_bin=N_Elements(freq_bin_i)
-;
-;nfreq_bin=Max(freq_bin_i)+1
-;bin_offset=(*obs.baseline_info).bin_offset
 frequency_array=(obs.freq)[fi_use]
 
 psf_base=psf.base
@@ -60,23 +56,12 @@ flag_switch=Keyword_Set(flag_arr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 
-;baseline_i=params.baseline_arr
-;nbaselines=bin_offset[1]
-;n_samples=N_Elements(bin_offset)
 n_frequencies=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
-
-;vis_dimension=Float(nbaselines*n_samples)
 
 image_uv=Complexarr(dimension,elements)
 weights=Complexarr(dimension,elements)
 variance=Fltarr(dimension,elements)
-
-;IF Keyword_Set(visibility_list) THEN BEGIN
-;    n_additional=N_Elements(visibility_list)
-;    image_list=Ptrarr(size(visibility_list,/dimension))
-;    FOR vi=0L,n_additional-1 DO image_list[vi]=Ptr_new(Complexarr(dimension,elements))
-;ENDIF ELSE n_additional=0
 
 IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_flag=1
@@ -105,7 +90,6 @@ range_test_y_i=where((ymin LT 0) OR (ymax GE elements),n_test_y)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
-;dist_test=Sqrt((xcen-dimension/2.)^2.+(ycen-elements/2.)^2.)
 dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
 IF n_dist_flag GT 0 THEN BEGIN
@@ -114,8 +98,6 @@ IF n_dist_flag GT 0 THEN BEGIN
 ENDIF
 
 IF Keyword_Set(flag_arr) THEN BEGIN
-;    IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=flag_arr[fi_use,*] ELSE flag_arr_use=Temporary(flag_arr[fi_use,*])
-    
     flag_i=where((flag_arr[fi_use,*]) LE 0,n_flag,ncomplement=n_unflag)
     IF n_unflag EQ 0 THEN BEGIN
         timing=Systime(1)-t0_0
@@ -130,16 +112,9 @@ ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
-bin_i=where(bin_n,n_bin_use);+bin_min
+bin_i=where(bin_n,n_bin_use)
 
-IF n_conj GT 0 THEN BEGIN
-
-ENDIF
-;obs.n_vis=Total(bin_n)
-
-;vis_density=Float(Total(bin_n))/(dimension*elements)
 n_vis=Float(Total(bin_n))
-;vis_density=n_vis*(obs.degpix*!DtoR)^2.
 
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
@@ -196,8 +171,6 @@ t6a=0
 t6b=0
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
-;    ;MUST use double precision!
-;    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     
     x_off1=x_offset[inds]
@@ -207,15 +180,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
 
-;    bt_i=Floor(inds/n_frequencies)
-;    base_i=baseline_i[bt_i]
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
-    
-    ;match all visibilities that use exactly the same beam model
-;    bl_fr_i=fbin+base_i*nfreq_bin
-;    bl_fr_n=histogram(bl_fr_i,binsize=1,reverse_indices=rbfi,omin=bl_fr_min)
-;    bl_fr_ii=where(bl_fr_n,n_bl_fr_ii)
     
     vis_n=bin_n[bin_i[bi]]
     box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
@@ -232,11 +198,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t4+=t5_0-t4_0
     
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
-;    FOR addv_i=0L,n_additional-1 DO (*image_list[addv_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]$
-;        +=(*visibility_list[addv_i])[inds]#box_matrix_dag/n_vis
-    
-;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-;        Replicate(1./n_vis,vis_n)#Abs(box_matrix)
     IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
         Replicate(1./n_vis,vis_n)#box_matrix_dag
     IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
@@ -273,8 +234,6 @@ t7=Systime(1)-t7_0
 IF ~Keyword_Set(no_conjugate) THEN BEGIN
     image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
     image_uv=(image_uv+image_uv_conj)/2.
-    ;FOR addv_i=0L,n_additional-1 DO *image_list[addv_i]=(*image_list[addv_i]+Shift(Reverse(reverse(Conj(*image_list[addv_i]),1),2),1,1))/2.
-    
     IF Arg_present(weights) THEN BEGIN
         weights_conj=Shift(Reverse(reverse(Conj(weights),1),2),1,1)
         weights=(weights+weights_conj)/2.
