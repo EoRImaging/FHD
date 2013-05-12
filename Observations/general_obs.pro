@@ -32,7 +32,7 @@ IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag) EQ 0 THEN flag=0
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
 IF Keyword_Set(simultaneous) THEN deconvolve=0
-IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
+;IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
 ;Set up gridding and deconvolution parameters
