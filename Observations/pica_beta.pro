@@ -23,7 +23,7 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 ;noise_calibrate=0
 ;align=0
 ;dimension=1024.
-gain_factor=0.25
+gain_factor=0.15
 dimension=2048.
 max_sources=5000.
 pad_uv_image=2.

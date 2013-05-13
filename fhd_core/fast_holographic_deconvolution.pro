@@ -423,7 +423,8 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF si GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
-        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',i,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
+        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',$
+            i,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
         converge_check[i2]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)
         BREAK
     ENDIF
@@ -431,23 +432,30 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF (Round(i mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
         i2+=1
         t10=Systime(1)-t0
-        IF not Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
-;        print,StrCompress(String(format='("At iteration ",I," with ",I," components after ",I," seconds (convergence:",F,")")',i,si,t10,Stddev(image_filtered[where(source_mask)],/nan)))
+        IF not Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
+            i,si,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
         converge_check[i2]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)
         IF 2.*converge_check[i2] GT image_filtered[source_i] THEN BEGIN
-            print,'Break after iteration',i,' from low signal to noise'
+            print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',$
+                i,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
-        IF converge_check[i2] GT converge_check[i2-1] THEN BEGIN
-            print,'Break after iteration',i,' from lack of convergence'
+        IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
+            print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',$
+                i,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
     ENDIF
 ENDFOR
+IF i EQ max_iter THEN BEGIN
+    t10=Systime(1)-t0
+    print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds (convergence:",F,")")',$
+        i,t10,Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)))
+ENDIF
 
 ;condense clean components
 noise_map=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)*weight_invert(beam_avg)
