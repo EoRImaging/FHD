@@ -41,11 +41,9 @@ ky_span=kx_span
 degpix=obs.degpix
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=32. ;=32?
 IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) ;=16?
-;psf_dim2=psf_dim*psf_resolution
-;
-;degpix_use=!RaDeg/(kbinsize*psf_dim)
-psf_dim2=dimension
-degpix_use=degpix
+
+psf_dim2=psf_dim*psf_resolution
+degpix_use=degpix*dimension/psf_dim2
 
 psf_scale=degpix_use/degpix
 xvals2=meshgrid(psf_dim2,psf_dim2,1)*psf_scale-psf_dim2*psf_scale/2.+dimension/2.
@@ -93,8 +91,8 @@ psf_xvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 psf_yvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 xvals_i=meshgrid(psf_dim,psf_dim,1)*psf_resolution
 yvals_i=meshgrid(psf_dim,psf_dim,2)*psf_resolution
-psf_xvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,1)/Float(psf_resolution)-psf_dim/2.+dimension/2.
-psf_yvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,2)/Float(psf_resolution)-psf_dim/2.+elements/2.
+psf_xvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,1)/Float(psf_resolution)-psf_dim/2.+psf_dim2/2.
+psf_yvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,2)/Float(psf_resolution)-psf_dim/2.+psf_dim2/2.
 ;xvals=meshgrid(psf_dim2,psf_dim2,1)/psf_resolution-psf_dim/2.
 ;yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
 FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
@@ -115,12 +113,12 @@ az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 
 IF Abs(obs.obsra-obs.zenra) GT 90. THEN lon_offset=obs.obsra-((obs.obsra GT obs.zenra) ? 360.:(-360.))-obs.zenra ELSE lon_offset=obs.obsra-obs.zenra
 lat_offset=-(obs.zendec-obs.obsdec)
-degpix_use3=[Cos(lon_offset*!DtoR*Cos(obs.obsdec*!DtoR)),Cos(lat_offset*!DtoR)]*degpix_use
+;degpix_use3=[Cos(lon_offset*!DtoR*Cos(obs.obsdec*!DtoR)),Cos(lat_offset*!DtoR)]*degpix_use
 xvals3=za_arr*Sin(az_arr*!DtoR);/degpix_use3[0]
 yvals3=za_arr*Cos(az_arr*!DtoR);/degpix_use3[1]
 
 el_arr=90.-za_arr
-polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0,0,0])
+polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
 
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
@@ -160,12 +158,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
             frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=psf_dim2)
         IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
         beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$
             frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
+            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=psf_dim2)
         
         t3_a=Systime(1)
         t2+=t3_a-t2_a
