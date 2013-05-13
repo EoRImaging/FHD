@@ -55,7 +55,7 @@ IF N_Elements(start_fi) EQ 0 THEN start_fi=0
 fi=start_fi
 IF N_Elements(end_fi) EQ 0 THEN end_fi=n_files-1
 WHILE fi LE end_fi DO BEGIN
-    IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi)),Strn(Floor(end_fi-start_fi)))
+    IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(end_fi-start_fi+1)))
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$

@@ -49,7 +49,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*hanning(dimension,elements)),/inverse)))
     model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model),/inverse)*(degpix*!DtoR)^2.))
     dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
-    model_uv_holo[pol_i]=Ptr_new(holo_mapfn_apply(*model_uv[pol_i],*map_fn_arr[pol_i]))
+    model_uv_holo[pol_i]=Ptr_new(holo_mapfn_apply(*model_uv[pol_i],*map_fn_arr[pol_i],/indexed))
     model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix))
     beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
     beam_vals=(*beam_base[pol_i])[beam_i]
