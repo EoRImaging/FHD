@@ -309,21 +309,21 @@ FOR i=0L,max_iter-1 DO BEGIN
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 
     flux_ref=source_find_image[source_i]*add_threshold
-    additional_i=where(source_find_image GT flux_ref,n_add)
+    additional_i=where(source_find_image GT flux_ref,n_sources)
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
-    add_x=additional_i mod dimension
-    add_y=Floor(additional_i/dimension)
-    add_dist=fltarr(n_add)-1
-    FOR addi=1,n_add-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
-    additional_i_usei=where(add_dist LT 0,n_sources)
+;    add_x=additional_i mod dimension
+;    add_y=Floor(additional_i/dimension)
+;    add_dist=fltarr(n_sources)-1
+;    FOR addi=1,n_sources-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
+;    additional_i_usei=where(add_dist LT 0,n_sources)
     
     IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     IF max_add_sources EQ 0 THEN BREAK
     IF n_sources GT max_add_sources THEN BEGIN
-        additional_i_usei=additional_i_usei[0:max_add_sources-1]
+        additional_i=additional_i[0:max_add_sources-1]
         n_sources=max_add_sources
     ENDIF
-    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
+;    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     
     IF i EQ 0 THEN converge_check[i]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)
     converge_check2[i]=Stddev((image_filtered*beam_avg)[where(source_mask)],/nan)

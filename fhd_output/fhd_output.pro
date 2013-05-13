@@ -128,9 +128,9 @@ t0+=t1a-t0a
     FOR pol_i=0,(npol<2)-1 DO BEGIN
         *beam_base_out[pol_i]=Rebin(*beam_base[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
 ;        *beam_base_out[pol_i]=beam_image(psf,obs_out,pol_i=pol_i,dimension=dimension,/fast)
-        *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold/2.)
+        *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i])
         beam_mask_test=*beam_base_out[pol_i]
-        beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold/2.,Max(beam_mask_test)])
+        beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold,Max(beam_mask_test)])
         beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
         beam_avg+=*beam_base_out[pol_i]
         beam_mask*=beam_mask0

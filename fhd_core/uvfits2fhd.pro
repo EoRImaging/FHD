@@ -238,7 +238,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
         
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
-    psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,_Extra=extra)
+    psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
+    print,'Beam modeling time: ',t_beam
     vis_flag_update,flag_arr0,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
     save,obs,filename=obs_filepath
     

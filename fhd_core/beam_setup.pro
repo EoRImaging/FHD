@@ -10,7 +10,7 @@
 ;
 ; :Author: isullivan
 ;-
-FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,$
+FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,$
     instrument=instrument,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,_Extra=extra
 
@@ -222,7 +222,7 @@ psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residual
     psf_resolution=psf_resolution,psf_dim=psf_dim)
 save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
-t0=Systime(1)-t00
-IF ~Keyword_Set(silent) THEN print,[t0,t1,t2,t3,t4,t5]
+timing=Systime(1)-t00
+IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]
 RETURN,psf
 END

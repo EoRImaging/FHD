@@ -10,6 +10,7 @@ ENDIF
 dimension=obs.dimension
 elements=obs.elements
 astr=obs.astr
+degpix=obs.degpix
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
 
 freq_use=where((*obs.baseline_info).freq_use,nf_use)
