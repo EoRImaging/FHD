@@ -15,6 +15,7 @@ FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,$
     instrument=instrument,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
+t00=Systime(1)
 
 ;vis_path_default,data_directory,filename,file_path,obs=obs,version=version
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_beams'+'.sav') EQ 0) THEN BEGIN 
@@ -105,6 +106,7 @@ ENDFOR
 
 astr=obs.astr
 
+t1_a=Systime(1)
 xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
 valid_i=where(Finite(ra_arr_use1))
 Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt
@@ -129,7 +131,10 @@ norm=Sqrt(2.)*[ex0,ey0]
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
 pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
-t1=Systime(1)
+t1=Systime(1)-t1_a
+t2=0
+t3=0
+t4=0
 
 IF ~Keyword_Set(silent) THEN print,'Building beam model. Time elapsed: estimated time remaining'
 FOR pol_i=0,n_pol-1 DO BEGIN
@@ -140,6 +145,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain2_full=(pol2 EQ 0) ? gain_array_X:gain_array_Y
     
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
+        t2_a=Systime(1)
         antenna_beam_arr1=Ptrarr(16,/allocate)
         antenna_beam_arr2=Ptrarr(16,/allocate)
         beam1_arr=Ptrarr(n_tiles,/allocate)
@@ -161,6 +167,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
             ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
         
+        t3_a=Systime(1)
+        t2+=t3_a-t2_a
 ;        psf_base1=dirty_image_generate(beam1_0*beam2_0*(*proj[pol_i]),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
 ;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
@@ -173,7 +181,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
         gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
         psf_base2*=gain_normalization
-        
+        t4_a=Systime(1)
+        t3+=t4_a-t3_a
         
 ;        FOR tile_i=0,n_tiles-1 DO BEGIN
 ;            *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
@@ -205,12 +214,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
             psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(Reform(psf_base2[xvals_i+i,yvals_i+j],psf_dim*psf_dim)) 
         breakpoint0=0
+        t4+=Systime(1)-t4_a
     ENDFOR
 ENDFOR
 
+t5_a=Systime(1)
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim)
 save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
+t5=Systime(1)-t5_a
+t0=Systime(1)-t00
+IF ~Keyword_Set(silent) THEN print,[t0,t1,t2,t3,t4,t5]
 RETURN,psf
 END

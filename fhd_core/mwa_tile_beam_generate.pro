@@ -37,7 +37,7 @@ ENDELSE
 ;za=za_arr[psf_dim2/2.,psf_dim2/2.]
 ;az=az_arr[psf_dim2/2.,psf_dim2/2.]
 
-antenna_spacing=1.1D ;meters (design) ;1.071
+antenna_spacing=1.1 ;meters (design) ;1.071
 antenna_length=29.125*2.54/100. ;meters (measured)
 antenna_height=0.35 ;meters (rumor)
 
@@ -55,7 +55,7 @@ ENDIF
 
 xc_arr=Reform((meshgrid(4,4,1))*antenna_spacing,16) ;dipole east position (meters)
 yc_arr=Reform((meshgrid(4,4,2))*antenna_spacing,16) ;dipole north position (meters)
-zc_arr=Dblarr(16)
+zc_arr=Fltarr(16)
 
 term_A=Tan(az*!DtoR)
 term_B=za*!DtoR
@@ -72,6 +72,7 @@ IF N_Elements(delay_settings) EQ 0 THEN BEGIN
     D0_d=Round(D0_d) ;round to nearest real delay setting
     D0_d*=299792458D*4.35E-10
 ENDIF ELSE D0_d=delay_settings*299792458.*4.35E-10
+D0_d=Float(D0_d)
 
 proj_east=Reform(xvals,(psf_dim2)^2.)
 proj_north=Reform(yvals,(psf_dim2)^2.)
@@ -81,8 +82,11 @@ proj_z=Cos(za_arr_use*!DtoR)
 D_d=(proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d*!Radeg);/Kconv
 D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 
-groundplane=2D*Sin(Cos(za_arr_use*!DtoR)#(Kconv*(antenna_height+zc_arr))) ;looks correct
-groundplane=Reform(groundplane,psf_dim2,psf_dim2,16)
+;groundplane=2.*Sin(Cos(za_arr_use*!DtoR)#(Kconv*(antenna_height+zc_arr))) ;looks correct
+;groundplane=Reform(groundplane,psf_dim2,psf_dim2,16)
+
+groundplane=2.*Sin(Cos(za_arr_use*!DtoR)*(Kconv*(antenna_height)))
+groundplane=Reform(groundplane,psf_dim2,psf_dim2)
 
 projection=1.
 
@@ -94,25 +98,27 @@ ii=Complex(0,1)
 ;IF polarization EQ 0 THEN pol=Cos(xvals*!DtoR-xc) ELSE pol=Cos(yvals*!DtoR-yc)
 ;;IF polarization EQ 0 THEN pol=(1.-((xvals*!DtoR-xc)^2.)/2.)>0. ELSE pol=(1.-((yvals*!DtoR-yc)^2.)/2.)>0.
 
-dipole_gain_arr=groundplane*projection*Exp(-ii*Kconv*D_d*!DtoR)
+;dipole_gain_arr=groundplane*projection*Exp(-ii*Kconv*D_d*!DtoR)
+dipole_gain_arr=Exp(-ii*Kconv*D_d*!DtoR)
+
 ;dipole_gain_arr=groundplane*projection*Exp(-ii*D_d*!DtoR)
 ;horizon_test=where(abs(za_arr_use) GE 90.,n_horizon_test)
 ;horizon_mask=fltarr(psf_dim2,psf_dim2)+1
 ;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
 
-horizon_test=Region_grow(za_arr,psf_dim2*(1.+psf_dim2)/2.,thresh=[0,89.])
-horizon_mask=fltarr(psf_dim2,psf_dim2)
-horizon_mask[horizon_test]=1.
+;horizon_test=Region_grow(za_arr,psf_dim2*(1.+psf_dim2)/2.,thresh=[0,89.])
+;horizon_mask=fltarr(psf_dim2,psf_dim2)
+;horizon_mask[horizon_test]=1.
 
 IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(16,/allocate)
 FOR i=0,15 DO BEGIN
-    *antenna_beam_arr[i]=dipole_gain_arr[*,*,i];*pol
+    *antenna_beam_arr[i]=dipole_gain_arr[*,*,i]*groundplane;*pol
 ENDFOR
 
 tile_beam=fltarr(psf_dim2,psf_dim2)
 FOR i=0,15 DO tile_beam+=*antenna_beam_arr[i]*antenna_gain_arr[i]
 
-tile_beam*=normalization*horizon_mask;*uv_mask
+tile_beam*=normalization;*horizon_mask;*uv_mask
 
 ;tile_beam=tile_beam>0.
 RETURN,tile_beam
