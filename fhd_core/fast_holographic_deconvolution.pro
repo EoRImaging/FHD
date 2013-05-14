@@ -332,18 +332,18 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=(additional_i[src_i] mod dimension)
         sy=Floor(additional_i[src_i]/dimension)
-        source_box=image_use[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
-;        box_i=where(source_box GT fit_threshold,n_fit)
-;        IF n_fit EQ 0 THEN BEGIN
-;            source_mask[sx,sy]=0
-;            CONTINUE
-;        ENDIF
-;        IF Total(source_fit_fn[box_i]) LT source_fit_fn_ref THEN BEGIN
-;            source_mask[sx,sy]=0
-;            CONTINUE
-;        ENDIF
+        source_box=source_find_image[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+        box_i=where(source_box GT fit_threshold,n_fit)
+        IF n_fit EQ 0 THEN BEGIN
+            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+            CONTINUE
+        ENDIF
+        IF Total(source_fit_fn[box_i]) LT source_fit_fn_ref THEN BEGIN
+            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+            CONTINUE
+        ENDIF
         
-;        source_box=source_box>(-Abs(converge_check2[i]))
+        source_box=source_box>fit_threshold
 ;        source_box-=Min(source_box)
 ;        xcen0=Total(source_box[box_i]*source_box_xvals[box_i])/Total(source_box[box_i])
 ;        ycen0=Total(source_box[box_i]*source_box_yvals[box_i])/Total(source_box[box_i])
