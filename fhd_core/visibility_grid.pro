@@ -72,10 +72,12 @@ xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 
 conj_i=where(ky_arr GT 0,n_conj)
+conj_test=intarr(size(vis_arr_use,/dimension))
 IF n_conj GT 0 THEN BEGIN
     xcen[*,conj_i]=-xcen[*,conj_i]
     ycen[*,conj_i]=-ycen[*,conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
+    conj_test[*,conj_i]=1
 ENDIF
  
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
@@ -183,6 +185,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     x_off1=x_offset[inds]
     y_off1=y_offset[inds]
     vis_box=vis_arr_use[inds]
+    conj_box=conj_test[inds]
         
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
@@ -195,7 +198,12 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]  
+    FOR ii=0L,vis_n-1 DO BEGIN
+        IF conj_box[ii] EQ 1 THEN box_matrix[ii,*]=Conj(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) $
+            ELSE box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
+    
+    ENDFOR
+;    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]  
     box_matrix_dag=Conj(box_matrix)
 
     t4_0=Systime(1)
