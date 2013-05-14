@@ -255,7 +255,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     t2_0=Systime(1)
     t1+=t2_0-t1_0 
     
-    IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
+;    IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
         image_filtered=dirty_image_composite-model_image_composite
 ;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
         image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
@@ -276,23 +276,23 @@ FOR i=0L,max_iter-1 DO BEGIN
             image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use_U,smooth_width,/median,/circle)
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF    
-    ENDIF ELSE BEGIN
-        image_filtered=dirty_image_composite-model_image_composite
-;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
-        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
-
-        IF Keyword_Set(independent_fit) THEN BEGIN
-            image_use_Q=dirty_image_composite_Q-model_image_composite_Q
-            image_use_U=dirty_image_composite_U-model_image_composite_U
-            image_use_V=dirty_image_composite_V-model_image_composite_V
-            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q ;uses previously calculated image_smooth!
-            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
-            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V ;uses previously calculated image_smooth!
-        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
-            image_use_U=dirty_image_composite_U-model_image_composite_U
-            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
-        ENDIF    
-    ENDELSE
+;    ENDIF ELSE BEGIN
+;        image_filtered=dirty_image_composite-model_image_composite
+;;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
+;        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
+;
+;        IF Keyword_Set(independent_fit) THEN BEGIN
+;            image_use_Q=dirty_image_composite_Q-model_image_composite_Q
+;            image_use_U=dirty_image_composite_U-model_image_composite_U
+;            image_use_V=dirty_image_composite_V-model_image_composite_V
+;            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q ;uses previously calculated image_smooth!
+;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
+;            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V ;uses previously calculated image_smooth!
+;        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
+;            image_use_U=dirty_image_composite_U-model_image_composite_U
+;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
+;        ENDIF    
+;    ENDELSE
     image_unfiltered=dirty_image_composite-model_image_composite
     source_find_image=image_filtered*beam_avg*source_mask
     image_use=image_filtered*source_mask
@@ -352,7 +352,9 @@ FOR i=0L,max_iter-1 DO BEGIN
         ycen0=Total(source_box*source_box_yvals)/Total(source_box)
         xcen=sx-local_max_radius+xcen0
         ycen=sy-local_max_radius+ycen0
-        IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius/2. THEN CONTINUE
+        IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius/2. THEN BEGIN
+            CONTINUE
+        ENDIF
         xy2ad,xcen,ycen,astr,ra,dec
         
         beam_corr_src=fltarr(n_pol)
