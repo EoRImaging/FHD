@@ -25,7 +25,7 @@
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
-    visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,_Extra=extra
+    visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,mask_mirror_indices=mask_mirror_indices,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 IF N_Elements(complex) EQ 0 THEN complex=1
@@ -107,6 +107,13 @@ IF Keyword_Set(flag_arr) THEN BEGIN
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
+    ENDIF
+ENDIF
+
+IF Keyword_Set(mask_mirror_indices) THEN BEGIN
+    IF n_conj GT 0 THEN BEGIN
+        xmin[*,conj_i]=-1
+        ymin[*,conj_i]=-1
     ENDIF
 ENDIF
 

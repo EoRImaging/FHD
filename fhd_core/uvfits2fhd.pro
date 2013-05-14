@@ -158,7 +158,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     flag_arr0=Reform(data_array[flag_index,*,*,*]) 
     IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
     
-    flag_arr0=vis_flag_basic(flag_arr0,obs,_Extra=extra)
+    flag_arr0=vis_flag_basic(flag_arr0,obs,params,_Extra=extra)
     
     IF Keyword_Set(freq_start) THEN BEGIN
         frequency_array_MHz=obs.freq/1E6
@@ -239,7 +239,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
-    print,'Beam modeling time: ',t_beam
+    IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     vis_flag_update,flag_arr0,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
     save,obs,filename=obs_filepath
     

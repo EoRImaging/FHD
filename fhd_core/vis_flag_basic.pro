@@ -1,4 +1,5 @@
-FUNCTION vis_flag_basic,flag_arr,obs,instrument=instrument,tile_flag=tile_flag,freq_flag=freq_flag,_Extra=extra
+FUNCTION vis_flag_basic,flag_arr,obs,params,instrument=instrument,tile_flag=tile_flag,freq_flag=freq_flag,$
+    mask_mirror_indices=mask_mirror_indices,_Extra=extra
 ;dimensions of flag_arr should be (polarization,freq,baselineXtime)
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa32t' ELSE instrument=StrLowCase(instrument)
 
@@ -6,6 +7,13 @@ IF N_Elements(obs) GT 0 THEN BEGIN
     tile_names=(*obs.baseline_info).tile_names
 ENDIF
 n_freq=(size(flag_arr,/dimension))[1]
+
+IF Keyword_Set(mask_mirror_indices) AND Keyword_Set(params) THEN BEGIN
+    conj_i=where(params.uu GT 0,n_conj)
+    IF n_conj GT 0 THEN BEGIN
+        flag_arr[*,*,conj_i]=0
+    ENDIF
+ENDIF
 
 CASE instrument OF
     'mwa32t':BEGIN
