@@ -201,9 +201,10 @@ sm_ymax=(Max(yvals[where(source_mask)])+elements/2.+smooth_width)<(elements-1)
 beam_avg_box=beam_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 
-source_fit_fn=(Hanning(local_max_radius*2.+2,local_max_radius*2.+2))[1:*,1:*]
 source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
 source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
+;source_fit_fn=(Hanning(local_max_radius*2.+2,local_max_radius*2.+2))[1:*,1:*]
+source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
 
 dirty_image_composite_smooth=fltarr(dimension,elements)
 dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
@@ -351,7 +352,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ycen0=Total(source_box*source_box_yvals)/Total(source_box)
         xcen=sx-local_max_radius+xcen0
         ycen=sy-local_max_radius+ycen0
-        IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius THEN CONTINUE
+        IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius/2. THEN CONTINUE
         xy2ad,xcen,ycen,astr,ra,dec
         
         beam_corr_src=fltarr(n_pol)
@@ -468,7 +469,7 @@ t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'
 print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))
 print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
-print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.))
+print,String(format='("DFT source modeling:",A,"[",A,", or ",A," per 100 sources]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.),Strn(Round(t3*10000./si)/100.))
 print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
 timing=[t00,t1,t2,t3,t4]
 ;print,timing
