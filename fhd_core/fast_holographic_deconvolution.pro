@@ -421,8 +421,8 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF si GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
-        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds (convergence:",F,")")',$
-            i,t10,Stddev(source_find_image[where(source_mask)],/nan)))
+        print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds with ",I," sources (convergence:",F,")")',$
+            i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
         converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
         BREAK
     ENDIF
@@ -434,15 +434,15 @@ FOR i=0L,max_iter-1 DO BEGIN
             i,si,t10,Stddev(source_find_image[where(source_mask)],/nan)))
         converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
         IF 2.*converge_check[i2] GT image_filtered[source_i] THEN BEGIN
-            print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',$
-                i,t10,Stddev(source_find_image[where(source_mask)],/nan)))
+            print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
+                i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
         IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
-            print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',$
-                i,t10,Stddev(source_find_image[where(source_mask)],/nan)))
+            print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds with ",I," sources (convergence:",F,")")',$
+                i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
@@ -451,8 +451,8 @@ FOR i=0L,max_iter-1 DO BEGIN
 ENDFOR
 IF i EQ max_iter THEN BEGIN
     t10=Systime(1)-t0
-    print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds (convergence:",F,")")',$
-        i,t10,Stddev(source_find_image[where(source_mask)],/nan)))
+    print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds with ",I," sources (convergence:",F,")")',$
+        i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
 ENDIF
 
 ;condense clean components
