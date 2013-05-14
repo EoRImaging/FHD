@@ -344,7 +344,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             CONTINUE
         ENDIF
         
-        source_box=source_box>fit_threshold
+        source_box=source_box>0
 ;        source_box-=Min(source_box)
 ;        xcen0=Total(source_box[box_i]*source_box_xvals[box_i])/Total(source_box[box_i])
 ;        ycen0=Total(source_box[box_i]*source_box_yvals[box_i])/Total(source_box[box_i])
