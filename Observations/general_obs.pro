@@ -42,7 +42,7 @@ IF N_Elements(n_pol) EQ 0 THEN n_pol=2
 IF N_Elements(precess) EQ 0 THEN precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 IF N_Elements(gain_factor) EQ 0 THEN gain_factor=0.15
 IF N_Elements(max_sources) EQ 0 THEN max_sources=10000. ;maximum total number of source components to fit
-IF N_Elements(add_threshold) EQ 0 THEN add_threshold=0.9 ;also fit additional components brighter than this threshold
+IF N_Elements(add_threshold) EQ 0 THEN add_threshold=0.8 ;also fit additional components brighter than this threshold
 IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q, (U, V) seperately. Otherwise, only I (and U) is fit
 ;dimension=1024.
 
