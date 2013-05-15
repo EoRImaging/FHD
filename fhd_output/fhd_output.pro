@@ -166,13 +166,13 @@ t0+=t1a-t0a
     model_holo_arr=model_uv_holo
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
         gal_holo_uv=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
-            model_uv_holo=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1,uv_return=1)
+            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1,uv_return=1)
         gal_name='_galfit'
         gal_model_img=Ptrarr(npol)
         gal_holo_img=Ptrarr(npol)
         FOR pol_i=0,npol-1 DO BEGIN
             gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
-                image_filter_fn=image_filter_fn,degpix=degpix,_Extra=extra)*(*beam_correction_out[pol_i]))
+                image_filter_fn=image_filter_fn,degpix=degpix,_Extra=extra)*(*beam_base_out[pol_i]))
             gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,$
                 image_filter_fn=image_filter_fn,degpix=degpix,_Extra=extra)*(*beam_correction_out[pol_i]))
         ENDFOR

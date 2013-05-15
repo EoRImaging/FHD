@@ -66,7 +66,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *model_uv_holo[pol_i]*=scale_arr[pol_i]
     *model_img_holo[pol_i]*=scale_arr[pol_i]
 ENDFOR
-IF Arg_present(galaxy_model_img) THEN galaxy_model_img=Temporary(model)
+galaxy_model_img=model
 galaxy_model_uv=model_uv
 
 ;comp_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/components)
