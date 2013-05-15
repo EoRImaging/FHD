@@ -228,71 +228,74 @@ print,"Gain factor used:",fhd.gain_factor
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
 si=0L
+recalc_flag=1
 FOR i=0L,max_iter-1 DO BEGIN 
-    t1_0=Systime(1)
-    model_image_composite=fltarr(dimension,elements)
-    model_image_composite_Q=fltarr(dimension,elements)
-    model_image_composite_U=fltarr(dimension,elements)
-    model_image_composite_V=fltarr(dimension,elements)
-    FOR pol_i=0,n_pol-1 DO BEGIN 
-        IF pol_cut[pol_i] THEN CONTINUE
-        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix)
-        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
+    IF Keyword_Set(recalc_flag) THEN BEGIN
+        t1_0=Systime(1)
+        model_image_composite=fltarr(dimension,elements)
+        model_image_composite_Q=fltarr(dimension,elements)
+        model_image_composite_U=fltarr(dimension,elements)
+        model_image_composite_V=fltarr(dimension,elements)
+        FOR pol_i=0,n_pol-1 DO BEGIN 
+            IF pol_cut[pol_i] THEN CONTINUE
+            model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix)
+            model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
+            
+            *model_arr[pol_i]=model_image
+            IF pol_i LE 1 THEN model_image_composite+=model_image $
+                ELSE model_image_composite_U+=model_image
+            IF Keyword_Set(independent_fit) OR Keyword_Set(reject_pol_sources) THEN BEGIN   
+                CASE pol_i OF
+                    0:model_image_composite_Q+=model_image
+                    1:model_image_composite_Q-=model_image
+                    2:model_image_composite_V+=model_image
+                    3:model_image_composite_V-=model_image
+                ENDCASE
+            ENDIF
+        ENDFOR
         
-        *model_arr[pol_i]=model_image
-        IF pol_i LE 1 THEN model_image_composite+=model_image $
-            ELSE model_image_composite_U+=model_image
-        IF Keyword_Set(independent_fit) OR Keyword_Set(reject_pol_sources) THEN BEGIN   
-            CASE pol_i OF
-                0:model_image_composite_Q+=model_image
-                1:model_image_composite_Q-=model_image
-                2:model_image_composite_V+=model_image
-                3:model_image_composite_V-=model_image
-            ENDCASE
-        ENDIF
-    ENDFOR
-    
-    t2_0=Systime(1)
-    t1+=t2_0-t1_0 
-    
-;    IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
-        image_filtered=dirty_image_composite-model_image_composite
-;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
-        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
-        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+        t2_0=Systime(1)
+        t1+=t2_0-t1_0 
         
-        IF Keyword_Set(independent_fit) THEN BEGIN
-            image_use_Q=dirty_image_composite_Q-model_image_composite_Q
-            image_use_U=dirty_image_composite_U-model_image_composite_U
-            image_use_V=dirty_image_composite_V-model_image_composite_V
-            image_smooth_Q=Median(image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q
-            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
-            image_smooth_V=Median(image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
-        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
-            image_use_U=dirty_image_composite_U-model_image_composite_U
-            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use_U,smooth_width,/median,/circle)
-            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
-        ENDIF    
-;    ENDIF ELSE BEGIN
-;        image_filtered=dirty_image_composite-model_image_composite
-;;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
-;        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
-;
-;        IF Keyword_Set(independent_fit) THEN BEGIN
-;            image_use_Q=dirty_image_composite_Q-model_image_composite_Q
-;            image_use_U=dirty_image_composite_U-model_image_composite_U
-;            image_use_V=dirty_image_composite_V-model_image_composite_V
-;            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q ;uses previously calculated image_smooth!
-;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
-;            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V ;uses previously calculated image_smooth!
-;        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
-;            image_use_U=dirty_image_composite_U-model_image_composite_U
-;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
-;        ENDIF    
-;    ENDELSE
+    ;    IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
+            image_filtered=dirty_image_composite-model_image_composite
+    ;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
+            image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
+            image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+            
+            IF Keyword_Set(independent_fit) THEN BEGIN
+                image_use_Q=dirty_image_composite_Q-model_image_composite_Q
+                image_use_U=dirty_image_composite_U-model_image_composite_U
+                image_use_V=dirty_image_composite_V-model_image_composite_V
+                image_smooth_Q=Median(image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+                image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q
+                image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+                image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
+                image_smooth_V=Median(image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+                image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
+            ENDIF ELSE IF n_pol GT 2 THEN BEGIN
+                image_use_U=dirty_image_composite_U-model_image_composite_U
+                image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use_U,smooth_width,/median,/circle)
+                image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
+            ENDIF    
+    ;    ENDIF ELSE BEGIN
+    ;        image_filtered=dirty_image_composite-model_image_composite
+    ;;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
+    ;        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
+    ;
+    ;        IF Keyword_Set(independent_fit) THEN BEGIN
+    ;            image_use_Q=dirty_image_composite_Q-model_image_composite_Q
+    ;            image_use_U=dirty_image_composite_U-model_image_composite_U
+    ;            image_use_V=dirty_image_composite_V-model_image_composite_V
+    ;            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q ;uses previously calculated image_smooth!
+    ;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
+    ;            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V ;uses previously calculated image_smooth!
+    ;        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
+    ;            image_use_U=dirty_image_composite_U-model_image_composite_U
+    ;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
+    ;        ENDIF    
+    ;    ENDELSE
+    ENDIF ELSE t2_0=Systime(1)
     image_unfiltered=dirty_image_composite-model_image_composite
     source_find_image=image_filtered*beam_avg*source_mask
     image_use=image_filtered*source_mask
@@ -308,11 +311,11 @@ FOR i=0L,max_iter-1 DO BEGIN
     flux_ref=source_find_image[source_i]*add_threshold
     additional_i=where(source_find_image GT flux_ref,n_sources)
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
-;    add_x=additional_i mod dimension
-;    add_y=Floor(additional_i/dimension)
-;    add_dist=fltarr(n_sources)-1
-;    FOR addi=1,n_sources-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
-;    additional_i_usei=where(add_dist LT 0,n_sources)
+    add_x=additional_i mod dimension
+    add_y=Floor(additional_i/dimension)
+    add_dist=fltarr(n_sources)-1
+    FOR addi=1,n_sources-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
+    additional_i_usei=where(add_dist LT 0,n_sources)
     
     IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     IF max_add_sources EQ 0 THEN BREAK
@@ -320,6 +323,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         additional_i=additional_i[0:max_add_sources-1]
         n_sources=max_add_sources
     ENDIF
+    n_mask=0
 ;    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     
     IF i EQ 0 THEN converge_check[i]=Stddev(source_find_image[where(source_mask)],/nan)
@@ -330,16 +334,20 @@ FOR i=0L,max_iter-1 DO BEGIN
     flux_arr=fltarr(4)
     fit_threshold=-2.*converge_check2[i]
     source_fit_fn_ref=Total(source_fit_fn)/2.
+    
+    si_use=Lonarr(n_sources)-1
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=(additional_i[src_i] mod dimension)
         sy=Floor(additional_i[src_i]/dimension)
         source_box=source_find_image[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
         box_i=where(source_box GT fit_threshold,n_fit)
         IF n_fit EQ 0 THEN BEGIN
+            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
             source_mask[sx-1:sx+1,sy-1:sy+1]=0
             CONTINUE
         ENDIF
         IF Total(source_fit_fn[box_i]) LT source_fit_fn_ref THEN BEGIN
+            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
             source_mask[sx-1:sx+1,sy-1:sy+1]=0
             CONTINUE
         ENDIF
@@ -384,6 +392,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDFOR
         
         IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
+            n_mask+=Total(source_mask[sx,sy])
             source_mask[sx,sy]=0
             CONTINUE
         ENDIF
@@ -397,23 +406,54 @@ FOR i=0L,max_iter-1 DO BEGIN
         comp_arr[si].flux.Q=flux_arr[0]-flux_arr[1]
         comp_arr[si].flux.U=flux_arr[2]+flux_arr[3]
         comp_arr[si].flux.V=flux_arr[2]-flux_arr[3]
+        si_use[src_i]=si
 
-        ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-;        source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
-;        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals1,yvals1,dimension=dimension,elements=elements)
-        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix)
-;        source_uv=Complexarr(dimension,elements) & source_uv[uv_i_use2]=source_uv_vals
-;        source_uv+=Conj(Shift(Reverse(reverse(source_uv,1),2),1,1))
-
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            (*model_uv_full[pol_i])[uv_i_use2]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
-;            *model_uv_full[pol_i]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv
-;            (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*source_uv_vals
-;            (*model_uv_full[pol_i])[uv_i_use]+=flux_arr[pol_i]*source_uv_vals
-        ENDFOR
+;        ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
+;;        source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
+;;        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals1,yvals1,dimension=dimension,elements=elements)
+;        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix)
+;;        source_uv=Complexarr(dimension,elements) & source_uv[uv_i_use2]=source_uv_vals
+;;        source_uv+=Conj(Shift(Reverse(reverse(source_uv,1),2),1,1))
+;
+;        FOR pol_i=0,n_pol-1 DO BEGIN
+;            (*model_uv_full[pol_i])[uv_i_use2]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
+;;            *model_uv_full[pol_i]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv
+;;            (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*source_uv_vals
+;;            (*model_uv_full[pol_i])[uv_i_use]+=flux_arr[pol_i]*source_uv_vals
+;        ENDFOR
         
         si+=1
     ENDFOR
+    
+    si_use_i=where(si_use GE 0,n_si_use)
+    IF n_si_use EQ 0 THEN BEGIN
+        ;do something to end loop if n_mask EQ 0
+        
+        recalc_flag=0
+        CONTINUE
+    ENDIF ELSE recalc_flag=1
+    
+    si_use=si_use[si_use_i]
+    IF ~Keyword_Set(independent_fit) THEN BEGIN
+        ;<<<DOES NOT WORK FOR XY OR YX POLARIZATIONS YET!!!>>>
+        flux_vec=comp_arr[si_use].flux.I/2.
+        x_vec=comp_arr[si_use].x
+        y_vec=comp_arr[si_use].y
+        source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_vec)
+        FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals
+    ENDIF ELSE BEGIN
+            ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
+        FOR src_i=0L,n_si_use-1 DO BEGIN
+            si1=si_use[src_i]
+            source_uv_vals=source_dft(comp_arr[si1].x,comp_arr[si1].y,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix)
+            
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                beam_corr_src=(*beam_correction[pol_i])[comp_arr[si1].x,comp_arr[si1].y]
+                (*model_uv_full[pol_i])[uv_i_use2]+=comp_arr[si1].flux.(pol_i)*beam_corr_src*source_uv_vals
+            ENDFOR
+        ENDFOR
+    ENDELSE
+    
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     FOR pol_i=0,n_pol-1 DO BEGIN
