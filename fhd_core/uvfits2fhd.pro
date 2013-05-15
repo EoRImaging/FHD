@@ -286,17 +286,20 @@ IF Keyword_Set(data_flag) THEN BEGIN
     cal=fltarr(n_pol)
     IF Keyword_Set(grid_recalculate) THEN BEGIN
         print,'Gridding visibilities'
+        IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol)
         FOR pol_i=0,n_pol-1 DO BEGIN
     ;        IF Keyword_Set(GPU_enable) THEN $
     ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
     ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
     ;        ELSE $
-            dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,file_path_fhd,timing=t_grid0,fi_use=fi_use,$
-                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate,_Extra=extra)
+            dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,file_path_fhd,$
+                timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
+                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,_Extra=extra)
             t_grid[pol_i]=t_grid0
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
             save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
             save,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
+            IF Keyword_Set(deconvolve) THEN map_fn_arr[pol_i]=return_mapfn
         ENDFOR
         print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
@@ -310,7 +313,8 @@ IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 T
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,transfer_mapfn=transfer_mapfn;,GPU_enable=GPU_enable
+    fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,$
+        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr;,GPU_enable=GPU_enable
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
     IF Keyword_Set(quickview) THEN fhd_quickview,file_path_fhd=file_path_fhd,_Extra=extra

@@ -25,7 +25,8 @@
 FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
-    visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,mask_mirror_indices=mask_mirror_indices,_Extra=extra
+    visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
+    return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 IF N_Elements(complex) EQ 0 THEN complex=1
@@ -72,23 +73,21 @@ xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 
 conj_i=where(ky_arr GT 0,n_conj)
-conj_test=intarr(size(vis_arr_use,/dimension))
 IF n_conj GT 0 THEN BEGIN
     xcen[*,conj_i]=-xcen[*,conj_i]
     ycen[*,conj_i]=-ycen[*,conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
-    conj_test[*,conj_i]=1
 ENDIF
  
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
 xmin=Floor(xcen)+dimension/2.-(psf_dim/2.-1)
 ymin=Floor(ycen)+elements/2.-(psf_dim/2.-1)
-xmax=xmin+psf_dim-1
-ymax=ymin+psf_dim-1
+;xmax=xmin+psf_dim-1
+;ymax=(ymin+psf_dim-1)
 
-range_test_x_i=where((xmin LT 0) OR (xmax GE dimension),n_test_x)
-range_test_y_i=where((ymin LT 0) OR (ymax GE elements),n_test_y)
+range_test_x_i=where((xmin LT 0) OR ((xmin+psf_dim-1) GE dimension),n_test_x)
+range_test_y_i=where((ymin LT 0) OR ((ymin+psf_dim-1) GE elements),n_test_y)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
@@ -185,7 +184,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     x_off1=x_offset[inds]
     y_off1=y_offset[inds]
     vis_box=vis_arr_use[inds]
-    conj_box=conj_test[inds]
         
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
@@ -198,28 +196,27 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO BEGIN
-        IF conj_box[ii] EQ 1 THEN box_matrix[ii,*]=Conj(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) $
-            ELSE box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
-    
-    ENDFOR
-;    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]  
+    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]  
     box_matrix_dag=Conj(box_matrix)
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
+    ;try to use more efficient matrix subscript notation
     box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
 ;    box_arr=vis_box#box_matrix_dag/n_vis
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
-    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
-    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
+;    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
+    image_uv[xmin_use,ymin_use]+=box_arr
+;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+;        matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
+    IF Arg_present(weights) THEN weights[xmin_use,ymin_use]+=matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
 ;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
 ;        Replicate(1./n_vis,vis_n)#box_matrix_dag
-    IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
+;    IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+;        matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
+    IF Arg_present(variance) THEN variance[xmin_use,ymin_use]+=matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
 ;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
 ;        Replicate(1./n_vis,vis_n)#(Abs(box_matrix)^2.)
     
@@ -235,7 +232,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t6a+=t6b_0-t6a_0
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
-            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
         ENDFOR
         t6b+=Systime(1)-t6b_0
     ENDIF
@@ -248,6 +246,7 @@ t7_0=Systime(1)
 IF map_flag THEN BEGIN
     map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension)
     save,map_fn,filename=file_path_fhd+'_mapfn_'+pol_names[polarization]+'.sav'
+    IF Arg_present(return_mapfn) THEN return_mapfn=map_fn
 ENDIF
 t7=Systime(1)-t7_0
 
