@@ -33,7 +33,9 @@ IF N_Elements(map_fn_arr) EQ 0 THEN BEGIN
     map_fn_arr=Ptrarr(n_pol,/allocate)
     file_path_mapfn=file_path_fhd+'_mapfn_'
     pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
-    FOR pol_i=0,n_pol-1 DO *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
+    restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+    *map_fn_arr[pol_i]=Temporary(map_fn)
+;    FOR pol_i=0,n_pol-1 DO *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
 ENDIF
 
 model_uv=Ptrarr(n_pol)

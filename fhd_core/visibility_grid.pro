@@ -159,14 +159,6 @@ IF map_flag THEN BEGIN
     ENDFOR
 ENDIF
 
-;;pre-compute indices:
-;ind_map_base=lindgen(psf_dim^2.,psf_dim^2.)
-;ind_map=Ptrarr(psf_dim,psf_dim)
-;FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
-;    ij=i+j*psf_dim
-;    ind_map[i,j]=Ptr_new(Reform(ind_map_base[*,ij],psf_dim,psf_dim))
-;ENDFOR
-
 t0=Systime(1)-t0_0
 time_check_interval=Ceil(n_bin_use/10.)
 t1=0
@@ -201,39 +193,30 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    ;try to use more efficient matrix subscript notation
     box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
-;    box_arr=vis_box#box_matrix_dag/n_vis
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
-;    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
-    image_uv[xmin_use,ymin_use]+=box_arr
-;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-;        matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
-    IF Arg_present(weights) THEN weights[xmin_use,ymin_use]+=matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
-;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-;        Replicate(1./n_vis,vis_n)#box_matrix_dag
-;    IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-;        matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
-    IF Arg_present(variance) THEN variance[xmin_use,ymin_use]+=matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
-;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-;        Replicate(1./n_vis,vis_n)#(Abs(box_matrix)^2.)
+    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
+;    image_uv[xmin_use,ymin_use]+=box_arr
+    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+        matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
+;    IF Arg_present(weights) THEN weights[xmin_use,ymin_use]+=matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
+    IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+        matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
+;    IF Arg_present(variance) THEN variance[xmin_use,ymin_use]+=matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
     
     t6_0=Systime(1)
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
         t6a_0=Systime(1)
         box_arr_map=matrix_multiply(box_matrix,box_matrix_dag,/atranspose)/n_vis
-        ;alternate indexing approach. Does not appear to be any faster.
-;        FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO $
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*ind_map[i,j]]
         t6b_0=Systime(1)
         t6a+=t6b_0-t6a_0
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
         ENDFOR
         t6b+=Systime(1)-t6b_0
     ENDIF
