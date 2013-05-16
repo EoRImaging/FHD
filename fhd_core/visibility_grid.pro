@@ -109,6 +109,7 @@ IF Keyword_Set(flag_arr) THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
     ENDIF
+    IF ~Keyword_Set(preserve_visibilities) THEN flag_arr=0
 ENDIF
 
 IF Keyword_Set(mask_mirror_indices) THEN BEGIN
@@ -173,9 +174,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     
-    x_off1=x_offset[inds]
-    y_off1=y_offset[inds]
-    vis_box=vis_arr_use[inds]
+    x_off=x_offset[inds]
+    y_off=y_offset[inds]
+;    vis_box=vis_arr_use[inds]
         
     xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
     ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
@@ -183,13 +184,56 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
     
-    vis_n=bin_n[bin_i[bi]]
-    box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
+;    vis_n=bin_n[bin_i[bi]]
+;    box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
     
-    t3_0=Systime(1)
-    t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]  
-    box_matrix_dag=Conj(box_matrix)
+    fbin0=Round(fbin-Min(fbin))
+    x_off0=Round(x_off-Min(x_off))
+    y_off0=Round(y_off-Min(y_off))
+    nfbin0=Max(fbin0)+1L
+    nx_off0=Max(x_off0)+1L
+    
+    ident_index=fbin0+x_off0*nfbin0+y_off0*nx_off0*nfbin0
+    ident_n=histogram(ident_index,min=0,/bin,reverse=id_i)
+    ident_i=where(ident_n,vis_n)
+    
+    vis_n_arr=ident_n[ident_i]
+    
+    IF Mean(vis_n_arr) GT 1.1 THEN BEGIN
+        vis_box=Complexarr(vis_n)
+        box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
+        box_matrix_dag=box_matrix
+        
+        t2_0=Systime(1)
+        t2+=t2_0-t1_0
+        FOR ii=0L,vis_n-1 DO BEGIN
+            t2_0=Systime(1)
+            inds_i=id_i[id_i[ident_i[ii]]:id_i[ident_i[ii]+1]-1]
+            iii=id_i[id_i[ident_i[ii]]]
+            vis_box[ii]=Total(vis_arr_use[inds[inds_i]])
+            
+            t3_0=Systime(1)
+            t2+=t3_0-t2_0
+            psf_single=*psf_base[polarization,fbin[iii],x_off[iii],y_off[iii]]
+            box_matrix[ii,*]=psf_single*vis_n_arr[ii]
+            box_matrix_dag[ii,*]=Conj(psf_single)
+            t3+=Systime(1)-t3_0
+        ENDFOR
+        t3_0=Systime(1)
+    ENDIF ELSE BEGIN
+        vis_n=bin_n[bin_i[bi]]
+        vis_n_arr=Replicate(1.,vis_n)
+        vis_box=vis_arr_use[inds]
+        box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
+        t3_0=Systime(1)
+        t2+=t3_0-t1_0
+        FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+        box_matrix_dag=Conj(box_matrix)
+    ENDELSE
+    
+;    t2+=t3_0-t1_0
+;    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]*vis_n_arr[ii]
+;    box_matrix_dag=Conj(box_matrix)
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -200,10 +244,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
 ;    image_uv[xmin_use,ymin_use]+=box_arr
     IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
+        matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
 ;    IF Arg_present(weights) THEN weights[xmin_use,ymin_use]+=matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose)
     IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
+        matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
 ;    IF Arg_present(variance) THEN variance[xmin_use,ymin_use]+=matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose)
     
     t6_0=Systime(1)
@@ -224,6 +268,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t6+=t6_1-t6_0
     t1+=t6_1-t1_0 
 ENDFOR
+
+vis_arr_use=0
 
 t7_0=Systime(1)
 IF map_flag THEN BEGIN
