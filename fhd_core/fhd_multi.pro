@@ -427,7 +427,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     ;apply HMF
     FOR obs_i=0L,n_obs-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],_Extra=extra)*norm_arr[obs_i]
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],/indexed,_Extra=extra)*norm_arr[obs_i]
         ENDFOR
     ENDFOR
     t4+=Systime(1)-t4_0
