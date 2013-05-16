@@ -187,40 +187,40 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;    vis_n=bin_n[bin_i[bi]]
 ;    box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
     
-    fbin0=Round(fbin-Min(fbin))
-    x_off0=Round(x_off-Min(x_off))
-    y_off0=Round(y_off-Min(y_off))
-    nfbin0=Max(fbin0)+1L
-    nx_off0=Max(x_off0)+1L
-    
-    ident_index=fbin0+x_off0*nfbin0+y_off0*nx_off0*nfbin0
-    ident_n=histogram(ident_index,min=0,/bin,reverse=id_i)
-    ident_i=where(ident_n,vis_n)
-    
-    vis_n_arr=ident_n[ident_i]
-    
-    IF Mean(vis_n_arr) GT 1.1 THEN BEGIN
-        vis_box=Complexarr(vis_n)
-        box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
-        box_matrix_dag=box_matrix
-        
-        t2_0=Systime(1)
-        t2+=t2_0-t1_0
-        FOR ii=0L,vis_n-1 DO BEGIN
-            t2_0=Systime(1)
-            inds_i=id_i[id_i[ident_i[ii]]:id_i[ident_i[ii]+1]-1]
-            iii=id_i[id_i[ident_i[ii]]]
-            vis_box[ii]=Total(vis_arr_use[inds[inds_i]])
-            
-            t3_0=Systime(1)
-            t2+=t3_0-t2_0
-            psf_single=*psf_base[polarization,fbin[iii],x_off[iii],y_off[iii]]
-            box_matrix[ii,*]=psf_single*vis_n_arr[ii]
-            box_matrix_dag[ii,*]=Conj(psf_single)
-            t3+=Systime(1)-t3_0
-        ENDFOR
-        t3_0=Systime(1)
-    ENDIF ELSE BEGIN
+;    fbin0=Round(fbin-Min(fbin))
+;    x_off0=Round(x_off-Min(x_off))
+;    y_off0=Round(y_off-Min(y_off))
+;    nfbin0=Max(fbin0)+1L
+;    nx_off0=Max(x_off0)+1L
+;    
+;    ident_index=fbin0+x_off0*nfbin0+y_off0*nx_off0*nfbin0
+;    ident_n=histogram(ident_index,min=0,/bin,reverse=id_i)
+;    ident_i=where(ident_n,vis_n)
+;    
+;    vis_n_arr=ident_n[ident_i]
+;    
+;    IF Mean(vis_n_arr) GT 1.1 THEN BEGIN
+;        vis_box=Complexarr(vis_n)
+;        box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
+;        box_matrix_dag=box_matrix
+;        
+;        t2_0=Systime(1)
+;        t2+=t2_0-t1_0
+;        FOR ii=0L,vis_n-1 DO BEGIN
+;            t2_0=Systime(1)
+;            inds_i=id_i[id_i[ident_i[ii]]:id_i[ident_i[ii]+1]-1]
+;            iii=id_i[id_i[ident_i[ii]]]
+;            vis_box[ii]=Total(vis_arr_use[inds[inds_i]])
+;            
+;            t3_0=Systime(1)
+;            t2+=t3_0-t2_0
+;            psf_single=*psf_base[polarization,fbin[iii],x_off[iii],y_off[iii]]
+;            box_matrix[ii,*]=psf_single*vis_n_arr[ii]
+;            box_matrix_dag[ii,*]=Conj(psf_single)
+;            t3+=Systime(1)-t3_0
+;        ENDFOR
+;        t3_0=Systime(1)
+;    ENDIF ELSE BEGIN
         vis_n=bin_n[bin_i[bi]]
         vis_n_arr=Replicate(1.,vis_n)
         vis_box=vis_arr_use[inds]
@@ -229,7 +229,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t2+=t3_0-t1_0
         FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
         box_matrix_dag=Conj(box_matrix)
-    ENDELSE
+;    ENDELSE
     
 ;    t2+=t3_0-t1_0
 ;    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]*vis_n_arr[ii]

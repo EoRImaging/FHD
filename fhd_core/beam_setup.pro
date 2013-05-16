@@ -12,7 +12,8 @@
 ;-
 FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,$
-    instrument=instrument,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,_Extra=extra
+    instrument=instrument,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,$
+    swap_pol=swap_pol,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -120,6 +121,7 @@ yvals3=za_arr*Cos(az_arr*!DtoR);/degpix_use3[1]
 el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
+IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
 
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsza=90.-obsalt
@@ -128,7 +130,7 @@ norm=Sqrt(2.)*[ex0,ey0]
 
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
-pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
+IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 t1=Systime(1)-t1_a
 t2=0
 t3=0
