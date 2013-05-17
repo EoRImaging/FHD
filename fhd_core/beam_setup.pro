@@ -42,6 +42,7 @@ ky_span=kx_span
 degpix=obs.degpix
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=32. ;=32?
 IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) ;=16?
+psf_dim=Ceil(psf_dim/2)*2.
 
 psf_dim2=psf_dim*psf_resolution
 degpix_use=degpix*dimension/psf_dim2
