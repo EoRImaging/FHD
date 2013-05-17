@@ -325,6 +325,7 @@ IF Keyword_Set(export_images) THEN BEGIN
     fhd_output,obs,fhd,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
 ENDIF
 
+IF N_Elements(map_fn_arr) GT 0 THEN IF Max(Ptr_valid(map_fn_arr)) THEN Ptr_free,map_fn_arr
 ;;generate images showing the uv contributions of each tile. Very helpful for debugging!
 ;print,'Calculating individual tile uv coverage'
 ;mwa_tile_locate,obs=obs,params=params,psf=psf
