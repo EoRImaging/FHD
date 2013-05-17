@@ -286,7 +286,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
     cal=fltarr(n_pol)
     IF Keyword_Set(grid_recalculate) THEN BEGIN
         print,'Gridding visibilities'
-        IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol)
+        IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol,/allocate)
+        image_arr=Ptrarr(n_pol,/allocate)
+        image_uv_arr=Ptrarr(n_pol,/allocate)
+        weights_arr=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO BEGIN
     ;        IF Keyword_Set(GPU_enable) THEN $
     ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
@@ -299,7 +302,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
             save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
             save,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
-            IF Keyword_Set(deconvolve) THEN map_fn_arr[pol_i]=Ptr_new(return_mapfn)
+            IF Keyword_Set(deconvolve) THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
+            *image_arr[pol_i]=Temporary(dirty_img)
+            *image_uv_arr[pol_i]=Temporary(dirty_UV)
+            *weights_arr[pol_i]=Temporary(weights_grid)
         ENDFOR
         print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
@@ -314,7 +320,7 @@ IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 T
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
     fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,$
-        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr;,GPU_enable=GPU_enable
+        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
     IF Keyword_Set(quickview) THEN fhd_quickview,file_path_fhd=file_path_fhd,_Extra=extra
