@@ -119,6 +119,8 @@ IF Keyword_Set(mask_mirror_indices) THEN BEGIN
     ENDIF
 ENDIF
 
+xcen=(ycen=(dist_test=0)) ;free memory
+
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
 bin_i=where(bin_n,n_bin_use)
@@ -269,7 +271,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t1+=t6_1-t1_0 
 ENDFOR
 
+;free memory
 vis_arr_use=0
+xmin=(ymin=(ri=(inds=(x_offset=(y_offset=(bin_i=(bin_n=0)))))))
 
 t7_0=Systime(1)
 IF map_flag THEN BEGIN
