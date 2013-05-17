@@ -127,7 +127,7 @@ IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsza=90.-obsalt
 intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
-norm=Sqrt(2.)*[ex0,ey0]
+norm=Float(Sqrt(2.)*[ex0,ey0])
 
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin

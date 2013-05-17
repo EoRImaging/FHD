@@ -77,9 +77,10 @@ IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvo
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
-test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
+IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE n_pol1=1
+test_mapfn=1 & FOR pol_i=0,n_pol1-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
 IF test_mapfn EQ 0 THEN grid_recalculate=1
-test_mapfn=1 & FOR pol_i=0,n_pol-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav')
+test_mapfn=1 & FOR pol_i=0,n_pol1-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav')
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
     IF size(transfer_mapfn,/type) NE 7 THEN transfer_mapfn=basename
     IF basename NE transfer_mapfn THEN BEGIN
@@ -152,7 +153,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     flag_index=hdr.flag_index
     n_pol=obs.n_pol
     
-    data_array=data_struct.array
+    data_array=data_struct.array[*,0:n_pol-1,*]
     data_struct=0. ;free memory
     
     flag_arr0=Reform(data_array[flag_index,*,*,*]) 
