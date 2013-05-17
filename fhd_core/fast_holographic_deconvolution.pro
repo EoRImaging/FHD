@@ -42,6 +42,7 @@ local_max_radius=fhd.local_max_radius
 pol_use=fhd.pol_use
 independent_fit=fhd.independent_fit
 reject_pol_sources=fhd.reject_pol_sources
+sigma_threshold=2.
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -499,7 +500,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF not Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
             i,si,t10,Stddev(source_find_image[where(source_mask)],/nan)))
         converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
-        IF 2.*converge_check[i2] GT image_filtered[source_i] THEN BEGIN
+        IF sigma_threshold*converge_check[i2] GT source_find_image[source_i] THEN BEGIN
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
                 i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
@@ -524,7 +525,7 @@ ENDIF
 ;condense clean components
 noise_map=Stddev(source_find_image[where(source_mask)],/nan)*weight_invert(beam_avg)
 comp_arr=comp_arr[0:si-1]
-source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
+source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,reject_sigma_threshold=sigma_threshold)
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix)*(*beam_correction[pol_i])
