@@ -8,7 +8,7 @@ IF N_Elements(xvals) EQ 0 THEN BEGIN
     xvals=meshgrid(dimension,elements,1)
     yvals=meshgrid(dimension,elements,2)
 ENDIF
-IF N_Elements(flux) EQ 0 THEN flux=fltarr(size(x_loc,/dimension))+1.
+IF N_Elements(flux) EQ 0 THEN flux=fltarr(size(x_loc,/dimension)>1)+1.
 
 IF N_Elements(dimension) EQ 0 THEN BEGIN
     dims=size(xvals,/dimension)
