@@ -92,8 +92,8 @@ psf_xvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 psf_yvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 xvals_i=meshgrid(psf_dim,psf_dim,1)*psf_resolution
 yvals_i=meshgrid(psf_dim,psf_dim,2)*psf_resolution
-psf_xvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,1)/Float(psf_resolution)-psf_dim/2.+psf_dim2/2.
-psf_yvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,2)/Float(psf_resolution)-psf_dim/2.+psf_dim2/2.
+psf_xvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,1)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_dim2/2)
+psf_yvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,2)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_dim2/2)
 ;xvals=meshgrid(psf_dim2,psf_dim2,1)/psf_resolution-psf_dim/2.
 ;yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
 FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
@@ -112,7 +112,8 @@ Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs
 za_arr=fltarr(psf_dim2,psf_dim2)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 
-IF Abs(obs.obsra-obs.zenra) GT 90. THEN lon_offset=obs.obsra-((obs.obsra GT obs.zenra) ? 360.:(-360.))-obs.zenra ELSE lon_offset=obs.obsra-obs.zenra
+IF Abs(obs.obsra-obs.zenra) GT 90. THEN $
+    lon_offset=obs.obsra-((obs.obsra GT obs.zenra) ? 360.:(-360.))-obs.zenra ELSE lon_offset=obs.obsra-obs.zenra
 lat_offset=-(obs.zendec-obs.obsdec)
 ;degpix_use3=[Cos(lon_offset*!DtoR*Cos(obs.obsdec*!DtoR)),Cos(lat_offset*!DtoR)]*degpix_use
 xvals3=za_arr*Sin(az_arr*!DtoR);/degpix_use3[0]
@@ -196,9 +197,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        ENDFOR
 ;        
 ;        FOR bi=0,nbaselines-1 DO BEGIN
-;            IF Min((gain1[*,tile_A[bi]-1]-gain1_avg EQ fltarr(N_Elements(base_gain))) AND (gain2[*,tile_B[bi]-1]-gain2_avg EQ fltarr(N_Elements(base_gain)))) THEN BEGIN
-;                psf_residuals_n[pol_i,freq_i,bi]=0
-;                CONTINUE
+;            IF Min((gain1[*,tile_A[bi]-1]-gain1_avg EQ fltarr(N_Elements(base_gain))) $
+;                AND (gain2[*,tile_B[bi]-1]-gain2_avg EQ fltarr(N_Elements(base_gain)))) THEN BEGIN
+    ;                psf_residuals_n[pol_i,freq_i,bi]=0
+    ;                CONTINUE
 ;            ENDIF
 ;            
 ;            psf_single=dirty_image_generate(*beam1_arr[tile_A[bi]-1],*beam2_arr[tile_B[bi]-1])*uv_mask*gain_normalization
@@ -212,7 +214,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        ENDFOR
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2,beam1_arr,beam2_arr
         FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-            psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(Reform(psf_base2[xvals_i+i,yvals_i+j],psf_dim*psf_dim)) 
+            psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=$
+                Ptr_new(Reform(psf_base2[xvals_i+i,yvals_i+j],psf_dim*psf_dim)) 
         breakpoint0=0
         t4+=Systime(1)-t4_a
     ENDFOR
