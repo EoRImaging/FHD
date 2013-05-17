@@ -200,6 +200,7 @@ ENDFOR
 
 res_arr=Ptrarr(n_pol,n_obs,/allocate)
 smooth_arr=Ptrarr(n_pol,n_obs,/allocate)
+recalc_flag=Intarr(n_obs)+1
 FOR i=0L,max_iter-1 DO BEGIN 
     FOR pol_i=0,n_pol-1 DO BEGIN
         *healpix_map[pol_i]=Fltarr(n_hpx)
@@ -360,6 +361,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         elements=obs_arr[obs_i].elements
         beam_mask=*beam_mask_arr[obs_i]
         
+        si_use=lonarr(n_src)-1
         residual_test=*res_arr[0,obs_i] & IF n_pol GT 1 THEN residual_test=residual_test<*res_arr[1,obs_i]
         FOR src_i=0L,n_src-1 DO BEGIN    
             flux_arr=fltarr(4)
@@ -405,16 +407,60 @@ FOR i=0L,max_iter-1 DO BEGIN
             comp_arr1[si1].y=yv
             comp_arr1[si1].ra=ra_arr[src_i]
             comp_arr1[si1].dec=dec_arr[src_i]
+            si_use[src_i]=si1
             
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-            IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
-;                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
-                source_uv_vals=source_dft(comp_arr1[si1].x,comp_arr1[si1].y,*xv_arr[obs_i],*yv_arr[obs_i],$
-                    dimension=dimension,elements=elements,degpix=obs_arr[obs_i].degpix)
-                FOR pol_i=0,n_pol-1 DO $
-                    (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
-            ENDIF
+;            IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
+;;                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
+;                source_uv_vals=source_dft(comp_arr1[si1].x,comp_arr1[si1].y,*xv_arr[obs_i],*yv_arr[obs_i],$
+;                    dimension=dimension,elements=elements,degpix=obs_arr[obs_i].degpix)
+;                FOR pol_i=0,n_pol-1 DO $
+;                    (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
+;            ENDIF
         ENDFOR
+        
+        si_use_i=where(si_use GE 0,n_si_use)
+        IF n_si_use EQ 0 THEN BEGIN
+            ;do something to end loop if n_mask EQ 0
+            
+            recalc_flag[obs_i]=0
+            CONTINUE
+        ENDIF ELSE recalc_flag[obs_i]=1
+        
+        si_use=si_use[si_use_i]
+                ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
+        IF ~Keyword_Set(independent_fit) THEN BEGIN
+            ;<<<DOES NOT WORK FOR XY OR YX POLARIZATIONS YET!!!>>>
+            IF n_pol LE 2 THEN BEGIN
+                flux_vec=comp_arr1[si_use].flux.I/2.
+                x_vec=comp_arr1[si_use].x
+                y_vec=comp_arr1[si_use].y
+                source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_vec)
+                FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i,obs_i])[uv_i_use2]+=source_uv_vals
+            ENDIF ELSE BEGIN
+                flux_vec=comp_arr1[si_use].flux.I/2.
+                x_vec=comp_arr1[si_use].x
+                y_vec=comp_arr1[si_use].y
+                flux_vec2=comp_arr1[si_use].flux.U/2.
+                flux_arr=[[flux_vec],[flux_vec2]]
+                source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
+                FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i,obs_i])[uv_i_use2]+=source_uv_vals[*,0]
+                FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i,obs_i])[uv_i_use2]+=source_uv_vals[*,1]
+            ENDELSE
+        ENDIF ELSE BEGIN
+            x_vec=comp_arr1[si_use].x
+            y_vec=comp_arr1[si_use].y
+            
+            flux_arr=fltarr(n_si_use,n_pol)
+            flux_index_arr1=[4,4,6,6]
+            flux_index_arr2=[5,5,7,7]
+            sign_arr=[1.,-1.,1.,-1.]
+            FOR pol_i=0,n_pol-1 DO flux_arr[*,pol_i]=$
+                (comp_arr1[si_use].flux.(flux_index_arr1[pol_i])+sign_arr[pol_i]*comp_arr1[si_use].flux.(flux_index_arr2[pol_i]))/2.
+            source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
+            FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i,obs_i])[uv_i_use2]+=source_uv_vals[*,pol_i]
+        ENDELSE
+        
         *comp_arr[obs_i]=comp_arr1
     ENDFOR
     si_use=where(source_cut_arr,n_src_use,complement=si_mask,ncomplement=n_si_mask)
@@ -426,6 +472,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     ;apply HMF
     FOR obs_i=0L,n_obs-1 DO BEGIN
+        IF recalc_flag[obs_i] EQ 0 THEN CONTINUE
         FOR pol_i=0,n_pol-1 DO BEGIN
             *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],/indexed,_Extra=extra)*norm_arr[obs_i]
         ENDFOR
