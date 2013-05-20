@@ -23,11 +23,11 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 ;noise_calibrate=0
 ;align=0
 dimension=2048.
-max_sources=10000.
+max_sources=20000.
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 complex_beam=1
-FoV=90.
+FoV=120.
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$

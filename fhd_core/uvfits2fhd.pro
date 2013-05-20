@@ -303,7 +303,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
             save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
             save,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
-            IF Keyword_Set(deconvolve) THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
+            IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_arr[pol_i]=Temporary(dirty_img)
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
             *weights_arr[pol_i]=Temporary(weights_grid)
