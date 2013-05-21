@@ -22,11 +22,20 @@ IF N_Elements(elements) EQ 0 THEN elements=dimension
 
 x_use=x_loc-dimension/2.
 y_use=y_loc-elements/2.
+x_use*=(2.*!Pi/dimension)
+y_use*=(2.*!Pi/dimension)
 
 phase=matrix_multiply(xvals,x_use)+matrix_multiply(yvals,y_use)
-phase=Exp(icomp*(2.*!Pi/dimension)*phase)
 
-source_uv_vals=matrix_multiply(phase,flux)
+;phase=Exp(icomp*(2.*!Pi/dimension)*phase)
+;
+;source_uv_vals=matrix_multiply(phase,flux)
+
+cos_term=Cos(phase)
+sin_term=Sin(phase)
+source_uv_real_vals=matrix_multiply(cos_term,flux)
+source_uv_im_vals=matrix_multiply(sin_term,flux)
+source_uv_vals=Complex(source_uv_real_vals,source_uv_im_vals)
 source_uv_vals*=fft_norm
 
 RETURN,source_uv_vals

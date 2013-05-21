@@ -436,7 +436,6 @@ FOR i=0L,max_iter-1 DO BEGIN
     si_use=si_use[si_use_i]
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     IF ~Keyword_Set(independent_fit) THEN BEGIN
-        ;<<<DOES NOT WORK FOR XY OR YX POLARIZATIONS YET!!!>>>
         IF n_pol LE 2 THEN BEGIN
             flux_vec=comp_arr[si_use].flux.I/2.
             x_vec=comp_arr[si_use].x

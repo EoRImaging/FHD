@@ -28,31 +28,31 @@ elements=Float((size(image,/dimension))[1])
 
 IF size(map_fn,/type) EQ 7 THEN BEGIN ;IF map_fn is a string, assume it is a full filepath
     map_fn_use=getvar_savefile(map_fn,'map_fn')
-    IF Keyword_Set(complex) THEN BEGIN
+;    IF Keyword_Set(complex) THEN BEGIN
         image_complex_vector=reform(image,dimension*elements)
         SPRSAX2,map_fn_use,image_complex_vector,result_image_complex,$
             complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
         result_image=reform(result_image_complex,dimension,elements)
-    ENDIF ELSE BEGIN
-        image_real_vector=reform(Real_part(image),dimension*elements)
-        image_comp_vector=reform(Imaginary(image),dimension*elements)
-        SPRSAX2,map_fn_use,image_real_vector,result_image_real,image_comp_vector,result_image_comp,$
-            complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
-        result_image=Complex(result_image_real,result_image_comp)
-    ENDELSE
+;    ENDIF ELSE BEGIN
+;        image_real_vector=reform(Real_part(image),dimension*elements)
+;        image_comp_vector=reform(Imaginary(image),dimension*elements)
+;        SPRSAX2,map_fn_use,image_real_vector,result_image_real,image_comp_vector,result_image_comp,$
+;            complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
+;        result_image=Complex(result_image_real,result_image_comp)
+;    ENDELSE
 ENDIF ELSE BEGIN
-    IF Keyword_Set(complex) THEN BEGIN
+;    IF Keyword_Set(complex) THEN BEGIN
         image_complex_vector=reform(image,dimension*elements)
         SPRSAX2,map_fn,image_complex_vector,result_image_complex,$
             complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
         result_image=reform(result_image_complex,dimension,elements)
-    ENDIF ELSE BEGIN
-        image_real_vector=reform(Real_part(image),dimension*elements)
-        image_comp_vector=reform(Imaginary(image),dimension*elements)
-        SPRSAX2,map_fn,image_real_vector,result_image_real,image_comp_vector,result_image_comp,$
-            complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
-        result_image=Complex(result_image_real,result_image_comp)
-    ENDELSE
+;    ENDIF ELSE BEGIN
+;        image_real_vector=reform(Real_part(image),dimension*elements)
+;        image_comp_vector=reform(Imaginary(image),dimension*elements)
+;        SPRSAX2,map_fn,image_real_vector,result_image_real,image_comp_vector,result_image_comp,$
+;            complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
+;        result_image=Complex(result_image_real,result_image_comp)
+;    ENDELSE
 ENDELSE
 result_image=reform(result_image,dimension,elements)
 

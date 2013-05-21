@@ -236,7 +236,7 @@ pixres=72.
 xsize2=xsize/pixres
 ysize2=ysize/pixres
 
-PS_Start,filename=file_path_use+'.ps',/quiet,/nomatch,_Extra=extra,charsize=charsize,xsize=xsize2,ysize=ysize2
+PS_Start,filename=file_path_use+'.ps',/quiet,/nomatch,charsize=charsize,xsize=xsize2,ysize=ysize2
 ;position_default=[x0, y0, x1, y1]
 image_position=[xstart/xsize,ystart/ysize,(xstart+dimension)/xsize,(ystart+elements)/ysize]
 cgImage,image_use,/keep_aspect,background=background,layout=layout,margin=margin,noerase=noerase,$
