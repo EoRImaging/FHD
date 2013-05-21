@@ -227,6 +227,7 @@ ENDFOR
 complex_flag=Max(complex_flag_arr)
 IF complex_flag EQ 0 THEN BEGIN
     FOR i=0L,N_Elements(psf_base)-1 DO *psf_base[i]=Real_part(*psf_base[i])
+    print,'Saving only real part of beam model!'
 ENDIF
 
 t5_a=Systime(1)

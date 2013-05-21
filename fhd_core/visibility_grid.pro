@@ -29,7 +29,6 @@ FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,_Extra=extra
 t0_0=Systime(1)
 heap_gc
-IF N_Elements(complex) EQ 0 THEN complex=1
 
 pol_names=['xx','yy','xy','yx']
 
@@ -49,6 +48,7 @@ IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=visibility_array[fi_use,*
 
 frequency_array=(obs.freq)[fi_use]
 
+IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
 psf_base=psf.base
 psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
