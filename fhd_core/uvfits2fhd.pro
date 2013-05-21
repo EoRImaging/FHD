@@ -156,10 +156,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
     data_array=data_struct.array[*,0:n_pol-1,*]
     data_struct=0. ;free memory
     
-    flag_arr0=Reform(data_array[flag_index,*,*,*]) 
-    IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
-    
-    flag_arr0=vis_flag_basic(flag_arr0,obs,params,_Extra=extra)
+    IF file_test(flags_filepath) AND ~Keyword_Set(flag) THEN BEGIN
+        flag_arr0=getvar_savefile(flags_filepath,'flag_arr0')
+    ENDIF ELSE BEGIN
+        flag_arr0=Reform(data_array[flag_index,*,*,*]) 
+        IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
+        flag_arr0=vis_flag_basic(flag_arr0,obs,params,_Extra=extra)
+    ENDELSE
     
     IF Keyword_Set(freq_start) THEN BEGIN
         frequency_array_MHz=obs.freq/1E6
