@@ -138,6 +138,7 @@ t2=0
 t3=0
 t4=0
 
+complex_flag_arr=intarr(n_pol,nfreq_bin)
 IF ~Keyword_Set(silent) THEN print,'Building beam model. Time elapsed: estimated time remaining'
 FOR pol_i=0,n_pol-1 DO BEGIN
 
@@ -185,6 +186,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         psf_base2*=gain_normalization
         t4_a=Systime(1)
         t3+=t4_a-t3_a
+        IF Max(Abs(Atan(psf_base2,/phase))) GT residual_tolerance THEN complex_flag_arr[pol_i,freq_i]=1
         
 ;        FOR tile_i=0,n_tiles-1 DO BEGIN
 ;            *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
@@ -222,10 +224,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
 ENDFOR
 
+complex_flag=Max(complex_flag_arr)
+IF complex_flag EQ 0 THEN BEGIN
+    FOR i=0L,N_Elements(psf_base)-1 DO *psf_base[i]=Real_part(*psf_base[i])
+ENDIF
+
 t5_a=Systime(1)
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm,fbin_i=freq_bin_i,$
-    psf_resolution=psf_resolution,psf_dim=psf_dim)
+    psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag)
 save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00

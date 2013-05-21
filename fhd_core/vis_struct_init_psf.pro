@@ -17,7 +17,7 @@
 ;
 ; :Author: isullivan May 6, 2012
 ;-
-FUNCTION vis_struct_init_psf,base=base,res_i=res_i,res_val=res_val,res_N=res_N,$
+FUNCTION vis_struct_init_psf,base=base,res_i=res_i,res_val=res_val,res_N=res_N,complex_flag=complex_flag,$
     xvals=xvals,yvals=yvals,norm=norm,fbin_i=fbin_i,psf_resolution=psf_resolution,psf_dim=psf_dim
 ;
 
@@ -30,7 +30,9 @@ IF N_Elements(res_n) EQ 0 THEN res_n=lon64arr(1) ;will have the same dimensions 
 IF N_Elements(xvals) EQ 0 THEN xvals=Ptrarr(1) ;will have dimensions of (resolution,resolution)
 IF N_Elements(norm) EQ 0 THEN norm=fltarr(2)+1.
 IF N_Elements(fbin_i) EQ 0 THEN fbin_i=Lonarr(1)
+IF N_Elements(complex_flag) EQ 0 THEN complex_flag=1
 
-struct={base:base,res_i:res_i,res_val:res_val,res_n:res_n,xvals:xvals,yvals:yvals,norm:norm,fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim}
+struct={base:base,res_i:res_i,res_val:res_val,res_n:res_n,xvals:xvals,yvals:yvals,norm:norm,$
+    fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim,complex_flag:complex_flag}
 RETURN,struct
 END
