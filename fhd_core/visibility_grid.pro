@@ -233,26 +233,23 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
         IF Keyword_Set(complex) THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
 ;    ENDELSE
-    
-;    t2+=t3_0-t1_0
-;    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]*vis_n_arr[ii]
-;    box_matrix_dag=Conj(box_matrix)
 
     t4_0=Systime(1)
-    t3+=t4_0-t3_0;    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr
-;    box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
+    t3+=t4_0-t3_0   
+    box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
+    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr 
 ;    image_uv[xmin_use,ymin_use]+=Reform(box_arr,psf_dim,psf_dim)
-    image_uv[xmin_use,ymin_use]+=Reform(matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose),psf_dim,psf_dim)
+;    image_uv[xmin_use,ymin_use]+=Reform(matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose),psf_dim,psf_dim)
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
 
-;    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-;        matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
-    IF Arg_present(weights) THEN weights[xmin_use,ymin_use]+=Reform(matrix_multiply(Replicate(1./n_vis,vis_n),box_matrix_dag,/atranspose),psf_dim,psf_dim)
-;    IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-;        matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
-    IF Arg_present(variance) THEN variance[xmin_use,ymin_use]+=Reform(matrix_multiply(Replicate(1./n_vis,vis_n),Abs(box_matrix)^2.,/atranspose),psf_dim,psf_dim)
+    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+        matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
+;    IF Arg_present(weights) THEN weights[xmin_use,ymin_use]+=Reform(matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose),psf_dim,psf_dim)
+    IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
+        matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
+;    IF Arg_present(variance) THEN variance[xmin_use,ymin_use]+=Reform(matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix)^2.,/atranspose),psf_dim,psf_dim)
     
     t6_0=Systime(1)
     t5+=t6_0-t5_0
@@ -268,8 +265,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t6a+=t6b_0-t6a_0
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
         ENDFOR
         t6b+=Systime(1)-t6b_0
     ENDIF
