@@ -35,8 +35,9 @@ ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.)
 xmax=xmin+psf_dim-1
 ymax=ymin+psf_dim-1
 
-range_test_x_i=where((xmin LT 0) OR (xmax GE dimension),n_test_x)
-range_test_y_i=where((ymin LT 0) OR (ymax GE elements),n_test_y)
+range_test_x_i=where((xmin LE 0) OR (xmax GE dimension-1),n_test_x)
+range_test_y_i=where((ymin LE 0) OR (ymax GE elements-1),n_test_y)
+xmax=(ymax=0)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 

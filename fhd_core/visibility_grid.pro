@@ -84,11 +84,12 @@ x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
 xmin=Floor(xcen)+dimension/2.-(psf_dim/2.-1)
 ymin=Floor(ycen)+elements/2.-(psf_dim/2.-1)
-;xmax=xmin+psf_dim-1
-;ymax=(ymin+psf_dim-1)
+xmax=xmin+psf_dim-1
+ymax=ymin+psf_dim-1
 
-range_test_x_i=where((xmin LT 0) OR ((xmin+psf_dim-1) GE dimension),n_test_x)
-range_test_y_i=where((ymin LT 0) OR ((ymin+psf_dim-1) GE elements),n_test_y)
+range_test_x_i=where((xmin LE 0) OR (xmax GE dimension-1),n_test_x)
+range_test_y_i=where((ymin LE 0) OR (ymax GE elements-1),n_test_y)
+xmax=(ymax=0)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
@@ -240,36 +241,35 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t4_0=Systime(1)
     t3+=t4_0-t3_0   
     box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
-    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr 
-;    image_uv[xmin_use,ymin_use]+=Reform(box_arr,psf_dim,psf_dim)
-;    image_uv[xmin_use,ymin_use]+=Reform(matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose),psf_dim,psf_dim)
+;    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr 
+    image_uv[xmin_use,ymin_use]+=Reform(Temporary(box_arr),psf_dim,psf_dim)
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
 
-    IF Arg_present(weights) THEN weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
-;    IF Arg_present(weights) THEN weights[xmin_use,ymin_use]+=Reform(matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose),psf_dim,psf_dim)
-    IF Arg_present(variance) THEN variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=$
-        matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
-;    IF Arg_present(variance) THEN variance[xmin_use,ymin_use]+=Reform(matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix)^2.,/atranspose),psf_dim,psf_dim)
+    IF Arg_present(weights) THEN BEGIN
+        wts_box=matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
+;        weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
+        weights[xmin_use,ymin_use]+=Reform(Temporary(wts_box),psf_dim,psf_dim)
+    ENDIF
+    IF Arg_present(variance) THEN BEGIN
+        var_box=matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
+;        variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
+        variance[xmin_use,ymin_use]+=Reform(Temporary(var_box),psf_dim,psf_dim)
+    ENDIF
     
     t6_0=Systime(1)
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
         t6a_0=Systime(1)
-;        box_matrix_real=Real_part(box_matrix)
-;        box_matrix_im=Imaginary(box_matrix)
-;        box_map_real=matrix_multiply(box_matrix_real,box_matrix_real,/atranspose);+matrix_multiply(box_mat_im,box_mat_im,/atranspose)
-;        box_map_im=2.*matrix_multiply(box_matrix_real,box_matrix_im,/atranspose)
-;        box_arr_map=Complex(Temporary(box_map_real),Temporary(box_map_im))/n_vis
         box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/atranspose)
         t6b_0=Systime(1)
         t6a+=t6b_0-t6a_0
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
-            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+            dummy_ref=-1
         ENDFOR
         t6b+=Systime(1)-t6b_0
     ENDIF
