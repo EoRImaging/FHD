@@ -55,6 +55,8 @@ psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
 flag_switch=Keyword_Set(flag_ptr)
+weights_flag=Arg_present(weights)
+variance_flag=Arg_present(variance)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 
@@ -241,21 +243,21 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t4_0=Systime(1)
     t3+=t4_0-t3_0   
     box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
-;    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=box_arr 
-    image_uv[xmin_use,ymin_use]+=Reform(Temporary(box_arr),psf_dim,psf_dim)
+    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
+;    image_uv[xmin_use,ymin_use]+=Reform(Temporary(box_arr),psf_dim,psf_dim)
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
 
-    IF Arg_present(weights) THEN BEGIN
+    IF weights_flag THEN BEGIN
         wts_box=matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
-;        weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
-        weights[xmin_use,ymin_use]+=Reform(Temporary(wts_box),psf_dim,psf_dim)
+        weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
+;        weights[xmin_use,ymin_use]+=Reform(Temporary(wts_box),psf_dim,psf_dim)
     ENDIF
-    IF Arg_present(variance) THEN BEGIN
+    IF variance_flag THEN BEGIN
         var_box=matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
-;        variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
-        variance[xmin_use,ymin_use]+=Reform(Temporary(var_box),psf_dim,psf_dim)
+        variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
+;        variance[xmin_use,ymin_use]+=Reform(Temporary(var_box),psf_dim,psf_dim)
     ENDIF
     
     t6_0=Systime(1)
@@ -268,7 +270,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
 ;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*,ij]
+;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
             dummy_ref=-1
         ENDFOR
         t6b+=Systime(1)-t6b_0

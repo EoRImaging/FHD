@@ -299,7 +299,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
     ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
     ;        ELSE $
-            dirty_UV=visibility_grid(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,file_path_fhd,$
+            dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,_Extra=extra)
             t_grid[pol_i]=t_grid0
@@ -315,7 +315,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
-    Ptr_free,vis_arr,flag_arr
+    IF (Ptr_valid(vis_arr))[0] THEN Ptr_free,vis_arr
+    IF (Ptr_valid(flag_arr))[0] THEN Ptr_free,flag_arr
 ENDIF
 
 IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 THEN deconvolve=1
