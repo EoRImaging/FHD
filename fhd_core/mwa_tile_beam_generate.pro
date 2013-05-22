@@ -53,8 +53,8 @@ IF Keyword_Set(antenna_beam_arr) THEN IF Keyword_Set(*antenna_beam_arr[0]) THEN 
     RETURN,tile_beam
 ENDIF
 
-xc_arr=Reform((meshgrid(4,4,1))*antenna_spacing,16) ;dipole east position (meters)
-yc_arr=Reform((meshgrid(4,4,2))*antenna_spacing,16) ;dipole north position (meters)
+xc_arr=Reform((meshgrid(4,4,1))*antenna_spacing,16) & xc_arr-=Mean(xc_arr) ;dipole east position (meters)
+yc_arr=Reform((meshgrid(4,4,2))*antenna_spacing,16) & yc_arr-=Mean(yc_arr) ;dipole north position (meters)
 zc_arr=Fltarr(16)
 
 term_A=Tan(az*!DtoR)

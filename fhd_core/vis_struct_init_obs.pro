@@ -3,8 +3,8 @@ FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elemen
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,nfreq_avg=nfreq_avg,freq_bin=freq_bin,_Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
-IF N_Elements(lon) EQ 0 THEN lon=116.67081 ;degrees
-IF N_Elements(lat) EQ 0 THEN lat=-26.703319 ;degrees
+IF N_Elements(lon) EQ 0 THEN lon=116.67081524 ;degrees
+IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 ;degrees
 IF N_Elements(alt) EQ 0 THEN alt=377.83 ;altitude (meters)
 IF N_Elements(pflag) EQ 0 THEN pflag=0
 IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=32.
@@ -45,6 +45,7 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     ra_offset=0.
     dec_offset=0.
     time_offset/=(24.*3600.)
+    JD0=Min(Jdate)-time_offset
     
     obsra=header.obsra-ra_offset
     obsdec=header.obsdec-dec_offset
@@ -64,7 +65,7 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
                 Precess,zenra0,zendec,epoch,2000. ;slight error, since zenra0 is NOT in J2000, but assume the effect on zendec is small
             ENDIF
         ENDELSE
-    ENDIF ELSE zenpos2,Min(Jdate)-time_offset,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
+    ENDIF ELSE zenpos2,JD0,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
     
     IF Keyword_Set(scale_uv) THEN BEGIN
         params.uu*=scale_uv
@@ -153,7 +154,7 @@ IF N_Elements(tile_A) EQ 0 THEN tile_A=lonarr(1) ;tile numbers start from 1
 IF N_Elements(tile_B) EQ 0 THEN tile_B=lonarr(1) ;tile numbers start from 1
 IF N_Elements(bin_offset) EQ 0 THEN bin_offset=lonarr(1) ;indices to the start of each time integration
 IF N_Elements(Jdate) EQ 0 THEN Jdate=fltarr(1) ;Julian date of each time integration
-IF N_Elements(JD0) EQ 0 THEN JD0=Median(Jdate)
+IF N_Elements(JD0) EQ 0 THEN JD0=Min(Jdate)
 IF N_Elements(frequency_array) EQ 0 THEN frequency_array=fltarr(1) ;full frequency list
 IF N_Elements(freq_bin_i) EQ 0 THEN freq_bin_i=lonarr(1) ;bin number of each frequency. The same psf is used for all frequencies with the same bin number
 IF N_Elements(zenra) EQ 0 THEN zenra=0. ;degrees

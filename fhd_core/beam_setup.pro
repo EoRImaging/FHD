@@ -108,8 +108,10 @@ astr=obs.astr
 
 t1_a=Systime(1)
 xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
-valid_i=where(Finite(ra_arr_use1))
-Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt
+valid_i=where(Finite(ra_arr_use1),n_valid)
+
+;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
+Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],replicate(Jdate,n_valid),alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
 za_arr=fltarr(psf_dim2,psf_dim2)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 
@@ -173,20 +175,24 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         t3_a=Systime(1)
         t2+=t3_a-t2_a
 ;        psf_base1=dirty_image_generate(beam1_0*beam2_0*(*proj[pol_i]),/no_real)
+;        psf_base1=dirty_image_generate(beam1_0*Shift(Reverse(Reverse(Conj(beam2_0),1),2),1,1)*(*proj[pol_i]),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
 ;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
-        beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
+        beam_i=region_grow(real_part(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(real_part(psf_base1))/1e3,Max(real_part(psf_base1))])
         uv_mask[beam_i]=1.
-        psf_base1*=uv_mask
+;        psf_base1*=uv_mask
         
         psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
+        uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1,cubic=-0.5)
+        psf_base2*=uv_mask2
         gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
         psf_base2*=gain_normalization
         t4_a=Systime(1)
         t3+=t4_a-t3_a
-        IF Max(Abs(Atan(psf_base2,/phase))) GT residual_tolerance THEN complex_flag_arr[pol_i,freq_i]=1
+        phase_mag=(Abs(Atan(psf_base2,/phase))<Abs(!Pi-Abs(Atan(psf_base2,/phase))))*Floor(uv_mask2>0)
+        IF Max(phase_mag) GT !Pi*residual_tolerance THEN complex_flag_arr[pol_i,freq_i]=1
         
 ;        FOR tile_i=0,n_tiles-1 DO BEGIN
 ;            *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
