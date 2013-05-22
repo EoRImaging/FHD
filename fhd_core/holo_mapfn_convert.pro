@@ -1,8 +1,10 @@
-FUNCTION holo_mapfn_convert,map_fn,psf_dim=psf_dim,dimension=dimension,elements=elements,threshold=threshold,timing=timing
+FUNCTION holo_mapfn_convert,map_fn,psf_dim=psf_dim,dimension=dimension,elements=elements,$
+    n_vis=n_vis,threshold=threshold,timing=timing
 t0=Systime(1)
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF N_Elements(threshold) EQ 0 THEN threshold=0.
+IF N_Elements(n_vis) EQ 0 THEN norm=1. ELSE norm=n_vis
 
 ;convert pointer array holographic map function to a sparse matrix
 
@@ -57,7 +59,7 @@ ENDFOR
 
 Ptr_free,map_fn
 heap_gc
-map_fn={ija:ija,sa:sa,i_use:i_use}
+map_fn={ija:ija,sa:sa,i_use:i_use,norm:norm}
 
 timing=Systime(1)-t0
 RETURN,map_fn

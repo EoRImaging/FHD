@@ -22,7 +22,7 @@
 ;
 ; :Author: Ian Sullivan
 ;-
-FUNCTION visibility_grid,visibility_array,flag_arr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
+FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
@@ -44,7 +44,8 @@ max_baseline=obs.max_baseline
 freq_bin_i=obs.fbin_i
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
-IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=visibility_array[fi_use,*] ELSE vis_arr_use=Temporary(visibility_array[fi_use,*])
+IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=*visibility_ptr ELSE vis_arr_use=Temporary(*visibility_ptr)
+vis_arr_use=vis_arr_use[fi_use,*]
 
 frequency_array=(obs.freq)[fi_use]
 
@@ -53,7 +54,7 @@ psf_base=psf.base
 psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
-flag_switch=Keyword_Set(flag_arr)
+flag_switch=Keyword_Set(flag_ptr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 
@@ -98,8 +99,11 @@ IF n_dist_flag GT 0 THEN BEGIN
     ymin[flag_dist_i]=-1
 ENDIF
 
-IF Keyword_Set(flag_arr) THEN BEGIN
-    flag_i=where((flag_arr[fi_use,*]) LE 0,n_flag,ncomplement=n_unflag)
+IF Keyword_Set(flag_ptr) THEN BEGIN
+    IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
+    flag_arr=flag_arr[fi_use,*]
+    flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
+    flag_arr=0
     IF n_unflag EQ 0 THEN BEGIN
         timing=Systime(1)-t0_0
         image_uv=Complexarr(dimension,elements)
@@ -109,7 +113,6 @@ IF Keyword_Set(flag_arr) THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
     ENDIF
-    IF ~Keyword_Set(preserve_visibilities) THEN flag_arr=0
 ENDIF
 
 IF Keyword_Set(mask_mirror_indices) THEN BEGIN
@@ -132,19 +135,19 @@ n_psf_dim=N_Elements(psf_base)
 CASE 1 OF
     Keyword_Set(complex) AND Keyword_Set(double): BEGIN
         init_arr=Dcomplexarr(psf_dim2,psf_dim2)
-        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Dcomplex(*psf_base[i])
+;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Dcomplex(*psf_base[i])
     END
     Keyword_Set(double): BEGIN
         init_arr=Dblarr(psf_dim2,psf_dim2)
-        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Double(Abs(*psf_base[i]))
+;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Double(Abs(*psf_base[i]))
     END
     Keyword_Set(complex): BEGIN
         init_arr=Complexarr(psf_dim2,psf_dim2)
-        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Complex(*psf_base[i])
+;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Complex(*psf_base[i])
     END
     ELSE: BEGIN
         init_arr=Fltarr(psf_dim2,psf_dim2)
-        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Float(abs(*psf_base[i]))
+;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Float(real_part(*psf_base[i]))
     ENDELSE
 ENDCASE
 arr_type=Size(init_arr,/type)
@@ -260,7 +263,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;        box_map_real=matrix_multiply(box_matrix_real,box_matrix_real,/atranspose);+matrix_multiply(box_mat_im,box_mat_im,/atranspose)
 ;        box_map_im=2.*matrix_multiply(box_matrix_real,box_matrix_im,/atranspose)
 ;        box_arr_map=Complex(Temporary(box_map_real),Temporary(box_map_im))/n_vis
-        box_arr_map=matrix_multiply(box_matrix,box_matrix_dag,/atranspose)/n_vis
+        box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/atranspose)
         t6b_0=Systime(1)
         t6a+=t6b_0-t6a_0
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
@@ -281,7 +284,7 @@ xmin=(ymin=(ri=(inds=(x_offset=(y_offset=(bin_i=(bin_n=0)))))))
 
 t7_0=Systime(1)
 IF map_flag THEN BEGIN
-    map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension)
+    map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension,n_vis=n_vis)
     IF ~Keyword_Set(no_save) THEN save,map_fn,filename=file_path_fhd+'_mapfn_'+pol_names[polarization]+'.sav'
     IF Arg_present(return_mapfn) THEN return_mapfn=map_fn
 ENDIF

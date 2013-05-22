@@ -90,4 +90,10 @@ ENDIF ELSE BEGIN
         ENDFOR
     ENDELSE
 ENDELSE
+
+IF tag_exist(A,'norm') THEN BEGIN
+    norm=A.norm
+    B/=norm
+    IF b2_flag THEN B2/=norm
+ENDIF
 END
