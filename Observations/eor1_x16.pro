@@ -13,8 +13,13 @@ IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(channel) EQ 0 THEN channel=145
 image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
 
-IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))]) $
-    ELSE data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1',Strn(Floor(channel))])
+IF channel LE 0 THEN BEGIN
+    IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1']) $
+            ELSE data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1'])    
+ENDIF ELSE BEGIN
+    IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))]) $
+        ELSE data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1',Strn(Floor(channel))])
+ENDELSE
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
