@@ -2,7 +2,7 @@ PRO combine_obs_hpx_image,file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,
     nside=nside,restore_last=restore_last,weight_threshold=weight_threshold,obs_arr=obs_arr,output_path=output_path,$
     color_table=color_table,high_dirty=high_dirty,high_source=high_source,high_residual=high_residual,$
     fraction_polarized=fraction_polarized,low_dirty=low_dirty,low_source=low_source,low_residual=low_residual,$
-    map_projection=map_projection,_Extra=extra
+    map_projection=map_projection,mrc_hpx=mrc_hpx,_Extra=extra
 
 except=!except
 !except=0 
@@ -41,6 +41,7 @@ IF n_branch GT 0 THEN lon_use[lon_mod_i]+=360.
 lon_avg=Median(lon_use) & IF lon_avg GE 360. THEN lon_avg-=360.
 IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
 
+mrc_flag=(Ptr_valid(mrc_hpx))[0]
 ;IF not Keyword_Set(restore_last) THEN BEGIN
     FOR stk_i=0,1 DO BEGIN
         Stokes_single=fltarr(npix)
@@ -49,6 +50,7 @@ IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
         Stokes_restored=fltarr(npix)
         Stokes_dirty=fltarr(npix)
         Stokes_smooth=fltarr(npix)
+        Stokes_MRC=fltarr(npix)
         FOR pol_i=0,1 DO BEGIN
             stk_res0=*residual_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])
             Stokes_single[hpx_inds]+=stk_res0*sign[stk_i,pol_i]
@@ -56,6 +58,7 @@ IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
             Stokes_weights_single[hpx_inds]+=*weights_hpx[pol_i]
             stk_src0=*sources_hpx[pol_i]*weight_invert(*weights_hpx[pol_i]);*2.
             Stokes_sources[hpx_inds]+=stk_src0*sign[stk_i,pol_i]
+            IF mrc_flag THEN Stokes_MRC[hpx_inds]+=Stokes_sources[hpx_inds]+*mrc_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])
             Stokes_restored[hpx_inds]+=(stk_res0+stk_src0)*sign[stk_i,pol_i]
             Stokes_dirty[hpx_inds]+=*dirty_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*sign[stk_i,pol_i]
         ENDFOR
@@ -72,6 +75,7 @@ IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
         *Stokes_inds[stk_i]=hpx_ind_use
         Stokes_restored=Stokes_restored[hpx_ind_use]*norm
         Stokes_sources=Stokes_sources[hpx_ind_use]*norm
+        Stokes_MRC=Stokes_MRC[hpx_ind_use]*norm
         Stokes_dirty=Stokes_dirty[hpx_ind_use]*norm
 ;        Stokes_smooth=Stokes_smooth[hpx_ind_use]*norm
         
@@ -80,6 +84,7 @@ IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
         file_path_rst=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_restored'
         file_path_src=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_sources'
         file_path_dty=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_dirty'
+        file_path_mrc=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_MRC_rings'
 ;        file_path_smt=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_smooth'
         
         write_healpix_fits,file_path_img,*Stokes_images[stk_i],*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
@@ -87,6 +92,8 @@ IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
         write_healpix_fits,file_path_rst,Stokes_restored,*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
         write_healpix_fits,file_path_src,Stokes_sources,*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
         write_healpix_fits,file_path_dty,Stokes_dirty,*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
+        
+        IF mrc_flag THEN write_healpix_fits,file_path_mrc,Stokes_MRC,*Stokes_inds[stk_i],nside=nside,weights=*Stokes_weights[stk_i]
         
 ;        write_fits_cut4,file_path_img+'.fits',*Stokes_inds[stk_i],*Stokes_images[stk_i],/ring,Coords='C',nside=nside
 ;        write_fits_cut4,file_path_wts+'.fits',*Stokes_inds[stk_i],*Stokes_weights[stk_i],/ring,Coords='C',nside=nside
@@ -124,6 +131,7 @@ FOR stk_i=0,1 DO BEGIN
     file_path_rst=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_restored'
     file_path_src=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_sources'
     file_path_dty=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_dirty'
+    file_path_mrc=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_MRC_rings'
 ;    file_path_smt=save_path_base+'_Stokes_'+Stk_nm[stk_i]+'_hpx_smooth'
         
     title_img='Composite Stokes '+Stk_nm[stk_i]+' residual'
@@ -136,6 +144,7 @@ FOR stk_i=0,1 DO BEGIN
     title_rst='Composite Stokes '+Stk_nm[stk_i]+' restored'
     title_src='Composite Stokes '+Stk_nm[stk_i]+' sources'
     title_dty='Composite Stokes '+Stk_nm[stk_i]+' dirty'
+    title_mrc='Composite Stokes '+Stk_nm[stk_i]+' MRC rings'
     
 ;    title_smt='Composite Stokes '+Stk_nm[stk_i]+' smooth'
     healpix_image,file_path_rst,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
@@ -144,6 +153,8 @@ FOR stk_i=0,1 DO BEGIN
         title=title_src,lon=lon_avg,lat=Median(lat_arr),min=0,max=high_dirty*cnorm,/half,color_table=color_table
     healpix_image,file_path_dty,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
         title=title_dty,lon=lon_avg,lat=Median(lat_arr),min=low_dirty*cnorm,max=high_dirty*cnorm,/half,color_table=color_table
+    IF mrc_flag THEN healpix_image,file_path_mrc,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
+        title=title_mrc,lon=lon_avg,lat=Median(lat_arr),min=0,max=5.,/half,color_table=color_table
 ;        
 ;    healpix_image,file_path_smt,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
 ;        title=title_smt,lon=lon_avg,lat=Median(lat_arr),min=low_residual*cnorm/2.,max=high_residual*cnorm/2.,/half,color_table=color_table

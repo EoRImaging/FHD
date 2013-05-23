@@ -1,6 +1,7 @@
-PRO combine_obs_healpix,file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,$
+PRO combine_obs_healpix,file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx=mrc_hpx,$
     nside=nside,restore_last=restore_last,version=version,output_path=output_path,beam_threshold=beam_threshold,$
-    flux_scale=flux_scale,obs_arr=obs_arr,image_filter_fn=image_filter_fn,ston_cut=ston_cut,silent=silent,_Extra=extra
+    flux_scale=flux_scale,obs_arr=obs_arr,image_filter_fn=image_filter_fn,ston_cut=ston_cut,silent=silent,$
+    catalog_file_path=catalog_file_path,_Extra=extra
 
 except=!except
 !except=0 
@@ -94,12 +95,14 @@ weights_hpx=Ptrarr(n_pol,/allocate)
 sources_hpx=Ptrarr(n_pol,/allocate)
 restored_hpx=Ptrarr(n_pol,/allocate)
 dirty_hpx=Ptrarr(n_pol,/allocate)
+IF Keyword_Set(catalog_file_path) THEN mrc_hpx=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
   *residual_hpx[pol_i]=fltarr(n_hpx)
   *weights_hpx[pol_i]=fltarr(n_hpx)
   *sources_hpx[pol_i]=fltarr(n_hpx)
   *restored_hpx[pol_i]=fltarr(n_hpx)
   *dirty_hpx[pol_i]=fltarr(n_hpx)
+  IF Keyword_Set(catalog_file_path) THEN *mrc_hpx[pol_i]=fltarr(n_hpx)
 ENDFOR
 
 FOR obs_i=0,n_obs-1 DO BEGIN
@@ -138,6 +141,17 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         sources_single=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=16,dimension=dimension,width=restored_beam_width)*$
             cal_use[obs_i]*(*beam_base[pol_i])*n_vis_rel ;source_arr is already in instrumental pol (x beam once)
         
+        IF Keyword_Set(catalog_file_path) AND file_test(catalog_file_path) EQ 1 THEN BEGIN
+            mrc_cat=mrc_catalog_read(astr_out,file_path=catalog_file_path)
+            mrc_i_use=where((mrc_cat.x GE 0) AND (mrc_cat.x LE dimension-1) AND (mrc_cat.y GE 0) AND (mrc_cat.y LE elements-1),n_mrc)
+            
+            mrc_image*=5./median(mrc_cat.flux.I)
+            IF n_mrc GT 2 THEN BEGIN
+                mrc_cat=mrc_cat[mrc_i_use]
+                mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
+                    width=pad_uv_image,ring=6.*pad_uv_image)*(*beam_base[pol_i])^2.*n_vis_rel
+            ENDIF
+        ENDIF ELSE n_mrc=0
         residual_single=dirty_single-model_single
         
         weights_single=(*beam_base[pol_i]^2.)*n_vis_rel
@@ -147,11 +161,11 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         (*sources_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(sources_single,*hpx_cnv[obs_i])
         (*restored_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(residual_single+sources_single,*hpx_cnv[obs_i])
         (*dirty_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(dirty_single,*hpx_cnv[obs_i])
-        
+        IF n_mrc GT 0 THEN (*mrc_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(mrc_image,*hpx_cnv[obs_i])
     ENDFOR
     dv=1
 ENDFOR
 
-save,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,hpx_inds,nside,obs_arr,filename=save_path,/compress
+save,hpx_inds,nside,obs_arr,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,mrc_hpx,filename=save_path,/compress
 
 END
