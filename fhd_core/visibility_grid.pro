@@ -26,7 +26,7 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,we
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
-    return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,_Extra=extra
+    return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,model_ptr=model_ptr,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -45,6 +45,9 @@ freq_bin_i=obs.fbin_i
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
 IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=*visibility_ptr ELSE vis_arr_use=Temporary(*visibility_ptr)
+IF Keyword_Set(model_ptr) THEN $
+    IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=*model_ptr $
+    ELSE vis_arr_use-=Temporary(*model_ptr)
 vis_arr_use=vis_arr_use[fi_use,*]
 
 frequency_array=(obs.freq)[fi_use]

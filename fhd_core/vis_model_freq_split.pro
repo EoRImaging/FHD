@@ -92,9 +92,18 @@ t_grid=0
 tarr=fltarr(8)
 FOR pol_i=0,n_pol-1 DO BEGIN
     CASE 1 OF 
-        (data_flag AND model_flag):vis_use=*vis_data_arr[pol_i]-*vis_model_arr[pol_i];/n_avg
-        data_flag:vis_use=*vis_data_arr[pol_i]
-        model_flag:vis_use=*vis_model_arr[pol_i];/n_avg
+        (data_flag AND model_flag):BEGIN
+            vis_ptr=vis_data_arr[pol_i]
+            model_ptr=vis_model_arr[pol_i];/n_avg
+        END
+        data_flag:BEGIN
+            vis_ptr=vis_data_arr[pol_i]
+            model_ptr=Ptr_new() ;null pointer
+        END
+        model_flag:BEGIN
+            vis_ptr=vis_model_arr[pol_i];/n_avg
+            model_ptr=Ptr_new() ;null pointer
+        END
     ENDCASE
     freq_use=(*obs.baseline_info).freq_use
     n_vis_use=0.
@@ -102,8 +111,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
 ;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
 ;        vis_use1=vis_use[fi_use,*]
-        dirty_UV=visibility_grid(vis_use,*flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,/preserve_visibilities,$
-            polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,n_vis=n_vis,_Extra=extra)
+        dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,/preserve_visibilities,$
+            polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,$
+            model_ptr=model_ptr,n_vis=n_vis,_Extra=extra)
         n_vis_use+=n_vis
         IF Keyword_Set(fft) THEN BEGIN
             *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra,degpix=degpix)*n_vis
