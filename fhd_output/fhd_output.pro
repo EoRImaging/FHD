@@ -375,7 +375,7 @@ FOR pol_i=0,npol-1 DO BEGIN
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
-    Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+'_Sources_'+pol_names[pol_i+4],$
+    Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Sources_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
@@ -387,7 +387,7 @@ FOR pol_i=0,npol-1 DO BEGIN
     IF pol_i EQ 0 THEN BEGIN
         IF n_mrc GT 0 THEN BEGIN
             mrc_comp=(stokes_source+mrc_image)[zoom_low:zoom_high,zoom_low:zoom_high]
-            Imagefast,mrc_comp,file_path=image_path+'_Sources_MRCrings_'+pol_names[pol_i+4],$
+            Imagefast,mrc_comp,file_path=image_path+filter_name+gal_name+'_Sources_MRCrings_'+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=0,high=stokes_high,/invert_color,_Extra=extra 
         ENDIF
     ENDIF

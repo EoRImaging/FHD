@@ -142,14 +142,15 @@ FOR obs_i=0,n_obs-1 DO BEGIN
             cal_use[obs_i]*(*beam_base[pol_i])*n_vis_rel ;source_arr is already in instrumental pol (x beam once)
         
         IF Keyword_Set(catalog_file_path) AND file_test(catalog_file_path) EQ 1 THEN BEGIN
-            mrc_cat=mrc_catalog_read(astr_out,file_path=catalog_file_path)
+            mrc_cat=mrc_catalog_read(astr,file_path=catalog_file_path)
             mrc_i_use=where((mrc_cat.x GE 0) AND (mrc_cat.x LE dimension-1) AND (mrc_cat.y GE 0) AND (mrc_cat.y LE elements-1),n_mrc)
             
-            mrc_image*=5./median(mrc_cat.flux.I)
+;            mrc_image*=5./median(mrc_cat.flux.I)
             IF n_mrc GT 2 THEN BEGIN
                 mrc_cat=mrc_cat[mrc_i_use]
                 mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
-                    width=pad_uv_image,ring=6.*pad_uv_image)*(*beam_base[pol_i])^2.*n_vis_rel
+                    width=1.2,ring=8.)*(*beam_base[pol_i])^2.*n_vis_rel
+                mrc_image*=2.5^(0.8*400./150) ;very approximate spectral index correction
             ENDIF
         ENDIF ELSE n_mrc=0
         residual_single=dirty_single-model_single

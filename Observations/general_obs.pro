@@ -91,7 +91,7 @@ IF Keyword_Set(combine_healpix) THEN BEGIN
     IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
     combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
     combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx=mrc_hpx,obs_arr=obs_arr,$
-        nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,image_filter_fn=image_filter_fn,_Extra=extra
+        nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,image_filter_fn=image_filter_fn,catalog_file_path=catalog_file_path,_Extra=extra
     combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx=mrc_hpx,$
         weight_threshold=weight_threshold,fraction_pol=0.5,high_dirty=6.0,low_dirty=-1.5,high_residual=3.0,high_source=3.0,$
         nside=nside,output_path=healpix_path,restore_last=0,obs_arr=obs_arr,map_projection=map_projection,_Extra=extra
