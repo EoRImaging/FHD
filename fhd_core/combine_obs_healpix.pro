@@ -150,7 +150,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
                 mrc_cat=mrc_cat[mrc_i_use]
                 mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
                     width=1.2,ring=8.)*(*beam_base[pol_i])^2.*n_vis_rel
-                mrc_image*=2.5^(0.8*400./150) ;very approximate spectral index correction
+;                mrc_image*=2.5^(0.8*400./150) ;very approximate spectral index correction
             ENDIF
         ENDIF ELSE n_mrc=0
         residual_single=dirty_single-model_single
