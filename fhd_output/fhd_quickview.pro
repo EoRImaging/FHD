@@ -23,11 +23,11 @@ image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
 
-;IF Keyword_Set(image_filter_fn) THEN BEGIN
-;    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
-;    IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
-;ENDIF ELSE filter_name=''
-filter_name=''
+IF Keyword_Set(image_filter_fn) THEN BEGIN
+    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
+    IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
+ENDIF ELSE filter_name=''
+;filter_name=''
 
 ;IF N_Elements(normalization_arr) GT 0 THEN normalization=Mean(normalization_arr)/2.
 npol=fhd.npol
@@ -52,8 +52,9 @@ restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/degpix)/2.
 FOR pol_i=0,npol-1 DO BEGIN
 ;    *instr_images[pol_i]=dirty_image_generate(*residual_array[pol_i],image_filter_fn=image_filter_fn,degpix=degpix,$
 ;        _Extra=extra)*weight_invert(*beam_base[pol_i])
-    *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix)*weight_invert(*beam_base[pol_i])
-    *instr_images_filtered[pol_i]=*instr_images[pol_i]-Median(*instr_images[pol_i],fhd.smooth_width,/even)
+    *instr_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],$
+        degpix=degpix,image_filter_fn=image_filter_fn)*weight_invert(*beam_base[pol_i])
+    *instr_images_filtered[pol_i]=*instr_images[pol_i];-Median(*instr_images[pol_i],fhd.smooth_width,/even)
     *instr_sources[pol_i]=source_image_generate(comp_arr,obs,pol_i=pol_i,resolution=16,$
         dimension=dimension,width=restored_beam_width)
 ENDFOR

@@ -164,23 +164,23 @@ t0+=t1a-t0a
     IF Keyword_Set(pad_uv_image) THEN restored_beam_width*=pad_uv_image
 ;    restored_beam_width=pad_uv_image*(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(Sqrt(2.*Alog(2.)))
     model_holo_arr=model_uv_holo
-;    IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-;        gal_holo_uv=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
-;            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1,uv_return=1)
-;        gal_name='_galfit'
-;        gal_model_img=Ptrarr(npol)
-;        gal_holo_img=Ptrarr(npol)
-;        FOR pol_i=0,npol-1 DO BEGIN
-;            gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
-;                image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_base_out[pol_i]))
-;            gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,$
-;                image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_correction_out[pol_i]))
-;        ENDFOR
-;    ENDIF ELSE BEGIN
+    IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+        gal_holo_uv=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
+            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1,uv_return=1)
+        gal_name='_galfit'
+        gal_model_img=Ptrarr(npol)
+        gal_holo_img=Ptrarr(npol)
+        FOR pol_i=0,npol-1 DO BEGIN
+            gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
+                image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_base_out[pol_i]))
+            gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,$
+                image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_correction_out[pol_i]))
+        ENDFOR
+    ENDIF ELSE BEGIN
         gal_name=''
         gal_holo_uv=Ptrarr(npol)
         FOR pol_i=0,npol-1 DO gal_holo_uv[pol_i]=Ptr_new(0.)
-;    ENDELSE
+    ENDELSE
     FOR pol_i=0,npol-1 DO BEGIN
 ;        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
 ;            beam_correction=beam_correction,mask=source_uv_mask)
@@ -191,10 +191,10 @@ t0+=t1a-t0a
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,width=restored_beam_width,pad_uv_image=pad_uv_image)
-;        IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-;            *instr_sources[pol_i]+=*gal_model_img[pol_i]
-;;            *instr_images[pol_i]-=*gal_holo_img[pol_i]
-;        ENDIF
+        IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+            *instr_sources[pol_i]+=*gal_model_img[pol_i]
+;            *instr_images[pol_i]-=*gal_holo_img[pol_i]
+        ENDIF
     ENDFOR
     
     stokes_images=stokes_cnv(instr_images,beam=beam_base_out)
@@ -415,7 +415,7 @@ IF npol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
 source_array_export,comp_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_component_list2'
 
 residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
-    file_path_base=image_path
+    file_path_base=image_path,_Extra=extra
 
 t10=Systime(1)-t10b
 t00=Systime(1)-t0a

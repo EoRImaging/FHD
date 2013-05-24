@@ -54,9 +54,9 @@ align=0
 
 IF N_Elements(start_fi) EQ 0 THEN start_fi=0
 fi=start_fi
-IF N_Elements(end_fi) EQ 0 THEN end_fi=n_files-1
-WHILE fi LE end_fi DO BEGIN
-    IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(end_fi-start_fi+1)))
+IF N_Elements(end_fi) GT 0 THEN n_files=end_fi+1 ;changed to allow end_fi and update to both be specified
+WHILE fi LT n_files DO BEGIN
+    IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(n_files-start_fi)))
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
@@ -70,7 +70,7 @@ WHILE fi LE end_fi DO BEGIN
     IF Keyword_Set(update_file_list) THEN BEGIN ;use this if simultaneously downloading and deconvolving observations
         vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
         fhd_file_list=fhd_path_setup(vis_file_list,version=version)
-        end_fi=n_files-1
+        IF N_Elements(end_fi) GT 0 THEN n_files=end_fi+1
     ENDIF
 ENDWHILE
 

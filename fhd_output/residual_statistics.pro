@@ -1,5 +1,5 @@
 PRO residual_statistics,residual_image,obs,fhd,radius_inc=radius_inc,beam_base=beam_base,ston=ston,center=center,$
-    file_path_base=file_path_base,no_ps=no_ps
+    file_path_base=file_path_base,no_ps=no_ps,_Extra=extra
 ;Need to specify both obs and fhd structures
 
 compile_opt idl2,strictarrsubs  
