@@ -73,6 +73,7 @@ WHILE fi LT n_files DO BEGIN
         IF N_Elements(end_fi) GT 0 THEN n_files=end_fi+1
     ENDIF
 ENDWHILE
+IF N_Elements(end_fi) EQ 0 THEN end_fi=fi-1
 
 n_files_use=end_fi-start_fi+1
 vis_file_list=vis_file_list[start_fi:end_fi]

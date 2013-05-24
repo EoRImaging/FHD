@@ -172,7 +172,7 @@ t0+=t1a-t0a
         gal_holo_img=Ptrarr(npol)
         FOR pol_i=0,npol-1 DO BEGIN
             gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
-                image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_base_out[pol_i]))
+                image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_base_out[pol_i])/(obs.dimension)^4.)
             gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,$
                 image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_correction_out[pol_i]))
         ENDFOR
@@ -344,14 +344,16 @@ FOR pol_i=0,npol-1 DO BEGIN
     instr_low=Min(instr_residual[where(beam_mask)])
     instr_high=Max(instr_residual[where(beam_mask)])
     instrS_high=Max(instr_restored[where(beam_mask)])
+    log_dirty=0
+    log_source=1
     Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=instr_low,high=instr_high,_Extra=extra
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,_Extra=extra
     Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Residual_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high,_Extra=extra
     Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+'_Sources_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=0,high=instrS_high,/invert_color,_Extra=extra
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instrS_high,/invert_color,_Extra=extra
     Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Restored_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,low=instr_low,high=instrS_high,_Extra=extra
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=instr_low,high=instrS_high,_Extra=extra
     Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
         low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),/invert,_Extra=extra
