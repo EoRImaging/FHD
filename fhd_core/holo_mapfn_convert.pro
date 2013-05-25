@@ -59,7 +59,7 @@ ENDFOR
 
 Ptr_free,map_fn
 heap_gc
-map_fn={ija:ija,sa:sa,i_use:i_use,norm:norm}
+map_fn={ija:ija,sa:sa,i_use:i_use,norm:norm,indexed:1}
 
 timing=Systime(1)-t0
 RETURN,map_fn

@@ -11,6 +11,7 @@ IF tag_exist(A,'i_use') THEN BEGIN
     ija=A.ija
     i_use=A.i_use
     n=N_Elements(i_use)
+    IF tag_exist(A,'indexed') THEN IF Keyword_Set(A.indexed) THEN indexed=1 ELSE indexed=0
     IF Keyword_Set(indexed) THEN BEGIN
         X_use=X[i_use]
         IF Keyword_Set(X2) THEN X2_use=X2[i_use]
