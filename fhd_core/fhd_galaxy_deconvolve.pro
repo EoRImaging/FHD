@@ -64,7 +64,7 @@ print,scale_arr
 model*=scale
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *model_uv[pol_i]*=scale_arr[pol_i]*dimension*elements
+    *model_uv[pol_i]*=scale_arr[pol_i]/dimension*elements
     *model_uv_holo[pol_i]*=scale_arr[pol_i]
     *model_img_holo[pol_i]*=scale_arr[pol_i]
 ENDFOR
@@ -94,6 +94,7 @@ galaxy_model_uv=model_uv
 ;    scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
 ;ENDFOR
   
-IF Keyword_Set(file_path_galmodel) THEN save,model_img_holo,galaxy_model_img,galaxy_model_uv,model_uv_holo,filename=file_path_galmodel
+IF Keyword_Set(file_path_galmodel) THEN $
+    save,model_img_holo,galaxy_model_img,galaxy_model_uv,model_uv_holo,filename=file_path_galmodel
 IF Keyword_Set(uv_return) THEN RETURN,model_uv_holo ELSE RETURN,model_img_holo 
 END

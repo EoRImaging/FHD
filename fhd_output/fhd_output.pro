@@ -329,7 +329,7 @@ FOR pol_i=0,npol-1 DO BEGIN
     
     FitsFast,instr_dirty,fits_header,/write,file_path=export_path+filter_name+'_Dirty_'+pol_names[pol_i]
     FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+gal_name+'_Residual_'+pol_names[pol_i]
-    FitsFast,instr_source,fits_header,/write,file_path=export_path+'_Sources_'+pol_names[pol_i]
+    FitsFast,instr_source,fits_header,/write,file_path=export_path+filter_name+gal_name+'_Sources_'+pol_names[pol_i]
     FitsFast,instr_restored,fits_header,/write,file_path=export_path+filter_name+gal_name+'_Restored_'+pol_names[pol_i]
     FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
     FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
@@ -343,6 +343,7 @@ FOR pol_i=0,npol-1 DO BEGIN
     
     instr_low=Min(instr_residual[where(beam_mask)])
     instr_high=Max(instr_residual[where(beam_mask)])
+    instr_low=instr_low>(-instr_high)
     instrS_high=Max(instr_restored[where(beam_mask)])
     log_dirty=0
     log_source=1
@@ -350,10 +351,10 @@ FOR pol_i=0,npol-1 DO BEGIN
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,_Extra=extra
     Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Residual_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high,_Extra=extra
-    Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+'_Sources_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instrS_high,/invert_color,_Extra=extra
+    Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Sources_'+pol_names[pol_i],$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high,/invert_color,_Extra=extra
     Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Restored_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=instr_low,high=instrS_high,_Extra=extra
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,_Extra=extra
     Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
         low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),/invert,_Extra=extra
@@ -370,7 +371,8 @@ FOR pol_i=0,npol-1 DO BEGIN
     
     stokes_low=Min((stokes_residual*Sqrt(beam_avg>0))[where(beam_mask)])
     stokes_high=Max((stokes_residual*Sqrt(beam_avg>0))[where(beam_mask)])
-    stokesS_high=Max(stokes_restored[where(beam_mask)])
+    stokes_low=stokes_low>(-stokes_high)
+    stokesS_high=Max((stokes_restored*Sqrt(beam_avg>0))[where(beam_mask)])
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
     IF pol_i EQ 0 THEN log=0 ELSE log=0
     Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+gal_name+'_Residual_'+pol_names[pol_i+4],$
