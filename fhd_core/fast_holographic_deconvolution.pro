@@ -480,7 +480,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],*map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
     ENDFOR
     t4+=Systime(1)-t4_0
     

@@ -46,12 +46,17 @@ scale_arr=fltarr(n_pol)
 
 ;weight=weight_invert(Cos((dec_arr-obs.zendec)*!DtoR)^2.)
 
+norm_arr=fltarr(n_pol)+1.
 FOR pol_i=0,n_pol-1 DO BEGIN
 ;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*weight*(*beam_base[pol_i])),/inverse)))
 ;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*hanning(dimension,elements)),/inverse)))
     model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model),/inverse)*(degpix*!DtoR)^2.))
     dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
-    model_uv_holo[pol_i]=Ptr_new(holo_mapfn_apply(*model_uv[pol_i],*map_fn_arr[pol_i],/indexed))
+    model_uv_holo[pol_i]=Ptr_new(holo_mapfn_apply(*model_uv[pol_i],map_fn_arr[pol_i],/indexed))
+    norm_check=Fltarr(dimension,elements)+1.0
+    norm_check2=holo_mapfn_apply(norm_check,map_fn_arr[pol_i],/indexed,complex=0)
+    norm_arr[pol_i]=Mean(Real_part(norm_check2))/Mean(norm_check)
+    
     model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix))
     beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
     beam_vals=(*beam_base[pol_i])[beam_i]
@@ -64,9 +69,9 @@ print,scale_arr
 model*=scale
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *model_uv[pol_i]*=scale_arr[pol_i]/dimension*elements
-    *model_uv_holo[pol_i]*=scale_arr[pol_i]
-    *model_img_holo[pol_i]*=scale_arr[pol_i]
+    *model_uv[pol_i]*=scale;/dimension*elements
+    *model_uv_holo[pol_i]*=scale
+    *model_img_holo[pol_i]*=scale
 ENDFOR
 galaxy_model_img=model
 galaxy_model_uv=model_uv
@@ -84,7 +89,7 @@ galaxy_model_uv=model_uv
 ;FOR pol_i=0,n_pol-1 DO BEGIN
 ;    dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
 ;    FOR ci=0,n_comp-1 DO BEGIN
-;        model_uv_holo[ci,pol_i]=Ptr_new(holo_mapfn_apply(model_uv[ci],*map_fn_arr[pol_i]))
+;        model_uv_holo[ci,pol_i]=Ptr_new(holo_mapfn_apply(model_uv[ci],map_fn_arr[pol_i]))
 ;        model_img_holo[ci,pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[ci,pol_i],degpix=degpix))
 ;    ENDFOR
 ;    beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.2,Max(*beam_base[pol_i])])

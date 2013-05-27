@@ -7,8 +7,6 @@
 ;    
 ;    map_fn - the HMF to apply
 ;    
-;    mask - Must be the same dimensions as image. If supplied, masked pixels are skipped in the sparse matrix multiplication, which provides a significant speed increase over masking the input image. (not currently supported) 
-;
 ; :Keywords:
 ;    timing
 ;    
@@ -27,32 +25,20 @@ dimension=Float((size(image,/dimension))[0])
 elements=Float((size(image,/dimension))[1])
 
 IF size(map_fn,/type) EQ 7 THEN BEGIN ;IF map_fn is a string, assume it is a full filepath
-    map_fn_use=getvar_savefile(map_fn,'map_fn')
-;    IF Keyword_Set(complex) THEN BEGIN
-        image_complex_vector=reform(image,dimension*elements)
-        SPRSAX2,map_fn_use,image_complex_vector,result_image_complex,$
-            complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
+    file_path_mapfn=map_fn
+    restore,file_path_mapfn ;map_fn
+    map_fn_use=Ptr_new(map_fn)
+    image_complex_vector=reform(image,dimension*elements)
+    SPRSAX2,map_fn_use,image_complex_vector,result_image_complex,$
+        complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
         result_image=reform(result_image_complex,dimension,elements)
-;    ENDIF ELSE BEGIN
-;        image_real_vector=reform(Real_part(image),dimension*elements)
-;        image_comp_vector=reform(Imaginary(image),dimension*elements)
-;        SPRSAX2,map_fn_use,image_real_vector,result_image_real,image_comp_vector,result_image_comp,$
-;            complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
-;        result_image=Complex(result_image_real,result_image_comp)
-;    ENDELSE
+    Ptr_free,map_fn_use
+    map_fn=file_path_mapfn
 ENDIF ELSE BEGIN
-;    IF Keyword_Set(complex) THEN BEGIN
-        image_complex_vector=reform(image,dimension*elements)
-        SPRSAX2,map_fn,image_complex_vector,result_image_complex,$
-            complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
-        result_image=reform(result_image_complex,dimension,elements)
-;    ENDIF ELSE BEGIN
-;        image_real_vector=reform(Real_part(image),dimension*elements)
-;        image_comp_vector=reform(Imaginary(image),dimension*elements)
-;        SPRSAX2,map_fn,image_real_vector,result_image_real,image_comp_vector,result_image_comp,$
-;            complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
-;        result_image=Complex(result_image_real,result_image_comp)
-;    ENDELSE
+    image_complex_vector=reform(image,dimension*elements)
+    SPRSAX2,map_fn,image_complex_vector,result_image_complex,$
+        complex=complex,double=double,transpose=transpose,mask=0,indexed=indexed
+    result_image=reform(result_image_complex,dimension,elements)
 ENDELSE
 result_image=reform(result_image,dimension,elements)
 
