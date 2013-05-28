@@ -1,4 +1,4 @@
-PRO sprsax2,A,X,B,X2,B2,double=double,transpose=transpose,mask=mask,complex=complex,indexed=indexed
+PRO sprsax2,A,X,B,X2=X2,B2=B2,A2=A2,double=double,transpose=transpose,mask=mask,complex=complex,indexed=indexed
 ;Major modification in the storage format of ija and sa which allows for much faster extraction of sub-arrays. The older format is still supported temporarily
 ;slight modification to sprsax to allow much larger arrays
 ;also modified to more efficiently use sparse vectors if mask is supplied 
@@ -10,8 +10,8 @@ IF size(A,/type) EQ 10 THEN BEGIN ;check if pointer
     ija=(*A).ija
     i_use=(*A).i_use
     n=N_Elements(i_use)
-    IF tag_exist(*A,'indexed') THEN IF Keyword_Set(*A.indexed) THEN indexed=1 ELSE indexed=0
-    IF tag_exist(*A,'norm') THEN norm=*A.norm
+    IF tag_exist(*A,'indexed') THEN IF Keyword_Set((*A).indexed) THEN indexed=1 ELSE indexed=0
+    IF tag_exist(*A,'norm') THEN norm=(*A).norm
 ENDIF ELSE BEGIN
     sa=A.sa
     ija=A.ija
@@ -38,10 +38,22 @@ IF N_Elements(B) EQ 0 THEN BEGIN
         ELSE: B=Fltarr(N_Elements(X))
     ENDCASE
 ENDIF
-IF N_Params() GT 3 THEN BEGIN
-    b2_flag=1 
+IF Keyword_Set(X2) THEN BEGIN
+    x2_flag=1 
     B2=B
-ENDIF ELSE b2_flag=0
+ENDIF ELSE x2_flag=0
+IF Keyword_Set(A2) THEN BEGIN
+    a2_flag=1
+    IF size(A2,/type) EQ 10 THEN BEGIN
+        sa2=(*A2).sa 
+        IF tag_exist(*A2,'norm') THEN norm2=(*A2).norm
+    ENDIF ELSE BEGIN
+        sa2=A2.sa 
+        IF tag_exist(A2,'norm') THEN norm2=A2.norm
+    ENDELSE
+    B2=B
+    x2_flag=0 ;not compatible to do both! Also, no time savings
+ENDIF ELSE a2_flag=0
 IF Keyword_Set(mask) THEN mask_flag=1 ELSE mask_flag=0
 
 IF Keyword_Set(transpose) THEN BEGIN
@@ -49,19 +61,23 @@ IF Keyword_Set(transpose) THEN BEGIN
         IF Keyword_Set(indexed) THEN i=i0 ELSE i=i_use[i0]
         IF mask_flag THEN IF mask[i] EQ 0 THEN CONTINUE 
         IF Keyword_Set(indexed) THEN B[i_use[*ija[i0]]]+=*sa[i0]*X_use[i] ELSE B[*ija[i0]]+=*sa[i0]*X_use[i]
-        IF b2_flag THEN B2[*ija[i0]]+=*sa[i0]*X2_use[i]
+        IF x2_flag THEN B2[*ija[i0]]+=*sa[i0]*X2_use[i]
+        IF a2_flag THEN B2[*ija[i0]]+=*sa2[i0]*X_use[i]
     ENDFOR
 ENDIF ELSE BEGIN
     FOR i0=0L,n-1 DO BEGIN
         i=i_use[i0]
-        B[i]=matrix_multiply(*sa[i0],X_use[*ija[i0]],/atranspose)
-        IF b2_flag THEN B2[i]=matrix_multiply(*sa[i0],X2_use[*ija[i0]],/atranspose)
+        x1=X_use[*ija[i0]]
+        B[i]=matrix_multiply(*sa[i0],x1,/atranspose)
+        IF x2_flag THEN B2[i]=matrix_multiply(*sa[i0],X2_use[*ija[i0]],/atranspose)
+        IF a2_flag THEN B2[i]=matrix_multiply(*sa2[i0],x1,/atranspose)
     ENDFOR
 ENDELSE
     
 IF Keyword_Set(norm) THEN BEGIN
     B/=norm
-    IF b2_flag THEN B2/=norm
+    IF x2_flag THEN B2/=norm
+    IF a2_flag THEN B2/=norm2
 ENDIF
         
     ;ENDIF ELSE BEGIN

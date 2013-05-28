@@ -443,6 +443,16 @@ FOR i=0L,max_iter-1 DO BEGIN
             y_vec=comp_arr[si_use].y
             source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_vec)
             FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals
+            
+            t4_0=Systime(1)
+            t3+=t4_0-t3_0
+            IF n_pol EQ 1 THEN $
+                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],_Extra=extra,/indexed)*normalization $
+            ELSE BEGIN
+                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],map_fn2=map_fn_arr[1],holo2_return=holo2_return,_Extra=extra,/indexed)*normalization
+                *model_uv_holo[1]=Temporary(holo2_return)
+            ENDELSE
+            t4+=Systime(1)-t4_0
         ENDIF ELSE BEGIN
             flux_vec=comp_arr[si_use].flux.I/2.
             x_vec=comp_arr[si_use].x
@@ -452,6 +462,13 @@ FOR i=0L,max_iter-1 DO BEGIN
             source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
             FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,0]
             FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,1]
+            
+            t4_0=Systime(1)
+            t3+=t4_0-t3_0
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+            ENDFOR
+            t4+=Systime(1)-t4_0
         ENDELSE
     ENDIF ELSE BEGIN
         x_vec=comp_arr[si_use].x
@@ -465,6 +482,13 @@ FOR i=0L,max_iter-1 DO BEGIN
             (comp_arr[si_use].flux.(flux_index_arr1[pol_i])+sign_arr[pol_i]*comp_arr[si_use].flux.(flux_index_arr2[pol_i]))/2.
         source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
         FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,pol_i]
+        
+        t4_0=Systime(1)
+        t3+=t4_0-t3_0
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+        ENDFOR
+        t4+=Systime(1)-t4_0
 ;        FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,1]
 ;        FOR src_i=0L,n_si_use-1 DO BEGIN
 ;            si1=si_use[src_i]
@@ -477,12 +501,6 @@ FOR i=0L,max_iter-1 DO BEGIN
 ;        ENDFOR
     ENDELSE
     
-    t4_0=Systime(1)
-    t3+=t4_0-t3_0
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
-    ENDFOR
-    t4+=Systime(1)-t4_0
     
     IF si GE max_sources THEN BEGIN
         i2+=1                                        
