@@ -44,8 +44,8 @@ PRO ZENPOS2, date, ra, dec,lat=lat,lng=lng,degree=degree,J2000=J2000
 ;
 ;                            Define the needed conversion factors.
 ;
- d2rad = !DPI / 180.D0
- h2rad = !DPI / 12.D0
+ d2rad = !PI / 180.0
+ h2rad = !PI / 12.0
 ;
 ;                            Get the sideral time corresponding to the 
 ;                            supplied date.
@@ -61,19 +61,7 @@ PRO ZENPOS2, date, ra, dec,lat=lat,lng=lng,degree=degree,J2000=J2000
 IF Keyword_Set(J2000) THEN BEGIN
     caldat,date,month,day,year
     epoch=year+ymd2dn(year,month,day)/365.25
-;    ra_deg0=ra*!Radeg
-;    dec_deg0=dec*!Radeg
-;    BPrecess,ra_deg0,dec_deg0,ra_deg1950,dec_deg1950,epoch=1988.
-;    JPrecess,ra_deg1950,dec_deg1950,ra_deg2000,dec_deg2000,epoch=1950
-;    JPrecess,ra_deg0,dec_deg0,ra_deg2000,dec_deg2000,epoch=epoch
-;    JPrecess,ra_deg0,dec_deg0,ra_deg1,dec_deg1,epoch=epoch
-;    ra_shift=ra_deg1-ra_deg0
-;    dec_shift=dec_deg1-dec_deg0
-;    ra_deg2000=ra_deg0-ra_shift
-;    dec_deg2000=dec_deg0-dec_shift    
     Precess,ra,dec,epoch,2000.,/radian
-;    ra=ra_deg2000*!DtoR
-;    dec=dec_deg2000*!DtoR
 ENDIF
 
  IF Keyword_Set(degree) THEN BEGIN

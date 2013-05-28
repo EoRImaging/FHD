@@ -185,7 +185,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        psf_base1*=uv_mask
         
         psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
-        uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1,cubic=-0.5)
+        uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1)
         psf_base2*=uv_mask2
         gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
         psf_base2*=gain_normalization

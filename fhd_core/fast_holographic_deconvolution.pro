@@ -446,12 +446,15 @@ FOR i=0L,max_iter-1 DO BEGIN
             
             t4_0=Systime(1)
             t3+=t4_0-t3_0
-            IF n_pol EQ 1 THEN $
-                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],_Extra=extra,/indexed)*normalization $
-            ELSE BEGIN
-                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],map_fn2=map_fn_arr[1],holo2_return=holo2_return,_Extra=extra,/indexed)*normalization
-                *model_uv_holo[1]=Temporary(holo2_return)
-            ENDELSE
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+            ENDFOR
+;            IF n_pol EQ 1 THEN $
+;                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],_Extra=extra,/indexed)*normalization $
+;            ELSE BEGIN
+;                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],map_fn2=map_fn_arr[1],holo2_return=holo2_return,_Extra=extra,/indexed)*normalization
+;                *model_uv_holo[1]=Temporary(holo2_return)
+;            ENDELSE
             t4+=Systime(1)-t4_0
         ENDIF ELSE BEGIN
             flux_vec=comp_arr[si_use].flux.I/2.
