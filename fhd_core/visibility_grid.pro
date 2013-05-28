@@ -87,8 +87,8 @@ ENDIF
  
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
-xmin=Floor(xcen)+dimension/2.-(psf_dim/2.-1)
-ymin=Floor(ycen)+elements/2.-(psf_dim/2.-1)
+xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
 xmax=xmin+psf_dim-1
 ymax=ymin+psf_dim-1
 
@@ -188,7 +188,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     x_off=x_offset[inds]
     y_off=y_offset[inds]
-;    vis_box=vis_arr_use[inds]
         
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
@@ -196,57 +195,21 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
     
-;    vis_n=bin_n[bin_i[bi]]
-;    box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
+    vis_n=bin_n[bin_i[bi]]
+    vis_n_arr=Replicate(1.,vis_n)
     
-;    fbin0=Round(fbin-Min(fbin))
-;    x_off0=Round(x_off-Min(x_off))
-;    y_off0=Round(y_off-Min(y_off))
-;    nfbin0=Max(fbin0)+1L
-;    nx_off0=Max(x_off0)+1L
-;    
-;    ident_index=fbin0+x_off0*nfbin0+y_off0*nx_off0*nfbin0
-;    ident_n=histogram(ident_index,min=0,/bin,reverse=id_i)
-;    ident_i=where(ident_n,vis_n)
-;    
-;    vis_n_arr=ident_n[ident_i]
-;    
-;    IF Mean(vis_n_arr) GT 1.1 THEN BEGIN
-;        vis_box=Complexarr(vis_n)
-;        box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
-;        box_matrix_dag=box_matrix
-;        
-;        t2_0=Systime(1)
-;        t2+=t2_0-t1_0
-;        FOR ii=0L,vis_n-1 DO BEGIN
-;            t2_0=Systime(1)
-;            inds_i=id_i[id_i[ident_i[ii]]:id_i[ident_i[ii]+1]-1]
-;            iii=id_i[id_i[ident_i[ii]]]
-;            vis_box[ii]=Total(vis_arr_use[inds[inds_i]])
-;            
-;            t3_0=Systime(1)
-;            t2+=t3_0-t2_0
-;            psf_single=*psf_base[polarization,fbin[iii],x_off[iii],y_off[iii]]
-;            box_matrix[ii,*]=psf_single*vis_n_arr[ii]
-;            box_matrix_dag[ii,*]=Conj(psf_single)
-;            t3+=Systime(1)-t3_0
-;        ENDFOR
-;        t3_0=Systime(1)
-;    ENDIF ELSE BEGIN
-        vis_n=bin_n[bin_i[bi]]
-        vis_n_arr=Replicate(1.,vis_n)
-        vis_box=vis_arr_use[inds]
-        box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
-        t3_0=Systime(1)
-        t2+=t3_0-t1_0
-        FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
-        IF Keyword_Set(complex) THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
-;    ENDELSE
-
+    vis_box=vis_arr_use[inds]
+    box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
+    t3_0=Systime(1)
+    t2+=t3_0-t1_0
+    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+    IF Keyword_Set(complex) THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
+    
     t4_0=Systime(1)
     t3+=t4_0-t3_0   
     box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
-    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
+;    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
+    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Reform(Temporary(box_arr),psf_dim,psf_dim)
 ;    image_uv[xmin_use,ymin_use]+=Reform(Temporary(box_arr),psf_dim,psf_dim)
     t5_0=Systime(1)
     t4+=t5_0-t4_0
@@ -254,7 +217,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     IF weights_flag THEN BEGIN
         wts_box=matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
-        weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
+;        weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
+        weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Reform(Temporary(wts_box),psf_dim,psf_dim)
 ;        weights[xmin_use,ymin_use]+=Reform(Temporary(wts_box),psf_dim,psf_dim)
     ENDIF
     IF variance_flag THEN BEGIN
@@ -272,8 +236,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t6a+=t6b_0-t6a_0
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*,ij]
+            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
+;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*,ij]
 ;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
             dummy_ref=-1
         ENDFOR
