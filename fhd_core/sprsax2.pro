@@ -79,7 +79,7 @@ IF Keyword_Set(norm) THEN BEGIN
     IF x2_flag THEN B2/=norm
     IF a2_flag THEN B2/=norm2
 ENDIF
-        
+END
     ;ENDIF ELSE BEGIN
     ;
     ;    sa=A.sa
@@ -117,5 +117,5 @@ ENDIF
     ;        ENDFOR
     ;    ENDELSE
     ;ENDELSE
-    
-END
+;    
+;END
