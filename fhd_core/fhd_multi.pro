@@ -121,7 +121,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         file_path_mapfn=file_path_fhd+'_mapfn_'
         restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
-        weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
+        weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
         *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
         IF pol_i LE 2 THEN normalization_arr[pol_i]=1./mean(weights_single)
@@ -430,7 +430,6 @@ FOR i=0L,max_iter-1 DO BEGIN
         si_use=si_use[si_use_i]
                 ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
         IF ~Keyword_Set(independent_fit) THEN BEGIN
-            ;<<<DOES NOT WORK FOR XY OR YX POLARIZATIONS YET!!!>>>
             IF n_pol LE 2 THEN BEGIN
                 flux_vec=comp_arr1[si_use].flux.I/2.
                 x_vec=comp_arr1[si_use].x
@@ -474,7 +473,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR obs_i=0L,n_obs-1 DO BEGIN
         IF recalc_flag[obs_i] EQ 0 THEN CONTINUE
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],*map_fn_arr[pol_i,obs_i],/indexed,_Extra=extra)*norm_arr[obs_i]
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],map_fn_arr[pol_i,obs_i],/indexed,_Extra=extra)*norm_arr[obs_i]
         ENDFOR
     ENDFOR
     t4+=Systime(1)-t4_0

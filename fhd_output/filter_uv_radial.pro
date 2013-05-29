@@ -34,6 +34,6 @@ IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(fil
 IF Ptr_valid(filter) THEN *filter=filter_use
 
 ;filter/=Mean(filter) ;preserve mean value
-image_uv_filtered=image_uv*filter
+image_uv_filtered=image_uv*filter_use
 RETURN,image_uv_filtered
 END
