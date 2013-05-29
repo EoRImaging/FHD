@@ -152,12 +152,12 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ;    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
 ENDIF 
 
-filter_arr=Ptrarr(n_pol,/allocate)
+filter_arr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN    
     filter_single=1
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix)*(*beam_correction[pol_i])^2.;,$
 ;        weights=*weights_arr[pol_i],image_filter='filter_uv_radial',filter=filter_single)*(*beam_correction[pol_i])^2.
-    *filter_arr[pol_i]=filter_single
+    IF Ptr_valid(filter_single) THEN filter_arr[pol_i]=filter_single
     IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
     
