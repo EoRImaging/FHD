@@ -1,7 +1,7 @@
 FUNCTION dirty_image_generate,dirty_image_uv,baseline_threshold=baseline_threshold,mask=mask,$
     normalization=normalization,resize=resize,width_smooth=width_smooth,degpix=degpix,$
-    hanning_filter=hanning_filter,no_real=no_real,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-    _Extra=extra
+    no_real=no_real,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
+    filter=filter,weights=weights,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 IF N_Elements(baseline_threshold) EQ 0 THEN baseline_threshold=0.
@@ -22,17 +22,34 @@ IF Keyword_Set(baseline_threshold) THEN BEGIN
     di_uv_use=dirty_image_uv*mask
 ENDIF ELSE di_uv_use=dirty_image_uv
 
-IF Keyword_Set(hanning_filter) THEN IF hanning_filter EQ -1 THEN $
-    di_uv_use*=fft_shift(hanning(dimension,elements)) ELSE di_uv_use*=hanning(dimension,elements)
+IF Arg_present(filter) THEN BEGIN
+    IF Ptr_valid(filter) THEN BEGIN
+        IF N_Elements(*filter) EQ N_Elements(di_uv_use) THEN di_uv_use*=*filter $
+            ELSE BEGIN
+                IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_hanning'
+                di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
+            ENDELSE
+    ENDIF ELSE BEGIN
+        filter=Ptr_new(/allocate)
+        IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_hanning'
+        di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
+    ENDELSE
+ENDIF ELSE BEGIN
+    IF Keyword_Set(image_filter_fn) THEN $
+        di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
+ENDELSE
 
-IF Keyword_Set(image_filter_fn) THEN BEGIN
-    di_uv_use=Call_Function(image_filter_fn,di_uv_use,_Extra=extra) ;filter_uv_hanning.pro default    
-    source_uv_mask=fltarr(dimension,elements)
-    source_uv_mask[where(di_uv_use)]=1
-    filter_norm=max(Real_part(fft_shift(FFT(fft_shift(source_uv_mask)))))/$
-        max(Real_part(fft_shift(FFT(fft_shift(Call_Function(image_filter_fn,source_uv_mask,_Extra=extra))))))
-    di_uv_use*=filter_norm
-ENDIF
+;IF Keyword_Set(hanning_filter) THEN IF hanning_filter EQ -1 THEN $
+;    di_uv_use*=fft_shift(hanning(dimension,elements)) ELSE di_uv_use*=hanning(dimension,elements)
+;
+;IF Keyword_Set(image_filter_fn) THEN BEGIN
+;    di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,_Extra=extra) ;filter_uv_hanning.pro default    
+;    source_uv_mask=fltarr(dimension,elements)
+;    source_uv_mask[where(di_uv_use)]=1
+;    filter_norm=max(Real_part(fft_shift(FFT(fft_shift(source_uv_mask)))))/$
+;        max(Real_part(fft_shift(FFT(fft_shift(Call_Function(image_filter_fn,source_uv_mask,_Extra=extra))))))
+;    di_uv_use*=filter_norm
+;ENDIF
 
 IF Keyword_Set(resize) THEN BEGIN
     dimension=dimension*resize
