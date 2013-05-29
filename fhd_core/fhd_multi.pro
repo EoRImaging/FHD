@@ -436,7 +436,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                 x_vec=comp_arr1[si_use].x
                 y_vec=comp_arr1[si_use].y
                 source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_vec)
-                FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i,obs_i])[uv_i_use2]+=source_uv_vals
+                FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=source_uv_vals
             ENDIF ELSE BEGIN
                 flux_vec=comp_arr1[si_use].flux.I/2.
                 x_vec=comp_arr1[si_use].x
@@ -444,8 +444,8 @@ FOR i=0L,max_iter-1 DO BEGIN
                 flux_vec2=comp_arr1[si_use].flux.U/2.
                 flux_arr=[[flux_vec],[flux_vec2]]
                 source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
-                FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i,obs_i])[uv_i_use2]+=source_uv_vals[*,0]
-                FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i,obs_i])[uv_i_use2]+=source_uv_vals[*,1]
+                FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=source_uv_vals[*,0]
+                FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=source_uv_vals[*,1]
             ENDELSE
         ENDIF ELSE BEGIN
             x_vec=comp_arr1[si_use].x
@@ -458,7 +458,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             FOR pol_i=0,n_pol-1 DO flux_arr[*,pol_i]=$
                 (comp_arr1[si_use].flux.(flux_index_arr1[pol_i])+sign_arr[pol_i]*comp_arr1[si_use].flux.(flux_index_arr2[pol_i]))/2.
             source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
-            FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i,obs_i])[uv_i_use2]+=source_uv_vals[*,pol_i]
+            FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=source_uv_vals[*,pol_i]
         ENDELSE
         
         *comp_arr[obs_i]=comp_arr1
