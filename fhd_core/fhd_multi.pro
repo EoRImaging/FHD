@@ -83,7 +83,8 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     beam_sourcefind_mask=(beam_mask=fltarr(obs.dimension,obs.elements)+1)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
         mask0=(mask1=fltarr(obs.dimension,obs.elements))
-        mask_i=region_grow(*beam_model[pol_i,obs_i],obs.obsx+obs.dimension*obs.obsy,thresh=[beam_threshold,max(*beam_model[pol_i,obs_i])])
+        ref_pix=Long(obs.obsx)+Long(obs.dimension)*Long(obs.obsy)
+        mask_i=region_grow(*beam_model[pol_i,obs_i],ref_pix,thresh=[beam_threshold,max(*beam_model[pol_i,obs_i])])
         mask0[mask_i]=1
         beam_sourcefind_mask*=mask0
                 
