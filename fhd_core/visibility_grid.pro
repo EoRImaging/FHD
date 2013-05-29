@@ -113,6 +113,7 @@ IF Keyword_Set(flag_ptr) THEN BEGIN
     IF n_unflag EQ 0 THEN BEGIN
         timing=Systime(1)-t0_0
         image_uv=Complexarr(dimension,elements)
+        n_vis=0.
         RETURN,image_uv
     ENDIF
     IF n_flag GT 0 THEN BEGIN

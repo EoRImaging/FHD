@@ -114,6 +114,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,/preserve_visibilities,$
             polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,$
             model_ptr=model_ptr,n_vis=n_vis,_Extra=extra)
+        IF n_vis EQ 0 THEN BEGIN
+            IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
+            *residual_arr[pol_i,fi]=init_arr
+            *weights_arr[pol_i,fi]=init_arr
+            *variance_arr[pol_i,fi]=init_arr
+            CONTINUE
+        ENDIF
         n_vis_use+=n_vis
         IF Keyword_Set(fft) THEN BEGIN
             *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra,degpix=degpix)*n_vis
