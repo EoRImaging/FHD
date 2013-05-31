@@ -1,4 +1,4 @@
-FUNCTION visibility_degrid,image_uv,flag_arr,obs,psf,params,$
+FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
     complex=complex,double=double,_Extra=extra
 t0=Systime(1)
@@ -24,7 +24,7 @@ psf_base=psf.base
 psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
-flag_switch=Keyword_Set(flag_arr)
+flag_switch=Keyword_Set(flag_ptr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 baseline_i=params.baseline_arr
@@ -40,15 +40,16 @@ IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_frequencies,vis_dimen
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
-x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
-y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
-xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.) 
-ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.) 
+x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
+y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
+xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
 xmax=xmin+psf_dim-1
 ymax=ymin+psf_dim-1
 
-range_test_x_i=where((xmin LT 0) OR (xmax GE dimension),n_test_x)
-range_test_y_i=where((ymin LT 0) OR (ymax GE elements),n_test_y)
+range_test_x_i=where((xmin LE 0) OR (xmax GE dimension-1),n_test_x)
+range_test_y_i=where((ymin LE 0) OR (ymax GE elements-1),n_test_y)
+xmax=(ymax=0)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
@@ -59,8 +60,8 @@ IF n_dist_flag GT 0 THEN BEGIN
     ymin[flag_dist_i]=-1
 ENDIF
 
-IF Keyword_Set(flag_arr) THEN BEGIN
-    flag_i=where(flag_arr LE 0,n_flag)
+IF Keyword_Set(flag_ptr) THEN BEGIN
+    flag_i=where(*flag_ptr LE 0,n_flag)
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
@@ -88,21 +89,22 @@ t3=0
 t4=0
 t5=0
 t6=0
-image_uv_use=image_uv/2. ;account for complex conjugate?
+image_uv_use=image_uv
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     ;MUST use double precision!
 ;    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
+    ind0=inds[0]
     
-    x_off1=x_offset[inds]
-    y_off1=y_offset[inds]
+    x_off=x_offset[inds]
+    y_off=y_offset[inds]
         
-    xmin_use=Min(xmin[inds]) ;should all be the same, but don't want an array
-    ymin_use=Min(ymin[inds]) ;should all be the same, but don't want an array
+    xmin_use=xmin[ind0] ;should all be the same, but don't want an array
+    ymin_use=ymin[ind0] ;should all be the same, but don't want an array
 
-    bt_i=Floor(inds/n_frequencies)
-    base_i=baseline_i[bt_i]
+;    bt_i=Floor(inds/n_frequencies)
+;    base_i=baseline_i[bt_i]
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
     
@@ -113,15 +115,15 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO BEGIN
-;        psf_use=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]
-;;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]) ;temporary addition while I transition to complex beams!
+;        psf_use=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+;;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]) ;temporary addition while I transition to complex beams!
 ;        box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)   
-        box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off1[ii],y_off1[ii]]     
+        box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]     
     ENDFOR
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    vis_box=box_matrix#box_arr
+    vis_box=matrix_multiply(box_arr,box_matrix,/atranspose) ;box_matrix#box_arr
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
@@ -134,5 +136,5 @@ ENDFOR
 
 IF not Keyword_Set(silent) THEN print,t1,t2,t3,t4,t5
 timing=Systime(1)-t0
-RETURN,visibility_array
+RETURN,Ptr_new(visibility_array)
 END
