@@ -105,6 +105,7 @@ model_arr=Ptrarr(n_pol,/allocate)
 normalization_arr=fltarr(n_pol) ;factor to normalize holo_mapfn_apply
 model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
+model_uv_stks=Ptrarr(4,/allocate)
 
 source_comp_init,comp_arr,n_sources=max_sources
 pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
@@ -184,15 +185,11 @@ uv_i_use2=where(source_uv_mask2,n_uv_use2)
 ;IF source_uv_mask[dimension*elements/2+dimension/2] NE 0 THEN n_uv_use2-=1
 xvals2=xvals[uv_i_use2]
 yvals2=yvals[uv_i_use2]
-;xvals3=xvals_mirror[uv_i_use2]
-;yvals3=yvals_mirror[uv_i_use2]
-;mirror_inds0=(xvals3+dimension/2.)+(yvals3+elements/2.)*dimension
-;mirror_inds=Sort(mirror_inds0)+n_uv_use2
 
 t1=0 ;generation of model_images and image_use for source detection
-t2=0 ;source extraction
-t3=0 ;fit the brightest source(s) to each polarization/etc...
-t4=0 ;update model and run Holo mapping function
+t2=0 ;filtering and source extraction
+t3=0 ;DFT
+t4=0 ;Holographic mapping function
 i2=0. 
 t0=Systime(1)
 
@@ -262,44 +259,26 @@ FOR i=0L,max_iter-1 DO BEGIN
         t2_0=Systime(1)
         t1+=t2_0-t1_0 
         
-    ;    IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
-            image_filtered=dirty_image_composite-model_image_composite
-    ;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
-            image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
-            image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
-            
-            IF Keyword_Set(independent_fit) THEN BEGIN
-                image_use_Q=dirty_image_composite_Q-model_image_composite_Q
-                image_use_U=dirty_image_composite_U-model_image_composite_U
-                image_use_V=dirty_image_composite_V-model_image_composite_V
-                image_smooth_Q=Median(image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-                image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q
-                image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-                image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
-                image_smooth_V=Median(image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-                image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
-            ENDIF ELSE IF n_pol GT 2 THEN BEGIN
-                image_use_U=dirty_image_composite_U-model_image_composite_U
-                image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use_U,smooth_width,/median,/circle)
-                image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
-            ENDIF    
-    ;    ENDIF ELSE BEGIN
-    ;        image_filtered=dirty_image_composite-model_image_composite
-    ;;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
-    ;        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth ;uses previously calculated image_smooth!
-    ;
-    ;        IF Keyword_Set(independent_fit) THEN BEGIN
-    ;            image_use_Q=dirty_image_composite_Q-model_image_composite_Q
-    ;            image_use_U=dirty_image_composite_U-model_image_composite_U
-    ;            image_use_V=dirty_image_composite_V-model_image_composite_V
-    ;            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q ;uses previously calculated image_smooth!
-    ;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
-    ;            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V ;uses previously calculated image_smooth!
-    ;        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
-    ;            image_use_U=dirty_image_composite_U-model_image_composite_U
-    ;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U ;uses previously calculated image_smooth!
-    ;        ENDIF    
-    ;    ENDELSE
+        image_filtered=dirty_image_composite-model_image_composite
+;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
+        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
+        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+        
+        IF Keyword_Set(independent_fit) THEN BEGIN
+            image_use_Q=dirty_image_composite_Q-model_image_composite_Q
+            image_use_U=dirty_image_composite_U-model_image_composite_U
+            image_use_V=dirty_image_composite_V-model_image_composite_V
+            image_smooth_Q=Median(image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q
+            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
+            image_smooth_V=Median(image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
+        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
+            image_use_U=dirty_image_composite_U-model_image_composite_U
+            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use_U,smooth_width,/median,/circle)
+            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
+        ENDIF  
     ENDIF ELSE t2_0=Systime(1)
     image_unfiltered=dirty_image_composite-model_image_composite
     source_find_image=image_filtered*beam_avg*source_mask
@@ -321,6 +300,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     add_dist=fltarr(n_sources)-1
     FOR addi=1,n_sources-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
     additional_i_usei=where(add_dist LT 0,n_sources)
+    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     
     IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     IF max_add_sources EQ 0 THEN BREAK
@@ -329,13 +309,10 @@ FOR i=0L,max_iter-1 DO BEGIN
         n_sources=max_add_sources
     ENDIF
     n_mask=0
-;    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     
     IF i EQ 0 THEN converge_check[i]=Stddev(source_find_image[where(source_mask)],/nan)
     converge_check2[i]=Stddev(source_find_image[where(source_mask)],/nan)
     ;fit flux here, and fill comp_arr for each pol
-    t3_0=Systime(1)
-    t2+=t3_0-t2_0
     flux_arr=fltarr(4)
     fit_threshold=-2.*converge_check2[i]
     source_fit_fn_ref=Total(source_fit_fn)/2.
@@ -390,9 +367,6 @@ FOR i=0L,max_iter-1 DO BEGIN
                 ELSE flux_use=Interpolate(image_use_U[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius],xcen0,ycen0,cubic=-0.5)
             
             flux_use=(flux_use*gain_factor_use)>0
-            
-;            comp_arr[si].flux.(pol_i)=flux_use*gain_factor_use*beam_src[pol_i]*(*p_map_simple[pol_i])[additional_i[src_i]]
-;            flux_use*=ps_not_used*(*beam_correction[pol_i])[additional_i[src_i]]
             flux_arr[pol_i]=flux_use;*beam_corr_src[pol_i] ;"True sky" instrumental pol
         ENDFOR
         
@@ -412,21 +386,6 @@ FOR i=0L,max_iter-1 DO BEGIN
         comp_arr[si].flux.U=flux_arr[2]+flux_arr[3]
         comp_arr[si].flux.V=flux_arr[2]-flux_arr[3]
         si_use[src_i]=si
-
-;        ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-;;        source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr[si].x-dimension/2.)*xvals1+(comp_arr[si].y-elements/2.)*yvals1))
-;;        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals1,yvals1,dimension=dimension,elements=elements)
-;        source_uv_vals=source_dft(comp_arr[si].x,comp_arr[si].y,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix)
-;;        source_uv=Complexarr(dimension,elements) & source_uv[uv_i_use2]=source_uv_vals
-;;        source_uv+=Conj(Shift(Reverse(reverse(source_uv,1),2),1,1))
-;
-;        FOR pol_i=0,n_pol-1 DO BEGIN
-;            (*model_uv_full[pol_i])[uv_i_use2]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv_vals
-;;            *model_uv_full[pol_i]+=comp_arr[si].flux.(pol_i)*beam_corr_src[pol_i]*source_uv
-;;            (*model_uv_full[pol_i])[uv_i_use]+=comp_arr[si].flux.(pol_i)*source_uv_vals
-;;            (*model_uv_full[pol_i])[uv_i_use]+=flux_arr[pol_i]*source_uv_vals
-;        ENDFOR
-        
         si+=1
     ENDFOR
     
@@ -440,73 +399,101 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     si_use=si_use[si_use_i]
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-    IF ~Keyword_Set(independent_fit) THEN BEGIN
-        IF n_pol LE 2 THEN BEGIN
-            flux_vec=comp_arr[si_use].flux.I/2.
-            x_vec=comp_arr[si_use].x
-            y_vec=comp_arr[si_use].y
-            source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_vec)
-            FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals
-            
-            t4_0=Systime(1)
-            t3+=t4_0-t3_0
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
-            ENDFOR
-;            IF n_pol EQ 1 THEN $
-;                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],_Extra=extra,/indexed)*normalization $
-;            ELSE BEGIN
-;                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],map_fn2=map_fn_arr[1],holo2_return=holo2_return,_Extra=extra,/indexed)*normalization
-;                *model_uv_holo[1]=Temporary(holo2_return)
-;            ENDELSE
-            t4+=Systime(1)-t4_0
-        ENDIF ELSE BEGIN
-            flux_vec=comp_arr[si_use].flux.I/2.
-            x_vec=comp_arr[si_use].x
-            y_vec=comp_arr[si_use].y
-            flux_vec2=comp_arr[si_use].flux.U/2.
-            flux_arr=[[flux_vec],[flux_vec2]]
-            source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
-            FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,0]
-            FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,1]
-            
-            t4_0=Systime(1)
-            t3+=t4_0-t3_0
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
-            ENDFOR
-            t4+=Systime(1)-t4_0
-        ENDELSE
-    ENDIF ELSE BEGIN
-        x_vec=comp_arr[si_use].x
-        y_vec=comp_arr[si_use].y
-        
-        flux_arr=fltarr(n_si_use,n_pol)
-        flux_index_arr1=[4,4,6,6]
-        flux_index_arr2=[5,5,7,7]
-        sign_arr=[1.,-1.,1.,-1.]
-        FOR pol_i=0,n_pol-1 DO flux_arr[*,pol_i]=$
-            (comp_arr[si_use].flux.(flux_index_arr1[pol_i])+sign_arr[pol_i]*comp_arr[si_use].flux.(flux_index_arr2[pol_i]))/2.
-        source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
-        FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,pol_i]
-        
-        t4_0=Systime(1)
-        t3+=t4_0-t3_0
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
-        ENDFOR
-        t4+=Systime(1)-t4_0
-;        FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,1]
-;        FOR src_i=0L,n_si_use-1 DO BEGIN
-;            si1=si_use[src_i]
-;            source_uv_vals=source_dft(comp_arr[si1].x,comp_arr[si1].y,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix)
+    t3_0=Systime(1)
+    t2+=t3_0-t2_0
+    flux_I=comp_arr[si_use].flux.I
+    flux_Q=comp_arr[si_use].flux.Q
+    flux_U=comp_arr[si_use].flux.U
+    flux_V=comp_arr[si_use].flux.V
+    x_vec=comp_arr[si_use].x
+    y_vec=comp_arr[si_use].y
+    *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
+    IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
+        ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 
+    IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
+        ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U)
+    IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
+        ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V)
+    SWITCH n_pol OF
+        4:(*model_uv_full[3])[uv_i_use2]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
+        3:(*model_uv_full[2])[uv_i_use2]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.
+        2:(*model_uv_full[1])[uv_i_use2]+=(*model_uv_stks[0]-*model_uv_stks[1])/2.
+        1:(*model_uv_full[0])[uv_i_use2]+=(*model_uv_stks[0]+*model_uv_stks[1])/2.
+    ENDSWITCH
+    
+    t4_0=Systime(1)
+    t3+=t4_0-t3_0
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+    ENDFOR
+    t4+=Systime(1)-t4_0
+;    IF ~Keyword_Set(independent_fit) THEN BEGIN
+;        IF n_pol LE 2 THEN BEGIN
+;            flux_vec=comp_arr[si_use].flux.I/2.
+;            x_vec=comp_arr[si_use].x
+;            y_vec=comp_arr[si_use].y
+;            source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_vec)
+;            FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals
 ;            
+;            t4_0=Systime(1)
+;            t3+=t4_0-t3_0
 ;            FOR pol_i=0,n_pol-1 DO BEGIN
-;                beam_corr_src=(*beam_correction[pol_i])[comp_arr[si1].x,comp_arr[si1].y]
-;                (*model_uv_full[pol_i])[uv_i_use2]+=comp_arr[si1].flux.(pol_i)*beam_corr_src*source_uv_vals
+;                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
 ;            ENDFOR
+;;            IF n_pol EQ 1 THEN $
+;;                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],_Extra=extra,/indexed)*normalization $
+;;            ELSE BEGIN
+;;                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],map_fn2=map_fn_arr[1],holo2_return=holo2_return,_Extra=extra,/indexed)*normalization
+;;                *model_uv_holo[1]=Temporary(holo2_return)
+;;            ENDELSE
+;            t4+=Systime(1)-t4_0
+;        ENDIF ELSE BEGIN
+;            flux_vec=comp_arr[si_use].flux.I/2.
+;            x_vec=comp_arr[si_use].x
+;            y_vec=comp_arr[si_use].y
+;            flux_vec2=comp_arr[si_use].flux.U/2.
+;            flux_arr=[[flux_vec],[flux_vec2]]
+;            source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
+;            FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,0]
+;            FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,1]
+;            
+;            t4_0=Systime(1)
+;            t3+=t4_0-t3_0
+;            FOR pol_i=0,n_pol-1 DO BEGIN
+;                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+;            ENDFOR
+;            t4+=Systime(1)-t4_0
+;        ENDELSE
+;    ENDIF ELSE BEGIN
+;        x_vec=comp_arr[si_use].x
+;        y_vec=comp_arr[si_use].y
+;        
+;        flux_arr=fltarr(n_si_use,n_pol)
+;        flux_index_arr1=[4,4,6,6]
+;        flux_index_arr2=[5,5,7,7]
+;        sign_arr=[1.,-1.,1.,-1.]
+;        FOR pol_i=0,n_pol-1 DO flux_arr[*,pol_i]=$
+;            (comp_arr[si_use].flux.(flux_index_arr1[pol_i])+sign_arr[pol_i]*comp_arr[si_use].flux.(flux_index_arr2[pol_i]))/2.
+;        source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
+;        FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,pol_i]
+;        
+;        t4_0=Systime(1)
+;        t3+=t4_0-t3_0
+;        FOR pol_i=0,n_pol-1 DO BEGIN
+;            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
 ;        ENDFOR
-    ENDELSE
+;        t4+=Systime(1)-t4_0
+;;        FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,1]
+;;        FOR src_i=0L,n_si_use-1 DO BEGIN
+;;            si1=si_use[src_i]
+;;            source_uv_vals=source_dft(comp_arr[si1].x,comp_arr[si1].y,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix)
+;;            
+;;            FOR pol_i=0,n_pol-1 DO BEGIN
+;;                beam_corr_src=(*beam_correction[pol_i])[comp_arr[si1].x,comp_arr[si1].y]
+;;                (*model_uv_full[pol_i])[uv_i_use2]+=comp_arr[si1].flux.(pol_i)*beam_corr_src*source_uv_vals
+;;            ENDFOR
+;;        ENDFOR
+;    ENDELSE
     
     
     IF si GE max_sources THEN BEGIN
