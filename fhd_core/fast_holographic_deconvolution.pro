@@ -110,8 +110,6 @@ model_uv_stks=Ptrarr(4,/allocate)
 source_comp_init,comp_arr,n_sources=max_sources
 pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
 
-pol_cut=1-histogram(pol_use,min=0,bin=1,nbins=n_pol)
-
 ;load holo map functions and initialize output arrays
 dirty_image_composite=fltarr(dimension,elements)
 dirty_image_composite_Q=fltarr(dimension,elements)
@@ -125,12 +123,14 @@ IF Keyword_Set(transfer_mapfn) THEN BEGIN
 ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    IF pol_cut[pol_i] THEN CONTINUE
 ;    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
         restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i]=Temporary(map_fn)
     ENDIF
+ENDFOR
+
+FOR pol_i=0,n_pol-1 DO BEGIN
     weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
     weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
     source_uv_mask[where(*image_uv_arr[pol_i])]=1.
@@ -239,7 +239,6 @@ FOR i=0L,max_iter-1 DO BEGIN
         model_image_composite_U=fltarr(dimension,elements)
         model_image_composite_V=fltarr(dimension,elements)
         FOR pol_i=0,n_pol-1 DO BEGIN 
-            IF pol_cut[pol_i] THEN CONTINUE
             model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix)
             model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
             
