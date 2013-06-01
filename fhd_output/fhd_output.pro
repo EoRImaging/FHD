@@ -451,7 +451,7 @@ IF npol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
 source_array_export,comp_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_component_list2'
 
 residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
-    file_path_base=image_path,_Extra=extra
+    file_path_base=image_path_fg,_Extra=extra
 
 t10=Systime(1)-t10b
 t00=Systime(1)-t0a
