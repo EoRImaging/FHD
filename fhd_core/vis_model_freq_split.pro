@@ -123,9 +123,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
         n_vis_use+=n_vis
         IF Keyword_Set(fft) THEN BEGIN
-            *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,_Extra=extra,degpix=degpix)*n_vis
-            *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,_Extra=extra,degpix=degpix)*n_vis
-            *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo,_Extra=extra,degpix=degpix)*n_vis
+            *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,degpix=degpix)*n_vis
+            *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,degpix=degpix)*n_vis
+            *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo,degpix=degpix)*n_vis
         ENDIF ELSE BEGIN
             *residual_arr[pol_i,fi]=dirty_uv*n_vis
             *weights_arr[pol_i,fi]=weights_holo*n_vis

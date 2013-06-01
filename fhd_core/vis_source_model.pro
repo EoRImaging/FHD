@@ -27,6 +27,7 @@ pol_names=['xx','yy','xy','yx']
 n_pol=obs.n_pol
 dimension=obs.dimension
 elements=obs.elements
+degpix=obs.degpix
 kbinsize=obs.kpix
 kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
@@ -35,9 +36,9 @@ icomp=Complex(0,1)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 IF ~Keyword_Set(uv_mask) THEN uv_mask=Fltarr(dimension,elements)+1
-uv_use_i=where(uv_mask)
-xvals=xvals[uv_use_i]
-yvals=yvals[uv_use_i]
+uv_i_use=where(uv_mask)
+xvals=xvals[uv_i_use]
+yvals=yvals[uv_i_use]
 
 freq_bin_i=obs.fbin_i
 nfreq_bin=Max(freq_bin_i)+1
@@ -60,27 +61,33 @@ n_sources=N_Elements(source_list)
 
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     t_model0=Systime(1)
-    beam_corr_src=fltarr(n_pol,n_sources)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        beam_single=beam_image(psf,pol_i=pol_i,dimension=obs.dimension)
-        beam_corr_single=weight_invert(beam_single)
-        beam_corr_src[pol_i,*]=beam_corr_single[source_list.x,source_list.y]
-    ENDFOR
-    
     model_uv_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(dimension,elements)
-    
-    FOR si=0.,n_sources-1 DO BEGIN
-        source_uv=Exp(icomp*(2.*!Pi/dimension)*((source_list[si].x-dimension/2.)*xvals+(source_list[si].y-elements/2.)*yvals))
-        FOR pol_i=0,n_pol-1 DO (*model_uv_arr[pol_i])[uv_use_i]+=source_list[si].flux.(pol_i)*beam_corr_src[pol_i,si]*source_uv
-        
-    ENDFOR
+    model_uv_stks=Ptrarr(4,/allocate)
+    flux_I=source_list.flux.I
+    flux_Q=source_list.flux.Q
+    flux_U=source_list.flux.U
+    flux_V=source_list.flux.V
+    x_vec=source_list.x
+    y_vec=source_list.y
+    *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
+    IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
+        ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 
+    IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
+        ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U)
+    IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
+        ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V)
+    SWITCH n_pol OF
+        4:(*model_uv_arr[3])[uv_i_use]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
+        3:(*model_uv_arr[2])[uv_i_use]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.
+        2:(*model_uv_arr[1])[uv_i_use]+=(*model_uv_stks[0]-*model_uv_stks[1])/2.
+        1:(*model_uv_arr[0])[uv_i_use]+=(*model_uv_stks[0]+*model_uv_stks[1])/2.
+    ENDSWITCH
     t_model=Systime(1)-t_model0
     IF ~Keyword_Set(silent) THEN print,"DFT timing: ",strn(t_model)
 ENDIF
 
-vis_arr=Ptrarr(n_pol,/allocate)
-n_sources=(size(source_list,/dimension)) ;??
+vis_arr=Ptrarr(n_pol)
 
 psf_base=psf.base
 psf_residuals_n=psf.res_n
@@ -90,28 +97,8 @@ psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-;    vis_single=Complexarr(n_freq,vis_dimension)
-;    FOR bi=0L,nbaselines-1 DO BEGIN
-;        baseline_i=bi mod nbaselines
-;        IF Keyword_Set(flag_switch) THEN IF Total((*flag_arr[pol_i])[*,bi+bin_offset]) EQ 0 THEN CONTINUE
-;        IF kx_arr[bi] EQ 0 THEN CONTINUE ;skip the auto-correlations
-;        FOR fi=0L,n_freq-1 DO BEGIN
-;            freq_i=freq_bin_i[fi]
-;            IF Keyword_Set(flag_switch) THEN IF Total((*flag_arr[pol_i])[fi,bi+bin_offset]) EQ 0 THEN CONTINUE
-;            freq=frequency_array[fi]
-;            
-;            FOR ti=0L,n_samples-1 DO BEGIN
-;                bi_use=bi+bin_offset[ti]
-;                IF Keyword_Set(flag_switch) THEN IF (*flag_arr[pol_i])[fi,bi_use] EQ 0 THEN CONTINUE
-;                vis_single[fi,bi_use]=visibility_psf(psf_base, psf_residuals_n, psf_residuals_i, psf_residuals_val,$
-;                    freq_i=freq_i,baseline_i=baseline_i,xcenter=kx_arr[bi_use]*freq,$
-;                    ycenter=ky_arr[bi_use]*freq,image_sample=*model_uv_arr[pol_i],dimension=dimension,$
-;                    polarization=pol_i,psf_dim=psf_dim,psf_resolution=psf_resolution)
-;            ENDFOR
-;        ENDFOR
-;    ENDFOR
     vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_arr[pol_i],obs,psf,params,/silent,$
-        timing=t_degrid0,polarization=pol_i,complex=complex,double=double,_Extra=extra)
+        timing=t_degrid0,polarization=pol_i,complex=complex,double=double)
     IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid0)
 ENDFOR
 

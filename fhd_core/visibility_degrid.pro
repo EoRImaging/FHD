@@ -5,6 +5,7 @@ t0=Systime(1)
 heap_gc
 
 pol_names=['xx','yy','xy','yx']
+IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
 
 ;extract information from the structures
 dimension=Float(obs.dimension)
@@ -115,9 +116,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO BEGIN
-;        psf_use=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
-;;        psf_use=Abs(*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]) ;temporary addition while I transition to complex beams!
-;        box_matrix[ii,*]=Reform(psf_use,psf_dim*psf_dim,/overwrite)   
         box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]     
     ENDFOR
 
