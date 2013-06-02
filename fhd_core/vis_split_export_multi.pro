@@ -113,15 +113,15 @@ FOR obs_i=0,n_obs-1 DO BEGIN
        
     
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=
+        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
             healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
-        (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=
+        (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
             healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
-        (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=
+        (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
             healpix_cnv_apply(*model_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
-        (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=
+        (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
             healpix_cnv_apply(*weights_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
-        (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=
+        (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
             healpix_cnv_apply(*variance_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
     ENDFOR
 ;    hpx_cnv=healpix_cnv_generate(obs,nside=nside,/restore_last,file_path=file_path,/silent)
