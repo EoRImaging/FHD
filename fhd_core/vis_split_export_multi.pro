@@ -18,6 +18,12 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     file_path=fhd_file_list[obs_i]
     restore,file_path+'_obs.sav'    
     IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs) ELSE obs_arr[obs_i]=obs
+    astr=obs.astr
+    pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(astr.cdelt))
+    Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
+    
+    IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
+    nside_use=nside_use>Nside_chk
 ENDFOR
 
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
