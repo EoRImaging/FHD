@@ -26,6 +26,11 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     nside_use=nside_use>Nside_chk
 ENDFOR
 
+n_pol=Min(obs_arr.n_pol)
+n_freq=Min(obs_arr.n_freq)
+IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/Max(obs_arr.fbin_i+1)))
+n_freq_use=n_freq/n_avg
+
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 hpx_cnv=Ptrarr(n_obs,/allocate)
 FOR obs_i=0.,n_obs-1 DO BEGIN
@@ -72,10 +77,6 @@ hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds);,reverse_ind=reverse
 n_hpx=N_Elements(hpx_inds)
 ;hind0=histogram(hpx_inds,/bin,omin=hpx_ind_min,omax=hpx_ind_max,reverse_ind=ri0)
 
-n_pol=Min(obs_arr.n_pol)
-n_freq=Min(obs_arr.n_freq)
-IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/Max(obs_arr.fbin_i+1)))
-n_freq_use=n_freq/n_avg
 ;n_hpx=N_Elements(hpx_inds)
 residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
