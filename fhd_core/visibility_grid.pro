@@ -26,7 +26,8 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,we
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
-    return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,model_ptr=model_ptr,_Extra=extra
+    return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
+    model_ptr=model_ptr,model_return=model_return,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -44,12 +45,19 @@ max_baseline=obs.max_baseline
 freq_bin_i=obs.fbin_i
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
-IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=*visibility_ptr ELSE vis_arr_use=Temporary(*visibility_ptr)
-IF Keyword_Set(model_ptr) THEN $
-    IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=*model_ptr $
-    ELSE vis_arr_use-=Temporary(*model_ptr)
-vis_arr_use=vis_arr_use[fi_use,*]
-
+IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[fi_use,*] ELSE vis_arr_use=(Temporary(*visibility_ptr))[fi_use,*] 
+model_flag=0
+IF Keyword_Set(model_ptr) THEN BEGIN
+    IF Arg_present(model_return) THEN BEGIN
+        IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[fi_use,*] $
+        ELSE model_use=(Temporary(*model_ptr))[fi_use,*]
+        model_return=Complexarr(dimension,elements)
+        model_flag=1
+    ENDIF ELSE BEGIN
+        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[fi_use,*] $
+        ELSE vis_arr_use-=(Temporary(*model_ptr))[fi_use,*]
+    ENDELSE
+ENDIF
 frequency_array=(obs.freq)[fi_use]
 
 IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
@@ -83,6 +91,7 @@ IF n_conj GT 0 THEN BEGIN
     xcen[*,conj_i]=-xcen[*,conj_i]
     ycen[*,conj_i]=-ycen[*,conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
+    IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
 ENDIF
  
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
@@ -214,6 +223,11 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0   
+    IF Keyword_Set(model_flag) THEN BEGIN
+        model_box=model_use[inds]
+        box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose)
+        model_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
+    ENDIF
     box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
 ;    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Reform((box_arr),psf_dim,psf_dim)

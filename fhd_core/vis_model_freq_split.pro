@@ -111,9 +111,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
 ;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
 ;        vis_use1=vis_use[fi_use,*]
+        IF Ptr_valid(model_ptr) THEN model_return=1
         dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,/preserve_visibilities,$
             polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,$
-            model_ptr=model_ptr,n_vis=n_vis)
+            model_ptr=model_ptr,n_vis=n_vis,model_return=model_return)
         IF n_vis EQ 0 THEN BEGIN
             IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
             *residual_arr[pol_i,fi]=init_arr

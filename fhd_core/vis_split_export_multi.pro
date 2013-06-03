@@ -78,27 +78,28 @@ n_hpx=N_Elements(hpx_inds)
 ;hind0=histogram(hpx_inds,/bin,omin=hpx_ind_min,omax=hpx_ind_max,reverse_ind=ri0)
 
 ;n_hpx=N_Elements(hpx_inds)
-residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+t_hpx=0.
+;residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 dirty_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 weights_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 variance_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     FOR freq_i=0,n_freq_use-1 DO BEGIN
-        *residual_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
+;        *residual_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *model_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *dirty_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *weights_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
         *variance_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
     ENDFOR
 ENDFOR    
+t_hpx=Systime(1)-t_hpx
 FOR obs_i=0,n_obs-1 DO BEGIN 
     fhd_path=fhd_file_list[obs_i]
     vis_path=vis_file_list[obs_i]
     
     print,"Frequency splitting: "+file_basename(vis_path,'_cal.uvfits',/fold_case)
     restore,fhd_path+'_beams.sav' ;psf
-;    restore,fhd_path+'_obs.sav' ;obs now restored earlier
     ; *_fhd.sav contains:
     ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     ;    beam_base,beam_correction,ra_arr,dec_arr,astr
@@ -118,81 +119,68 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     model_arr1=vis_model_freq_split(source_array,obs,psf,fhd_file_path=fhd_path,vis_file_path=vis_path,$
         n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask,even_only=even_only,odd_only=odd_only,_Extra=extra)
        
-    
+    t_hpx0=Systime(1)
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
-            healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
+;        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
+;            healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
+        IF Total(*dirty_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
         (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
-            healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
+            healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],hpx_cnv[obs_i])
         (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
-            healpix_cnv_apply(*model_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
+            healpix_cnv_apply(*model_arr1[pol_i,freq_i],hpx_cnv[obs_i])
         (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
-            healpix_cnv_apply(*weights_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
+            healpix_cnv_apply(*weights_arr1[pol_i,freq_i],hpx_cnv[obs_i])
         (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
-            healpix_cnv_apply(*variance_arr1[pol_i,freq_i],*hpx_cnv[obs_i])
+            healpix_cnv_apply(*variance_arr1[pol_i,freq_i],hpx_cnv[obs_i])
     ENDFOR
-;    hpx_cnv=healpix_cnv_generate(obs,nside=nside,/restore_last,file_path=file_path,/silent)
-;    hind1=histogram(hpx_cnv.inds,/bin,min=hpx_ind_min,max=hpx_ind_max,reverse_ind=ri1)
-;    n_ref1=Total(hind1)
-;    
-;    hpx_ind_i=where(hind0*hind1,n_ref)
-;    
-;    hpx_ind_map1=ri1[ri1[hpx_ind_i]]
-;    hpx_ind_map0=ri0[ri0[hpx_ind_i]]
-;    FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-;        (*residual_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
-;            (healpix_cnv_apply(*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-;        (*dirty_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
-;            (healpix_cnv_apply(*dirty_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-;        (*model_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
-;            (healpix_cnv_apply(*model_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-;        (*weights_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
-;            (healpix_cnv_apply(*weights_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-;        (*variance_hpx_arr[pol_i,freq_i])[hpx_ind_map0]+=$
-;            (healpix_cnv_apply(*variance_arr1[pol_i,freq_i],hpx_cnv))[hpx_ind_map1]
-;    ENDFOR
+    t_hpx1=Systime(1)
+    t_hpx+=t_hpx1-t_hpx0
+    
 ENDFOR
 
 dirty_xx_cube=fltarr(n_hpx,n_freq_use)
 dirty_yy_cube=fltarr(n_hpx,n_freq_use)
 FOR fi=0L,n_freq_use-1 DO BEGIN
-    dirty_xx_cube[*,fi]=*dirty_hpx_arr[0,fi]
-    dirty_yy_cube[*,fi]=*dirty_hpx_arr[1,fi]
+    ;write index in much more efficient memory access order
+    dirty_xx_cube[n_hpx*fi]=Temporary(*dirty_hpx_arr[0,fi])
+    dirty_yy_cube[n_hpx*fi]=Temporary(*dirty_hpx_arr[1,fi])
 ENDFOR
 Ptr_free,dirty_hpx_arr
-
-res_xx_cube=fltarr(n_hpx,n_freq_use)
-res_yy_cube=fltarr(n_hpx,n_freq_use)
-FOR fi=0L,n_freq_use-1 DO BEGIN
-    res_xx_cube[*,fi]=*residual_hpx_arr[0,fi]
-    res_yy_cube[*,fi]=*residual_hpx_arr[1,fi]
-ENDFOR
-Ptr_free,residual_hpx_arr
 
 model_xx_cube=fltarr(n_hpx,n_freq_use)
 model_yy_cube=fltarr(n_hpx,n_freq_use)
 FOR fi=0L,n_freq_use-1 DO BEGIN
-    model_xx_cube[*,fi]=*model_hpx_arr[0,fi]
-    model_yy_cube[*,fi]=*model_hpx_arr[1,fi]
+    model_xx_cube[n_hpx*fi]=Temporary(*model_hpx_arr[0,fi])
+    model_yy_cube[n_hpx*fi]=Temporary(*model_hpx_arr[1,fi])
 ENDFOR
 Ptr_free,model_hpx_arr
+
+;res_xx_cube=dirty_xx_cube-model_xx_cube
+;res_yy_cube=dirty_yy_cube-model_yy_cube
+;res_xx_cube=fltarr(n_hpx,n_freq_use)
+;res_yy_cube=fltarr(n_hpx,n_freq_use)
+;FOR fi=0L,n_freq_use-1 DO BEGIN
+;    res_xx_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[0,fi])
+;    res_yy_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[1,fi])
+;ENDFOR
+;Ptr_free,residual_hpx_arr
 
 weights_xx_cube=fltarr(n_hpx,n_freq_use)
 weights_yy_cube=fltarr(n_hpx,n_freq_use)
 FOR fi=0L,n_freq_use-1 DO BEGIN
-    weights_xx_cube[*,fi]=*weights_hpx_arr[0,fi]
-    weights_yy_cube[*,fi]=*weights_hpx_arr[1,fi]
+    weights_xx_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[0,fi])
+    weights_yy_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[1,fi])
 ENDFOR
 Ptr_free,weights_hpx_arr
 
 variance_xx_cube=fltarr(n_hpx,n_freq_use)
 variance_yy_cube=fltarr(n_hpx,n_freq_use)
 FOR fi=0L,n_freq_use-1 DO BEGIN
-    variance_xx_cube[*,fi]=*variance_hpx_arr[0,fi]
-    variance_yy_cube[*,fi]=*variance_hpx_arr[1,fi]
+    variance_xx_cube[n_hpx*fi]=Temporary(*variance_hpx_arr[0,fi])
+    variance_yy_cube[n_hpx*fi]=Temporary(*variance_hpx_arr[1,fi])
 ENDFOR
 Ptr_free,variance_hpx_arr
 
-save,filename=cube_filepath,dirty_xx_cube,res_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,$
-    dirty_yy_cube,res_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,obs_arr,nside,hpx_inds,n_avg,/compress
+save,filename=cube_filepath,dirty_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,$
+    dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,obs_arr,nside,hpx_inds,n_avg
 END
