@@ -30,13 +30,18 @@ Ptr_free,model_arr
 
 n_pol=N_Elements(image_uv_arr)
 IF N_Elements(map_fn_arr) EQ 0 THEN BEGIN
+    
+    map_fn_free_flag=1
     map_fn_arr=Ptrarr(n_pol,/allocate)
+    
     file_path_mapfn=file_path_fhd+'_mapfn_'
     pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
-    restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-    *map_fn_arr[pol_i]=Temporary(map_fn)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+        *map_fn_arr[pol_i]=Temporary(map_fn)
+    ENDFOR
 ;    FOR pol_i=0,n_pol-1 DO *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
-ENDIF
+ENDIF ELSE map_fn_free_flag=0
 
 model_uv=Ptrarr(n_pol)
 model_uv_holo=Ptrarr(n_pol)
@@ -99,6 +104,7 @@ galaxy_model_uv=model_uv
 ;    scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
 ;ENDFOR
   
+IF map_fn_free_flag THEN Ptr_free,map_fn_arr
 IF Keyword_Set(file_path_galmodel) THEN $
     save,model_img_holo,galaxy_model_img,galaxy_model_uv,model_uv_holo,filename=file_path_galmodel
 IF Keyword_Set(uv_return) THEN RETURN,model_uv_holo ELSE RETURN,model_img_holo 
