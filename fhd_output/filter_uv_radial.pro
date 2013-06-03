@@ -1,4 +1,4 @@
-FUNCTION filter_uv_radial,image_uv,name=name,weights=weights,filter=filter,_Extra=extra
+FUNCTION filter_uv_radial,image_uv,name=name,weights=weights,filter=filter,radial_power=radial_power,_Extra=extra
 name='radial'
 ;IF N_Elements(filter) EQ N_Elements(image_uv) THEN RETURN,image_uv*filter
 IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
@@ -9,7 +9,7 @@ radial_map=fft_shift(dist(dimension,elements))
 rad_hist=histogram(radial_map,min=1,/binsize,reverse_ind=ri)
 rad_bin=where(rad_hist,n_bin)
 
-filter_use=Sqrt(radial_map)
+IF Keyword_Set(radial_power) THEN filter_use=radial_map^radial_power ELSE filter_use=Sqrt(radial_map)
 wts_i=where(weights,n_wts)
 IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)
 

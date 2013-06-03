@@ -425,75 +425,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
     ENDFOR
-    t4+=Systime(1)-t4_0
-;    IF ~Keyword_Set(independent_fit) THEN BEGIN
-;        IF n_pol LE 2 THEN BEGIN
-;            flux_vec=comp_arr[si_use].flux.I/2.
-;            x_vec=comp_arr[si_use].x
-;            y_vec=comp_arr[si_use].y
-;            source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_vec)
-;            FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals
-;            
-;            t4_0=Systime(1)
-;            t3+=t4_0-t3_0
-;            FOR pol_i=0,n_pol-1 DO BEGIN
-;                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
-;            ENDFOR
-;;            IF n_pol EQ 1 THEN $
-;;                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],_Extra=extra,/indexed)*normalization $
-;;            ELSE BEGIN
-;;                *model_uv_holo[0]=holo_mapfn_apply(*model_uv_full[0],map_fn_arr[0],map_fn2=map_fn_arr[1],holo2_return=holo2_return,_Extra=extra,/indexed)*normalization
-;;                *model_uv_holo[1]=Temporary(holo2_return)
-;;            ENDELSE
-;            t4+=Systime(1)-t4_0
-;        ENDIF ELSE BEGIN
-;            flux_vec=comp_arr[si_use].flux.I/2.
-;            x_vec=comp_arr[si_use].x
-;            y_vec=comp_arr[si_use].y
-;            flux_vec2=comp_arr[si_use].flux.U/2.
-;            flux_arr=[[flux_vec],[flux_vec2]]
-;            source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
-;            FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,0]
-;            FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,1]
-;            
-;            t4_0=Systime(1)
-;            t3+=t4_0-t3_0
-;            FOR pol_i=0,n_pol-1 DO BEGIN
-;                *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
-;            ENDFOR
-;            t4+=Systime(1)-t4_0
-;        ENDELSE
-;    ENDIF ELSE BEGIN
-;        x_vec=comp_arr[si_use].x
-;        y_vec=comp_arr[si_use].y
-;        
-;        flux_arr=fltarr(n_si_use,n_pol)
-;        flux_index_arr1=[4,4,6,6]
-;        flux_index_arr2=[5,5,7,7]
-;        sign_arr=[1.,-1.,1.,-1.]
-;        FOR pol_i=0,n_pol-1 DO flux_arr[*,pol_i]=$
-;            (comp_arr[si_use].flux.(flux_index_arr1[pol_i])+sign_arr[pol_i]*comp_arr[si_use].flux.(flux_index_arr2[pol_i]))/2.
-;        source_uv_vals=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
-;        FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,pol_i]
-;        
-;        t4_0=Systime(1)
-;        t3+=t4_0-t3_0
-;        FOR pol_i=0,n_pol-1 DO BEGIN
-;            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
-;        ENDFOR
-;        t4+=Systime(1)-t4_0
-;;        FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use2]+=source_uv_vals[*,1]
-;;        FOR src_i=0L,n_si_use-1 DO BEGIN
-;;            si1=si_use[src_i]
-;;            source_uv_vals=source_dft(comp_arr[si1].x,comp_arr[si1].y,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix)
-;;            
-;;            FOR pol_i=0,n_pol-1 DO BEGIN
-;;                beam_corr_src=(*beam_correction[pol_i])[comp_arr[si1].x,comp_arr[si1].y]
-;;                (*model_uv_full[pol_i])[uv_i_use2]+=comp_arr[si1].flux.(pol_i)*beam_corr_src*source_uv_vals
-;;            ENDFOR
-;;        ENDFOR
-;    ENDELSE
-    
+    t4+=Systime(1)-t4_0    
     
     IF si GE max_sources THEN BEGIN
         i2+=1                                        
@@ -536,7 +468,11 @@ ENDIF
 noise_map=Stddev(source_find_image[where(source_mask)],/nan)*weight_invert(beam_avg)
 comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,reject_sigma_threshold=sigma_threshold)
-
+model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+ENDFOR
+    
 FOR pol_i=0,n_pol-1 DO BEGIN
     *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix)*(*beam_correction[pol_i])
 ENDFOR  

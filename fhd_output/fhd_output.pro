@@ -1,7 +1,7 @@
-PRO fhd_output,obs,fhd, file_path_fhd=file_path_fhd,version=version,$
+PRO fhd_output,obs,fhd, file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
     noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,$
     fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
-    pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,_Extra=extra
+    pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
@@ -47,7 +47,7 @@ restore,file_path_fhd+'_params.sav' ;params
 restore,file_path_fhd+'_hdr.sav' ;hdr
 
 IF N_Elements(normalization_arr) GT 0 THEN normalization=Mean(normalization_arr)/2.
-npol=fhd.npol
+n_pol=fhd.npol
 dimension_uv=obs.dimension
 
 IF Keyword_Set(pad_uv_image) THEN BEGIN
@@ -109,13 +109,33 @@ t0+=t1a-t0a
 
 ;IF not Keyword_Set(restore_last) THEN BEGIN
 
-;    map_fn_arr=Ptrarr(npol,/allocate)
     pol_names=['xx','yy','xy','yx','I','Q','U','V']
-;    FOR pol_i=0,npol-1 DO BEGIN
-;        file_name_base='_mapfn_'+pol_names[pol_i]
-;        restore,file_path_fhd+file_name_base+'.sav' ;map_fn
-;        *map_fn_arr[pol_i]=map_fn
+    IF Keyword_Set(model_recalculate) OR Keyword_Set(galaxy_model_fit) THEN BEGIN
+        IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
+        IF N_Elements(*map_fn_arr[0]) EQ 0 THEN BEGIN
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                file_name_base='_mapfn_'+pol_names[pol_i]
+                restore,file_path_fhd+file_name_base+'.sav' ;map_fn
+                *map_fn_arr[pol_i]=map_fn
+            ENDFOR
+        ENDIF
+    ENDIF
+    
+;    source_uv_mask=fltarr(size(*image_uv_arr[0],/dimension))
+;    FOR pol_i=0,n_pol-1 DO BEGIN
+;        mask_i=where(*image_uv_arr[pol_i],n_mask_use)
+;        IF n_mask_use GT 0 THEN source_uv_mask[mask_i]=1
 ;    ENDFOR
+;    IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
+    
+    IF Keyword_Set(model_recalculate) THEN BEGIN
+        uv_mask=fltarr(dimension,elements)
+        FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
+        model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+        ENDFOR
+    ENDIF
     psf=beam_setup(obs_out,file_path_fhd,/restore_last,/silent)
     t2a=Systime(1)
     t1+=t2a-t1a
@@ -123,9 +143,9 @@ t0+=t1a-t0a
     ;beam_threshold=0.05
     beam_mask=fltarr(dimension,elements)+1
     beam_avg=fltarr(dimension,elements)
-    beam_base_out=Ptrarr(npol,/allocate)
-    beam_correction_out=Ptrarr(npol,/allocate)
-    FOR pol_i=0,(npol<2)-1 DO BEGIN
+    beam_base_out=Ptrarr(n_pol,/allocate)
+    beam_correction_out=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
         *beam_base_out[pol_i]=Rebin(*beam_base[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
         *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold/100.)
         beam_mask_test=*beam_base_out[pol_i]
@@ -136,26 +156,19 @@ t0+=t1a-t0a
     ENDFOR
     psf=0
     heap_gc
-;    FOR pol_i=0,(npol<2)-1 DO *beam_correction_out[pol_i]*=beam_mask
-    beam_avg/=(npol<2)
+;    FOR pol_i=0,(n_pol<2)-1 DO *beam_correction_out[pol_i]*=beam_mask
+    beam_avg/=(n_pol<2)
     beam_i=where(beam_mask)
     
     t3a=Systime(1)
     t2+=t3a-t2a
     
-    dirty_images=Ptrarr(npol,/allocate)
-    instr_images=Ptrarr(npol,/allocate)
-    instr_sources=Ptrarr(npol,/allocate)
+    dirty_images=Ptrarr(n_pol,/allocate)
+    instr_images=Ptrarr(n_pol,/allocate)
+    instr_sources=Ptrarr(n_pol,/allocate)
     
-    model_uv_arr=Ptrarr(npol,/allocate)
-    model_holo_arr=Ptrarr(npol,/allocate)
-    
-    source_uv_mask=fltarr(size(*image_uv_arr[0],/dimension))
-    FOR pol_i=0,npol-1 DO BEGIN
-        mask_i=where(*image_uv_arr[pol_i],n_mask_use)
-        IF n_mask_use GT 0 THEN source_uv_mask[mask_i]=1
-    ENDFOR
-    IF Total(source_uv_mask) EQ 0 THEN source_uv_mask+=1
+    model_uv_arr=Ptrarr(n_pol,/allocate)
+    model_holo_arr=Ptrarr(n_pol,/allocate)
     
     ;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
@@ -167,9 +180,9 @@ t0+=t1a-t0a
         gal_holo_uv=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
             galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1,uv_return=1)
         gal_name='_galfit'
-        gal_model_img=Ptrarr(npol)
-        gal_holo_img=Ptrarr(npol)
-        FOR pol_i=0,npol-1 DO BEGIN
+        gal_model_img=Ptrarr(n_pol)
+        gal_holo_img=Ptrarr(n_pol)
+        FOR pol_i=0,n_pol-1 DO BEGIN
             gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
                 image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_base_out[pol_i])/(obs.degpix*obs.dimension)^2.)
             gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,weights=*weights_arr[pol_i],$
@@ -177,10 +190,10 @@ t0+=t1a-t0a
         ENDFOR
     ENDIF ELSE BEGIN
         gal_name=''
-        gal_holo_uv=Ptrarr(npol)
-        FOR pol_i=0,npol-1 DO gal_holo_uv[pol_i]=Ptr_new(0.)
+        gal_holo_uv=Ptrarr(n_pol)
+        FOR pol_i=0,n_pol-1 DO gal_holo_uv[pol_i]=Ptr_new(0.)
     ENDELSE
-    FOR pol_i=0,npol-1 DO BEGIN
+    FOR pol_i=0,n_pol-1 DO BEGIN
 ;        *model_uv_arr[pol_i]=source_array_model(source_arr,pol_i=pol_i,dimension=dimension_uv,$
 ;            beam_correction=beam_correction,mask=source_uv_mask)
 ;        *model_holo_arr[pol_i]=holo_mapfn_apply(*model_uv_arr[pol_i],*map_fn_arr[pol_i],_Extra=extra)*normalization
@@ -287,7 +300,7 @@ t0+=t1a-t0a
         res_Is=(res_I-median(res_I,5))
         noise_floor=noise_calibrate
         calibration=noise_floor/Stddev(res_Is[beam_i])
-        FOR pol_i=0,npol-1 DO BEGIN
+        FOR pol_i=0,n_pol-1 DO BEGIN
             *instr_images[pol_i]*=calibration
             *dirty_images[pol_i]*=calibration
             *stokes_images[pol_i]*=calibration
@@ -319,7 +332,7 @@ y_inc=Floor(beam_i/dimension)
 zoom_low=min(x_inc)<min(y_inc)
 zoom_high=max(x_inc)>max(y_inc)
     
-FOR pol_i=0,npol-1 DO BEGIN
+FOR pol_i=0,n_pol-1 DO BEGIN
     instr_residual=*instr_images[pol_i]
     instr_dirty=*dirty_images[pol_i]
     instr_source=*instr_sources[pol_i]
@@ -439,7 +452,7 @@ Ires=(Qres=fltarr(N_Elements(source_arr_out)))
 cx=Round(source_arr_out.x) & cy=Round(source_arr_out.y)
 ind_use=where((cx<cy GE 0) AND (cx>cy LE (obs_out.dimension<obs_out.elements)-1))  
 Ires[ind_use]=(*stokes_images[0])[cx[ind_use],cy[ind_use]]
-IF npol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
+IF n_pol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
 source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list2'
 
 radius=angle_difference(obs_out.obsdec,obs_out.obsra,comp_arr.dec,comp_arr.ra,/degree)
@@ -447,7 +460,7 @@ Ires=(Qres=fltarr(N_Elements(comp_arr_out)))
 cx=Round(comp_arr_out.x) & cy=Round(comp_arr_out.y)
 ind_use=where((cx<cy GE 0) AND (cx>cy LE (obs_out.dimension<obs_out.elements)-1))  
 Ires[ind_use]=(*stokes_images[0])[cx[ind_use],cy[ind_use]]
-IF npol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
+IF n_pol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
 source_array_export,comp_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_component_list2'
 
 residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
