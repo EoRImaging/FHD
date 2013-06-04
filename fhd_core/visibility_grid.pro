@@ -43,23 +43,41 @@ min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
 freq_bin_i=obs.fbin_i
+n_freq=Long(obs.n_freq)
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
 
-IF N_Elements(bi_use) EQ 0 THEN BEGIN
-
+IF Keyword_Set(flag_ptr) THEN BEGIN
+    IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
 ENDIF
-IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[fi_use,bi_use] ELSE vis_arr_use=(Temporary(*visibility_ptr))[fi_use,bi_use] 
+
+IF N_Elements(bi_use) EQ 0 THEN BEGIN
+    IF Keyword_Set(flag_arr) THEN BEGIN
+        flag_test=Total(flag_arr>0,1)
+        bi_use=where(flag_test)
+    ENDIF ELSE BEGIN
+        b_info=*(obs.baseline_info)
+        tile_use=(b_info.tile_names)[b_info.tile_use]
+        
+        bi_use=where((b_info.tile_A EQ tile_use) OR (b_info.tile_B EQ tile_use))
+    ENDELSE
+ENDIF
+n_b_use=N_Elements(bi_use)
+n_f_use=N_Elements(fi_use)
+
+vis_inds_use=matrix_multiply(fi_use,replicate(1L,n_b_use))+matrix_multiply(replicate(1L,n_f_use),bi_use)*n_freq
+IF Keyword_Set(flag_arr) THEN flag_arr=flag_arr[vis_inds_use]
+IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[vis_inds_use] ELSE vis_arr_use=(Temporary(*visibility_ptr))[vis_inds_use] 
 model_flag=0
 IF Keyword_Set(model_ptr) THEN BEGIN
     IF Arg_present(model_return) THEN BEGIN
-        IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[fi_use,bi_use] $
-        ELSE model_use=(Temporary(*model_ptr))[fi_use,bi_use]
+        IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[vis_inds_use] $
+        ELSE model_use=(Temporary(*model_ptr))[vis_inds_use]
         model_return=Complexarr(dimension,elements)
         model_flag=1
     ENDIF ELSE BEGIN
-        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[fi_use,bi_use] $
-        ELSE vis_arr_use-=(Temporary(*model_ptr))[fi_use,bi_use]
+        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[vis_inds_use] $
+        ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
     ENDELSE
 ENDIF
 frequency_array=(obs.freq)[fi_use]
@@ -72,10 +90,10 @@ psf_resolution=(Size(psf_base,/dimension))[2]
 flag_switch=Keyword_Set(flag_ptr)
 weights_flag=Arg_present(weights)
 variance_flag=Arg_present(variance)
-kx_arr=params[bi_use].uu/kbinsize
-ky_arr=params[bi_use].vv/kbinsize
+kx_arr=params.uu[bi_use]/kbinsize
+ky_arr=params.vv[bi_use]/kbinsize
 
-n_frequencies=N_Elements(frequency_array)
+n_freq1=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
 
 image_uv=Complexarr(dimension,elements)
@@ -118,9 +136,7 @@ IF n_dist_flag GT 0 THEN BEGIN
     ymin[flag_dist_i]=-1
 ENDIF
 
-IF Keyword_Set(flag_ptr) THEN BEGIN
-    IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
-    flag_arr=flag_arr[fi_use,bi_use]
+IF Keyword_Set(flag_arr) THEN BEGIN
     flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
     flag_arr=0
     IF n_unflag EQ 0 THEN BEGIN
@@ -212,7 +228,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
 
-    freq_i=(inds mod n_frequencies)
+    freq_i=(inds mod n_freq1)
     fbin=freq_bin_i[freq_i]
     
     vis_n=bin_n[bin_i[bi]]
