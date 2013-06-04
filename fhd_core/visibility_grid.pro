@@ -24,10 +24,10 @@
 ;-
 FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
-    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,preserve_visibilities=preserve_visibilities,$
+    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,bi_use=bi_use,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
-    model_ptr=model_ptr,model_return=model_return,_Extra=extra
+    model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -45,17 +45,21 @@ max_baseline=obs.max_baseline
 freq_bin_i=obs.fbin_i
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
-IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[fi_use,*] ELSE vis_arr_use=(Temporary(*visibility_ptr))[fi_use,*] 
+
+IF N_Elements(bi_use) EQ 0 THEN BEGIN
+
+ENDIF
+IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[fi_use,bi_use] ELSE vis_arr_use=(Temporary(*visibility_ptr))[fi_use,bi_use] 
 model_flag=0
 IF Keyword_Set(model_ptr) THEN BEGIN
     IF Arg_present(model_return) THEN BEGIN
-        IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[fi_use,*] $
-        ELSE model_use=(Temporary(*model_ptr))[fi_use,*]
+        IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[fi_use,bi_use] $
+        ELSE model_use=(Temporary(*model_ptr))[fi_use,bi_use]
         model_return=Complexarr(dimension,elements)
         model_flag=1
     ENDIF ELSE BEGIN
-        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[fi_use,*] $
-        ELSE vis_arr_use-=(Temporary(*model_ptr))[fi_use,*]
+        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[fi_use,bi_use] $
+        ELSE vis_arr_use-=(Temporary(*model_ptr))[fi_use,bi_use]
     ENDELSE
 ENDIF
 frequency_array=(obs.freq)[fi_use]
@@ -68,8 +72,8 @@ psf_resolution=(Size(psf_base,/dimension))[2]
 flag_switch=Keyword_Set(flag_ptr)
 weights_flag=Arg_present(weights)
 variance_flag=Arg_present(variance)
-kx_arr=params.uu/kbinsize
-ky_arr=params.vv/kbinsize
+kx_arr=params[bi_use].uu/kbinsize
+ky_arr=params[bi_use].vv/kbinsize
 
 n_frequencies=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
@@ -116,7 +120,7 @@ ENDIF
 
 IF Keyword_Set(flag_ptr) THEN BEGIN
     IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
-    flag_arr=flag_arr[fi_use,*]
+    flag_arr=flag_arr[fi_use,bi_use]
     flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
     flag_arr=0
     IF n_unflag EQ 0 THEN BEGIN

@@ -68,12 +68,13 @@ IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
         IF Keyword_Set(odd_only) THEN flag_arr1[*,odd_bi_use]=flag_arr0[pol_i,*,odd_bi_use]
         *flag_arr[pol_i]*=flag_arr1
     ENDFOR
-ENDIF
+ENDIF 
+flag_test=Total(*flag_arr[0]>0,1)
+bi_use=where(flag_test)
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
     freq_bin_i2=obs.fbin_i
     n_avg=Round(n_freq/Max(freq_bin_i2+1))
-    
 ENDIF ELSE BEGIN
     freq_bin_i2=Floor(lindgen(n_freq)/n_avg)
 ENDELSE
@@ -112,9 +113,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
 ;        vis_use1=vis_use[fi_use,*]
         IF Ptr_valid(model_ptr) THEN model_return=1
-        dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,/preserve_visibilities,$
+        dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
             polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,$
-            model_ptr=model_ptr,n_vis=n_vis,model_return=model_return)
+            model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
         IF n_vis EQ 0 THEN BEGIN
             IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
             *residual_arr[pol_i,fi]=init_arr
