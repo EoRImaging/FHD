@@ -52,13 +52,35 @@ ENDELSE
 
 IF Keyword_Set(unpolarized) THEN flux_Q=(flux_V=0.)
 
-*model_uv_stks[0]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
-IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
-    ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 
-IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
-    ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U)
-IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
-    ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V)
+n_vec=Float(N_Elements(x_vec))
+n_val=Float(N_Elements(xvals))
+
+IF n_vec*n_val GT 1E8 THEN BEGIN
+    frac=n_vec*n_val/1E8
+    n_vec1=(Round(n_vec/frac)>1.)<n_vec
+    ii=0L
+    FOR stk_i=0,3 DO *model_uv_stks[stk_i]=Complexarr(dimension,elements)
+    WHILE n_vec1 GT 0 DO BEGIN
+        i_use=Lindgen(n_vec1)+ii
+        *model_uv_stks[0]+=source_dft(x_vec[i_use],y_vec[i_use],xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I[i_use])
+        IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
+            ELSE *model_uv_stks[1]+=source_dft(x_vec[i_use],y_vec[i_use],xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q[i_use]) 
+        IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
+            ELSE *model_uv_stks[2]+=source_dft(x_vec[i_use],y_vec[i_use],xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U[i_use])
+        IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
+            ELSE *model_uv_stks[3]+=source_dft(x_vec[i_use],y_vec[i_use],xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V[i_use])
+        ii+=n_vec1
+        n_vec1=n_vec1<(n_vec-(ii+1))
+    ENDWHILE
+ENDIF ELSE BEGIN
+    *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
+    IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
+        ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 
+    IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
+        ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U)
+    IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
+        ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V)
+ENDELSE
 SWITCH n_pol OF
     4:(*model_uv_arr[3])[uv_i_use]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
     3:(*model_uv_arr[2])[uv_i_use]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.

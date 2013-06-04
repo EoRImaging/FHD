@@ -32,9 +32,9 @@ phase=matrix_multiply(xvals,x_use)+matrix_multiply(yvals,y_use)
 ;source_uv_vals=matrix_multiply(phase,flux)
 
 cos_term=Cos(phase)
-sin_term=Sin(phase)
-source_uv_real_vals=matrix_multiply(cos_term,flux)
-source_uv_im_vals=matrix_multiply(sin_term,flux)
+source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux)
+sin_term=Sin(Temporary(phase))
+source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux)
 source_uv_vals=Complex(source_uv_real_vals,source_uv_im_vals)
 source_uv_vals*=fft_norm
 
