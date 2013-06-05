@@ -55,7 +55,7 @@ norm=(interpol(norm_arr,freq10_list,freq10,/spline))[0]
 components=fltarr(n_freq,ncomp)
 FOR j=0L,ncomp-1 DO FOR fi=0L,n_freq-1 DO components[fi,j]=interpol(component_arr[j,*],freq10_list,freq10[fi],/spline)
 
-Temperature=Reform(components#maps_408)*norm
+Temperature=(components#maps_408)*norm
 
 model=Ptrarr(n_freq)
 FOR fi=0L,n_freq-1 DO BEGIN
