@@ -430,36 +430,25 @@ FOR i=0L,max_iter-1 DO BEGIN
         
         si_use=si_use[si_use_i]
                 ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-        IF ~Keyword_Set(independent_fit) THEN BEGIN
-            IF n_pol LE 2 THEN BEGIN
-                flux_vec=comp_arr1[si_use].flux.I/2.
-                x_vec=comp_arr1[si_use].x
-                y_vec=comp_arr1[si_use].y
-                source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_vec)
-                FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=source_uv_vals
-            ENDIF ELSE BEGIN
-                flux_vec=comp_arr1[si_use].flux.I/2.
-                x_vec=comp_arr1[si_use].x
-                y_vec=comp_arr1[si_use].y
-                flux_vec2=comp_arr1[si_use].flux.U/2.
-                flux_arr=[[flux_vec],[flux_vec2]]
-                source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
-                FOR pol_i=0,(n_pol<2)-1 DO (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=source_uv_vals[*,0]
-                FOR pol_i=2,n_pol-1 DO (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=source_uv_vals[*,1]
-            ENDELSE
-        ENDIF ELSE BEGIN
-            x_vec=comp_arr1[si_use].x
-            y_vec=comp_arr1[si_use].y
-            
-            flux_arr=fltarr(n_si_use,n_pol)
-            flux_index_arr1=[4,4,6,6]
-            flux_index_arr2=[5,5,7,7]
-            sign_arr=[1.,-1.,1.,-1.]
-            FOR pol_i=0,n_pol-1 DO flux_arr[*,pol_i]=$
-                (comp_arr1[si_use].flux.(flux_index_arr1[pol_i])+sign_arr[pol_i]*comp_arr1[si_use].flux.(flux_index_arr2[pol_i]))/2.
-            source_uv_vals=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr)
-            FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=source_uv_vals[*,pol_i]
-        ENDELSE
+        flux_I=comp_arr1[si_use].flux.I
+        flux_Q=comp_arr1[si_use].flux.Q
+        flux_U=comp_arr1[si_use].flux.U
+        flux_V=comp_arr1[si_use].flux.V
+        x_vec=comp_arr1[si_use].x
+        y_vec=comp_arr1[si_use].y
+        *model_uv_stks[0]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
+        IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
+            ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 
+        IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
+            ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_U)
+        IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
+            ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_V)
+        SWITCH n_pol OF
+            4:(*model_uv_full[3,obs_i])[*uv_i_arr[obs_i]]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
+            3:(*model_uv_full[2,obs_i])[*uv_i_arr[obs_i]]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.
+            2:(*model_uv_full[1,obs_i])[*uv_i_arr[obs_i]]+=(*model_uv_stks[0]-*model_uv_stks[1])/2.
+            1:(*model_uv_full[0,obs_i])[*uv_i_arr[obs_i]]+=(*model_uv_stks[0]+*model_uv_stks[1])/2.
+        ENDSWITCH
         
         *comp_arr[obs_i]=comp_arr1
     ENDFOR
