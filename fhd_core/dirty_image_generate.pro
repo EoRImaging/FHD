@@ -8,6 +8,7 @@ IF N_Elements(baseline_threshold) EQ 0 THEN baseline_threshold=0.
 
 dimension=(size(dirty_image_uv,/dimension))[0]
 elements=(size(dirty_image_uv,/dimension))[1]
+di_uv_use=dirty_image_uv
 
 IF Keyword_Set(baseline_threshold) THEN BEGIN
     ;IF N_Elements(normalization) EQ 0 THEN normalization=1./dimension*elements
@@ -15,12 +16,14 @@ IF Keyword_Set(baseline_threshold) THEN BEGIN
     rarray=Sqrt((meshgrid(dimension,1)-dimension/2)^2.+(meshgrid(elements,2)-elements/2.)^2.)
     IF baseline_threshold GE 0 THEN cut_i=where(rarray LT baseline_threshold,n_cut) $
         ELSE cut_i=where(rarray GT Abs(baseline_threshold),n_cut)
-    mask=fltarr(dimension,elements)+1.
-    IF n_cut GT 0 THEN mask[cut_i]=0
-    IF Keyword_Set(width_smooth) THEN mask=Smooth(mask,width_smooth>1.)
-    cut_i=where(dirty_image_uv*mask EQ 0,n_cut,comp=keep_i,ncomp=n_keep)
-    di_uv_use=dirty_image_uv*mask
-ENDIF ELSE di_uv_use=dirty_image_uv
+    mask_bt=fltarr(dimension,elements)+1.
+    IF n_cut GT 0 THEN mask_bt[cut_i]=0
+    IF Keyword_Set(width_smooth) THEN mask_bt=Smooth(mask_bt,width_smooth>1.)
+    cut_i=where(dirty_image_uv*mask_bt EQ 0,n_cut,comp=keep_i,ncomp=n_keep)
+    di_uv_use*=mask_bt
+ENDIF
+
+IF Keyword_Set(mask) THEN di_uv_use*=mask 
 
 IF Arg_present(filter) THEN BEGIN
     IF Ptr_valid(filter) THEN BEGIN
@@ -39,18 +42,6 @@ ENDIF ELSE BEGIN
         di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
 ENDELSE
 
-;IF Keyword_Set(hanning_filter) THEN IF hanning_filter EQ -1 THEN $
-;    di_uv_use*=fft_shift(hanning(dimension,elements)) ELSE di_uv_use*=hanning(dimension,elements)
-;
-;IF Keyword_Set(image_filter_fn) THEN BEGIN
-;    di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,_Extra=extra) ;filter_uv_hanning.pro default    
-;    source_uv_mask=fltarr(dimension,elements)
-;    source_uv_mask[where(di_uv_use)]=1
-;    filter_norm=max(Real_part(fft_shift(FFT(fft_shift(source_uv_mask)))))/$
-;        max(Real_part(fft_shift(FFT(fft_shift(Call_Function(image_filter_fn,source_uv_mask,_Extra=extra))))))
-;    di_uv_use*=filter_norm
-;ENDIF
-
 IF Keyword_Set(resize) THEN BEGIN
     dimension=dimension*resize
     elements=elements*resize
@@ -60,9 +51,6 @@ IF Keyword_Set(resize) THEN BEGIN
     di_uv_img=REBIN(di_uv_img,dimension,elements)
     di_uv_use=complex(di_uv_real,di_uv_img)    
 ENDIF
-
-;IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use)))/(dimension*elements) $
-;    ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use))))/(dimension*elements)
 
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     dimension_new=((dimension>elements)*pad_uv_image)>(dimension>elements)
