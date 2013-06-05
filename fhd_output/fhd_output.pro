@@ -406,10 +406,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
     
     IF pol_i EQ 0 THEN BEGIN
+        Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path_fg+'_Grid',$
+            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
+            lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+            offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+    
         IF n_mrc GT 0 THEN BEGIN
             mrc_comp=(stokes_source+mrc_image)[zoom_low:zoom_high,zoom_low:zoom_high]
             Imagefast,mrc_comp,file_path=image_path_fg+'_Sources_MRCrings_'+pol_names[pol_i+4],$
-                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=0,high=stokes_high,/invert_color,_Extra=extra 
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=0,high=5.,/invert_color,_Extra=extra 
         ENDIF
     ENDIF
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
@@ -418,6 +423,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i]
         gal_low=0.
         gal_high=Max((*gal_model_img[pol_i])[beam_i])
+        gal_high2=Max((*stokes_gal_model[pol_i])[beam_i])
         gal_log=0
         debug_gal=1
         while debug_gal GT 0 DO BEGIN
@@ -433,10 +439,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
-            imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalCombinedSources_'+pol_names[pol_i],$
+            imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalSources_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,_Extra=extra
             imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,_Extra=extra
+            imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high2,_Extra=extra
             debug_gal=0
             dummyval=0
         endwhile

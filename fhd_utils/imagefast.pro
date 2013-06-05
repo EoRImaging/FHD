@@ -136,6 +136,28 @@ CASE 1 OF
     END
     
     Keyword_Set(sqrt_color): BEGIN
+        image_use2=image_use
+        high_i=where(image_use GE color_center,n_high)
+        low_i=where(image_use LT color_center,n_low)
+        IF n_high GT 0 THEN image_use2[high_i]=Sqrt(image_use2[high_i]-color_center+1)
+        IF n_low GT 0 THEN image_use2[low_i]=-Sqrt(color_center-image_use2[low_i]+1)
+        image_val_shift=-Min(image_use2)
+        image_rescale=256./(Max(image_use2)-Min(image_use2))
+        image_use2+=image_val_shift
+        image_use2*=image_rescale
+        image_use=image_use2
+        
+        cb_divisions2=cb_divisions*32
+        cb_label_vals=(high-low)*findgen(cb_divisions*32+1)/(cb_divisions*32.)+low
+        cb_label_vals2=cb_label_vals
+        high_i2=where(cb_label_vals GE color_center,n_high2)
+        low_i2=where(cb_label_vals LT color_center,n_low2)
+        IF n_high2 GT 0 THEN cb_label_vals2[high_i2]=Sqrt(cb_label_vals[high_i2]-color_center+1)
+        IF n_low2 GT 0 THEN cb_label_vals2[low_i2]=-Sqrt(color_center-cb_label_vals[low_i2]+1)
+        cb_label_vals2+=image_val_shift
+        cb_label_vals2*=256./Max(cb_label_vals2)
+        cb_label_ii=indgen(cb_divisions+1)*256/cb_divisions
+        cb_label_vals=Interpol(cb_label_vals,cb_label_vals2,cb_label_ii)
         
     END
     
