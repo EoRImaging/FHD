@@ -21,88 +21,102 @@ freq_arr=(obs.freq)[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
-model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr)
-
-model=fltarr(dimension,elements)
-FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]
-model/=Total(nf_arr)
-Ptr_free,model_arr
-
-n_pol=N_Elements(image_uv_arr)
-IF N_Elements(map_fn_arr) EQ 0 THEN BEGIN
+IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
+    model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr)
     
-    map_fn_free_flag=1
-    map_fn_arr=Ptrarr(n_pol,/allocate)
+    model=fltarr(dimension,elements)
+    FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]
+    model/=Total(nf_arr)
+    Ptr_free,model_arr
     
-    file_path_mapfn=file_path_fhd+'_mapfn_'
-    pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
+    n_pol=N_Elements(image_uv_arr)
+    IF N_Elements(map_fn_arr) EQ 0 THEN BEGIN
+        
+        map_fn_free_flag=1
+        map_fn_arr=Ptrarr(n_pol,/allocate)
+        
+        file_path_mapfn=file_path_fhd+'_mapfn_'
+        pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+            *map_fn_arr[pol_i]=Temporary(map_fn)
+        ENDFOR
+    ;    FOR pol_i=0,n_pol-1 DO *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
+    ENDIF ELSE map_fn_free_flag=0
+    
+    model_uv=Ptrarr(n_pol)
+    model_uv_holo=Ptrarr(n_pol)
+    model_img_holo=Ptrarr(n_pol)
+    dirty_img=Ptrarr(n_pol)
+    scale_arr=fltarr(n_pol)
+    
+    ;weight=weight_invert(Cos((dec_arr-obs.zendec)*!DtoR)^2.)
+    
+    norm_arr=fltarr(n_pol)+1.
     FOR pol_i=0,n_pol-1 DO BEGIN
-        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-        *map_fn_arr[pol_i]=Temporary(map_fn)
-    ENDFOR
-;    FOR pol_i=0,n_pol-1 DO *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
-ENDIF ELSE map_fn_free_flag=0
-
-model_uv=Ptrarr(n_pol)
-model_uv_holo=Ptrarr(n_pol)
-model_img_holo=Ptrarr(n_pol)
-dirty_img=Ptrarr(n_pol)
-scale_arr=fltarr(n_pol)
-
-;weight=weight_invert(Cos((dec_arr-obs.zendec)*!DtoR)^2.)
-
-norm_arr=fltarr(n_pol)+1.
-FOR pol_i=0,n_pol-1 DO BEGIN
-;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*weight*(*beam_base[pol_i])),/inverse)))
-;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*hanning(dimension,elements)),/inverse)))
-    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model),/inverse)*(degpix*!DtoR)^2.))
-    dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
-    model_uv_holo[pol_i]=Ptr_new(holo_mapfn_apply(*model_uv[pol_i],map_fn_arr[pol_i],/indexed))
-    norm_check=Fltarr(dimension,elements)+1.0
-    norm_check2=holo_mapfn_apply(norm_check,map_fn_arr[pol_i],/indexed,complex=0)
-    norm_arr[pol_i]=Mean(Real_part(norm_check2))/Mean(norm_check)
+    ;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*weight*(*beam_base[pol_i])),/inverse)))
+    ;    model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model*hanning(dimension,elements)),/inverse)))
+        model_uv[pol_i]=Ptr_new(fft_shift(FFT(fft_shift(model),/inverse)*(degpix*!DtoR)^2.))
+        dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
+        model_uv_holo[pol_i]=Ptr_new(holo_mapfn_apply(*model_uv[pol_i],map_fn_arr[pol_i],/indexed))
+        norm_check=Fltarr(dimension,elements)+1.0
+        norm_check2=holo_mapfn_apply(norm_check,map_fn_arr[pol_i],/indexed,complex=0)
+        norm_arr[pol_i]=Mean(Real_part(norm_check2))/Mean(norm_check)
+        
+        model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix))
+        beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
+        beam_vals=(*beam_base[pol_i])[beam_i]
+        model_vals=(*model_img_holo[pol_i])[beam_i]
+        image_vals=(*dirty_img[pol_i])[beam_i]
+        scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
+    ENDFOR   
+    scale=Mean(scale_arr)
+    print,scale_arr
+    model*=scale
     
-    model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix))
-    beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
-    beam_vals=(*beam_base[pol_i])[beam_i]
-    model_vals=(*model_img_holo[pol_i])[beam_i]
-    image_vals=(*dirty_img[pol_i])[beam_i]
-    scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
-ENDFOR   
-scale=Mean(scale_arr)
-print,scale_arr
-model*=scale
-
-FOR pol_i=0,n_pol-1 DO BEGIN
-    *model_uv[pol_i]*=scale;/dimension*elements
-    *model_uv_holo[pol_i]*=scale
-    *model_img_holo[pol_i]*=scale
-ENDFOR
-galaxy_model_img=model
-galaxy_model_uv=model_uv
-
-;comp_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/components)
-;n_comp=N_Elements(comp_arr)
-;
-;model_uv=Ptrarr(n_comp)
-;FOR ci=0,n_comp-1 DO model_uv[ci]=Ptr_new(fft_shift(FFT(fft_shift(*comp_arr[ci]),/inverse)))
-;model_uv_holo=Ptrarr(n_comp,n_pol)
-;model_img_holo=Ptrarr(n_comp,n_pol)
-;dirty_img=Ptrarr(n_pol)
-;scale_arr=fltarr(n_comp,n_pol)
-;
-;FOR pol_i=0,n_pol-1 DO BEGIN
-;    dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
-;    FOR ci=0,n_comp-1 DO BEGIN
-;        model_uv_holo[ci,pol_i]=Ptr_new(holo_mapfn_apply(model_uv[ci],map_fn_arr[pol_i]))
-;        model_img_holo[ci,pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[ci,pol_i],degpix=degpix))
-;    ENDFOR
-;    beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.2,Max(*beam_base[pol_i])])
-;    beam_vals=(*beam_base[pol_i])[beam_i]
-;    model_vals=(*model_img_holo[pol_i])[beam_i]
-;    image_vals=(*dirty_img[pol_i])[beam_i]
-;    scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
-;ENDFOR
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv[pol_i]*=scale;/dimension*elements
+        *model_uv_holo[pol_i]*=scale
+        *model_img_holo[pol_i]*=scale
+    ENDFOR
+    galaxy_model_img=model
+    galaxy_model_uv=model_uv
+ENDIF ELSE BEGIN
+    comp_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/components)
+    n_comp=N_Elements(comp_arr)
+    
+    model_uv=Ptrarr(n_comp)
+    FOR ci=0,n_comp-1 DO model_uv[ci]=Ptr_new(fft_shift(FFT(fft_shift(*comp_arr[ci]),/inverse)))
+    model_uv_holo=Ptrarr(n_comp,n_pol)
+    model_img_holo=Ptrarr(n_comp,n_pol)
+    dirty_img=Ptrarr(n_pol)
+    scale_arr=fltarr(n_comp,n_pol)
+    
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        dirty_img[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix))
+        beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
+        beam_vals=(*beam_base[pol_i])[beam_i]
+        image_vals=(*dirty_img[pol_i])[beam_i]
+        FOR ci=0,n_comp-1 DO BEGIN
+            model_uv_holo[ci,pol_i]=Ptr_new(holo_mapfn_apply(model_uv[ci],map_fn_arr[pol_i]))
+            model_img_holo[ci,pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[ci,pol_i],degpix=degpix))
+            
+            model_vals=(*model_img_holo[ci,pol_i])[beam_i]
+            scale_arr[ci,pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
+        ENDFOR
+    ENDFOR
+    scale_arr2=Total(scale_arr,2)/n_pol
+    
+    model*=scale
+    
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv[pol_i]*=scale;/dimension*elements
+        *model_uv_holo[pol_i]*=scale
+        *model_img_holo[pol_i]*=scale
+    ENDFOR
+    galaxy_model_img=model
+    galaxy_model_uv=model_uv
+ENDELSE  
   
 IF map_fn_free_flag THEN Ptr_free,map_fn_arr
 IF Keyword_Set(file_path_galmodel) THEN $
