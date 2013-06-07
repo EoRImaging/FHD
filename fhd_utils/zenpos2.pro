@@ -1,4 +1,4 @@
-PRO ZENPOS2, date, ra, dec,lat=lat,lng=lng,degree=degree,J2000=J2000
+PRO ZENPOS2, date, ra, dec,lat=lat,lng=lng,degree=degree,J2000=J2000,double=double
 ;+
 ; NAME:
 ;       ZENPOS
@@ -68,5 +68,12 @@ ENDIF
     ra*=!Radeg
     dec*=!Radeg
  ENDIF
+ IF Keyword_Set(double) THEN BEGIN
+    ra=Double(ra)
+    dec=Double(dec)
+ ENDIF ELSE BEGIN
+    ra=Float(ra)
+    dec=Float(dec)
+ ENDELSE
  RETURN
  END
