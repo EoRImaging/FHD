@@ -23,7 +23,8 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 ;noise_calibrate=0
 ;align=0
 ;dimension=1024.
-max_sources=10000.
+max_sources=5000.
+gain_factor=0.25
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 complex_beam=1
@@ -34,6 +35,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,$
-    complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,_Extra=extra
+    complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,gain_factor=gain_factor,_Extra=extra
 !except=except
 END

@@ -58,7 +58,10 @@ IF N_Elements(end_fi) GT 0 THEN n_files=end_fi+1 ;changed to allow end_fi and up
 WHILE fi LT n_files DO BEGIN
     IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(n_files-start_fi)))
     IF N_Elements(skip_fi) GT 0 THEN BEGIN
-        IF max(skip_fi EQ fi) GT 0 THEN CONTINUE
+        IF max(skip_fi EQ fi) GT 0 THEN BEGIN
+            fi+=1
+            CONTINUE
+        ENDIF
     ENDIF
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
