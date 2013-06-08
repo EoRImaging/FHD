@@ -27,7 +27,8 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,we
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,bi_use=bi_use,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
-    model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,_Extra=extra
+    model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
+    phase_threshold=phase_threshold,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -148,6 +149,14 @@ IF Keyword_Set(flag_arr) THEN BEGIN
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
+    ENDIF
+ENDIF
+
+IF Keyword_Set(phase_threshold) THEN BEGIN
+    phase_cut=where(Abs(Atan(vis_arr_use,/phase)) GT phase_threshold,n_phase_cut)
+    IF n_phase_cut GT 0 THEN BEGIN
+        xmin[phase_cut]=-1
+        ymin[phase_cut]=-1
     ENDIF
 ENDIF
 
