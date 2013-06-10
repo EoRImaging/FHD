@@ -36,15 +36,18 @@ ENDIF ELSE BEGIN
     IF N_Elements(zendec) EQ 0 THEN zendec=obsdec    
 ENDELSE
 
-IF Abs(phasera-zenra) GT 90. THEN lon_offset=phasera-((phasera GT zenra) ? 360.:(-360.))-zenra ELSE lon_offset=phasera-zenra
+IF Abs(phasera-zenra) GT 90. THEN lon_offset=phasera-((phasera GT zenra) ? 360.:(-360.))-zenra $
+    ELSE lon_offset=phasera-zenra
 
 lat_offset=-(zendec-phasedec)
 
 zenith_ang=angle_difference(phasedec,phasera,zendec,zenra,/degree)
 hour_angle=lon_offset
-;parallactic angle from http://www.astron.nl/aips++/docs/glossary/p.html#parallactic_angle with lambda=zendec, h=hour_angle, delta=phasedec
+;parallactic angle from http://www.astron.nl/aips++/docs/glossary/p.html#parallactic_angle 
+; with lambda=zendec, h=hour_angle, delta=phasedec
 ;minus sign??
-parallactic_ang=-!Radeg*atan(-sin(!DtoR*hour_angle),cos(!DtoR*phasedec)*tan(!DtoR*zendec)-sin(!DtoR*phasedec)*cos(!DtoR*hour_angle))
+parallactic_ang=-!Radeg*atan(-sin(!DtoR*hour_angle),$
+    cos(!DtoR*phasedec)*tan(!DtoR*zendec)-sin(!DtoR*phasedec)*cos(!DtoR*hour_angle))
 
 ;parallactic_ang=(parallactic_ang-90.)
 xi=-Tan(zenith_ang*!DtoR)*Sin(parallactic_ang*!DtoR)
@@ -62,8 +65,10 @@ PV2_2=eta
 ;PV2_2=xi
 x_c=obsx
 y_c=obsy
-lon_c=obsra
-lat_c=obsdec
+;lon_c=obsra
+;lat_c=obsdec
+lon_c=phasera
+lat_c=phasedec
 MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
     CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
     LATPOLE = 0., LONGPOLE = 180.

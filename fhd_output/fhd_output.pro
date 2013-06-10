@@ -50,16 +50,22 @@ restore,file_path_fhd+'_hdr.sav' ;hdr
 IF N_Elements(normalization_arr) GT 0 THEN normalization=Mean(normalization_arr)/2.
 n_pol=fhd.npol
 dimension_uv=obs.dimension
+astr=obs.astr
 
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     dimension_use=((obs.dimension>obs.elements)*pad_uv_image)>(obs.dimension>obs.elements)
     IF tag_exist(extra,'dimension') THEN extra.dimension=dimension_use
     obs_out=vis_struct_init_obs(hdr,params,n_pol=obs.n_pol,dimension=dimension_use,lon=obs.lon,lat=obs.lat,$
-        kbinsize=obs.kpix,zenra=obs.zenra,zendec=obs.zendec,phasera=obs.phasera,phasedec=obs.phasedec,_Extra=extra)
+        kbinsize=obs.kpix,_Extra=extra)
+    astr_out=astr
+    astr_out.cdelt/=pad_uv_image
+    astr_out.crpix*=pad_uv_image
+    obs_out.astr=astr_out
 ENDIF ELSE obs_out=obs
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
+astr_out=obs_out.astr
 
 zoom_radius=Round(18./(degpix)/16.)*16.
 zoom_low=dimension/2.-zoom_radius
@@ -73,8 +79,6 @@ offset_lon=5.;15. paper 10 memo
 reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=0;1 paper 3 memo
 label_spacing=1.
-astr_out=obs_out.astr
-astr=obs.astr
 
 si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]
@@ -171,6 +175,7 @@ t0+=t1a-t0a
     
     model_uv_arr=Ptrarr(n_pol,/allocate)
     model_holo_arr=Ptrarr(n_pol,/allocate)
+    res_uv_arr=Ptrarr(n_pol,/allocate)
     
     ;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
@@ -202,6 +207,7 @@ t0+=t1a-t0a
         *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         instr_img_uv=*image_uv_arr[pol_i]-*model_holo_arr[pol_i]-*gal_holo_uv[pol_i]
+        *res_uv_arr[pol_i]=instr_img_uv
         *instr_images[pol_i]=dirty_image_generate(instr_img_uv,degpix=degpix,weights=*weights_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
@@ -333,9 +339,13 @@ x_inc=beam_i mod dimension
 y_inc=Floor(beam_i/dimension)
 zoom_low=min(x_inc)<min(y_inc)
 zoom_high=max(x_inc)>max(y_inc)
-    
+
+image_path_fg=image_path+filter_name+gal_name
+export_path_fg=export_path+filter_name+gal_name
+
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_residual=*instr_images[pol_i]
+    instr_res_phase=Atan(*res_uv_arr[pol_i],/phase)
     instr_dirty=*dirty_images[pol_i]
     instr_source=*instr_sources[pol_i]
     instr_restored=instr_residual+instr_source
@@ -345,9 +355,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     stokes_restored=stokes_residual+stokes_source
     
     t8a=Systime(1)
-    export_path_fg=export_path+filter_name+gal_name
     FitsFast,instr_dirty,fits_header,/write,file_path=export_path+filter_name+'_Dirty_'+pol_names[pol_i]
     FitsFast,instr_residual,fits_header,/write,file_path=export_path_fg+'_Residual_'+pol_names[pol_i]
+    FitsFast,instr_res_phase,fits_header,/write,file_path=export_path_fg+'_ResidualPhase_'+pol_names[pol_i]
     FitsFast,instr_source,fits_header,/write,file_path=export_path_fg+'_Sources_'+pol_names[pol_i]
     FitsFast,instr_restored,fits_header,/write,file_path=export_path_fg+'_Restored_'+pol_names[pol_i]
     FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
@@ -358,6 +368,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
         low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
+    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
     
     instr_low=Min(instr_residual[beam_i])
     instr_high=Max(instr_residual[beam_i])
@@ -365,7 +377,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     instrS_high=Max(instr_restored[beam_i])
     log_dirty=0
     log_source=1
-    image_path_fg=image_path+filter_name+gal_name
     Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Dirty_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,_Extra=extra
     Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Residual_'+pol_names[pol_i],$

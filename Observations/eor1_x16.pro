@@ -18,10 +18,10 @@ image_filter_fn='filter_uv_radial' ;applied ONLY to output images
 ;ENDIF ELSE BEGIN
 IF channel LE 0 THEN BEGIN
     IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1']) $
-            ELSE data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1'])    
+            ELSE data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1A'])    
 ENDIF ELSE BEGIN
     IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))]) $
-        ELSE data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1',Strn(Floor(channel))])
+        ELSE data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['X16','EOR1A',Strn(Floor(channel))])
 ENDELSE
 
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)

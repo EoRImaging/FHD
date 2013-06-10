@@ -164,8 +164,8 @@ IF N_Elements(zendec) EQ 0 THEN zendec=0. ELSE zendec=Float(zendec);degrees
 ;IF N_Elements(rotation) EQ 0 THEN rotation=0. ;degrees
 IF N_Elements(obsra) EQ 0 THEN obsra=0. ELSE obsra=Float(obsra);degrees
 IF N_Elements(obsdec) EQ 0 THEN obsdec=0. ELSE obsdec=Float(obsdec);degrees
-IF N_Elements(phasera)EQ 0 THEN phasera=0. ELSE phasera=Float(phasera)
-IF N_Elements(phasedec) EQ 0 THEN phasedec=0. ELSE phasedec=Float(phasedec)
+IF N_Elements(phasera)EQ 0 THEN phasera=obsra ELSE phasera=Float(phasera)
+IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec ELSE phasedec=Float(phasedec)
 IF N_Elements(calibration) EQ 0 THEN calibration=fltarr(4)+1.
 IF N_Elements(n_pol) EQ 0 THEN n_pol=1 ELSE n_pol=Fix(n_pol)
 IF N_Elements(n_tile) EQ 0 THEN n_tile=1. ELSE n_tile=Float(n_tile)
