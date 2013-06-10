@@ -132,7 +132,7 @@ t0+=t1a-t0a
     IF Keyword_Set(model_recalculate) THEN BEGIN
         uv_mask=fltarr(dimension,elements)
         FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
-        model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask)
+        model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd.sigma_cut)
         FOR pol_i=0,n_pol-1 DO BEGIN
             *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
         ENDFOR

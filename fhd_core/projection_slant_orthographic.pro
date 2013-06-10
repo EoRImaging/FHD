@@ -41,21 +41,16 @@ IF Abs(phasera-zenra) GT 90. THEN lon_offset=phasera-((phasera GT zenra) ? 360.:
 lat_offset=-(zendec-phasedec)
 
 zenith_ang=angle_difference(phasedec,phasera,zendec,zenra,/degree)
-;parallactic_ang_argument=((Sin(zendec*!DtoR)-Sin(phasedec*!DtoR))*Cos(zenith_ang*!DtoR))/(Cos(phasedec*!DtoR)*Sin(zenith_ang*!DtoR))
-;IF parallactic_ang_argument GT 1 THEN parallactic_ang_argument=1.-(parallactic_ang_argument-1.)
 hour_angle=lon_offset
 ;parallactic angle from http://www.astron.nl/aips++/docs/glossary/p.html#parallactic_angle with lambda=zendec, h=hour_angle, delta=phasedec
 ;minus sign??
 parallactic_ang=-!Radeg*atan(-sin(!DtoR*hour_angle),cos(!DtoR*phasedec)*tan(!DtoR*zendec)-sin(!DtoR*phasedec)*cos(!DtoR*hour_angle))
-;parallactic_ang=Atan(parallactic_ang_argument<1)*!RaDeg ;
 
-;rotation=0.;parallactic_ang;*2.;(parallactic_ang-90.);*2
 ;parallactic_ang=(parallactic_ang-90.)
 xi=-Tan(zenith_ang*!DtoR)*Sin(parallactic_ang*!DtoR)
 eta=Tan(zenith_ang*!DtoR)*Cos(parallactic_ang*!DtoR)
 
 projection_name='SIN'
-;image is centered at obsra, obsdec, but projection is centered at zenra, zendec
 
 CTYPE=['RA---'+projection_name,'DEC--'+projection_name]
 IF N_Elements(degpix) EQ 2 THEN delt=degpix ELSE delt=[degpix,degpix]
@@ -67,8 +62,8 @@ PV2_2=eta
 ;PV2_2=xi
 x_c=obsx
 y_c=obsy
-lon_c=phasera
-lat_c=phasedec
+lon_c=obsra
+lat_c=obsdec
 MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
     CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
     LATPOLE = 0., LONGPOLE = 180.

@@ -1,7 +1,8 @@
 FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
-    zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,nfreq_avg=nfreq_avg,freq_bin=freq_bin,_Extra=extra
+    zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,$
+    nfreq_avg=nfreq_avg,freq_bin=freq_bin,_Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081524 ;degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 ;degrees

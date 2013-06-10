@@ -120,12 +120,19 @@ IF Keyword_Set(data_flag) THEN BEGIN
     dimension=obs.dimension
     
     IF Keyword_Set(rephase_to_zenith) THEN BEGIN
+        obs1=obs
+        hdr1=hdr
         phasera=obs.obsra
         phasedec=obs.obsdec        
-        hdr.obsra=obs.zenra
-        hdr.obsdec=obs.zendec
-        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+        hdr1.obsra=obs.zenra
+        hdr1.obsdec=obs.zendec
+        obs1.obsx=obs.zenx
+        obs1.obsy=obs.zeny
+;        obs1=vis_struct_init_obs(hdr1,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+        obs1=vis_struct_init_obs(hdr1,params,n_pol=n_pol,obsx=obs.zenx,obsy=obs.zeny,_Extra=extra)
         phase_shift=1.
+        hdr=hdr1
+        obs=obs1
 ;        obs1=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
 ;        kx_arr=params.uu/kbinsize
 ;        ky_arr=params.vv/kbinsize
