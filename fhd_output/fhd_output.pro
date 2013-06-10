@@ -294,7 +294,7 @@ t0+=t1a-t0a
         mrc_cat=mrc_cat[mrc_i_use]
         mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
             width=pad_uv_image,ring=6.*pad_uv_image)
-        mrc_image*=Median(source_arr_out.flux.I)/median(mrc_cat.flux.I)
+;        mrc_image*=Median(source_arr_out.flux.I)/median(mrc_cat.flux.I)
     ENDIF
     
     IF Keyword_Set(noise_calibrate) THEN BEGIN

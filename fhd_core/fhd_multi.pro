@@ -56,6 +56,7 @@ map_fn_arr=Ptrarr(n_pol,n_obs,/allocate)
 dirty_uv_arr=Ptrarr(n_pol,n_obs,/allocate) 
 model_uv_holo=Ptrarr(n_pol,n_obs,/allocate)
 model_uv_full=Ptrarr(n_pol,n_obs,/allocate)
+model_uv_stks=Ptrarr(4,/allocate)
 weights_arr=Ptrarr(n_pol,n_obs,/allocate)
 
 uv_mask_arr=Ptrarr(n_obs,/allocate)
