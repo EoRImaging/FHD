@@ -75,7 +75,7 @@ FOR fi=0,n_files-1 DO BEGIN
     sa_id[ns_i[fi]:ns_i[fi+1]-1]=sa.id
     sa_ston[ns_i[fi]:ns_i[fi+1]-1]=sa.ston
     sa_radius[ns_i[fi]:ns_i[fi+1]-1]=angle_difference(obs_arr[fi].obsdec,obs_arr[fi].obsra,sa.dec,sa.ra,/degree)
-    sa_beam[ns_i[fi]:ns_i[fi+1]-1]=(*beam_arr[fi])[sa.x,sa.y]
+    sa_beam[ns_i[fi]:ns_i[fi+1]-1]=Sqrt((((*beam_arr[fi,0])[sa.x,sa.y])^2.+((*beam_arr[fi,1])[sa.x,sa.y])^2.)/2.)
     sa_extend[ns_i[fi]:ns_i[fi+1]-1]=Ptr_valid(sa.extend)
 ENDFOR
 
