@@ -49,6 +49,7 @@ FOR fi=0,n_files-1 DO BEGIN
     *source_array2[fi]=sa
 ENDFOR
 degpix=Median(obs_arr.degpix)
+n_pol=Min(obs_arr.n_pol)
 
 ns=Total(n_src)
 ns_i=[0,Total(n_src,/cumulative)]
@@ -67,6 +68,8 @@ sa_extend=fltarr(ns)
 FOR fi=0,n_files-1 DO BEGIN
     IF n_src[fi] EQ 0 THEN CONTINUE
     
+    IF n_pol GT 1 THEN beam_avg=Sqrt(((*beam_arr[fi,0])^2.+(*beam_arr[fi,1])^2.)/2.) $
+        ELSE beam_avg=*beam_arr[fi,0]
     sa=*source_array2[fi]
     sa=sa[*src_i[fi]]
     sa_x[ns_i[fi]:ns_i[fi+1]-1]=sa.x
@@ -78,7 +81,7 @@ FOR fi=0,n_files-1 DO BEGIN
     sa_id[ns_i[fi]:ns_i[fi+1]-1]=sa.id
     sa_ston[ns_i[fi]:ns_i[fi+1]-1]=sa.ston
     sa_radius[ns_i[fi]:ns_i[fi+1]-1]=angle_difference(obs_arr[fi].obsdec,obs_arr[fi].obsra,sa.dec,sa.ra,/degree)
-    sa_beam[ns_i[fi]:ns_i[fi+1]-1]=Sqrt((((*beam_arr[fi,0])[sa.x,sa.y])^2.+((*beam_arr[fi,1])[sa.x,sa.y])^2.)/2.)
+    sa_beam[ns_i[fi]:ns_i[fi+1]-1]=beam_avg[sa.x,sa.y]
     sa_extend[ns_i[fi]:ns_i[fi+1]-1]=Ptr_valid(sa.extend)
 ENDFOR
 

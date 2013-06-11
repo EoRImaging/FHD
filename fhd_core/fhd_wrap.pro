@@ -63,6 +63,7 @@ ENDIF
         beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,$
         file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,_Extra=extra
         
+;compression reduces the file size by 50%, but takes 5-30 seconds longer
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav',/compress
 
