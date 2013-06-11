@@ -75,6 +75,7 @@ obs_filepath=file_path_fhd+'_obs.sav'
 params_filepath=file_path_fhd+'_params.sav'
 hdr_filepath=file_path_fhd+'_hdr.sav'
 fhd_filepath=file_path_fhd+'_fhd.sav'
+autocorr_filepath=file_path_fhd+'_autos.sav'
 IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
@@ -283,6 +284,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     vis_flag_update,flag_arr0,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
     save,obs,filename=obs_filepath
+    
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
         error=1
@@ -318,6 +320,14 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;free memory
     data_array=0 
     flag_arr0=0
+    
+    autocorr_i=where(tile_A EQ tile_B,n_autocorr)
+    auto_corr=Ptrarr(n_pol)
+    IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
+        auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
+        auto_corr[pol_i]=Ptr_new(auto_vals)
+    ENDFOR
+    save,auto_corr,obs,filename=autocorr_filepath
     
     ;IF Keyword_Set(calibrate) THEN FOR pol_i=0,n_pol-1 DO $
     ;    visibility_calibrate_simple,*vis_arr[pol_i],*flag_arr[pol_i],obs,params,beam=*beam[pol_i]
