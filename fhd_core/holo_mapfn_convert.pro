@@ -1,5 +1,5 @@
 FUNCTION holo_mapfn_convert,map_fn,psf_dim=psf_dim,dimension=dimension,elements=elements,$
-    n_vis=n_vis,threshold=threshold,timing=timing
+    n_vis=n_vis,threshold=threshold,error=error,timing=timing
 t0=Systime(1)
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
@@ -38,6 +38,10 @@ FOR xi=1,dimension-2 DO BEGIN
 ENDFOR
 
 i_use=where(n_arr,n_use)
+IF n_use EQ 0 THEN BEGIN
+    error=1
+    RETURN,0
+ENDIF
 
 i_use_hist=histogram(i_use,min=0,bin=1,reverse_ind=ri_use)
 sa=Ptrarr(n_use,/allocate)

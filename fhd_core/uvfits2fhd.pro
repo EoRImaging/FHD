@@ -343,7 +343,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;        ELSE $
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
-                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,_Extra=extra)
+                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,_Extra=extra)
+            IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
             save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'

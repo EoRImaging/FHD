@@ -28,7 +28,7 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,we
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    phase_threshold=phase_threshold,_Extra=extra
+    phase_threshold=phase_threshold,error=error,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -140,12 +140,6 @@ ENDIF
 IF Keyword_Set(flag_arr) THEN BEGIN
     flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
     flag_arr=0
-    IF n_unflag EQ 0 THEN BEGIN
-        timing=Systime(1)-t0_0
-        image_uv=Complexarr(dimension,elements)
-        n_vis=0.
-        RETURN,image_uv
-    ENDIF
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
@@ -168,6 +162,15 @@ IF Keyword_Set(mask_mirror_indices) THEN BEGIN
 ENDIF
 
 xcen=(ycen=(dist_test=0)) ;free memory
+
+IF max(xmin)<max(ymin) LT 0 THEN BEGIN
+    print,'All data flagged or cut! Returning'
+    timing=Systime(1)-t0_0
+    image_uv=Complexarr(dimension,elements)
+    n_vis=0.
+    error=1
+    RETURN,image_uv
+ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
@@ -304,7 +307,15 @@ xmin=(ymin=(ri=(inds=(x_offset=(y_offset=(bin_i=(bin_n=0)))))))
 
 t7_0=Systime(1)
 IF map_flag THEN BEGIN
-    map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension,n_vis=n_vis)
+    map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension,n_vis=n_vis,error=error)
+    IF Keyword_Set(error) THEN BEGIN
+        print,'All data flagged, cut, or has a null beam model! Returning'
+        timing=Systime(1)-t0_0
+        image_uv=Complexarr(dimension,elements)
+        n_vis=0.
+        error=1
+        RETURN,image_uv
+    ENDIF
     IF ~Keyword_Set(no_save) THEN save,map_fn,filename=file_path_fhd+'_mapfn_'+pol_names[polarization]+'.sav'
     IF Arg_present(return_mapfn) THEN return_mapfn=map_fn
 ENDIF
