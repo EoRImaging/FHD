@@ -59,8 +59,8 @@ CTYPE=['RA---'+projection_name,'DEC--'+projection_name]
 IF N_Elements(degpix) EQ 2 THEN delt=degpix ELSE delt=[degpix,degpix]
 cd=[[1.,0.],[0.,1.]]
 ;;cd=[[Cos(rotation*!DtoR),Sin(rotation*!DtoR)],[-Sin(rotation*!DtoR),Cos(rotation*!DtoR)]]
-PV2_1=Float(xi)
-PV2_2=Float(eta)
+PV2_1=Double(xi)
+PV2_2=Double(eta)
 ;PV2_1=eta
 ;PV2_2=xi
 x_c=obsx
