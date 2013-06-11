@@ -22,6 +22,9 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF
 
 n_files=N_Elements(file_list)
+IF n_files LT 2 THEN BEGIN
+    RETURN
+ENDIF
 source_array2=Ptrarr(n_files,/allocate)
 beam_arr=Ptrarr(n_files,2)
 

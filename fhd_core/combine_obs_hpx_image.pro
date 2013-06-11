@@ -29,16 +29,23 @@ sign=[[1.,1.],[1.,-1.]]
 Stk_nm=['I','Q']
 npix=nside2npix(nside)
 ;IF not Keyword_Set(nside) THEN nside=npix2nside(npix)
-lon_arr=obs_arr.obsra
-lat_arr=obs_arr.obsdec
-n_files=N_Elements(lon_arr)
-lon_hist=histogram(Floor(lon_arr),min=0,/bin,max=359)
-lon_test=morph_distance(lon_hist,/background)
-test_max=max(lon_test,lon_branch)
-lon_use=lon_arr
-lon_mod_i=where(lon_arr LE lon_branch,n_branch)
-IF n_branch GT 0 THEN lon_use[lon_mod_i]+=360.
-lon_avg=Median(lon_use) & IF lon_avg GE 360. THEN lon_avg-=360.
+n_obs=N_Elements(obs_arr)
+IF n_obs EQ 1 THEN BEGIN
+    lon_avg=obs_arr.obsra
+    lat_avg=obs_arr.obsdec
+ENDIF ELSE BEGIN
+    lon_arr=obs_arr.obsra
+    lat_arr=obs_arr.obsdec
+    lon_hist=histogram(Floor(lon_arr),min=0,/bin,max=359)
+    lon_test=morph_distance(lon_hist,/background)
+    test_max=max(lon_test,lon_branch)
+    lon_use=lon_arr
+    lon_mod_i=where(lon_arr LE lon_branch,n_branch)
+    IF n_branch GT 0 THEN lon_use[lon_mod_i]+=360.
+    lon_avg=Median(lon_use) & IF lon_avg GE 360. THEN lon_avg-=360.
+    lat_avg=Mean(lat_arr)
+ENDELSE
+
 IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
 
 mrc_flag=(Ptr_valid(mrc_hpx))[0]
@@ -66,7 +73,7 @@ mrc_flag=(Ptr_valid(mrc_hpx))[0]
         hpx_ind_use=where(Stokes_weights_single GT weight_threshold_use,n_hpx,complement=i_cut,ncomplement=n_cut)
         IF stk_i EQ 0 THEN BEGIN      
             area=4.*!Pi*(!RaDeg^2.)*(Float(n_hpx)/npix)
-            print,"Observed area: "+Strn(area)+" degrees from "+Strn(n_files)+" snapshot observations."
+            print,"Observed area: "+Strn(area)+" degrees from "+Strn(n_obs)+" snapshot observations."
         ENDIF
         norm=1.;1./Max(Stokes_weights_single)^2.
 ;        
@@ -137,9 +144,9 @@ FOR stk_i=0,1 DO BEGIN
     title_img='Composite Stokes '+Stk_nm[stk_i]+' residual'
     title_wts='Composite Stokes '+Stk_nm[stk_i]+' weights'
     healpix_image,file_path_img,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
-        title=title_img,lon=lon_avg,lat=Median(lat_arr),min=low_residual*cnorm,max=high_residual*cnorm,/half,color_table=color_table
+        title=title_img,lon=lon_avg,lat=lat_avg,min=low_residual*cnorm,max=high_residual*cnorm,/half,color_table=color_table
     healpix_image,file_path_wts,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
-        title=title_wts,lon=lon_avg,lat=Median(lat_arr),/half,color_table=color_table
+        title=title_wts,lon=lon_avg,lat=lat_avg,/half,color_table=color_table
         
     title_rst='Composite Stokes '+Stk_nm[stk_i]+' restored'
     title_src='Composite Stokes '+Stk_nm[stk_i]+' sources'
@@ -148,16 +155,16 @@ FOR stk_i=0,1 DO BEGIN
     
 ;    title_smt='Composite Stokes '+Stk_nm[stk_i]+' smooth'
     healpix_image,file_path_rst,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
-        title=title_rst,lon=lon_avg,lat=Median(lat_arr),min=low_dirty*cnorm,max=high_dirty*cnorm,/half,color_table=color_table
+        title=title_rst,lon=lon_avg,lat=lat_avg,min=low_dirty*cnorm,max=high_dirty*cnorm,/half,color_table=color_table
     healpix_image,file_path_src,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
-        title=title_src,lon=lon_avg,lat=Median(lat_arr),min=0,max=high_dirty*cnorm,/half,color_table=color_table
+        title=title_src,lon=lon_avg,lat=lat_avg,min=0,max=high_dirty*cnorm,/half,color_table=color_table
     healpix_image,file_path_dty,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
-        title=title_dty,lon=lon_avg,lat=Median(lat_arr),min=low_dirty*cnorm,max=high_dirty*cnorm,/half,color_table=color_table
+        title=title_dty,lon=lon_avg,lat=lat_avg,min=low_dirty*cnorm,max=high_dirty*cnorm,/half,color_table=color_table
     IF mrc_flag THEN healpix_image,file_path_mrc,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
-        title=title_mrc,lon=lon_avg,lat=Median(lat_arr),min=0,max=5.,/half,color_table=color_table
+        title=title_mrc,lon=lon_avg,lat=lat_avg,min=0,max=5.,/half,color_table=color_table
 ;        
 ;    healpix_image,file_path_smt,map_projection=map_projection,ps_write=0,png_write=1,silent=1,$
-;        title=title_smt,lon=lon_avg,lat=Median(lat_arr),min=low_residual*cnorm/2.,max=high_residual*cnorm/2.,/half,color_table=color_table
+;        title=title_smt,lon=lon_avg,lat=lat_avg,min=low_residual*cnorm/2.,max=high_residual*cnorm/2.,/half,color_table=color_table
 ENDFOR
 
 END
