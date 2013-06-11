@@ -274,16 +274,16 @@ IF Keyword_Set(data_flag) THEN BEGIN
     print,String(format='(A," tiles used and ",A," tiles flagged")',$
         Strn(n_tile_use),Strn(n_tile_cut))
     
-    save,obs,filename=obs_filepath
-    save,params,filename=params_filepath
-    save,hdr,filename=hdr_filepath
+    SAVE,obs,filename=obs_filepath,/compress
+    SAVE,params,filename=params_filepath,/compress
+    SAVE,hdr,filename=hdr_filepath,/compress
         
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
     IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     vis_flag_update,flag_arr0,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
-    save,obs,filename=obs_filepath
+    SAVE,obs,filename=obs_filepath,/compress
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
@@ -327,12 +327,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
         auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
         auto_corr[pol_i]=Ptr_new(auto_vals)
     ENDFOR
-    save,auto_corr,obs,filename=autocorr_filepath
+    SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
     
     ;IF Keyword_Set(calibrate) THEN FOR pol_i=0,n_pol-1 DO $
     ;    visibility_calibrate_simple,*vis_arr[pol_i],*flag_arr[pol_i],obs,params,beam=*beam[pol_i]
     
-    ;save,vis_arr,filename=vis_filepath
+    ;SAVE,vis_arr,filename=vis_filepath
     
     t_grid=fltarr(n_pol)
     t_mapfn_gen=fltarr(n_pol)
@@ -357,8 +357,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
-            save,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav'
-            save,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav'
+            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
+            SAVE,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav',/compress
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_arr[pol_i]=Temporary(dirty_img)
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
