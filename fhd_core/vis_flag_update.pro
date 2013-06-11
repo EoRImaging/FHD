@@ -59,6 +59,10 @@ IF Keyword_Set(flag_arr) THEN BEGIN
     ENDIF
 ENDIF
 
+IF max(xmin)<max(ymin) LT 0 THEN BEGIN
+    obs.n_vis=0
+    RETURN
+ENDIF
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(xmin+ymin*dimension,binsize=1,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
 bin_i=where(bin_n,n_bin_use);+bin_min

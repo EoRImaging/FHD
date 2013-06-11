@@ -69,9 +69,10 @@ WHILE fi LT n_files DO BEGIN
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-        complex=complex_beam,double=double_precison_beam,precess=precess,$
+        complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,_Extra=extra
     IF Keyword_Set(cleanup) AND cleanup GT 1 THEN fhd_cleanup,fhd_file_list[fi],/minimal
+    IF ~Keyword_Set(error) THEN IF Keyword_Set(fi_use) THEN fi_use=[fi_use,fi] ELSE fi_use=fi
     fi+=1.
     IF Keyword_Set(update_file_list) THEN BEGIN ;use this if simultaneously downloading and deconvolving observations
         vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
@@ -81,9 +82,9 @@ WHILE fi LT n_files DO BEGIN
 ENDWHILE
 IF N_Elements(end_fi) EQ 0 THEN end_fi=fi-1
 
-n_files_use=end_fi-start_fi+1
-vis_file_list=vis_file_list[start_fi:end_fi]
-fhd_file_list=fhd_file_list[start_fi:end_fi]
+n_files_use=N_Elements(fi_use)
+vis_file_list=vis_file_list[fi_use]
+fhd_file_list=fhd_file_list[fi_use]
 IF Keyword_Set(simultaneous) THEN BEGIN
     IF Total(simultaneous) GT 1 THEN N_simultaneous=simultaneous
     fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,n_pol=n_pol,$

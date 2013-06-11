@@ -35,11 +35,12 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,$
     n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
     file_path_fhd=file_path_fhd,force_data=force_data,quickview=quickview,freq_start=freq_start,freq_end=freq_end,$
-    tile_flag_list=tile_flag_list,_Extra=extra
+    tile_flag_list=tile_flag_list,error=error,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
 !except=0 ;System variable that controls when math errors are printed. Set to 0 to disable.
+error=0
 heap_gc 
 t0=Systime(1)
 ;IF N_Elements(version) EQ 0 THEN version=0
@@ -100,6 +101,11 @@ IF Keyword_Set(beam_recalculate) OR Keyword_Set(flag) OR Keyword_Set(grid_recalc
 
 IF Keyword_Set(data_flag) THEN BEGIN
     ;info_struct=mrdfits(filepath(filename+ext,root_dir=rootdir('mwa'),subdir=data_directory),2,info_header,/silent)
+    IF file_test(file_path_vis) EQ 0 THEN BEGIN
+        print,"File: "+file_path_vis+" not found! Returning"
+        error=1
+        RETURN
+    ENDIF
     data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
     ;; testing for export type. If multibeam, then read original header
     casa_type = strlowcase(strtrim(sxpar(data_header0, 'OBJECT'), 2))
@@ -277,6 +283,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     vis_flag_update,flag_arr0,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
     save,obs,filename=obs_filepath
+    IF obs.n_vis EQ 0 THEN BEGIN
+        print,"All data flagged! Returning."
+        error=1
+        RETURN
+    ENDIF
     
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)
