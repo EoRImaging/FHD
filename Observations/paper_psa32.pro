@@ -23,19 +23,20 @@ healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_fi
 catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 
 ;dimension=1024.
-FoV=120.
+FoV=160.
 dimension=1024.
+psf_dim=8.
 
 max_sources=10000.
 pad_uv_image=2.
-precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
+precess=1 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 instrument='paper'
 lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
 n_pol=2
 ;mirror_X=1
 independent_fit=1 ;not sure of polarization calibration for now!
-time_offset=5.*60. ;time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time. 
+time_offset=10.*60. ;time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time. 
 no_ps=1
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
@@ -44,7 +45,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,no_ps=no_ps,$
     rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,lon=lon,lat=lat,FoV=FoV,time_offset=time_offset,$
-    complex_beam=complex_beam,double_precison_beam=double_precison_beam,instrument=instrument,_Extra=extra
+    complex_beam=complex_beam,double_precison_beam=double_precison_beam,instrument=instrument,psf_dim=psf_dim,_Extra=extra
 
 !except=except
 END

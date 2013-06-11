@@ -22,7 +22,7 @@ IF Keyword_Set(astr) THEN BEGIN
     ra0=astr.crval[0]
     dec0=astr.crval[1]
     angs=angle_difference(dec0,ra0,dec,ra,/degree)
-    i_use=where(Abs(angs) LE 45,n_use)
+    i_use=where(Abs(angs) LE 60.,n_use)
     IF n_use GT 0 THEN BEGIN
         ad2xy,ra[i_use],dec[i_use],astr,x_arr,y_arr
         mrc_cat[i_use].x=x_arr
