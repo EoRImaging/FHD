@@ -37,7 +37,7 @@ FOR fi=0,n_files-1 DO BEGIN
     sa=getvar_savefile(file_path+'_fhd.sav','source_array')
     beam_arr[fi,*]=getvar_savefile(file_path+'_fhd.sav','beam_base')
 ;    sa_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list'
-    restore,file_path+'_obs.sav'
+    RESTORE,file_path+'_obs.sav'
     IF fi_c EQ 0 THEN obs_arr=Replicate(obs,n_files)
     obs_arr[fi]=obs
     
@@ -147,7 +147,7 @@ FOR gi=0L,ng-1 DO BEGIN
     source_list[gi].sources=Ptr_new(source_sub)
 ENDFOR
 
-save,source_list,filename=save_path
+SAVE,source_list,filename=save_path,/compress
 print,Strn(ns_use)+" sources detected in at least "+Strn(min_detect)+" observations."
 
 END

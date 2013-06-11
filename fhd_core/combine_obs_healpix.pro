@@ -12,7 +12,7 @@ IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 save_path=output_path+'_maps.sav'
 
 IF Keyword_Set(restore_last) THEN BEGIN
-    restore,save_path
+    RESTORE,save_path
     RETURN
 ENDIF
 
@@ -52,7 +52,7 @@ cal_use=replicate(flux_scale,n_obs)
 IF ~Keyword_Set(silent) THEN print,'Initializing HEALPix maps'
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path=file_list_use[obs_i]
-    restore,file_path+'_obs.sav'
+    RESTORE,file_path+'_obs.sav'
     IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs)
     obs_arr[obs_i]=obs
     astr=obs.astr
@@ -167,6 +167,6 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     dv=1
 ENDFOR
 
-save,hpx_inds,nside,obs_arr,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,mrc_hpx,filename=save_path,/compress
+SAVE,hpx_inds,nside,obs_arr,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,mrc_hpx,filename=save_path,/compress
 
 END

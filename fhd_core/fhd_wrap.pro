@@ -26,9 +26,9 @@ PRO fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,beam_threshold=beam_
 heap_gc
 compile_opt idl2,strictarrsubs  
 
-IF N_Elements(obs) EQ 0 THEN restore,file_path_fhd+'_obs.sav'
+IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
 fhd=fhd_init(obs,_Extra=extra)
-save,fhd,filename=file_path_fhd+'_fhd_params.sav'
+SAVE,fhd,filename=file_path_fhd+'_fhd_params.sav',/compress
 
 npol=fhd.npol
 dimension=obs.dimension
@@ -37,7 +37,7 @@ elements=obs.elements
 pol_names=['xx','yy','xy','yx']
 ext='.UVFITS'
 
-IF N_Elements(params) EQ 0 THEN restore,filename=file_path_fhd+'_params.sav'
+IF N_Elements(params) EQ 0 THEN RESTORE,filename=file_path_fhd+'_params.sav'
 IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,file_path_fhd,/restore_last) 
 
 ;set to fit each polarization independantly 
@@ -63,8 +63,8 @@ ENDIF
         beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,$
         file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,_Extra=extra
         
-save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
-    beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav'
+SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
+    beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav',/compress
 
 IF N_Elements(quickview) EQ 0 THEN quickview=1
 IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
