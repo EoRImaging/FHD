@@ -31,7 +31,11 @@ IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag) EQ 0 THEN flag=0
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
-IF Keyword_Set(simultaneous) THEN deconvolve=0
+IF Keyword_Set(simultaneous) THEN BEGIN
+    deconvolve=0
+    export_sim=export_images
+    export_images=0
+ENDIF
 IF Keyword_Set(recalculate_all) AND (N_Elements(deconvolve) EQ 0) THEN deconvolve=1
 ;IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
@@ -91,6 +95,14 @@ IF Keyword_Set(simultaneous) THEN BEGIN
         independent_fit=independent_fit,/silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
         export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,_Extra=extra    
+    IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
+        uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
+            beam_recalculate=0,transfer_mapfn=0,mapfn_recalculate=0,flag=0,grid=0,healpix_recalculate=0,$
+            /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
+            export_images=1,noise_calibrate=noise_calibrate,align=align,$
+            dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
+            error=error,quickview=0,_Extra=extra
+    ENDFOR
 ENDIF
 
 map_projection='orth'
