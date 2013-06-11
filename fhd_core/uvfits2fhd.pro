@@ -160,6 +160,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
     print,String(format='("Bandwidth used: ",A," MHz")',Strn(bandwidth))
     print,String(format='("UV resolution used: ",A," wavelengths")',Strn(kbinsize))
     print,String(format='("UV image size used: ",A," wavelengths")',Strn(k_span))
+    print,String(format='("Observation coordinates: ",A," ",A,A)',$
+        Strn(obs.obsra,length=6),(obs.obsdec GE 0) ? '+':'-',Strn(Abs(obs.obsdec),length=5))
+    print,String(format='("Zenith coordinates: ",A," ",A,A)',$
+        Strn(obs.zenra,length=6),(obs.zendec GE 0) ? '+':'-',Strn(Abs(obs.zendec),length=5))
+    IF Keyword_Set(phasera) THEN print,String(format='("Image phased to coordinates: ",A," ",A,A)',$
+        Strn(phasera,length=6),(phasedec GE 0) ? '+':'-',Strn(Abs(phasedec),length=5))
     
     pol_dim=hdr.pol_dim
     freq_dim=hdr.freq_dim
