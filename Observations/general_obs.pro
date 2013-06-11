@@ -24,7 +24,7 @@ IF N_Elements(healpix_path) EQ 0 THEN healpix_path=fhd_path_setup(output_dir=dat
 IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 n_files=N_Elements(vis_file_list)
 
-;Set which files to restore or recalculate (if the file is not found, it will be recalculated regardless)
+;Set which files to restore or recalculate (if the file is not found and needed, it will be recalculated
 IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
@@ -48,7 +48,7 @@ IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q
 
 ;Set up output image parameters
 IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=2. ;grid output images at a higher resolution if set (ignored for quickview images)
-IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
+IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_radial' ;applied ONLY to output images
 noise_calibrate=0
 align=0
 
