@@ -33,9 +33,9 @@ instrument='paper'
 lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
 n_pol=2
-mirror_X=1
+;mirror_X=1
 independent_fit=1 ;not sure of polarization calibration for now!
-time_offset=5.*60. ;time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time. 
+time_offset=10.*60. ;time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time. 
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
