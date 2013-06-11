@@ -35,7 +35,7 @@ lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
 n_pol=2
 ;mirror_X=1
-independent_fit=1 ;not sure of polarization calibration for now!
+;independent_fit=1 ;not sure of polarization calibration for now!
 time_offset=10.*60. ;time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time. 
 no_ps=1
 
