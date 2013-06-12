@@ -13,7 +13,7 @@
 FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,$
     instrument=instrument,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,$
-    swap_pol=swap_pol,_Extra=extra
+    swap_pol=swap_pol,no_complex_beam=no_complex_beam,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -233,6 +233,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 complex_flag=Max(complex_flag_arr)
+IF Keyword_Set(no_complex_beam) THEN complex_flag=0
 IF complex_flag EQ 0 THEN BEGIN
     FOR i=0L,N_Elements(psf_base)-1 DO *psf_base[i]=Real_part(*psf_base[i])
     print,'Saving only real part of beam model!'
