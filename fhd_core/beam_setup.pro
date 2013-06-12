@@ -125,7 +125,7 @@ yvals3=za_arr*Cos(az_arr*!DtoR);/degpix_use3[1]
 el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
+;IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
 
 IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
 
@@ -186,7 +186,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         uv_mask[beam_i]=1.
 ;        psf_base1*=uv_mask
         
-        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
+;        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
+        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1)
         uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1)
         psf_base2*=uv_mask2
         gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
