@@ -43,6 +43,8 @@ degpix=[beam_RA_delt,beam_Dec_delt]
 freq_i_test=Min(abs(freq_arr-frequency),freq_i_use)
 beam_slice=Reform(beam_cube[*,*,freq_i_use])
 
+beam_slice=Sqrt(beam_slice>0.)
+
 IF polarization EQ 0 THEN beam_slice=Rotate(beam_slice,1)
 
 ;IF polarization EQ 0 THEN BEGIN

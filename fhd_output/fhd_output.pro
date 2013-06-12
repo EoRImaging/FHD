@@ -456,7 +456,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,_Extra=extra
             imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,_Extra=extra
-            imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i],$
+            imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high2,_Extra=extra
             debug_gal=0
             dummyval=0
