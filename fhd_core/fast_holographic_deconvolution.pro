@@ -19,7 +19,7 @@ PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_ar
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,$
-    galaxy_model_fit=galaxy_model_fit,_Extra=extra
+    galaxy_model_fit=galaxy_model_fit,scale_gain=scale_gain,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 
@@ -348,7 +348,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         
         beam_corr_src=fltarr(n_pol)
         beam_src=fltarr(n_pol)
-        gain_factor_use=gain_array[additional_i[src_i]]
+        beam_corr_avg_src=beam_corr_avg[additional_i[src_i]]
         FOR pol_i=0,n_pol-1 DO BEGIN   
             beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
             beam_src[pol_i]=(*beam_base[pol_i])[additional_i[src_i]]
@@ -365,8 +365,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5) $
                 ELSE flux_use=Interpolate(image_use_U[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius],xcen0,ycen0,cubic=-0.5)
             
-            flux_use=(flux_use*gain_factor_use)>0
-            flux_arr[pol_i]=flux_use;*beam_corr_src[pol_i] ;"True sky" instrumental pol
+            flux_arr[pol_i]=flux_use*beam_corr_avg_src ;"True sky" instrumental pol
         ENDFOR
         
         IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
@@ -374,6 +373,12 @@ FOR i=0L,max_iter-1 DO BEGIN
             source_mask[sx,sy]=0
             CONTINUE
         ENDIF
+        
+        IF Keyword_Set(scale_gain) THEN BEGIN
+            ston_single=(flux_arr[0]+flux_arr[1])/converge_check2[i]
+            gain_factor_use=((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))>gain_factor
+        ENDIF ELSE gain_factor_use=gain_array[additional_i[src_i]]
+        flux_arr*=gain_factor_use
         
         FOR pol_i=0,n_pol-1 DO comp_arr[si].flux.(pol_i)=flux_arr[pol_i]*beam_src[pol_i];*ps_not_used ;Apparent brightness, instrumental polarization X gain (a scalar)
         comp_arr[si].x=xcen
