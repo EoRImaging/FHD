@@ -64,8 +64,8 @@ n_pol=obs.n_pol
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
 
-frequency_array=obs.freq
-freq_bin_i=obs.fbin_i
+IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 
 freq_center=fltarr(nfreq_bin)
