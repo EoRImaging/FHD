@@ -70,8 +70,9 @@ nfreq_bin=Max(freq_bin_i)+1
 
 freq_center=fltarr(nfreq_bin)
 FOR fi=0L,nfreq_bin-1 DO BEGIN
-;    freq_center[fi]=Median(frequency_array[where(freq_bin_i EQ fi)])
-    freq_center[fi]=Interpol(frequency_array,freq_bin_i,fi)
+    fi_i=where(freq_bin_i EQ fi,n_fi)
+    IF n_fi EQ 0 THEN freq_center[fi]=Interpol(frequency_array,freq_bin_i,fi) $
+        ELSE freq_center[fi]=Median(frequency_array[fi_i])
 ENDFOR
 bin_offset=(*obs.baseline_info).bin_offset
 nbaselines=bin_offset[1]
@@ -189,9 +190,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         uv_mask[beam_i]=1.
 ;        psf_base1*=uv_mask
         
-;        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
-        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1)
+        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
+;        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1)
         uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1)
+        phase_test=Atan(psf_base2,/phase)*!Radeg
+        phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
+        IF n_phase_cut GT 0 THEN uv_mask2[phase_cut]=0
         psf_base2*=uv_mask2
         gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
         psf_base2*=gain_normalization
