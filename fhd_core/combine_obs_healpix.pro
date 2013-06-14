@@ -115,6 +115,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;        restore,file_path+'_fhd.sav'
     IF file_test(file_path+'_fhd_params.sav') EQ 0 THEN fhd=fhd_init() ELSE fhd=getvar_savefile(file_path+'_fhd_params.sav','fhd')
     image_uv_arr=getvar_savefile(file_path+'_fhd.sav','image_uv_arr')
+    weights_uv_arr=getvar_savefile(file_path+'_fhd.sav','weights_arr')
     source_array=getvar_savefile(file_path+'_fhd.sav','source_array')
     model_uv_holo=getvar_savefile(file_path+'_fhd.sav','model_uv_holo')
     beam_base=getvar_savefile(file_path+'_fhd.sav','beam_base')
@@ -135,8 +136,8 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;    n_vis_rel=1.
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
     FOR pol_i=0,n_pol-1 DO BEGIN
-        dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis_rel
-        model_single=dirty_image_generate(*model_uv_holo[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix)*cal_use[obs_i]*n_vis_rel
+        dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix,weights=*weights_uv_arr[pol_i])*cal_use[obs_i]*n_vis_rel
+        model_single=dirty_image_generate(*model_uv_holo[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix,weights=*weights_uv_arr[pol_i])*cal_use[obs_i]*n_vis_rel
 
         sources_single=source_image_generate(source_arr,obs,pol_i=pol_i,resolution=16,dimension=dimension,width=restored_beam_width)*$
             cal_use[obs_i]*(*beam_base[pol_i])*n_vis_rel ;source_arr is already in instrumental pol (x beam once)

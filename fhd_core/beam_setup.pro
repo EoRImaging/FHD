@@ -69,7 +69,10 @@ freq_bin_i=obs.fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 
 freq_center=fltarr(nfreq_bin)
-FOR fi=0L,nfreq_bin-1 DO freq_center[fi]=Median(frequency_array[where(freq_bin_i EQ fi)])
+FOR fi=0L,nfreq_bin-1 DO BEGIN
+;    freq_center[fi]=Median(frequency_array[where(freq_bin_i EQ fi)])
+    freq_center[fi]=Interpol(frequency_array,freq_bin_i,fi)
+ENDFOR
 bin_offset=(*obs.baseline_info).bin_offset
 nbaselines=bin_offset[1]
 
@@ -125,7 +128,7 @@ yvals3=za_arr*Cos(az_arr*!DtoR);/degpix_use3[1]
 el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-;IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
+IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
 
 IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
 
