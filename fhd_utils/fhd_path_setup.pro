@@ -13,7 +13,8 @@ IF Keyword_Set(output_filename) THEN filename=output_filename
 IF N_Elements(data_directory) EQ 0 THEN message,"Output directory not specified"
 IF N_Elements(filename) EQ 0 THEN message,"Filename not specified"
 
-IF Keyword_Set(version) THEN version_dirname='fhd_v'+strn(Fix(version)) ELSE version_dirname='fhd'
+IF Keyword_Set(version) THEN IF size(version,/type) EQ 7 THEN version_dirname='fhd_'+version ELSE version_dirname='fhd_v'+strn(Fix(version)) $
+    ELSE version_dirname='fhd'
 
 CASE 1 OF 
     Keyword_Set(subdir) AND ~Keyword_Set(no_sub_fhd):subdir_use=[version_dirname,subdir]

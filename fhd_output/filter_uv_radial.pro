@@ -5,13 +5,15 @@ IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
 dimension=(size(image_uv,/dimension))[0]
 elements=(size(image_uv,/dimension))[1]
 
-radial_map=fft_shift(dist(dimension,elements))
+xv=meshgrid(dimension,elements,1)-dimension/2
+yv=meshgrid(dimension,elements,2)-elements/2
+
+radial_map=Sqrt(xv^2.+yv^2.)
 
 filter_use=fltarr(dimension,elements)
 radial_smooth=5.
 val0=0.
 
-radial_map=fft_shift(dist(dimension,elements))
 rad_hist=histogram(radial_map,min=1,/binsize,reverse_ind=ri)
 rad_bin=where(rad_hist,n_bin)
 rad_vals=fltarr(n_bin)
@@ -38,8 +40,7 @@ filter_use=Reform(interpol(rad_vals_use,rad_i_use,reform(radial_map,dimension*Fl
 
 IF Max(filter_use) EQ 0 THEN RETURN,image_uv 
 
-radial_map=fft_shift(radial_map)
-IF Keyword_Set(radial_power) THEN filter_use*=radial_map^radial_power ELSE filter_use*=Sqrt(radial_map)
+IF Keyword_Set(radial_power) THEN filter_use*=radial_map^radial_power ELSE filter_use*=weight_invert(Sqrt(radial_map))
 wts_i=where(weights,n_wts)
 IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)
 
