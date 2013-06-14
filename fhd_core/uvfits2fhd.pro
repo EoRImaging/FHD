@@ -96,8 +96,8 @@ IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 
 data_flag=file_test(hdr_filepath) AND file_test(flags_filepath) AND file_test(obs_filepath) AND file_test(params_filepath)
 
-IF Keyword_Set(beam_recalculate) OR Keyword_Set(flag) OR Keyword_Set(grid_recalculate) OR $
-    Keyword_Set(mapfn_recalculate) OR Keyword_Set(healpix_recalculate) OR $
+IF Keyword_Set(beam_recalculate) OR Keyword_Set(grid_recalculate) OR $
+    Keyword_Set(mapfn_recalculate) OR $
     Keyword_Set(force_data) OR ~data_flag THEN data_flag=1 ELSE data_flag=0
 
 IF Keyword_Set(data_flag) THEN BEGIN

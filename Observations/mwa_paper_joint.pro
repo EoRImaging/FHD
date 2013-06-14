@@ -47,7 +47,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     combine_healpix=combine_healpix,no_ps=no_ps,flag=flag,_Extra=extra
 
 ;PAPER DATA NEXT
-vis_file_list_paper=file_search(data_directory_paper,'*_cal.uvfits',count=n_files)
+vis_file_list_paper=file_search(data_directory_paper,'*.uvfits',count=n_files)
 fhd_file_list_paper=fhd_path_setup(vis_file_list_paper,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory_paper,subdir='Healpix',output_filename='Combined_obs',version=version)
 
