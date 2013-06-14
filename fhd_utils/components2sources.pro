@@ -27,6 +27,7 @@ FOR gi=0L,ng-1 DO BEGIN
     si_g=gri[gri[gi]:gri[gi+1]-1]; guaranteed at least one source per group
     
     flux_I=(comp_arr[si_g].flux.I)>0.
+    IF Total(flux_I) LE 0 THEN CONTINUE
     source_arr[gi].x=Total(comp_arr[si_g].x*flux_I)/Total(flux_I) ;flux_I is guaranteed to be non-zero from above
     source_arr[gi].y=Total(comp_arr[si_g].y*flux_I)/Total(flux_I) ;flux_I is guaranteed to be non-zero from above
     source_arr[gi].ra=Total(comp_arr[si_g].ra*flux_I)/Total(flux_I) ;flux_I is guaranteed to be non-zero from above

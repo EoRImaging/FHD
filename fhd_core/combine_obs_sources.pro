@@ -25,8 +25,7 @@ n_files=N_Elements(file_list)
 IF n_files LT 2 THEN BEGIN
     RETURN
 ENDIF
-source_array2=Ptrarr(n_files,/allocate)
-beam_arr=Ptrarr(n_files,2)
+source_array=Ptrarr(n_files,/allocate)
 
 n_src=fltarr(n_files)
 src_i=Ptrarr(n_files,/allocate)
@@ -35,7 +34,7 @@ FOR fi=0,n_files-1 DO BEGIN
     file_path=file_list[fi]
     IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(file_path+'_fhd.sav') EQ 0) THEN CONTINUE ELSE fi_c+=1
     sa=getvar_savefile(file_path+'_fhd.sav','source_array')
-    beam_arr[fi,*]=getvar_savefile(file_path+'_fhd.sav','beam_base')
+    
 ;    sa_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list'
     RESTORE,file_path+'_obs.sav'
     IF fi_c EQ 0 THEN obs_arr=Replicate(obs,n_files)
@@ -44,12 +43,20 @@ FOR fi=0,n_files-1 DO BEGIN
 ;    textfast,sa,/read,file_path=sa_path,first_line=1
     
     src_i0=where(sa.ston GE StoN,n_src0)
-    n_src[fi]+=n_src0
+    n_src[fi]=n_src0
     *src_i[fi]=src_i0
-    *source_array2[fi]=sa
+    *source_array[fi]=sa
 ENDFOR
 degpix=Median(obs_arr.degpix)
 n_pol=Min(obs_arr.n_pol)
+
+beam_arr=Ptrarr(n_files,n_pol)
+FOR fi=0,n_files-1 DO BEGIN
+    file_path=file_list[fi]
+    IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(file_path+'_fhd.sav') EQ 0) THEN CONTINUE
+    beam_arr_single=getvar_savefile(file_path+'_fhd.sav','beam_base')
+    beam_arr[fi,*]=beam_arr_single[0:n_pol-1]
+ENDFOR
 
 ns=Total(n_src)
 ns_i=[0,Total(n_src,/cumulative)]
@@ -70,19 +77,23 @@ FOR fi=0,n_files-1 DO BEGIN
     
     IF n_pol GT 1 THEN beam_avg=Sqrt(((*beam_arr[fi,0])^2.+(*beam_arr[fi,1])^2.)/2.) $
         ELSE beam_avg=*beam_arr[fi,0]
-    sa=*source_array2[fi]
+    sa=*source_array[fi]
     sa=sa[*src_i[fi]]
-    sa_x[ns_i[fi]:ns_i[fi+1]-1]=sa.x
-    sa_y[ns_i[fi]:ns_i[fi+1]-1]=sa.y
-    sa_ra[ns_i[fi]:ns_i[fi+1]-1]=sa.ra
-    sa_dec[ns_i[fi]:ns_i[fi+1]-1]=sa.dec
-    sa_I[ns_i[fi]:ns_i[fi+1]-1]=sa.flux.I
-    sa_bin[ns_i[fi]:ns_i[fi+1]-1]=fi
-    sa_id[ns_i[fi]:ns_i[fi+1]-1]=sa.id
-    sa_ston[ns_i[fi]:ns_i[fi+1]-1]=sa.ston
-    sa_radius[ns_i[fi]:ns_i[fi+1]-1]=angle_difference(obs_arr[fi].obsdec,obs_arr[fi].obsra,sa.dec,sa.ra,/degree)
-    sa_beam[ns_i[fi]:ns_i[fi+1]-1]=beam_avg[sa.x,sa.y]
-    sa_extend[ns_i[fi]:ns_i[fi+1]-1]=Ptr_valid(sa.extend)
+    sa_inds=lindgen(n_src[fi])+ns_i[fi]
+    
+    pix_i=Floor(sa.x)+Floor(sa.y)*obs_arr[fi].dimension
+    ;replacing ns_i[fi]:ns_i[fi+1]-1 with sa_inds
+    sa_x[sa_inds]=sa.x
+    sa_y[sa_inds]=sa.y
+    sa_ra[sa_inds]=sa.ra
+    sa_dec[sa_inds]=sa.dec
+    sa_I[sa_inds]=sa.flux.I
+    sa_bin[sa_inds]=fi
+    sa_id[sa_inds]=sa.id
+    sa_ston[sa_inds]=sa.ston
+    sa_radius[sa_inds]=angle_difference(obs_arr[fi].obsdec,obs_arr[fi].obsra,sa.dec,sa.ra,/degree)
+    sa_beam[sa_inds]=beam_avg[pix_i]
+    sa_extend[sa_inds]=Ptr_valid(sa.extend)
 ENDFOR
 
 group_id=fltarr(ns)-1
