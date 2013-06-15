@@ -81,7 +81,8 @@ IF Keyword_Set(model_ptr) THEN BEGIN
         ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
     ENDELSE
 ENDIF
-frequency_array=(obs.freq)[fi_use]
+IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+frequency_array=frequency_array[fi_use]
 
 IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
 psf_base=psf.base

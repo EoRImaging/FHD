@@ -96,8 +96,8 @@ IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 
 data_flag=file_test(hdr_filepath) AND file_test(flags_filepath) AND file_test(obs_filepath) AND file_test(params_filepath)
 
-IF Keyword_Set(beam_recalculate) OR Keyword_Set(flag) OR Keyword_Set(grid_recalculate) OR $
-    Keyword_Set(mapfn_recalculate) OR Keyword_Set(healpix_recalculate) OR $
+IF Keyword_Set(beam_recalculate) OR Keyword_Set(grid_recalculate) OR $
+    Keyword_Set(mapfn_recalculate) OR $
     Keyword_Set(force_data) OR ~data_flag THEN data_flag=1 ELSE data_flag=0
 
 IF Keyword_Set(data_flag) THEN BEGIN
@@ -149,8 +149,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
 ;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
     ENDIF ELSE phase_shift=1.
     
-    IF Keyword_Set(freq_start) THEN bw_start=(freq_start*1E6)>Min(obs.freq) ELSE bw_start=Min(obs.freq)
-    IF Keyword_Set(freq_end) THEN bw_end=(freq_end*1E6)<Max(obs.freq) ELSE bw_end=Max(obs.freq)
+    IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
+    
+    IF Keyword_Set(freq_start) THEN bw_start=(freq_start*1E6)>Min(freq_arr) ELSE bw_start=Min(freq_arr)
+    IF Keyword_Set(freq_end) THEN bw_end=(freq_end*1E6)<Max(freq_arr) ELSE bw_end=Max(freq_arr)
     bandwidth=Round((bw_end-bw_start)/1E5)/10.
     fov=dimension*degpix
     k_span=kbinsize*dimension
@@ -186,12 +188,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDELSE
     
     IF Keyword_Set(freq_start) THEN BEGIN
-        frequency_array_MHz=obs.freq/1E6
+        frequency_array_MHz=freq_arr/1E6
         freq_start_cut=where(frequency_array_MHz LT freq_start,nf_cut_start)
         IF nf_cut_start GT 0 THEN flag_arr0[*,freq_start_cut,*]=0
     ENDIF ELSE nf_cut_start=0
     IF Keyword_Set(freq_end) THEN BEGIN
-        frequency_array_MHz=obs.freq/1E6
+        frequency_array_MHz=freq_arr/1E6
         freq_end_cut=where(frequency_array_MHz GT freq_end,nf_cut_end)
         IF nf_cut_end GT 0 THEN flag_arr0[*,freq_end_cut,*]=0
     ENDIF ELSE nf_cut_end=0

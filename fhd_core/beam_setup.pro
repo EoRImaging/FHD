@@ -64,12 +64,16 @@ n_pol=obs.n_pol
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
 
-frequency_array=obs.freq
-freq_bin_i=obs.fbin_i
+IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 
 freq_center=fltarr(nfreq_bin)
-FOR fi=0L,nfreq_bin-1 DO freq_center[fi]=Median(frequency_array[where(freq_bin_i EQ fi)])
+FOR fi=0L,nfreq_bin-1 DO BEGIN
+    fi_i=where(freq_bin_i EQ fi,n_fi)
+    IF n_fi EQ 0 THEN freq_center[fi]=Interpol(frequency_array,freq_bin_i,fi) $
+        ELSE freq_center[fi]=Median(frequency_array[fi_i])
+ENDFOR
 bin_offset=(*obs.baseline_info).bin_offset
 nbaselines=bin_offset[1]
 
@@ -125,7 +129,7 @@ yvals3=za_arr*Cos(az_arr*!DtoR);/degpix_use3[1]
 el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-;IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
+IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
 
 IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
 
@@ -186,9 +190,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         uv_mask[beam_i]=1.
 ;        psf_base1*=uv_mask
         
-;        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
-        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1)
+        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
+;        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1)
         uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1)
+        phase_test=Atan(psf_base2,/phase)*!Radeg
+        phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
+        IF n_phase_cut GT 0 THEN uv_mask2[phase_cut]=0
         psf_base2*=uv_mask2
         gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
         psf_base2*=gain_normalization

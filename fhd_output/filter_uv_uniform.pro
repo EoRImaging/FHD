@@ -9,7 +9,10 @@ filter_use=fltarr(dimension,elements)
 radial_smooth=5.
 val0=0.
 
-radial_map=fft_shift(dist(dimension,elements))
+xv=meshgrid(dimension,elements,1)-dimension/2
+yv=meshgrid(dimension,elements,2)-elements/2
+
+radial_map=Sqrt(xv^2.+yv^2.)
 rad_hist=histogram(radial_map,min=1,/binsize,reverse_ind=ri)
 rad_bin=where(rad_hist,n_bin)
 rad_vals=fltarr(n_bin)

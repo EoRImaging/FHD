@@ -29,7 +29,7 @@ psf_dim=6.
 
 max_sources=10000.
 pad_uv_image=2.
-precess=1 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
+precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 instrument='paper'
 lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
@@ -39,6 +39,7 @@ n_pol=2
 time_offset=5.*60. ;time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time. 
 no_ps=1
 no_complex_beam=1
+nfreq_avg=1.
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
@@ -47,7 +48,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,no_ps=no_ps,$
     rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,lon=lon,lat=lat,FoV=FoV,time_offset=time_offset,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,instrument=instrument,psf_dim=psf_dim,$
-    no_complex_beam=no_complex_beam,_Extra=extra
+    no_complex_beam=no_complex_beam,nfreq_avg=nfreq_avg,_Extra=extra
 
 !except=except
 END

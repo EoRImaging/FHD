@@ -14,10 +14,11 @@ degpix=obs.degpix
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
 
 freq_use=where((*obs.baseline_info).freq_use,nf_use)
-f_bin=obs.fbin_i
+IF Tag_exist(obs,'fbin_i') THEN f_bin=obs.fbin_i ELSE f_bin=(*obs.baseline_info).fbin_i
 fb_use=Uniq(f_bin[freq_use])
 nbin=N_Elements(fb_use)
-freq_arr=(obs.freq)[freq_use[fb_use]]/1E6
+IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
+freq_arr=freq_arr[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 

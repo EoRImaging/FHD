@@ -48,7 +48,8 @@ label_spacing=1.
 instr_images_filtered=Ptrarr(npol,/allocate)
 instr_images=Ptrarr(npol,/allocate)
 instr_sources=Ptrarr(npol,/allocate)
-restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/degpix)/2.
+restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
+restored_beam_width=restored_beam_width>0.75
 FOR pol_i=0,npol-1 DO BEGIN
 ;    *instr_images[pol_i]=dirty_image_generate(*residual_array[pol_i],image_filter_fn=image_filter_fn,degpix=degpix,$
 ;        _Extra=extra)*weight_invert(*beam_base[pol_i])
