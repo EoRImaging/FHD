@@ -33,7 +33,7 @@ n_freq=obs.n_freq
 n_pol=(size(data_array,/dimension))[1]
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
-freq=obs.freq
+IF Tag_exist(obs,'freq') THEN freq=obs.freq ELSE freq=(*obs.baseline_info).freq
 n_tiles=n_elements(uniq(tile_A[sort(tile_A)]))
 flag_center=1
 flag_edge=3
