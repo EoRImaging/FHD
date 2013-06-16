@@ -97,8 +97,9 @@ no_ps=1
 deconvolve=0
 export_images=1
 combine_healpix=1
-no_complex_beam=1
+;no_complex_beam=1
 simultaneous=1
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'force_data') THEN extra.force_data=0
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=0,export_images=export_images,version=version,$
     beam_recalculate=0,healpix_recalculate=0,mapfn_recalculate=0,simultaneous=simultaneous,$
