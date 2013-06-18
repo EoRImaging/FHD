@@ -49,8 +49,8 @@ ija=Ptrarr(n_use,/allocate)
 
 FOR i0=0.,n_use-1 DO BEGIN
     i=i_use[i0]
-    xi=Float(i mod dimension)
-    yi=Float(Floor(i/dimension))
+    xi=Long(i mod dimension)
+    yi=Long(Floor(i/dimension))
     map_fn_sub=*map_fn[xi,yi]
     *map_fn[xi,yi]=0 ;free memory as soon as it's read
     j_use=where(Abs(map_fn_sub) GT threshold,n_use)
