@@ -76,7 +76,10 @@ WHILE fi LT n_files DO BEGIN
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,_Extra=extra
     IF Keyword_Set(cleanup) AND cleanup GT 1 THEN fhd_cleanup,fhd_file_list[fi],/minimal
-    IF ~Keyword_Set(error) THEN IF Keyword_Set(fi_use) THEN fi_use=[fi_use,fi] ELSE fi_use=fi
+    IF Keyword_Set(error) THEN BEGIN
+        print,'Error encountered!'
+    ENDIF ELSE $
+        IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi
     fi+=1.
     IF Keyword_Set(update_file_list) THEN BEGIN ;use this if simultaneously downloading and deconvolving observations
         vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
