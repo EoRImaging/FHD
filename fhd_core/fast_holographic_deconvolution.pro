@@ -260,7 +260,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         
         image_filtered=dirty_image_composite-model_image_composite
 ;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
-        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use,smooth_width,/median,/circle)
+        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
         image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
         
         IF Keyword_Set(independent_fit) THEN BEGIN
@@ -275,7 +275,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
         ENDIF ELSE IF n_pol GT 2 THEN BEGIN
             image_use_U=dirty_image_composite_U-model_image_composite_U
-            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box;Max_filter(image_use_U,smooth_width,/median,/circle)
+            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF  
     ENDIF ELSE t2_0=Systime(1)
@@ -320,7 +320,8 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=(additional_i[src_i] mod dimension)
         sy=Floor(additional_i[src_i]/dimension)
-        source_box=source_find_image[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+        source_box=source_find_image[sx-local_max_radius:sx+local_max_radius,$
+            sy-local_max_radius:sy+local_max_radius]*source_fit_fn
         box_i=where(source_box GT fit_threshold,n_fit)
         IF n_fit EQ 0 THEN BEGIN
             n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
@@ -380,7 +381,8 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDIF ELSE gain_factor_use=gain_array[additional_i[src_i]]
         flux_arr*=gain_factor_use
         
-        FOR pol_i=0,n_pol-1 DO comp_arr[si].flux.(pol_i)=flux_arr[pol_i]*beam_src[pol_i];*ps_not_used ;Apparent brightness, instrumental polarization X gain (a scalar)
+        ;Apparent brightness, instrumental polarization X gain (a scalar)
+        FOR pol_i=0,n_pol-1 DO comp_arr[si].flux.(pol_i)=flux_arr[pol_i]*beam_src[pol_i]
         comp_arr[si].x=xcen
         comp_arr[si].y=ycen
         comp_arr[si].ra=ra

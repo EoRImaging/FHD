@@ -334,14 +334,13 @@ FOR i=0L,max_iter-1 DO BEGIN
     dec_arr=fltarr(n_src)
     source_cut_arr=fltarr(n_src)
     FOR src_i=0L,n_src-1 DO BEGIN
-        Query_disc,nside,pix_coords[source_i[src_i],*],local_radius/2.,region_inds,ninds,/deg
+        Query_disc,nside,pix_coords[source_i[src_i],*],local_radius,region_inds,ninds,/deg
         region_i=reverse_inds[region_inds]
         region_i=region_i[where(region_i GE 0)] ;guaranteed at least the center pixel
         ra1=ra_hpx[region_i]
         dec1=dec_hpx[region_i]
-        dist_test=angle_difference(source_dec[src_i],source_ra[src_i],dec1,ra1,/degree)>(2.*degpix_hpx)
-        dist_weights=(local_radius/dist_test)
-        simg1=source_find_hpx[region_i]*dist_weights
+        dist_weights=Exp(-(angle_difference(source_dec[src_i],source_ra[src_i],dec1,ra1,/degree)/local_radius)^2.)
+        simg1=source_find_hpx[region_i];*dist_weights
         
         ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
         dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
