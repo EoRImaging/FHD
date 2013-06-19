@@ -140,8 +140,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix))[dimension/2.,elements/2.]
     normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
-;gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
-gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)^2.
+gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)^2.
 gain_array*=gain_normalization
 ;normalization=.25
 normalization=1.

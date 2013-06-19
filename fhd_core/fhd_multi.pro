@@ -27,7 +27,7 @@ ENDFOR
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
 gain_factor=fhd.gain_factor
-gain_factor_use=gain_factor*(!RaDeg/(obs_arr.MAX_BASELINE/obs_arr.KPIX)/obs_arr.degpix)^2. ;correct by approx. beam area
+;gain_factor_use=gain_factor*(!RaDeg/(obs_arr.MAX_BASELINE/obs_arr.KPIX)/obs_arr.degpix)^2. ;correct by approx. beam area
 mapfn_interval=fhd.mapfn_interval
 max_iter=fhd.max_iter
 max_sources=fhd.max_sources
@@ -118,7 +118,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     
     source_uv_mask=fltarr(dimension,elements)
     source_uv_mask2=fltarr(dimension,elements)
-    normalization_arr=fltarr(n_pol<2)
+    normalization_arr=fltarr(n_pol)
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
 ;        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
@@ -128,12 +128,13 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
         *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
-        IF pol_i LE 2 THEN normalization_arr[pol_i]=1./mean(weights_single)
+        normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i,obs_i],degpix=obs.degpix))[dimension/2.,elements/2.]
+        normalization_arr[pol_i]*=((*beam_model[pol_i,obs_i])[obs.obsx,obs.obsy])^2.
         source_uv_mask[where(*weights_arr[pol_i,obs_i])]=1.
         source_uv_mask2[where(weights_single)]=1.
     ENDFOR
     *uv_mask_arr[obs_i]=source_uv_mask
-    norm_arr[obs_i]=Mean(normalization_arr)
+    norm_arr[obs_i]=Mean(normalization_arr[0:n_pol-1])
     
     uv_i_use=where(source_uv_mask,n_uv_use)
     uv_use_frac=Float(n_uv_use)/(dimension*elements)
@@ -147,10 +148,10 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     box_coords[obs_i,2]=(Min(yvals[where(beam_mask)])+elements/2.-smooth_width)>0
     box_coords[obs_i,3]=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
 ENDFOR
-
-;print,"Normalization factors used: ",norm_arr
-print,"Normalization factors (ignored!): ",norm_arr 
-norm_arr[*]=1.
+gain_factor_use=gain_factor*norm_arr
+print,"Gain normalization factors used: ",norm_arr
+;print,"Normalization factors (ignored!): ",norm_arr 
+;norm_arr[*]=1.
 ;FFT normalization factors:
 ;norm_arr=(obs_arr.degpix*!DtoR)^2.*(obs_arr.dimension*obs_arr.elements)
 ;print,"FFT Normalization factors used: ",norm_arr
@@ -216,7 +217,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             
             t2_0a=Systime(1)
             t1+=t2_0a-t1_0
-            IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
+;            IF i mod Floor(1./gain_factor) EQ 0 THEN BEGIN
                 smooth0=fltarr(size(residual,/dimension))
                 image_smooth=Median(residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]$
                     *(*beam_corr[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]],smooth_width,/even)$
@@ -226,7 +227,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                 *smooth_arr[pol_i,obs_i]=smooth0
                 smooth_hpx=healpix_cnv_apply(smooth0*(*beam_sourcefind_mask_arr[obs_i]),*hpx_cnv[obs_i])
                 (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
-            ENDIF
+;            ENDIF
             
             *res_arr[pol_i,obs_i]=residual-*smooth_arr[pol_i,obs_i]
             residual_use=residual*(*beam_sourcefind_mask_arr[obs_i]);l*(*source_mask_arr[obs_i])
@@ -466,7 +467,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR obs_i=0L,n_obs-1 DO BEGIN
         IF recalc_flag[obs_i] EQ 0 THEN CONTINUE
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],map_fn_arr[pol_i,obs_i],/indexed,_Extra=extra)*norm_arr[obs_i]
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],map_fn_arr[pol_i,obs_i],/indexed,_Extra=extra);*norm_arr[obs_i]
         ENDFOR
     ENDFOR
     t4+=Systime(1)-t4_0
