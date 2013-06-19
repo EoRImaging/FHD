@@ -103,11 +103,9 @@ IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'force_data') THEN extra.force
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=0,export_images=export_images,version=version,$
     beam_recalculate=0,healpix_recalculate=0,mapfn_recalculate=0,simultaneous=simultaneous,$
-    grid=grid,deconvolve=0,image_filter_fn=image_filter_fn,data_directory=data_directory_all,n_pol=n_pol,$
+    grid=0,deconvolve=0,image_filter_fn=image_filter_fn,data_directory=data_directory_all,n_pol=n_pol,$
     vis_file_list=vis_file_list_all,fhd_file_list=fhd_file_list_all,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
-    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,no_ps=no_ps,$
-    rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,lon=lon,lat=lat,FoV=FoV,time_offset=time_offset,$
-    complex_beam=complex_beam,double_precison_beam=double_precison_beam,instrument=instrument,psf_dim=psf_dim,$
-    no_complex_beam=no_complex_beam,nfreq_avg=nfreq_avg,combine_healpix=combine_healpix,flag=0,_Extra=extra
+    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,$
+    combine_healpix=combine_healpix,flag=0,_Extra=extra
     
 END
