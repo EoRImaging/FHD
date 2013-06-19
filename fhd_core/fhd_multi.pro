@@ -27,7 +27,7 @@ ENDFOR
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
 gain_factor=fhd.gain_factor
-gain_factor_use=gain_factor*(!RaDeg/(mean(obs.MAX_BASELINE)/Mean(obs.KPIX))/Mean(obs.degpix))^2. ;correct by approx. beam area
+gain_factor_use=gain_factor*(!RaDeg/(obs_arr.MAX_BASELINE/obs_arr.KPIX)/obs_arr.degpix)^2. ;correct by approx. beam area
 mapfn_interval=fhd.mapfn_interval
 max_iter=fhd.max_iter
 max_sources=fhd.max_sources
@@ -343,7 +343,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ra1=ra_hpx[region_i]
         dec1=dec_hpx[region_i]
         dist_weights=Exp(-(angle_difference(source_dec[src_i],source_ra[src_i],dec1,ra1,/degree)/local_radius)^2.)
-        simg1=source_find_hpx[region_i];*dist_weights
+        simg1=source_find_hpx[region_i]*dist_weights>0.
         
         ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
         dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
@@ -395,7 +395,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                             IF pol_i GE 2 THEN flux_use=flux_U[src_i]+sign*flux_V[src_i]
                         ENDIF ELSE IF pol_i LE 1 THEN flux_use=flux_I[src_i] ELSE flux_use=flux_U[src_i]
                         
-                        flux_use*=gain_factor_use/2.
+                        flux_use*=gain_factor_use[obs_i]/2.
                         comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
                         flux_arr[pol_i]=flux_use;"True sky" instrumental pol
                     ENDFOR

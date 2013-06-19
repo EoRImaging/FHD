@@ -366,7 +366,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5) $
                 ELSE flux_use=Interpolate(image_use_U[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius],xcen0,ycen0,cubic=-0.5)
             
-            flux_arr[pol_i]=flux_use*beam_corr_avg_src ;"True sky" instrumental pol
+            flux_arr[pol_i]=flux_use*beam_corr_avg_src/2. ;"True sky" instrumental pol
         ENDFOR
         
         IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
