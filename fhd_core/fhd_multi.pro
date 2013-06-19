@@ -23,9 +23,11 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     save,fhd,filename=file_path+'_fhd_params.sav'
 ENDFOR
 
+
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
 gain_factor=fhd.gain_factor
+gain_factor_use=gain_factor*(!RaDeg/(mean(obs.MAX_BASELINE)/Mean(obs.KPIX))/Mean(obs.degpix))^2. ;correct by approx. beam area
 mapfn_interval=fhd.mapfn_interval
 max_iter=fhd.max_iter
 max_sources=fhd.max_sources
@@ -157,6 +159,7 @@ hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_i
 n_hpx=N_Elements(hpx_inds)
 n_hpx_full=nside2npix(nside)
 degpix_hpx=Sqrt((4*!Pi*!Radeg^2.)/n_hpx_full)
+
 
 pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,dec_hpx,ra_hpx,/astro
@@ -392,7 +395,7 @@ FOR i=0L,max_iter-1 DO BEGIN
                             IF pol_i GE 2 THEN flux_use=flux_U[src_i]+sign*flux_V[src_i]
                         ENDIF ELSE IF pol_i LE 1 THEN flux_use=flux_I[src_i] ELSE flux_use=flux_U[src_i]
                         
-                        flux_use*=gain_factor
+                        flux_use*=gain_factor_use/2.
                         comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
                         flux_arr[pol_i]=flux_use;"True sky" instrumental pol
                     ENDFOR
@@ -430,19 +433,19 @@ FOR i=0L,max_iter-1 DO BEGIN
         
         si_use=si_use[si_use_i]
                 ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-        flux_I=comp_arr1[si_use].flux.I
-        flux_Q=comp_arr1[si_use].flux.Q
-        flux_U=comp_arr1[si_use].flux.U
-        flux_V=comp_arr1[si_use].flux.V
+        flux_I_use=comp_arr1[si_use].flux.I
+        flux_Q_use=comp_arr1[si_use].flux.Q
+        flux_U_use=comp_arr1[si_use].flux.U
+        flux_V_use=comp_arr1[si_use].flux.V
         x_vec=comp_arr1[si_use].x
         y_vec=comp_arr1[si_use].y
-        *model_uv_stks[0]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
-        IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
-            ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 
-        IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
-            ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_U)
-        IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
-            ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_V)
+        *model_uv_stks[0]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_I_use)
+        IF Total(flux_Q_use) EQ 0 THEN *model_uv_stks[1]=0. $
+            ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q_use) 
+        IF Total(flux_U_use) EQ 0 THEN *model_uv_stks[2]=0. $
+            ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_U_use)
+        IF Total(flux_V_use) EQ 0 THEN *model_uv_stks[3]=0. $
+            ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_V_use)
         SWITCH n_pol OF
             4:(*model_uv_full[3,obs_i])[*uv_i_arr[obs_i]]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
             3:(*model_uv_full[2,obs_i])[*uv_i_arr[obs_i]]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.

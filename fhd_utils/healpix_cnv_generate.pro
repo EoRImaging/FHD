@@ -23,6 +23,7 @@ IF N_Elements(radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4.
 IF not Keyword_Set(nside) THEN BEGIN
     pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(astr.cdelt))
     Nside=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
+    nside*=2.
 ENDIF
 npix=nside2npix(nside)
 
@@ -85,30 +86,30 @@ FOR i=0L,n_img_use-1L DO BEGIN
     ind0=inds[i]
     sa0=fltarr(n_arr[i])
     ija0=Lon64arr(n_arr[i])
-    bin_i=Total([0,h00[ind0],h01[ind0],h10[ind0],h11[ind0]],/cumulative)-1
+    bin_i=Total([0,h00[ind0],h01[ind0],h10[ind0],h11[ind0]],/cumulative)
     IF h00[ind0] GT 0 THEN BEGIN
         bi=0
         inds1=ri00[ri00[ind0]:ri00[ind0+1]-1]
-        sa0[bin_i[bi]+1:bin_i[bi+1]]=x_frac[inds1]*y_frac[inds1]
-        ija0[bin_i[bi]+1:bin_i[bi+1]]=inds1
+        sa0[bin_i[bi]:bin_i[bi+1]-1]=x_frac[inds1]*y_frac[inds1]
+        ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
     IF h01[ind0] GT 0 THEN BEGIN
         bi=1
         inds1=ri01[ri01[ind0]:ri01[ind0+1]-1]
-        sa0[bin_i[bi]+1:bin_i[bi+1]]=x_frac[inds1]*(1.-y_frac[inds1])
-        ija0[bin_i[bi]+1:bin_i[bi+1]]=inds1
+        sa0[bin_i[bi]:bin_i[bi+1]-1]=x_frac[inds1]*(1.-y_frac[inds1])
+        ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
     IF h10[ind0] GT 0 THEN BEGIN
         bi=2
         inds1=ri10[ri10[ind0]:ri10[ind0+1]-1]
-        sa0[bin_i[bi]+1:bin_i[bi+1]]=(1.-x_frac[inds1])*y_frac[inds1]
-        ija0[bin_i[bi]+1:bin_i[bi+1]]=inds1
+        sa0[bin_i[bi]:bin_i[bi+1]-1]=(1.-x_frac[inds1])*y_frac[inds1]
+        ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
     IF h11[ind0] GT 0 THEN BEGIN
         bi=3
         inds1=ri11[ri11[ind0]:ri11[ind0+1]-1]
-        sa0[bin_i[bi]+1:bin_i[bi+1]]=(1.-x_frac[inds1])*(1.-y_frac[inds1])
-        ija0[bin_i[bi]+1:bin_i[bi+1]]=inds1
+        sa0[bin_i[bi]:bin_i[bi+1]-1]=(1.-x_frac[inds1])*(1.-y_frac[inds1])
+        ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
     *sa[i]=sa0
     *ija[i]=ija0
