@@ -5,11 +5,11 @@ FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elemen
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_offset=time_offset,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
-IF N_Elements(lon) EQ 0 THEN lon=116.67081524 ;degrees
-IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 ;degrees
-IF N_Elements(alt) EQ 0 THEN alt=377.83 ;altitude (meters)
-IF N_Elements(pflag) EQ 0 THEN pflag=0
-IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=32.
+IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees
+IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees
+IF N_Elements(alt) EQ 0 THEN alt=377.83 & alt=Float(alt);altitude (meters)
+IF N_Elements(pflag) EQ 0 THEN pflag=0 & pflag=Fix(pflag,type=2)
+IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=32. & nfreq_avg=Long(nfreq_avg)
 
 IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN    
     time=params.time
@@ -146,38 +146,38 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
 ;        dimension=dimension,elements=elements,rotation=rotation,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny
 ENDIF 
 
-IF N_Elements(dimension) EQ 0 THEN dimension=1024. ELSE dimension=Float(dimension) ;dimension of the image in pixels; dimension = x direction
-IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
-IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 ELSE kbinsize=Float(kbinsize) ;k-space resolution, in wavelengths per pixel
-IF N_Elements(degpix) EQ 0 THEN degpix=!RaDeg/(kbinsize*dimension) ELSE degpix=Float(degpix) ;image space resolution, in degrees per pixel
-IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2. ELSE obsx=Float(obsx)
-IF N_Elements(obsy) EQ 0 THEN obsy=elements/2. ELSE obsy=Float(obsy)
+IF N_Elements(dimension) EQ 0 THEN dimension=1024. & dimension=Float(dimension) ;dimension of the image in pixels; dimension = x direction
+IF N_Elements(elements) EQ 0 THEN elements=dimension & elements=Float(elements);elements = y direction
+IF N_Elements(kbinsize) EQ 0 THEN kbinsize=0.5 & kbinsize=Float(kbinsize) ;k-space resolution, in wavelengths per pixel
+IF N_Elements(degpix) EQ 0 THEN degpix=!RaDeg/(kbinsize*dimension) & degpix=Float(degpix) ;image space resolution, in degrees per pixel
+IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2. & obsx=Float(obsx)
+IF N_Elements(obsy) EQ 0 THEN obsy=elements/2. & obsy=Float(obsy)
 IF N_Elements(tile_A) EQ 0 THEN tile_A=lonarr(1) ;tile numbers start from 1
 IF N_Elements(tile_B) EQ 0 THEN tile_B=lonarr(1) ;tile numbers start from 1
 IF N_Elements(bin_offset) EQ 0 THEN bin_offset=lonarr(1) ;indices to the start of each time integration
-IF N_Elements(Jdate) EQ 0 THEN Jdate=Dblarr(1) ELSE Jdate=Double(Jdate) ;Julian date of each time integration
-IF N_Elements(JD0) EQ 0 THEN JD0=Min(Jdate) ELSE JD0=Double(JD0)
+IF N_Elements(Jdate) EQ 0 THEN Jdate=Dblarr(1) & Jdate=Double(Jdate) ;Julian date of each time integration
+IF N_Elements(JD0) EQ 0 THEN JD0=Min(Jdate) & JD0=Double(JD0)
 IF N_Elements(frequency_array) EQ 0 THEN frequency_array=fltarr(1) ;full frequency list
 IF N_Elements(freq_bin_i) EQ 0 THEN freq_bin_i=lonarr(1) ;bin number of each frequency. The same psf is used for all frequencies with the same bin number
-IF N_Elements(zenra) EQ 0 THEN zenra=0. ELSE zenra=Float(zenra);degrees
-IF N_Elements(zendec) EQ 0 THEN zendec=0. ELSE zendec=Float(zendec);degrees
+IF N_Elements(zenra) EQ 0 THEN zenra=0. & zenra=Float(zenra);degrees
+IF N_Elements(zendec) EQ 0 THEN zendec=0. & zendec=Float(zendec);degrees
 ;IF N_Elements(rotation) EQ 0 THEN rotation=0. ;degrees
-IF N_Elements(obsra) EQ 0 THEN obsra=0. ELSE obsra=Float(obsra);degrees
-IF N_Elements(obsdec) EQ 0 THEN obsdec=0. ELSE obsdec=Float(obsdec);degrees
-IF N_Elements(phasera)EQ 0 THEN phasera=obsra ELSE phasera=Float(phasera)
-IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec ELSE phasedec=Float(phasedec)
-IF N_Elements(calibration) EQ 0 THEN calibration=fltarr(4)+1.
-IF N_Elements(n_pol) EQ 0 THEN n_pol=1 ELSE n_pol=Fix(n_pol)
-IF N_Elements(n_tile) EQ 0 THEN n_tile=1. ELSE n_tile=Float(n_tile)
-IF N_Elements(n_freq) EQ 0 THEN n_freq=1. ELSE n_freq=Float(n_freq)
-IF N_Elements(n_vis) EQ 0 THEN n_vis=1. ELSE n_vis=Float(n_vis)
-IF N_Elements(freq_use) EQ 0 THEN freq_use=Lonarr(n_freq)+1
-IF N_Elements(tile_use) EQ 0 THEN tile_use=Lonarr(n_tile)+1
+IF N_Elements(obsra) EQ 0 THEN obsra=0. & obsra=Float(obsra);degrees
+IF N_Elements(obsdec) EQ 0 THEN obsdec=0. & obsdec=Float(obsdec);degrees
+IF N_Elements(phasera)EQ 0 THEN phasera=obsra & phasera=Float(phasera)
+IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec & phasedec=Float(phasedec)
+IF N_Elements(calibration) EQ 0 THEN calibration=fltarr(4)+1. ELSE calibration=Float(calibration)
+IF N_Elements(n_pol) EQ 0 THEN n_pol=1 & n_pol=Fix(n_pol,type=2)
+IF N_Elements(n_tile) EQ 0 THEN n_tile=1 & n_tile=Long(n_tile)
+IF N_Elements(n_freq) EQ 0 THEN n_freq=1 & n_freq=Long(n_freq)
+IF N_Elements(n_vis) EQ 0 THEN n_vis=1 & n_vis=Long(n_vis)
+IF N_Elements(freq_use) EQ 0 THEN freq_use=Lonarr(n_freq)+1 & freq_use=Long(freq_use)
+IF N_Elements(tile_use) EQ 0 THEN tile_use=Lonarr(n_tile)+1 & tile_use=Long(tile_use)
 IF N_Elements(tile_names) EQ 0 THEN tile_names=Lindgen(n_tile)+1
-IF N_Elements(max_baseline) EQ 0 THEN max_baseline=0. ELSE max_baseline=Float(max_baseline)
-IF N_Elements(min_baseline) EQ 0 THEN min_baseline=0. ELSE min_baseline=Float(min_baseline)
-IF N_Elements(zenx) EQ 0 THEN zenx=obsx ELSE zenx=Float(zenx)
-IF N_Elements(zeny) EQ 0 THEN zeny=obsy ELSE zeny=Float(zeny)
+IF N_Elements(max_baseline) EQ 0 THEN max_baseline=0. & max_baseline=Float(max_baseline)
+IF N_Elements(min_baseline) EQ 0 THEN min_baseline=0. & min_baseline=Float(min_baseline)
+IF N_Elements(zenx) EQ 0 THEN zenx=obsx & zenx=Float(zenx)
+IF N_Elements(zeny) EQ 0 THEN zeny=obsy & zeny=Float(zeny)
 IF N_Elements(astr) EQ 0 THEN BEGIN
     MAKE_ASTR, astr, CD = [[1.,0.],[0.,1.]] , DELT = [degpix,degpix], CRPIX = [dimension/2.+1.,elements/2.+1.], $
         CRVAL = [obsra,obsdec], CTYPE = ['RA---SIN','DEC--SIN'], PV2=[0.,0.],$
