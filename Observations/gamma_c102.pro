@@ -10,11 +10,11 @@ IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=0
-IF N_Elements(channel) EQ 0 THEN channel=121
-image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
+IF N_Elements(channel) EQ 0 THEN channel=141
+image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-IF channel LE 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['Gamma','C102']) $
-    ELSE data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['Gamma','C102',Strn(Floor(channel))])
+IF channel LE 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['Gamma','C102']) $
+    ELSE data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['Gamma','C102',Strn(Floor(channel))])
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)

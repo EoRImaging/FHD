@@ -88,6 +88,9 @@ D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 groundplane=2.*Sin(Cos(za_arr_use*!DtoR)*(Kconv*(antenna_height)))
 groundplane=Reform(groundplane,psf_dim2,psf_dim2)
 
+;fudge_factor=0.5
+;groundplane=Max(groundplane)*(1-fudge_factor)+groundplane*fudge_factor
+
 projection=1.
 
 ;leakage_xtoy=0.
