@@ -109,6 +109,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDCASE
     freq_use=(*obs.baseline_info).freq_use
     n_vis_use=0.
+    IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
+    IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=init_arr[x_range,y_range]
     FOR fi=0L,nf-1 DO BEGIN
         fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
 ;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
@@ -119,7 +121,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,$
                 model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
         IF n_vis EQ 0 THEN BEGIN
-            IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
             *residual_arr[pol_i,fi]=init_arr
             *weights_arr[pol_i,fi]=init_arr
             *variance_arr[pol_i,fi]=init_arr
