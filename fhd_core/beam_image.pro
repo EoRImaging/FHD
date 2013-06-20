@@ -39,6 +39,8 @@ IF Keyword_Set(obs) THEN BEGIN
         ELSE freq_i_use=findgen(n_freq)
 ENDIF
 
+IF N_Elements(freq_i) GT 0 THEN freq_i_use=freq_i
+
 n_bin_use=0.
 IF Keyword_Set(square) THEN BEGIN
     beam_base=Complexarr(dimension,elements)
