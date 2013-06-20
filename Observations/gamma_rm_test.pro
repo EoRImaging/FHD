@@ -48,19 +48,15 @@ yh=elements/2.-Floor(psf_dim/2.)+psf_dim
 
 instr_cube=Fltarr(n_freq,dimension_use,elements_use,2)
 weights_cube=Fltarr(n_freq,dimension_use,elements_use,2)
+weights_threshold=0.05^2.
 FOR fi=0L,n_freq-1 DO BEGIN
     FOR pol_i=0,1 DO BEGIN
         instr_cube[fi,*,*,pol_i]=(*dirty_arr[pol_i,fi_use[fi]])
-        beam_single=Reform((*psf.base)[pol_i,fi_use[fi],rbin,rbin],psf_dim,psf_dim)
-        beam_base_uv1=Complexarr(dimension,elements)
-        beam_base_uv1[xl:xh,yl:yh]=beam_single
-        beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
-        beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
-        beam_base+=beam_base_single*Conj(beam_base_single)
-        weights_cube[fi,*,*,pol_i]=Abs(beam_base[x_low:x_high,y_low:y_high])
+        weights_cube[fi,*,*,pol_i]=(beam_image(psf,obs,pol_i=pol_i,freq_i=fi_use[fi],/square))[x_low:x_high,y_low:y_high]
     ENDFOR
 ENDFOR
 
+weights_cube=weights_cube>weights_threshold ;make sure not to pass zeroes, but really should only look at regions where this isn't a problem
 Stokes_Q=instr_cube[*,*,*,0]/weights_cube[*,*,*,0]-instr_cube[*,*,*,1]/weights_cube[*,*,*,1]
 Stokes_U=Fltarr(n_freq,dimension_use,elements_use)
 LAMBDASQ=(c_light/freq_arr)^2.
