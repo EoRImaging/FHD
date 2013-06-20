@@ -13,6 +13,7 @@ psf_filepath=fhd_file_path+'_beams.sav'
 obs_filepath=fhd_file_path+'_obs.sav'
 
 SWITCH N_Params() OF
+    0:
     1:restore,obs_filepath ;obs
     2:restore,psf_filepath ;psf
     3:restore,params_filepath ;params
