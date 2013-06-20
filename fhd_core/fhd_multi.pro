@@ -344,7 +344,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ra1=ra_hpx[region_i]
         dec1=dec_hpx[region_i]
         dist_weights=Exp(-(angle_difference(source_dec[src_i],source_ra[src_i],dec1,ra1,/degree)/local_radius)^2.)
-        simg1=source_find_hpx[region_i]*dist_weights>0.
+        simg1=source_find_hpx[region_i]>0;*dist_weights>0.
         
         ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
         dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
