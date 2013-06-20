@@ -1,7 +1,7 @@
 PRO gamma_rm_test,n_avg=n_avg,phi=phi,_Extra=extra
 
 IF N_Elements(n_avg) EQ 0 THEN n_avg=1.
-IF N_Elements(phi) EQ 0 THEN phi=[0.1,1.,10.]
+IF N_Elements(phi) EQ 0 THEN phi=findgen(200)/2.-99.5
 
 data_directory='D:\MWA\DATA2\Gamma\C102\141\
 vis_file_path='D:\MWA\DATA2\Gamma\C102\141\1035663744_cal.uvfits'
