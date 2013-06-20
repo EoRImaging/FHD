@@ -1,6 +1,6 @@
 FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
-    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,_Extra=extra
+    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,x_range=x_range,y_range=y_range,_Extra=extra
 ;no need to specify data_directory or filename if obs exists
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ext='.UVFITS'
@@ -127,9 +127,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
         n_vis_use+=n_vis
         IF Keyword_Set(fft) THEN BEGIN
-            *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,degpix=degpix)*n_vis
-            *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,degpix=degpix)*n_vis
-            *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo,degpix=degpix)*n_vis
+            IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN BEGIN
+                *residual_arr[pol_i,fi]=(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis)[x_range,y_range]
+                *weights_arr[pol_i,fi]=(dirty_image_generate(weights_holo,degpix=degpix)*n_vis)[x_range,y_range]
+                *variance_arr[pol_i,fi]=(dirty_image_generate(variance_holo,degpix=degpix)*n_vis)[x_range,y_range]
+            ENDIF ELSE BEGIN 
+                *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,degpix=degpix)*n_vis
+                *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,degpix=degpix)*n_vis
+                *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo,degpix=degpix)*n_vis
+            ENDELSE
         ENDIF ELSE BEGIN
             *residual_arr[pol_i,fi]=dirty_uv*n_vis
             *weights_arr[pol_i,fi]=weights_holo*n_vis

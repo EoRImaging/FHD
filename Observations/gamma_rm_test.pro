@@ -9,14 +9,12 @@ fhd_file_path='D:\MWA\DATA2\Gamma\C102\141\fhd\1035663744'
 
 obs_filepath=fhd_file_path+'_obs.sav'
 psf_filepath=fhd_file_path+'_beams.sav'
-restore,fhd_file_path+'_beams.sav' ;psf
+restore,psf_filepath ;psf
+restore,obs_filepath ;obs
 ;; *_fhd.sav contains:
 ;;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
 ;;    beam_base,beam_correction,ra_arr,dec_arr,astr
 ;restore,fhd_file_path+'_fhd.sav'
-
-dirty_arr=vis_model_freq_split(model_uv_arr=0,fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,$
-    n_avg=n_avg,timing=t_split,/fft,weights=weights_arr,variance=variance_arr,_Extra=extra) 
 
 ra_cen=float(ten(06,36,35.928))*15.
 dec_cen=float(ten(-20,40,16.93))
@@ -29,6 +27,12 @@ y_low=Floor(y_cen-radius/obs.degpix)
 y_high=Ceil(y_cen+radius/obs.degpix)
 dimension_use=x_high-x_low+1.
 elements_use=y_high-y_low+1.
+x_range=Lindgen(dimension_use)+x_low
+y_range=Lindgen(elements_use)+y_low
+
+dirty_arr=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,$
+    n_avg=n_avg,timing=t_split,/fft,weights=weights_arr,variance=variance_arr,x_range=x_range,y_range=y_range,_Extra=extra) 
+
 
 fi_use=(*obs.baseline_info).fi_use
 freq_arr=obs.freq[fi_use]
@@ -45,7 +49,7 @@ instr_cube=Fltarr(n_freq,dimension_use,elements_use,2)
 weights_cube=Fltarr(n_freq,dimension_use,elements_use,2)
 FOR fi=0L,n_freq-1 DO BEGIN
     FOR pol_i=0,1 DO BEGIN
-        instr_cube[fi,*,*,pol_i]=(*dirty_arr[pol_i,fi_use[fi]])[x_low:x_high,y_low:y_high]
+        instr_cube[fi,*,*,pol_i]=(*dirty_arr[pol_i,fi_use[fi]])
         beam_single=Reform((*psf.base)[pol_i,fi_use[fi],rbin,rbin],psf_dim,psf_dim)
         beam_base_uv1=Complexarr(dimension,elements)
         beam_base_uv1[xl:xh,yl:yh]=beam_single
