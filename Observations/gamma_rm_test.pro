@@ -52,7 +52,7 @@ weights_threshold=0.05^2.
 FOR fi=0L,n_freq-1 DO BEGIN
     FOR pol_i=0,1 DO BEGIN
         instr_cube[fi,*,*,pol_i]=(*dirty_arr[pol_i,fi_use[fi]])
-        weights_cube[fi,*,*,pol_i]=(beam_image(psf,obs,pol_i=pol_i,freq_i=fi_use[fi],/square))[x_low:x_high,y_low:y_high]
+        weights_cube[fi,*,*,pol_i]=extract_subarray(beam_image(psf,obs,pol_i=pol_i,freq_i=fi_use[fi],/square),x_range,y_range)
     ENDFOR
 ENDFOR
 

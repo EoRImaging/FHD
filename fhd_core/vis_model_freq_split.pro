@@ -110,7 +110,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     freq_use=(*obs.baseline_info).freq_use
     n_vis_use=0.
     IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
-    IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=init_arr[[x_range],[y_range]]
+    IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=extract_subarray(init_arr,x_range,y_range)
     FOR fi=0L,nf-1 DO BEGIN
         fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
 ;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
@@ -129,9 +129,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         n_vis_use+=n_vis
         IF Keyword_Set(fft) THEN BEGIN
             IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN BEGIN
-                *residual_arr[pol_i,fi]=(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis)[[x_range],[y_range]]
-                *weights_arr[pol_i,fi]=(dirty_image_generate(weights_holo,degpix=degpix)*n_vis)[[x_range],[y_range]]
-                *variance_arr[pol_i,fi]=(dirty_image_generate(variance_holo,degpix=degpix)*n_vis)[[x_range],[y_range]]
+                *residual_arr[pol_i,fi]=extract_subarray(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis,x_range,y_range)
+                *weights_arr[pol_i,fi]=extract_subarray(dirty_image_generate(weights_holo,degpix=degpix)*n_vis,x_range,y_range)
+                *variance_arr[pol_i,fi]=extract_subarray(dirty_image_generate(variance_holo,degpix=degpix)*n_vis,x_range,y_range)
             ENDIF ELSE BEGIN 
                 *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,degpix=degpix)*n_vis
                 *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,degpix=degpix)*n_vis
