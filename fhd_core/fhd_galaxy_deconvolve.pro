@@ -67,6 +67,7 @@ IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
         model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix))
         beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
         beam_vals=(*beam_base[pol_i])[beam_i]
+        beam_vals=beam_vals^2.
         model_vals=(*model_img_holo[pol_i])[beam_i]
         image_vals=(*dirty_img[pol_i])[beam_i]
         scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
