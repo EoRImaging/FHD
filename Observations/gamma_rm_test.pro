@@ -15,7 +15,8 @@ restore,obs_filepath ;obs
 ;;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
 ;;    beam_base,beam_correction,ra_arr,dec_arr,astr
 ;restore,fhd_file_path+'_fhd.sav'
-
+dimension=obs.dimension
+elements=obs.elements
 ra_cen=float(ten(06,36,35.928))*15.
 dec_cen=float(ten(-20,40,16.93))
 radius=0.2
@@ -34,8 +35,8 @@ dirty_arr=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_file_p
     n_avg=n_avg,timing=t_split,/fft,weights=weights_arr,variance=variance_arr,x_range=x_range,y_range=y_range,_Extra=extra) 
 
 
-fi_use=(*obs.baseline_info).fi_use
-freq_arr=obs.freq[fi_use]
+fi_use=where((*obs.baseline_info).freq_use)
+freq_arr=((*obs.baseline_info).freq)[fi_use]
 c_light=299792458.
 n_freq=N_Elements(fi_use)
 rbin=0
