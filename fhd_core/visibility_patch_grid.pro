@@ -10,8 +10,8 @@ elements=obs.elements
 n_pol=obs.n_pol
 dummy_string=''
 IF N_Elements(rephase_vis_flag) EQ 0 THEN rephase_vis_flag=1
-IF N_Elements(phase_x) EQ 0 THEN phase_x=dimension/2.
-IF N_Elements(phase_y) EQ 0 THEN phase_y=elements/2.
+IF N_Elements(phase_x) EQ 0 THEN phase_x=Median(inds_patch mod dimension)
+IF N_Elements(phase_y) EQ 0 THEN phase_y=Median(Floor(inds_patch/dimension))
 
 xy_inds=array_indices([dimension,elements],inds_patch,/dimension)
 xvals=Reform(xy_inds[0,*])
