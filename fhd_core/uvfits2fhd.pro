@@ -158,6 +158,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     k_span=kbinsize*dimension
     print,String(format='("Image size used: ",A," pixels")',Strn(dimension))
     print,String(format='("Image resolution used: ",A," degrees/pixel")',Strn(degpix))
+    print,String(format='("Approx beam area: ",A)',Strn((!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)))
     print,String(format='("Field of view used: ",A," degrees")',Strn(fov))
     print,String(format='("Bandwidth used: ",A," MHz")',Strn(bandwidth))
     print,String(format='("UV resolution used: ",A," wavelengths")',Strn(kbinsize))

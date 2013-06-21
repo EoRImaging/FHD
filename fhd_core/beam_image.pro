@@ -58,7 +58,7 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
             beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
             beam_base+=beam_base_single*Conj(beam_base_single)
-            n_bin_use+=1.
+            n_bin_use+=1.*freq_norm[fi]
         ENDFOR
     ENDIF ELSE BEGIN
         IF N_Elements(n_freq) EQ 0 THEN n_freq=N_Elements(freq_bin_i)
@@ -76,7 +76,7 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
             beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
             beam_base+=nf_bin*beam_base_single*Conj(beam_base_single)
-            n_bin_use+=nf_bin
+            n_bin_use+=nf_bin*freq_norm[fbin]
         ENDFOR
     ENDELSE
 ENDIF ELSE BEGIN
@@ -87,7 +87,7 @@ ENDIF ELSE BEGIN
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fi,rbin,rbin]):*psf_base_ptr[pol_i,fi,rbin,rbin],psf_dim,psf_dim)
             beam_base_uv+=beam_single
-            n_bin_use+=1.
+            n_bin_use+=1.*freq_norm[fi]
         ENDFOR
     ENDIF ELSE BEGIN
         IF N_Elements(n_freq) EQ 0 THEN n_freq=N_Elements(freq_bin_i)
@@ -100,7 +100,7 @@ ENDIF ELSE BEGIN
             fbin=freq_bin_i[fi]
             beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
             beam_base_uv+=beam_single
-            n_bin_use+=1.
+            n_bin_use+=1.*freq_norm[fbin]
         ENDFOR
     ENDELSE
     
@@ -112,7 +112,7 @@ ENDELSE
 beam_base/=n_bin_use
 beam_base=real_part(beam_base)
 
-
+IF Keyword_Set(obs) THEN beam_test=beam_base[obs.obsx,obs.obsy] ELSE beam_test=Max(beam_base)
 ;since this form of the beam is only an approximation (should be individually applied to each frequency), ensure that the normalization is preserved
 IF tag_exist(psf,'norm') THEN BEGIN
     CASE pol_i OF 
@@ -123,9 +123,9 @@ IF tag_exist(psf,'norm') THEN BEGIN
     ENDCASE
     norm=psf.norm[pol_i1]*psf.norm[pol_i2];[dimension/2.,elements/2.]
     IF Keyword_Set(square) THEN norm=norm^2.
-    beam_base*=norm/Max(beam_base)
+    beam_base*=norm/beam_test
 ENDIF ELSE BEGIN
-    beam_base*=pol_norm[pol_i]/Max(beam_base)
+    beam_base*=pol_norm[pol_i]/beam_test
 ENDELSE
 RETURN,beam_base
 END

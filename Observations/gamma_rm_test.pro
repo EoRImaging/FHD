@@ -26,13 +26,12 @@ x_low=Floor(x_cen-radius/obs.degpix)
 x_high=Ceil(x_cen+radius/obs.degpix)
 y_low=Floor(y_cen-radius/obs.degpix)
 y_high=Ceil(y_cen+radius/obs.degpix)
-dimension_use=x_high-x_low+1.
-elements_use=y_high-y_low+1.
-dimension_use=(elements_use=(dimension_use>elements_use)
+dimension_use=((x_high-x_low+1.)>(y_high-y_low+1.)
 IF dimension_use mod 2 EQ 1 THEN dimension_use+=1
-IF elements_use mod 2 EQ 1 THEN elements_use+=1
-x_range=Lindgen(dimension_use)+x_low
+elements_use=dimension_use
+x_range=Lindgen(dimension_use)+x_low 
 y_range=Lindgen(elements_use)+y_low
+inds=Rebin(x_range,dimension_use,elements_use,/sample)+Rebin(transpose(y_range)*dimension,dimension_use,elements_use)
 
 dirty_arr=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,$
     n_avg=n_avg,timing=t_split,/fft,weights=weights_arr,variance=variance_arr,x_range=x_range,y_range=y_range,_Extra=extra) 

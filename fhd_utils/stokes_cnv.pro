@@ -1,4 +1,4 @@
-FUNCTION stokes_cnv,image_arr,beam_arr=beam_arr,p_map=p_map,p_corr=p_corr,inverse=inverse
+FUNCTION stokes_cnv,image_arr,beam_arr=beam_arr,p_map=p_map,p_corr=p_corr,inverse=inverse,square=square
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 dims=size(image_arr,/dimension)
 n_pol=dims[0]
@@ -12,12 +12,15 @@ IF not Keyword_Set(inverse) THEN BEGIN
         FOR ii=0L,Product(dims)-1 DO *p_use[ii]=1. 
     ENDIF ELSE p_use=p_corr
 ENDIF ELSE BEGIN
-    beam_use=beam_arr
+    beam_use=Ptrarr(dims,/allocate)
+    FOR ii=0L,Product(dims)-1 DO *beam_use[ii]=*beam_arr[ii]
+;    beam_use=beam_arr
     IF not Keyword_Set(p_map) THEN BEGIN 
         p_use=Ptrarr(dims,/allocate) 
         FOR ii=0L,Product(dims)-1 DO *p_use[ii]=1. 
     ENDIF ELSE p_use=p_map
-ENDELSE    
+ENDELSE 
+IF Keyword_Set(square) THEN FOR ii=0L,Product(dims)-1 DO *beam_use[ii]=*beam_use[ii]^2.
 
 stokes_list1=[0,0,2,2]
 stokes_list2=[1,1,3,3]
