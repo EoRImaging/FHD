@@ -1,6 +1,7 @@
 FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
-    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,x_range=x_range,y_range=y_range,_Extra=extra
+    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,$
+    vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,_Extra=extra
 ;no need to specify data_directory or filename if obs exists
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ext='.UVFITS'
@@ -89,6 +90,7 @@ ENDIF
 residual_arr=Ptrarr(n_pol,nf,/allocate)
 weights_arr=Ptrarr(n_pol,nf,/allocate)
 variance_arr=Ptrarr(n_pol,nf,/allocate)
+vis_n_arr=Fltarr(n_pol,nf)
 
 t_grid=0
 tarr=fltarr(8)
@@ -134,6 +136,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             CONTINUE
         ENDIF
         n_vis_use+=n_vis
+        vis_n_arr[pol_i,fi]=n_vis
         IF Keyword_Set(fft) THEN BEGIN
             IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN BEGIN
                 *residual_arr[pol_i,fi]=extract_subarray(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis,x_range,y_range)

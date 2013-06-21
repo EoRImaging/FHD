@@ -26,15 +26,15 @@ x_low=Floor(x_cen-radius/obs.degpix)
 x_high=Ceil(x_cen+radius/obs.degpix)
 y_low=Floor(y_cen-radius/obs.degpix)
 y_high=Ceil(y_cen+radius/obs.degpix)
-dimension_use=((x_high-x_low+1.)>(y_high-y_low+1.)
-IF dimension_use mod 2 EQ 1 THEN dimension_use+=1
+dimension_use=(x_high-x_low+1.)>(y_high-y_low+1.)
+IF (dimension_use mod 2) EQ 1 THEN dimension_use+=1
 elements_use=dimension_use
 x_range=Lindgen(dimension_use)+x_low 
 y_range=Lindgen(elements_use)+y_low
 inds=Rebin(x_range,dimension_use,elements_use,/sample)+Rebin(transpose(y_range)*dimension,dimension_use,elements_use)
 
 dirty_arr=vis_model_freq_split(0,obs,psf,model_uv_arr=0,fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,$
-    n_avg=n_avg,timing=t_split,/fft,weights=weights_arr,variance=variance_arr,x_range=x_range,y_range=y_range,_Extra=extra) 
+    n_avg=n_avg,timing=t_split,/fft,weights=weights_arr,variance=variance_arr,x_range=x_range,y_range=y_range,vis_n_arr=vis_n_arr,_Extra=extra) 
 
 
 fi_use=where((*obs.baseline_info).freq_use)
@@ -53,7 +53,7 @@ weights_cube=Fltarr(n_freq,dimension_use,elements_use,2)
 weights_threshold=0.05^2.
 FOR fi=0L,n_freq-1 DO BEGIN
     FOR pol_i=0,1 DO BEGIN
-        instr_cube[fi,*,*,pol_i]=(*dirty_arr[pol_i,fi_use[fi]])
+        instr_cube[fi,*,*,pol_i]=(*dirty_arr[pol_i,fi_use[fi]])/vis_n_arr[pol_i,fi_use[fi]]
         weights_cube[fi,*,*,pol_i]=extract_subarray(beam_image(psf,obs,pol_i=pol_i,freq_i=fi_use[fi],/square),x_range,y_range)
     ENDFOR
 ENDFOR
