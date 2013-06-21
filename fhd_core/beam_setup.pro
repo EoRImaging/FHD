@@ -40,6 +40,7 @@ kbinsize=obs.kpix
 kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
 degpix=obs.degpix
+IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=32. ;=32?
 IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) ;=16?
 psf_dim=Ceil(psf_dim/2)*2.
@@ -74,6 +75,11 @@ FOR fi=0L,nfreq_bin-1 DO BEGIN
     IF n_fi EQ 0 THEN freq_center[fi]=Interpol(frequency_array,freq_bin_i,fi) $
         ELSE freq_center[fi]=Median(frequency_array[fi_i])
 ENDFOR
+
+freq_norm=freq_center^(-alpha)
+;freq_norm/=Sqrt(Mean(freq_norm^2.))
+freq_norm/=Mean(freq_norm) 
+
 bin_offset=(*obs.baseline_info).bin_offset
 nbaselines=bin_offset[1]
 
@@ -138,6 +144,8 @@ obsza=90.-obsalt
 intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
 norm=Float(Sqrt(2.)*[ex0,ey0])
 
+psf_normalization=Replicate(1.,n_pol)#freq_norm
+
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
@@ -199,6 +207,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         psf_base2*=uv_mask2
         gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
         psf_base2*=gain_normalization
+        psf_base2*=psf_normalization[pol_i,freq_i]
         t4_a=Systime(1)
         t3+=t4_a-t3_a
         phase_mag=(Abs(Atan(psf_base2,/phase))<Abs(!Pi-Abs(Atan(psf_base2,/phase))))*Floor(uv_mask2>0)
@@ -249,8 +258,9 @@ ENDIF
 
 t5_a=Systime(1)
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
-    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm,fbin_i=freq_bin_i,$
-    psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag)
+    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=psf_normalization,fbin_i=freq_bin_i,$
+    psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,norm=normalization,$
+    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen)
 IF ~Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00

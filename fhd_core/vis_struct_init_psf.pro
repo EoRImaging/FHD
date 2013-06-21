@@ -18,21 +18,26 @@
 ; :Author: isullivan May 6, 2012
 ;-
 FUNCTION vis_struct_init_psf,base=base,res_i=res_i,res_val=res_val,res_N=res_N,complex_flag=complex_flag,$
-    xvals=xvals,yvals=yvals,norm=norm,fbin_i=fbin_i,psf_resolution=psf_resolution,psf_dim=psf_dim
+    xvals=xvals,yvals=yvals,norm=norm,fbin_i=fbin_i,psf_resolution=psf_resolution,psf_dim=psf_dim,$
+    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen
 ;
 
-IF N_Elements(base) EQ 0 THEN base=Ptrarr(1) ;will actually have dimensions (npol,nfreq,resolution,resolution)
+
+IF N_Elements(n_pol) EQ 0 THEN n_pol=1 ELSE n_pol=Fix(n_pol)
+IF N_Elements(n_freq) EQ 0 THEN n_freq=1 ELSE n_freq=Fix(n_freq)
+IF N_Elements(freq_cen) EQ 0 THEN freq_cen=Fltarr(n_freq) ELSE freq_cen=Float(freq_cen)
+IF N_Elements(base) EQ 0 THEN base=Ptrarr(1,1,1,1) ;will actually have dimensions (npol,nfreq,resolution,resolution)
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=1. ELSE psf_resolution=Float(psf_resolution);over-resolution
 IF N_Elements(psf_dim) EQ 0 THEN psf_dim=1. ELSE psf_dim=Float(psf_dim)
 IF N_Elements(res_i) EQ 0 THEN res_i=Ptrarr(1) ;will have the same dimensions as base. Contains indices for pixels with values different from base
 IF N_Elements(res_val) EQ 0 THEN res_val=Ptrarr(1);will have the same dimensions as base. Contains values for pixels with values different from base
-IF N_Elements(res_n) EQ 0 THEN res_n=lon64arr(1) ;will have the same dimensions as base. Contains the number of pixels with values different from base
+IF N_Elements(res_n) EQ 0 THEN res_n=lon64arr(1) ELSE res_n=Long(res_n) ;will have the same dimensions as base. Contains the number of pixels with values different from base
 IF N_Elements(xvals) EQ 0 THEN xvals=Ptrarr(1) ;will have dimensions of (resolution,resolution)
-IF N_Elements(norm) EQ 0 THEN norm=fltarr(2)+1.
-IF N_Elements(fbin_i) EQ 0 THEN fbin_i=Lonarr(1)
+IF N_Elements(norm) EQ 0 THEN norm=replicate(1.,n_pol,n_freq) ELSE norm=Float(norm)
+IF N_Elements(fbin_i) EQ 0 THEN fbin_i=Lonarr(1) ELSE fbin_i=Long(fbin_i)
 IF N_Elements(complex_flag) EQ 0 THEN complex_flag=1
 
 struct={base:base,res_i:res_i,res_val:res_val,res_n:res_n,xvals:xvals,yvals:yvals,norm:norm,$
-    fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim,complex_flag:complex_flag}
+    fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim,complex_flag:complex_flag,n_pol:n_pol,n_freq:n_freq,freq:freq_cen}
 RETURN,struct
 END

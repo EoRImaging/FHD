@@ -2,7 +2,7 @@ FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elemen
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,$
-    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_offset=time_offset,_Extra=extra
+    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_offset=time_offset,spectral_index=spectral_index,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees
@@ -183,6 +183,7 @@ IF N_Elements(astr) EQ 0 THEN BEGIN
         CRVAL = [obsra,obsdec], CTYPE = ['RA---SIN','DEC--SIN'], PV2=[0.,0.],$
         LATPOLE = 0., LONGPOLE = 180.
 ENDIF
+IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 ELSE spectral_index=Float(spectral_index) 
 ;struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:degpix,$
 ;    tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
 ;    obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,rotation:rotation,$
@@ -195,6 +196,6 @@ struct={dimension:dimension,elements:elements,kpix:kbinsize,degpix:Mean(Abs(degp
     obsra:obsra,obsdec:obsdec,zenra:zenra,zendec:zendec,obsx:obsx,obsy:obsy,zenx:zenx,zeny:zeny,lon:lon,lat:lat,alt:alt,$
     pflag:pflag,cal:calibration,n_pol:n_pol,n_tile:n_tile,n_freq:n_freq,n_vis:n_vis,jd0:jd0,$
     max_baseline:max_baseline,min_baseline:min_baseline,phasera:phasera,phasedec:phasedec,$
-    astr:astr,baseline_info:Ptr_new(arr)}    
+    astr:astr,alpha:spectral_index,baseline_info:Ptr_new(arr)}    
 RETURN,struct
 END
