@@ -24,6 +24,9 @@ IF N_Elements(dimension) EQ 0 THEN dimension=obs.dimension
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF tag_exist(psf,'dim') THEN psf_dim=psf.dim ELSE psf_dim=Sqrt((size(*psf_base_ptr[0,0,0,0],/dimension))[0])
 IF tag_exist(psf,'resolution') THEN psf_res=psf.resolution ELSE psf_res=(size(psf_base_ptr,/dimension))[2]
+IF tag_exist(psf,'n_pol') THEN n_pol=psf.n_pol ELSE n_pol=(size(psf_base_ptr,/dimension))[0]
+IF tag_exist(psf,'n_freq') THEN n_freq=psf.n_freq ELSE n_freq=(size(psf_base_ptr,/dimension))[1]
+IF tag_exist(psf,'norm') THEN norm=psf.norm ELSE norm=replicate(1.,n_pol,n_freq)
 rbin=0;psf_res/2
 xl=dimension/2.-Floor(psf_dim/2.)+1
 xh=dimension/2.-Floor(psf_dim/2.)+psf_dim
@@ -75,7 +78,7 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
             beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
-            beam_base+=nf_bin*beam_base_single*Conj(beam_base_single)
+            beam_base+=nf_bin*beam_base_single*Conj(beam_base_single)/norm[pol_i,fbin]
             n_bin_use+=nf_bin
         ENDFOR
     ENDELSE
