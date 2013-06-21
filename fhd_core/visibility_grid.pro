@@ -90,8 +90,8 @@ psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
 flag_switch=Keyword_Set(flag_ptr)
-weights_flag=Arg_present(weights)
-variance_flag=Arg_present(variance)
+weights_flag=Keyword_Set(weights)
+variance_flag=Keyword_Set(variance)
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize
 
@@ -325,11 +325,11 @@ t7=Systime(1)-t7_0
 IF ~Keyword_Set(no_conjugate) THEN BEGIN
     image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
     image_uv=(image_uv+image_uv_conj)/2.
-    IF Arg_present(weights) THEN BEGIN
+    IF weights_flag THEN BEGIN
         weights_conj=Shift(Reverse(reverse(Conj(weights),1),2),1,1)
         weights=(weights+weights_conj)/2.
     ENDIF
-    IF Arg_present(variance) THEN BEGIN
+    IF variance_flag THEN BEGIN
         variance_mirror=Shift(Reverse(reverse(variance,1),2),1,1)
         variance=(variance+variance_mirror)/2.
     ENDIF

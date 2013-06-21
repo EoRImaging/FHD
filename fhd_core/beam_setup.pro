@@ -13,7 +13,7 @@
 FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,$
     instrument=instrument,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,$
-    swap_pol=swap_pol,no_complex_beam=no_complex_beam,_Extra=extra
+    swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -85,7 +85,7 @@ phasera=obs.phasera
 phasedec=obs.phasedec
 Jdate=obs.Jd0
 
-beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain
+beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain,no_save=no_save
 
 ;begin forming psf
 psf_residuals_i=Ptrarr(n_pol,nfreq_bin,nbaselines) ;contains arrays of pixel indices of pixels with modified psf for a given baseline id
@@ -251,7 +251,7 @@ t5_a=Systime(1)
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=norm,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag)
-save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
+IF ~Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
 IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]

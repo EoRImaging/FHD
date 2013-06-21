@@ -116,6 +116,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
 ;        vis_use1=vis_use[fi_use,*]
         IF Ptr_valid(model_ptr) THEN model_return=1
+        variance_holo=1 ;initialize
+        weights_holo=1 ;initialize
         IF nf_use EQ 0 THEN n_vis=0 ELSE $
             dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
                 polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,$

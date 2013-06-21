@@ -359,6 +359,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
     ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
     ;        ELSE $
+            weights_grid=1 ;initialize
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,_Extra=extra)

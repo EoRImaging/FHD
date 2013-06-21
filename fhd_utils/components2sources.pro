@@ -19,8 +19,12 @@ FOR si=0L,ns-1 DO BEGIN
     g_id+=1
 ENDFOR
 
-hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
 ng=max(group_id)
+IF ng LE 0 THEN BEGIN
+    source_comp_init,source_arr,n_sources=1
+    RETURN,source_arr
+ENDIF
+hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
 
 source_comp_init,source_arr,n_sources=ng
 FOR gi=0L,ng-1 DO BEGIN

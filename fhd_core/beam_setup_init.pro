@@ -1,4 +1,4 @@
-PRO beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain
+PRO beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain,no_save=no_save
 ;IF not Keyword_Set(data_directory) THEN vis_path_default,data_directory,filename ;set default if not supplied
 ext='.UVFITS'
 tile_gain_x_filename='tile_gains_x'
@@ -27,12 +27,12 @@ tile_gain_y_filepath=file_path_fhd+tile_gain_y_filename
 ;do not overwrite a gain_array if one already exists (it's either real data, or the same default data as this!)
 IF file_test(tile_gain_x_filepath) EQ 0 THEN BEGIN
     gain_array_X=gain_array
-    textfast,gain_array_X,file_path=tile_gain_x_filepath,/write
+    IF ~Keyword_Set(no_save) THEN textfast,gain_array_X,file_path=tile_gain_x_filepath,/write
 ENDIF ELSE textfast,gain_array_X,file_path=tile_gain_x_filepath,/read
 
 IF file_test(tile_gain_y_filepath) EQ 0 THEN BEGIN
     gain_array_Y=gain_array_X
-    textfast,gain_array_Y,file_path=tile_gain_y_filepath,/write
+    IF ~Keyword_Set(no_save) THEN textfast,gain_array_Y,file_path=tile_gain_y_filepath,/write
 ENDIF ELSE textfast,gain_array_Y,file_path=tile_gain_y_filepath,/read
 
 END
