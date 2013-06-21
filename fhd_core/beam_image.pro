@@ -26,7 +26,8 @@ IF tag_exist(psf,'dim') THEN psf_dim=psf.dim ELSE psf_dim=Sqrt((size(*psf_base_p
 IF tag_exist(psf,'resolution') THEN psf_res=psf.resolution ELSE psf_res=(size(psf_base_ptr,/dimension))[2]
 IF tag_exist(psf,'n_pol') THEN n_pol=psf.n_pol ELSE n_pol=(size(psf_base_ptr,/dimension))[0]
 IF tag_exist(psf,'n_freq') THEN n_freq=psf.n_freq ELSE n_freq=(size(psf_base_ptr,/dimension))[1]
-IF tag_exist(psf,'norm') THEN norm=psf.norm ELSE norm=replicate(1.,n_pol,n_freq)
+IF tag_exist(psf,'pnorm') THEN pol_norm=psf.pnorm ELSE pol_norm=replicate(1.,n_pol)
+IF tag_exist(psf,'fnorm') THEN freq_norm=psf.fnorm ELSE freq_norm=replicate(1.,n_freq)
 rbin=0;psf_res/2
 xl=dimension/2.-Floor(psf_dim/2.)+1
 xh=dimension/2.-Floor(psf_dim/2.)+psf_dim
@@ -50,7 +51,6 @@ IF Keyword_Set(square) THEN BEGIN
     IF N_Elements(freq_bin_i) EQ 0 THEN BEGIN
         dims=Size(psf_base_ptr,/dimension)
         n_freq_bin=dims[1]
-;        beam_base_uv=complexarr(psf_dim,psf_dim)
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fi,rbin,rbin]):*psf_base_ptr[pol_i,fi,rbin,rbin],psf_dim,psf_dim)
             beam_base_uv1=Complexarr(dimension,elements)
@@ -67,25 +67,18 @@ IF Keyword_Set(square) THEN BEGIN
         freq_bin_use=freq_bin_i[freq_i_use]
         fbin_use=freq_bin_use[Uniq(freq_bin_use,Sort(freq_bin_use))]
         nbin=N_Elements(Uniq(freq_bin_use,Sort(freq_bin_use)))
-;        beam_base_uv=complexarr(psf_dim,psf_dim)
         FOR bin0=0L,nbin-1 DO BEGIN
             fbin=fbin_use[bin0]
             nf_bin=Float(Total(freq_bin_use EQ fbin))
-;            fi=freq_i_use[fi0]
-    ;        beam_base_uv+=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
             beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
             beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
-            beam_base+=nf_bin*beam_base_single*Conj(beam_base_single)/norm[pol_i,fbin]
+            beam_base+=nf_bin*beam_base_single*Conj(beam_base_single)
             n_bin_use+=nf_bin
         ENDFOR
     ENDELSE
-;    beam_base_uv1=Complexarr(dimension,elements)
-;    beam_base_uv1[xl:xh,yl:yh]=beam_base_uv
-;    beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
-;    beam_base=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
 ENDIF ELSE BEGIN
     IF N_Elements(freq_bin_i) EQ 0 THEN BEGIN
         dims=Size(psf_base_ptr,/dimension)
@@ -105,7 +98,6 @@ ENDIF ELSE BEGIN
             fi=freq_i_use[fi0]
             IF N_Elements(freq_i) GT 0 THEN IF Total(freq_i EQ fi) EQ 0 THEN CONTINUE
             fbin=freq_bin_i[fi]
-    ;        beam_base_uv+=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
             beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
             beam_base_uv+=beam_single
             n_bin_use+=1.
@@ -120,18 +112,20 @@ ENDELSE
 beam_base/=n_bin_use
 beam_base=real_part(beam_base)
 
-CASE pol_i OF 
-    0:BEGIN pol_i1=0 & pol_i2=0 & END
-    1:BEGIN pol_i1=1 & pol_i2=1 & END
-    2:BEGIN pol_i1=0 & pol_i2=1 & END
-    3:BEGIN pol_i1=1 & pol_i2=0 & END
-ENDCASE
 
 ;since this form of the beam is only an approximation (should be individually applied to each frequency), ensure that the normalization is preserved
 IF tag_exist(psf,'norm') THEN BEGIN
+    CASE pol_i OF 
+        0:BEGIN pol_i1=0 & pol_i2=0 & END
+        1:BEGIN pol_i1=1 & pol_i2=1 & END
+        2:BEGIN pol_i1=0 & pol_i2=1 & END
+        3:BEGIN pol_i1=1 & pol_i2=0 & END
+    ENDCASE
     norm=psf.norm[pol_i1]*psf.norm[pol_i2];[dimension/2.,elements/2.]
     IF Keyword_Set(square) THEN norm=norm^2.
     beam_base*=norm/Max(beam_base)
-ENDIF
+ENDIF ELSE BEGIN
+    beam_base*=pol_norm[pol_i]/Max(beam_base)
+ENDELSE
 RETURN,beam_base
 END

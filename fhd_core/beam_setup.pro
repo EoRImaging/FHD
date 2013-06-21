@@ -144,11 +144,14 @@ obsza=90.-obsalt
 intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
 norm=Float(Sqrt(2.)*[ex0,ey0])
 
-psf_normalization=Replicate(1.,n_pol)#freq_norm
 
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
+
+pol_norm=fltarr(n_pol)
+FOR pol_i=0,n_pol-1 DO pol_norm[pol_i]=norm[pol_arr[pol_i]]
+
 t1=Systime(1)-t1_a
 t2=0
 t3=0
@@ -205,9 +208,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
         IF n_phase_cut GT 0 THEN uv_mask2[phase_cut]=0
         psf_base2*=uv_mask2
-        gain_normalization=norm[pol1]*norm[pol2]/(Total(Abs(psf_base2))/psf_resolution^2.)
+        gain_normalization=1./(Total(Abs(psf_base2))/psf_resolution^2.)
         psf_base2*=gain_normalization
-        psf_base2*=psf_normalization[pol_i,freq_i]
+        psf_base2*=freq_norm[freq_i]
+        psf_base2*=pol_norm[pol_i]
         t4_a=Systime(1)
         t3+=t4_a-t3_a
         phase_mag=(Abs(Atan(psf_base2,/phase))<Abs(!Pi-Abs(Atan(psf_base2,/phase))))*Floor(uv_mask2>0)
@@ -258,8 +262,8 @@ ENDIF
 
 t5_a=Systime(1)
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
-    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,norm=psf_normalization,fbin_i=freq_bin_i,$
-    psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,norm=normalization,$
+    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
+    psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen)
 IF ~Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
