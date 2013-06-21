@@ -28,6 +28,9 @@ y_low=Floor(y_cen-radius/obs.degpix)
 y_high=Ceil(y_cen+radius/obs.degpix)
 dimension_use=x_high-x_low+1.
 elements_use=y_high-y_low+1.
+dimension_use=(elements_use=(dimension_use>elements_use)
+IF dimension_use mod 2 EQ 1 THEN dimension_use+=1
+IF elements_use mod 2 EQ 1 THEN elements_use+=1
 x_range=Lindgen(dimension_use)+x_low
 y_range=Lindgen(elements_use)+y_low
 
