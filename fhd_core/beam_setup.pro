@@ -150,7 +150,7 @@ gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 
 pol_norm=fltarr(n_pol)
-FOR pol_i=0,n_pol-1 DO pol_norm[pol_i]=norm[pol_arr[pol_i]]
+FOR pol_i=0,n_pol-1 DO pol_norm[pol_i]=norm[pol_arr[0,pol_i]]*norm[pol_arr[1,pol_i]]
 
 t1=Systime(1)-t1_a
 t2=0
