@@ -377,7 +377,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDIF
         
         IF Keyword_Set(scale_gain) THEN BEGIN
-            ston_single=(flux_arr[0]+flux_arr[1])/converge_check2[i]
+            ston_single=(flux_arr[0]+flux_arr[1])/(converge_check2[i]*gain_normalization)
             gain_factor_use=((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))>gain_factor
         ENDIF ELSE gain_factor_use=gain_array[additional_i[src_i]]
         flux_arr*=gain_factor_use
@@ -473,7 +473,9 @@ IF i EQ max_iter THEN BEGIN
 ENDIF
 
 ;condense clean components
-noise_map=Stddev(source_find_image[where(source_mask)],/nan)*weight_invert(beam_avg)
+noise_map=Stddev(source_find_image[where(source_mask)],/nan)*beam_corr_avg
+noise_map*=gain_normalization
+IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,reject_sigma_threshold=sigma_threshold)
 model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2)
