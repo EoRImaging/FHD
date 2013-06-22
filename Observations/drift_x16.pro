@@ -22,6 +22,8 @@ catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),sub
 
 ;noise_calibrate=0
 ;align=0
+
+;NOTE: The use of EXTRA to catch additional keywords means these defaults will be OVERWRITTEN if supplied on the command line
 dimension=1024.
 max_sources=10000.
 pad_uv_image=2.

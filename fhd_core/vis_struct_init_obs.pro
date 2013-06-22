@@ -131,7 +131,8 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
     IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ELSE dimension=Float(dimension);dimension of the image in pixels; dimension = x direction
     IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
     degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
-    max_baseline=Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))
+    IF N_Elements(max_baseline) EQ 0 THEN $
+        max_baseline=Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))
     kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
     
     IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
