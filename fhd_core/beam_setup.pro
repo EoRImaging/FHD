@@ -39,7 +39,7 @@ kbinsize=obs.kpix
 kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
 degpix=obs.degpix
-IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
+;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=32. ;=32?
 IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) ;=16?
 psf_dim=Ceil(psf_dim/2)*2.
@@ -75,9 +75,10 @@ FOR fi=0L,nfreq_bin-1 DO BEGIN
         ELSE freq_center[fi]=Median(frequency_array[fi_i])
 ENDFOR
 
-freq_norm=freq_center^(-alpha)
-;freq_norm/=Sqrt(Mean(freq_norm^2.))
-freq_norm/=Mean(freq_norm) 
+;freq_norm=freq_center^(-alpha)
+;;freq_norm/=Sqrt(Mean(freq_norm^2.))
+;freq_norm/=Mean(freq_norm) 
+freq_norm=Replicate(1.,nfreq_bin)
 
 bin_offset=(*obs.baseline_info).bin_offset
 nbaselines=bin_offset[1]

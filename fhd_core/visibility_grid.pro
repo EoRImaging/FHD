@@ -43,6 +43,7 @@ ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
+IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 n_freq=Long(obs.n_freq)
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
@@ -82,6 +83,10 @@ IF Keyword_Set(model_ptr) THEN BEGIN
     ENDELSE
 ENDIF
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+freq_norm=frequency_array^(-alpha)
+;freq_norm/=Sqrt(Mean(freq_norm^2.))
+freq_norm/=Mean(frequency_array) 
+freq_norm=freq_norm[fi_use]
 frequency_array=frequency_array[fi_use]
 
 IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
