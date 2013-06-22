@@ -180,6 +180,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
     data_array=data_struct.array[*,0:n_pol-1,*]
     data_struct=0. ;free memory
     
+    ;Read in or construct a new beam model. Also sets up the structure PSF
+    print,'Calculating beam model'
+    psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
+    IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
+    
     IF file_test(flags_filepath) AND ~Keyword_Set(flag) THEN BEGIN
         flag_arr0=getvar_savefile(flags_filepath,'flag_arr0')
     ENDIF ELSE BEGIN
@@ -287,10 +292,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     SAVE,params,filename=params_filepath,/compress
     SAVE,hdr,filename=hdr_filepath,/compress
         
-    ;Read in or construct a new beam model. Also sets up the structure PSF
-    print,'Calculating beam model'
-    psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
-    IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     vis_flag_update,flag_arr0,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
     SAVE,obs,filename=obs_filepath,/compress
     
