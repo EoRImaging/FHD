@@ -45,7 +45,6 @@ heap_gc
 t0=Systime(1)
 ;IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(calibrate) EQ 0 THEN calibrate=0
-IF N_Elements(min_baseline) EQ 0 THEN min_baseline=0.
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
@@ -121,7 +120,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     endelse
     
     params=vis_param_extract(data_struct.params,hdr)
-    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,min_baseline=min_baseline,_Extra=extra)
+    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
     kbinsize=obs.kpix
     degpix=obs.degpix
     dimension=obs.dimension
@@ -135,7 +134,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         hdr.obsdec=obs0.zendec
         obs.obsx=obs0.zenx
         obs.obsy=obs0.zeny
-        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,min_baseline=min_baseline,_Extra=extra)
+        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
 ;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs0.zenx,obsy=obs0.zeny,$
 ;            phasera=phasera,phasedec=phasedec,_Extra=extra)
 ;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs.zenx,obsy=obs.zeny,_Extra=extra)
@@ -163,6 +162,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     print,String(format='("Bandwidth used: ",A," MHz")',Strn(bandwidth))
     print,String(format='("UV resolution used: ",A," wavelengths")',Strn(kbinsize))
     print,String(format='("UV image size used: ",A," wavelengths")',Strn(k_span))
+    print,String(format='("Min baseline: ",A," wavelengths")',Strn(obs.min_baseline))
+    print,String(format='("Max baseline: ",A," wavelengths")',Strn(obs.max_baseline))
     print,String(format='("Observation coordinates: ",A," ",A,A)',$
         Strn(obs.obsra,length=6),(obs.obsdec GE 0) ? '+':'-',Strn(Abs(obs.obsdec),length=5))
     print,String(format='("Zenith coordinates: ",A," ",A,A)',$
