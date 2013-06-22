@@ -76,17 +76,16 @@ alias_mask[dimension/4:3.*dimension/4.,elements/4:3.*elements/4.]=1
 nbeam_avg=0
 FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     *beam_base[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,dimension=dimension,/square))
-;    *beam_base[pol_i]=beam_image(psf,obs,pol_i=pol_i,dimension=dimension)
     *beam_mask[pol_i]=fltarr(dimension,elements)
     
-    beam_mask_test=*beam_base[pol_i];*(*p_map_simple[pol_i])
+    beam_mask_test=*beam_base[pol_i]
 ;    *beam_i[pol_i]=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(beam_mask_test)])
     *beam_i[pol_i]=where(beam_mask_test GE beam_threshold)
     (*beam_mask[pol_i])[*beam_i[pol_i]]=1.
     IF pol_i LE 1 THEN BEGIN
         nbeam_avg+=1
         source_mask*=*beam_mask[pol_i]
-        beam_avg+=(*beam_base[pol_i])^2.;*(*p_map_simple[pol_i])
+        beam_avg+=(*beam_base[pol_i])^2.
     ENDIF
     
     *beam_correction[pol_i]=weight_invert(*beam_base[pol_i],beam_max_threshold)
@@ -123,7 +122,6 @@ IF Keyword_Set(transfer_mapfn) THEN BEGIN
 ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-;    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN *map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn')
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
         restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i]=Temporary(map_fn)
@@ -140,12 +138,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix))[dimension/2.,elements/2.]
     normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
-;gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
-gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
+gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
 gain_array*=gain_normalization
-;normalization=.25
 normalization=1.
-;normalization=(degpix*!DtoR)^2.*(dimension*elements)
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
@@ -178,12 +174,9 @@ ENDFOR
 
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
-print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
-;xvals1=xvals[uv_i_use]
-;yvals1=yvals[uv_i_use]
+print,"Fractional uv coverage: ",uv_use_frac
 
 uv_i_use2=where(source_uv_mask2,n_uv_use2)
-;IF source_uv_mask[dimension*elements/2+dimension/2] NE 0 THEN n_uv_use2-=1
 xvals2=xvals[uv_i_use2]
 yvals2=yvals[uv_i_use2]
 
@@ -206,7 +199,6 @@ beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 
 source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
 source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
-;source_fit_fn=(Hanning(local_max_radius*2.+2,local_max_radius*2.+2))[1:*,1:*]
 source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
 
 dirty_image_composite_smooth=fltarr(dimension,elements)
@@ -431,7 +423,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
     t4+=Systime(1)-t4_0    
     
@@ -480,7 +472,7 @@ comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,reject_sigma_threshold=sigma_threshold)
 model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+    *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
 ENDFOR
     
 FOR pol_i=0,n_pol-1 DO BEGIN

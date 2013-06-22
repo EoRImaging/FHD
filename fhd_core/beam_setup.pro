@@ -18,7 +18,6 @@ FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
 
-;vis_path_default,data_directory,filename,file_path,obs=obs,version=version
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_beams'+'.sav') EQ 0) THEN BEGIN 
     IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_beams'+'.sav' +' Not found. Recalculating.' 
     restore_last=0
@@ -105,11 +104,7 @@ xvals_i=meshgrid(psf_dim,psf_dim,1)*psf_resolution
 yvals_i=meshgrid(psf_dim,psf_dim,2)*psf_resolution
 psf_xvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,1)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_dim2/2)
 psf_yvals1=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,2)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_dim2/2)
-;xvals=meshgrid(psf_dim2,psf_dim2,1)/psf_resolution-psf_dim/2.
-;yvals=meshgrid(psf_dim2,psf_dim2,2)/psf_resolution-psf_dim/2.
 FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
-;    *psf_xvals[i,j]=xvals[xvals_i+i,yvals_i+j]
-;    *psf_yvals[i,j]=yvals[xvals_i+i,yvals_i+j]
     *psf_xvals[i,j]=meshgrid(psf_dim,psf_dim,1)-psf_dim/2.+Float(i)/psf_resolution
     *psf_yvals[i,j]=meshgrid(psf_dim,psf_dim,2)-psf_dim/2.+Float(j)/psf_resolution
 ENDFOR
@@ -128,9 +123,8 @@ az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 IF Abs(obs.obsra-obs.zenra) GT 90. THEN $
     lon_offset=obs.obsra-((obs.obsra GT obs.zenra) ? 360.:(-360.))-obs.zenra ELSE lon_offset=obs.obsra-obs.zenra
 lat_offset=-(obs.zendec-obs.obsdec)
-;degpix_use3=[Cos(lon_offset*!DtoR*Cos(obs.obsdec*!DtoR)),Cos(lat_offset*!DtoR)]*degpix_use
-xvals3=za_arr*Sin(az_arr*!DtoR);/degpix_use3[0]
-yvals3=za_arr*Cos(az_arr*!DtoR);/degpix_use3[1]
+xvals3=za_arr*Sin(az_arr*!DtoR)
+yvals3=za_arr*Cos(az_arr*!DtoR)
 
 el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
@@ -158,7 +152,7 @@ t3=0
 t4=0
 
 complex_flag_arr=intarr(n_pol,nfreq_bin)
-IF ~Keyword_Set(silent) THEN print,'Building beam model. Time elapsed: estimated time remaining'
+;IF ~Keyword_Set(silent) THEN print,'Building beam model. Time elapsed: estimated time remaining'
 FOR pol_i=0,n_pol-1 DO BEGIN
 
     pol1=pol_arr[0,pol_i]
@@ -191,18 +185,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
         t3_a=Systime(1)
         t2+=t3_a-t2_a
-;        psf_base1=dirty_image_generate(beam1_0*beam2_0*(*proj[pol_i]),/no_real)
-;        psf_base1=dirty_image_generate(beam1_0*Shift(Reverse(Reverse(Conj(beam2_0),1),2),1,1)*(*proj[pol_i]),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
-;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
         beam_i=region_grow(real_part(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(real_part(psf_base1))/1e3,Max(real_part(psf_base1))])
         uv_mask[beam_i]=1.
-;        psf_base1*=uv_mask
         
         psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
-;        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1)
         uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1)
         phase_test=Atan(psf_base2,/phase)*!Radeg
         phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)

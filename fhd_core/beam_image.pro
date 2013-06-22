@@ -112,7 +112,8 @@ ENDELSE
 beam_base/=n_bin_use
 beam_base=real_part(beam_base)
 
-IF Keyword_Set(obs) THEN beam_test=beam_base[obs.obsx,obs.obsy] ELSE beam_test=Max(beam_base)
+;IF Keyword_Set(obs) THEN beam_test=beam_base[obs.obsx,obs.obsy] ELSE beam_test=Max(beam_base)
+beam_test=Max(beam_base)
 ;since this form of the beam is only an approximation (should be individually applied to each frequency), ensure that the normalization is preserved
 IF tag_exist(psf,'norm') THEN BEGIN
     CASE pol_i OF 
