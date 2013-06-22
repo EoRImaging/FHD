@@ -1,27 +1,3 @@
-;+
-; :Description:
-;    Grids visibilities to the uv plane using a high-resolution beam model. Written using the efficient notation of holo_mapfn_generate.pro
-;
-; :Params:
-;    visibility_array - single polarization visibility data
-;    
-;    flag_arr - 
-;    
-;    obs - structure containing details of the observation
-;    
-;    params - structure containing u and v coordinates of the baselines, in meters/c.
-;    
-;    psf - structure containing the high-resolution gridded beam model.
-;
-; :Keywords:
-;    weights - if set, contains the weights generated from gridding visibilities with value 1
-;    
-;    timing
-;    
-;    polarization - polarization index used to pick the correct beam
-;
-; :Author: Ian Sullivan
-;-
 FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,bi_use=bi_use,$
@@ -268,21 +244,16 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     ENDIF
     box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
-;    image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Reform((box_arr),psf_dim,psf_dim)
-;    image_uv[xmin_use,ymin_use]+=Reform(box_arr,psf_dim,psf_dim)
     t5_0=Systime(1)
     t4+=t5_0-t4_0
 
     IF weights_flag THEN BEGIN
         wts_box=matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
         weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
-;        weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Reform((wts_box),psf_dim,psf_dim)
-;        weights[xmin_use,ymin_use]+=Reform(Temporary(wts_box),psf_dim,psf_dim)
     ENDIF
     IF variance_flag THEN BEGIN
         var_box=matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
-;        variance[xmin_use,ymin_use]+=Reform(Temporary(var_box),psf_dim,psf_dim)
     ENDIF
     
     t6_0=Systime(1)
@@ -294,10 +265,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t6a+=t6b_0-t6a_0
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]+=box_arr_map[*,ij]
             (*map_fn[xmin_use+i,ymin_use+j])[*map_fn_inds[i,j]]+=box_arr_map[*,ij]
-;            (*map_fn[xmin_use+i,ymin_use+j])[psf_dim-i,psf_dim-j]+=Reform(box_arr_map[*,ij],psf_dim,psf_dim)
             dummy_ref=-1
         ENDFOR
         t6b+=Systime(1)-t6b_0

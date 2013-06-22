@@ -171,7 +171,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         Strn(phasera,length=6),(phasedec GE 0) ? '+':'-',Strn(Abs(phasedec),length=5))
     
     IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
-    print,String(format='("Spectral index fit: ",A,)',Strn(alpha))
+    print,String(format='("Spectral index fit: ",A)',Strn(alpha))
     pol_dim=hdr.pol_dim
     freq_dim=hdr.freq_dim
     real_index=hdr.real_index

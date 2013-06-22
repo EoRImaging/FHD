@@ -26,12 +26,10 @@ sub_yv=meshgrid(psf_dim2,2)-psf_dim
 n=dimension*elements
 
 n_arr=fltarr(dimension,elements)
-;diag_vals=fltarr(dimension,elements)
 FOR xi=1,dimension-2 DO BEGIN
     FOR yi=1,elements-2 DO BEGIN
         IF not Ptr_valid(map_fn[xi,yi]) THEN CONTINUE
         temp_arr=*map_fn[xi,yi]
-;        diag_vals[xi,yi]=temp_arr[psf_dim,psf_dim]
         i1=where(Abs(temp_arr) GT threshold,n1)
         n_arr[xi,yi]=n1
     ENDFOR
