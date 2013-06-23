@@ -61,7 +61,7 @@ ENDIF
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
 freq_norm=frequency_array^(-alpha)
 ;freq_norm/=Sqrt(Mean(freq_norm^2.))
-freq_norm/=Mean(frequency_array) 
+freq_norm/=Mean(freq_norm) 
 freq_norm=freq_norm[fi_use]
 frequency_array=frequency_array[fi_use]
 
@@ -228,7 +228,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     vis_n=bin_n[bin_i[bi]]
     vis_n_arr=Replicate(1.,vis_n)
     
-    vis_box=vis_arr_use[inds]
+    vis_box=vis_arr_use[inds]*freq_norm[freq_i]
     box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
     t3_0=Systime(1)
     t2+=t3_0-t1_0

@@ -13,6 +13,9 @@ astr=obs.astr
 degpix=obs.degpix
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
 pixel_area=pixel_area(astr,dimension=dimension,elements=elements)
+i_use=where(Finite(ra_arr))
+glactc,ra_arr[i_use],dec_Arr[i_use],2000.,gl_vals,gb_vals,1,/degree
+gal_lat_weights=fltarr(dimension,elements) & gal_lat_weights[i_use]=Sqrt(1./(gb_vals>degpix))
 
 
 freq_use=where((*obs.baseline_info).freq_use,nf_use)
@@ -20,6 +23,13 @@ IF Tag_exist(obs,'fbin_i') THEN f_bin=obs.fbin_i ELSE f_bin=(*obs.baseline_info)
 fb_use=Uniq(f_bin[freq_use])
 nbin=N_Elements(fb_use)
 IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
+IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
+freq_norm=freq_arr^(-alpha)
+;freq_norm/=Sqrt(Mean(freq_norm^2.))
+freq_norm/=Mean(freq_norm) 
+
+freq_norm=freq_norm[freq_use[fb_use]]
+
 freq_arr=freq_arr[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
@@ -28,7 +38,7 @@ IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
     model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr)
     
     model=fltarr(dimension,elements)
-    FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]
+    FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]*freq_norm[fi]
     model/=Total(nf_arr)
     model*=weight_invert(pixel_area)
     Ptr_free,model_arr
@@ -71,6 +81,7 @@ IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
         beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
         beam_vals=(*beam_base[pol_i])[beam_i]
         beam_vals=beam_vals^2.
+        weights=beam_vals*gal_lat_weights[beam_i]
         model_vals=(*model_img_holo[pol_i])[beam_i]
         image_vals=(*dirty_img[pol_i])[beam_i]
         scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
