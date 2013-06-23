@@ -69,7 +69,7 @@ beam_correction=Ptrarr(n_pol,/allocate)
 beam_i=Ptrarr(n_pol,/allocate)
 beam_mask=Ptrarr(n_pol,/allocate)
 source_mask=fltarr(dimension,elements)+1.; & source_mask[valid_radec_i]=1.
-gain_array=fltarr(dimension,elements)+gain_factor
+gain_use=gain_factor
 beam_avg=fltarr(dimension,elements)
 alias_mask=fltarr(dimension,elements) 
 alias_mask[dimension/4:3.*dimension/4.,elements/4:3.*elements/4.]=1
@@ -139,8 +139,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
 gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+pix_area_cnv=pixel_area(astr,dimension=dimension)/degpix^2.
 ;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
-gain_array*=gain_normalization
+gain_use*=gain_normalization
 normalization=1.
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
@@ -371,7 +372,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF Keyword_Set(scale_gain) THEN BEGIN
             ston_single=(flux_arr[0]+flux_arr[1])/(converge_check2[i]*gain_normalization)
             gain_factor_use=((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))>gain_factor
-        ENDIF ELSE gain_factor_use=gain_array[additional_i[src_i]]
+        ENDIF ELSE gain_factor_use=gain_use
         flux_arr*=gain_factor_use
         
         ;Apparent brightness, instrumental polarization X gain (a scalar)
@@ -400,12 +401,13 @@ FOR i=0L,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    flux_I=comp_arr[si_use].flux.I
-    flux_Q=comp_arr[si_use].flux.Q
-    flux_U=comp_arr[si_use].flux.U
-    flux_V=comp_arr[si_use].flux.V
     x_vec=comp_arr[si_use].x
     y_vec=comp_arr[si_use].y
+    area_cnv=pix_area_cnv[x_vec,y_vec]
+    flux_I=comp_arr[si_use].flux.I*area_cnv
+    flux_Q=comp_arr[si_use].flux.Q*area_cnv
+    flux_U=comp_arr[si_use].flux.U*area_cnv
+    flux_V=comp_arr[si_use].flux.V*area_cnv
     *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
     IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
         ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 

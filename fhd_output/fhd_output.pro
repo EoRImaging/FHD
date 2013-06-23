@@ -66,6 +66,7 @@ dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
+;pix_area_cnv=pixel_area(astr_out,dimension=dimension)/degpix^2.
 
 zoom_radius=Round(18./(degpix)/16.)*16.
 zoom_low=dimension/2.-zoom_radius

@@ -12,6 +12,8 @@ elements=obs.elements
 astr=obs.astr
 degpix=obs.degpix
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
+pixel_area=pixel_area(astr,dimension=dimension,elements=elements)
+
 
 freq_use=where((*obs.baseline_info).freq_use,nf_use)
 IF Tag_exist(obs,'fbin_i') THEN f_bin=obs.fbin_i ELSE f_bin=(*obs.baseline_info).fbin_i
@@ -28,6 +30,7 @@ IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
     model=fltarr(dimension,elements)
     FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]
     model/=Total(nf_arr)
+    model*=weight_invert(pixel_area)
     Ptr_free,model_arr
     
     n_pol=N_Elements(image_uv_arr)
