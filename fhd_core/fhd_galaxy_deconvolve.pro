@@ -15,7 +15,7 @@ xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,
 pixel_area=pixel_area(astr,dimension=dimension,elements=elements)
 i_use=where(Finite(ra_arr))
 glactc,ra_arr[i_use],dec_Arr[i_use],2000.,gl_vals,gb_vals,1,/degree
-gal_lat_weights=fltarr(dimension,elements) & gal_lat_weights[i_use]=Sqrt(1./(Abs(gb_vals)>degpix))
+gal_lat_weights=fltarr(dimension,elements) & gal_lat_weights[i_use]=(1./(Abs(gb_vals)>5))
 
 
 freq_use=where((*obs.baseline_info).freq_use,nf_use)
