@@ -15,7 +15,7 @@ xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,
 pixel_area=pixel_area(astr,dimension=dimension,elements=elements)
 i_use=where(Finite(ra_arr))
 glactc,ra_arr[i_use],dec_Arr[i_use],2000.,gl_vals,gb_vals,1,/degree
-gal_lat_weights=fltarr(dimension,elements) & gal_lat_weights[i_use]=Sqrt(1./(gb_vals>degpix))
+gal_lat_weights=fltarr(dimension,elements) & gal_lat_weights[i_use]=Sqrt(1./(Abs(gb_vals)>degpix))
 
 
 freq_use=where((*obs.baseline_info).freq_use,nf_use)
@@ -80,11 +80,11 @@ IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
         model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix))
         beam_i=Region_grow(*beam_base[pol_i],Round(obs.obsx)+Round(obs.obsy)*dimension,threshold=[0.05,Max(*beam_base[pol_i])])
         beam_vals=(*beam_base[pol_i])[beam_i]
-        beam_vals=beam_vals^2.
+        beam_vals=beam_vals
         weights=beam_vals*gal_lat_weights[beam_i]
         model_vals=(*model_img_holo[pol_i])[beam_i]
         image_vals=(*dirty_img[pol_i])[beam_i]
-        scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./beam_vals))[1]
+        scale_arr[pol_i]=(linfit(model_vals,image_vals,measure_error=1./weights))[1]
     ENDFOR   
     scale=Mean(scale_arr)
     print,scale_arr
