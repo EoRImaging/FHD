@@ -16,10 +16,10 @@ ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
-freq_bin_i=obs.fbin_i
+IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 bin_offset=(*obs.baseline_info).bin_offset
-frequency_array=obs.freq
+IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
 
 psf_base=psf.base
 psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])

@@ -254,7 +254,7 @@ t5_a=Systime(1)
 psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
-    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen)
+    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center)
 IF ~Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
