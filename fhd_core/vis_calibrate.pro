@@ -1,4 +1,4 @@
-FUNCTION vis_calibrate,vis_ptr,obs,psf,params,cal=cal,flag_ptr=flag_ptr,model_ptr=model_ptr,source_arr=source_arr,$
+FUNCTION vis_calibrate,vis_ptr,obs,psf,params,cal=cal,flag_ptr=flag_ptr,model_ptr=model_ptr,$
     min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,gain_arr_ptr=gain_arr_ptr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
@@ -24,6 +24,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     ENDIF ELSE BEGIN
         print,"Invalid calibration supplied!"
         error=1
+        timing=Systime(1)-t0_0
         RETURN,vis_ptr
     ENDELSE
 ENDIF
@@ -32,8 +33,8 @@ IF Keyword_Set(calibration_source_list) THEN BEGIN
     
 ENDIF
 
-vis_model_ptr=vis_source_model(source_arr,obs,psf,params,flag_ptr,model_uv_arr=model_ptr,$
-    file_path=file_path_fhd,timing=model_timing,silent=silent,_Extra=extra)
+vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,flag_ptr,model_uv_arr=model_ptr,$
+    timing=model_timing,silent=silent,_Extra=extra)
 
 
 cal=vis_struct_init_cal(obs,params)
@@ -93,10 +94,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDFOR 
         gain_arr[fi,*]=gain_curr
     ENDFOR
+    
     *cal.gain[pol_i]=gain_arr
 ENDFOR
 ;cal=vis_struct_update_cal(cal,gain_new,obs=obs)
 
 vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=preserve_visibilities)
+timing=Systime(1)-t0_0
 RETURN,vis_cal
 END

@@ -2,7 +2,7 @@ FUNCTION vis_source_model,source_list,obs,psf,params,flag_arr,model_uv_arr=model
     timing=timing,silent=silent,uv_mask=uv_mask
 
 t0=Systime(1)
-
+IF N_Elements(file_path) EQ 0 THEN file_path=''
 flags_filepath=file_path+'_flags.sav'
 ;vis_filepath=file_path+'_vis.sav'
 params_filepath=file_path+'_params.sav'

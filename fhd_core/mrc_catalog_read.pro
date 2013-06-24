@@ -1,4 +1,4 @@
-FUNCTION mrc_catalog_read,astr,names=names,file_path=file_path
+FUNCTION mrc_catalog_read,astr,names=names,file_path=file_path,frequency=frequency
 ;MRC catalog is 99% complete to 1 Jy. Catalog is at 408MHz
 ;filename='MRC full radio catalog.fits'
 ;data_dir='DATA'
@@ -9,8 +9,12 @@ ra=catalog.ra
 dec=catalog.dec
 names=catalog.name
 flux_error=catalog.flux_error
+catalog_freq=408. ;MHz
+IF N_Elements(frequency) EQ 0 THEN frequency=catalog_freq
+spectral_index=-0.8
+flux_scale=(frequency/catalog_freq)^spectral_index
 ;The Crab nebula appears to be missing from the catalog, so add it in by hand:
-flux=[flux/1000.,1526./2.8985507]
+flux=[flux/1000.,1526.]*flux_scale
 ra=[ra,ten(5,34,31.94)*15.]
 dec=[dec,ten(22,0,52.2)]
 names=[names,'Crab']

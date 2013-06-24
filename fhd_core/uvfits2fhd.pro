@@ -35,8 +35,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,$
     n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     rephase_to_zenith=rephase_to_zenith,healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,quickview=quickview,freq_start=freq_start,freq_end=freq_end,$
-    calibrate_visibilities=calibrate_visibilities,calibration_source_list=calibration_source_list,$
-    error=error,_Extra=extra
+    calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -74,6 +73,7 @@ params_filepath=file_path_fhd+'_params.sav'
 hdr_filepath=file_path_fhd+'_hdr.sav'
 fhd_filepath=file_path_fhd+'_fhd.sav'
 autocorr_filepath=file_path_fhd+'_autos.sav'
+cal_filepath=file_path_fhd+'_cal.sav'
 IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
@@ -239,16 +239,18 @@ IF Keyword_Set(data_flag) THEN BEGIN
         ENDIF
     ENDIF
     
+    IF Keyword_Set(transfer_calibration) THEN BEGIN
+        calibrate_visibilities=1
+        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=cal_filepath
+    ENDIF
+    
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         cal_uv_model=Complexarr(dimension,elements)
-        IF Keyword_Set(calibration_source_list) THEN BEGIN
-            
-        ENDIF
-        
-        IF Keyword_Set(gsm_calibrate) THEN BEGIN
-            
-        ENDIF
-        
+        print,"Calibrating visibilities"
+        vis_arr=vis_calibrate(vis_arr,obs,psf,params,cal=cal,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
+             transfer_calibration=transfer_calibration,timing=cal_timing,error=error,_Extra=extra)
+        print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
+        save,cal,filename=cal_filepath,/compress
     ENDIF
     
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
