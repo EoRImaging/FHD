@@ -489,7 +489,7 @@ t1+=Systime(1)-t1_0
 
 t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'
-print,String(format='("Setup:",A,)',Strn(Round(t_init)))
+print,String(format='("Setup:",A," ")',Strn(Round(t_init)))
 print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))
 print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
 print,String(format='("DFT source modeling:",A,"[",A,", or ",A," per 100 sources]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.),Strn(Round(t3*10000./si)/100.))
