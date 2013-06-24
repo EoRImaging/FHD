@@ -24,8 +24,8 @@ CASE instrument OF
         channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
         channel_center_flag=where(fine_channel_i EQ 15)
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *flag_ptr[channel_edge_flag,*]=0
-            *flag_ptr[channel_center_flag,*]=0
+            (*flag_ptr[pol_i])[channel_edge_flag,*]=0
+            (*flag_ptr[pol_i])[channel_center_flag,*]=0
         ENDFOR
     END
     ELSE:
