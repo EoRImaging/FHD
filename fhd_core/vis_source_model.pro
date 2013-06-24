@@ -39,11 +39,10 @@ IF ~Keyword_Set(uv_mask) THEN uv_mask=Fltarr(dimension,elements)+1
 ;uv_i_use=where(uv_mask)
 ;xvals=xvals[uv_i_use]
 ;yvals=yvals[uv_i_use]
-
-freq_bin_i=obs.fbin_i
+IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 bin_offset=(*obs.baseline_info).bin_offset
-frequency_array=obs.freq
+IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
 
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize

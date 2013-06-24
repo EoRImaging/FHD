@@ -249,7 +249,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         print,"Calibrating visibilities"
         IF ~Keyword_Set(transfer_calibration) AND ~Keyword_Set(calibration_source_list) THEN $
             calibration_source_list=generate_source_cal_list(obs.astr,psf,catalog_path=calibration_catalog_file_path)
-        vis_arr=vis_calibrate(vis_arr,obs,psf,params,cal=cal,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
+        vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,$
              calibration_source_list=calibration_source_list,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))

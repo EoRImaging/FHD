@@ -7,7 +7,7 @@ spectral_index=-0.8
 
 ra0=astr.crval[0]
 dec0=astr.crval[1]
-angs=angle_difference(dec0,ra0,dec,ra,/degree)
+angs=angle_difference(dec0,ra0,catalog.dec,catalog.ra,/degree)
 i_use=where(Abs(angs) LE 60.,n_use)
 
 source_comp_init,source_list,n_sources=n_use

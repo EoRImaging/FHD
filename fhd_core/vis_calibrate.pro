@@ -1,4 +1,4 @@
-FUNCTION vis_calibrate,vis_ptr,obs,psf,params,cal=cal,flag_ptr=flag_ptr,model_ptr=model_ptr,$
+FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_ptr=model_ptr,$
     min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,gain_arr_ptr=gain_arr_ptr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
@@ -29,9 +29,9 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     ENDELSE
 ENDIF
 
-IF Keyword_Set(calibration_source_list) THEN BEGIN
-    
-ENDIF
+;IF Keyword_Set(calibration_source_list) THEN BEGIN
+;    
+;ENDIF
 
 vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,flag_ptr,model_uv_arr=model_ptr,$
     timing=model_timing,silent=silent,_Extra=extra)
@@ -68,8 +68,8 @@ flag_freq_test=fltarr(n_freq)
 flag_tile_test=fltarr(n_tile)
 FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_ptr[pol_i],dimension=2)>0
 
-freq_flag
-tile_flag
+;freq_flag
+;tile_flag
 ;calibration loop
 ;vis_use=Ptrarr(n_pol,/allocate) 
 ;FOR pol_i=0,n_pol-1 DO *vis_use[pol_i]=*vis_ptr[pol_i]
