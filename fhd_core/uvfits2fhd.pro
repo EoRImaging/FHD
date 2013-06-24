@@ -33,9 +33,10 @@
 PRO uvfits2fhd,file_path_vis,export_images=export_images,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
-    rephase_to_zenith=rephase_to_zenith,CASA_calibration=CASA_calibration,healpix_recalculate=healpix_recalculate,$
+    rephase_to_zenith=rephase_to_zenith,healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,quickview=quickview,freq_start=freq_start,freq_end=freq_end,$
-    tile_flag_list=tile_flag_list,error=error,_Extra=extra
+    calibrate_visibilities=calibrate_visibilities,calibration_source_list=calibration_source_list,$
+    error=error,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -44,14 +45,12 @@ error=0
 heap_gc 
 t0=Systime(1)
 ;IF N_Elements(version) EQ 0 THEN version=0
-IF N_Elements(calibrate) EQ 0 THEN calibrate=0
+IF N_Elements(calibrate_visibilities) EQ 0 THEN calibrate_visibilities=0
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag) EQ 0 THEN flag=0.
-;IF N_Elements(deconvolve) EQ 0 THEN deconvolve=1
-IF N_Elements(CASA_calibration) EQ 0 THEN CASA_calibration=1
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
 ;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
@@ -179,6 +178,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     imaginary_index=hdr.imaginary_index
     flag_index=hdr.flag_index
     n_pol=obs.n_pol
+    n_freq=obs.n_freq
     
     data_array=data_struct.array[*,0:n_pol-1,*]
     data_struct=0. ;free memory
@@ -188,23 +188,32 @@ IF Keyword_Set(data_flag) THEN BEGIN
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
     IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     
+    vis_arr=Ptrarr(n_pol,/allocate)
+    flag_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),$
+            Reform(data_array[imaginary_index,pol_i,*,*]))*phase_shift
+        *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
+    ENDFOR
+    ;free memory
+    data_array=0 
+    flag_arr0=0
+    
     IF file_test(flags_filepath) AND ~Keyword_Set(flag) THEN BEGIN
-        flag_arr0=getvar_savefile(flags_filepath,'flag_arr0')
+        flag_arr=getvar_savefile(flags_filepath,'flag_arr')
     ENDIF ELSE BEGIN
-        flag_arr0=Reform(data_array[flag_index,*,*,*]) 
-        IF (size(data_array,/dimension))[1] EQ 1 THEN flag_arr0=Reform(flag_arr0,1,(size(flag_arr0,/dimension))[0],(size(flag_arr0,/dimension))[1])
-        flag_arr0=vis_flag_basic(flag_arr0,obs,params,_Extra=extra)
+        flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
     ENDELSE
     
     IF Keyword_Set(freq_start) THEN BEGIN
         frequency_array_MHz=freq_arr/1E6
         freq_start_cut=where(frequency_array_MHz LT freq_start,nf_cut_start)
-        IF nf_cut_start GT 0 THEN flag_arr0[*,freq_start_cut,*]=0
+        IF nf_cut_start GT 0 THEN FOR pol_i=0,n_pol-1 DO *flag_arr[freq_start_cut,*]=0
     ENDIF ELSE nf_cut_start=0
     IF Keyword_Set(freq_end) THEN BEGIN
         frequency_array_MHz=freq_arr/1E6
         freq_end_cut=where(frequency_array_MHz GT freq_end,nf_cut_end)
-        IF nf_cut_end GT 0 THEN flag_arr0[*,freq_end_cut,*]=0
+        IF nf_cut_end GT 0 THEN FOR pol_i=0,n_pol-1 DO *flag_arr[freq_end_cut,*]=0
     ENDIF ELSE nf_cut_end=0
     
     IF Keyword_Set(tile_flag_list) THEN BEGIN
@@ -222,49 +231,61 @@ IF Keyword_Set(data_flag) THEN BEGIN
             FOR ci=0,n_cut-1 DO BEGIN
                 ti=tile_cut_i[ci]
                 na=ra[ra[ti+1]-1]-ra[ra[ti]]
-                IF na GT 0 THEN flag_arr0[*,*,ra[ra[ti]:ra[ti+1]-1]]=0
+                IF na GT 0 THEN FOR pol_i=0,n_pol-1 DO *flag_arr[*,ra[ra[ti]:ra[ti+1]-1]]=0
                 nb=rb[rb[ti+1]-1]-rb[rb[ti]]
-                IF nb GT 0 THEN flag_arr0[*,*,rb[rb[ti]:rb[ti+1]-1]]=0
+                IF nb GT 0 THEN FOR pol_i=0,n_pol-1 DO *flag_arr[*,rb[rb[ti]:rb[ti+1]-1]]=0
             ENDFOR
-            SAVE,flag_arr0,filename=flags_filepath,/compress
+            SAVE,flag_arr,filename=flags_filepath,/compress
         ENDIF
     ENDIF
     
+    IF Keyword_Set(calibrate_visibilities) THEN BEGIN
+        cal_uv_model=Complexarr(dimension,elements)
+        IF Keyword_Set(calibration_source_list) THEN BEGIN
+            
+        ENDIF
+        
+        IF Keyword_Set(gsm_calibrate) THEN BEGIN
+            
+        ENDIF
+        
+    ENDIF
+    
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
-        flag_arr1=flag_arr0
-        SAVE,flag_arr0,filename=flags_filepath,/compress
+        flag_arr1=flag_arr
+        SAVE,flag_arr,filename=flags_filepath,/compress
         restore,filepath(transfer_mapfn+'_flags.sav',root=fhd_dir)
-        n0=N_Elements(flag_arr0[0,*,*])
-        n1=N_Elements(flag_arr1[0,*,*])
+        n0=N_Elements(*flag_arr[0])
+        n1=N_Elements(*flag_arr1[0])
         CASE 1 OF
-            n0 EQ n1:FOR pol_i=0,n_pol-1 DO flag_arr1[pol_i,*,*]*=flag_arr0[pol_i,*,*] ;in case using different # of pol's
+            n0 EQ n1:FOR pol_i=0,n_pol-1 DO *flag_arr1[pol_i]*=*flag_arr[pol_i] ;in case using different # of pol's
             n1 GT n0: BEGIN
-                nf0=(size(flag_arr0,/dimension))[1]
-                nb0=(size(flag_arr0,/dimension))[2]
-                FOR pol_i=0,n_pol-1 DO flag_arr1[pol_i,0:nf0-1,0:nb0-1]*=flag_arr0[pol_i,*,*]
+                nf0=(size(*flag_arr[0],/dimension))[0]
+                nb0=(size(*flag_arr[0],/dimension))[1]
+                FOR pol_i=0,n_pol-1 DO (*flag_arr1[pol_i])[0:nf0-1,0:nb0-1]*=*flag_arr[pol_i]
             END
             ELSE: BEGIN
-                nf1=(size(flag_arr1,/dimension))[1]
-                nb1=(size(flag_arr1,/dimension))[2]
+                nf1=(size(*flag_arr1[0],/dimension))[0]
+                nb1=(size(*flag_arr1[0],/dimension))[1]
                 print,"WARNING: restoring flags and Mapfn from mismatched data! Mapfn may be corrupted!"
-                FOR pol_i=0,n_pol-1 DO flag_arr1[pol_i,*,*]*=flag_arr0[pol_i,0:nf1-1,0:nb1-1]
+                FOR pol_i=0,n_pol-1 DO *flag_arr1[pol_i]*=(*flag_arr[pol_i])[0:nf1-1,0:nb1-1]
             ENDELSE
         ENDCASE
-        flag_arr0=flag_arr1
-        SAVE,flag_arr0,filename=flags_filepath,/compress
+        flag_arr=flag_arr
+        SAVE,flag_arr,filename=flags_filepath,/compress
         flag_arr1=0
     ENDIF ELSE BEGIN
         IF Keyword_Set(flag) THEN BEGIN
             print,'Flagging anomalous data'
-            vis_flag,data_array,flag_arr0,obs,params,_Extra=extra
-            SAVE,flag_arr0,filename=flags_filepath,/compress
+            vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
+            SAVE,flag_arr,filename=flags_filepath,/compress
         ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
-            SAVE,flag_arr0,filename=flags_filepath,/compress
+            SAVE,flag_arr,filename=flags_filepath,/compress
     ENDELSE
     
     flag_freq_test=fltarr(obs.n_freq)
     flag_tile_test=fltarr(obs.n_tile)
-    FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(Reform(flag_arr0[pol_i,*,*]),dimension=2)>0
+    FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_arr[pol_i],dimension=2)>0
     flag_freq_use_i=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
     IF n_freq_use EQ 0 THEN print,'All frequencies flagged!' ELSE BEGIN
         (*obs.baseline_info).freq_use[*]=0
@@ -277,8 +298,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
             tA_i=where(tile_A EQ (tile_i+1),nA)
             tB_i=where(tile_B EQ (tile_i+1),nB)
             
-            IF nA GT 0 THEN flag_tile_test[tile_i]+=Max(Reform(flag_arr0[pol_i,*,tA_i]))>0
-            IF nB GT 0 THEN flag_tile_test[tile_i]+=Max(Reform(flag_arr0[pol_i,*,tB_i]))>0
+            IF nA GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tA_i])>0
+            IF nB GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tB_i])>0
         ENDFOR
     ENDFOR
     flag_tile_use_i=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
@@ -295,7 +316,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     SAVE,params,filename=params_filepath,/compress
     SAVE,hdr,filename=hdr_filepath,/compress
         
-    vis_flag_update,flag_arr0,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
+    vis_flag_update,flag_arr,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
     SAVE,obs,filename=obs_filepath,/compress
     
     IF obs.n_vis EQ 0 THEN BEGIN
@@ -303,6 +324,19 @@ IF Keyword_Set(data_flag) THEN BEGIN
         error=1
         RETURN
     ENDIF
+    
+    IF Keyword_Set(healpix_recalculate) THEN $
+        hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
+            mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
+    hpx_cnv=0
+    
+    autocorr_i=where(tile_A EQ tile_B,n_autocorr)
+    auto_corr=Ptrarr(n_pol)
+    IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
+        auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
+        auto_corr[pol_i]=Ptr_new(auto_vals)
+    ENDFOR
+    SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
     
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)
@@ -317,35 +351,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
         mask0[mask_i]=1
         beam_mask*=mask0
     ENDFOR
-    
-    IF Keyword_Set(healpix_recalculate) THEN $
-        hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
-            mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
-    hpx_cnv=0
-    
-    vis_arr=Ptrarr(n_pol,/allocate)
-    flag_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),$
-            Reform(data_array[imaginary_index,pol_i,*,*]))*phase_shift
-        *flag_arr[pol_i]=reform(flag_arr0[pol_i,*,*])
-    ENDFOR
-    ;free memory
-    data_array=0 
-    flag_arr0=0
-    
-    autocorr_i=where(tile_A EQ tile_B,n_autocorr)
-    auto_corr=Ptrarr(n_pol)
-    IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
-        auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
-        auto_corr[pol_i]=Ptr_new(auto_vals)
-    ENDFOR
-    SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
-    
-    ;IF Keyword_Set(calibrate) THEN FOR pol_i=0,n_pol-1 DO $
-    ;    visibility_calibrate_simple,*vis_arr[pol_i],*flag_arr[pol_i],obs,params,beam=*beam[pol_i]
-    
-    ;SAVE,vis_arr,filename=vis_filepath
     
     t_grid=fltarr(n_pol)
     t_mapfn_gen=fltarr(n_pol)

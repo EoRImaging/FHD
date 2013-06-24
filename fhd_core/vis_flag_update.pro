@@ -1,4 +1,4 @@
-PRO vis_flag_update,flag_arr,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
+PRO vis_flag_update,flag_ptr,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -50,10 +50,9 @@ IF n_dist_flag GT 0 THEN BEGIN
     ymin[flag_dist_i]=-1
 ENDIF
 
-IF Keyword_Set(flag_arr) THEN BEGIN
-    n_flag_dim=size(flag_arr,/n_dimension)
-    IF n_flag_dim EQ 2 THEN flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag) $
-        ELSE flag_i=where(flag_arr[0,*,*] LE 0,n_flag,ncomplement=n_unflag)
+IF Keyword_Set(flag_ptr) THEN BEGIN
+    n_flag_dim=size(*flag_ptr[0],/n_dimension)
+    flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1

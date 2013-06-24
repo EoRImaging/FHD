@@ -1,7 +1,8 @@
 FUNCTION vis_calibrate,vis_ptr,obs,psf,params,cal=cal,flag_ptr=flag_ptr,model_ptr=model_ptr,source_arr=source_arr,$
     min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,gain_arr_ptr=gain_arr_ptr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
-    n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,_Extra=extra
+    n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
+    calibration_source_list=calibration_source_list,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
@@ -26,6 +27,11 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
         RETURN,vis_ptr
     ENDELSE
 ENDIF
+
+IF Keyword_Set(calibration_source_list) THEN BEGIN
+    
+ENDIF
+
 vis_model_ptr=vis_source_model(source_arr,obs,psf,params,flag_ptr,model_uv_arr=model_ptr,$
     file_path=file_path_fhd,timing=model_timing,silent=silent,_Extra=extra)
 
@@ -67,26 +73,29 @@ tile_flag
 ;calibration loop
 ;vis_use=Ptrarr(n_pol,/allocate) 
 ;FOR pol_i=0,n_pol-1 DO *vis_use[pol_i]=*vis_ptr[pol_i]
-FOR i=0L,n_cal_iter-1 DO BEGIN
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        gain_old=*cal.gain[pol_i]
-        vis_use=vis_calibration_apply(cal,vis_ptr,/preserve_original,pol_i=pol_i)
-        vis_use/=*vis_model_ptr[pol_i]
-        
-        ;average over time
-        ;the visibilities have dimension nfreq x (n_baselines x n_time), 
-        ; which can be reformed to nfreq x n_baselines x n_time 
-        vis_use=Total(Reform(vis_use,n_freq,n_baselines,n_time),3)
-        vis_use/=n_time
-        FOR fi=0L,n_freq-1 DO BEGIN
-            vis_matrix=Complexarr(n_tile,n_tile)
-            vis_matrix[tile_A_i,tile_B_i]=vis_use[fi,*]
-            
+FOR pol_i=0,n_pol-1 DO BEGIN
+    gain_arr=*cal.gain[pol_i]
+    vis_use=*vis_ptr[pol_i]
+    vis_use/=*vis_model_ptr[pol_i]
+    
+    ;average over time
+    ;the visibilities have dimension nfreq x (n_baselines x n_time), 
+    ; which can be reformed to nfreq x n_baselines x n_time 
+    vis_use=Total(Reform(vis_use,n_freq,n_baselines,n_time),3)
+    vis_use/=n_time
+    FOR fi=0L,n_freq-1 DO BEGIN
+        gain_curr=Reform(gain_arr[fi,*])
+        vis_matrix=Complexarr(n_tile,n_tile)
+        vis_matrix[tile_A_i,tile_B_i]=vis_use[fi,*]
+        FOR i=0L,n_cal_iter-1 DO BEGIN
+            gain_new=LA_Least_Squares(vis_matrix,gain_curr)
+            gain_curr=(gain_new+gain_curr)/2.
         ENDFOR 
-        
+        gain_arr[fi,*]=gain_curr
     ENDFOR
-    cal=vis_struct_update_cal(cal,gain_new,obs=obs)
+    *cal.gain[pol_i]=gain_arr
 ENDFOR
+;cal=vis_struct_update_cal(cal,gain_new,obs=obs)
 
 vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=preserve_visibilities)
 RETURN,vis_cal

@@ -17,7 +17,7 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO vis_flag,data_array,flag_arr,obs,params,flag_nsigma=flag_nsigma,_Extra=extra
+PRO vis_flag,vis_arr,flag_ptr,obs,params,flag_nsigma=flag_nsigma,_Extra=extra
 
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
@@ -35,12 +35,13 @@ tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
 IF Tag_exist(obs,'freq') THEN freq=obs.freq ELSE freq=(*obs.baseline_info).freq
 n_tiles=n_elements(uniq(tile_A[sort(tile_A)]))
-flag_center=1
-flag_edge=3
-coarse_channel_id=Floor(indgen(n_freq)/24.)
-coarse_channel_pos=indgen(n_freq) mod 32
-flag_arr[*,where(coarse_channel_pos EQ 16),*]=0
-flag_arr[*,where((coarse_channel_pos LT flag_edge) OR (coarse_channel_pos GT 32-flag_edge-1)),*]=0
+;now taken care of in a more appropriate place
+;flag_center=1
+;flag_edge=3
+;coarse_channel_id=Floor(indgen(n_freq)/24.)
+;coarse_channel_pos=indgen(n_freq) mod 32
+;flag_arr[*,where(coarse_channel_pos EQ 16),*]=0
+;flag_arr[*,where((coarse_channel_pos LT flag_edge) OR (coarse_channel_pos GT 32-flag_edge-1)),*]=0
 
 ;IF Keyword_Set(cut_baselines) THEN BEGIN
 uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(freq)
