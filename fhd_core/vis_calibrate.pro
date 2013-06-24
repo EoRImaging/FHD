@@ -1,4 +1,4 @@
-FUNCTION vis_calibrate,vis_ptr,obs,psf,params,cal=cal,flag_arr=flag_arr,model_ptr=model_ptr,source_arr=source_arr,$
+FUNCTION vis_calibrate,vis_ptr,obs,psf,params,cal=cal,flag_ptr=flag_ptr,model_ptr=model_ptr,source_arr=source_arr,$
     min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,gain_arr_ptr=gain_arr_ptr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,_Extra=extra
@@ -26,7 +26,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
         RETURN,vis_ptr
     ENDELSE
 ENDIF
-vis_model_ptr=vis_source_model(source_arr,obs,psf,params,flag_arr,model_uv_arr=model_ptr,$
+vis_model_ptr=vis_source_model(source_arr,obs,psf,params,flag_ptr,model_uv_arr=model_ptr,$
     file_path=file_path_fhd,timing=model_timing,silent=silent,_Extra=extra)
 
 
@@ -48,7 +48,22 @@ tile_A_i=cal.tile_A-1
 tile_B_i=cal.tile_B-1
 freq_arr=cal.freq
 bin_offset=cal.bin_offset
+n_baselines=bin_offset[1]
+tile_A_i=tile_A_i[0:bin_offset[1]]
+tile_B_i=tile_B_i[0:bin_offset[1]]
 
+IF N_Elements(flag_ptr) EQ 0 THEN BEGIN
+    flag_init=Replicate(1.,n_freq,n_baselines*Float(n_time))
+    flag_ptr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *flag_ptr[pol_i]=flag_init
+ENDIF
+
+flag_freq_test=fltarr(n_freq)
+flag_tile_test=fltarr(n_tile)
+FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_ptr[pol_i],dimension=2)>0
+
+freq_flag
+tile_flag
 ;calibration loop
 ;vis_use=Ptrarr(n_pol,/allocate) 
 ;FOR pol_i=0,n_pol-1 DO *vis_use[pol_i]=*vis_ptr[pol_i]
@@ -58,8 +73,17 @@ FOR i=0L,n_cal_iter-1 DO BEGIN
         vis_use=vis_calibration_apply(cal,vis_ptr,/preserve_original,pol_i=pol_i)
         vis_use/=*vis_model_ptr[pol_i]
         
-
-    
+        ;average over time
+        ;the visibilities have dimension nfreq x (n_baselines x n_time), 
+        ; which can be reformed to nfreq x n_baselines x n_time 
+        vis_use=Total(Reform(vis_use,n_freq,n_baselines,n_time),3)
+        vis_use/=n_time
+        FOR fi=0L,n_freq-1 DO BEGIN
+            vis_matrix=Complexarr(n_tile,n_tile)
+            vis_matrix[tile_A_i,tile_B_i]=vis_use[fi,*]
+            
+        ENDFOR 
+        
     ENDFOR
     cal=vis_struct_update_cal(cal,gain_new,obs=obs)
 ENDFOR
