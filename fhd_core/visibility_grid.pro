@@ -251,10 +251,12 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     IF weights_flag THEN BEGIN
         wts_box=matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
+        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
     ENDIF
     IF variance_flag THEN BEGIN
         var_box=matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
+        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
     
@@ -265,6 +267,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/atranspose)
         t6b_0=Systime(1)
         t6a+=t6b_0-t6a_0
+        IF Keyword_Set(grid_uniform_weight) THEN box_arr_map/=vis_n
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
             (*map_fn[xmin_use+i,ymin_use+j])[*map_fn_inds[i,j]]+=box_arr_map[*,ij]
