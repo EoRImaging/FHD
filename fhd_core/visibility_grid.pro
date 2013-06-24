@@ -4,7 +4,7 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,we
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    phase_threshold=phase_threshold,error=error,_Extra=extra
+    phase_threshold=phase_threshold,grid_uniform_weight=grid_uniform_weight,error=error,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -159,6 +159,7 @@ bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should 
 bin_i=where(bin_n,n_bin_use)
 
 n_vis=Float(Total(bin_n))
+IF Keyword_Set(grid_uniform_weight) THEN n_vis=n_bin_use
 
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
@@ -229,6 +230,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     vis_n_arr=Replicate(1.,vis_n)
     
     vis_box=vis_arr_use[inds]*freq_norm[freq_i]
+    IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
     box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
