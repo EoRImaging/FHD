@@ -105,8 +105,9 @@ normalization_arr=fltarr(n_pol) ;factor to normalize holo_mapfn_apply
 model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
 model_uv_stks=Ptrarr(4,/allocate)
+IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
+source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha
 
-source_comp_init,comp_arr,n_sources=max_sources
 pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
 
 ;load holo map functions and initialize output arrays

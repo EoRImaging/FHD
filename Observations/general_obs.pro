@@ -4,7 +4,8 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag=flag,$
-    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,_Extra=extra
+    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,$
+    calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -22,6 +23,7 @@ IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,
 IF N_Elements(fhd_file_list) EQ 0 THEN fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 IF N_Elements(healpix_path) EQ 0 THEN healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
+IF N_Elements(calibration_catalog_file_path) EQ 0 THEN calibration_catalog_file_path=rootdir('mwa')+filepath('calibration_source_list.sav',root='DATA')
 n_files=N_Elements(vis_file_list)
 
 ;Set which files to restore or recalculate (if the file is not found and needed, it will be recalculated
@@ -74,7 +76,8 @@ WHILE fi LT n_files DO BEGIN
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
-        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,_Extra=extra
+        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,$
+        calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
     IF Keyword_Set(cleanup) AND cleanup GT 1 THEN fhd_cleanup,fhd_file_list[fi],/minimal
     IF Keyword_Set(error) THEN BEGIN
         print,'Error encountered!'

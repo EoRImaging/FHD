@@ -35,7 +35,8 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,$
     n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     rephase_to_zenith=rephase_to_zenith,healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,quickview=quickview,freq_start=freq_start,freq_end=freq_end,$
-    calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,_Extra=extra
+    calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
+    calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -245,10 +246,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
-        cal_uv_model=Complexarr(dimension,elements)
         print,"Calibrating visibilities"
+        IF ~Keyword_Set(transfer_calibration) AND ~Keyword_Set(calibration_source_list) THEN $
+            calibration_source_list=generate_source_cal_list(obs.astr,psf,catalog_path=calibration_catalog_file_path)
         vis_arr=vis_calibrate(vis_arr,obs,psf,params,cal=cal,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
-             transfer_calibration=transfer_calibration,timing=cal_timing,error=error,_Extra=extra)
+             transfer_calibration=transfer_calibration,timing=cal_timing,error=error,$
+             calibration_source_list=calibration_source_list,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
     ENDIF
