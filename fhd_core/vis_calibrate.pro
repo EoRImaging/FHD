@@ -102,6 +102,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     baseline_weight=Total(weight,1)
     freq_use=where(freq_weight,n_freq_use)
     baseline_use=where(baseline_weight,n_baseline_use)
+    tile_use=where(histogram(tile_A_i[baseline_use],min=0,/bin,max=n_tile-1) $
+        +histogram(tile_B_i[baseline_use],min=0,/bin,max=n_tile-1))
 ;    tile_use=Uniq(tile_A_i[baseline_use])
 ;    n_tile_use=N_Elements(tile_use)
     
@@ -109,21 +111,25 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
         gain_curr=Reform(gain_arr[fi,*])
-        vis_matrix=Complexarr(n_tile,n_tile)
-        vis_matrix[tile_A_i[baseline_use],tile_B_i[baseline_use]]=vis_use[fi,baseline_use]
-        vis_matrix+=Conj(transpose(vis_matrix))
-        FOR i=0L,n_cal_iter-1 DO BEGIN
+        vis_matrix=Complexarr(n_tile,n_baseline_use)
+        gain_curr=Reform(gain_arr[fi,tile_A_i[baseline_use]])*Reform(gain_arr[fi,tile_B_i[baseline_use]])
+        vis_matrix[tile_A_i[baseline_use],baseline_use]+=vis_use[fi,baseline_use]
+        vis_matrix[tile_B_i[baseline_use],baseline_use]+=vis_use[fi,baseline_use]
+;        vis_matrix+=Conj(transpose(vis_matrix))
+        FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
             gain_new=LA_Least_Squares(vis_matrix,gain_curr,method=2)
-            gain_curr=(gain_new+gain_curr)/2.
+            gain_new=1./gain_new
+            gain_new2=gain_new[tile_A_i[baseline_use]]*gain_new[tile_B_i[baseline_use]]
+            gain_curr=(gain_new2+gain_curr)/2.
         ENDFOR 
-        gain_arr[fi,*]=gain_curr
+        gain_arr[fi,*]=gain_new
     ENDFOR
     
     *cal.gain[pol_i]=gain_arr
 ENDFOR
 ;cal=vis_struct_update_cal(cal,gain_new,obs=obs)
 
-vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=preserve_visibilities)
+vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=1)
 timing=Systime(1)-t0_0
 RETURN,vis_cal
 END
