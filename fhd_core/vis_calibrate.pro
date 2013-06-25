@@ -7,8 +7,6 @@ t0_0=Systime(1)
 error=0
 heap_gc
 
-IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=10L
-
 IF Keyword_Set(transfer_calibration) THEN BEGIN
     IF size(transfer_calibration,/type) EQ 7 THEN $
         IF file_test(transfer_calibration) THEN cal=getvar_savefile(transfer_calibration,'cal')
@@ -67,7 +65,7 @@ ENDIF
 ;flag_freq_test=fltarr(n_freq)
 ;flag_tile_test=fltarr(n_tile)
 ;FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_ptr[pol_i],dimension=2)>0
-
+;
 ;FOR pol_i=0,n_pol-1 DO BEGIN
 ;    FOR tile_i=0L,n_tile-1 DO BEGIN
 ;        flag_tile_test[tile_i]+=Max((*flag_ptr[pol_i])[*,tile_A_i
@@ -76,58 +74,59 @@ ENDIF
 ;
 ;freq_use_i=where(flag_freq_test,n_freq_use)
 ;tile_i_use=where(flag_tile_test,n_tile_use)
-
-
+;
+;
 ;freq_flag=fltarr(n_freq) & freq_flag[freq_use_i]=1
 ;tile_flag=fltarr(n_tile) & tile_flag[tile_i_use]=1
 
 ;calibration loop
 ;vis_use=Ptrarr(n_pol,/allocate) 
 ;FOR pol_i=0,n_pol-1 DO *vis_use[pol_i]=*vis_ptr[pol_i]
-FOR pol_i=0,n_pol-1 DO BEGIN
-    gain_arr=*cal.gain[pol_i]
-    vis_use=*vis_ptr[pol_i]
-    vis_use/=*vis_model_ptr[pol_i]
-    flag_use=0>*flag_ptr[pol_i]<1
-;    i_nan=where(Finite(result,/nan),n_nan)
-;    IF n_nan GT 0 THEN vis_use[i_nan]=0.
-    
-    ;average over time
-    ;the visibilities have dimension nfreq x (n_baselines x n_time), 
-    ; which can be reformed to nfreq x n_baselines x n_time 
-    vis_use=Total(Reform(vis_use,n_freq,n_baselines,n_time),3,/NAN)
-    weight=Total(Reform(flag_use,n_freq,n_baselines,n_time),3,/NAN)
-    i_use=where(weight GT 0,n_use)
-    freq_weight=Total(weight,2)
-    baseline_weight=Total(weight,1)
-    freq_use=where(freq_weight,n_freq_use)
-    baseline_use=where(baseline_weight,n_baseline_use)
-    tile_use=where(histogram(tile_A_i[baseline_use],min=0,/bin,max=n_tile-1) $
-        +histogram(tile_B_i[baseline_use],min=0,/bin,max=n_tile-1))
-;    tile_use=Uniq(tile_A_i[baseline_use])
-;    n_tile_use=N_Elements(tile_use)
-    
-    vis_use*=weight_invert(weight)
-    FOR fii=0L,n_freq_use-1 DO BEGIN
-        fi=freq_use[fii]
-        gain_curr=Reform(gain_arr[fi,*])
-        vis_matrix=Complexarr(n_tile,n_baseline_use)
-        gain_curr=Reform(gain_arr[fi,tile_A_i[baseline_use]])*Reform(gain_arr[fi,tile_B_i[baseline_use]])
-        vis_matrix[tile_A_i[baseline_use],baseline_use]+=vis_use[fi,baseline_use]
-        vis_matrix[tile_B_i[baseline_use],baseline_use]+=vis_use[fi,baseline_use]
-;        vis_matrix+=Conj(transpose(vis_matrix))
-        FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
-            gain_new=LA_Least_Squares(vis_matrix,gain_curr,method=2)
-            gain_new=1./gain_new
-            gain_new2=gain_new[tile_A_i[baseline_use]]*gain_new[tile_B_i[baseline_use]]
-            gain_curr=(gain_new2+gain_curr)/2.
-        ENDFOR 
-        gain_arr[fi,*]=gain_new
-    ENDFOR
-    
-    *cal.gain[pol_i]=gain_arr
-ENDFOR
-;cal=vis_struct_update_cal(cal,gain_new,obs=obs)
+
+cal=vis_calibrate_subroutine(cal,vis_ptr,vis_model_ptr,flag_ptr)
+;FOR pol_i=0,n_pol-1 DO BEGIN
+;    gain_arr=*cal.gain[pol_i]
+;    vis_use=*vis_ptr[pol_i]
+;    vis_use/=*vis_model_ptr[pol_i]
+;    flag_use=0>*flag_ptr[pol_i]<1
+;;    i_nan=where(Finite(result,/nan),n_nan)
+;;    IF n_nan GT 0 THEN vis_use[i_nan]=0.
+;    
+;    ;average over time
+;    ;the visibilities have dimension nfreq x (n_baselines x n_time), 
+;    ; which can be reformed to nfreq x n_baselines x n_time 
+;    vis_use=Total(Reform(vis_use,n_freq,n_baselines,n_time),3,/NAN)
+;    weight=Total(Reform(flag_use,n_freq,n_baselines,n_time),3,/NAN)
+;    i_use=where(weight GT 0,n_use)
+;    freq_weight=Total(weight,2)
+;    baseline_weight=Total(weight,1)
+;    freq_use=where(freq_weight,n_freq_use)
+;    baseline_use=where(baseline_weight,n_baseline_use)
+;    tile_use=where(histogram(tile_A_i[baseline_use],min=0,/bin,max=n_tile-1) $
+;        +histogram(tile_B_i[baseline_use],min=0,/bin,max=n_tile-1))
+;;    tile_use=Uniq(tile_A_i[baseline_use])
+;;    n_tile_use=N_Elements(tile_use)
+;    
+;    vis_use*=weight_invert(weight)
+;    FOR fii=0L,n_freq_use-1 DO BEGIN
+;        fi=freq_use[fii]
+;        gain_curr=Reform(gain_arr[fi,*])
+;        vis_matrix=Complexarr(n_tile,n_baseline_use)
+;        gain_curr=Reform(gain_arr[fi,tile_A_i[baseline_use]])*Reform(gain_arr[fi,tile_B_i[baseline_use]])
+;        vis_matrix[tile_A_i[baseline_use],baseline_use]+=vis_use[fi,baseline_use]
+;        vis_matrix[tile_B_i[baseline_use],baseline_use]+=vis_use[fi,baseline_use]
+;;        vis_matrix+=Conj(transpose(vis_matrix))
+;        FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
+;            gain_new=LA_Least_Squares(vis_matrix,gain_curr,method=2)
+;            gain_new=1./gain_new
+;            gain_new2=gain_new[tile_A_i[baseline_use]]*gain_new[tile_B_i[baseline_use]]
+;            gain_curr=(gain_new2+gain_curr)/2.
+;        ENDFOR 
+;        gain_arr[fi,*]=gain_new
+;    ENDFOR
+;    
+;    *cal.gain[pol_i]=gain_arr
+;ENDFOR
 
 vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=1)
 timing=Systime(1)-t0_0
