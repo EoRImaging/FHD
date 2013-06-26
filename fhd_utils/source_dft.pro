@@ -5,8 +5,8 @@ fft_norm=1.
 
 IF N_Elements(xvals) EQ 0 THEN BEGIN
     IF N_Elements(elements) EQ 0 THEN elements=dimension
-    xvals=meshgrid(dimension,elements,1)
-    yvals=meshgrid(dimension,elements,2)
+    xvals=meshgrid(dimension,elements,1)-dimension/2
+    yvals=meshgrid(dimension,elements,2)-elements/2
 ENDIF
 IF N_Elements(flux) EQ 0 THEN flux=fltarr(size(x_loc,/dimension)>1)+1.
 

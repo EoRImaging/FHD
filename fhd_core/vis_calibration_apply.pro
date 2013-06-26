@@ -22,8 +22,10 @@ IF N_Elements(pol_i) EQ 0 THEN BEGIN
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         gain_arr=*gain_ptr[pol_i]
-        vis_gain=gain_arr[inds_A]*gain_arr[inds_B]
+;        vis_gain=gain_arr[inds_A]*(gain_arr[inds_B])
+        vis_gain=gain_arr[inds_A]*Conj(gain_arr[inds_B])
         *vis_cal_ptr[pol_i]/=Temporary(vis_gain)
+;        *vis_cal_ptr[pol_i]*=Temporary(vis_gain)
     ENDFOR
     RETURN,vis_cal_ptr
 ENDIF ELSE BEGIN
