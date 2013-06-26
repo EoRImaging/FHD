@@ -92,7 +92,7 @@ elements=(size(yvals,/dimension))[1]
 
 IF strlowcase(!version.os_family) EQ 'windows' THEN $ 
     paper_beam_filepath=rootdir()+'PAPER_DATA\PAPER_x_beam_nside128.fits' ELSE $
-    paper_beam_filepath='/data2/PAPER/PAPER_x_beam_nside128.fits'
+    paper_beam_filepath='/data2/PAPER/psa32/PAPER_x_beam_nside128.fits'
 beam_cube=mrdfits(paper_beam_filepath,0,header,/silent)
 naxis1=sxpar(header,'NAXIS1')
 naxis2=sxpar(header,'NAXIS2')
@@ -130,7 +130,7 @@ IF n_mask GT 0 THEN BEGIN
     yvals_use[mask_i]=!Values.F_NAN
 ENDIF
 ad2xy,xvals_use,yvals_use,astr,x_int,y_int
-tile_beam=Float(interpolate(beam_slice,x_int,y_int,missing=0,cubic=-0.5))
+tile_beam=Float(interpolate(beam_slice,x_int,y_int,missing=0,cubic=-0.5))>0.
 
 IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(1,/allocate)
 *antenna_beam_arr[0]=tile_beam

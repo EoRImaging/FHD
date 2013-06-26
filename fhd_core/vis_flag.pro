@@ -27,7 +27,7 @@ n_pol=obs.n_pol
 n_freq=obs.n_freq
 
 data_abs=Abs(*vis_arr[0])
-IF n_pol GT 1 THEN data_abs=SQRT(data_abs^2.+(*vis_arr[1])^2.)
+IF n_pol GT 1 THEN data_abs=SQRT(data_abs^2.+Abs(*vis_arr[1])^2.)
 
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
@@ -48,14 +48,14 @@ IF N_baselines_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,cut_bas
 ;ENDIF
 
 tile_fom=fltarr(n_tiles)
-FOR tile_i=0,n_tiles-1 DO BEGIN
-    tile_Ai=where((tile_A-1) EQ tile_i,nA)
-    tile_Bi=where((tile_B-1) EQ tile_i,nB)
+FOR tile_i=0L,n_tiles-1 DO BEGIN
+    tile_Ai=where((tile_A-1) EQ tile_i,nA,/L64)
+    tile_Bi=where((tile_B-1) EQ tile_i,nB,/L64)
     IF nB GT 0 THEN IF nA GT 0 THEN tile_ABi=[tile_Ai,tile_Bi] ELSE tile_ABi=tile_Bi ELSE IF nA GT 0 THEN tile_ABi=tile_Ai 
     data_subset=data_abs[*,tile_ABi]
     FOR pol_i=0,n_pol-1 DO BEGIN
-        i_use=where(((*flag_ptr[pol_i])[*,tile_ABi] GT 0) AND (data_subset[*,tile_ABi] GT 0),n_use)
-        IF n_use GT 10 THEN tile_fom[tile_i]+=Stddev((data_subset[*,tile_ABi])[i_use]);/Median(data_subset[i_use])
+        i_use=where(((*flag_ptr[pol_i])[*,tile_ABi] GT 0) AND (data_subset GT 0),n_use)
+        IF n_use GT 10 THEN tile_fom[tile_i]+=Stddev(data_subset[i_use]);/Median(data_subset[i_use])
     ENDFOR
 ENDFOR
 
