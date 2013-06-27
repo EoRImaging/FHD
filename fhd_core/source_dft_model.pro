@@ -6,7 +6,7 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 
-pix_area_cnv=pixel_area(obs.astr,dimension=dimension)/degpix^2.
+;pix_area_cnv=pixel_area(obs.astr,dimension=dimension);/degpix^2.
 
 IF N_Elements(uv_mask) EQ 0 THEN uv_mask=fltarr(dimension,elements)+1
 uv_i_use=where(uv_mask)
@@ -52,11 +52,11 @@ ENDIF ELSE BEGIN
     y_vec=src_arr.y
 ENDELSE
 
-area_cnv=pix_area_cnv[x_vec,y_vec]
-flux_I*=area_cnv
-flux_Q*=area_cnv
-flux_U*=area_cnv
-flux_V*=area_cnv
+;area_cnv=pix_area_cnv[x_vec,y_vec]
+;flux_I*=area_cnv
+;flux_Q*=area_cnv
+;flux_U*=area_cnv
+;flux_V*=area_cnv
 
 IF Keyword_Set(unpolarized) THEN flux_Q=(flux_V=0.)
 

@@ -16,9 +16,13 @@ dec_vals=dec_vals[i_use]
 ra0=astr.crval[0]
 dec0=astr.crval[1]
 ang_dist=angle_difference(dec0,ra0,dec_vals,ra_vals,/degree)
-area_vals=1./Cos(ang_dist*!DtoR)^2.
+area_vals=1./Cos(ang_dist*!DtoR)
 area_map=Fltarr(dimension,elements)
 area_map[i_use]=area_vals*area0
+
+
+;Turn off for now!
+area_map[*]=1.
 
 RETURN,area_map
 END

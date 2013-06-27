@@ -140,7 +140,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
 gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
-pix_area_cnv=pixel_area(astr,dimension=dimension)/degpix^2.
+;pix_area_cnv=pixel_area(astr,dimension=dimension);/degpix^2.
 ;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
 gain_use*=gain_normalization
 normalization=1.
@@ -405,11 +405,11 @@ FOR i=0L,max_iter-1 DO BEGIN
     t2+=t3_0-t2_0
     x_vec=comp_arr[si_use].x
     y_vec=comp_arr[si_use].y
-    area_cnv=pix_area_cnv[x_vec,y_vec]
-    flux_I=comp_arr[si_use].flux.I*area_cnv
-    flux_Q=comp_arr[si_use].flux.Q*area_cnv
-    flux_U=comp_arr[si_use].flux.U*area_cnv
-    flux_V=comp_arr[si_use].flux.V*area_cnv
+;    area_cnv=pix_area_cnv[x_vec,y_vec]
+    flux_I=comp_arr[si_use].flux.I;*area_cnv
+    flux_Q=comp_arr[si_use].flux.Q;*area_cnv
+    flux_U=comp_arr[si_use].flux.U;*area_cnv
+    flux_V=comp_arr[si_use].flux.V;*area_cnv
     *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
     IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
         ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 

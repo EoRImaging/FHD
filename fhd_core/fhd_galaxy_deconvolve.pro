@@ -12,7 +12,7 @@ elements=obs.elements
 astr=obs.astr
 degpix=obs.degpix
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
-pixel_area=pixel_area(astr,dimension=dimension,elements=elements)
+;pixel_area=pixel_area(astr,dimension=dimension,elements=elements)
 i_use=where(Finite(ra_arr))
 glactc,ra_arr[i_use],dec_Arr[i_use],2000.,gl_vals,gb_vals,1,/degree
 gal_lat_weights=fltarr(dimension,elements) & gal_lat_weights[i_use]=(1./(Abs(gb_vals)>5))
@@ -40,7 +40,7 @@ IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
     model=fltarr(dimension,elements)
     FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]*freq_norm[fi]
     model/=Total(nf_arr)
-    model*=weight_invert(pixel_area)
+;    model*=weight_invert(pixel_area)
     Ptr_free,model_arr
     
     n_pol=N_Elements(image_uv_arr)

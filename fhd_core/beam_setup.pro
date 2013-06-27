@@ -130,9 +130,10 @@ yvals3=za_arr*Cos(az_arr*!DtoR)
 el_arr=90.-za_arr
 polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
 proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
 
 IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
+*proj[3]*=Complex(0,1)
+IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
 
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsza=90.-obsalt

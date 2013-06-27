@@ -1,6 +1,7 @@
 PRO fhd_multi,fhd_file_list,source_array,comp_arr,fhd=fhd,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
     residual_array=residual_array,dirty_uv_arr=dirty_uv_arr,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
-    silent=silent,beam_model=beam_model,beam_corr=beam_corr,norm_arr=norm_arr,source_mask=source_mask,hpx_inds=hpx_inds,_Extra=extra
+    silent=silent,beam_model=beam_model,beam_corr=beam_corr,norm_arr=norm_arr,source_mask=source_mask,hpx_inds=hpx_inds,$
+    transfer_mapfn=transfer_mapfn,_Extra=extra
 except=!except
 !except=0
 compile_opt idl2,strictarrsubs  
@@ -71,6 +72,13 @@ uv_i_arr=Ptrarr(n_obs,/allocate)
 
 box_coords=Lonarr(n_obs,4)
 norm_arr=Fltarr(n_obs)
+IF Keyword_Set(transfer_mapfn) THEN BEGIN
+    file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) 
+    print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
+    restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;restores a variable named map_fn
+    map_fn_ptr=Ptr_new(map_fn)
+    FOR pol_i=0,n_pol-1 DO FOR obs_i=0L,n_obs-1 DO map_fn_arr[pol_i,obs]=map_fn_ptr
+ENDIF
 
 FOR obs_i=0.,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
@@ -122,9 +130,11 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
 ;        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
-        file_path_mapfn=file_path_fhd+'_mapfn_'
-        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-        *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
+        IF ~Ptr_valid(map_fn_arr[pol_i,obs_i]) THEN BEGIN
+            file_path_mapfn=file_path_fhd+'_mapfn_'
+            restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+            *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
+        ENDIF
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
         *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
