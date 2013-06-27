@@ -4,8 +4,9 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag=flag,$
-    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,$
+    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,force_no_data=force_no_data,$
     calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
+
 except=!except
 !except=0 
 heap_gc
@@ -69,6 +70,8 @@ WHILE fi LT n_files DO BEGIN
             CONTINUE
         ENDIF
     ENDIF
+    IF (recalculate_all EQ 0) AND Keyword_Set(cleanup) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
+    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
