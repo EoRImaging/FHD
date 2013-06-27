@@ -23,7 +23,7 @@ IF N_Elements(data_directory) EQ 0 THEN data_directory=rootdir('mwa')+filepath('
 IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 IF N_Elements(fhd_file_list) EQ 0 THEN fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 IF N_Elements(healpix_path) EQ 0 THEN healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
-IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
+IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 IF N_Elements(calibration_catalog_file_path) EQ 0 THEN calibration_catalog_file_path=rootdir('mwa')+filepath('calibration_source_list.sav',root='DATA')
 n_files=N_Elements(vis_file_list)
 
