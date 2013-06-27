@@ -257,7 +257,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF
     
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
-;        flag_arr1=flag_arr
+        flag_arr1=flag_arr
 ;        SAVE,flag_arr,filename=flags_filepath,/compress
         IF basename EQ transfer_mapfn THEN BEGIN 
             IF Keyword_Set(flag) THEN BEGIN
@@ -266,8 +266,18 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 SAVE,flag_arr,filename=flags_filepath,/compress
             ENDIF
         ENDIF ELSE restore,filepath(transfer_mapfn+'_flags.sav',root=fhd_dir) ;flag_arr
-;        n0=N_Elements(*flag_arr[0])
-;        n1=N_Elements(*flag_arr1[0])
+        n0=N_Elements(*flag_arr[0])
+        n1=N_Elements(*flag_arr1[0])
+        IF n1 GT n0 THEN BEGIN
+            nf0=(size(*flag_arr[0],/dimension))[0]
+            nb0=(size(*flag_arr[0],/dimension))[1]
+            FOR pol_i=0,n_pol-1 DO (*flag_arr1[pol_i])[0:nf0-1,0:nb0-1]*=*flag_arr[pol_i]
+            SAVE,flag_arr,filename=flags_filepath,/compress
+        ENDIF
+        IF n0 GT n1 THEN BEGIN
+            error=1
+            RETURN
+        ENDIF
 ;        CASE 1 OF
 ;            n0 EQ n1:FOR pol_i=0,n_pol-1 DO *flag_arr1[pol_i]*=*flag_arr[pol_i] ;in case using different # of pol's
 ;            n1 GT n0: BEGIN
