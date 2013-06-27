@@ -1,0 +1,60 @@
+Fast Holographic Deconvolution IDL installation instructions
+
+
+1 Download the latest versions of the following libraries:	
+
+a. this repository (https://github.com/miguelfmorales/FHD/)
+
+b. the power spectrum generation code (https://github.com/miguelfmorales/PS/)
+
+c. the astro IDL library (http://idlastro.gsfc.nasa.gov/)
+
+d. the coyote library (http://www.idlcoyote.com/documents/programs.php)
+
+e. the HEALPix library (http://healpix.jpl.nasa.gov/healpixSoftwareCapabilities.shtml)
+
+*****
+I got HEALPix from http://sourceforge.net/projects/healpix/ as the NASA page seemed out-of-date
+*****
+
+2 Add these libraries to your IDL path in the order listed
+
+a. To add a library to your path, on Windows machines type (on the IDL command line)
+!PATH = !PATH + ';' + Expand_Path('+path\to\library\')
+
+And on Unix-based machines type
+*****
+!PATH = Expand_Path('+path/to/library/') + ':' + !PATH
+(I remember that you told me to switch the order for the IDL PATH.)
+*****
+
+Be sure to use the correct separator (; or : ) and include the ‘+’ sign at the start of +path/to/library/
+
+*****
+You can create an IDL startup file to set the IDL path.
+Reference: http://slugidl.pbworks.com/w/page/28913708/Adding%20Programs%20to%20Your%20IDL%20Path
+(Not sure if we want to reproduce the instructions or just point people to that page.)
+*****
+
+3 Install HEALPix, as http://healpix.jpl.nasa.gov/html/install.htm
+
+4 Install Imagemagick if not already present (http://www.imagemagick.org)
+
+*****
+On eor-01, I had to install the i386 version of Imagemagick even though x86_64 was already installed. Maybe it's important to specify the version. 
+*****
+
+5 Open a fresh terminal and start IDL to test the installation. Suggested test commands:
+
+print,cgHasImageMagick() 
+[prints error if coyote library not installed, returns 0 if coyote library installed but Imagemagick not installed correctly, and returns 1 if both are installed correctly]
+astrolib  [prints error if astro IDL library not installed correctly, prints message “ASTROLIB: Astronomy Library system variables have been added” if installed correctly]
+
+init_healpix 
+[prints error if HEALPix not installed correctly]
+
+imagefast,randomN(5,256,256),file_path='some/output/path/testimage.png' 
+[prints error if FHD not installed correctly, generates a 256x256 pixel image of poisson noise at path 'some/output/path/testimage.png' if installed correctly and read/write permissions are set correctly]
+
+If the above commands all work, it’s time to try it out on some data:
+
