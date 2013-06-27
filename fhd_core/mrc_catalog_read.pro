@@ -3,11 +3,11 @@ FUNCTION mrc_catalog_read,astr,names=names,file_path=file_path,frequency=frequen
 ;filename='MRC full radio catalog.fits'
 ;data_dir='DATA'
 ;file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
-catalog=mrdfits(file_path,1,header,/silent)
+catalog=mrdfits(file_path,1,header,/silent,columns=[1,2,3,4])
 flux=catalog.flux
 ra=catalog.ra
 dec=catalog.dec
-names=catalog.name
+;names=catalog.name
 flux_error=catalog.flux_error
 catalog_freq=408. ;MHz
 IF N_Elements(frequency) EQ 0 THEN frequency=catalog_freq
@@ -17,7 +17,7 @@ flux_scale=(frequency/catalog_freq)^spectral_index
 flux=[flux/1000.,1526.]*flux_scale
 ra=[ra,ten(5,34,31.94)*15.]
 dec=[dec,ten(22,0,52.2)]
-names=[names,'Crab']
+;names=[names,'Crab']
 flux_error=[flux_error/1000.,-1]
 ns=N_Elements(flux)
 source_comp_init,mrc_cat,n_sources=ns
