@@ -73,11 +73,13 @@ uv_i_arr=Ptrarr(n_obs,/allocate)
 box_coords=Lonarr(n_obs,4)
 norm_arr=Fltarr(n_obs)
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
-    file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) 
+    file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(fhd_file_list[0])) 
     print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
-    restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;restores a variable named map_fn
-    map_fn_ptr=Ptr_new(map_fn)
-    FOR pol_i=0,n_pol-1 DO FOR obs_i=0L,n_obs-1 DO map_fn_arr[pol_i,obs]=map_fn_ptr
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;restores a variable named map_fn
+        map_fn_ptr=Ptr_new(map_fn)
+        FOR obs_i=0L,n_obs-1 DO map_fn_arr[pol_i,obs_i]=map_fn_ptr
+    ENDFOR
 ENDIF
 
 FOR obs_i=0.,n_obs-1 DO BEGIN

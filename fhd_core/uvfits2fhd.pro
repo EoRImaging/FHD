@@ -264,9 +264,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 print,'Flagging anomalous data'
                 vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
             ENDIF
-            SAVE,flag_arr,filename=flags_filepath,/compress
             
         ENDIF ELSE restore,filepath(transfer_mapfn+'_flags.sav',root=fhd_dir) ;flag_arr
+        SAVE,flag_arr,filename=flags_filepath,/compress
         n0=N_Elements(*flag_arr[0])
         n1=N_Elements(*flag_arr1[0])
         IF n1 GT n0 THEN BEGIN
