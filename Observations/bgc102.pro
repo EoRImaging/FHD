@@ -11,7 +11,7 @@ IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(channel) EQ 0 THEN channel=121
-image_filter_fn='filter_uv_hanning' ;applied ONLY to output images
+image_filter_fn='' ;applied ONLY to output images
 
 data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['BGC102'])
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
@@ -29,10 +29,11 @@ IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 ;align=0
 ;dimension=1024.
 max_sources=50000.
+gain_factor=0.25
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
-complex_beam=1
 FoV=90.
+no_ps=1
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$

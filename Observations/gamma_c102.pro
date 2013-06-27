@@ -11,7 +11,7 @@ IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(channel) EQ 0 THEN channel=141
-image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
+image_filter_fn='' ;applied ONLY to output images
 
 IF channel LE 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['Gamma','C102']) $
     ELSE data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['Gamma','C102',Strn(Floor(channel))])

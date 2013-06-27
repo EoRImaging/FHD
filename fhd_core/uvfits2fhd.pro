@@ -270,12 +270,18 @@ IF Keyword_Set(data_flag) THEN BEGIN
         n0=N_Elements(*flag_arr[0])
         n1=N_Elements(*flag_arr1[0])
         IF n1 GT n0 THEN BEGIN
+            ;If more data, zero out additional
             nf0=(size(*flag_arr[0],/dimension))[0]
             nb0=(size(*flag_arr[0],/dimension))[1]
-            FOR pol_i=0,n_pol-1 DO (*flag_arr1[pol_i])[0:nf0-1,0:nb0-1]*=*flag_arr[pol_i]
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                *flag_arr1[pol_i]=fltarr(size(*flag_arr1[pol_i],/dimension))
+                (*flag_arr1[pol_i])[0:nf0-1,0:nb0-1]*=*flag_arr[pol_i]
+            ENDFOR
+            flag_arr=flag_arr1
             SAVE,flag_arr,filename=flags_filepath,/compress
         ENDIF
         IF n0 GT n1 THEN BEGIN
+            ;If less data, return with an error!
             error=1
             RETURN
         ENDIF
