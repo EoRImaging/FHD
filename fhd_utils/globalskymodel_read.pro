@@ -1,18 +1,24 @@
-FUNCTION globalskymodel_read,frequency,ra_arr=ra_arr,dec_arr=dec_arr,components=components
+FUNCTION globalskymodel_read,frequency,ra_arr=ra_arr,dec_arr=dec_arr,components=components,haslam_filtered=haslam_filtered
 ;gl supplied galactic longitude (or RA if celestial_coord is set)
 ;gb supplied galactic latitude (or Dec if celestial_coord is set)
 ;returns the model temperatures from the Global Sky Model at the specified galactic longitude and latitude
 IF N_Elements(frequency) EQ 0 THEN frequency=300. ;MHz
-file_path_base=filepath('',root=rootdir('mwa'),sub=['DATA','Galaxy model','gsm'])
-;the first time the file is read in, convert it to FITS format (MUCH faster to read when called again later!)
-IF file_test(file_path_base+'components.fits') EQ 0 THEN BEGIN
-    textfast,component_list,/read,file_path=file_path_base+'components.dat',extension=0
-    textfast,maps_408,/read,file_path=file_path_base+'component_maps_408locked.dat',extension=0
-    Fitsfast,component_list,/write,file_path=file_path_base+'components'
-    Fitsfast,maps_408,/write,file_path=file_path_base+'component_maps_408locked'
-ENDIF
-Fitsfast,component_list,/read,file_path=file_path_base+'components'
-Fitsfast,maps_408,/read,file_path=file_path_base+'component_maps_408locked'
+
+file_path_base=filepath('',root=rootdir('FHD'),sub='catalog_data')
+IF Keyword_Set(haslam_filtered) THEN BEGIN
+    ;this is a byte array! Need to convert to floating point. Why did they save it in this format???
+    Fitsfast,maps_408,header,/read,file_path=file_path_base+'lambda_haslam408_dsds'    
+ENDIF ELSE BEGIN
+    ;the first time the file is read in, convert it to FITS format (MUCH faster to read when called again later!)
+    IF file_test(file_path_base+'components.fits') EQ 0 THEN BEGIN
+        textfast,component_list,/read,file_path=file_path_base+'components.dat',extension=0
+        textfast,maps_408,/read,file_path=file_path_base+'component_maps_408locked.dat',extension=0
+        Fitsfast,component_list,/write,file_path=file_path_base+'components'
+        Fitsfast,maps_408,/write,file_path=file_path_base+'component_maps_408locked'
+    ENDIF
+    Fitsfast,component_list,/read,file_path=file_path_base+'components'
+    Fitsfast,maps_408,/read,file_path=file_path_base+'component_maps_408locked'
+ENDELSE
 
 npix=(size(maps_408,/dimension))[1] ;should equal 12.*512^2.
 nside=npix2nside(npix)

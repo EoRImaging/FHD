@@ -20,7 +20,7 @@ data_directory_all=rootdir('mwa')+filepath('',root='DATA2',subdir=['mwa_paper_jo
 vis_file_list_mwa=file_search(data_directory_mwa,'*_cal.uvfits',count=n_files)
 fhd_file_list_mwa=fhd_path_setup(vis_file_list_mwa,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory_mwa,subdir='Healpix',output_filename='Combined_obs',version=version)
-catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
+catalog_file_path=filepath('MRC full radio catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 
 ;noise_calibrate=0
 ;align=0
