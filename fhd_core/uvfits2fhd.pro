@@ -257,6 +257,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF
     
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
+        IF basename EQ transfer_mapfn THEN BEGIN 
+            IF Keyword_Set(flag) THEN BEGIN
+                print,'Flagging anomalous data'
+                vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
+                SAVE,flag_arr,filename=flags_filepath,/compress
+            ENDIF
+        ENDIF
         flag_arr1=flag_arr
         SAVE,flag_arr,filename=flags_filepath,/compress
         restore,filepath(transfer_mapfn+'_flags.sav',root=fhd_dir)
@@ -410,7 +417,7 @@ ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     print,'Exporting images'    
-    fhd_output,obs,fhd,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+    fhd_output,obs,fhd,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,_Extra=extra
 ENDIF
 
 IF N_Elements(map_fn_arr) GT 0 THEN IF Max(Ptr_valid(map_fn_arr)) THEN Ptr_free,map_fn_arr

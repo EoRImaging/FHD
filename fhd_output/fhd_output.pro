@@ -2,7 +2,7 @@ PRO fhd_output,obs,fhd, file_path_fhd=file_path_fhd,version=version,map_fn_arr=m
     noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,$
     fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
-    gridline_image_show=gridline_image_show,_Extra=extra
+    gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
@@ -119,9 +119,10 @@ t0+=t1a-t0a
     IF Keyword_Set(model_recalculate) OR Keyword_Set(galaxy_model_fit) THEN BEGIN
         IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
         IF N_Elements(*map_fn_arr[0]) EQ 0 THEN BEGIN
+            IF Keyword_Set(transfer_mapfn) THEN file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) $
+                ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
             FOR pol_i=0,n_pol-1 DO BEGIN
-                file_name_base='_mapfn_'+pol_names[pol_i]
-                restore,file_path_fhd+file_name_base+'.sav' ;map_fn
+                restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
                 *map_fn_arr[pol_i]=map_fn
             ENDFOR
         ENDIF
