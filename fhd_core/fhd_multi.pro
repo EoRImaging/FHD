@@ -224,7 +224,7 @@ recalc_flag=Intarr(n_obs)+1
 FOR i=0L,max_iter-1 DO BEGIN 
     FOR pol_i=0,n_pol-1 DO BEGIN
         *healpix_map[pol_i]=Fltarr(n_hpx)
-        IF i mod Floor(1./gain_factor) EQ 0 THEN *smooth_map[pol_i]=Fltarr(n_hpx)
+        *smooth_map[pol_i]=Fltarr(n_hpx)
         FOR obs_i=0,n_obs-1 DO BEGIN
             t1_0=Systime(1)
             residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],degpix=obs_arr[obs_i].degpix)
