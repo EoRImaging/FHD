@@ -34,9 +34,9 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     rephase_to_zenith=rephase_to_zenith,healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
-    file_path_fhd=file_path_fhd,force_data=force_data,quickview=quickview,freq_start=freq_start,freq_end=freq_end,$
+    file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
-    calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
+    calibration_catalog_file_path=calibration_catalog_file_path,quickview=quickview,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -96,8 +96,10 @@ IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 data_flag=file_test(hdr_filepath) AND file_test(flags_filepath) AND file_test(obs_filepath) AND file_test(params_filepath)
 
 IF Keyword_Set(beam_recalculate) OR Keyword_Set(grid_recalculate) OR $
-    Keyword_Set(mapfn_recalculate) OR $
-    Keyword_Set(force_data) OR ~data_flag THEN data_flag=1 ELSE data_flag=0
+    Keyword_Set(mapfn_recalculate) OR ~data_flag THEN data_flag=1 ELSE data_flag=0
+
+IF Keyword_Set(force_data) THEN data_flag=1
+IF Keyword_Set(force_no_data) THEN data_flag=0
 
 IF Keyword_Set(data_flag) THEN BEGIN
     ;info_struct=mrdfits(filepath(filename+ext,root_dir=rootdir('mwa'),subdir=data_directory),2,info_header,/silent)

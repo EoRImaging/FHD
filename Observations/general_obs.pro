@@ -106,7 +106,7 @@ IF Keyword_Set(simultaneous) THEN BEGIN
         export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
-        uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
+        uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             beam_recalculate=0,transfer_mapfn=0,mapfn_recalculate=0,flag=0,grid=0,healpix_recalculate=0,$
             /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,noise_calibrate=noise_calibrate,align=align,$

@@ -133,7 +133,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
 ;        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
-        IF ~Ptr_valid(map_fn_arr[pol_i,obs_i]) THEN BEGIN
+        IF N_Elements(*map_fn_arr[pol_i,obs_i]) EQ 0 THEN BEGIN
             file_path_mapfn=file_path_fhd+'_mapfn_'
             restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
             *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
