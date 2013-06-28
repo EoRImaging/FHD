@@ -67,6 +67,8 @@ Start_fi ; first file index of the supplied list to deconvolve (zero index)
 
 version=0 ; Add a version number to the output data directory. Used only in the top-level observation wrappers
 
+vis_file_list ; Typically supplied by the observation wrapper. Can be a string array containing the full file paths of the uvfits files to deconvolve OR can be the filepath to a text file (must end .txt), which contains the full filepaths of the visibilities.
+
 
 3b Gridding options
 
