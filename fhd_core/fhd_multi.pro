@@ -42,6 +42,7 @@ pol_use=fhd.pol_use
 independent_fit=fhd.independent_fit
 reject_pol_sources=fhd.reject_pol_sources
 local_radius=local_max_radius*Mean(obs_arr.degpix)
+source_alias_radius=Mean(obs_arr.degpix*obs_arr.dimension)/4.
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -373,12 +374,17 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDIF
     FOR obs_i=0L,n_obs-1 DO BEGIN
         ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
+        dist_test=angle_difference(obs_arr[obs_i].obsdec,obs_arr[obs_i].obsra,dec_arr,ra_arr,/degree)
+        dist_cut=where(dist_test GT source_alias_radius,n_dist_cut)
+
         comp_arr1=*comp_arr[obs_i]
         dimension=obs_arr[obs_i].dimension
         elements=obs_arr[obs_i].elements
         beam_mask=*beam_mask_arr[obs_i]
         
         si_use=lonarr(n_src)-1
+        si_cut=lonarr(n_src)
+        IF n_dist_cut GT 0 THEN si_cut[dist_cut]=1
         residual_test=*res_arr[0,obs_i] & IF n_pol GT 1 THEN residual_test=residual_test<*res_arr[1,obs_i]
         FOR src_i=0L,n_src-1 DO BEGIN    
             flux_arr=fltarr(4)
@@ -387,6 +393,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             beam_src=fltarr(n_pol)
             xv=x_arr[src_i]
             yv=y_arr[src_i]
+            IF si_cut[src_i] THEN CONTINUE
             source_use_flag=1
             IF xv<yv GE 0 AND xv>yv LE (dimension<elements)-1 THEN BEGIN 
                 IF beam_mask[xv,yv] EQ 0 THEN source_use_flag=0
