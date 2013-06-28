@@ -8,8 +8,45 @@ error=0
 heap_gc
 
 IF Keyword_Set(transfer_calibration) THEN BEGIN
-    IF size(transfer_calibration,/type) EQ 7 THEN $
-        IF file_test(transfer_calibration) THEN cal=getvar_savefile(transfer_calibration,'cal')
+    IF size(transfer_calibration,/type) EQ 7 THEN BEGIN
+        IF file_test(transfer_calibration) EQ 0 THEN BEGIN
+            print,'File:'+transfer_calibration+' not found!'
+            error=1
+            RETURN,vis_ptr
+        ENDIF
+        CASE StrLowCase(Strmid(transfer_calibration[0],3,/reverse)) OF
+            '.sav':cal=getvar_savefile(transfer_calibration,'cal')
+            '.txt':BEGIN
+                textfast,gain_arr,/read,file_path=transfer_calibration
+                gain_arr_ptr=Ptr_new(gain_arr)
+                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
+                    transfer_calibration=1,timing=cal_timing,error=error,gain_arr_ptr=gain_arr_ptr,$
+                    calibration_source_list=calibration_source_list,_Extra=extra)
+                RETURN,vis_cal
+            END
+            '.npz':BEGIN
+                gain_arr=read_numpy(transfer_calibration)
+                gain_arr_ptr=Ptr_new(gain_arr)
+                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
+                    transfer_calibration=1,timing=cal_timing,error=error,gain_arr_ptr=gain_arr_ptr,$
+                    calibration_source_list=calibration_source_list,_Extra=extra)
+                RETURN,vis_cal
+            END
+            '.npy':BEGIN
+                gain_arr=read_numpy(transfer_calibration)
+                gain_arr_ptr=Ptr_new(gain_arr)
+                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
+                    transfer_calibration=1,timing=cal_timing,error=error,gain_arr_ptr=gain_arr_ptr,$
+                    calibration_source_list=calibration_source_list,_Extra=extra)
+                RETURN,vis_cal
+            END
+            ELSE: BEGIN
+                print,'Unknown file format: ',transfer_calibration
+                error=1
+                RETURN,vis_ptr
+            ENDELSE
+        ENDCASE
+    ENDIF
     IF size(cal,/type) EQ 8 THEN BEGIN
         vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=preserve_visibilities)
         timing=Systime(1)-t0_0
