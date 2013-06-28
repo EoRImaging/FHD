@@ -40,7 +40,7 @@ CASE action OF
             Data=Read_Ascii(file_path_use,data_start=first_line)
             n_dims=size(data.(0),/n_dim)
             IF n_dims EQ 1 THEN n_columns=1 ELSE n_columns=(size(data.(0),/dimension))[0]
-            template={version:1,datastart:first_line,delimiter:byte(32),missingvalue:!Values.F_NAN,Commentsymbol:'',fieldcount:n_columns,$
+                template={version:1,datastart:first_line,delimiter:byte(32),missingvalue:!Values.F_NAN,Commentsymbol:'',fieldcount:n_columns,$
             fieldtypes:lonarr(n_columns)+7,fieldlocations:indgen(n_columns),fieldnames:string(indgen(n_columns)),fieldgroups:indgen(n_columns)}
             Data=Read_Ascii(file_path_use,data_start=first_line,template=template)
         ENDIF ELSE BEGIN
