@@ -200,9 +200,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *beam_map[pol_i]=Fltarr(n_hpx)
     *beam_map2[pol_i]=Fltarr(n_hpx)
     FOR obs_i=0,n_obs-1 DO BEGIN
-        (*beam_map[pol_i])[*hpx_ind_map[obs_i]]+=*beam_model_hpx_arr[pol_i,obs_i]
+        (*beam_map[pol_i])[*hpx_ind_map[obs_i]]+=*beam_model_hpx_arr[pol_i,obs_i]^2.
         (*beam_map2[pol_i])[*hpx_ind_map[obs_i]]+=*beam_model_hpx_arr[pol_i,obs_i]^2.
     ENDFOR
+    *beam_map[pol_i]=Sqrt(*beam_map[pol_i]>0)
     *beam_corr_map[pol_i]=weight_invert(*beam_map[pol_i])
     *beam_corr_map2[pol_i]=weight_invert(*beam_map2[pol_i])
 ENDFOR
