@@ -1,5 +1,5 @@
 FUNCTION read_numpy,filename,data_type=data_type,fudge=fudge
-;filename='C:\MWA\DATA\X16\CASA\caltest\freq.npy'
+filename='C:\MWA\DATA\X16\CASA\caltest\freq.npy'
 openr,lun,filename,/get_lun
 header1=bytarr(10)
 readu,lun,header1
