@@ -18,7 +18,7 @@ SWITCH N_Params() OF
     1:restore,obs_filepath ;obs
     2:restore,psf_filepath ;psf
     3:restore,params_filepath ;params
-    4:restore,flags_filepath ;flag_arr0
+    4:restore,flags_filepath ;flag_arr
     ELSE:
 ENDSWITCH
 
@@ -44,13 +44,6 @@ IF N_Elements(vis_data_arr) EQ 0 AND ~Keyword_Set(no_data) THEN BEGIN
     ENDFOR
 ENDIF ELSE data_flag=1-no_data
 
-IF N_Elements(flag_arr) EQ 0 THEN BEGIN
-    flag_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *flag_arr[pol_i]=reform(flag_arr0[pol_i,*,*])
-    ENDFOR
-ENDIF
-
 IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
     bin_start=(*obs.baseline_info).bin_offset
     nt=N_Elements(bin_start)
@@ -66,8 +59,8 @@ IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
     odd_bi_use=where(bin_i mod 2 EQ 1)
     flag_arr1=fltarr(size(*flag_arr[0],/dimension))
     FOR pol_i=0,n_pol-1 DO BEGIN
-        IF Keyword_Set(even_only) THEN flag_arr1[*,even_bi_use]=flag_arr0[pol_i,*,even_bi_use]
-        IF Keyword_Set(odd_only) THEN flag_arr1[*,odd_bi_use]=flag_arr0[pol_i,*,odd_bi_use]
+        IF Keyword_Set(even_only) THEN flag_arr1[*,even_bi_use]=(*flag_arr[pol_i])[*,even_bi_use]
+        IF Keyword_Set(odd_only) THEN flag_arr1[*,odd_bi_use]=(*flag_arr[pol_i])[*,odd_bi_use]
         *flag_arr[pol_i]*=flag_arr1
     ENDFOR
 ENDIF 
