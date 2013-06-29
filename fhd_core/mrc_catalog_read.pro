@@ -3,11 +3,11 @@ FUNCTION mrc_catalog_read,astr,names=names,file_path=file_path,frequency=frequen
 ;filename='MRC full radio catalog.fits'
 ;data_dir='DATA'
 ;file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
-catalog=mrdfits(file_path,1,header,/silent,columns=[1,2,3,4])
+;catalog=mrdfits(file_path,1,header,/silent,columns=[1,2,3,4])
 Fitsfast,catalog,/read,file_path=file_path
-flux=Reform(catalog[1,*])
-ra=Reform(catalog[2,*])
-dec=Reform(catalog[3,*])
+flux=Reform(catalog[3,*])
+ra=Reform(catalog[1,*])
+dec=Reform(catalog[2,*])
 flux_error=Reform(catalog[4,*])
 ;flux=catalog.flux
 ;ra=catalog.ra
