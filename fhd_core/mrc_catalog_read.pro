@@ -4,11 +4,16 @@ FUNCTION mrc_catalog_read,astr,names=names,file_path=file_path,frequency=frequen
 ;data_dir='DATA'
 ;file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 catalog=mrdfits(file_path,1,header,/silent,columns=[1,2,3,4])
-flux=catalog.flux
-ra=catalog.ra
-dec=catalog.dec
-;names=catalog.name
-flux_error=catalog.flux_error
+Fitsfast,catalog,/read,file_path=file_path
+flux=Reform(catalog[1,*])
+ra=Reform(catalog[2,*])
+dec=Reform(catalog[3,*])
+flux_error=Reform(catalog[4,*])
+;flux=catalog.flux
+;ra=catalog.ra
+;dec=catalog.dec
+;;names=catalog.name
+;flux_error=catalog.flux_error
 catalog_freq=408. ;MHz
 IF N_Elements(frequency) EQ 0 THEN frequency=catalog_freq
 spectral_index=-0.8
