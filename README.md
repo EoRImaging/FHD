@@ -23,7 +23,7 @@ Contents:
 1 Overview 
 FHD is an imaging algorithm for radio interferometers. It uses the full complex gain for every baseline for gridding, and pre-computes the uv-plane covariance matrix (the Holographic Mapping function). In its current implementation, FHD follows a centroided matched pursuit algorithm for deconvolving point sources. While FHD does not refer back to the visibilities once they have been gridded to a dirty image, it is still properly classified as a visibility-based subtraction algorithm since sources are forward-modeled through the mapping function. 
 
-Aside from the basic use of snapshot imaging, there are a number of extensions that expand its capabilities. Most notably, FHD can perform a joint deconvolution of any set of visibilities by regridding each snapshot to a common HEALPix mesh. This allows for long integrations, and even for joint deconvolution of data from different instruments. 
+Aside from the basic use of snapshot imaging, there are a number of extensions that expand its capabilities. Most notably, FHD can perform a joint deconvolution of any set of visibilities by regridding each snapshot to a common HEALPix mesh. This allows for long integrations, and even for joint deconvolution of data from different instruments. Additionally, if snapshot observations share precisely the same beam models (these models can change over time and be different for each antenna, the observations must simply have the same change over time etc..), then the mapping function can be re-used between them. This allows for long integrations without an excessively large memory requirement, since the same mapping function can be used for each snapshot.
 
 FHD is typically called by writing a script that is a wrapper for general_obs.pro. This script contains the full file paths to all of the uvfits files that will be used, the path to any ancillary catalog that will be used, and the desired paths where it will put the output. 
 
@@ -112,7 +112,7 @@ Beam_threshold=0.05 ; Minimum primary beam threshold to use when constructing th
 
 gain_factor=0.15 ; “Clean” gain factor to use 
 
-Galaxy_model_fit=0 ; read in and forward-model the Haslam map of diffuse galactic emission. Fit an overall amplitude and subtract from the dirty images prior to deconvolution of point sources
+Galaxy_model_fit=0 ; read in and forward-model the Haslam map of diffuse galactic emission. Fit an overall amplitude and subtract from the dirty images prior to deconvolution of point sources. 
 
 independent_fit=0 ;set to 1 to fit I, Q, (U, V) seperately. Otherwise, only I (and U) is fit
 
