@@ -1,7 +1,7 @@
 PRO fhd_multi,fhd_file_list,source_array,comp_arr,fhd=fhd,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
     residual_array=residual_array,dirty_uv_arr=dirty_uv_arr,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     silent=silent,beam_model=beam_model,beam_corr=beam_corr,norm_arr=norm_arr,source_mask=source_mask,hpx_inds=hpx_inds,$
-    transfer_mapfn=transfer_mapfn,_Extra=extra
+    transfer_mapfn=transfer_mapfn,galaxy_model_fit=galaxy_model_fit,_Extra=extra
 except=!except
 !except=0
 compile_opt idl2,strictarrsubs  
@@ -127,6 +127,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         *beam_model_hpx_arr[pol_i,obs_i]=healpix_cnv_apply(*beam_model[pol_i,obs_i],*hpx_cnv[obs_i])
     ENDFOR
     
+    
     source_uv_mask=fltarr(dimension,elements)
     source_uv_mask2=fltarr(dimension,elements)
     normalization_arr=fltarr(n_pol)
@@ -146,6 +147,14 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         source_uv_mask[where(*weights_arr[pol_i,obs_i])]=1.
         source_uv_mask2[where(weights_single)]=1.
     ENDFOR
+    
+    IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+        gal_model_holo=fhd_galaxy_deconvolve(obs,dirty_uv_arr[*,obs_i],map_fn_arr=map_fn_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
+            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0,/uv_return)
+        FOR pol_i=0,n_pol-1 DO *dirty_uv_arr[pol_i,obs_i] -=*gal_model_holo[pol_i]
+    ;    gal_model_composite=fltarr(dimension,elements)
+    ;    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
+    ENDIF
     *uv_mask_arr[obs_i]=source_uv_mask
     norm_arr[obs_i]=Mean(normalization_arr[0:n_pol-1])
     
