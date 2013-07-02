@@ -17,14 +17,21 @@ FUNCTION read_numpy, filename
   head_len=Strlen(header)
 
   pos_dims=Strpos(header,"'shape':")
-  dims=Strsplit(Strmid(header,pos_dims+10,head_len-1-(pos_dims+10)),',() }',/extract)
+  dims=Strsplit(Strmid(header,pos_dims+8,head_len-1-(pos_dims+8)),',() }',/extract)
   dims=Long(dims)
 
   pos_order=Strpos(header,"'fortran_order':")
   pos_type=Strpos(header,"'descr':")
-  type_code_str=Strsplit(Strmid(header,pos_type+10,pos_order-(pos_type+10)-1),"' ,",/extract)
-  ;;print,type_code_str
-   
+  type_code_str=Strsplit(Strmid(header,pos_type+8,pos_order-(pos_type+8)-1),"' ,",/extract)
+  
+  ordering = strsplit(strmid(header, pos_order+16, pos_dims-(pos_order+16)-1), "' ,",/extract)
+
+  case strlowcase(ordering) of
+     'false': dims = reverse(dims)
+     'true':
+     else: print, 'ordering not recognized, assuming Fortran order'
+  endcase
+
   ;; find data type:
   endian_type_code = strsplit(type_code_str, '[a-z0-9]+',/regex,/extract)
   data_type_code = strsplit(type_code_str, '[^a-z]',/regex,/extract)
@@ -73,6 +80,7 @@ FUNCTION read_numpy, filename
      data=read_binary(filename,data_type=idl_type_code,data_dims=dims,endian=endian,data_start=head_len)
   endelse
 
+  if strlowcase(ordering) eq 'false' then data = transpose(data)
 
   RETURN,data
 END
