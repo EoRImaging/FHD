@@ -20,7 +20,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
                 textfast,gain_arr,/read,file_path=transfer_calibration
                 gain_arr_ptr=Ptr_new(gain_arr)
                 vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-                    transfer_calibration=1,timing=cal_timing,error=error,gain_arr_ptr=gain_arr_ptr,$
+                    transfer_calibration=1,timing=timing,error=error,gain_arr_ptr=gain_arr_ptr,$
                     calibration_source_list=calibration_source_list,_Extra=extra)
                 RETURN,vis_cal
             END
@@ -28,7 +28,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
                 gain_arr=read_numpy(transfer_calibration)
                 gain_arr_ptr=Ptr_new(gain_arr)
                 vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-                    transfer_calibration=1,timing=cal_timing,error=error,gain_arr_ptr=gain_arr_ptr,$
+                    transfer_calibration=1,timing=timing,error=error,gain_arr_ptr=gain_arr_ptr,$
                     calibration_source_list=calibration_source_list,_Extra=extra)
                 RETURN,vis_cal
             END
@@ -36,7 +36,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
                 gain_arr=read_numpy(transfer_calibration)
                 gain_arr_ptr=Ptr_new(gain_arr)
                 vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-                    transfer_calibration=1,timing=cal_timing,error=error,gain_arr_ptr=gain_arr_ptr,$
+                    transfer_calibration=1,timing=timing,error=error,gain_arr_ptr=gain_arr_ptr,$
                     calibration_source_list=calibration_source_list,_Extra=extra)
                 RETURN,vis_cal
             END
@@ -52,7 +52,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
         timing=Systime(1)-t0_0
         RETURN,vis_cal
     ENDIF ELSE IF Max(Ptr_valid(gain_arr_ptr)) THEN BEGIN
-        cal=vis_struct_init_cal(obs)
+        cal=vis_struct_init_cal(obs,params)
         vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=preserve_visibilities)
         timing=Systime(1)-t0_0
         RETURN,vis_cal
