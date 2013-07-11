@@ -7,7 +7,26 @@ IF N_Elements(frequency) EQ 0 THEN frequency=300. ;MHz
 file_path_base=filepath('',root=rootdir('FHD'),sub='catalog_data')
 IF Keyword_Set(haslam_filtered) THEN BEGIN
     ;this is a byte array! Need to convert to floating point. Why did they save it in this format???
-    Fitsfast,maps_408,header,/read,file_path=file_path_base+'lambda_haslam408_dsds'    
+    Fitsfast,Temperature,header,/read,file_path=file_path_base+'lambda_haslam408_dsds'  ;temperature in K    
+    
+    npix=N_Elements(Temperature) ;should equal 12.*512^2.
+    nside=npix2nside(npix)
+    
+    radec_i=where(Finite(ra_arr))
+    ra_use=ra_arr[radec_i]
+    dec_use=dec_arr[radec_i]
+    
+    GlactC,ra_use,dec_use,2000.,gl_use,gb_use,1,/degree
+    ang2vec,gb_use,gl_use,vec_use,/astro
+;    ang2vec,dec_use,ra_use,vec_use,/astro
+    vec2pix_nest,nside,vec_use,ipring
+    
+    Temperature=Temperature[ipring]
+    model=Ptrarr(1)
+    model0=fltarr(size(ra_arr,/dimension))
+    model0[radec_i]=Temperature
+    model[0]=Ptr_new(model0)
+    RETURN,model 
 ENDIF ELSE BEGIN
     ;the first time the file is read in, convert it to FITS format (MUCH faster to read when called again later!)
     IF file_test(file_path_base+'components.fits') EQ 0 THEN BEGIN
