@@ -1,5 +1,5 @@
 FUNCTION fhd_galaxy_deconvolve,obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,model_uv_holo=model_uv_holo,$
-    galaxy_model_img=galaxy_model_img,galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=restore,uv_return=uv_return
+    galaxy_model_img=galaxy_model_img,galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=restore,uv_return=uv_return,_Extra=extra
 
 IF Keyword_Set(file_path_fhd) THEN file_path_galmodel=file_path_fhd+'_GalaxyModel.sav' ELSE file_path_galmodel=''
 IF Keyword_Set(restore) AND file_test(file_path_galmodel) THEN BEGIN
@@ -35,11 +35,13 @@ fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
 IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
-    model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr)
+    model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra)
     
-    model=fltarr(dimension,elements)
-    FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]*freq_norm[fi]
-    model/=Total(nf_arr)
+    IF N_Elements(model_arr) GT 1 THEN BEGIN
+        model=fltarr(dimension,elements)
+        FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]*freq_norm[fi]
+        model/=Total(nf_arr)
+    ENDIF ELSE model=*model_arr[0]
 ;    model*=weight_invert(pixel_area)
     Ptr_free,model_arr
     
