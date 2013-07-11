@@ -6,7 +6,7 @@ IF N_Elements(frequency) EQ 0 THEN frequency=300. ;MHz
 
 file_path_base=filepath('',root=rootdir('FHD'),sub='catalog_data')
 IF Keyword_Set(haslam_filtered) THEN BEGIN
-    ;this is a byte array! Need to convert to floating point. Why did they save it in this format???
+    print,"Using 408 MHz filtered Haslam map"
     Fitsfast,Temperature,header,/read,file_path=file_path_base+'lambda_haslam408_dsds'  ;temperature in K    
     
     npix=N_Elements(Temperature) ;should equal 12.*512^2.
@@ -28,6 +28,7 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     model[0]=Ptr_new(model0)
     RETURN,model 
 ENDIF ELSE BEGIN
+    print,"Using unfiltered Global Sky Model"
     ;the first time the file is read in, convert it to FITS format (MUCH faster to read when called again later!)
     IF file_test(file_path_base+'components.fits') EQ 0 THEN BEGIN
         textfast,component_list,/read,file_path=file_path_base+'components.dat',extension=0

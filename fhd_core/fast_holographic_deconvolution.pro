@@ -147,7 +147,7 @@ normalization=1.
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
-        galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0)
+        galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0,_Extra=extra)
 ;    gal_model_composite=fltarr(dimension,elements)
 ;    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
 ENDIF 
