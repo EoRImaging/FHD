@@ -17,9 +17,6 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF
 
 ;color_table=0.1
-dimension=1024.
-elements=dimension
-n_pol=2
 cal_ref_i=2
 fix_flux=1
 ;combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
@@ -63,6 +60,9 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
     nside_use=nside_use>Nside_chk
 ENDFOR
+
+n_pol=Min(obs_arr.n_pol)
+
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 hpx_cnv=Ptrarr(n_obs,/allocate)
 FOR obs_i=0.,n_obs-1 DO BEGIN
@@ -98,22 +98,22 @@ restored_hpx=Ptrarr(n_pol,/allocate)
 dirty_hpx=Ptrarr(n_pol,/allocate)
 IF Keyword_Set(catalog_file_path) THEN mrc_hpx=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
-  *residual_hpx[pol_i]=fltarr(n_hpx)
-  *weights_hpx[pol_i]=fltarr(n_hpx)
-  *sources_hpx[pol_i]=fltarr(n_hpx)
-  *restored_hpx[pol_i]=fltarr(n_hpx)
-  *dirty_hpx[pol_i]=fltarr(n_hpx)
-  IF Keyword_Set(catalog_file_path) THEN *mrc_hpx[pol_i]=fltarr(n_hpx)
+    *residual_hpx[pol_i]=fltarr(n_hpx)
+    *weights_hpx[pol_i]=fltarr(n_hpx)
+    *sources_hpx[pol_i]=fltarr(n_hpx)
+    *restored_hpx[pol_i]=fltarr(n_hpx)
+    *dirty_hpx[pol_i]=fltarr(n_hpx)
+    IF Keyword_Set(catalog_file_path) THEN *mrc_hpx[pol_i]=fltarr(n_hpx)
 ENDFOR
 
 FOR obs_i=0,n_obs-1 DO BEGIN
     IF ~Keyword_Set(silent) THEN print,StrCompress('Converting snapshot '+Strn(obs_i+1)+' of '+Strn(n_obs)+' to common HEALPix coordinates')
     heap_gc
     obs=obs_arr[obs_i]
+    dimension=obs.dimension
+    elements=obs.elements
     n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
     file_path=file_list_use[obs_i]
-;        restore,file_path+'_fhd_params.sav'
-;        restore,file_path+'_fhd.sav'
     IF file_test(file_path+'_fhd_params.sav') EQ 0 THEN fhd=fhd_init() ELSE fhd=getvar_savefile(file_path+'_fhd_params.sav','fhd')
     image_uv_arr=getvar_savefile(file_path+'_fhd.sav','image_uv_arr')
     weights_uv_arr=getvar_savefile(file_path+'_fhd.sav','weights_arr')
@@ -132,9 +132,6 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     IF ns_use EQ 0 THEN CONTINUE
     source_arr=source_array[si_use]
     
-;    IF Keyword_Set(ston_cut) THEN IF max(source_array.ston) LT fhd.ston_cut THEN CONTINUE
-    
-;    n_vis_rel=1.
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
     FOR pol_i=0,n_pol-1 DO BEGIN
         dirty_single=dirty_image_generate(*image_uv_arr[pol_i],image_filter_fn=image_filter_fn,degpix=obs_arr[obs_i].degpix,weights=*weights_uv_arr[pol_i])*cal_use[obs_i]*n_vis_rel
@@ -147,7 +144,6 @@ FOR obs_i=0,n_obs-1 DO BEGIN
             mrc_cat=mrc_catalog_read(astr,file_path=catalog_file_path)
             mrc_i_use=where((mrc_cat.x GE 0) AND (mrc_cat.x LE dimension-1) AND (mrc_cat.y GE 0) AND (mrc_cat.y LE elements-1),n_mrc)
             
-;            mrc_image*=5./median(mrc_cat.flux.I)
             IF n_mrc GT 2 THEN BEGIN
                 mrc_cat=mrc_cat[mrc_i_use]
                 mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$

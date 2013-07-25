@@ -157,6 +157,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     bandwidth=Round((bw_end-bw_start)/1E5)/10.
     fov=dimension*degpix
     k_span=kbinsize*dimension
+    
+    
     print,String(format='("Image size used: ",A," pixels")',Strn(dimension))
     print,String(format='("Image resolution used: ",A," degrees/pixel")',Strn(degpix))
     print,String(format='("Approx. beam area: ",A," pixels")',Strn((!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)))
@@ -170,8 +172,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
         Strn(obs.obsra,length=6),(obs.obsdec GE 0) ? '+':'-',Strn(Abs(obs.obsdec),length=5))
     print,String(format='("Zenith coordinates: ",A," ",A,A)',$
         Strn(obs.zenra,length=6),(obs.zendec GE 0) ? '+':'-',Strn(Abs(obs.zendec),length=5))
-    IF Keyword_Set(phasera) THEN print,String(format='("Image phased to coordinates: ",A," ",A,A)',$
-        Strn(phasera,length=6),(phasedec GE 0) ? '+':'-',Strn(Abs(phasedec),length=5))
+    IF (obs.phasera NE obs.obsra) OR (obs.phasedec NE obs.obsdec) THEN $
+        print,String(format='("Image phased to coordinates: ",A," ",A,A)',$
+            Strn(obs.phasera,length=6),(obs.phasedec GE 0) ? '+':'-',Strn(Abs(obs.phasedec),length=5))
     
     IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
     print,String(format='("Spectral index fit: ",A)',Strn(alpha))
