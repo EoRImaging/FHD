@@ -46,11 +46,14 @@ ENDIF ELSE BEGIN
     lat_avg=Mean(lat_arr)
 ENDELSE
 
+n_pol=Min(obs_arr.n_pol)<2
+IF n_pol EQ 1 THEN sign*=2. ;hack to get the factor of two in all the right places
+
 IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
 
 mrc_flag=(Ptr_valid(mrc_hpx))[0]
 ;IF not Keyword_Set(restore_last) THEN BEGIN
-    FOR stk_i=0,1 DO BEGIN
+    FOR stk_i=0,n_pol-1 DO BEGIN
         Stokes_single=fltarr(npix)
         Stokes_weights_single=fltarr(npix)
         Stokes_sources=fltarr(npix)
@@ -58,7 +61,7 @@ mrc_flag=(Ptr_valid(mrc_hpx))[0]
         Stokes_dirty=fltarr(npix)
         Stokes_smooth=fltarr(npix)
         Stokes_MRC=fltarr(npix)
-        FOR pol_i=0,1 DO BEGIN
+        FOR pol_i=0,n_pol-1 DO BEGIN
             stk_res0=*residual_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])
             Stokes_single[hpx_inds]+=stk_res0*sign[stk_i,pol_i]
 ;            Stokes_smooth+=*smooth_hpx[pol_i]*weight_invert(*weights_hpx[pol_i])*sign[stk_i,pol_i]
@@ -127,7 +130,7 @@ IF N_Elements(low_dirty) EQ 0 THEN low_dirty=-high_dirty/2.
 IF N_Elements(low_source) EQ 0 THEN low_source=0.
 IF N_Elements(fraction_polarized) EQ 0 THEN fraction_polarized=0.5
 
-FOR stk_i=0,1 DO BEGIN
+FOR stk_i=0,n_pol-1 DO BEGIN
     CASE stk_i OF
         0:cnorm=1.
         1:cnorm=fraction_polarized
