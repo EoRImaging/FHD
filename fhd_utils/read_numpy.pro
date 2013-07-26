@@ -29,7 +29,7 @@ FUNCTION read_numpy, filename
   if pos_shape eq 0 then message, 'no shape key in dictionary. Cannot parse file.'
   pos_dim_start = strpos(header, '(', pos_shape)
   pos_dim_end = strpos(header, ')', pos_dim_start)
-  if pos_dim_start or pos_dim_end eq 0 then message, 'Cannot parse shape key value'
+  if pos_dim_start eq 0 or pos_dim_end eq 0 then message, 'Cannot parse shape key value'
   dims=Strsplit(Strmid(header,pos_dim_start,pos_dim_end-pos_dim_start),"':,() ",/extract)
   ;; shape=() means there is 1 element. After the strsplit this would give an empty string
   if n_elements(dims) eq 1 and dims[0] eq '' then dims = 1 else dims=Long(dims)
@@ -38,14 +38,14 @@ FUNCTION read_numpy, filename
   if pos_order eq 0 then message, 'no fortran_order key in dictionary. Cannot parse file.'
   pos_order_start = strpos(header, ':', pos_order)
   pos_order_end = strpos(header, ',', pos_order_start)
-  if pos_order_start or pos_order_end eq 0 then message, 'Cannot parse fortran_order key value'
+  if pos_order_start eq 0 or pos_order_end eq 0 then message, 'Cannot parse fortran_order key value'
   ordering = strsplit(strmid(header, pos_order_start, pos_order_end-pos_order_start), ":' ,",/extract)
 
   pos_type=Strpos(header,"descr")
   if pos_type eq 0 then message, 'no descr key in dictionary. Cannot parse file.'
   pos_type_start = strpos(header, ':', pos_type)
   pos_type_end = strpos(header, ',', pos_type_start)
-  if pos_type_start or pos_type_end eq 0 then message, 'Cannot parse descr key value'
+  if pos_type_start eq 0 or pos_type_end eq 0 then message, 'Cannot parse descr key value'
   type_code_str=strsplit(strmid(header, pos_type_start, pos_type_end-pos_type_start), ":' ,",/extract)
   
   ;; fix dimensions for ordering if more than 1 dimension
