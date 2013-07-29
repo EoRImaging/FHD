@@ -1,4 +1,4 @@
-PRO healpix_view,hpx_vals,hpx_inds,nside=nside,hpx_cnv=hpx_cnv,color_table=color_table,lon=lon,lat=lat
+PRO healpix_view,hpx_vals,hpx_inds,nside=nside,hpx_cnv=hpx_cnv,color_table=color_table,lon=lon,lat=lat, filepath = filepath
 
 IF not Keyword_Set(color_table) THEN color_table=0.1
 
@@ -17,8 +17,24 @@ IF (N_Elements(lon) EQ 0) OR (N_Elements(lat) EQ 0) THEN BEGIN
     IF N_Elements(lon) EQ 0 THEN lon_use=ATan(Median(Tan(pix_ra*!DtoR)))*!Radeg ELSE lon_use=lon
 ENDIF ELSE BEGIN lon_use=lon & lat_use=lat & ENDELSE
 
-file_path_img=rootdir('mwa')+'Healpix_tmp'
-write_fits_cut4,file_path_img+'.fits',hpx_inds,hpx_vals,/ring,Coords='C',nside=nside
+if n_elements(filepath) ne 0 then begin
+   if file_test(filepath, /directory) then begin
+      ;; this is a directory, add default filename
+      file_path_img = file_dirname(filepath, /mark_directory) + file_basename(filepath, /mark_directory) + $
+                      path_sep + 'Healpix_tmp.fits'
+   endif else begin
+      ;; this is a filename, if no directory add default path, ensure extension is .fits
+      froot = file_dirname(filepath, /mark_directory)
+      if froot eq '.' then froot = rootdir('mwa')
+      
+      fbase = file_basename(filepath)
+      temp = strpos(fbase, '.', /reverse_search)
+      if temp gt -1 then exten = strmid(fbase, temp) else exten = ''
+      if exten eq '.fits' then file_path_img = froot + fbase else file_path_img = froot + fbase + '.fits'
+   endelse
+endif else file_path_img=rootdir('mwa')+'Healpix_tmp.fits'
+
+write_fits_cut4,file_path_img,hpx_inds,hpx_vals,/ring,Coords='C',nside=nside
 healpix_image,file_path_img,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
         lon=lon_use,lat=lat_use,min=min(hpx_vals),max=max(hpx_vals),/half,color_table=color_table
 END
