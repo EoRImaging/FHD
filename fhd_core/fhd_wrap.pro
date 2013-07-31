@@ -29,7 +29,7 @@ compile_opt idl2,strictarrsubs
 IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
 fhd=fhd_init(obs,_Extra=extra)
 SAVE,fhd,filename=file_path_fhd+'_fhd_params.sav',/compress
-fhd_log_settings,file_path_fhd,fhd=fhd
+fhd_log_settings,file_path_fhd,fhd=fhd,obs=obs,psf=psf
 
 npol=fhd.npol
 dimension=obs.dimension

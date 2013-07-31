@@ -1,8 +1,9 @@
 PRO TextFast,data,header,file_path=file_path,read=read,write=write,action=action,column_list=column_list,$
- first_line=first_line,xdr=xdr,string=string,append=append,extension=extension
+ first_line=first_line,xdr=xdr,string=string,append=append,extension=extension,delimiter=delimiter
 
 ON_ERROR,2
 
+IF N_Elements(delimiter) EQ 0 THEN delimiter=String(9B)
 UPNAME=StrUpCase(file_path)
 ptxt=strpos(UPNAME,'.TXT')
 IF N_Elements(extension) NE 0 THEN IF extension EQ 0 THEN ptxt=0
@@ -29,18 +30,22 @@ CASE action OF
             temp_array[*,head_elements:*]=data_use
             data_use=temp_array
         ENDIF
+        
+        
         IF Keyword_Set(append) THEN OpenU,unit,file_path_use,/Get_LUN,/append $
             ELSE OpenW,unit,file_path_use,/Get_LUN
-        format_code=String(format='("(",I,"(A,TR1))")',dimension)
+;        format_code=String(format='("(",A,"(A,TR1))")',Strn(dimension))
+        format_code=String(format='("(",A,"(A,",A,A,A,"))")',Strn(dimension),'"',delimiter,'"')
+;        format_code=String(format='("(",I,"(A,A))")',dimension)
         PrintF,unit,format=format_code,data_use
         Free_LUN,unit
     END
     'read':BEGIN
         IF Keyword_Set(string) THEN BEGIN
-            Data=Read_Ascii(file_path_use,data_start=first_line)
+            Data=Read_Ascii(file_path_use,data_start=first_line,delimiter=delimiter)
             n_dims=size(data.(0),/n_dim)
-            IF n_dims EQ 1 THEN n_columns=1 ELSE n_columns=(size(data.(0),/dimension))[0]
-                template={version:1,datastart:first_line,delimiter:byte(32),missingvalue:!Values.F_NAN,Commentsymbol:'',fieldcount:n_columns,$
+            IF n_dims EQ 1 THEN n_columns=1 ELSE n_columns=(size(data.(0),/dimension))[0]            
+                template={version:1,datastart:first_line,delimiter:delimiter,missingvalue:!Values.F_NAN,Commentsymbol:'',fieldcount:n_columns,$
             fieldtypes:lonarr(n_columns)+7,fieldlocations:indgen(n_columns),fieldnames:string(indgen(n_columns)),fieldgroups:indgen(n_columns)}
             Data=Read_Ascii(file_path_use,data_start=first_line,template=template)
         ENDIF ELSE BEGIN

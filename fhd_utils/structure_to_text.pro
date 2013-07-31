@@ -1,7 +1,7 @@
-FUNCTION structure_to_text,str,delimeter=delimeter,heading=heading
+FUNCTION structure_to_text,str,delimiter=delimiter,heading=heading
 IF N_Elements(str) EQ 0 THEN RETURN,''
 
-IF N_Elements(delimeter) EQ 0 THEN delimeter=String(9B) ;tab character
+IF N_Elements(delimiter) EQ 0 THEN delimiter=String(9B) ;tab character
 
 n_tags=n_tags(str)
 tag_name_arr=tag_names(str)
@@ -26,7 +26,7 @@ FOR ti=0L,n_tags-1 DO BEGIN
         stretch=n_sub_tags
         result[1,ti_use]=String(format='("Structure (",A," tags)")',Strn(len))
         IF stretch GT 0 THEN result=[[result],[Strarr(2,stretch)]]
-        result[0,ti_use+1]=structure_to_text(tag_val,delimeter=delimeter)
+        result[0,ti_use+1]=structure_to_text(tag_val,delimiter=delimiter)
         ti_use+=stretch+1
         CONTINUE
     ENDIF
@@ -53,7 +53,7 @@ FOR ti=0L,n_tags-1 DO BEGIN
         format_code='("'+size_type(tag_val)+' array (",'+Strn(n_dims)+'(A,:," x "))'
         text_val=String(format=format_code,dim_arr)+' elements)'
     ENDIF ELSE BEGIN
-        format_code=Strcompress('('+String(format='(A,"(A),:,")',Strn(len)),/remove_all)+'"'+delimeter+'"'+')'
+        format_code=Strcompress('('+String(format='(A,"(A),:,")',Strn(len)),/remove_all)+'"'+delimiter+'"'+')'
         text_val=String(format=format_code,tag_val)
     ENDELSE
     result[1,ti_use]=text_val
