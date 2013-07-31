@@ -351,6 +351,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         
     vis_flag_update,flag_arr,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
     SAVE,obs,filename=obs_filepath,/compress
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
