@@ -2,7 +2,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_ptr=mo
     min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,gain_arr_ptr=gain_arr_ptr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
-    calibration_source_list=calibration_source_list,_Extra=extra
+    calibration_source_list=calibration_source_list,debug=debug,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
@@ -99,10 +99,41 @@ IF N_Elements(flag_ptr) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *flag_ptr[pol_i]=flag_init
 ENDIF
 
-;calibration loop
-cal=vis_calibrate_subroutine(cal,vis_ptr,vis_model_ptr,flag_ptr)
-
-vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=1)
+IF Keyword_Set(debug) THEN BEGIN
+    print,"Entering calibration DEBUG mode"
+    debug_i=1
+    test_uv=Ptrarr(n_pol,/allocate)
+    test_img=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *test_uv[pol_i]=visibility_grid(vis_cal[pol_i],flag_ptr[pol_i],obs,psf,params,$
+            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
+            mapfn_recalculate=0,error=error,_Extra=extra)
+        *test_img[pol_i]=dirty_image_generate(*test_uv[pol_i],degpix=obs.degpix)
+    ENDFOR
+    
+    WHILE debug_i DO BEGIN
+        debug_i=0
+        ;calibration loop
+        cal=vis_calibrate_subroutine(cal,vis_ptr,vis_model_ptr,flag_ptr)
+        
+        vis_cal=vis_calibration_apply(cal,vis_ptr,preserve_original=1)
+        
+        cal_uv=Ptrarr(n_pol,/allocate)
+        cal_img=Ptrarr(n_pol,/allocate)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *cal_uv[pol_i]=visibility_grid(vis_cal[pol_i],flag_ptr[pol_i],obs,psf,params,$
+                /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
+                mapfn_recalculate=0,error=error,_Extra=extra)
+            *cal_img[pol_i]=dirty_image_generate(*cal_uv[pol_i],degpix=obs.degpix)
+        ENDFOR
+        stop
+    ENDWHILE
+ENDIF ELSE BEGIN
+    ;calibration loop
+    cal=vis_calibrate_subroutine(cal,vis_ptr,vis_model_ptr,flag_ptr)
+    
+    vis_cal=vis_calibration_apply(cal,vis_ptr)
+ENDELSE
 timing=Systime(1)-t0_0
 RETURN,vis_cal
 END

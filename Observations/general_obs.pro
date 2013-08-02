@@ -18,14 +18,22 @@ IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 
 ;Set up paths
+;Convoluted way of setting up 'instrument' for use here, while still leaving it to be passed in Extra
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'instrument') THEN instrument=extra.instrument
+IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
 IF N_Elements(version) EQ 0 THEN version=0
-IF N_Elements(data_directory) EQ 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
+IF N_Elements(data_directory) EQ 0 THEN data_directory=$
+    rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
 IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
-IF StrLowCase(Strmid(vis_file_list[0],3,/reverse)) EQ '.txt' THEN Textfast,vis_file_list,file_path=vis_file_list,/read,/string
+IF StrLowCase(Strmid(vis_file_list[0],3,/reverse)) EQ '.txt' THEN $
+    Textfast,vis_file_list,file_path=vis_file_list,/read,/string
 IF N_Elements(fhd_file_list) EQ 0 THEN fhd_file_list=fhd_path_setup(vis_file_list,version=version)
-IF N_Elements(healpix_path) EQ 0 THEN healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
-IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-IF N_Elements(calibration_catalog_file_path) EQ 0 THEN calibration_catalog_file_path=rootdir('mwa')+filepath('calibration_source_list.sav',root='DATA')
+IF N_Elements(healpix_path) EQ 0 THEN healpix_path=$
+    fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
+IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=$
+    filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
+IF N_Elements(calibration_catalog_file_path) EQ 0 THEN calibration_catalog_file_path=$
+    filepath(instrument+'_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 n_files=N_Elements(vis_file_list)
 
 ;Set which files to restore or recalculate (if the file is not found and needed, it will be recalculated
