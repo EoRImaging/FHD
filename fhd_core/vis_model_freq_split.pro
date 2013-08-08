@@ -68,7 +68,7 @@ flag_test=Total(*flag_arr[0]>0,1)
 bi_use=where(flag_test)
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
-    freq_bin_i2=obs.fbin_i
+    IF Tag_exist(obs,'fbin_i') THEN freq_bin_i2=obs.fbin_i ELSE freq_bin_i2=(*obs.baseline_info).fbin_i
     n_avg=Round(n_freq/Max(freq_bin_i2+1))
 ENDIF ELSE BEGIN
     freq_bin_i2=Floor(lindgen(n_freq)/n_avg)
