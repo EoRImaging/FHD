@@ -1,4 +1,4 @@
-FUNCTION vis_calibration_apply,cal,vis_ptr,preserve_original=preserve_original,pol_i=pol_i
+FUNCTION vis_calibration_apply,vis_ptr,cal,preserve_original=preserve_original,pol_i=pol_i
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq
