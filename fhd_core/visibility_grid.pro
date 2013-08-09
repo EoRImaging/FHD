@@ -309,7 +309,7 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
     ENDIF
     IF variance_flag THEN BEGIN
         variance_mirror=Shift(Reverse(reverse(variance,1),2),1,1)
-        variance=(variance+variance_mirror)/2.
+        variance=(variance+variance_mirror)/4. ;2?
     ENDIF
 ENDIF
 ;normalization=dimension*elements

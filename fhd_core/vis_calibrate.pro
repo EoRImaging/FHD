@@ -114,15 +114,16 @@ IF Keyword_Set(debug) THEN BEGIN
     WHILE debug_i DO BEGIN
         debug_i=0
         ;calibration loop
-        ;NOTE that flags will NOT be updated in this loop (necessary to avoid contamination if run multiple times with any errors)
-        cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,/preserve,_Extra=extra)
+        IF N_Elements(flag_ptr_use) NE n_pol THEN flag_ptr_use=Ptrarr(n_pol,/allocate)
+        FOR pol_i=0,n_pol-1 DO *flag_ptr_use[pol_i]=*flag_ptr[pol_i]
+        cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr_use,obs,params,cal,_Extra=extra)
         
         vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=1)
         
         cal_uv=Ptrarr(n_pol,/allocate)
         cal_img=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO BEGIN
-            *cal_uv[pol_i]=visibility_grid(vis_cal[pol_i],flag_ptr[pol_i],obs,psf,params,$
+            *cal_uv[pol_i]=visibility_grid(vis_cal[pol_i],flag_ptr_use[pol_i],obs,psf,params,$
                 /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
                 mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
             *cal_img[pol_i]=dirty_image_generate(*cal_uv[pol_i],degpix=obs.degpix)
