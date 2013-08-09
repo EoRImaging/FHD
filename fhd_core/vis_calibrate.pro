@@ -104,11 +104,17 @@ IF Keyword_Set(debug) THEN BEGIN
     debug_i=1
     test_uv=Ptrarr(n_pol,/allocate)
     test_img=Ptrarr(n_pol,/allocate)
+    model_uv=Ptrarr(n_pol,/allocate)
+    model_img=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *test_uv[pol_i]=visibility_grid(vis_ptr[pol_i],flag_ptr[pol_i],obs,psf,params,$
             /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
             mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
         *test_img[pol_i]=dirty_image_generate(*test_uv[pol_i],degpix=obs.degpix)
+        *model_uv[pol_i]=visibility_grid(vis_model_ptr[pol_i],flag_ptr[pol_i],obs,psf,params,$
+            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
+            mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
+        *model_img[pol_i]=dirty_image_generate(*model_uv[pol_i],degpix=obs.degpix)
     ENDFOR
     
     WHILE debug_i DO BEGIN
