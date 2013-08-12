@@ -7,6 +7,7 @@ IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=10L
 IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
 IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline
+IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params)
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq

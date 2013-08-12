@@ -1,4 +1,4 @@
-FUNCTION vis_calibration_apply,vis_ptr,cal,preserve_original=preserve_original,pol_i=pol_i
+FUNCTION vis_calibration_apply,vis_ptr,cal,preserve_original=preserve_original,pol_i=pol_i,invert_gain=invert_gain
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq
@@ -22,18 +22,20 @@ IF N_Elements(pol_i) EQ 0 THEN BEGIN
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         gain_arr=*gain_ptr[pol_i]
+        IF Keyword_Set(invert_gain) THEN gain_arr=weight_invert(Conj(gain_arr))
 ;        vis_gain=gain_arr[inds_A]*(gain_arr[inds_B])
         vis_gain=gain_arr[inds_A]*Conj(gain_arr[inds_B])
-        *vis_cal_ptr[pol_i]/=Temporary(vis_gain)
-;        *vis_cal_ptr[pol_i]*=Temporary(vis_gain)
+        *vis_cal_ptr[pol_i]*=Weight_invert(vis_gain)
+;        *vis_cal_ptr[pol_i]*=vis_gain
     ENDFOR
     RETURN,vis_cal_ptr
 ENDIF ELSE BEGIN
     ;return a complex array, not a pointer, and don't overwrite if selecting one pol
     vis_cal=*vis_ptr[pol_i] 
     gain_arr=*gain_ptr[pol_i]
-    vis_gain=gain_arr[inds_A]*gain_arr[inds_B]
-    vis_cal/=Temporary(vis_gain)
+    IF Keyword_Set(invert_gain) THEN gain_arr=weight_invert(Conj(gain_arr))
+    vis_gain=gain_arr[inds_A]*Conj(gain_arr[inds_B])
+    vis_cal*=Weight_invert(vis_gain)
     RETURN,vis_cal
 ENDELSE
 

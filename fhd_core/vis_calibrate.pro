@@ -102,15 +102,22 @@ ENDIF
 IF Keyword_Set(debug) THEN BEGIN
     print,"Entering calibration DEBUG mode"
     debug_i=1
-    test_uv=Ptrarr(n_pol,/allocate)
-    test_img=Ptrarr(n_pol,/allocate)
+    raw_uv=Ptrarr(n_pol,/allocate)
+    raw_img=Ptrarr(n_pol,/allocate)
+    rand_uv=Ptrarr(n_pol,/allocate)
+    rand_img=Ptrarr(n_pol,/allocate)
     model_uv=Ptrarr(n_pol,/allocate)
     model_img=Ptrarr(n_pol,/allocate)
+    vis_rand=vis_randomize(vis_ptr,obs,params,cal_rand=cal_rand)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *test_uv[pol_i]=visibility_grid(vis_ptr[pol_i],flag_ptr[pol_i],obs,psf,params,$
+        *raw_uv[pol_i]=visibility_grid(vis_ptr[pol_i],flag_ptr[pol_i],obs,psf,params,$
             /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
             mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
-        *test_img[pol_i]=dirty_image_generate(*test_uv[pol_i],degpix=obs.degpix)
+        *raw_img[pol_i]=dirty_image_generate(*raw_uv[pol_i],degpix=obs.degpix)
+        *rand_uv[pol_i]=visibility_grid(vis_rand[pol_i],flag_ptr[pol_i],obs,psf,params,$
+            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
+            mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
+        *rand_img[pol_i]=dirty_image_generate(*rand_uv[pol_i],degpix=obs.degpix)
         *model_uv[pol_i]=visibility_grid(vis_model_ptr[pol_i],flag_ptr[pol_i],obs,psf,params,$
             /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
             mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
@@ -122,17 +129,25 @@ IF Keyword_Set(debug) THEN BEGIN
         ;calibration loop
         IF N_Elements(flag_ptr_use) NE n_pol THEN flag_ptr_use=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO *flag_ptr_use[pol_i]=*flag_ptr[pol_i]
-        cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr_use,obs,params,cal,_Extra=extra)
-        
+        cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr_use,obs,params,_Extra=extra)        
         vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=1)
+        
+        cal2=vis_calibrate_subroutine(vis_rand,vis_ptr,flag_ptr_use2,obs,params,_Extra=extra)        
+        vis_cal2=vis_calibration_apply(vis_rand,cal2,preserve_original=1)
         
         cal_uv=Ptrarr(n_pol,/allocate)
         cal_img=Ptrarr(n_pol,/allocate)
+        cal2_uv=Ptrarr(n_pol,/allocate)
+        cal2_img=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO BEGIN
             *cal_uv[pol_i]=visibility_grid(vis_cal[pol_i],flag_ptr_use[pol_i],obs,psf,params,$
                 /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
                 mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
             *cal_img[pol_i]=dirty_image_generate(*cal_uv[pol_i],degpix=obs.degpix)
+            *cal2_uv[pol_i]=visibility_grid(vis_cal2[pol_i],flag_ptr_use2[pol_i],obs,psf,params,$
+                /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid2,/silent,$
+                mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
+            *cal2_img[pol_i]=dirty_image_generate(*cal2_uv[pol_i],degpix=obs.degpix)
         ENDFOR
         stop
     ENDWHILE
