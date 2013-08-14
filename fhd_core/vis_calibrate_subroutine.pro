@@ -92,14 +92,27 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
         FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
             vis_model_matrix[model_matrix_inds]=vis_model2*Conj(gain_curr[B_ind])
-            vis_use=vis_data2
+;            vis_model_matrix[model_matrix_inds]=vis_model2*gain_curr[B_ind]
+            vis_use=Conj(vis_data2)
+;            vis_use=Conj(vis_data2)
+            
+;            real_matrix=Real_part(vis_model_matrix)
+;            im_matrix=Imaginary(vis_model_matrix)
+;            vis_real=Real_part(vis_use)
+;            vis_im=Imaginary(vis_use)
+;            gain_real=LA_Least_Squares(real_matrix,vis_real,/double,method=2)
+;            gain_im=LA_Least_Squares(im_matrix,vis_im,/double,method=2)
+;            gain_new=Complex(gain_real,gain_im)
+;            
 ;            vis_use=Reform(vis_data_matrix##(1./Conj(gain_curr)))
             gain_new=LA_Least_Squares(vis_model_matrix,vis_use,/double,method=2)
             
             gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
             gain_curr=(gain_new+gain_curr)/2.
         ENDFOR
-        gain_arr[fi,tile_use]=1./Conj(gain_curr)
+;        gain_arr[fi,tile_use]=gain_curr
+        gain_arr[fi,tile_use]=Conj(gain_curr)
+;        gain_arr[fi,tile_use]=1./Conj(gain_curr)
 ;        gain_arr[fi,tile_use]=1./(gain_curr)
     ENDFOR
     

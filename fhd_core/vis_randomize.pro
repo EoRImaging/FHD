@@ -1,7 +1,7 @@
 FUNCTION vis_randomize,vis_ptr,obs,params,cal_rand=cal_rand,random_gain_amplitude=random_gain_amplitude,random_gain_phase=random_gain_phase
 
-IF N_Elements(random_gain_amplitude) EQ 0 THEN random_gain_amplitude=0.1
-IF N_Elements(random_gain_phase) EQ 0 THEN random_gain_phase=10. ;degrees
+IF N_Elements(random_gain_amplitude) EQ 0 THEN random_gain_amplitude=0.5
+IF N_Elements(random_gain_phase) EQ 0 THEN random_gain_phase=15. ;degrees
 icomp=Complex(0,1)
 cal_rand=vis_struct_init_cal(obs,params)
 n_pol=obs.n_pol
