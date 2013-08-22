@@ -90,6 +90,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
         model_matrix_inds=A_ind+Lindgen(n_baseline_use*2.)*n_tile_use
         
+        phase_fit_iter=Floor(n_cal_iter/4.)
         FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
             vis_model_matrix[model_matrix_inds]=vis_model2*Conj(gain_curr[B_ind])
 ;            vis_model_matrix[model_matrix_inds]=vis_model2*gain_curr[B_ind]
@@ -108,6 +109,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             gain_new=LA_Least_Squares(vis_model_matrix,vis_use,/double,method=2)
             
             gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
+            IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
             gain_curr=(gain_new+gain_curr)/2.
         ENDFOR
 ;        gain_arr[fi,tile_use]=gain_curr
