@@ -125,7 +125,7 @@ IF Keyword_Set(debug) THEN BEGIN
     ENDFOR
     
     WHILE debug_i DO BEGIN
-        debug_i=0
+    ;NOTE: THIS IS AN INFINITE LOOP! YOU MUST SET debug_i=0 MANUALLY AT THE STOP!!!
         ;calibration loop
         IF N_Elements(flag_ptr_use) NE n_pol THEN flag_ptr_use=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO *flag_ptr_use[pol_i]=*flag_ptr[pol_i]

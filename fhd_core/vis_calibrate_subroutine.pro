@@ -3,7 +3,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
     preserve_visibilities=preserve_visibilities,_Extra=extra
     
 
-IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=10L
+IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=30L
+IF n_cal_iter LT 6 THEN print,'Warning! At least 6 calibration iterations recommended. Using '+Strn(Floor(n_cal_iter))
 IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
 IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline
@@ -31,8 +32,6 @@ kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
 dist_arr=(freq_arr#kr_arr)*kbinsize
 flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
 
-;baselines_use=where((kr_arr GE min_cal_baseline) AND (kr_arr LE max_cal_basline),n_baseline_use)
-
 cal_return=cal
 FOR pol_i=0,n_pol-1 DO cal_return.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 
@@ -55,7 +54,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     vis_avg*=weight_invert(weight)
     vis_model*=weight_invert(weight)
     
-    i_use=where(weight GT 0,n_use)
+;    i_use=where(weight GT 0,n_use)
     freq_weight=Total(weight,2)
     baseline_weight=Total(weight,1)
     freq_use=where(freq_weight,n_freq_use)
@@ -82,86 +81,40 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         gain_curr=Reform(gain_arr[fi,tile_use])
         vis_data2=[Reform(vis_avg[fi,baseline_use]),Conj(Reform(vis_avg[fi,baseline_use]))]
         vis_model2=[Reform(vis_model[fi,baseline_use]),Conj(Reform(vis_model[fi,baseline_use]))]
+        weight2=[Reform(weight[fi,baseline_use]),Reform(weight[fi,baseline_use])]
+;        n_baseline_use2=n_baseline_use*2.
+        b_i_use=where(weight2 GT 0,n_baseline_use2)
+        vis_data2=vis_data2[b_i_use]
+        vis_model2=vis_model2[b_i_use]
         
+        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
+        A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
+        B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
         
-        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use*2.)
-        A_ind=[tile_A_i_use,tile_B_i_use]
-        B_ind=[tile_B_i_use,tile_A_i_use]
-        
-        model_matrix_inds=A_ind+Lindgen(n_baseline_use*2.)*n_tile_use
+        model_matrix_inds=A_ind+Lindgen(n_baseline_use2)*n_tile_use
         
         phase_fit_iter=Floor(n_cal_iter/4.)
         FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
             vis_model_matrix[model_matrix_inds]=vis_model2*Conj(gain_curr[B_ind])
+            vis_use=vis_data2
 ;            vis_model_matrix[model_matrix_inds]=vis_model2*gain_curr[B_ind]
-            vis_use=Conj(vis_data2)
 ;            vis_use=Conj(vis_data2)
-            
-;            real_matrix=Real_part(vis_model_matrix)
-;            im_matrix=Imaginary(vis_model_matrix)
-;            vis_real=Real_part(vis_use)
-;            vis_im=Imaginary(vis_use)
-;            gain_real=LA_Least_Squares(real_matrix,vis_real,/double,method=2)
-;            gain_im=LA_Least_Squares(im_matrix,vis_im,/double,method=2)
-;            gain_new=Complex(gain_real,gain_im)
 ;            
 ;            vis_use=Reform(vis_data_matrix##(1./Conj(gain_curr)))
             gain_new=LA_Least_Squares(vis_model_matrix,vis_use,/double,method=2)
             
-            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
+;            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
             IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
+            IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
+                gain_new*=Mean(gain_new[where(gain_new)])*weight_invert(Abs(gain_new)) ;then fit only average amplitude
             gain_curr=(gain_new+gain_curr)/2.
+            gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
         ENDFOR
-;        gain_arr[fi,tile_use]=gain_curr
-        gain_arr[fi,tile_use]=Conj(gain_curr)
+        gain_arr[fi,tile_use]=gain_curr
+;        gain_arr[fi,tile_use]=Conj(gain_curr)
 ;        gain_arr[fi,tile_use]=1./Conj(gain_curr)
 ;        gain_arr[fi,tile_use]=1./(gain_curr)
     ENDFOR
-    
-;    FOR fii=0L,n_freq_use-1 DO BEGIN
-;        fi=freq_use[fii]
-;        gain_curr=Reform(gain_arr[fi,tile_use])
-;        
-;        
-;        vis_data_matrix=Complexarr(n_tile_use,n_tile_use)
-;        vis_data_matrix[tile_A_i_use,tile_B_i_use]=Reform(vis_avg[fi,baseline_use])
-;        vis_data_matrix[tile_B_i_use,tile_A_i_use]=Conj(Reform(vis_avg[fi,baseline_use]))
-;        
-;        vis_model_matrix=Complexarr(n_tile_use,n_tile_use)
-;        vis_model_matrix[tile_A_i_use,tile_B_i_use]=Reform(vis_model[fi,baseline_use])
-;        vis_model_matrix[tile_B_i_use,tile_A_i_use]=Conj(Reform(vis_model[fi,baseline_use]))
-;        
-;        FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
-;            vis_use=Reform(vis_data_matrix##Conj(gain_curr))
-;;            vis_use=Reform(vis_data_matrix##(1./Conj(gain_curr)))
-;            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,/double,method=2)
-;            gain_new=weight_invert(gain_new)
-;            
-;            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
-;            gain_curr=(gain_new+gain_curr)/2.
-;        ENDFOR
-;        gain_arr[fi,tile_use]=gain_curr
-;    ENDFOR
-        
-;    FOR fii=0L,n_freq_use-1 DO BEGIN
-;        fi=freq_use[fii]
-;        gain_curr=Reform(gain_arr[fi,tile_use])
-;        vis_matrix=Complexarr(n_tile,n_tile)
-;        vis_matrix[tile_A_i[baseline_use],tile_B_i[baseline_use]]=vis_avg[fi,baseline_use]
-;;        vis_matrix+=Conj(transpose(vis_matrix))
-;        vis_matrix+=diag_matrix(replicate(1.,n_tile))
-;;        vis_matrix+=Conj(transpose(vis_matrix))
-;;        vis_matrix/=2.
-;        
-;        FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
-;            vis_matrix_use=extract_subarray(vis_matrix,tile_use,tile_use)
-;            gain_new=LA_Least_Squares(vis_matrix_use,Conj(gain_curr),/double)
-;;            gain_new=1./gain_new
-;            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
-;            gain_curr=(gain_new+gain_curr)/2.
-;        ENDFOR 
-;        gain_arr[fi,tile_use]=gain_curr
-;    ENDFOR
     
     ;need some error checking in case bad tile_use or freq_use
     gain_freq_test=Median(Abs(gain_arr[*,tile_use]),dimension=2)
@@ -179,10 +132,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         gain_vals=gain_arr_sub[sort(gain_arr_sub)]
         n_vals=N_Elements(gain_vals)
         sigma_use=stddev(gain_vals[n_vals/4.:(3.*n_vals/4.)],/nan,/double)
-        tile_use=where((Abs(gain_tile_test-Median(gain_tile_test)) LE sigma_threshold*sigma_use) AND tile_mask,$
+        tile_use=where((Abs(gain_tile_test-Median(gain_tile_test[tile_use])) LE sigma_threshold*sigma_use) AND tile_mask,$
             n_tile_use,complement=tile_cut,ncomplement=n_tile_cut)
         IF n_tile_cut GT 0 THEN tile_mask[tile_cut]=0
-        freq_use=where((Abs(gain_freq_test-Median(gain_freq_test)) LE sigma_threshold*sigma_use) AND freq_mask,$
+        freq_use=where((Abs(gain_freq_test-Median(gain_freq_test[freq_use])) LE sigma_threshold*sigma_use) AND freq_mask,$
             n_freq_use,complement=freq_cut,ncomplement=n_freq_cut)
         IF n_freq_cut GT 0 THEN freq_mask[freq_cut]=0
 ;    ENDFOR
