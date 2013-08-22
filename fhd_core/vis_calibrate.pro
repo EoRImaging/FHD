@@ -111,15 +111,15 @@ IF Keyword_Set(debug) THEN BEGIN
     vis_rand=vis_randomize(vis_ptr,obs,params,cal_rand=cal_rand)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *raw_uv[pol_i]=visibility_grid(vis_ptr[pol_i],flag_ptr[pol_i],obs,psf,params,$
-            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
+            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_raw,/silent,$
             mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
         *raw_img[pol_i]=dirty_image_generate(*raw_uv[pol_i],degpix=obs.degpix)
         *rand_uv[pol_i]=visibility_grid(vis_rand[pol_i],flag_ptr[pol_i],obs,psf,params,$
-            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
+            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_rand,/silent,$
             mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
         *rand_img[pol_i]=dirty_image_generate(*rand_uv[pol_i],degpix=obs.degpix)
         *model_uv[pol_i]=visibility_grid(vis_model_ptr[pol_i],flag_ptr[pol_i],obs,psf,params,$
-            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
+            /no_save,timing=t_grid0,polarization=pol_i,weights=weights_model,/silent,$
             mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
         *model_img[pol_i]=dirty_image_generate(*model_uv[pol_i],degpix=obs.degpix)
     ENDFOR
@@ -143,11 +143,11 @@ IF Keyword_Set(debug) THEN BEGIN
         cal2_img=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO BEGIN
             *cal_uv[pol_i]=visibility_grid(vis_cal[pol_i],flag_ptr_use[pol_i],obs,psf,params,$
-                /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid,/silent,$
+                /no_save,timing=t_grid0,polarization=pol_i,weights=weights_cal,/silent,$
                 mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
             *cal_img[pol_i]=dirty_image_generate(*cal_uv[pol_i],degpix=obs.degpix)
             *cal2_uv[pol_i]=visibility_grid(vis_cal2[pol_i],flag_ptr_use2[pol_i],obs,psf,params,$
-                /no_save,timing=t_grid0,polarization=pol_i,weights=weights_grid2,/silent,$
+                /no_save,timing=t_grid0,polarization=pol_i,weights=weights_cal2,/silent,$
                 mapfn_recalculate=0,error=error,/preserve_vis,_Extra=extra)
             *cal2_img[pol_i]=dirty_image_generate(*cal2_uv[pol_i],degpix=obs.degpix)
         ENDFOR

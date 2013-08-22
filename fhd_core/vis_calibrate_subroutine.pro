@@ -3,7 +3,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
     preserve_visibilities=preserve_visibilities,_Extra=extra
     
 
-IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=30L
+IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=10L
 IF n_cal_iter LT 6 THEN print,'Warning! At least 6 calibration iterations recommended. Using '+Strn(Floor(n_cal_iter))
 IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
 IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
@@ -82,10 +82,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         vis_data2=[Reform(vis_avg[fi,baseline_use]),Conj(Reform(vis_avg[fi,baseline_use]))]
         vis_model2=[Reform(vis_model[fi,baseline_use]),Conj(Reform(vis_model[fi,baseline_use]))]
         weight2=[Reform(weight[fi,baseline_use]),Reform(weight[fi,baseline_use])]
+        
 ;        n_baseline_use2=n_baseline_use*2.
         b_i_use=where(weight2 GT 0,n_baseline_use2)
         vis_data2=vis_data2[b_i_use]
         vis_model2=vis_model2[b_i_use]
+        amp_test=Mean(Abs(vis_data2))/Mean(Abs(vis_model2))
+;        gain_curr*=Sqrt(amp_test)/Mean(abs(gain_curr))
         
         vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
         A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
