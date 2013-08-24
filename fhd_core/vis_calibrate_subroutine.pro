@@ -89,34 +89,31 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         vis_data2=vis_data2[b_i_use]*weight_invert(weight2)
         vis_model2=vis_model2[b_i_use]*weight_invert(weight2)
         
-        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
+;        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
         A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
         B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
-     
-;        vis_data2=Reform(vis_avg[fi,baseline_use])
-;        vis_model2=Reform(vis_model[fi,baseline_use])
-;        weight2=Reform(weight[fi,baseline_use])
-;        
-;;        n_baseline_use2=n_baseline_use*2.
-;        b_i_use=where(weight2 GT 0,n_baseline_use2)
-;        weight2=weight2[b_i_use]
-;        vis_data2=vis_data2[b_i_use];*weight_invert(weight2)
-;        vis_model2=vis_model2[b_i_use];*weight_invert(weight2)
-;        
-;        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
-;        A_ind=tile_A_i_use & A_ind=A_ind[b_i_use]
-;        B_ind=tile_B_i_use & B_ind=B_ind[b_i_use]
         
-        model_matrix_inds=A_ind+Lindgen(n_baseline_use2)*n_tile_use
+        A_ind_arr=Ptrarr(n_tile_use,/allocate)
+        n_arr=Fltarr(n_tile_use)
+        FOR tile_i=0L,n_tile_use-1 DO BEGIN
+            ;should be set up so that using where is okay
+            *A_ind_arr[tile_i]=where(A_ind EQ tile_i,n1)
+            n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
+        ENDFOR
+        
+;        model_matrix_inds=A_ind+Lindgen(n_baseline_use2)*n_tile_use
         
         phase_fit_iter=Floor(n_cal_iter/4.)
         
+        gain_new=Complexarr(n_tile_use)
         FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
-            vis_model_matrix[model_matrix_inds]=vis_model2*Conj(gain_curr[B_ind])
+;            vis_model_matrix[model_matrix_inds]=vis_model2*Conj(gain_curr[B_ind])
             vis_use=vis_data2
-;            
-;            vis_use=Reform(vis_data_matrix##(1./Conj(gain_curr)))
-            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
+            
+            vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
+            FOR tile_i=0L,n_tile_use-1 DO IF n_Arr[tile_i] THEN $
+                gain_new[tile_i]=LA_Least_Squares(Reform(vis_model_matrix[*A_ind_arr[tile_i]],1,n_Arr[tile_i]),vis_use[*A_ind_arr[tile_i]],method=2)
+;            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
             
 ;            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
             IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
