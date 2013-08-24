@@ -79,34 +79,33 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
         gain_curr=Reform(gain_arr[fi,tile_use])
-;        vis_data2=[Reform(vis_avg[fi,baseline_use]),Conj(Reform(vis_avg[fi,baseline_use]))]
-;        vis_model2=[Reform(vis_model[fi,baseline_use]),Conj(Reform(vis_model[fi,baseline_use]))]
-;        weight2=[Reform(weight[fi,baseline_use]),Reform(weight[fi,baseline_use])]
-;        
-;;        n_baseline_use2=n_baseline_use*2.
-;        b_i_use=where(weight2 GT 0,n_baseline_use2)
-;        vis_data2=vis_data2[b_i_use]
-;        vis_model2=vis_model2[b_i_use]
-;        amp_test=Mean(Abs(vis_data2))/Mean(Abs(vis_model2))
-;;        gain_curr*=Sqrt(amp_test)/Mean(abs(gain_curr))
-;        
-;        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
-;        A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
-;        B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
-        vis_data2=Reform(vis_avg[fi,baseline_use])
-        vis_model2=Reform(vis_model[fi,baseline_use])
-        weight2=Reform(weight[fi,baseline_use])
+        vis_data2=[Reform(vis_avg[fi,baseline_use]),Conj(Reform(vis_avg[fi,baseline_use]))]
+        vis_model2=[Reform(vis_model[fi,baseline_use]),Conj(Reform(vis_model[fi,baseline_use]))]
+        weight2=[Reform(weight[fi,baseline_use]),Reform(weight[fi,baseline_use])]
         
 ;        n_baseline_use2=n_baseline_use*2.
         b_i_use=where(weight2 GT 0,n_baseline_use2)
-        vis_data2=vis_data2[b_i_use]
-        vis_model2=vis_model2[b_i_use]
-        amp_test=Mean(Abs(vis_data2))/Mean(Abs(vis_model2))
-;        gain_curr*=Sqrt(amp_test)/Mean(abs(gain_curr))
+        weight2=weight2[b_i_use]
+        vis_data2=vis_data2[b_i_use]*weight_invert(weight2)
+        vis_model2=vis_model2[b_i_use]*weight_invert(weight2)
         
         vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
-        A_ind=tile_A_i_use & A_ind=A_ind[b_i_use]
-        B_ind=tile_B_i_use & B_ind=B_ind[b_i_use]
+        A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
+        B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
+        
+;        vis_data2=Reform(vis_avg[fi,baseline_use])
+;        vis_model2=Reform(vis_model[fi,baseline_use])
+;        weight2=Reform(weight[fi,baseline_use])
+;        
+;;        n_baseline_use2=n_baseline_use*2.
+;        b_i_use=where(weight2 GT 0,n_baseline_use2)
+;        weight2=weight2[b_i_use]
+;        vis_data2=vis_data2[b_i_use];*weight_invert(weight2)
+;        vis_model2=vis_model2[b_i_use];*weight_invert(weight2)
+;        
+;        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
+;        A_ind=tile_A_i_use & A_ind=A_ind[b_i_use]
+;        B_ind=tile_B_i_use & B_ind=B_ind[b_i_use]
         
         model_matrix_inds=A_ind+Lindgen(n_baseline_use2)*n_tile_use
         
@@ -124,7 +123,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
             IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
                 gain_new*=Mean(Abs(gain_new[where(gain_new)]))*weight_invert(Abs(gain_new)) ;then fit only average amplitude
-            gain_curr=(gain_new+gain_curr)/2.
+            gain_old=gain_curr
+            gain_curr=(gain_new+gain_old)/2.
+            dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
+            diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
+            IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
             gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
         ENDFOR
         gain_arr[fi,tile_use]=gain_curr
