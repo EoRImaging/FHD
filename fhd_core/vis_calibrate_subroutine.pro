@@ -127,6 +127,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             IF nan_test(gain_curr) GT 0 THEN gain_curr[where(Finite(gain_curr,/nan))]=gain_old[where(Finite(gain_curr,/nan))]
             gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
         ENDFOR
+        Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr
 ;        gain_arr[fi,tile_use]=Conj(gain_curr)
 ;        gain_arr[fi,tile_use]=1./Conj(gain_curr)
