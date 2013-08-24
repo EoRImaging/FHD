@@ -9,6 +9,7 @@ IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
 IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline
 IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params)
+min_baseline_eqns=2.
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq
@@ -92,7 +93,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FOR tile_i=0L,n_tile_use-1 DO BEGIN
             ;should be set up so that using where is okay
             inds=where(A_ind EQ tile_i,n1)
-            IF n1 GT 0 THEN *A_ind_arr[tile_i]=Reform(inds,1,n1) ELSE *A_ind_arr[tile_i]=inds
+            IF n1 GT 1 THEN *A_ind_arr[tile_i]=Reform(inds,1,n1) ELSE *A_ind_arr[tile_i]=-1
             n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
         ENDFOR
         
@@ -107,7 +108,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             vis_use=vis_data2
             
             vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
-            FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GT 0 THEN $
+            FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_baseline_eqns THEN $
                 gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2)
 ;            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
             
