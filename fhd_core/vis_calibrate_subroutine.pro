@@ -92,7 +92,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
         A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
         B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
-        
+     
 ;        vis_data2=Reform(vis_avg[fi,baseline_use])
 ;        vis_model2=Reform(vis_model[fi,baseline_use])
 ;        weight2=Reform(weight[fi,baseline_use])
@@ -110,11 +110,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         model_matrix_inds=A_ind+Lindgen(n_baseline_use2)*n_tile_use
         
         phase_fit_iter=Floor(n_cal_iter/4.)
+        
         FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
             vis_model_matrix[model_matrix_inds]=vis_model2*Conj(gain_curr[B_ind])
             vis_use=vis_data2
-;            vis_model_matrix[model_matrix_inds]=vis_model2*gain_curr[B_ind]
-;            vis_use=Conj(vis_data2)
 ;            
 ;            vis_use=Reform(vis_data_matrix##(1./Conj(gain_curr)))
             gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
@@ -128,6 +127,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
             diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
             IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
+            IF nan_test(gain_curr) GT 0 THEN gain_curr[where(Finite(gain_curr,/nan))]=gain_old[where(Finite(gain_curr,/nan))]
             gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
         ENDFOR
         gain_arr[fi,tile_use]=gain_curr
