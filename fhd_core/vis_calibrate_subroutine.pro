@@ -4,7 +4,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
     
 
 IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=10L
-IF n_cal_iter LT 6 THEN print,'Warning! At least 6 calibration iterations recommended. Using '+Strn(Floor(n_cal_iter))
+IF n_cal_iter LT 5 THEN print,'Warning! At least 5 calibration iterations recommended. Using '+Strn(Floor(n_cal_iter))
 IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
 IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline
@@ -79,9 +79,23 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
         gain_curr=Reform(gain_arr[fi,tile_use])
-        vis_data2=[Reform(vis_avg[fi,baseline_use]),Conj(Reform(vis_avg[fi,baseline_use]))]
-        vis_model2=[Reform(vis_model[fi,baseline_use]),Conj(Reform(vis_model[fi,baseline_use]))]
-        weight2=[Reform(weight[fi,baseline_use]),Reform(weight[fi,baseline_use])]
+;        vis_data2=[Reform(vis_avg[fi,baseline_use]),Conj(Reform(vis_avg[fi,baseline_use]))]
+;        vis_model2=[Reform(vis_model[fi,baseline_use]),Conj(Reform(vis_model[fi,baseline_use]))]
+;        weight2=[Reform(weight[fi,baseline_use]),Reform(weight[fi,baseline_use])]
+;        
+;;        n_baseline_use2=n_baseline_use*2.
+;        b_i_use=where(weight2 GT 0,n_baseline_use2)
+;        vis_data2=vis_data2[b_i_use]
+;        vis_model2=vis_model2[b_i_use]
+;        amp_test=Mean(Abs(vis_data2))/Mean(Abs(vis_model2))
+;;        gain_curr*=Sqrt(amp_test)/Mean(abs(gain_curr))
+;        
+;        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
+;        A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
+;        B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
+        vis_data2=Reform(vis_avg[fi,baseline_use])
+        vis_model2=Reform(vis_model[fi,baseline_use])
+        weight2=Reform(weight[fi,baseline_use])
         
 ;        n_baseline_use2=n_baseline_use*2.
         b_i_use=where(weight2 GT 0,n_baseline_use2)
@@ -91,8 +105,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        gain_curr*=Sqrt(amp_test)/Mean(abs(gain_curr))
         
         vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
-        A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
-        B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
+        A_ind=tile_A_i_use & A_ind=A_ind[b_i_use]
+        B_ind=tile_B_i_use & B_ind=B_ind[b_i_use]
         
         model_matrix_inds=A_ind+Lindgen(n_baseline_use2)*n_tile_use
         
@@ -104,12 +118,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;            vis_use=Conj(vis_data2)
 ;            
 ;            vis_use=Reform(vis_data_matrix##(1./Conj(gain_curr)))
-            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,/double,method=2)
+            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
             
 ;            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
             IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
             IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
-                gain_new*=Mean(gain_new[where(gain_new)])*weight_invert(Abs(gain_new)) ;then fit only average amplitude
+                gain_new*=Mean(Abs(gain_new[where(gain_new)]))*weight_invert(Abs(gain_new)) ;then fit only average amplitude
             gain_curr=(gain_new+gain_curr)/2.
             gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
         ENDFOR
