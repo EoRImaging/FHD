@@ -5,8 +5,6 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
 
 IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=10L
 IF n_cal_iter LT 5 THEN print,'Warning! At least 5 calibration iterations recommended. Using '+Strn(Floor(n_cal_iter))
-IF N_Elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=1
-preserve_visibilities=0
 IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
 IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline
@@ -17,10 +15,7 @@ n_freq=cal.n_freq
 n_tile=cal.n_tile
 n_time=cal.n_time
 
-IF Keyword_Set(preserve_visibilities) THEN BEGIN
-    flag_ptr_use=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *flag_ptr_use[pol_i]=*flag_ptr[pol_i]
-ENDIF ELSE flag_ptr_use=flag_ptr
+flag_ptr_use=flag_ptr ;flags WILL be over-written! 
 tile_A_i=cal.tile_A-1
 tile_B_i=cal.tile_B-1
 freq_arr=cal.freq
@@ -45,13 +40,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ;average over time
     ;the visibilities have dimension nfreq x (n_baselines x n_time), 
     ; which can be reformed to nfreq x n_baselines x n_time 
-;    IF Keyword_Set(preserve_visibilities) THEN BEGIN
-        flag_use=0>Reform(*flag_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
-        vis_model=Reform(*vis_model_ptr[pol_i],n_freq,n_baselines,n_time)
-;    ENDIF ELSE BEGIN
-;        flag_use=0>Reform(Temporary(*flag_ptr_use[pol_i]),n_freq,n_baselines,n_time)<1
-;        vis_model=Reform(Temporary(*vis_model_ptr[pol_i]),n_freq,n_baselines,n_time)
-;    ENDELSE
+    flag_use=0>Reform(*flag_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
+    IF Keyword_Set(preserve_visibilities) THEN vis_model=Reform(*vis_model_ptr[pol_i],n_freq,n_baselines,n_time) $
+        ELSE vis_model=Reform(Temporary(*vis_model_ptr[pol_i]),n_freq,n_baselines,n_time)
     vis_model=Total(Temporary(vis_model)*flag_use,3)
     vis_measured=Reform(*vis_ptr[pol_i],n_freq,n_baselines,n_time)
     vis_avg=Total(Temporary(vis_measured)*flag_use,3)
@@ -117,7 +108,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             
             vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
             FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GT 0 THEN $
-                gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[Reform(*A_ind_arr[tile_i])],method=2)
+                gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2)
 ;            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
             
 ;            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
