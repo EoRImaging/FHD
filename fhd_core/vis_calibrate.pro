@@ -131,10 +131,12 @@ IF Keyword_Set(debug) THEN BEGIN
         FOR pol_i=0,n_pol-1 DO *flag_ptr_use[pol_i]=*flag_ptr[pol_i]
         IF N_Elements(flag_ptr_use2) NE n_pol THEN flag_ptr_use2=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO *flag_ptr_use2[pol_i]=*flag_ptr[pol_i]
-        cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr_use,obs,params,/preserve_vis,_Extra=extra)        
-        vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=1)
+        cal=vis_calibrate_subroutine(vis_rand,vis_model_ptr,flag_ptr_use,obs,params,/preserve_vis,_Extra=extra)  
+        heap_gc      
+        vis_cal=vis_calibration_apply(vis_rand,cal,preserve_original=1)
         
-        cal2=vis_calibrate_subroutine(vis_rand,vis_ptr,flag_ptr_use2,obs,params,/preserve_vis,_Extra=extra)        
+        cal2=vis_calibrate_subroutine(vis_rand,vis_ptr,flag_ptr_use2,obs,params,/preserve_vis,_Extra=extra)     
+        heap_gc   
         vis_cal2=vis_calibration_apply(vis_rand,cal2,preserve_original=1)
         
         cal_uv=Ptrarr(n_pol,/allocate)
