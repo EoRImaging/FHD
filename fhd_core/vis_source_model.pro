@@ -65,6 +65,40 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     IF ~Keyword_Set(silent) THEN print,"DFT timing: ",strn(t_model)
 ENDIF
 
+IF Keyword_Set(galaxy_calibrate) THEN BEGIN
+    freq_use=where((*obs.baseline_info).freq_use,nf_use)
+    IF Tag_exist(obs,'fbin_i') THEN f_bin=obs.fbin_i ELSE f_bin=(*obs.baseline_info).fbin_i
+    fb_use=Uniq(f_bin[freq_use])
+    nbin=N_Elements(fb_use)
+    IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
+    IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
+    freq_norm=freq_arr^(-alpha)
+    ;freq_norm/=Sqrt(Mean(freq_norm^2.))
+    freq_norm/=Mean(freq_norm) 
+    freq_arr=freq_arr[freq_use[fb_use]]/1E6
+    fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
+    nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
+    
+    dimension=obs.dimension
+    elements=obs.elements
+    astr=obs.astr
+    degpix=obs.degpix
+    xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
+    
+    model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra)
+    
+    IF N_Elements(model_arr) GT 1 THEN BEGIN
+        model=fltarr(dimension,elements)
+        FOR fi=0L,nbin-1 DO model+=*model_arr[fi]*nf_arr[fi]*freq_norm[fi]
+        model/=Total(nf_arr)
+    ENDIF ELSE model=*model_arr[0]
+;    model*=weight_invert(pixel_area)
+    Ptr_free,model_arr
+    
+    model_uv=fft_shift(FFT(fft_shift(model),/inverse)*(degpix*!DtoR)^2.)
+    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=model_uv
+ENDIF
+
 vis_arr=Ptrarr(n_pol)
 
 psf_base=psf.base
