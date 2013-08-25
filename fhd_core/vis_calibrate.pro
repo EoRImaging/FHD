@@ -68,7 +68,7 @@ ENDIF
 ;    
 ;ENDIF
 
-cal=vis_struct_init_cal(obs,params)
+cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list)
 vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,cal,flag_ptr,model_uv_arr=model_ptr,$
     timing=model_timing,silent=silent,_Extra=extra)
 

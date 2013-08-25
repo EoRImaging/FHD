@@ -1,5 +1,5 @@
 FUNCTION vis_source_model,source_list,obs,psf,params,cal,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path,$
-    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate
+    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,_Extra=extra
 
 t0=Systime(1)
 IF N_Elements(file_path) EQ 0 THEN file_path=''
