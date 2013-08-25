@@ -68,10 +68,10 @@ ENDIF
 ;    
 ;ENDIF
 
-vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,flag_ptr,model_uv_arr=model_ptr,$
+cal=vis_struct_init_cal(obs,params)
+vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,cal,flag_ptr,model_uv_arr=model_ptr,$
     timing=model_timing,silent=silent,_Extra=extra)
 
-cal=vis_struct_init_cal(obs,params)
 pol_names=['xx','yy','xy','yx']
 
 ;extract information from the structures

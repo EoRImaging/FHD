@@ -1,5 +1,5 @@
-FUNCTION vis_source_model,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path,$
-    timing=timing,silent=silent,uv_mask=uv_mask
+FUNCTION vis_source_model,source_list,obs,psf,params,cal,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path,$
+    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate
 
 t0=Systime(1)
 IF N_Elements(file_path) EQ 0 THEN file_path=''
@@ -54,6 +54,8 @@ n_freq_bin=N_Elements(freq_bin_i)
 
 vis_dimension=Float(nbaselines*n_samples)
 n_sources=N_Elements(source_list)
+cal.n_cal_src=n_sources
+cal.galaxy_cal=Keyword_Set(galaxy_calibrate)
 
 ;xcen=frequency_array#kx_arr
 ;ycen=frequency_array#ky_arr
