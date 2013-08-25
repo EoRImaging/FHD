@@ -111,7 +111,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_baseline_eqns THEN $
                 gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2)
 ;            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
-            
+            IF Total(Abs(gain_new)) EQ 0 THEN BEGIN
+                gain_curr=gain_new
+                BREAK
+            ENDIF
 ;            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
             IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
             IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
