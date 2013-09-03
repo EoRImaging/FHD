@@ -7,7 +7,7 @@ IF Keyword_Set(file_path_vis) THEN BEGIN
     data_directory=file_dirname(file_path_vis)
 ENDIF
 
-IF Keyword_Set(output_dir) THEN data_directory=output_dir
+IF ~Keyword_Set(output_dir) THEN output_dir=data_directory
 IF Keyword_Set(output_filename) THEN filename=output_filename
 
 IF N_Elements(data_directory) EQ 0 THEN message,"Output directory not specified"
@@ -24,16 +24,17 @@ CASE 1 OF
 ENDCASE
 
 n_files=N_Elements(file_path_vis)
+IF N_Elements(output_dir) LT n_files THEN output_dir_use=Replicate(output_dir[0],n_files) ELSE output_dir_use=output_dir
 IF n_files GT 1 THEN BEGIN
     file_path=Strarr(n_files)
     FOR file_i=0,n_files-1 DO BEGIN
-        dir=filepath('',root_dir=data_directory[file_i],sub=subdir_use)
+        dir=filepath('',root_dir=output_dir_use[file_i],sub=subdir_use)
         IF file_test(dir) EQ 0 THEN file_mkdir,dir   
         file_path[file_i]=filepath(filename[file_i],root_dir=dir)
     ENDFOR
 
 ENDIF ELSE BEGIN
-    dir=filepath('',root_dir=data_directory,sub=subdir_use)
+    dir=filepath('',root_dir=output_dir_use,sub=subdir_use)
     IF file_test(dir) EQ 0 THEN file_mkdir,dir   
     file_path=filepath(filename,root_dir=dir)
 ENDELSE

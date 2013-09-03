@@ -24,7 +24,7 @@ IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
 IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(data_directory) EQ 0 THEN data_directory=$
     rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
-IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
+IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 IF StrLowCase(Strmid(vis_file_list[0],3,/reverse)) EQ '.txt' THEN $
     Textfast,vis_file_list,file_path=vis_file_list,/read,/string
 IF N_Elements(fhd_file_list) EQ 0 THEN fhd_file_list=fhd_path_setup(vis_file_list,version=version)
