@@ -1,5 +1,5 @@
 FUNCTION vis_struct_init_cal,obs,params,gain_arr_ptr=gain_arr_ptr,n_pol=n_pol,n_freq=n_freq,n_tile=n_tile,n_time=n_time,source_list=source_list,$
-    tile_A=tile_A,tile_B=tile_B,freq=freq,bin_offset=bin_offset,tile_names=tiles_names,u_loc=u_loc,v_loc=v_loc,n_cal_src=n_cal_src,galaxy_cal=galaxy_cal
+    tile_A=tile_A,tile_B=tile_B,freq=freq,bin_offset=bin_offset,tile_names=tile_names,u_loc=u_loc,v_loc=v_loc,n_cal_src=n_cal_src,galaxy_cal=galaxy_cal
 IF N_Elements(tile_A) EQ 0 THEN tile_A=(*obs.baseline_info).tile_A
 IF N_Elements(tile_B) EQ 0 THEN tile_B=(*obs.baseline_info).tile_B
 IF N_Elements(freq) EQ 0 THEN freq=(*obs.baseline_info).freq

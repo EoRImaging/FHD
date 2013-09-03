@@ -8,6 +8,7 @@ flags_filepath=file_path+'_flags.sav'
 params_filepath=file_path+'_params.sav'
 psf_filepath=file_path+'_beams.sav'
 obs_filepath=file_path+'_obs.sav'
+IF N_Elements(silent) EQ 0 THEN silent=1
 
 SWITCH N_Params() OF
     1:restore,obs_filepath
@@ -108,10 +109,12 @@ psf_residuals_val=psf.res_val
 psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
+t_degrid=Fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_arr[pol_i],obs,psf,params,/silent,timing=t_degrid0,polarization=pol_i)
-    IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid0)
+    t_degrid[pol_i]=t_degrid0
 ENDFOR
+IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid)
 
 timing=Systime(1)-t0
 

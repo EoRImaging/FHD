@@ -17,7 +17,7 @@ IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+f
     ELSE data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
-healpix_path=fhd_path_setup(vis_file_list[0],subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
+healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 
 ;noise_calibrate=0

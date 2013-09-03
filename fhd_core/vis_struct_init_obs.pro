@@ -112,7 +112,7 @@ IF Keyword_Set(params) AND Keyword_Set(header) THEN BEGIN
         IF hist_A1[tile_i] GT 0 THEN tile_A[ria[ria[tile_i]:ria[tile_i+1]-1]]=i0+1
         IF hist_B1[tile_i] GT 0 THEN tile_B[rib[rib[tile_i]:rib[tile_i+1]-1]]=i0+1
     ENDFOR
-    tile_names=tile_nums+1
+    tile_names=tile_nums
     
     kx_arr=params.uu#frequency_array
     ky_arr=params.vv#frequency_array

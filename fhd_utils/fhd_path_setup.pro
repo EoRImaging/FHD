@@ -1,5 +1,6 @@
 FUNCTION fhd_path_setup,file_path_vis,data_directory=data_directory,filename=filename,version=version,$
-    output_dir=output_dir,output_filename=output_filename,no_sub_fhd=no_sub_fhd,subdir=subdir,_Extra=extra
+    output_directory=output_directory,output_filename=output_filename,no_sub_fhd=no_sub_fhd,subdir=subdir,_Extra=extra
+;NOTE that any keywords passed through _Extra (i.e. from the command line) will supersede any passed explicitly
 
 IF Keyword_Set(file_path_vis) THEN BEGIN
     filename=file_basename(file_path_vis,'.uvfits',/fold_case)
@@ -7,10 +8,10 @@ IF Keyword_Set(file_path_vis) THEN BEGIN
     data_directory=file_dirname(file_path_vis)
 ENDIF
 
-IF ~Keyword_Set(output_dir) THEN output_dir=data_directory
+IF N_Elements(output_directory)+N_Elements(data_directory) EQ 0 THEN message,"Output directory not specified"
+IF ~Keyword_Set(output_directory) THEN output_directory=data_directory
 IF Keyword_Set(output_filename) THEN filename=output_filename
 
-IF N_Elements(data_directory) EQ 0 THEN message,"Output directory not specified"
 IF N_Elements(filename) EQ 0 THEN message,"Filename not specified"
 
 IF Keyword_Set(version) THEN IF size(version,/type) EQ 7 THEN version_dirname='fhd_'+version ELSE version_dirname='fhd_v'+strn(Fix(version)) $
@@ -24,7 +25,7 @@ CASE 1 OF
 ENDCASE
 
 n_files=N_Elements(file_path_vis)
-IF N_Elements(output_dir) LT n_files THEN output_dir_use=Replicate(output_dir[0],n_files) ELSE output_dir_use=output_dir
+IF N_Elements(output_directory) LT n_files THEN output_dir_use=Replicate(output_directory[0],n_files) ELSE output_dir_use=output_directory
 IF n_files GT 1 THEN BEGIN
     file_path=Strarr(n_files)
     FOR file_i=0,n_files-1 DO BEGIN

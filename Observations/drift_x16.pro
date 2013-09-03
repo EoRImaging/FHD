@@ -11,13 +11,13 @@ IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(channel) EQ 0 THEN channel=121
-image_filter_fn='filter_uv_radial' ;applied ONLY to output images
+image_filter_fn='' ;applied ONLY to output images
 
 IF channel LE 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift']) $
     ELSE data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift',Strn(Floor(channel))])
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
-fhd_file_list=fhd_path_setup(vis_file_list,version=version)
-healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
+fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
+healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 
 ;noise_calibrate=0

@@ -1,5 +1,6 @@
-FUNCTION structure_to_text,str,delimiter=delimiter,heading=heading
+FUNCTION structure_to_text,str,delimiter=delimiter,heading=heading,indent=indent
 IF N_Elements(str) EQ 0 THEN RETURN,''
+IF N_Elements(indent) EQ 0 THEN indent=0
 
 IF N_Elements(delimiter) EQ 0 THEN delimiter=String(9B) ;tab character
 
@@ -24,9 +25,9 @@ FOR ti=0L,n_tags-1 DO BEGIN
     IF size(tag_val,/type) EQ 8 THEN BEGIN ;if structure
         n_sub_tags=n_tags(tag_val)
         stretch=n_sub_tags
-        result[1,ti_use]=String(format='("Structure (",A," tags)")',Strn(len))
+        result[1,ti_use]=String(format='("Structure (",A," tags)")',Strn(n_sub_tags))
         IF stretch GT 0 THEN result=[[result],[Strarr(2,stretch)]]
-        result[0,ti_use+1]=structure_to_text(tag_val,delimiter=delimiter)
+        result[0,ti_use+1]=structure_to_text(tag_val,delimiter=delimiter,/indent)
         ti_use+=stretch+1
         CONTINUE
     ENDIF
@@ -60,5 +61,6 @@ FOR ti=0L,n_tags-1 DO BEGIN
     ti_use+=1
 ENDFOR
 
+IF Keyword_Set(indent) THEN result[0,*]=delimiter+result[0,*]
 RETURN,result
 END
