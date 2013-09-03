@@ -1,5 +1,5 @@
 FUNCTION fhd_path_setup,file_path_vis,data_directory=data_directory,filename=filename,version=version,$
-    output_dir=output_dir,output_filename=output_filename,no_sub_fhd=no_sub_fhd,subdir=subdir
+    output_dir=output_dir,output_filename=output_filename,no_sub_fhd=no_sub_fhd,subdir=subdir,_Extra=extra
 
 IF Keyword_Set(file_path_vis) THEN BEGIN
     filename=file_basename(file_path_vis,'.uvfits',/fold_case)
