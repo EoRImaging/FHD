@@ -1,4 +1,4 @@
-FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
+FUNCTION vis_struct_init_obs,header,params,meta, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,$

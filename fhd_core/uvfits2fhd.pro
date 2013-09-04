@@ -122,7 +122,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     endelse
     
     params=vis_param_extract(data_struct.params,hdr)
-    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
+    meta=vis_struct_init_meta(file_path_vis,hdr,params)
+    obs=vis_struct_init_obs(hdr,params,meta,n_pol=n_pol,_Extra=extra)
     kbinsize=obs.kpix
     degpix=obs.degpix
     dimension=obs.dimension
@@ -136,7 +137,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         hdr.obsdec=obs0.zendec
         obs.obsx=obs0.zenx
         obs.obsy=obs0.zeny
-        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+        obs=vis_struct_init_obs(hdr,params,meta,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
 ;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs0.zenx,obsy=obs0.zeny,$
 ;            phasera=phasera,phasedec=phasedec,_Extra=extra)
 ;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs.zenx,obsy=obs.zeny,_Extra=extra)
