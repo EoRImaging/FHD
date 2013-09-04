@@ -363,7 +363,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
     
     beam=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)
+    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)
     
     beam_mask=fltarr(obs.dimension,obs.elements)+1
     alias_mask=fltarr(obs.dimension,obs.elements) 
