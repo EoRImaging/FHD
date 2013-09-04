@@ -53,14 +53,21 @@ dimension_uv=obs.dimension
 astr=obs.astr
 
 IF Keyword_Set(pad_uv_image) THEN BEGIN
-    dimension_use=((obs.dimension>obs.elements)*pad_uv_image)>(obs.dimension>obs.elements)
-    IF tag_exist(extra,'dimension') THEN extra.dimension=dimension_use
-    obs_out=vis_struct_init_obs(hdr,params,n_pol=obs.n_pol,dimension=dimension_use,lon=obs.lon,lat=obs.lat,$
-        kbinsize=obs.kpix,_Extra=extra)
+    pad_uv_image=pad_uv_image>1.
+
+    obs_out=obs
     astr_out=astr
     astr_out.cdelt/=pad_uv_image
     astr_out.crpix*=pad_uv_image
+    
     obs_out.astr=astr_out
+    obs_out.dimension*=pad_uv_image
+    obs_out.elements*=pad_uv_image
+    obs_out.obsx*=pad_uv_image
+    obs_out.obsy*=pad_uv_image
+    obs_out.zenx*=pad_uv_image
+    obs_out.zeny*=pad_uv_image
+    obs_out.degpix/=pad_uv_image
 ENDIF ELSE obs_out=obs
 dimension=obs_out.dimension
 elements=obs_out.elements
