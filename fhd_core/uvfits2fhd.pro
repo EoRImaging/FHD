@@ -122,34 +122,33 @@ IF Keyword_Set(data_flag) THEN BEGIN
     endelse
     
     params=vis_param_extract(data_struct.params,hdr)
-    meta=vis_struct_init_meta(file_path_vis,hdr,params)
-    obs=vis_struct_init_obs(hdr,params,meta,n_pol=n_pol,_Extra=extra)
+    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
     kbinsize=obs.kpix
     degpix=obs.degpix
     dimension=obs.dimension
     
-    IF Keyword_Set(rephase_to_zenith) THEN BEGIN
-        obs0=obs
-        hdr0=hdr
-        phasera=obs0.obsra
-        phasedec=obs0.obsdec        
-        hdr.obsra=obs0.zenra
-        hdr.obsdec=obs0.zendec
-        obs.obsx=obs0.zenx
-        obs.obsy=obs0.zeny
-        obs=vis_struct_init_obs(hdr,params,meta,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
-;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs0.zenx,obsy=obs0.zeny,$
-;            phasera=phasera,phasedec=phasedec,_Extra=extra)
-;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs.zenx,obsy=obs.zeny,_Extra=extra)
-        phase_shift=1.
-;        obs1=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
-;        kx_arr=params.uu/kbinsize
-;        ky_arr=params.vv/kbinsize
-;        xcen=Float(obs.freq#kx_arr)
-;        ycen=Float(obs.freq#ky_arr)
-;        phase_shift=Exp((2.*!Pi*Complex(0,1)/dimension)*((obs.obsx-obs1.obsx)*xcen+(obs.obsy-obs1.obsy)*ycen))
-;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
-    ENDIF ELSE phase_shift=1.
+;    IF Keyword_Set(rephase_to_zenith) THEN BEGIN
+;        obs0=obs
+;        hdr0=hdr
+;        phasera=obs0.obsra
+;        phasedec=obs0.obsdec        
+;        hdr.obsra=obs0.zenra
+;        hdr.obsdec=obs0.zendec
+;        obs.obsx=obs0.zenx
+;        obs.obsy=obs0.zeny
+;        obs=vis_struct_init_obs(hdr,params,meta,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+;;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs0.zenx,obsy=obs0.zeny,$
+;;            phasera=phasera,phasedec=phasedec,_Extra=extra)
+;;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs.zenx,obsy=obs.zeny,_Extra=extra)
+;        phase_shift=1.
+;;        obs1=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
+;;        kx_arr=params.uu/kbinsize
+;;        ky_arr=params.vv/kbinsize
+;;        xcen=Float(obs.freq#kx_arr)
+;;        ycen=Float(obs.freq#ky_arr)
+;;        phase_shift=Exp((2.*!Pi*Complex(0,1)/dimension)*((obs.obsx-obs1.obsx)*xcen+(obs.obsy-obs1.obsy)*ycen))
+;;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
+;    ENDIF ELSE phase_shift=1.
     
     IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
     
@@ -158,7 +157,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     bandwidth=Round((bw_end-bw_start)/1E5)/10.
     fov=dimension*degpix
     k_span=kbinsize*dimension
-    
     
     print,String(format='("Image size used: ",A," pixels")',Strn(dimension))
     print,String(format='("Image resolution used: ",A," degrees/pixel")',Strn(degpix))
@@ -199,7 +197,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     flag_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),$
-            Reform(data_array[imaginary_index,pol_i,*,*]))*phase_shift
+            Reform(data_array[imaginary_index,pol_i,*,*]));*phase_shift
         *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
     ENDFOR
     ;free memory

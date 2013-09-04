@@ -12,7 +12,6 @@ IF Keyword_Set(obs) THEN BEGIN
     zendec=obs.zendec
     dimension=obs.dimension
     elements=obs.elements
-;    rotation=obs.rotation
     obsx=obs.obsx
     obsy=obs.obsy
     astr=obs.astr
@@ -27,7 +26,6 @@ ENDIF ELSE BEGIN
     IF N_Elements(elements) EQ 0 THEN elements=dimension
     IF N_Elements(obsx) EQ 0 THEN obsx=dimension/2.
     IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
-;    IF N_Elements(rotation) EQ 0 THEN rotation=0.
     IF N_Elements(obsra) EQ 0 THEN obsra=0.
     IF N_Elements(obsdec) EQ 0 THEN obsdec=0.
     IF N_Elements(phasera) EQ 0 THEN phasera=obsra
@@ -58,47 +56,18 @@ projection_name='SIN'
 CTYPE=['RA---'+projection_name,'DEC--'+projection_name]
 IF N_Elements(degpix) EQ 2 THEN delt=degpix ELSE delt=[degpix,degpix]
 cd=[[1.,0.],[0.,1.]]
-;;cd=[[Cos(rotation*!DtoR),Sin(rotation*!DtoR)],[-Sin(rotation*!DtoR),Cos(rotation*!DtoR)]]
 PV2_1=Double(xi)
 PV2_2=Double(eta)
-;PV2_1=eta
-;PV2_2=xi
 x_c=obsx
 y_c=obsy
-;lon_c=obsra
-;lat_c=obsdec
 lon_c=phasera
 lat_c=phasedec
 MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
     CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
     LATPOLE = 0., LONGPOLE = 180.
 
-;IF (phasera NE obsra) OR (phasedec NE obsdec) THEN BEGIN
-;    ad2xy,phasera,phasedec,astr,phasex,phasey
-;    dx=obsx-phasex
-;    dy=obsy-phasey
-;    obsx+=dx
-;    obsy+=dy
-;    x_c=obsx
-;    y_c=obsy
-;;    IF Keyword_Set(obs) THEN BEGIN
-;;        obs.obsx=obsx
-;;        obs.obsy=obsy
-;;    ENDIF
-;    MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
-;        CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
-;        LATPOLE = 0., LONGPOLE = 180.
-;ENDIF
-
 ad2xy,zenra,zendec,astr,zenx,zeny
 ad2xy,obsra,obsdec,astr,obsx,obsy
-
-IF Keyword_Set(obs) THEN BEGIN
-    obs.zenx=zenx
-    obs.zeny=zeny
-    obs.obsx=obsx
-    obs.obsy=obsy
-ENDIF
 
 IF arg_present(ra_arr) THEN BEGIN
     xvals=meshgrid(dimension,elements,1)
