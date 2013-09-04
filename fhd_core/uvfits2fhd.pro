@@ -234,6 +234,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
         ENDIF
     ENDIF
     
+    vis_count_i=where(*flag_arr[0],n_vis_in)
+    obs.n_vis_in=n_vis_in
+    
     IF Keyword_Set(transfer_calibration) THEN BEGIN
         calibrate_visibilities=1
         IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=cal_filepath

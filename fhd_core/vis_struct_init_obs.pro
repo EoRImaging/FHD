@@ -55,7 +55,7 @@ n_tile=hdr.n_tile
 n_freq=hdr.n_freq
 freq_use=Lonarr(n_freq)+1
 tile_use=Lonarr(n_tile)+1
-n_vis=Float(N_Elements(time))*n_freq
+n_vis=(n_vis_raw=(n_vis_in=(Float(N_Elements(time))*n_freq)))
 
 ;256 tile upper limit is hard-coded in CASA format
 ;these tile numbers have been verified to be correct
@@ -100,9 +100,9 @@ arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:fre
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names}
 struct={dimension:Float(dimension),elements:Float(elements),kpix:Float(kbinsize),degpix:Float(degpix),$
     obsra:meta.obsra,obsdec:meta.obsdec,zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,$
-    zenx:meta.zenx,zeny:meta.zeny,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
-    pflag:Fix(pflag,type=2),cal:Float(calibration),n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),$
-    n_vis:Long(n_vis),jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),$
+    zenx:meta.zenx,zeny:meta.zeny,lon:meta.lon,lat:meta.lat,alt:meta.alt,pflag:Fix(pflag,type=2),cal:Float(calibration),$
+    n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),$
+    jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),$
     phasera:meta.phasera,phasedec:meta.phasedec,astr:meta.astr,alpha:Float(spectral_index),baseline_info:Ptr_new(arr)}    
 RETURN,struct
 END

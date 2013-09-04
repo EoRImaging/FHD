@@ -1,7 +1,8 @@
 FUNCTION vis_source_model,source_list,obs,psf,params,cal,flag_arr,model_uv_arr=model_uv_arr,file_path=file_path,$
-    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,_Extra=extra
+    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,_Extra=extra
 
 t0=Systime(1)
+IF N_Elements(error) EQ 0 THEN error=0
 IF N_Elements(file_path) EQ 0 THEN file_path=''
 flags_filepath=file_path+'_flags.sav'
 ;vis_filepath=file_path+'_vis.sav'
@@ -108,6 +109,15 @@ psf_residuals_i=psf.res_i
 psf_residuals_val=psf.res_val
 psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
+
+valid_test=fltarr(n_pol)
+FOR pol_i=0,n_pol-1 DO valid_test[pol_i]=Total(Abs(*model_uv_arr[pol_i]))
+IF min(valid_test) EQ 0 THEN BEGIN
+    error=1
+    print,"ERROR: Invalid calibration model."
+    timing=Systime(1)-t0
+    RETURN,vis_arr
+ENDIF
 
 t_degrid=Fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN

@@ -46,7 +46,7 @@ IF file_test(metafits_path) THEN BEGIN
     Precess,zenra,zendec,epoch,2000.    
 ENDIF ELSE BEGIN
     ;use hdr and params to guess metadata
-    
+    print,metafits_path+' not found. Calculating obs settings from the uvfits header instead'
     ;256 tile upper limit is hard-coded in CASA format
     ;these tile numbers have been verified to be correct
     tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1

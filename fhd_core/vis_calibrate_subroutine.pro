@@ -8,8 +8,8 @@ IF n_cal_iter LT 5 THEN print,'Warning! At least 5 calibration iterations recomm
 IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
 IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline
-IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params)
-min_baseline_eqns=2.
+IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
+min_baseline_eqns=2. ;minimum number of calibration equations needed to solve for the gain of one baseline
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq
@@ -169,6 +169,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
     *cal_return.gain[pol_i]=gain_arr
 ENDFOR
+
+vis_count_i=where(*flag_ptr_use[0],n_vis_cal)
+cal_return.n_vis_cal=n_vis_cal
 
 RETURN,cal_return
 END

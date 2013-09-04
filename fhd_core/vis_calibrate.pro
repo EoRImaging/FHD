@@ -64,22 +64,17 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     ENDELSE
 ENDIF
 
-;IF Keyword_Set(calibration_source_list) THEN BEGIN
-;    
-;ENDIF
-
-cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list)
+cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list,_Extra=extra)
 vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,cal,flag_ptr,model_uv_arr=model_ptr,$
-    timing=model_timing,silent=silent,_Extra=extra)
+    timing=model_timing,silent=silent,error=error,_Extra=extra)    
 
+IF Keyword_Set(error) THEN BEGIN
+    timing=Systime(1)-t0_0
+    RETURN,vis_ptr
+ENDIF
 pol_names=['xx','yy','xy','yx']
 
 ;extract information from the structures
-min_baseline=obs.min_baseline
-max_baseline=obs.max_baseline
-IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=min_baseline
-IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=max_baseline
-
 n_pol=cal.n_pol
 n_freq=cal.n_freq
 n_tile=cal.n_tile
