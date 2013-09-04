@@ -1,4 +1,4 @@
-FUNCTION vis_struct_init_obs,header,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
+FUNCTION vis_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,$
@@ -23,11 +23,11 @@ FOR i=1,nb-1 DO bin_width[i]=b0i[i]-b0i[i-1]
 bin_width_c=total(bin_width,/cumulative)
 bin_offset=fltarr(nb) & bin_offset[1:*]=total(bin_width[0:nb-2],/cumulative)    
 
-frequency_array=(findgen(header.n_freq)-header.freq_ref_i)*header.freq_width+header.freq_ref
-IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*header.freq_width  ;Hz
+frequency_array=(findgen(hdr.n_freq)-hdr.freq_ref_i)*hdr.freq_width+hdr.freq_ref
+IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*hdr.freq_width  ;Hz
 freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
 nfreq_bin=N_Elements(freq_hist)
-freq_bin_i=fltarr(header.n_freq)
+freq_bin_i=fltarr(hdr.n_freq)
 FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
 
 IF Keyword_Set(scale_uv) THEN BEGIN
@@ -50,9 +50,9 @@ IF Keyword_Set(rotate_uv) THEN BEGIN
 ENDIF
 
 calibration=fltarr(4)+1.
-IF N_Elements(n_pol) EQ 0 THEN n_pol=header.n_pol
-n_tile=header.n_tile
-n_freq=header.n_freq
+IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
+n_tile=hdr.n_tile
+n_freq=hdr.n_freq
 freq_use=Lonarr(n_freq)+1
 tile_use=Lonarr(n_tile)+1
 n_vis=Float(N_Elements(time))*n_freq
@@ -72,7 +72,6 @@ FOR i0=0,n_tile-1 DO BEGIN
     IF hist_A1[tile_i] GT 0 THEN tile_A[ria[ria[tile_i]:ria[tile_i+1]-1]]=i0+1
     IF hist_B1[tile_i] GT 0 THEN tile_B[rib[rib[tile_i]:rib[tile_i+1]-1]]=i0+1
 ENDFOR
-tile_names=meta.antenna_names
 
 kx_arr=params.uu#frequency_array
 ky_arr=params.vv#frequency_array

@@ -14,7 +14,7 @@ metafits_path=metafits_dir+path_sep()+metafits_name+metafits_ext
 
 time=params.time
 b0i=Uniq(time)
-jdate=double(header.jd0)+time[b0i]
+jdate=double(hdr.jd0)+time[b0i]
 
 IF N_Elements(dimension) EQ 0 THEN dimension=1024.
 IF N_Elements(elements) EQ 0 THEN elements=dimension
@@ -47,16 +47,25 @@ IF file_test(metafits_path) THEN BEGIN
 ENDIF ELSE BEGIN
     ;use hdr and params to guess metadata
     
-    year=Float(Strmid(header.date,0,4))
-    month=Float(Strmid(header.date,5,2))
-    day=Float(Strmid(header.date,8,2))
+    ;256 tile upper limit is hard-coded in CASA format
+    ;these tile numbers have been verified to be correct
+    tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
+    tile_B1=Long(Fix(params.baseline_arr mod 256))
+    hist_A1=histogram(tile_A1,min=0,max=256,/binsize,reverse_ind=ria)
+    hist_B1=histogram(tile_B1,min=0,max=256,/binsize,reverse_ind=rib)
+    hist_AB=hist_A1+hist_B1
+    tile_names=where(hist_AB,n_tile)
+    
+    year=Float(Strmid(hdr.date,0,4))
+    month=Float(Strmid(hdr.date,5,2))
+    day=Float(Strmid(hdr.date,8,2))
     epoch=Double(year+ymd2dn(year,month,day)/365.25)
     IF ~Keyword_Set(time_offset) THEN time_offset=0d
     time_offset/=(24.*3600.)
     JD0=Min(Jdate)+time_offset
     
-    obsra=header.obsra
-    obsdec=header.obsdec
+    obsra=hdr.obsra
+    obsdec=hdr.obsdec
     IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
     IF N_Elements(phasera) EQ 0 THEN phasera=obsra
     IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec

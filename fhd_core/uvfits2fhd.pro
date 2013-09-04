@@ -109,20 +109,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
         RETURN
     ENDIF
     data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
-    ;; testing for export type. If multibeam, then read original header
-    casa_type = strlowcase(strtrim(sxpar(data_header0, 'OBJECT'), 2))
-    if casa_type ne 'multi' then use_calheader = 1 else use_calheader = 0
-    if use_calheader eq 0 then begin
-      IF file_test(header_filepath) EQ 0 THEN uvfits_header_casafix,file_path_vis,file_path_fhd=file_path_fhd
-      RESTORE,header_filepath
-      hdr=vis_header_extract(data_header,header2=data_header0, params = data_struct.params)
-    endif else begin
-      hdr=vis_header_extract(data_header0, params = data_struct.params)
     
-    endelse
-    
+    hdr=vis_header_extract(data_header0, params = data_struct.params)    
     params=vis_param_extract(data_struct.params,hdr)
-    obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
+    obs=vis_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     kbinsize=obs.kpix
     degpix=obs.degpix
     dimension=obs.dimension
