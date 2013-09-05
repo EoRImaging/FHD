@@ -102,7 +102,6 @@ IF Keyword_Set(force_data) THEN data_flag=1
 IF Keyword_Set(force_no_data) THEN data_flag=0
 
 IF Keyword_Set(data_flag) THEN BEGIN
-    ;info_struct=mrdfits(filepath(filename+ext,root_dir=rootdir('mwa'),subdir=data_directory),2,info_header,/silent)
     IF file_test(file_path_vis) EQ 0 THEN BEGIN
         print,"File: "+file_path_vis+" not found! Returning"
         error=1
@@ -116,29 +115,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     kbinsize=obs.kpix
     degpix=obs.degpix
     dimension=obs.dimension
-    
-;    IF Keyword_Set(rephase_to_zenith) THEN BEGIN
-;        obs0=obs
-;        hdr0=hdr
-;        phasera=obs0.obsra
-;        phasedec=obs0.obsdec        
-;        hdr.obsra=obs0.zenra
-;        hdr.obsdec=obs0.zendec
-;        obs.obsx=obs0.zenx
-;        obs.obsy=obs0.zeny
-;        obs=vis_struct_init_obs(hdr,params,meta,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
-;;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs0.zenx,obsy=obs0.zeny,$
-;;            phasera=phasera,phasedec=phasedec,_Extra=extra)
-;;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,obsx=obs.zenx,obsy=obs.zeny,_Extra=extra)
-;        phase_shift=1.
-;;        obs1=vis_struct_init_obs(hdr,params,n_pol=n_pol,phasera=phasera,phasedec=phasedec,_Extra=extra)
-;;        kx_arr=params.uu/kbinsize
-;;        ky_arr=params.vv/kbinsize
-;;        xcen=Float(obs.freq#kx_arr)
-;;        ycen=Float(obs.freq#ky_arr)
-;;        phase_shift=Exp((2.*!Pi*Complex(0,1)/dimension)*((obs.obsx-obs1.obsx)*xcen+(obs.obsy-obs1.obsy)*ycen))
-;;        obs=vis_struct_init_obs(hdr,params,n_pol=n_pol,_Extra=extra)
-;    ENDIF ELSE phase_shift=1.
     
     IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
     
@@ -158,12 +134,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
     print,String(format='("Min baseline: ",A," wavelengths")',Strn(obs.min_baseline))
     print,String(format='("Max baseline: ",A," wavelengths")',Strn(obs.max_baseline))
     print,String(format='("Observation coordinates: ",A," ",A,A)',$
-        Strn(obs.obsra,length=6),(obs.obsdec GE 0) ? '+':'-',Strn(Abs(obs.obsdec),length=5))
+        Strn(obs.obsra,length=7),(obs.obsdec GE 0) ? '+':'-',Strn(Abs(obs.obsdec),length=6))
     print,String(format='("Zenith coordinates: ",A," ",A,A)',$
-        Strn(obs.zenra,length=6),(obs.zendec GE 0) ? '+':'-',Strn(Abs(obs.zendec),length=5))
+        Strn(obs.zenra,length=7),(obs.zendec GE 0) ? '+':'-',Strn(Abs(obs.zendec),length=6))
     IF (obs.phasera NE obs.obsra) OR (obs.phasedec NE obs.obsdec) THEN $
         print,String(format='("Image phased to coordinates: ",A," ",A,A)',$
-            Strn(obs.phasera,length=6),(obs.phasedec GE 0) ? '+':'-',Strn(Abs(obs.phasedec),length=5))
+            Strn(obs.phasera,length=7),(obs.phasedec GE 0) ? '+':'-',Strn(Abs(obs.phasedec),length=6))
     
     IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
     print,String(format='("Spectral index fit: ",A)',Strn(alpha))
@@ -178,11 +154,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     data_array=data_struct.array[*,0:n_pol-1,*]
     data_struct=0. ;free memory
     
-    ;Read in or construct a new beam model. Also sets up the structure PSF
-    print,'Calculating beam model'
-    psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
-    IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
-    
     vis_arr=Ptrarr(n_pol,/allocate)
     flag_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -193,6 +164,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;free memory
     data_array=0 
     flag_arr0=0
+    
+    ;Read in or construct a new beam model. Also sets up the structure PSF
+    print,'Calculating beam model'
+    psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
+    IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     
     IF file_test(flags_filepath) AND ~Keyword_Set(flag) THEN BEGIN
         flag_arr=getvar_savefile(flags_filepath,'flag_arr')
@@ -256,7 +232,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr
-;        SAVE,flag_arr,filename=flags_filepath,/compress
         IF basename EQ transfer_mapfn THEN BEGIN 
             IF Keyword_Set(flag) THEN BEGIN
                 print,'Flagging anomalous data'
@@ -374,7 +349,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
         mask0=fltarr(obs.dimension,obs.elements)
         mask_i=where(*beam[pol_i]*alias_mask GE 0.05)
-;        mask_i=region_grow(*beam[pol_i],Floor(obs.obsx)+obs.dimension*Floor(obs.obsy),thresh=[0.05,max(*beam[pol_i])])
         mask0[mask_i]=1
         beam_mask*=mask0
     ENDFOR

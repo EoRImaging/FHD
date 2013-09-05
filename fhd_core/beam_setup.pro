@@ -58,7 +58,7 @@ IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
 
 ;extract information from the structures
 n_tiles=obs.n_tile
-n_frequencies=obs.n_freq
+n_freq=obs.n_freq
 n_pol=obs.n_pol
 
 tile_A=(*obs.baseline_info).tile_A
