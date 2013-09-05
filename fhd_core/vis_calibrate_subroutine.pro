@@ -6,8 +6,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
 IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=10L
 IF n_cal_iter LT 5 THEN print,'Warning! At least 5 calibration iterations recommended. Using '+Strn(Floor(n_cal_iter))
 IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
-IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
-IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline
+min_cal_baseline=cal.min_cal_baseline
+max_cal_baseline=cal.max_cal_baseline
 IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
 min_baseline_eqns=2. ;minimum number of calibration equations needed to solve for the gain of one baseline
 

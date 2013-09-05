@@ -1,8 +1,7 @@
 FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_ptr=model_ptr,$
-    min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,gain_arr_ptr=gain_arr_ptr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
-    calibration_source_list=calibration_source_list,debug=debug,_Extra=extra
+    calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
