@@ -41,6 +41,13 @@ IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_frequencies,vis_dimen
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
+
+conj_i=where(ky_arr GT 0,n_conj)
+IF n_conj GT 0 THEN BEGIN
+    xcen[*,conj_i]=-xcen[*,conj_i]
+    ycen[*,conj_i]=-ycen[*,conj_i]
+ENDIF
+
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
 xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
@@ -131,6 +138,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5+=t5_1-t5_0
     t1+=t5_1-t1_0 
 ENDFOR
+IF n_conj GT 0 THEN BEGIN
+    visibility_array[*,conj_i]=Conj(visibility_array[*,conj_i])
+ENDIF
 
 IF not Keyword_Set(silent) THEN print,t1,t2,t3,t4,t5
 timing=Systime(1)-t0

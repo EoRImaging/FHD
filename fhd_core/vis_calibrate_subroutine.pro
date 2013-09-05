@@ -1,15 +1,14 @@
-FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,n_cal_iter=n_cal_iter,$
-    min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,reference_tile=reference_tile,$
-    preserve_visibilities=preserve_visibilities,_Extra=extra
-    
+FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,_Extra=extra
 
-IF N_Elements(n_cal_iter) EQ 0 THEN n_cal_iter=10L
-IF n_cal_iter LT 5 THEN print,'Warning! At least 5 calibration iterations recommended. Using '+Strn(Floor(n_cal_iter))
-IF N_Elements(reference_tile) EQ 0 THEN reference_tile=1L
+IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
+reference_tile=cal.ref_antenna
 min_cal_baseline=cal.min_cal_baseline
 max_cal_baseline=cal.max_cal_baseline
-IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
-min_baseline_eqns=2. ;minimum number of calibration equations needed to solve for the gain of one baseline
+min_cal_solutions=cal.min_solns ;minimum number of calibration equations needed to solve for the gain of one baseline
+time_average=cal.time_avg
+max_cal_iter=cal.max_iter
+IF max_cal_iter LT 5 THEN print,'Warning! At least 5 calibration iterations recommended. Using '+Strn(Floor(max_cal_iter))
+conv_thresh=cal.conv_thresh
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq
@@ -75,7 +74,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 
     FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
-        gain_curr=Reform(gain_arr[fi,tile_use])
+        IF fii EQ 0 THEN gain_curr=Reform(gain_arr[fi,tile_use]) ;INTENTIONALLY reuse same gain solution between successive frequency channels
         vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)] 
         vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]
         weight2=Reform(weight[fi,baseline_use]) & weight2=[weight2,weight2]
@@ -100,15 +99,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
 ;        model_matrix_inds=A_ind+Lindgen(n_baseline_use2)*n_tile_use
         
-        phase_fit_iter=Floor(n_cal_iter/4.)
+        phase_fit_iter=Floor(max_cal_iter/4.)
         
         gain_new=Complexarr(n_tile_use)
-        FOR i=0L,(n_cal_iter-1)>1 DO BEGIN
+        conv_test=fltarr(max_cal_iter)
+        FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
 ;            vis_model_matrix[model_matrix_inds]=vis_model2*Conj(gain_curr[B_ind])
             vis_use=vis_data2
             
             vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
-            FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_baseline_eqns THEN $
+            FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN $
                 gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2)
 ;            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
             IF Total(Abs(gain_new)) EQ 0 THEN BEGIN
@@ -126,6 +126,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
             IF nan_test(gain_curr) GT 0 THEN gain_curr[where(Finite(gain_curr,/nan))]=gain_old[where(Finite(gain_curr,/nan))]
             gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
+            conv_test[i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
+            IF i GE 1 THEN $
+                IF conv_test[i] LE conv_thresh THEN BREAK $
+                ELSE IF (conv_test[i]-conv_test[i-1]) LE conv_thresh/2. THEN BREAK
         ENDFOR
         Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr

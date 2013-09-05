@@ -38,9 +38,10 @@ icomp=Complex(0,1)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 IF ~Keyword_Set(uv_mask) THEN uv_mask=Fltarr(dimension,elements)+1
-;uv_i_use=where(uv_mask)
-;xvals=xvals[uv_i_use]
-;yvals=yvals[uv_i_use]
+;only the LOWER half of the u-v plane is used for gridding/degridding. 
+; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half
+uv_mask[*,elements/2+1:*]=0.  
+
 IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 bin_offset=(*obs.baseline_info).bin_offset
