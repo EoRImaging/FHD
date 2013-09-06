@@ -222,7 +222,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
         IF ~Keyword_Set(transfer_calibration) AND ~Keyword_Set(calibration_source_list) THEN $
-            calibration_source_list=generate_source_cal_list(obs.astr,psf,$
+            calibration_source_list=generate_source_cal_list(obs,psf,$
                 catalog_path=calibration_catalog_file_path)
                 
         IF Keyword_Set(calibration_model_subtract) THEN return_cal_model=1
