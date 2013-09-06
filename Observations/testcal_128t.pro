@@ -8,7 +8,7 @@ heap_gc
 calibrate_visibilities=1
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(export_images) EQ 0 THEN export_images=1
-IF N_Elements(cleanup) EQ 0 THEN cleanup=1
+IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version='dcj_2'
 image_filter_fn='' ;applied ONLY to output images
@@ -16,7 +16,6 @@ image_filter_fn='' ;applied ONLY to output images
 IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['128T','test']) $
     ELSE data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
-vis_file_list=file_search(data_directory,'*5448.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
