@@ -377,8 +377,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
         low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
-    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
+;    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
+;        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
     
     instr_low=Min(instr_residual[beam_i])
     instr_high=Max(instr_residual[beam_i])
