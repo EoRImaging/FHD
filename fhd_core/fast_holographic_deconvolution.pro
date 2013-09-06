@@ -15,12 +15,12 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd,obs,psf,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
+PRO fast_holographic_deconvolution,fhd,obs,psf,cal,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,$
-    galaxy_model_fit=galaxy_model_fit,scale_gain=scale_gain,_Extra=extra
-
+    galaxy_model_fit=galaxy_model_fit,scale_gain=scale_gain,model_uv_arr=model_uv_arr,_Extra=extra
+;calibration_model_subtract is passed through the fhd structure
 compile_opt idl2,strictarrsubs  
 
 t00=Systime(1)    
@@ -43,6 +43,7 @@ pol_use=fhd.pol_use
 independent_fit=fhd.independent_fit
 reject_pol_sources=fhd.reject_pol_sources
 sigma_threshold=2.
+calibration_model_subtract=fhd.cal_subtract
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -223,9 +224,19 @@ print,"Initial convergence:",converge_check[0]
 ;ENDIF
 print,"Gain factor used:",fhd.gain_factor
 
+si=0L
+IF Keyword_Set(calibration_model_subtract) THEN BEGIN
+    n_cal_src=cal.n_cal_src
+    si+=n_cal_src
+    IF n_cal_src GT 0 THEN comp_arr[0:n_cal_src-1]=cal.source_list ;if this breaks, use a FOR loop
+    FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]*calibration_model_subtract ;this allows you to subtract less than 100% of the model!
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+    ENDFOR
+ENDIF
+
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
-si=0L
 recalc_flag=1
 t_init=Systime(1)-t00
 FOR i=0L,max_iter-1 DO BEGIN 
