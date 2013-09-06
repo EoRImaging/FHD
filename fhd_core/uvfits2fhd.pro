@@ -228,7 +228,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         IF Keyword_Set(calibration_model_subtract) THEN return_cal_model=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
-             calibration_source_list=calibration_source_list,return_cal_model=return_cal_model,_Extra=extra)
+             calibration_source_list=calibration_source_list,return_cal_model=return_cal_model,silent=silent,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
         IF Keyword_Set(return_cal_model) THEN save,model_uv_arr,filename=file_path_fhd+'_cal_uv.sav'
