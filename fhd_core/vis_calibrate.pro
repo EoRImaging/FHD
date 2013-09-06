@@ -1,7 +1,8 @@
 FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_ptr=model_ptr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
-    calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,_Extra=extra
+    calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,$
+    return_cal_model=return_cal_model,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
@@ -153,10 +154,12 @@ ENDIF
 ;ENDIF ELSE BEGIN
     ;calibration loop
     t2_a=Systime(1)
-    cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,_Extra=extra)
+    IF Keyword_Set(return_cal_model) THEN preserve_visibilities=1
+    cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,_Extra=extra)
     t3_a=Systime(1)
     t2=t2_a-t3_a
-    
+    IF Keyword_Set(return_cal_model) THEN return_cal_model=vis_model_ptr 
+
     vis_cal=vis_calibration_apply(vis_ptr,cal)
     t3=Systime(1)-t3_a
 ;ENDELSE

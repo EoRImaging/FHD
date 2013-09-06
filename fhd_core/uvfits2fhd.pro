@@ -225,7 +225,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 catalog_path=calibration_catalog_file_path)
         vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,$
-             calibration_source_list=calibration_source_list,_Extra=extra)
+             calibration_source_list=calibration_source_list,return_cal_model=return_cal_model,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
     ENDIF
@@ -365,6 +365,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         image_arr=Ptrarr(n_pol,/allocate)
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
+        IF Keyword_Set(return_cal_model) THEN model_uv_arr=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO BEGIN
     ;        IF Keyword_Set(GPU_enable) THEN $
     ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
@@ -373,12 +374,19 @@ IF Keyword_Set(data_flag) THEN BEGIN
             weights_grid=1 ;initialize
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
-                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,_Extra=extra)
+                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,$
+                model_ptr=return_cal_model,model_return=dirty_UV_model,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
             SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
             SAVE,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav',/compress
+            IF Keyword_Set(dirty_UV_model) THEN BEGIN
+                *model_uv_arr[pol_i]=dirty_UV_model
+                dirty_img_model=dirty_image_generate(dirty_UV_model,baseline_threshold=0,degpix=degpix)
+                SAVE,dirty_UV_model,weights_grid,filename=file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav',/compress
+                SAVE,dirty_img_model,filename=file_path_fhd+'_dirty_model_'+pol_names[pol_i]+'.sav',/compress
+            ENDIF
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_arr[pol_i]=Temporary(dirty_img)
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
@@ -398,7 +406,7 @@ IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 T
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
     fhd_wrap,obs,params,psf,fhd,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,$
-        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr
+        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,model_uv_arr=model_uv_arr
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
     IF Keyword_Set(quickview) THEN fhd_quickview,file_path_fhd=file_path_fhd,_Extra=extra
