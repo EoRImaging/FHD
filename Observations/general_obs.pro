@@ -94,7 +94,7 @@ WHILE fi LT n_files DO BEGIN
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
-        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,$
+        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,$
         calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,_Extra=extra
     IF Keyword_Set(cleanup) AND cleanup GT 1 THEN fhd_cleanup,fhd_file_list[fi],/minimal
     IF Keyword_Set(error) THEN BEGIN

@@ -14,7 +14,7 @@ FOR pol_i=0,3 DO BEGIN
     mapfn_filepath=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' & file_path_list=[file_path_list,mapfn_filepath]
 ENDFOR
 
-IF ~Keyword_Set(minimal) THEN BEGIN
+IF not Keyword_Set(minimal) THEN BEGIN
     beams_filepath=file_path_fhd+'_beams.sav' & file_path_list=[file_path_list,beams_filepath]
     hpx_filepath=file_path_fhd+'_hpxcnv.sav' & file_path_list=[file_path_list,hpx_filepath]
 ENDIF ELSE all=0

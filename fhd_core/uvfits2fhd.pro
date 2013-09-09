@@ -30,7 +30,7 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO uvfits2fhd,file_path_vis,export_images=export_images,$
+PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     rephase_to_zenith=rephase_to_zenith,healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
@@ -371,9 +371,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
     ;        ELSE $
             weights_grid=1 ;initialize
+            
+            IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
-                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,_Extra=extra)
+                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
