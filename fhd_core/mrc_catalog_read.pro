@@ -25,7 +25,7 @@ dec=[dec,ten(22,0,52.2)]
 ;names=[names,'Crab']
 flux_error=[flux_error/1000.,-1]
 ns=N_Elements(flux)
-source_comp_init,mrc_cat,n_sources=ns
+source_comp_init,mrc_cat,n_sources=ns,freq=catalog_freq,alpha=spectral_index
 
 IF Keyword_Set(astr) THEN BEGIN
     ra0=astr.crval[0]

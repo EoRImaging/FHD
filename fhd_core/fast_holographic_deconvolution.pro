@@ -222,7 +222,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     i2+=1
     max_sources+=n_cal_src
     
-    source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha
+    source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha,freq=obs.freq_center
     IF n_cal_src GT 0 THEN comp_arr[0:n_cal_src-1]=cal.source_list ;if this breaks, use a FOR loop
     FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]*calibration_model_subtract ;this allows you to subtract less than 100% of the model!
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -242,7 +242,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
     converge_check2[i2]=Stddev(source_find_image[where(source_mask)],/nan)
     print,"Convergence after subtracting input source model:",Strn(converge_check[i2])
-ENDIF ELSE source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha
+ENDIF ELSE source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha,freq=obs.freq_center
 
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
