@@ -224,7 +224,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
         IF not Keyword_Set(transfer_calibration) AND not Keyword_Set(calibration_source_list) THEN $
-            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path)
+            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path,_Extra=extra)
                 
         IF Keyword_Set(calibration_model_subtract) THEN return_cal_model=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$

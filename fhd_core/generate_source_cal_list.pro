@@ -1,6 +1,8 @@
-FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,spectral_index=spectral_index
+FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,spectral_index=spectral_index,$
+    max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,_Extra=extra
 catalog=getvar_savefile(catalog_path,'catalog')
 
+IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
@@ -28,13 +30,22 @@ IF n_use GT 0 THEN BEGIN
     source_list.alpha=spectral_index
 ;    source_list.StoN=catalog.StoN
     
-    src_use=where((x_arr GE 0) AND (x_arr LE dimension-1) AND (y_arr GE 0) AND (y_arr LE elements-1),n_src_use)
+    src_use=where((x_arr GE 0) AND (x_arr LE dimension-1) AND (y_arr GE 0) AND (y_arr LE elements-1) $
+        AND (source_list.flux.I GT calibration_flux_threshold),n_src_use)
     
     source_list=source_list[src_use]
-    order=Reverse(sort(source_list.flux.I))
+    
+    beam=fltarr(dimension,elements)
+    FOR pol_i=0,n_pol-1 DO beam+=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
+    beam=Sqrt(beam/n_pol)
+    influence=source_list.flux.I*beam[source_list.x,source_list.y]
+    
+    order=Reverse(sort(influence))
     source_list=source_list[order]
     source_list.id=Lindgen(n_src_use)
 ENDIF ELSE source_comp_init,source_list,n_sources=n_use,freq=obs.freq_center
 
+IF Keyword_Set(max_calibration_sources) THEN IF N_Elements(source_list) GT max_calibration_sources $
+    THEN source_list=source_list[0:max_calibration_sources-1]
 RETURN,source_list
 END
