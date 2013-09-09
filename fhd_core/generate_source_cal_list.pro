@@ -8,7 +8,7 @@ degpix=obs.degpix
 
 FoV=!RaDeg/obs.kpix
 freq_arr=psf.freq
-freq_use=Mean(freq_arr)
+freq_use=Mean(freq_arr)/1E8
 
 ra0=astr.crval[0]
 dec0=astr.crval[1]
@@ -30,11 +30,10 @@ IF n_use GT 0 THEN BEGIN
     
     src_use=where((x_arr GE 0) AND (x_arr LE dimension-1) AND (y_arr GE 0) AND (y_arr LE elements-1),n_src_use)
     
-    IF n_src_use GT 0 THEN source_list=source_list[src_use]
-
+    source_list=source_list[src_use]
     order=Reverse(sort(source_list.flux.I))
     source_list=source_list[order]
-    source_list.id=Lonarr(n_src_use)
+    source_list.id=Lindgen(n_src_use)
 ENDIF ELSE source_comp_init,source_list,n_sources=n_use,freq=obs.freq_center
 
 RETURN,source_list
