@@ -97,7 +97,7 @@ IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 data_flag=file_test(hdr_filepath) AND file_test(flags_filepath) AND file_test(obs_filepath) AND file_test(params_filepath)
 
 IF Keyword_Set(beam_recalculate) OR Keyword_Set(grid_recalculate) OR $
-    Keyword_Set(mapfn_recalculate) OR ~data_flag THEN data_flag=1 ELSE data_flag=0
+    Keyword_Set(mapfn_recalculate) OR not data_flag THEN data_flag=1 ELSE data_flag=0
 
 IF Keyword_Set(force_data) THEN data_flag=1
 IF Keyword_Set(force_no_data) THEN data_flag=0
@@ -170,8 +170,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
     print,'Calculating beam model'
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
     IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
+    beam=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)
     
-    IF file_test(flags_filepath) AND ~Keyword_Set(flag) THEN BEGIN
+    IF file_test(flags_filepath) AND not Keyword_Set(flag) THEN BEGIN
         flag_arr=getvar_savefile(flags_filepath,'flag_arr')
     ENDIF ELSE BEGIN
         flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
@@ -221,9 +223,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
-        IF ~Keyword_Set(transfer_calibration) AND ~Keyword_Set(calibration_source_list) THEN $
-            calibration_source_list=generate_source_cal_list(obs,psf,$
-                catalog_path=calibration_catalog_file_path)
+        IF not Keyword_Set(transfer_calibration) AND not Keyword_Set(calibration_source_list) THEN $
+            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path)
                 
         IF Keyword_Set(calibration_model_subtract) THEN return_cal_model=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
@@ -343,9 +344,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
         auto_corr[pol_i]=Ptr_new(auto_vals)
     ENDFOR
     SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
-    
-    beam=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)
     
     beam_mask=fltarr(obs.dimension,obs.elements)+1
     alias_mask=fltarr(obs.dimension,obs.elements) 

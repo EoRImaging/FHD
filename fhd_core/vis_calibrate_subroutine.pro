@@ -1,4 +1,5 @@
-FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,_Extra=extra
+FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
+    _Extra=extra
 
 IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
 reference_tile=cal.ref_antenna
@@ -90,7 +91,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 
     FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
-        IF fii EQ 0 THEN gain_curr=Reform(gain_arr[fi,tile_use]) ;INTENTIONALLY reuse same gain solution between successive frequency channels
+        ;Reuse same gain solution between successive frequency channels IF input gains are default values
+        IF fii EQ 0 THEN gain_curr=Reform(gain_arr[fi,tile_use]) 
+        IF Stddev(gain_arr[fi,tile_use]) GT 0 THEN gain_curr=Reform(gain_arr[fi,tile_use]) 
         vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)] 
         vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]
         weight2=Reform(weight[fi,baseline_use]) & weight2=[weight2,weight2]
@@ -112,26 +115,21 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
         ENDFOR
         
-;        vis_model_matrix=Complexarr(n_tile_use,n_baseline_use2)
-;        model_matrix_inds=A_ind+Lindgen(n_baseline_use2)*n_tile_use
-        
         phase_fit_iter=Floor(max_cal_iter/4.)
         
         gain_new=Complexarr(n_tile_use)
         conv_test=fltarr(max_cal_iter)
         FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
-;            vis_model_matrix[model_matrix_inds]=vis_model2*Conj(gain_curr[B_ind])
             vis_use=vis_data2
             
             vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
             FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN $
                 gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2)
-;            gain_new=LA_Least_Squares(vis_model_matrix,vis_use,method=2)
+
             IF Total(Abs(gain_new)) EQ 0 THEN BEGIN
                 gain_curr=gain_new
                 BREAK
             ENDIF
-;            gain_new*=Conj(gain_new[ref_tile_use])/Abs(gain_new[ref_tile_use])
             IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
             IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
                 gain_new*=Mean(Abs(gain_new[where(gain_new)]))*weight_invert(Abs(gain_new)) ;then fit only average amplitude

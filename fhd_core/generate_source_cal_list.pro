@@ -30,6 +30,9 @@ IF n_use GT 0 THEN BEGIN
     
     src_use=where((x_arr GE 0) AND (x_arr LE dimension-1) AND (y_arr GE 0) AND (y_arr LE elements-1),n_src_use)
     IF n_src_use GT 0 THEN source_list=source_list[src_use]
+
+    order=Reverse(sort(source_list.flux.I))
+    source_list=source_list[order]
 ENDIF
 
 RETURN,source_list

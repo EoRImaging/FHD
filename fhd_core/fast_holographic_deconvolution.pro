@@ -190,8 +190,8 @@ t4=0 ;Holographic mapping function
 i2=0. 
 t0=Systime(1)
 
-converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter)))
-converge_check2=Fltarr(max_iter)
+converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter>1))>2)
+converge_check2=Fltarr(max_iter>2)
 
 sm_xmin=(Min(xvals[where(source_mask)])+dimension/2.-smooth_width)>0
 sm_xmax=(Max(xvals[where(source_mask)])+dimension/2.+smooth_width)<(dimension-1)
@@ -204,31 +204,23 @@ source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
 source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
 source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
 
-dirty_image_composite_smooth=fltarr(dimension,elements)
-dirty_image_composite_smooth[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
-    Median(dirty_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-converge_check[0]=(converge_check2[0]=$
-    Stddev(((dirty_image_composite-dirty_image_composite_smooth)*beam_avg)[where(source_mask,n_pix0)],/nan))
-print,"Initial convergence:",converge_check[0]
-;IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-;    dirty_image_composite_smooth_gal=fltarr(dimension,elements)
-;    dirty_image_composite_smooth_gal[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=$
-;        Median((dirty_image_composite-gal_model_composite)[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-;    converge_check_gal=Stddev(((dirty_image_composite-gal_model_composite-dirty_image_composite_smooth_gal)*beam_avg)[where(source_mask,n_pix0)],/nan)
-;    print,"Convergence after subtracting model diffuse galactic emission:",converge_check_gal 
-;    IF converge_check_gal GT converge_check[0] THEN BEGIN
-;        print,"Galactic model not used due to bad fit"
-;        gal_model_composite[*]=0.
-;    ENDIF
-;ENDIF
-print,"Gain factor used:",fhd.gain_factor
+image_filtered=dirty_image_composite
+image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+source_find_image=image_filtered*beam_avg*source_mask
+converge_check[0]=Stddev(source_find_image[where(source_mask)],/nan)
+converge_check2[0]=Stddev(source_find_image[where(source_mask)],/nan)
+print,"Gain factor used:",Strn(fhd.gain_factor)
+print,"Initial convergence:",Strn(converge_check[0])
 
 si=0L
+i0=0L
 IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     print,String(format='("Calibration source model subtracted (",A3,"%)")',Strn(calibration_model_subtract*100.,length=3))
     n_cal_src=cal.n_cal_src
     si+=n_cal_src
-    IF n_cal_src GT max_sources THEN max_sources=n_cal_src
+    i2+=1
+    max_sources+=n_cal_src
     
     source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha
     IF n_cal_src GT 0 THEN comp_arr[0:n_cal_src-1]=cal.source_list ;if this breaks, use a FOR loop
@@ -236,13 +228,27 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
+    model_image_composite=fltarr(dimension,elements)
+    FOR pol_i=0,(n_pol<2)-1 DO BEGIN 
+        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix)
+        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
+        model_image_composite+=model_image
+    ENDFOR
+    
+    image_filtered=dirty_image_composite-model_image_composite
+    image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+    image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+    source_find_image=image_filtered*beam_avg*source_mask
+    converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
+    converge_check2[i2]=Stddev(source_find_image[where(source_mask)],/nan)
+    print,"Convergence after subtracting input source model:",Strn(converge_check[i2])
 ENDIF ELSE source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha
 
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
 recalc_flag=1
 t_init=Systime(1)-t00
-FOR i=0L,max_iter-1 DO BEGIN 
+FOR i=i0,max_iter-1 DO BEGIN 
     IF Keyword_Set(recalc_flag) THEN BEGIN
         t1_0=Systime(1)
         model_image_composite=fltarr(dimension,elements)
@@ -270,7 +276,6 @@ FOR i=0L,max_iter-1 DO BEGIN
         t1+=t2_0-t1_0 
         
         image_filtered=dirty_image_composite-model_image_composite
-;        IF Keyword_Set(galaxy_model_fit) THEN image_use-=gal_model_composite
         image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
         image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
         
