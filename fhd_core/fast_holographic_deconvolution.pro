@@ -108,7 +108,6 @@ model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
 model_uv_stks=Ptrarr(4,/allocate)
 IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
-source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
 
@@ -191,7 +190,7 @@ t4=0 ;Holographic mapping function
 i2=0. 
 t0=Systime(1)
 
-converge_check=Fltarr(Ceil(max_iter/check_iter))
+converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter)))
 converge_check2=Fltarr(max_iter)
 
 sm_xmin=(Min(xvals[where(source_mask)])+dimension/2.-smooth_width)>0
@@ -226,14 +225,18 @@ print,"Gain factor used:",fhd.gain_factor
 
 si=0L
 IF Keyword_Set(calibration_model_subtract) THEN BEGIN
+    print,String(format='("Calibration source model subtracted (",A3,"%)")',Strn(calibration_model_subtract*100.,length=3))
     n_cal_src=cal.n_cal_src
     si+=n_cal_src
+    IF n_cal_src GT max_sources THEN max_sources=n_cal_src
+    
+    source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha
     IF n_cal_src GT 0 THEN comp_arr[0:n_cal_src-1]=cal.source_list ;if this breaks, use a FOR loop
     FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]*calibration_model_subtract ;this allows you to subtract less than 100% of the model!
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
-ENDIF
+ENDIF ELSE source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha
 
 IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 

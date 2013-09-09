@@ -2,7 +2,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
     calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,$
-    return_cal_model=return_cal_model,_Extra=extra
+    return_cal_model=return_cal_model,silent=silent,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc

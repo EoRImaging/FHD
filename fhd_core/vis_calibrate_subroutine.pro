@@ -23,30 +23,46 @@ bin_offset=cal.bin_offset
 n_baselines=bin_offset[1]
 
 kbinsize=obs.kpix
-kx_arr=cal.uu[0:n_baselines-1]/kbinsize ;ignore slight variation with time
-ky_arr=cal.vv[0:n_baselines-1]/kbinsize
-kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
-dist_arr=(freq_arr#kr_arr)*kbinsize
-flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
 
 cal_return=cal
 FOR pol_i=0,n_pol-1 DO cal_return.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 
-tile_A_i=tile_A_i[0:n_baselines-1]
-tile_B_i=tile_B_i[0:n_baselines-1]
 FOR pol_i=0,n_pol-1 DO BEGIN
     gain_arr=*cal.gain[pol_i]
     
-    ;average over time
-    ;the visibilities have dimension nfreq x (n_baselines x n_time), 
-    ; which can be reformed to nfreq x n_baselines x n_time 
-    flag_use=0>Reform(*flag_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
-    IF Keyword_Set(preserve_visibilities) THEN vis_model=Reform(*vis_model_ptr[pol_i],n_freq,n_baselines,n_time) $
-        ELSE vis_model=Reform(Temporary(*vis_model_ptr[pol_i]),n_freq,n_baselines,n_time)
-    vis_model=Total(Temporary(vis_model)*flag_use,3)
-    vis_measured=Reform(*vis_ptr[pol_i],n_freq,n_baselines,n_time)
-    vis_avg=Total(Temporary(vis_measured)*flag_use,3)
-    weight=Total(Temporary(flag_use),3)
+    IF Keyword_Set(time_average) THEN BEGIN
+        ;average over time
+        ;the visibilities have dimension nfreq x (n_baselines x n_time), 
+        ; which can be reformed to nfreq x n_baselines x n_time 
+        tile_A_i=tile_A_i[0:n_baselines-1]
+        tile_B_i=tile_B_i[0:n_baselines-1]
+        flag_use=0>Reform(*flag_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
+        IF Keyword_Set(preserve_visibilities) THEN vis_model=Reform(*vis_model_ptr[pol_i],n_freq,n_baselines,n_time) $
+            ELSE vis_model=Reform(Temporary(*vis_model_ptr[pol_i]),n_freq,n_baselines,n_time)
+        vis_model=Total(Temporary(vis_model)*flag_use,3)
+        vis_measured=Reform(*vis_ptr[pol_i],n_freq,n_baselines,n_time)
+        vis_avg=Total(Temporary(vis_measured)*flag_use,3)
+        weight=Total(Temporary(flag_use),3)
+        
+        kx_arr=cal.uu[0:n_baselines-1]/kbinsize ;ignore slight variation with time
+        ky_arr=cal.vv[0:n_baselines-1]/kbinsize
+        kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
+        dist_arr=(freq_arr#kr_arr)*kbinsize
+        flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
+    ENDIF ELSE BEGIN
+        flag_use=0>*flag_ptr_use[pol_i]<1
+        IF Keyword_Set(preserve_visibilities) THEN vis_model=*vis_model_ptr[pol_i] $
+            ELSE vis_model=Temporary(*vis_model_ptr[pol_i])
+        vis_model=Temporary(vis_model)*flag_use
+        vis_avg=*vis_ptr[pol_i]*flag_use
+        weight=Temporary(flag_use)
+        
+        kx_arr=cal.uu/kbinsize 
+        ky_arr=cal.vv/kbinsize
+        kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
+        dist_arr=(freq_arr#kr_arr)*kbinsize
+        flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
+    ENDELSE
     
     IF n_dist_cut GT 0 THEN weight[flag_dist_cut]=0.
     vis_avg*=weight_invert(weight)
