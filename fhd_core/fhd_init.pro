@@ -4,7 +4,7 @@ FUNCTION fhd_init,obs,restore=restore,pol_use=pol_use,freq_use=freq_use,time_i_u
     mapfn_threshold=mapfn_threshold,baseline_threshold=baseline_threshold,beam_threshold=beam_threshold,add_threshold=add_threshold,$
     polarization_map=polarization_map,polarization_correction=polarization_correction,ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,$
     beam_base=beam_base,beam_correction=beam_correction,independent_fit=independent_fit,reject_pol_sources=reject_pol_sources,$
-    beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius
+    beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,transfer_mapfn=transfer_mapfn
 
 
 IF N_Elements(obs) EQ 0 THEN obs=vis_struct_init_obs()
@@ -29,13 +29,15 @@ IF N_Elements(check_iter) EQ 0 THEN IF max_add_sources EQ 1 THEN check_iter=Roun
 IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q, (U, V) seperately. Otherwise, only I (and U) is fit
 IF N_Elements(reject_pol_sources) EQ 0 THEN reject_pol_sources=0 ;set to exclude source candidates with high Stokes Q/I
 IF N_Elements(calibration_model_subtract) EQ 0 THEN calibration_model_subtract=0. ELSE calibration_model_subtract=Float(calibration_model_subtract)
+IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn='False'
 
 fhd={npol:npol,baseline_threshold:baseline_threshold,$
     beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
     gain_factor:gain_factor,mapfn_interval:mapfn_interval,mapfn_threshold:mapfn_threshold,$
     add_threshold:add_threshold,max_add_sources:max_add_sources,independent_fit:independent_fit,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,smooth_width:smooth_width,$
-    pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,cal_subtract:calibration_model_subtract}
+    pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
+    cal_subtract:calibration_model_subtract}
 
 RETURN,fhd
 END

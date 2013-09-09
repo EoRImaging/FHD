@@ -5,7 +5,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag=flag,$
     transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,force_no_data=force_no_data,$
-    calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
+    calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,_Extra=extra
 
 except=!except
 !except=0 
@@ -26,7 +26,8 @@ IF N_Elements(data_directory) EQ 0 THEN data_directory=$
     rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
 IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 IF StrLowCase(Strmid(vis_file_list[0],3,/reverse)) EQ '.txt' THEN $
-    Textfast,vis_file_list,file_path=vis_file_list,/read,/string
+    vis_file_list=string_list_read(vis_file_list)
+
 IF N_Elements(fhd_file_list) EQ 0 THEN fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 IF N_Elements(healpix_path) EQ 0 THEN healpix_path=$
     fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
@@ -51,6 +52,11 @@ ENDIF
 IF Keyword_Set(recalculate_all) AND (N_Elements(deconvolve) EQ 0) THEN deconvolve=1
 ;IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
+IF size(transfer_mapfn,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_mapfn[0],3,/reverse)) EQ '.txt' THEN $
+    transfer_mapfn=string_list_read(transfer_mapfn,data_directory=data_directory)
+IF N_Elements(transfer_calibration) EQ 0 THEN transfer_calibration=0
+IF size(transfer_calibration,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_calibration[0],3,/reverse)) EQ '.txt' THEN $
+    transfer_calibration=string_list_read(transfer_calibration,data_directory=data_directory)
 
 ;Set up gridding and deconvolution parameters
 IF N_Elements(complex_beam) EQ 0 THEN complex_beam=1
@@ -89,7 +95,7 @@ WHILE fi LT n_files DO BEGIN
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,$
-        calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
+        calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,_Extra=extra
     IF Keyword_Set(cleanup) AND cleanup GT 1 THEN fhd_cleanup,fhd_file_list[fi],/minimal
     IF Keyword_Set(error) THEN BEGIN
         print,'Error encountered!'

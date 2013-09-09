@@ -31,7 +31,7 @@ IF size(cal,/type) NE 8 THEN IF file_test(file_path_fhd+'_cal.sav') EQ 1 THEN RE
     ELSE cal=vis_struct_init_cal(obs,params)
 
 IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
-fhd=fhd_init(obs,calibration_model_subtract=calibration_model_subtract,_Extra=extra)
+fhd=fhd_init(obs,calibration_model_subtract=calibration_model_subtract,transfer_mapfn=transfer_mapfn,_Extra=extra)
 
 n_pol=fhd.npol
 dimension=obs.dimension
