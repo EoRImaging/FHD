@@ -29,6 +29,7 @@ freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reve
 nfreq_bin=N_Elements(freq_hist)
 freq_bin_i=fltarr(hdr.n_freq)
 FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
+freq_center=Median(frequency_array)
 
 IF Keyword_Set(scale_uv) THEN BEGIN
     params.uu*=scale_uv
@@ -100,9 +101,10 @@ arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:fre
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names}
 struct={dimension:Float(dimension),elements:Float(elements),kpix:Float(kbinsize),degpix:Float(degpix),$
     obsra:meta.obsra,obsdec:meta.obsdec,zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,$
-    zenx:meta.zenx,zeny:meta.zeny,lon:meta.lon,lat:meta.lat,alt:meta.alt,pflag:Fix(pflag,type=2),cal:Float(calibration),$
+    zenx:meta.zenx,zeny:meta.zeny,phasera:meta.phasera,phasedec:meta.phasedec,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),$
-    phasera:meta.phasera,phasedec:meta.phasedec,astr:meta.astr,alpha:Float(spectral_index),baseline_info:Ptr_new(arr)}    
+    freq_center:Float(freq_center),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
+    baseline_info:Ptr_new(arr)}    
 RETURN,struct
 END
