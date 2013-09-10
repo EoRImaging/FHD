@@ -44,9 +44,15 @@ IF file_test(metafits_path) THEN BEGIN
     zendec=lat
     epoch=date_conv(date_string)/1000.
     Precess,zenra,zendec,epoch,2000.    
+    
+    beamformer_delays=sxpar(hdr0,'DELAYS')
+    beamformer_delays=Ptr_new(Float(Strsplit(beamformer_delays,',',/extract)))
 ENDIF ELSE BEGIN
     ;use hdr and params to guess metadata
-    print,metafits_path+' not found. Calculating obs settings from the uvfits header instead'
+    print,'### NOTE ###'
+    print,'Metafits file not found! Calculating obs settings from the uvfits header instead'
+    
+;    print,metafits_path+' not found. Calculating obs settings from the uvfits header instead'
     ;256 tile upper limit is hard-coded in CASA format
     ;these tile numbers have been verified to be correct
     tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
@@ -83,6 +89,7 @@ ENDIF ELSE BEGIN
             ENDIF
         ENDELSE
     ENDIF ELSE zenpos2,JD0,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
+    beamformer_delays=Ptr_new()
 ENDELSE
 
 IF Keyword_Set(rephase_to_zenith) THEN BEGIN
@@ -96,7 +103,7 @@ projection_slant_orthographic,astr=astr,degpix=degpix2,obsra=obsra,obsdec=obsdec
 
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),astr:astr,$
-    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny)}
+    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),delays:beamformer_delays}
 
 RETURN,meta
 END
