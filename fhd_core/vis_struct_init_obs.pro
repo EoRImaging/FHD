@@ -77,11 +77,8 @@ ENDFOR
 kx_arr=params.uu#frequency_array
 ky_arr=params.vv#frequency_array
 kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
-IF N_Elements(max_baseline) EQ 0 THEN BEGIN
-    max_baseline=Max(kr_arr)
-    max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr))
-ENDIF ELSE max_baseline_use=max_baseline
-IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)])
+IF N_Elements(max_baseline) EQ 0 THEN max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr)) $
+    ELSE max_baseline_use=max_baseline
 
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
 IF ~Keyword_Set(kbinsize) THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
@@ -93,6 +90,7 @@ IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(element
 degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
 IF N_Elements(max_baseline) EQ 0 THEN $
     max_baseline=Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))
+IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)])
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 
 meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,_Extra=extra)
