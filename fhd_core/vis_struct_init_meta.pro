@@ -37,16 +37,22 @@ IF file_test(metafits_path) THEN BEGIN
     LST=sxpar(hdr0,'LST')
 ;    HA=sxpar(hdr0,'HA')
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
-    date_string=sxpar(hdr0,'DATE-OBS')
-    JD0=date_string_to_julian(date_string)
+    date_obs=sxpar(hdr0,'DATE-OBS')
+    JD0=date_string_to_julian(date_obs)
     
     zenra=LST
     zendec=lat
-    epoch=date_conv(date_string)/1000.
+    epoch=date_conv(date_obs)/1000.
     Precess,zenra,zendec,epoch,2000.    
+    
+    beamformer_delays=sxpar(hdr0,'DELAYS')
+    beamformer_delays=Ptr_new(Float(Strsplit(beamformer_delays,',',/extract)))
 ENDIF ELSE BEGIN
     ;use hdr and params to guess metadata
-    print,metafits_path+' not found. Calculating obs settings from the uvfits header instead'
+    print,'### NOTE ###'
+    print,'Metafits file not found! Calculating obs settings from the uvfits header instead'
+    
+;    print,metafits_path+' not found. Calculating obs settings from the uvfits header instead'
     ;256 tile upper limit is hard-coded in CASA format
     ;these tile numbers have been verified to be correct
     tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
@@ -55,11 +61,10 @@ ENDIF ELSE BEGIN
     hist_B1=histogram(tile_B1,min=0,max=256,/binsize,reverse_ind=rib)
     hist_AB=hist_A1+hist_B1
     tile_names=where(hist_AB,n_tile)
+    date_obs=hdr.date
+    JD0=date_string_to_julian(date_obs)
+    epoch=date_conv(hdr.date)/1000.
     
-    year=Float(Strmid(hdr.date,0,4))
-    month=Float(Strmid(hdr.date,5,2))
-    day=Float(Strmid(hdr.date,8,2))
-    epoch=Double(year+ymd2dn(year,month,day)/365.25)
     IF ~Keyword_Set(time_offset) THEN time_offset=0d
     time_offset/=(24.*3600.)
     JD0=Min(Jdate)+time_offset
@@ -83,7 +88,11 @@ ENDIF ELSE BEGIN
             ENDIF
         ENDELSE
     ENDIF ELSE zenpos2,JD0,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
+    beamformer_delays=Ptr_new()
 ENDELSE
+
+IF Abs(obsra-zenra) LT degpix THEN zenra=obsra
+IF Abs(obsdec-zendec) LT degpix THEN zendec=obsdec
 
 IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     phasera=obsra
@@ -92,11 +101,12 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     obsdec=zendec
 ENDIF
 projection_slant_orthographic,astr=astr,degpix=degpix2,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
-    dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec
+    dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec,$
+    epoch=2000.,JDate=JD0,date_obs=date_obs
 
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),astr:astr,$
-    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny)}
+    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),delays:beamformer_delays}
 
 RETURN,meta
 END

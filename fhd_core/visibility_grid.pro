@@ -78,6 +78,7 @@ ky_arr=params.vv[bi_use]/kbinsize
 
 n_freq1=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
+psf_dim3=psf_dim*psf_dim
 
 image_uv=Complexarr(dimension,elements)
 weights=Complexarr(dimension,elements)
@@ -231,11 +232,11 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     vis_box=vis_arr_use[inds]*freq_norm[freq_i]
     IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
-    box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
+    box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
-    IF Keyword_Set(complex) THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+    IF Keyword_Set(complex) THEN box_matrix_dag=Transpose(Conj(box_matrix)) ELSE box_matrix_dag=Transpose(box_matrix) 
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0   
@@ -264,7 +265,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
         t6a_0=Systime(1)
-        box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/atranspose)
+        box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag))
         t6b_0=Systime(1)
         t6a+=t6b_0-t6a_0
         IF Keyword_Set(grid_uniform_weight) THEN box_arr_map/=vis_n

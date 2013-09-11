@@ -113,7 +113,7 @@ ENDIF
 t2_a=Systime(1)
 cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,_Extra=extra)
 t3_a=Systime(1)
-t2=t2_a-t3_a
+t2=t3_a-t2_a
 
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 t3=Systime(1)-t3_a

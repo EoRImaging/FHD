@@ -6,11 +6,15 @@ FUNCTION mwa_tile_beam_generate,antenna_gain_arr,antenna_beam_arr,obsaz=obsaz,ob
 
 compile_opt idl2,strictarrsubs  
 ;indices of antenna_gain_arr correspond to these antenna locations:
-;12 13 14 15
-;8  9  10 11
-;4  5  6  7
-;0  1  2  3 
-;
+;         N
+;    0  1  2  3
+;    
+;    4  5  6  7  
+;W                E
+;    8  9  10 11   
+;    
+;    12 13 14 15 
+;         S
 ;polarization 0: x, 1: y
 ;angle offset is the rotation of the entire tile in current coordinates in DEGREES
 ; (this should be the rotation between E-W or N-S and Ra-Dec)
@@ -52,9 +56,10 @@ IF Keyword_Set(antenna_beam_arr) THEN IF Keyword_Set(*antenna_beam_arr[0]) THEN 
     tile_beam=tile_beam
     RETURN,tile_beam
 ENDIF
-
-xc_arr=Reform((meshgrid(4,4,1))*antenna_spacing,16) & xc_arr-=Mean(xc_arr) ;dipole east position (meters)
-yc_arr=Reform((meshgrid(4,4,2))*antenna_spacing,16) & yc_arr-=Mean(yc_arr) ;dipole north position (meters)
+xc_arr0=Reform((meshgrid(4,4,1))*antenna_spacing,16)
+xc_arr=xc_arr0-Mean(xc_arr0) ;dipole east position (meters)
+yc_arr0=Reform(Reverse(meshgrid(4,4,2),2)*antenna_spacing,16)
+yc_arr=yc_arr0-Mean(yc_arr0) ;dipole north position (meters)
 zc_arr=Fltarr(16)
 
 term_A=Tan(az*!DtoR)
@@ -66,12 +71,12 @@ az_arr_use=Reform(az_arr,(psf_dim2)^2.)
 
 ;!!!THIS SHOULD REALLY BE READ IN FROM A FILE!!!
 ;beamformer phase setting (meters) 
-IF N_Elements(delay_settings) EQ 0 THEN BEGIN
-    D0_d=xc_arr*sin(za*!DtoR)*Sin(az*!DtoR)+yc_arr*Sin(za*!DtoR)*Cos(az*!DtoR) 
+IF not Ptr_valid(delay_settings) THEN BEGIN
+    D0_d=xc_arr0*sin(za*!DtoR)*Sin(az*!DtoR)+yc_arr0*Sin(za*!DtoR)*Cos(az*!DtoR) 
     D0_d/=299792458.*4.35E-10 ;435 picoseconds is base delay length unit
     D0_d=Round(D0_d) ;round to nearest real delay setting
     D0_d*=299792458D*4.35E-10
-ENDIF ELSE D0_d=delay_settings*299792458.*4.35E-10
+ENDIF ELSE D0_d=*delay_settings*299792458.*4.35E-10
 D0_d=Float(D0_d)
 
 proj_east=Reform(xvals,(psf_dim2)^2.)

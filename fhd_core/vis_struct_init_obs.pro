@@ -77,11 +77,8 @@ ENDFOR
 kx_arr=params.uu#frequency_array
 ky_arr=params.vv#frequency_array
 kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
-IF N_Elements(max_baseline) EQ 0 THEN BEGIN
-    max_baseline=Max(kr_arr)
-    max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr))
-ENDIF ELSE max_baseline_use=max_baseline
-IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)])
+IF N_Elements(max_baseline) EQ 0 THEN max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr)) $
+    ELSE max_baseline_use=max_baseline
 
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
 IF ~Keyword_Set(kbinsize) THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
@@ -93,6 +90,7 @@ IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(element
 degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
 IF N_Elements(max_baseline) EQ 0 THEN $
     max_baseline=Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))
+IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)])
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 
 meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,_Extra=extra)
@@ -101,9 +99,9 @@ arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:fre
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names}
 struct={dimension:Float(dimension),elements:Float(elements),kpix:Float(kbinsize),degpix:Float(degpix),$
     obsra:meta.obsra,obsdec:meta.obsdec,zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,$
-    zenx:meta.zenx,zeny:meta.zeny,phasera:meta.phasera,phasedec:meta.phasedec,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
+    zenx:meta.zenx,zeny:meta.zeny,phasera:meta.phasera,orig_phasedec:meta.phasedec,phasedec:meta.phasedec,orig_phasera:meta.phasera,$
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),$
-    jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),$
+    jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
     baseline_info:Ptr_new(arr)}    
 RETURN,struct

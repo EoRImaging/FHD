@@ -63,6 +63,7 @@ IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
 dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+xcen=(ycen=(dist_test=0))
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1
     ymin[flag_dist_i]=-1
@@ -98,10 +99,11 @@ t4=0
 t5=0
 t6=0
 image_uv_use=image_uv
+psf_dim3=psf_dim*psf_dim
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     ;MUST use double precision!
-;    box_arr=Make_array(psf_dim*psf_dim,psf_dim*psf_dim,type=arr_type)
+;    box_arr=Make_array(psf_dim3,psf_dim3,type=arr_type)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     ind0=inds[0]
     
@@ -117,18 +119,19 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
     
     vis_n=bin_n[bin_i[bi]]
-    box_matrix=Make_array(vis_n,psf_dim*psf_dim,type=arr_type)
+    box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) ;NOTE!!! THIS IS THE TRANSPOSE OF box_matrix IN visibility_grid!!!!
     
-    box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim*psf_dim)
+    box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO BEGIN
-        box_matrix[ii,*]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]     
-    ENDFOR
+;    FOR ii=0L,vis_n-1 DO BEGIN
+;        box_matrix[*,ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]     
+;    ENDFOR
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    vis_box=matrix_multiply(box_arr,box_matrix,/btranspose) ;box_matrix#box_arr
+    vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     

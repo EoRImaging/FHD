@@ -37,7 +37,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,quickview=quickview,$
-    calibration_model_subtract=calibration_model_subtract,_Extra=extra
+    calibration_model_subtract=calibration_model_subtract,no_rephase=no_rephase,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -116,6 +116,29 @@ IF Keyword_Set(data_flag) THEN BEGIN
     kbinsize=obs.kpix
     degpix=obs.degpix
     dimension=obs.dimension
+    pol_dim=hdr.pol_dim
+    freq_dim=hdr.freq_dim
+    real_index=hdr.real_index
+    imaginary_index=hdr.imaginary_index
+    flag_index=hdr.flag_index
+    n_pol=obs.n_pol
+    n_freq=obs.n_freq
+    
+    data_array=Temporary(data_struct.array[*,0:n_pol-1,*])
+    data_struct=0. ;free memory
+    
+    vis_arr=Ptrarr(n_pol,/allocate)
+    flag_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),$
+            Reform(data_array[imaginary_index,pol_i,*,*]));*phase_shift
+        *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
+    ENDFOR
+    ;free memory
+    data_array=0 
+    flag_arr0=0
+    IF not Keyword_Set(no_rephase) THEN IF (obs.phasera NE obs.obsra) OR (obs.phasedec NE obs.obsdec) THEN $
+        vis_arr=visibility_rephase(obs,params,vis_arr)
     
     IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
     
@@ -144,27 +167,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
     print,String(format='("Spectral index fit: ",A)',Strn(alpha))
-    pol_dim=hdr.pol_dim
-    freq_dim=hdr.freq_dim
-    real_index=hdr.real_index
-    imaginary_index=hdr.imaginary_index
-    flag_index=hdr.flag_index
-    n_pol=obs.n_pol
-    n_freq=obs.n_freq
-    
-    data_array=data_struct.array[*,0:n_pol-1,*]
-    data_struct=0. ;free memory
-    
-    vis_arr=Ptrarr(n_pol,/allocate)
-    flag_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),$
-            Reform(data_array[imaginary_index,pol_i,*,*]));*phase_shift
-        *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
-    ENDFOR
-    ;free memory
-    data_array=0 
-    flag_arr0=0
     
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
@@ -173,11 +175,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)
     
-    IF file_test(flags_filepath) AND not Keyword_Set(flag) THEN BEGIN
-        flag_arr=getvar_savefile(flags_filepath,'flag_arr')
-    ENDIF ELSE BEGIN
-        flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
-    ENDELSE
+;    IF file_test(flags_filepath) AND not Keyword_Set(flag) THEN BEGIN
+;        flag_arr=getvar_savefile(flags_filepath,'flag_arr')
+;    ENDIF ELSE BEGIN
+;        flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
+;    ENDELSE
     
     IF Keyword_Set(freq_start) THEN BEGIN
         frequency_array_MHz=freq_arr/1E6

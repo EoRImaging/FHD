@@ -1,7 +1,8 @@
 PRO projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr,valid_i=valid_i,$
     degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
     dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,$
-    zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec
+    zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec,$
+    epoch=epoch,JDate=JDate,date_obs=date_obs
 
 ;extract values from obs
 IF Keyword_Set(obs) THEN BEGIN
@@ -34,6 +35,10 @@ ENDIF ELSE BEGIN
     IF N_Elements(zendec) EQ 0 THEN zendec=obsdec    
 ENDELSE
 
+IF N_Elements(epoch) EQ 0 THEN epoch=2000.
+IF N_Elements(JDate) EQ 0 THEN JDate=Julday(1,1,2000)
+IF N_Elements(date_obs) EQ 0 THEN date_obs='UNKNOWN'
+
 IF Abs(phasera-zenra) GT 90. THEN lon_offset=phasera-((phasera GT zenra) ? 360.:(-360.))-zenra $
     ELSE lon_offset=phasera-zenra
 
@@ -64,7 +69,8 @@ lon_c=phasera
 lat_c=phasedec
 MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
     CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
-    LATPOLE = 0., LONGPOLE = 180.
+    LATPOLE = 0., LONGPOLE = 180.,EQUINOX=epoch,MJD_OBS=JDate-2400000.5,$
+    DATE_OBS=date_obs,NAXIS=[dimension,elements],axes=[1,2]
 
 ad2xy,zenra,zendec,astr,zenx,zeny
 ad2xy,obsra,obsdec,astr,obsx,obsy
