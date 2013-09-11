@@ -19,8 +19,8 @@ IF N_Elements(n_time) EQ 0 THEN n_time=N_Elements(bin_offset)
 IF N_Elements(n_cal_src) EQ 0 THEN n_cal_src=-1
 IF N_Elements(source_list) EQ 0 THEN source_comp_init,source_list,n_sources=n_cal_src,freq=obs.freq_center
 IF N_Elements(galaxy_cal) EQ 0 THEN galaxy_cal=0
-IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline
-IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline
+IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline ELSE min_cal_baseline=min_cal_baseline>obs.min_baseline
+IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline ELSE max_cal_baseline=max_cal_baseline<obs.max_baseline
 IF N_Elements(cal_time_average) EQ 0 THEN cal_time_average=1 ;time average visibilities before calculating calibration solutions by default
 IF N_Elements(min_cal_solutions) EQ 0 THEN min_cal_solutions=5
 IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=10L
