@@ -131,7 +131,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr)) ;box_matrix#box_arr
+    vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
