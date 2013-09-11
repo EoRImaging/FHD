@@ -51,7 +51,7 @@ IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
-IF N_Elements(flag) EQ 0 THEN flag=0.
+IF N_Elements(flag) EQ 0 THEN flag=1.
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
 ;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0

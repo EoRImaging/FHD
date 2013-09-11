@@ -91,6 +91,9 @@ ENDIF ELSE BEGIN
     beamformer_delays=Ptr_new()
 ENDELSE
 
+IF Abs(obsra-zenra) LT obs.degpix THEN zenra=obsra
+IF Abs(obsdec-zendec) LT obs.degpix THEN zendec=obsdec
+
 IF Keyword_Set(rephase_to_zenith) THEN BEGIN
     phasera=obsra
     phasedec=obsdec
