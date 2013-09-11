@@ -1,13 +1,13 @@
 FUNCTION vis_flag_basic,flag_ptr,obs,params,instrument=instrument,tile_flag=tile_flag,freq_flag=freq_flag,$
-    mask_mirror_indices=mask_mirror_indices,n_pol=n_pol,n_freq=n_freq,_Extra=extra
+    mask_mirror_indices=mask_mirror_indices,_Extra=extra
 ;dimensions of flag_arr should be (polarization,freq,baselineXtime)
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
 
 IF N_Elements(obs) GT 0 THEN BEGIN
     tile_names=(*obs.baseline_info).tile_names
 ENDIF
-IF N_Elements(n_pol) EQ 0 THEN n_pol=N_Elements(flag_ptr)
-IF N_Elements(n_freq) EQ 0 THEN n_freq=(size(*flag_ptr[0],/dimension))[0]
+n_pol=obs.n_pol
+n_freq=obs.n_freq
 
 IF Keyword_Set(mask_mirror_indices) AND Keyword_Set(params) THEN BEGIN
     conj_i=where(params.uu GT 0,n_conj)
@@ -29,7 +29,7 @@ CASE instrument OF
         ENDFOR
     END
     'mwa':BEGIN
-        freq_avg=768./n_freq
+        freq_avg=Round(768./n_freq)
         channel_edge_flag_width=2./freq_avg
         coarse_channel_width=32./freq_avg
         fine_channel_i=lindgen(n_freq) mod coarse_channel_width
