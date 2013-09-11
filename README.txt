@@ -13,11 +13,13 @@ Contents:
 
 3a Program control
 
-3b Gridding
+3b Calibration
 
-3c Deconvolution
+3c Gridding
 
-3d Output
+3d Deconvolution
+
+3e Output
 
 
 1 Overview 
@@ -70,11 +72,26 @@ version=0 ; Add a version number to the output data directory. Used only in the 
 vis_file_list ; Typically supplied by the observation wrapper. Can be a string array containing the full file paths of the uvfits files to deconvolve OR can be the filepath to a text file (must end .txt), which contains the full filepaths of the visibilities.
 
 
-3b Gridding options
+3b Calibration options
 
 Calibrate_visibilities ; Set to calculate new calibration solutions
 
 Calibration_catalog_file_path ; catalog of point sources to use for calibration
+
+max_calibration_sources ; Maximum number of calibration sources to use from catalog
+
+min_cal_baseline ; Minimum baseline length to use for calculating calibration solution
+
+max_cal_baseline ; Maximum baseline length to use for calculating calibration solution
+
+calibration_model_subtract ; subtract the calibration model from the data before proceeding to gridding and deconvolution
+
+max_cal_iter=10 ; Maximum calibration iterations
+
+Transfer_calibration ; File path of calibration solution to apply. Allowed formats are .sav files with an FHD cal structure, text files, and numpy arrays (not yet supported)
+
+
+3c Gridding options
 
 dimension=1024. 	; Image size, in pixels, used during deconvolution 
 
@@ -100,11 +117,10 @@ Rephase_to_zenith=0 ;Set to correct a zenith observation that was re-phased to a
 
 Tile_flag_list ; Numeric list of tiles to flag (Index starts at 1!)
 
-Transfer_calibration ; File path of calibration solution to apply. Allowed formats are .sav files with an FHD cal structure, text files, and numpy arrays (not yet supported)
 transfer_mapfn=0 ; use a specific mapping function (specified as a string containing the full file path) for deconvolution, and do not calculate a new one. If set to 1 and a list of uvfits files are given, it will calculate the mapping function for the first file and transfer that mapping function for the rest of the files. 
 
 
-3c Deconvolution options
+3d Deconvolution options
 
 add_threshold=0.8 ; When fitting source components, fit all sources brighter than this fraction of the brightest pixel
 
@@ -131,7 +147,7 @@ Sigma_cut=2 ; only include source components detected with signal to noise great
 Smooth_width=7; width of median filter to use to highlight point sources
 
 
-3d Output options
+3e Output options
 
 Combine_healpix; Set to regrid all supplied snapshots to HEALPix after deconvolution, and create combined maps. Also creates a source list structure 
 
