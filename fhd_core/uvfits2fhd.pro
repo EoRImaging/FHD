@@ -51,7 +51,7 @@ IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
-IF N_Elements(flag) EQ 0 THEN flag=1.
+IF N_Elements(flag) EQ 0 THEN flag=0.
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
 ;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
@@ -175,11 +175,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)
     
-    IF file_test(flags_filepath) AND not Keyword_Set(flag) THEN BEGIN
-        flag_arr=getvar_savefile(flags_filepath,'flag_arr')
-    ENDIF ELSE BEGIN
-        flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
-    ENDELSE
+;    IF file_test(flags_filepath) AND not Keyword_Set(flag) THEN BEGIN
+;        flag_arr=getvar_savefile(flags_filepath,'flag_arr')
+;    ENDIF ELSE BEGIN
+;        flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
+;    ENDELSE
     
     IF Keyword_Set(freq_start) THEN BEGIN
         frequency_array_MHz=freq_arr/1E6

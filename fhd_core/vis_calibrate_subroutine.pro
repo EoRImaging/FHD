@@ -153,19 +153,19 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain_freq_test=Median(Abs(gain_arr[*,tile_use]),dimension=2)
     gain_tile_test=Median(Abs(gain_arr[freq_use,*]),dimension=1)
     
-    sigma_threshold=5.
-    tile_mask=fltarr(n_tile) & tile_mask[tile_use]=1
-    freq_mask=fltarr(n_freq) & freq_mask[freq_use]=1
-    gain_arr_sub=extract_subarray(Abs(gain_arr),freq_use,tile_use)
-    gain_vals=gain_arr_sub[sort(gain_arr_sub)]
-    n_vals=N_Elements(gain_vals)
-    sigma_use=stddev(gain_vals[n_vals/4.:(3.*n_vals/4.)],/nan,/double)
-    tile_use=where((Abs(gain_tile_test-Median(gain_tile_test[tile_use])) LE sigma_threshold*sigma_use) AND tile_mask,$
-        n_tile_use,complement=tile_cut,ncomplement=n_tile_cut)
-    IF n_tile_cut GT 0 THEN tile_mask[tile_cut]=0
-    freq_use=where((Abs(gain_freq_test-Median(gain_freq_test[freq_use])) LE sigma_threshold*sigma_use) AND freq_mask,$
-        n_freq_use,complement=freq_cut,ncomplement=n_freq_cut)
-    IF n_freq_cut GT 0 THEN freq_mask[freq_cut]=0
+;    sigma_threshold=10.
+;    tile_mask=fltarr(n_tile) & tile_mask[tile_use]=1
+;    freq_mask=fltarr(n_freq) & freq_mask[freq_use]=1
+;    gain_arr_sub=extract_subarray(Abs(gain_arr),freq_use,tile_use)
+;    gain_vals=gain_arr_sub[sort(gain_arr_sub)]
+;    n_vals=N_Elements(gain_vals)
+;    sigma_use=stddev(gain_vals[n_vals/4.:(3.*n_vals/4.)],/nan,/double)
+;    tile_use=where((Abs(gain_tile_test-Median(gain_tile_test[tile_use])) LE sigma_threshold*sigma_use) AND tile_mask,$
+;        n_tile_use,complement=tile_cut,ncomplement=n_tile_cut)
+;    IF n_tile_cut GT 0 THEN tile_mask[tile_cut]=0
+;    freq_use=where((Abs(gain_freq_test-Median(gain_freq_test[freq_use])) LE sigma_threshold*sigma_use) AND freq_mask,$
+;        n_freq_use,complement=freq_cut,ncomplement=n_freq_cut)
+;    IF n_freq_cut GT 0 THEN freq_mask[freq_cut]=0
     
     IF n_tile_cut GT 0 THEN BEGIN
         gain_arr[*,tile_cut]=1.
