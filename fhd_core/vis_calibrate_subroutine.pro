@@ -166,16 +166,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    freq_use=where((Abs(gain_freq_test-Median(gain_freq_test[freq_use])) LE sigma_threshold*sigma_use) AND freq_mask,$
 ;        n_freq_use,complement=freq_cut,ncomplement=n_freq_cut)
 ;    IF n_freq_cut GT 0 THEN freq_mask[freq_cut]=0
-    
-    IF n_tile_cut GT 0 THEN BEGIN
-        gain_arr[*,tile_cut]=1.
-        tile_cut_full=tile_cut#Replicate(1.,n_time)+Replicate(1.,n_tile_cut)#bin_offset
-        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[*,tile_cut_full]=0
-    ENDIF
-    IF n_freq_cut GT 0 THEN BEGIN
-        gain_arr[freq_cut,*]=1.
-        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[freq_cut,*]=0
-    ENDIF
+;    
+;    IF n_tile_cut GT 0 THEN BEGIN
+;        gain_arr[*,tile_cut]=1.
+;        tile_cut_full=tile_cut#Replicate(1.,n_time)+Replicate(1.,n_tile_cut)#bin_offset
+;        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[*,tile_cut_full]=0
+;    ENDIF
+;    IF n_freq_cut GT 0 THEN BEGIN
+;        gain_arr[freq_cut,*]=1.
+;        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[freq_cut,*]=0
+;    ENDIF
     
     nan_i=where(Finite(gain_arr,/nan),n_nan)
     IF n_nan GT 0 THEN BEGIN
