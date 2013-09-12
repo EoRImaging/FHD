@@ -2,7 +2,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
     calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,$
-    return_cal_model=return_cal_model,silent=silent,_Extra=extra
+    return_cal_model=return_cal_model,silent=silent,initial_calibration=initial_calibration,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
@@ -67,17 +67,21 @@ ENDIF
 cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list,_Extra=extra)
 CASE size(initial_calibration,/type) OF
     0:;do nothing if undefined
+    
     7:BEGIN
         file_path_use=initial_calibration
         IF StrLowCase(Strmid(file_path_use,0,3,/reverse_offset)) NE 'sav' THEN file_path_use+='.sav'
         IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=file_dirname(file_path_fhd))
-        cal_init=getvar_savefile(file_path_use,'cal')
-        cal.gain=cal_init.gain
+        IF file_test(file_path_use) THEN BEGIN
+            cal_init=getvar_savefile(file_path_use,'cal')
+            cal.gain=cal_init.gain
+        ENDIF
     END
     8:cal.gain=initial_calibration.gain
     10:cal.gain=initial_calibration
-    ELSE:
+    ELSE:IF Keyword_Set(initial_calibration) THEN initial_calibration=file_path_fhd+'_cal' ;if set to a numeric type, assume this calibration solution will be wanted for future iterations
 ENDCASE
+IF size(initial_calibration,/type) EQ 7 THEN print,'Using initial calibration solution from '+initial_calibration ;put here to catch the ELSE statement
 
 vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,cal,flag_ptr,model_uv_arr=model_uv_arr,$
     timing=model_timing,silent=silent,error=error,_Extra=extra)    
