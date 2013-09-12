@@ -24,5 +24,11 @@ obs.zenx-=dx
 obs.zeny-=dy
 obs.phasera=obs.obsra
 obs.phasedec=obs.obsdec
+
+astr=obs.astr
+astr.crpix=[obs.obsx,obs.obsy]
+astr.crval=[obs.obsra,obs.obsdec]
+obs.astr=astr
+
 RETURN,vis_arr_out
 END
