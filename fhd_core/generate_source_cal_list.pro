@@ -1,4 +1,4 @@
-FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,spectral_index=spectral_index,$
+FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,_Extra=extra
 catalog=getvar_savefile(catalog_path,'catalog')
 
@@ -26,9 +26,9 @@ IF n_use GT 0 THEN BEGIN
     ad2xy,source_list.ra,source_list.dec,astr,x_arr,y_arr
     source_list.x=x_arr
     source_list.y=y_arr
-    IF N_Elements(spectral_index) EQ 0 THEN spectral_index=catalog.alpha
-    FOR i=0,7 DO source_list.flux.(i)=catalog.flux.(i)*(freq_use/catalog.freq)^spectral_index
-    source_list.alpha=spectral_index
+    IF N_Elements(calibration_spectral_index) EQ 0 THEN calibration_spectral_index=catalog.alpha
+    FOR i=0,7 DO source_list.flux.(i)=catalog.flux.(i)*(freq_use/catalog.freq)^calibration_spectral_index
+    source_list.alpha=calibration_spectral_index
 ;    source_list.StoN=catalog.StoN
     
     src_use=where((x_arr GE 0) AND (x_arr LE dimension-1) AND (y_arr GE 0) AND (y_arr LE elements-1) $
