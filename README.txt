@@ -21,6 +21,8 @@ Contents:
 
 3e Output
 
+4 Example FHD runs - coming soon!
+
 
 1 Overview 
 FHD is an imaging algorithm for radio interferometers. It uses the full complex gain for every baseline for gridding, and pre-computes the uv-plane covariance matrix (the Holographic Mapping function). In its current implementation, FHD follows a centroided matched pursuit algorithm for deconvolving point sources. While FHD does not refer back to the visibilities once they have been gridded to a dirty image, it is still properly classified as a visibility-based subtraction algorithm since sources are forward-modeled through the mapping function. 
@@ -74,21 +76,27 @@ vis_file_list ; Typically supplied by the observation wrapper. Can be a string a
 
 3b Calibration options
 
-Calibrate_visibilities ; Set to calculate new calibration solutions
+calibrate_visibilities ; Set to calculate new calibration solutions
 
-Calibration_catalog_file_path ; catalog of point sources to use for calibration
+calibration_catalog_file_path ; catalog of point sources to use for calibration
 
 max_calibration_sources ; Maximum number of calibration sources to use from catalog
+
+calibration_flux_threshold=0 ; Minimum source flux to use for calibration.
+
+calibration_spectral_index ; Set to a number to use as spectral index and override any catalog value(s).
 
 min_cal_baseline ; Minimum baseline length to use for calculating calibration solution
 
 max_cal_baseline ; Maximum baseline length to use for calculating calibration solution
 
-calibration_model_subtract ; subtract the calibration model from the data before proceeding to gridding and deconvolution
+calibration_model_subtract=0 ; subtract the calibration model from the data before proceeding to deconvolution. Set to fraction of model to subtract (e.g. 0.5 for 50%)
 
 max_cal_iter=10 ; Maximum calibration iterations
 
 Transfer_calibration ; File path of calibration solution to apply. Allowed formats are .sav files with an FHD cal structure, text files, and numpy arrays (not yet supported)
+
+initial_calibration ; Set to string of obsid or filepath of cal.sav file to initiate the calibration to previous solution before calibration loop. In other words, point to an initial guess for the algorithm.
 
 
 3c Gridding options
@@ -146,6 +154,10 @@ Sigma_cut=2 ; only include source components detected with signal to noise great
 
 Smooth_width=7; width of median filter to use to highlight point sources
 
+generate_calibration_catalog.pro ; This is an independent program (not an option to FHD) which will take the output source list from an FHD run and produce a calibration catalog for future calibration.
+
+Generating calibration catalog from FHD output:
+This is NOT an option to be passed into FHD, but rather an independent program to produce a calibration catalog from and FHD output source list. Simply run:
 
 3e Output options
 
