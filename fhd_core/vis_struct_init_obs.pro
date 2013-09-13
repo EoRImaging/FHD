@@ -96,7 +96,7 @@ kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,_Extra=extra)
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
-    freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names}
+    freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
 struct={dimension:Float(dimension),elements:Float(elements),kpix:Float(kbinsize),degpix:Float(degpix),$
     obsra:meta.obsra,obsdec:meta.obsdec,zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,$
     zenx:meta.zenx,zeny:meta.zeny,phasera:meta.phasera,orig_phasedec:meta.phasedec,phasedec:meta.phasedec,orig_phasera:meta.phasera,$

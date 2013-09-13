@@ -24,12 +24,20 @@ IF N_Elements(obsy) EQ 0 THEN obsy=elements/2.
 degpix2=[degpix,degpix]
 IF Keyword_Set(mirror_X) THEN degpix2[0]*=-1
 IF Keyword_Set(mirror_Y) THEN degpix2[1]*=-1
+n_pol=hdr.n_pol
 
 IF file_test(metafits_path) THEN BEGIN
     hdr0=headfits(metafits_path,exten=0,/silent)
     
     data=mrdfits(metafits_path,1,hdr1,/silent)
+    pol_names=data.pol
+    single_i=where(pol_names EQ pol_names[0],n_single)
     tile_names=data.tile
+    tile_names=tile_names[single_i]
+    tile_height=data.height
+    tile_height=tile_height[single_i]-alt
+    tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(data(single_i+pol_i).flag)
+    
     obsra=sxpar(hdr0,'RA')
     obsdec=sxpar(hdr0,'Dec')
     phasera=sxpar(hdr0,'RAPHASE')
@@ -61,6 +69,8 @@ ENDIF ELSE BEGIN
     hist_B1=histogram(tile_B1,min=0,max=256,/binsize,reverse_ind=rib)
     hist_AB=hist_A1+hist_B1
     tile_names=where(hist_AB,n_tile)
+    tile_height=Fltarr(n_tile)
+    tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(intarr(n_tile))
     date_obs=hdr.date
     JD0=date_string_to_julian(date_obs)
     epoch=date_conv(hdr.date)/1000.
@@ -106,7 +116,8 @@ projection_slant_orthographic,astr=astr,degpix=degpix2,obsra=obsra,obsdec=obsdec
 
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),astr:astr,$
-    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),delays:beamformer_delays}
+    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),delays:beamformer_delays,tile_height:Float(tile_height),$
+    tile_flag:tile_flag}
 
 RETURN,meta
 END
