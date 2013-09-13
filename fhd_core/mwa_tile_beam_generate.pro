@@ -93,9 +93,6 @@ D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 groundplane=2.*Sin(Cos(za_arr_use*!DtoR)*(Kconv*(antenna_height)))
 groundplane=Reform(groundplane,psf_dim2,psf_dim2)
 
-;fudge_factor=0.5
-;groundplane=Max(groundplane)*(1-fudge_factor)+groundplane*fudge_factor
-
 projection=1.
 
 ;leakage_xtoy=0.
@@ -113,10 +110,6 @@ dipole_gain_arr=Exp(-ii*Kconv*D_d*!DtoR)
 ;horizon_test=where(abs(za_arr_use) GE 90.,n_horizon_test)
 ;horizon_mask=fltarr(psf_dim2,psf_dim2)+1
 ;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
-
-;horizon_test=Region_grow(za_arr,psf_dim2*(1.+psf_dim2)/2.,thresh=[0,89.])
-;horizon_mask=fltarr(psf_dim2,psf_dim2)
-;horizon_mask[horizon_test]=1.
 
 IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(16,/allocate)
 FOR i=0,15 DO BEGIN
