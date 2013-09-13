@@ -83,7 +83,7 @@ CASE size(initial_calibration,/type) OF
 ENDCASE
 IF size(initial_calibration,/type) EQ 7 THEN print,'Using initial calibration solution from '+initial_calibration ;put here to catch the ELSE statement
 
-vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,cal,flag_ptr,model_uv_arr=model_uv_arr,$
+vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,$
     timing=model_timing,silent=silent,error=error,_Extra=extra)    
 t1=Systime(1)-t0_0
 

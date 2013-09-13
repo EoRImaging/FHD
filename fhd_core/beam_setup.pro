@@ -123,9 +123,9 @@ Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs
 za_arr=fltarr(psf_dim2,psf_dim2)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 
-IF Abs(obs.obsra-obs.zenra) GT 90. THEN $
-    lon_offset=obs.obsra-((obs.obsra GT obs.zenra) ? 360.:(-360.))-obs.zenra ELSE lon_offset=obs.obsra-obs.zenra
-lat_offset=-(obs.zendec-obs.obsdec)
+;IF Abs(obs.obsra-obs.zenra) GT 90. THEN $
+;    lon_offset=obs.obsra-((obs.obsra GT obs.zenra) ? 360.:(-360.))-obs.zenra ELSE lon_offset=obs.obsra-obs.zenra
+;lat_offset=-(obs.zendec-obs.obsdec)
 xvals3=za_arr*Sin(az_arr*!DtoR)
 yvals3=za_arr*Cos(az_arr*!DtoR)
 
