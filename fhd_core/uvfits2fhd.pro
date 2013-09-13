@@ -173,7 +173,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
     IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     beam=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)
+    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
     
 ;    IF file_test(flags_filepath) AND not Keyword_Set(flag) THEN BEGIN
 ;        flag_arr=getvar_savefile(flags_filepath,'flag_arr')

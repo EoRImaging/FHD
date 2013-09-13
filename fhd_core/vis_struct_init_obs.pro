@@ -6,7 +6,7 @@ FUNCTION vis_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
-IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=32. & nfreq_avg=Long(nfreq_avg)
+IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=1. & nfreq_avg=Long(nfreq_avg)
 IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 
 time=params.time

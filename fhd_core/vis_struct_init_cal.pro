@@ -25,6 +25,7 @@ IF N_Elements(cal_time_average) EQ 0 THEN cal_time_average=1 ;time average visib
 IF N_Elements(min_cal_solutions) EQ 0 THEN min_cal_solutions=5
 IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=10L
 IF N_Elements(ref_antenna) EQ 0 THEN ref_antenna=1L
+ref_antenna_name=(*obs.baseline_info).tile_names[ref_antenna]
 IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-3
 IF N_Elements(calibration_origin) EQ 0 THEN calibration_origin='Calibration not transferred'
 
@@ -37,7 +38,7 @@ ENDIF
 cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,$
     tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,n_cal_src:n_cal_src,$
     galaxy_cal:galaxy_cal,min_cal_baseline:min_cal_baseline,max_cal_baseline:max_cal_baseline,n_vis_cal:n_vis_cal,$
-    time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,conv_thresh:cal_convergence_threshold,$
-    cal_origin:calibration_origin}
+    time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,ref_antenna_name:ref_antenna_name,$
+    conv_thresh:cal_convergence_threshold,cal_origin:calibration_origin}
 RETURN,cal_struct
 END

@@ -69,7 +69,6 @@ yc=term_A*xc
 za_arr_use=Reform(za_arr,(psf_dim2)^2.)
 az_arr_use=Reform(az_arr,(psf_dim2)^2.)
 
-;!!!THIS SHOULD REALLY BE READ IN FROM A FILE!!!
 ;beamformer phase setting (meters) 
 IF not Ptr_valid(delay_settings) THEN BEGIN
     D0_d=xc_arr0*sin(za*!DtoR)*Sin(az*!DtoR)+yc_arr0*Sin(za*!DtoR)*Cos(az*!DtoR) 
@@ -77,14 +76,18 @@ IF not Ptr_valid(delay_settings) THEN BEGIN
     D0_d=Round(D0_d) ;round to nearest real delay setting
     D0_d*=299792458D*4.35E-10
 ENDIF ELSE D0_d=*delay_settings*299792458.*4.35E-10
-D0_d=Float(D0_d)
+D0_d=Float(D0_d);*Kconv*!Radeg
 
-proj_east=Reform(xvals,(psf_dim2)^2.)
-proj_north=Reform(yvals,(psf_dim2)^2.)
+;proj_east=Reform(xvals,(psf_dim2)^2.)
+;proj_north=Reform(yvals,(psf_dim2)^2.)
+;proj_z=Cos(za_arr_use*!DtoR)
+
+proj_east=Sin(za_arr_use*!DtoR)*Sin(az_arr_use*!DtoR)
+proj_north=Sin(za_arr_use*!DtoR)*Cos(az_arr_use*!DtoR)
 proj_z=Cos(za_arr_use*!DtoR)
 
 ;phase of each dipole for the source (relative to the beamformer settings)
-D_d=(proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d*!Radeg);/Kconv
+D_d=(proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d);/Kconv
 D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 
 ;groundplane=2.*Sin(Cos(za_arr_use*!DtoR)#(Kconv*(antenna_height+zc_arr))) ;looks correct
@@ -104,7 +107,8 @@ ii=Complex(0,1)
 ;;IF polarization EQ 0 THEN pol=(1.-((xvals*!DtoR-xc)^2.)/2.)>0. ELSE pol=(1.-((yvals*!DtoR-yc)^2.)/2.)>0.
 
 ;dipole_gain_arr=groundplane*projection*Exp(-ii*Kconv*D_d*!DtoR)
-dipole_gain_arr=Exp(-ii*Kconv*D_d*!DtoR)
+dipole_gain_arr=Exp(-ii*Kconv*D_d)
+;dipole_gain_arr=Exp(-ii*Kconv*D_d*!DtoR)
 
 ;dipole_gain_arr=groundplane*projection*Exp(-ii*D_d*!DtoR)
 ;horizon_test=where(abs(za_arr_use) GE 90.,n_horizon_test)

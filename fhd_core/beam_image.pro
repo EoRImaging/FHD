@@ -22,12 +22,12 @@ compile_opt idl2,strictarrsubs
 psf_base_ptr=psf.base
 IF N_Elements(dimension) EQ 0 THEN dimension=obs.dimension
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF tag_exist(psf,'dim') THEN psf_dim=psf.dim ELSE psf_dim=Sqrt((size(*psf_base_ptr[0,0,0,0],/dimension))[0])
-IF tag_exist(psf,'resolution') THEN psf_res=psf.resolution ELSE psf_res=(size(psf_base_ptr,/dimension))[2]
-IF tag_exist(psf,'n_pol') THEN n_pol=psf.n_pol ELSE n_pol=(size(psf_base_ptr,/dimension))[0]
-IF tag_exist(psf,'n_freq') THEN n_freq=psf.n_freq ELSE n_freq=(size(psf_base_ptr,/dimension))[1]
-IF tag_exist(psf,'pnorm') THEN pol_norm=psf.pnorm ELSE pol_norm=replicate(1.,n_pol)
-IF tag_exist(psf,'fnorm') THEN freq_norm=psf.fnorm ELSE freq_norm=replicate(1.,n_freq)
+psf_dim=psf.dim
+psf_res=psf.resolution
+n_pol=psf.n_pol
+n_freq=psf.n_freq
+pol_norm=psf.pnorm
+freq_norm=psf.fnorm
 rbin=0;psf_res/2
 xl=dimension/2.-Floor(psf_dim/2.)+1
 xh=dimension/2.-Floor(psf_dim/2.)+psf_dim
@@ -115,18 +115,8 @@ beam_base=real_part(beam_base)
 ;IF Keyword_Set(obs) THEN beam_test=beam_base[obs.obsx,obs.obsy] ELSE beam_test=Max(beam_base)
 beam_test=Max(beam_base)
 ;since this form of the beam is only an approximation (should be individually applied to each frequency), ensure that the normalization is preserved
-IF tag_exist(psf,'norm') THEN BEGIN
-    CASE pol_i OF 
-        0:BEGIN pol_i1=0 & pol_i2=0 & END
-        1:BEGIN pol_i1=1 & pol_i2=1 & END
-        2:BEGIN pol_i1=0 & pol_i2=1 & END
-        3:BEGIN pol_i1=1 & pol_i2=0 & END
-    ENDCASE
-    norm=psf.norm[pol_i1]*psf.norm[pol_i2];[dimension/2.,elements/2.]
-    IF Keyword_Set(square) THEN norm=norm^2.
-    beam_base*=norm/beam_test
-ENDIF ELSE BEGIN
-    beam_base*=pol_norm[pol_i]/beam_test
-ENDELSE
+
+IF Keyword_Set(square) THEN beam_base*=pol_norm[pol_i]^2./beam_test ELSE beam_base*=pol_norm[pol_i]/beam_test
+
 RETURN,beam_base
 END

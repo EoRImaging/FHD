@@ -85,7 +85,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
     
     ref_tile_use=Min(where(reference_tile EQ tile_use))
-    IF ref_tile_use EQ -1 THEN ref_tile_use=0L
+    IF ref_tile_use EQ -1 THEN BEGIN
+        ref_tile_use=0L
+        cal.ref_antenna=tile_use[ref_tile_use]
+        cal.ref_antenna_name=(*obs.baseline_info).tile_names[cal.ref_antenna]
+    ENDIF
     nan_i=where(Finite(vis_avg,/nan),n_nan)
     IF n_nan GT 0 THEN vis_model[nan_i]=(vis_avg[nan_i]=0)
 
