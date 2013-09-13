@@ -58,7 +58,7 @@ n_freq_bin=N_Elements(freq_bin_i)
 
 vis_dimension=Float(nbaselines*n_samples)
 n_sources=N_Elements(source_list)
-IF Arg_present(cal) THEN BEGIN
+IF N_Elements(cal) NE 0 THEN BEGIN
     cal.n_cal_src=n_sources
     cal.galaxy_cal=Keyword_Set(galaxy_calibrate)
 ENDIF
