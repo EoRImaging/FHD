@@ -137,8 +137,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;free memory
     data_array=0 
     flag_arr0=0
-    IF not Keyword_Set(no_rephase) THEN IF (obs.phasera NE obs.obsra) OR (obs.phasedec NE obs.obsdec) THEN $
-        vis_arr=visibility_rephase(obs,params,vis_arr)
+;    IF not Keyword_Set(no_rephase) THEN IF (obs.phasera NE obs.obsra) OR (obs.phasedec NE obs.obsdec) THEN $
+;        vis_arr=visibility_rephase(obs,params,vis_arr)
     
     IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
     

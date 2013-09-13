@@ -131,7 +131,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,*map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
+    weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
     weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
     source_uv_mask[where(*image_uv_arr[pol_i])]=1.
     source_uv_mask2[where(weights_single)]=1
