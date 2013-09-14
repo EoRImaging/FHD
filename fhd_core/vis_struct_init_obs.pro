@@ -6,7 +6,6 @@ FUNCTION vis_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
-IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=1. & nfreq_avg=Long(nfreq_avg)
 IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 
 time=params.time
@@ -24,6 +23,10 @@ bin_width_c=total(bin_width,/cumulative)
 bin_offset=fltarr(nb) & bin_offset[1:*]=total(bin_width[0:nb-2],/cumulative)    
 
 frequency_array=(findgen(hdr.n_freq)-hdr.freq_ref_i)*hdr.freq_width+hdr.freq_ref
+IF N_Elements(nfreq_avg) EQ 0 THEN BEGIN
+    nfreq_avg=Round(hdr.freq_ref/hdr.freq_width/1000.)
+ENDIF
+
 IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*hdr.freq_width  ;Hz
 freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
 nfreq_bin=N_Elements(freq_hist)
