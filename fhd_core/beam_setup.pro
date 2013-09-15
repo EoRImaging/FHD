@@ -117,6 +117,10 @@ t1_a=Systime(1)
 xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
 valid_i=where(Finite(ra_arr_use1),n_valid)
 
+Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+obsza=90.-obsalt
+intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
+norm=Float(Sqrt(2.)*[ex0,ey0])
 ;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
 ;;NOTE: The NEW Eq2Hor REQUIRES Jdate to be a scalar! They created a new bug when they fixed the old one
 Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
@@ -136,12 +140,6 @@ proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polariza
 IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
 *proj[3]*=Complex(0,1)
 IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
-
-Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
-obsza=90.-obsalt
-intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
-norm=Float(Sqrt(2.)*[ex0,ey0])
-
 
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
