@@ -43,7 +43,7 @@ antenna_length=29.125*2.54/100. ;meters (measured)
 antenna_height=0.35 ;meters (rumor)
 
 Kconv=(2.*!Pi)*(frequency/299792458.) ;wavenumber (radians/meter)
-Kconv/=kbinsize_use ;convert radians to pixels
+;Kconv/=kbinsize_use ;convert radians to pixels
 wavelength=299792458./frequency
 
 IF Keyword_Set(antenna_beam_arr) THEN IF Keyword_Set(*antenna_beam_arr[0]) THEN BEGIN
@@ -104,7 +104,7 @@ projection=1.
 
 ii=Complex(0,1)
 
-dipole_gain_arr=Exp(-ii*Kconv*D_d)
+dipole_gain_arr=Exp(-ii*Kconv*D_d/kbinsize_use)
 ;horizon_test=where(abs(za_arr_use) GE 90.,n_horizon_test)
 ;horizon_mask=fltarr(psf_dim2,psf_dim2)+1
 ;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
