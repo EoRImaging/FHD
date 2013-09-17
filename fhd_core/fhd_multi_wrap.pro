@@ -21,7 +21,7 @@ FOR j=0L,n_rep-1 DO BEGIN
         silent=silent,beam_model=beam_model2,beam_corr=beam_corr2,norm_arr=norm_arr2,source_mask=source_mask2,$
         hpx_inds=hpx_inds2,_Extra=extra
     
-    IF Keyword_Set(quickview) OR Keyword_Set(individual_save) THEN BEGIN
+;    IF Keyword_Set(quickview) OR Keyword_Set(individual_save) THEN BEGIN
         FOR fi=0,nsub-1 DO BEGIN
             file_path_fhd=fhd_file_list_sub[fi]
             obs=obs_arr[fi]
@@ -50,9 +50,7 @@ FOR j=0L,n_rep-1 DO BEGIN
                 save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
                     beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav'
         ENDFOR
-    ENDIF
-    hashname=hash_name_gen()
-;    save_path=filepath(hashname)
+;    ENDIF
 ENDFOR
 
 END

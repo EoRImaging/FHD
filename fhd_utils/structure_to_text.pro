@@ -34,13 +34,16 @@ FOR ti=0L,n_tags-1 DO BEGIN
     
     IF size(tag_val,/type) EQ 10 THEN BEGIN ;if pointer
         n_dims=size(tag_val,/n_dimension)
-        IF n_dims EQ 0 THEN result[1,ti_use]='Pointer' ELSE BEGIN
+        IF n_dims EQ 0 THEN BEGIN
+            result[1,ti_use]='Pointer' 
+        ENDIF ELSE BEGIN
             dims=size(tag_val,/dimensions)
             dim_arr=Strarr(n_dims)
             FOR dim_i=0,n_dims-1 DO dim_arr[dim_i]=Strn(dims[dim_i])
             format_code='("Pointer array (",'+Strn(n_dims)+'(A,:," x "))'
             result[1,ti_use]=String(format=format_code,dim_arr)+' elements)'
         ENDELSE
+        
 ;        result[1,ti_use]=String(format='("Pointer (",A," elements)")',Strn(len))
         ti_use+=1
         CONTINUE

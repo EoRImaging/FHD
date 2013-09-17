@@ -187,7 +187,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
         t3_a=Systime(1)
         t2+=t3_a-t2_a
-        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]),/no_real)
+        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]*2.),/no_real)
+;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
         beam_i=region_grow(real_part(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(real_part(psf_base1))/1e3,Max(real_part(psf_base1))])
@@ -200,9 +201,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF n_phase_cut GT 0 THEN uv_mask2[phase_cut]=0
         psf_base2*=uv_mask2
         gain_normalization=1./(Total(Abs(psf_base2))/psf_resolution^2.)
-        psf_base2*=gain_normalization
-        psf_base2*=freq_norm[freq_i]
-        psf_base2*=pol_norm[pol_i]
+;        psf_base2*=gain_normalization
+;        psf_base2*=freq_norm[freq_i]
+;        psf_base2*=pol_norm[pol_i]
         t4_a=Systime(1)
         t3+=t4_a-t3_a
         phase_mag=(Abs(Atan(psf_base2,/phase))<Abs(!Pi-Abs(Atan(psf_base2,/phase))))*Floor(uv_mask2>0)

@@ -22,7 +22,6 @@ kbinsize_use=kbinsize;/psf_resolution
 
 IF N_Elements(normalization) EQ 0 THEN normalization=1.
 psf_dim=Float(psf_dim)
-;psf_dim2=psf_dim*psf_resolution
 psf_dim2=dimension
 degpix_use=!RaDeg/(kbinsize_use*psf_dim2) 
 IF N_Elements(xvals) EQ 0 THEN xvals=(meshgrid(psf_dim2,psf_dim2,1)-psf_dim2/2.)*degpix_use
@@ -38,15 +37,13 @@ ENDIF ELSE BEGIN
     za=obsza
     az=obsaz
 ENDELSE
-;za=za_arr[psf_dim2/2.,psf_dim2/2.]
-;az=az_arr[psf_dim2/2.,psf_dim2/2.]
 
 antenna_spacing=1.1 ;meters (design) ;1.071
 antenna_length=29.125*2.54/100. ;meters (measured)
 antenna_height=0.35 ;meters (rumor)
 
 Kconv=(2.*!Pi)*(frequency/299792458.) ;wavenumber (radians/meter)
-;Kconv=(frequency/299792458.) ;wavenumber (radians/meter)
+Kconv/=kbinsize_use ;convert radians to pixels
 wavelength=299792458./frequency
 
 IF Keyword_Set(antenna_beam_arr) THEN IF Keyword_Set(*antenna_beam_arr[0]) THEN BEGIN
@@ -76,7 +73,8 @@ IF not Ptr_valid(delay_settings) THEN BEGIN
     D0_d=Round(D0_d) ;round to nearest real delay setting
     D0_d*=299792458D*4.35E-10
 ENDIF ELSE D0_d=*delay_settings*299792458.*4.35E-10
-D0_d=Float(D0_d);*Kconv*!Radeg
+D0_d=Float(D0_d)
+D0_d-=Min(D0_d)
 
 ;proj_east=Reform(xvals,(psf_dim2)^2.)
 ;proj_north=Reform(yvals,(psf_dim2)^2.)
@@ -95,29 +93,25 @@ D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 
 groundplane=2.*Sin(Cos(za_arr_use*!DtoR)*(Kconv*(antenna_height)))
 groundplane=Reform(groundplane,psf_dim2,psf_dim2)
+groundplane0=2.*Sin(Kconv*antenna_height)
 
+;IF polarization EQ 0 THEN projection=Sqrt(1.-(Sin(za_arr*!DtoR)*Sin(az_arr*!DtoR))^2.) $
+;    ELSE projection=Sqrt(1.-(Sin(za_arr*!DtoR)*Cos(az_arr*!DtoR))^2.) 
+;IF polarization EQ 0 THEN projection0=Sqrt(1.-(Sin(za*!DtoR)*Sin(az*!DtoR))^2.) $
+;    ELSE projection0=Sqrt(1.-(Sin(za*!DtoR)*Cos(az*!DtoR))^2.) 
 projection=1.
 
-;leakage_xtoy=0.
-;leakage_ytox=0.
 
 ii=Complex(0,1)
-;;IF polarization EQ 0 THEN pol=Cos(xvals*!DtoR-xc)^2. ELSE pol=Cos(yvals*!DtoR-yc)^2.
-;IF polarization EQ 0 THEN pol=Cos(xvals*!DtoR-xc) ELSE pol=Cos(yvals*!DtoR-yc)
-;;IF polarization EQ 0 THEN pol=(1.-((xvals*!DtoR-xc)^2.)/2.)>0. ELSE pol=(1.-((yvals*!DtoR-yc)^2.)/2.)>0.
 
-;dipole_gain_arr=groundplane*projection*Exp(-ii*Kconv*D_d*!DtoR)
 dipole_gain_arr=Exp(-ii*Kconv*D_d)
-;dipole_gain_arr=Exp(-ii*Kconv*D_d*!DtoR)
-
-;dipole_gain_arr=groundplane*projection*Exp(-ii*D_d*!DtoR)
 ;horizon_test=where(abs(za_arr_use) GE 90.,n_horizon_test)
 ;horizon_mask=fltarr(psf_dim2,psf_dim2)+1
 ;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
 
 IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(16,/allocate)
 FOR i=0,15 DO BEGIN
-    *antenna_beam_arr[i]=dipole_gain_arr[*,*,i]*groundplane;*pol
+    *antenna_beam_arr[i]=dipole_gain_arr[*,*,i]*groundplane*projection/(16.*groundplane0);*pol
 ENDFOR
 
 tile_beam=fltarr(psf_dim2,psf_dim2)
