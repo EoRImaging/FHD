@@ -157,7 +157,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     print,String(format='("UV image size used: ",A," wavelengths")',Strn(k_span))
     print,String(format='("Min baseline: ",A," wavelengths")',Strn(obs.min_baseline))
     print,String(format='("Max baseline: ",A," wavelengths")',Strn(obs.max_baseline))
-    
+    print,String(format='("Observation pointing (Az,El): ",A," ",A)',$
+        Strn(obs.obsaz,length=6),Strn(obs.obsalt,length=5))
     print,String(format='("Observation coordinates: ",A," ",A,A)',$
         Strn(obs.obsra,length=7),(obs.obsdec GE 0) ? '+':'-',Strn(Abs(obs.obsdec),length=6))
     print,String(format='("Zenith coordinates: ",A," ",A,A)',$
