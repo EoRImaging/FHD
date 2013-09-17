@@ -100,7 +100,7 @@ meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimen
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
-struct={dimension:Float(dimension),elements:Float(elements),kpix:Float(kbinsize),degpix:Float(degpix),$
+struct={dimension:Float(dimension),elements:Float(elements),kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,$
     obsra:meta.obsra,obsdec:meta.obsdec,zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,$
     zenx:meta.zenx,zeny:meta.zeny,phasera:meta.phasera,orig_phasedec:meta.phasedec,phasedec:meta.phasedec,orig_phasera:meta.phasera,$
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),$

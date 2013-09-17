@@ -114,10 +114,11 @@ projection_slant_orthographic,astr=astr,degpix=degpix2,obsra=obsra,obsdec=obsdec
     dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec,$
     epoch=2000.,JDate=JD0,date_obs=date_obs
 
+Eq2Hor,obsra,obsdec,JD0,obsalt,obsaz,lat=lat,lon=lon,alt=Mean(alt)
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),astr:astr,$
-    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),delays:beamformer_delays,tile_height:Float(tile_height),$
-    tile_flag:tile_flag}
+    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),obsaz:Float(obsaz),obsalt:Float(obsalt),$
+    delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag}
 
 RETURN,meta
 END

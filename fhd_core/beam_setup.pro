@@ -127,9 +127,6 @@ Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs
 za_arr=fltarr(psf_dim2,psf_dim2)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 
-;IF Abs(obs.obsra-obs.zenra) GT 90. THEN $
-;    lon_offset=obs.obsra-((obs.obsra GT obs.zenra) ? 360.:(-360.))-obs.zenra ELSE lon_offset=obs.obsra-obs.zenra
-;lat_offset=-(obs.zendec-obs.obsdec)
 xvals3=za_arr*Sin(az_arr*!DtoR)
 yvals3=za_arr*Cos(az_arr*!DtoR)
 
@@ -154,7 +151,6 @@ t3=0
 t4=0
 
 complex_flag_arr=intarr(n_pol,nfreq_bin)
-;IF ~Keyword_Set(silent) THEN print,'Building beam model. Time elapsed: estimated time remaining'
 FOR pol_i=0,n_pol-1 DO BEGIN
 
     pol1=pol_arr[0,pol_i]
@@ -201,9 +197,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF n_phase_cut GT 0 THEN uv_mask2[phase_cut]=0
         psf_base2*=uv_mask2
         gain_normalization=1./(Total(Abs(psf_base2))/psf_resolution^2.)
-;        psf_base2*=gain_normalization
-;        psf_base2*=freq_norm[freq_i]
-;        psf_base2*=pol_norm[pol_i]
+        psf_base2*=gain_normalization
+        psf_base2*=freq_norm[freq_i]
+        psf_base2*=pol_norm[pol_i]
         t4_a=Systime(1)
         t3+=t4_a-t3_a
         phase_mag=(Abs(Atan(psf_base2,/phase))<Abs(!Pi-Abs(Atan(psf_base2,/phase))))*Floor(uv_mask2>0)
