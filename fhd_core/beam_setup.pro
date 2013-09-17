@@ -12,7 +12,7 @@
 ;-
 FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,$
-    instrument=instrument,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,$
+    silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
@@ -28,7 +28,7 @@ IF Keyword_Set(restore_last) THEN BEGIN
     RETURN,psf
 ENDIF
 
-IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
+IF Tag_exist(obs,'instrument') THEN instrument=obs.instrument ELSE instrument='mwa'
 tile_beam_fn=instrument+'_tile_beam_generate' ;mwa_tile_beam_generate
 IF instrument EQ 'paper' THEN base_gain=fltarr(1)+1.
 ;Fixed parameters 
