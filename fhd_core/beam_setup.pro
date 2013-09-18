@@ -47,6 +47,11 @@ psf_dim=Ceil(psf_dim/2)*2.
 
 psf_dim2=psf_dim*psf_resolution
 degpix_use=degpix*dimension/psf_dim2
+scale=psf_dim2/dimension
+obsx2=obs.obsx*scale
+obsy2=obs.obsy*scale
+zenx2=obs.zenx*scale
+zeny2=obs.zeny*scale
 
 psf_scale=degpix_use/degpix
 xvals2=meshgrid(psf_dim2,psf_dim2,1)*psf_scale-psf_dim2*psf_scale/2.+dimension/2.
@@ -131,19 +136,19 @@ az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 xvals3=za_arr*Sin(az_arr*!DtoR)
 yvals3=za_arr*Cos(az_arr*!DtoR)
 
-el_arr=90.-za_arr
-polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
-proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-
-IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
-*proj[3]*=Complex(0,1)
-IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
+;el_arr=90.-za_arr
+;polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
+;proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
+;
+;IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
+;*proj[3]*=Complex(0,1)
+;IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
 
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 
-pol_norm=fltarr(n_pol)
+pol_norm=fltarr(n_pol)+1.
 FOR pol_i=0,n_pol-1 DO pol_norm[pol_i]=(norm[pol_arr[0,pol_i]]*norm[pol_arr[1,pol_i]])
 
 t1=Systime(1)-t1_a
@@ -184,11 +189,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
-        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]*2.),/no_real)
-;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
+;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]*2.),/no_real)
+        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real) ;projection now inside tile beam function
+;        psf_base1=Conj(dirty_image_generate(beam1_0*Conj(beam2_0),/no_real))
+;        psf_base1=Shift(Reverse(Reverse(dirty_image_generate(beam1_0*Conj(beam2_0),/no_real),1),2),1,1)
+;        IF real_part(psf_base1[obsx2,obsy2]) LT 0 THEN sign=-1. ELSE sign=1.
+;        psf_base1*=sign
+        
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
-        beam_i=region_grow(real_part(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(real_part(psf_base1))/1e3,Max(real_part(psf_base1))])
+        beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
         uv_mask[beam_i]=1.
         
         psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
@@ -198,9 +208,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF n_phase_cut GT 0 THEN uv_mask2[phase_cut]=0
         psf_base2*=uv_mask2
         gain_normalization=1./(Total(Abs(psf_base2))/psf_resolution^2.)
-        psf_base2*=gain_normalization
-        psf_base2*=freq_norm[freq_i]
-        psf_base2*=pol_norm[pol_i]
+;        psf_base2*=gain_normalization
+;        psf_base2*=freq_norm[freq_i]
+;        psf_base2*=pol_norm[pol_i]
         t4_a=Systime(1)
         t3+=t4_a-t3_a
         phase_mag=(Abs(Atan(psf_base2,/phase))<Abs(!Pi-Abs(Atan(psf_base2,/phase))))*Floor(uv_mask2>0)
