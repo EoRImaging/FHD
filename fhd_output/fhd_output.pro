@@ -2,7 +2,8 @@ PRO fhd_output,obs,fhd, file_path_fhd=file_path_fhd,version=version,map_fn_arr=m
     noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,$
     fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
-    gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,_Extra=extra
+    gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,$
+    image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
