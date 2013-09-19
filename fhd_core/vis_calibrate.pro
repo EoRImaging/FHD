@@ -122,7 +122,8 @@ t3_a=Systime(1)
 t2=t3_a-t2_a
 
 vis_cal=vis_calibration_apply(vis_ptr,cal)
-IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_ptr[pol_i]-=Temporary(*vis_model_ptr[pol_i])
+
+IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0
 IF not Keyword_Set(silent) THEN print,timing,t1,t2,t3
