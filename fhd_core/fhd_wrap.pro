@@ -17,7 +17,7 @@
 PRO fhd_wrap,obs,params,psf,fhd,cal,file_path_fhd=file_path_fhd,beam_threshold=beam_threshold,quickview=quickview,$
     data_directory=data_directory,filename=filename,version=version,silent=silent,transfer_mapfn=transfer_mapfn,$
     map_fn_arr=map_fn_arr,GPU_enable=GPU_enable,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
-    calibration_model_subtract=calibration_model_subtract,model_uv_arr=model_uv_arr,_Extra=extra
+    calibration_image_subtract=calibration_image_subtract,model_uv_arr=model_uv_arr,_Extra=extra
 
 ;snapshot data must have been gridded previously, and the Holo map fns generated
 ;reads and deconvolves simultaneously on multiple polarizations, time intervals, and frequencies
@@ -31,7 +31,7 @@ IF size(cal,/type) NE 8 THEN IF file_test(file_path_fhd+'_cal.sav') EQ 1 THEN RE
     ELSE cal=vis_struct_init_cal(obs,params)
 
 IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
-fhd=fhd_init(obs,calibration_model_subtract=calibration_model_subtract,transfer_mapfn=transfer_mapfn,_Extra=extra)
+fhd=fhd_init(obs,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,_Extra=extra)
 
 n_pol=fhd.npol
 dimension=obs.dimension
@@ -54,7 +54,7 @@ IF N_Elements(weights_arr) EQ 0 THEN BEGIN
     weights_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid')
 ENDIF
-IF Keyword_Set(calibration_model_subtract) THEN BEGIN
+IF Keyword_Set(calibration_image_subtract) THEN BEGIN
     IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
         model_filepath=file_path_fhd+'_cal_uv.sav'
         IF file_test(model_filepath) EQ 0 THEN fhd.cal_subtract=0 ELSE BEGIN

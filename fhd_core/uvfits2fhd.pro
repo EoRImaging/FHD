@@ -37,7 +37,8 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,quickview=quickview,$
-    calibration_model_subtract=calibration_model_subtract,no_rephase=no_rephase,_Extra=extra
+    calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
+    no_rephase=no_rephase,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -231,11 +232,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
         print,"Calibrating visibilities"
         IF not Keyword_Set(transfer_calibration) AND not Keyword_Set(calibration_source_list) THEN $
             calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path,_Extra=extra)
-                
-        IF Keyword_Set(calibration_model_subtract) THEN return_cal_model=1
+        
+        IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
+        IF Keyword_Set(calibration_image_subtract) THEN return_cal_model=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
-             calibration_source_list=calibration_source_list,return_cal_model=return_cal_model,silent=silent,_Extra=extra)
+             calibration_source_list=calibration_source_list,return_cal_model=return_cal_model,$
+             calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
         IF Keyword_Set(return_cal_model) THEN save,model_uv_arr,filename=file_path_fhd+'_cal_uv.sav'
@@ -404,7 +407,7 @@ ENDIF
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,params,psf,fhd,cal,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,calibration_model_subtract=calibration_model_subtract,$
+    fhd_wrap,obs,params,psf,fhd,cal,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,calibration_image_subtract=calibration_image_subtract,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,model_uv_arr=model_uv_arr
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'

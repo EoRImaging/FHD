@@ -1,5 +1,5 @@
 FUNCTION fhd_init,obs,restore=restore,pol_use=pol_use,freq_use=freq_use,time_i_use=time_i_use,$
-    gain_factor=gain_factor,mapfn_interval=mapfn_interval,calibration_model_subtract=calibration_model_subtract,$
+    gain_factor=gain_factor,mapfn_interval=mapfn_interval,calibration_image_subtract=calibration_image_subtract,$
     max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,$
     mapfn_threshold=mapfn_threshold,baseline_threshold=baseline_threshold,beam_threshold=beam_threshold,add_threshold=add_threshold,$
     polarization_map=polarization_map,polarization_correction=polarization_correction,ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,$
@@ -28,7 +28,7 @@ IF N_Elements(max_iter) EQ 0 THEN IF max_add_sources EQ 1 THEN max_iter=max_sour
 IF N_Elements(check_iter) EQ 0 THEN IF max_add_sources EQ 1 THEN check_iter=Round(5./gain_factor) ELSE check_iter=Round(1./gain_factor)
 IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q, (U, V) seperately. Otherwise, only I (and U) is fit
 IF N_Elements(reject_pol_sources) EQ 0 THEN reject_pol_sources=0 ;set to exclude source candidates with high Stokes Q/I
-IF N_Elements(calibration_model_subtract) EQ 0 THEN calibration_model_subtract=0. ELSE calibration_model_subtract=Float(calibration_model_subtract)
+IF N_Elements(calibration_image_subtract) EQ 0 THEN calibration_image_subtract=0. ELSE calibration_image_subtract=Float(calibration_image_subtract)
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn='False'
 
 fhd={npol:npol,baseline_threshold:baseline_threshold,$
@@ -37,7 +37,7 @@ fhd={npol:npol,baseline_threshold:baseline_threshold,$
     add_threshold:add_threshold,max_add_sources:max_add_sources,independent_fit:independent_fit,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,smooth_width:smooth_width,$
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
-    cal_subtract:calibration_model_subtract}
+    cal_subtract:calibration_image_subtract}
 
 RETURN,fhd
 END
