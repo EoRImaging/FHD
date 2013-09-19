@@ -55,6 +55,8 @@ IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag) EQ 0 THEN flag=0.
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
+IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1
+
 ;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
 ;IF Keyword_Set(GPU_enable) THEN BEGIN
 ;    Defsysv,'GPU',exist=gpuvar_exist
@@ -175,7 +177,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
-    psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,_Extra=extra)
+    psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
@@ -381,7 +383,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;        ELSE $
             weights_grid=1 ;initialize
             
-            IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,_Extra=extra)

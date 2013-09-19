@@ -1,15 +1,3 @@
-;+
-; :Description:
-;    Generates the gridded beam models for each baseline/frequency to be used for gridding visibilities.
-;
-; :Params:
-;    obs - structure containing details of the observation
-;
-; :Keywords:
-;    
-;
-; :Author: isullivan
-;-
 FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,$
@@ -19,11 +7,11 @@ compile_opt idl2,strictarrsubs
 t00=Systime(1)
 
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_beams'+'.sav') EQ 0) THEN BEGIN 
-    IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_beams'+'.sav' +' Not found. Recalculating.' 
+    IF not Keyword_Set(silent) THEN print,file_path_fhd+'_beams'+'.sav' +' Not found. Recalculating.' 
     restore_last=0
 ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
-    IF ~Keyword_Set(silent) THEN print,'Saved beam model restored'
+    IF not Keyword_Set(silent) THEN print,'Saved beam model restored'
     restore,file_path_fhd+'_beams'+'.sav'
     RETURN,psf
 ENDIF
@@ -264,9 +252,9 @@ psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residual
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center)
-IF ~Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
+IF not Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
-IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]
+IF not Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]
 RETURN,psf
 END
