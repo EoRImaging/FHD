@@ -3,7 +3,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
     calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,$
     return_cal_model=return_cal_model,silent=silent,initial_calibration=initial_calibration,$
-    calibration_visibilities_subtract=calibration_visibilities_subtract,_Extra=extra
+    calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
@@ -123,7 +123,32 @@ t2=t3_a-t2_a
 
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 
-IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
+if arg_present(vis_baseline_hist) then begin
+  IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_ptr[pol_i]
+  
+  kx_arr=cal.uu[0:n_baselines-1]/obs.kpix ;ignore slight variation with time
+  ky_arr=cal.vv[0:n_baselines-1]/obs.kpix
+  kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
+  dist_arr=(freq_arr#kr_arr)*obs.kpix
+  dist_hist = histogram(dist_arr, min=obs.min_baseline, binsize=5, max=obs.max_baseline, locations = dist_locs, reverse_indices = dist_ri)
+  vis_res_ratio_mean = fltarr(n_pol, n_elements(dist_locs))
+  vis_res_sigma = fltarr(n_pol, n_elements(dist_locs))
+  for pol_i=0,n_pol-1 do begin
+    vis_model_arr = Temporary(*vis_model_ptr[pol_i])
+    for i=0, n_elements(dist_locs)-1 do if dist_hist[i] gt 0 then begin
+    inds = dist_ri[dist_ri[i]:dist_ri[i+1]-1]
+      if Keyword_Set(calibration_visibilities_subtract) then begin
+        vis_res_ratio_mean[i] = mean(abs((*vis_cal[pol_i])[inds]))/mean(abs(vis_model_arr[inds]))
+        vis_res_sigma[i] = sqrt(variance(abs((*vis_cal[pol_i])[inds])))/mean(abs(vis_model_arr[inds]))
+      endif else begin
+        vis_res_ratio_mean[i] = mean(abs((*vis_cal[pol_i])[inds]-vis_model_arr[inds]))/mean(abs(vis_model_arr[inds]))
+        vis_res_sigma[i] = sqrt(variance(abs((*vis_cal[pol_i])[inds]-vis_model_arr[inds])))/mean(abs(vis_model_arr[inds]))
+      endelse
+    endif
+  endfor
+  vis_baseline_hist = {baseline_length:dist_locs, vis_res_ratio_mean:vis_res_ratio_mean, vis_res_sigma:vis_res_sigma}
+endif else IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
+
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0
 IF not Keyword_Set(silent) THEN print,timing,t1,t2,t3
