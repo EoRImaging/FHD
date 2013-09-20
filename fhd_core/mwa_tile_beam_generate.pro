@@ -102,6 +102,7 @@ IF polarization EQ 0 THEN projection=Sqrt(1.-proj_east^2.) ELSE projection=Sqrt(
 ;    ELSE projection0=Sqrt(1.-(Sin(za*!DtoR)*Cos(az*!DtoR))^2.) 
 ;projection/=projection0
 
+;projection=Sqrt(projection)
 ;projection=1.
 
 ii=Complex(0,1)
