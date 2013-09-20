@@ -9,7 +9,7 @@ IF Keyword_Set(file_path_vis) THEN BEGIN
 ENDIF
 
 IF N_Elements(output_directory)+N_Elements(data_directory) EQ 0 THEN message,"Output directory not specified"
-IF not Keyword_Set(output_directory) THEN output_directory=data_directory
+IF ~Keyword_Set(output_directory) THEN output_directory=data_directory
 IF Keyword_Set(output_filename) THEN filename=output_filename
 
 IF N_Elements(filename) EQ 0 THEN message,"Filename not specified"
@@ -19,7 +19,7 @@ IF Keyword_Set(version) THEN IF size(version,/type) EQ 7 THEN version_dirname='f
 
 CASE 1 OF 
     Keyword_Set(subdir) AND ~Keyword_Set(no_sub_fhd):subdir_use=[version_dirname,subdir]
-    not Keyword_Set(no_sub_fhd):subdir_use=Strarr(1)+version_dirname
+    ~Keyword_Set(no_sub_fhd):subdir_use=Strarr(1)+version_dirname
     Keyword_Set(subdir):subdir_use=subdir
     ELSE: subdir_use=''
 ENDCASE

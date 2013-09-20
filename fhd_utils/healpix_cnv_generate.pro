@@ -20,7 +20,7 @@ elements=obs.elements
 IF N_Elements(radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4.
 ;all angles in DEGREES
 ;uses RING index scheme
-IF not Keyword_Set(nside) THEN BEGIN
+IF ~Keyword_Set(nside) THEN BEGIN
     pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(astr.cdelt))
     Nside=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
     nside*=2.

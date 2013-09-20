@@ -78,7 +78,7 @@ IF N_Elements(start_fi) EQ 0 THEN start_fi=0
 fi=start_fi
 IF N_Elements(end_fi) GT 0 THEN n_files=end_fi+1 ;changed to allow end_fi and update to both be specified
 WHILE fi LT n_files DO BEGIN
-    IF not Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(n_files-start_fi)))
+    IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(n_files-start_fi)))
     IF N_Elements(skip_fi) GT 0 THEN BEGIN
         IF max(skip_fi EQ fi) GT 0 THEN BEGIN
             fi+=1

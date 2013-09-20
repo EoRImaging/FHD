@@ -244,7 +244,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     print,"Convergence after subtracting input source model:",Strn(converge_check[i2])
 ENDIF ELSE source_comp_init,comp_arr,n_sources=max_sources,alpha=alpha,freq=obs.freq_center
 
-IF not Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
+IF ~Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
 recalc_flag=1
 t_init=Systime(1)-t00
@@ -463,7 +463,7 @@ FOR i=i0,max_iter-1 DO BEGIN
     IF (Round(i mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
         i2+=1
         t10=Systime(1)-t0
-        IF not Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
+        IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
             i,si,t10,Stddev(source_find_image[where(source_mask)],/nan)))
         converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
         IF sigma_threshold*converge_check[i2] GT source_find_image[source_i] THEN BEGIN

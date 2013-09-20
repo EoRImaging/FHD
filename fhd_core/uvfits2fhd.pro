@@ -141,7 +141,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;free memory
     data_array=0 
     flag_arr0=0
-;    IF not Keyword_Set(no_rephase) THEN IF (obs.phasera NE obs.obsra) OR (obs.phasedec NE obs.obsdec) THEN $
+;    IF ~Keyword_Set(no_rephase) THEN IF (obs.phasera NE obs.obsra) OR (obs.phasedec NE obs.obsdec) THEN $
 ;        vis_arr=visibility_rephase(obs,params,vis_arr)
     
     IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
@@ -182,7 +182,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
     
-;    IF file_test(flags_filepath) AND not Keyword_Set(flag) THEN BEGIN
+;    IF file_test(flags_filepath) AND ~Keyword_Set(flag) THEN BEGIN
 ;        flag_arr=getvar_savefile(flags_filepath,'flag_arr')
 ;    ENDIF ELSE BEGIN
 ;        flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
@@ -232,7 +232,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
-        IF not Keyword_Set(transfer_calibration) AND not Keyword_Set(calibration_source_list) THEN $
+        IF ~Keyword_Set(transfer_calibration) AND ~Keyword_Set(calibration_source_list) THEN $
             calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path,_Extra=extra)
         
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0

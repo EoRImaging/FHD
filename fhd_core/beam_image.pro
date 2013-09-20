@@ -118,7 +118,7 @@ beam_base=real_part(beam_base)
 
 ;beam_test=1.
 ;IF Keyword_Set(square) THEN pnorm_use=pol_norm[pol_i]^2./beam_test ELSE pnorm_use=(pol_norm[pol_i])/beam_test
-;beam_base*=sqrt(pnorm_use)
+;beam_base*=pnorm_use
 ;beam_base=Reverse(Reverse(beam_base,1),2)
 
 RETURN,beam_base

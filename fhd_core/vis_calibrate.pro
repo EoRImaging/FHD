@@ -151,6 +151,6 @@ endif else IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_
 
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0
-IF not Keyword_Set(silent) THEN print,timing,t1,t2,t3
+IF ~Keyword_Set(silent) THEN print,timing,t1,t2,t3
 RETURN,vis_cal
 END

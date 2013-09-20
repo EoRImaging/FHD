@@ -95,7 +95,8 @@ D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 ;groundplane=Reform(groundplane,psf_dim2,psf_dim2,16)
 
 groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength)) ;should technically have zc_arr, but until that is nonzero this is the same and faster
-groundplane0=2.*Sin(2.*!Pi*antenna_height/wavelength) ;normalization factor
+;groundplane0=2.*Sin(2.*!Pi*antenna_height/wavelength) ;normalization factor
+groundplane0=2.*Sin(Cos(za*!DtoR)*2.*!Pi*antenna_height/wavelength) ;normalization factor
 
 IF polarization EQ 0 THEN projection=Sqrt(1.-proj_east^2.) ELSE projection=Sqrt(1.-proj_north^2.) 
 ;IF polarization EQ 0 THEN projection0=Sqrt(1.-(Sin(za*!DtoR)*Sin(az*!DtoR))^2.) $
