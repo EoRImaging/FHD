@@ -147,7 +147,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             conv_test[i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
             IF i GE 1 THEN $
                 IF conv_test[i] LE conv_thresh THEN BREAK $
-                ELSE IF (conv_test[i]-conv_test[i-1]) LE conv_thresh/2. THEN BREAK
+                ELSE IF Abs(conv_test[i]-conv_test[i-1]) LE conv_thresh/2. THEN BREAK
         ENDFOR
         Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr
