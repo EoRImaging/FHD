@@ -1,6 +1,5 @@
 FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolution,threshold=threshold,$
-    dimension=dimension,elements=elements,width=width,ring_radius=ring_radius,n_sources=n_sources,$
-    pad_uv_image=pad_uv_image,_Extra=extra
+    dimension=dimension,elements=elements,width=width,ring_radius=ring_radius,n_sources=n_sources,_Extra=extra
 IF Keyword_Set(obs) THEN BEGIN
     dimension=obs.dimension
     elements=obs.elements
@@ -81,6 +80,5 @@ ENDFOR
 ;ELSE FOR si=0.,ns-1 DO $
 ;    source_image+=sf[si]*Exp(-(((x_vals-sx[si])/width)^2.+((y_vals-sy[si])/width)^2.)/2.) 
 Ptr_free,beam_useR_arr
-;IF Keyword_set(pad_uv_image) THEN source_image*=pad_uv_image^2.
 RETURN,source_image
 END

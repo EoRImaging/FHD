@@ -221,7 +221,7 @@ t0+=t1a-t0a
         *instr_images[pol_i]=dirty_image_generate(instr_img_uv,degpix=degpix,weights=*weights_arr[pol_i],$
             image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
         *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
-            dimension=dimension,width=restored_beam_width,pad_uv_image=pad_uv_image)
+            dimension=dimension,width=restored_beam_width)
 ;        IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ;            *instr_sources[pol_i]+=*gal_model_img[pol_i]
 ;;            *instr_images[pol_i]-=*gal_holo_img[pol_i]

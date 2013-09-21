@@ -42,16 +42,6 @@ reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=0;1 paper 3 memo
 label_spacing=1.
 
-
-
-
-;Build a fits header
-mkhdr,fits_header,*residual_array[0]
-putast, fits_header, astr_out;, cd_type=1
-
-
-
-
 IF N_Elements(source_array) GT 0 THEN BEGIN
     si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
     source_arr=source_array[si_use]
@@ -71,6 +61,46 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
         ENDFOR
     ENDIF
 ENDIF
+
+beam_mask=fltarr(dimension,elements)+1
+beam_avg=fltarr(dimension,elements)
+beam_base_out=Ptrarr(n_pol,/allocate)
+beam_correction_out=Ptrarr(n_pol,/allocate)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    beam_base=Sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
+    *beam_base_out[pol_i]=Rebin(beam_base,dimension,elements) ;should be fine even if pad_uv_image is not set
+    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-4)
+    IF pol_i GT 1 THEN CONTINUE
+    beam_mask_test=*beam_base_out[pol_i]
+    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[1e-4,Max(beam_mask_test)])
+    beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
+    beam_avg+=*beam_base_out[pol_i]
+    beam_mask*=beam_mask0
+ENDFOR
+beam_avg/=(n_pol<2)
+beam_i=where(beam_mask)
+
+
+instr_images=Ptrarr(n_pol)
+instr_sources=Ptrarr(n_pol)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i]))
+    IF N_Elements(source_arr_out) GT 0 THEN BEGIN
+        instr_sources[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
+            dimension=dimension,width=restored_beam_width,_Extra=extra))
+    ENDIF
+ENDFOR
+stokes_images=stokes_cnv(instr_images,beam=beam_base_out)
+stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out) ;returns null pointer if instr_sources is a null pointer 
+
+;Build a fits header
+mkhdr,fits_header,*residual_array[0]
+putast, fits_header, astr_out;, cd_type=1
+
+
+
+
 END
 ;
 ;
