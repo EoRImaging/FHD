@@ -21,7 +21,7 @@ IF Keyword_Set(image_filter_fn) THEN BEGIN
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
 ENDIF ELSE filter_name=''
     
-n_pol=obs.npol
+n_pol=obs.n_pol
 dimension_uv=obs.dimension
 astr=obs.astr
 
@@ -59,8 +59,6 @@ label_spacing=1.
 
 IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1
-    si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
-    source_arr=source_array[si_use]
     source_arr_out=source_array
     sx=(source_array.x-obs.dimension/2.)*2.+obs_out.dimension/2.
     sy=(source_array.y-obs.elements/2.)*2.+obs_out.elements/2.
@@ -111,7 +109,7 @@ stokes_images=stokes_cnv(instr_images,beam=beam_base_out)
 stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out) ;returns null pointer if instr_sources is a null pointer 
 
 ;Build a fits header
-mkhdr,fits_header,*residual_array[0]
+mkhdr,fits_header,*instr_images[0]
 putast, fits_header, astr_out;, cd_type=1
 
 x_inc=beam_i mod dimension
