@@ -57,25 +57,6 @@ reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=0;1 paper 3 memo
 label_spacing=1.
 
-IF N_Elements(source_array) GT 0 THEN BEGIN
-    source_flag=1
-    source_arr_out=source_array
-    sx=(source_array.x-obs.dimension/2.)*2.+obs_out.dimension/2.
-    sy=(source_array.y-obs.elements/2.)*2.+obs_out.elements/2.
-    source_arr_out.x=sx & source_arr_out.y=sy
-    
-    extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
-    IF n_extend GT 0 THEN BEGIN
-        FOR ext_i=0L,n_extend-1 DO BEGIN
-            comp_arr_out=*source_array[extend_test[ext_i]].extend
-            ad2xy,comp_arr_out.ra,comp_arr_out.dec,astr_out,cx,cy
-            comp_arr_out.x=cx & comp_arr_out.y=cy
-            source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)
-            *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
-        ENDFOR
-    ENDIF
-ENDIF ELSE source_flag=0
-
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
@@ -95,6 +76,38 @@ beam_avg/=(n_pol<2)
 beam_mask[0:dimension/4.-1,*]=0 & beam_mask[3.*dimension/4.:dimension-1,*]=0 
 beam_mask[*,0:elements/4.-1]=0 & beam_mask[*,3.*elements/4.:elements-1]=0 
 beam_i=where(beam_mask)
+
+IF N_Elements(source_array) GT 0 THEN BEGIN
+    source_flag=1
+    source_arr_out=source_array
+    sx=(source_array.x-obs.dimension/2.)*2.+obs_out.dimension/2.
+    sy=(source_array.y-obs.elements/2.)*2.+obs_out.elements/2.
+    source_arr_out.x=sx & source_arr_out.y=sy
+    IF Total(source_arr_out.flux.(0)) EQ 0 THEN BEGIN
+        source_arr_out.flux.(0)=(*beam_base_out[0])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.I+source_arr_out.flux.Q)/2.
+        source_arr_out.flux.(1)=(*beam_base_out[1])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.I-source_arr_out.flux.Q)/2.
+;        source_arr_out.flux.(2)=(*beam_base_out[2])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.Q+source_arr_out.flux.U)/2.
+;        source_arr_out.flux.(3)=(*beam_base_out[3])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.Q-source_arr_out.flux.U)/2.
+    ENDIF
+    
+    extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
+    IF n_extend GT 0 THEN BEGIN
+        FOR ext_i=0L,n_extend-1 DO BEGIN
+            comp_arr_out=*source_array[extend_test[ext_i]].extend
+            ad2xy,comp_arr_out.ra,comp_arr_out.dec,astr_out,cx,cy
+            comp_arr_out.x=cx & comp_arr_out.y=cy
+            
+            IF Total(comp_arr_out.flux.(0)) EQ 0 THEN BEGIN
+                comp_arr_out.flux.(0)=(*beam_base_out[0])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.I+comp_arr_out.flux.Q)/2.
+                comp_arr_out.flux.(1)=(*beam_base_out[1])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.I-comp_arr_out.flux.Q)/2.
+        ;        comp_arr_out.flux.(2)=(*beam_base_out[2])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.Q+comp_arr_out.flux.U)/2.
+        ;        comp_arr_out.flux.(3)=(*beam_base_out[3])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.Q-comp_arr_out.flux.U)/2.
+            ENDIF
+            source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)
+            *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
+        ENDFOR
+    ENDIF
+ENDIF ELSE source_flag=0
 
 instr_images=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
