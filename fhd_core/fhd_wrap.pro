@@ -76,8 +76,8 @@ fast_holographic_deconvolution,fhd,obs,psf,cal,image_uv_arr,source_array,comp_ar
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav',/compress
 
-IF N_Elements(quickview) EQ 0 THEN quickview=1
-IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
-    beam_base,file_path_fhd=file_path_fhd,_Extra=extra
+;IF N_Elements(quickview) EQ 0 THEN quickview=1
+;IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
+;    beam_base,file_path_fhd=file_path_fhd,_Extra=extra
 
 END

@@ -408,17 +408,27 @@ ENDIF
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,params,psf,fhd,cal,file_path_fhd=file_path_fhd,_Extra=extra,silent=silent,calibration_image_subtract=calibration_image_subtract,$
-        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,model_uv_arr=model_uv_arr
+    fhd_wrap,obs,params,psf,fhd,cal,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
+        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,model_uv_arr=model_uv_arr,_Extra=extra
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
-    IF Keyword_Set(quickview) THEN fhd_quickview,file_path_fhd=file_path_fhd,_Extra=extra
+;    IF Keyword_Set(quickview) THEN fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
+;        file_path_fhd=file_path_fhd,_Extra=extra
 ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     print,'Exporting images'    
-    fhd_output,obs,fhd,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
-        image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra
+    IF file_test(file_path_fhd+'_fhd.sav') THEN BEGIN
+        fhd_output,obs,fhd,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
+            image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra 
+    ENDIF ELSE BEGIN
+        IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
+            IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav' 
+            source_array=cal.source_list
+        ENDIF
+        fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+            model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+    ENDELSE
 ENDIF
 
 IF N_Elements(map_fn_arr) GT 0 THEN IF Max(Ptr_valid(map_fn_arr)) THEN Ptr_free,map_fn_arr
