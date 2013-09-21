@@ -1,8 +1,26 @@
 PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,$
-    zoom_radius=zoom_radius,zoom_low=zoom_low,zoom_high=zoom_high,grid_spacing=grid_spacing,reverse_image=reverse_image,$
+    zoom_low=zoom_low,zoom_high=zoom_high,grid_spacing=grid_spacing,reverse_image=reverse_image,$
     _Extra=extra
+
+
+basename=file_basename(file_path_fhd)
+dirpath=file_dirname(file_path_fhd)
+IF not Keyword_Set(silent) THEN print,'Exporting (quickview): ',basename
+export_path=filepath(basename,root=dirpath,sub='export')
+export_dir=file_dirname(export_path)
+
+image_path=filepath(basename,root=dirpath,sub='images')
+image_dir=file_dirname(image_path)
+IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
+IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
+
+IF Keyword_Set(image_filter_fn) THEN BEGIN
+    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
+    IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
+ENDIF ELSE filter_name=''
+    
 n_pol=obs.npol
 dimension_uv=obs.dimension
 astr=obs.astr
@@ -29,9 +47,6 @@ elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
-zoom_radius=Round(18./(degpix)/16.)*16.
-zoom_low=dimension/2.-zoom_radius
-zoom_high=dimension/2.+zoom_radius-1
 ;stats_radius=10. ;degrees
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
@@ -43,6 +58,7 @@ map_reverse=0;1 paper 3 memo
 label_spacing=1.
 
 IF N_Elements(source_array) GT 0 THEN BEGIN
+    source_flag=1
     si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
     source_arr=source_array[si_use]
     source_arr_out=source_array
@@ -60,7 +76,7 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
             *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
         ENDFOR
     ENDIF
-ENDIF
+ENDIF ELSE source_flag=0
 
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
@@ -86,7 +102,7 @@ instr_sources=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i]))
-    IF N_Elements(source_arr_out) GT 0 THEN BEGIN
+    IF source_flag THEN BEGIN
         instr_sources[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,width=restored_beam_width,_Extra=extra))
     ENDIF
@@ -98,9 +114,95 @@ stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out) ;returns null pointe
 mkhdr,fits_header,*residual_array[0]
 putast, fits_header, astr_out;, cd_type=1
 
+x_inc=beam_i mod dimension
+y_inc=Floor(beam_i/dimension)
+IF N_Elements(zoom_low) EQ 0 THEN zoom_low=min(x_inc)<min(y_inc)
+IF N_Elements(zoom_high) EQ 0 THEN zoom_high=max(x_inc)>max(y_inc)
 
 
+FOR pol_i=0,n_pol-1 DO BEGIN
+    instr_residual=*instr_images[pol_i]
+    IF source_flag THEN BEGIN
+        instr_source=*instr_sources[pol_i]
+        instr_restored=instr_residual+instr_source
+        stokes_source=(*stokes_sources[pol_i])*beam_mask
+        stokes_residual=(*stokes_images[pol_i])*beam_mask
+        stokes_restored=stokes_residual+stokes_source
+    ENDIF
+    beam_use=*beam_base_out[pol_i]
+    
+    FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+'_Residual_'+pol_names[pol_i]
+    FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
+    FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
+    
+    Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
+        low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
+    
+    instr_low=Min(instr_residual[beam_i])
+    instr_high=Max(instr_residual[beam_i])
+    instr_low=instr_low>(-instr_high)
+    log_dirty=0
+    log_source=1
+    Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i],$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high,_Extra=extra
+    Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
+        low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),/invert,_Extra=extra
+    
+    FitsFast,stokes_residual,fits_header,/write,file_path=export_path+filter_name+'_Residual_'+pol_names[pol_i+4]
+        
+    stokes_low=Min((stokes_residual*Sqrt(beam_avg>0))[beam_i])
+    stokes_high=Max((stokes_residual*Sqrt(beam_avg>0))[beam_i])
+    stokes_low=stokes_low>(-stokes_high)
+    IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
+    IF pol_i EQ 0 THEN log=0 ELSE log=0
+    Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i+4],$
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$
+        lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+    
+    IF source_flag THEN BEGIN
+        
+;        FitsFast,instr_source,fits_header,/write,file_path=export_path+filter_name+'_Sources_'+pol_names[pol_i]
+        FitsFast,instr_restored,fits_header,/write,file_path=export_path+filter_name+'_Restored_'+pol_names[pol_i]
+;        FitsFast,stokes_sources,fits_header,/write,file_path=export_path+'_Sources_'+pol_names[pol_i+4]
+        FitsFast,stokes_restored,fits_header,/write,file_path=export_path+filter_name+'_Restored_'+pol_names[pol_i+4]
+        
+        instrS_high=Max(instr_restored[beam_i])
+        stokesS_high=Max((stokes_restored*Sqrt(beam_avg>0))[beam_i])
+;        Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Sources_'+pol_names[pol_i+4],$
+;            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
+;            lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+;            offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+        Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i+4],$
+            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokes_high,$
+            lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+            offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+        
+;        Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Sources_'+pol_names[pol_i],$
+;            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high,/invert_color,_Extra=extra
+        Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i],$
+            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,_Extra=extra
+    ENDIF
+    IF pol_i EQ 0 THEN BEGIN
+        IF Keyword_Set(gridline_image_show) THEN Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path+filter_name+'_Grid',$
+            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
+            lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+            offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+    ENDIF
+ENDFOR
 
+IF source_flag THEN BEGIN
+    ;write sources to a text file
+    radius=angle_difference(obs_out.obsdec,obs_out.obsra,source_arr_out.dec,source_arr_out.ra,/degree)
+    Ires=(Qres=fltarr(N_Elements(source_arr_out)))
+    cx=Round(source_arr_out.x) & cy=Round(source_arr_out.y)
+    ind_use=where((cx<cy GE 0) AND (cx>cy LE (obs_out.dimension<obs_out.elements)-1))  
+    Ires[ind_use]=(*stokes_images[0])[cx[ind_use],cy[ind_use]]
+    IF n_pol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
+    source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list'
+ENDIF
 END
 ;
 ;
