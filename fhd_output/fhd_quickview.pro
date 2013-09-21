@@ -16,18 +16,38 @@ image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
 
-IF Keyword_Set(image_filter_fn) THEN BEGIN
-    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
-    IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
-ENDIF ELSE filter_name=''
+
+IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav' 
+IF N_Elements(psf) EQ 0 THEN IF file_test(file_path_fhd+'_beams.sav') THEN RESTORE,file_path_fhd+'_beams.sav' ELSE $
+    psf=beam_setup(obs,file_path_fhd,silent=silent,timing=t_beam,_Extra=extra)
+IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav'
     
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
 astr=obs.astr
+restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
+restored_beam_width=restored_beam_width>0.75
+pol_names=['xx','yy','xy','yx','I','Q','U','V']
+
+IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
+    image_uv_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv');*obs.cal[pol_i]
+ENDIF
+IF N_Elements(weights_arr) EQ 0 THEN BEGIN
+    weights_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid')
+ENDIF
+
+IF Keyword_Set(image_filter_fn) THEN BEGIN
+    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
+    IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
+ENDIF ELSE filter_name=''
 
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     pad_uv_image=pad_uv_image>1.
-
+    
+    restored_beam_width*=pad_uv_image
+    
     obs_out=obs
     astr_out=astr
     astr_out.cdelt/=pad_uv_image
@@ -48,7 +68,6 @@ degpix=obs_out.degpix
 astr_out=obs_out.astr
 
 ;stats_radius=10. ;degrees
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
 grid_spacing=10.
 offset_lat=5.;15. paper 10 memo
@@ -185,10 +204,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF ~Keyword_Set(no_png) THEN BEGIN
             instrS_high=Max(instr_restored[beam_i])
             stokesS_high=Max((stokes_restored*Sqrt(beam_avg>0))[beam_i])
-    ;        Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Sources_'+pol_names[pol_i+4],$
-    ;            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
-    ;            lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-    ;            offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+            IF pol_i EQ 0 THEN Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Sources_'+pol_names[pol_i+4],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
+                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
             Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokes_high,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
