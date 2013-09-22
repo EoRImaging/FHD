@@ -1,6 +1,6 @@
 PRO eor_firstpass,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,_Extra=extra
+    grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -19,11 +19,12 @@ IF N_Elements(flag) EQ 0 THEN flag=1
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 ;NEED TO FIGURE OUT THE PROPER DIRECTORY AND output_directory TO USE AT MIT
-IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['128T','test']) $
-    ELSE data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'])
+data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['128T','test']) 
+output_directory='Some/path/to/where/data/should/go/at/mit'
+
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
-fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
-healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
+fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)
+healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
