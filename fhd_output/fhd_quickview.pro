@@ -34,9 +34,12 @@ IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv');*obs.cal[pol_i]
 ENDIF
 IF N_Elements(weights_arr) EQ 0 THEN BEGIN
-    weights_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid')
+    weights_arr=Ptrarr(n_pol)
+    IF file_test(file_path_fhd+'_uv_'+pol_names[0]+'.sav') THEN $
+        FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid'))
 ENDIF
+
+IF ~Min(Ptr_valid(weights_arr)) THEN FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
@@ -171,9 +174,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     log_source=1
     
     IF ~Keyword_Set(no_png) THEN BEGIN
-        Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
-            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
-            low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
+;        Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
+;            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
+;            low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
         
         Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high,_Extra=extra
@@ -189,7 +192,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FitsFast,stokes_residual,fits_header,/write,file_path=export_path+filter_name+'_Residual_'+pol_names[pol_i+4]
         FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+'_Residual_'+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
-        FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
+;        FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
     ENDIF
     
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0

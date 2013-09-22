@@ -38,7 +38,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,quickview=quickview,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
-    no_rephase=no_rephase,_Extra=extra
+    no_rephase=no_rephase,weights_grid=weights_grid,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -376,12 +376,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
         image_arr=Ptrarr(n_pol,/allocate)
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
+        IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
         FOR pol_i=0,n_pol-1 DO BEGIN
     ;        IF Keyword_Set(GPU_enable) THEN $
     ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
     ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
     ;        ELSE $
-            weights_grid=1 ;initialize
+
             
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
@@ -389,13 +390,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
             dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
-            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
+            IF N_Elements(weights_grid) GT 0 THEN SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
             SAVE,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav',/compress
 
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_arr[pol_i]=Temporary(dirty_img)
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
-            *weights_arr[pol_i]=Temporary(weights_grid)
+            IF N_Elements(weights_grid) GT 0 THEN *weights_arr[pol_i]=Temporary(weights_grid)
         ENDFOR
         print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN

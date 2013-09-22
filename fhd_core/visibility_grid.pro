@@ -207,12 +207,18 @@ t5=0
 t6=0
 t6a=0
 t6b=0
+t3a=0
 IF map_flag THEN BEGIN
     map_fn_inds=Ptrarr(psf_dim,psf_dim,/allocate)
     psf2_inds=indgen(psf_dim2,psf_dim2)
     FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO $  
         *map_fn_inds[i,j]=psf2_inds[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]
 ENDIF
+
+;pdim=size(psf_base,/dimension)
+;psf_base_dag=Ptrarr(pdim,/allocate)
+;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
+
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
@@ -236,27 +242,28 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
-    IF Keyword_Set(complex) THEN box_matrix_dag=Transpose(Conj(box_matrix)) ELSE box_matrix_dag=Transpose(box_matrix) 
+    t3a+=Systime(1)-t3_0
+    IF Keyword_Set(complex) THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0   
     IF Keyword_Set(model_flag) THEN BEGIN
         model_box=model_use[inds]
-        box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose)
+        box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
         model_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     ENDIF
-    box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose)
+    box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose,/btranspose)
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     t5_0=Systime(1)
     t4+=t5_0-t4_0
 
     IF weights_flag THEN BEGIN
-        wts_box=matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose)
+        wts_box=matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose,/btranspose)
         IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
     ENDIF
     IF variance_flag THEN BEGIN
-        var_box=matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose)
+        var_box=matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
         IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
@@ -265,7 +272,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5+=t6_0-t5_0
     IF map_flag THEN BEGIN
         t6a_0=Systime(1)
-        box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag))
+        box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/btranspose)
         t6b_0=Systime(1)
         t6a+=t6b_0-t6a_0
         IF Keyword_Set(grid_uniform_weight) THEN box_arr_map/=vis_n
@@ -317,7 +324,7 @@ ENDIF
 ;image_uv*=normalization ;account for FFT convention
 
 IF ~Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4,t5,t6,t7
-IF ~Keyword_Set(silent) THEN print,t6a,t6b
+IF ~Keyword_Set(silent) THEN print,t6a,t6b,t3a
 time_arr=[t0,t1,t2,t3,t4,t5,t6,t7]
 timing=Systime(1)-t0_0
 RETURN,image_uv
