@@ -228,7 +228,7 @@ t0+=t1a-t0a
 ;        ENDIF
     ENDFOR
     
-    stokes_images=stokes_cnv(instr_images,beam=beam_base_out)
+    stokes_images=stokes_cnv(instr_images,beam=beam_base_out) ;NOTE one factor of the beam already corrected for
     stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out)
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
         stokes_gal_holo=stokes_cnv(gal_holo_img,beam=beam_base_out)
