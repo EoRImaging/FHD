@@ -7,6 +7,7 @@ except=!except
 heap_gc
 ;wrapper designed to generate decent images as quickly as possible
 
+calibration_visibilities_subtract=1
 calibrate_visibilities=1
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=1
@@ -41,6 +42,8 @@ psf_dim=8
 min_baseline=12.
 flag_nsigma=20.
 ring_radius=6.*pad_uv_image
+nfreq_avg=16
+max_calibration_sources=100.
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
@@ -49,6 +52,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,psf_dim=psf_dim,$
     FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,$
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
-    ring_radius=ring_radius,flag_nsigma=flag_nsigma,_Extra=extra
+    ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,max_calibration_sources=max_calibration_sources,$
+    calibration_visibilities_subtract=calibration_visibilities_subtract,_Extra=extra
 !except=except
 END
