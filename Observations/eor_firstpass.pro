@@ -11,13 +11,12 @@ IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=1
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
-IF N_Elements(version) EQ 0 THEN version=''
+IF N_Elements(version) EQ 0 THEN version=1
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=0
 IF N_Elements(mapfn_recalculate) THEN mapfn_recalculate=0
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag) EQ 0 THEN flag=1
-image_filter_fn='' ;applied ONLY to output images
-
+image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 ;NEED TO FIGURE OUT THE PROPER DIRECTORY AND output_directory TO USE AT MIT
 IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['128T','test']) $
@@ -35,7 +34,8 @@ FoV=100.
 no_ps=1 ;don't save postscript copy of images
 psf_dim=8
 min_baseline=12.
-flag_nsigma=10.
+flag_nsigma=20.
+ring_radius=6.*pad_uv_image
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
@@ -44,6 +44,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,psf_dim=psf_dim,$
     FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,$
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
-    _Extra=extra
+    ring_radius=ring_radius,flag_nsigma=flag_nsigma,_Extra=extra
 !except=except
 END
