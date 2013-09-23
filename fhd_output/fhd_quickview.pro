@@ -37,9 +37,10 @@ IF N_Elements(weights_arr) EQ 0 THEN BEGIN
     weights_arr=Ptrarr(n_pol)
     IF file_test(file_path_fhd+'_uv_'+pol_names[0]+'.sav') THEN $
         FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid'))
-ENDIF
+ENDIF 
 
-IF ~Min(Ptr_valid(weights_arr)) THEN FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
+IF Min(Ptr_valid(weights_arr)) EQ 0 THEN FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
+FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
