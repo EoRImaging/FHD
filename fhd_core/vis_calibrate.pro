@@ -129,14 +129,17 @@ if Keyword_Set(vis_baseline_hist) then begin
   kx_arr=cal.uu[0:n_baselines-1]/obs.kpix ;ignore slight variation with time
   ky_arr=cal.vv[0:n_baselines-1]/obs.kpix
   kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
-  dist_arr=(freq_arr#kr_arr)*obs.kpix
-  dist_hist = histogram(dist_arr, min=obs.min_baseline, binsize=5, max=obs.max_baseline, locations = dist_locs, reverse_indices = dist_ri)
+  dist_arr=(freq_arr#temporary(kr_arr))*obs.kpix
+  dist_arr = reform(rebin(dist_arr, n_freq,n_baselines,n_time,/sample),n_freq,n_baselines*n_time)
+  dist_hist = histogram(temporary(dist_arr), min=obs.min_baseline, binsize=5, max=obs.max_baseline, locations = dist_locs, reverse_indices = dist_ri)
   vis_res_ratio_mean = fltarr(n_pol, n_elements(dist_locs))
   vis_res_sigma = fltarr(n_pol, n_elements(dist_locs))
   for pol_i=0,n_pol-1 do begin
     vis_model_arr = Temporary(*vis_model_ptr[pol_i])
     for i=0, n_elements(dist_locs)-1 do if dist_hist[i] gt 0 then begin
     inds = dist_ri[dist_ri[i]:dist_ri[i+1]-1]
+    wh_noflag = where(vis_model_arr[inds] gt 0, count_noflag)
+    if count_noflag eq 0 then continue else inds = inds[wh_noflag]
       if Keyword_Set(calibration_visibilities_subtract) then begin
         vis_res_ratio_mean[i] = mean(abs((*vis_cal[pol_i])[inds]))/mean(abs(vis_model_arr[inds]))
         vis_res_sigma[i] = sqrt(variance(abs((*vis_cal[pol_i])[inds])))/mean(abs(vis_model_arr[inds]))
