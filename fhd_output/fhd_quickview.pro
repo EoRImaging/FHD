@@ -165,11 +165,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
     beam_use=*beam_base_out[pol_i]
     
-    instr_low=Min(instr_residual[beam_i])
-    instr_high=Max(instr_residual[beam_i])
+    instr_low=Min(instr_residual[beam_i])>(-5.*Stddev(instr_residual[beam_i]))
+    instr_high=Max(instr_residual[beam_i])<(10.*Stddev(instr_residual[beam_i]))
+    
     instr_low=instr_low>(-instr_high)    
-    stokes_low=Min((stokes_residual*Sqrt(beam_avg>0))[beam_i])
-    stokes_high=Max((stokes_residual*Sqrt(beam_avg>0))[beam_i])
+    stokes_low=Min((stokes_residual*Sqrt(beam_avg>0))[beam_i])>(-5.*Stddev((stokes_residual*Sqrt(beam_avg>0))[beam_i]))
+    stokes_high=Max((stokes_residual*Sqrt(beam_avg>0))[beam_i])<(10.*Stddev((stokes_residual*Sqrt(beam_avg>0))[beam_i]))
     stokes_low=stokes_low>(-stokes_high)
     log_dirty=0
     log_source=1

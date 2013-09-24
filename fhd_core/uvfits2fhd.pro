@@ -418,7 +418,6 @@ ENDIF ELSE BEGIN
 ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
-    print,'Exporting images'    
     IF file_test(file_path_fhd+'_fhd.sav') THEN BEGIN
         fhd_output,obs,fhd,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
             image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra 

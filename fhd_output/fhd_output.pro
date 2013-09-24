@@ -26,7 +26,7 @@ IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
-IF not Keyword_Set(silent) THEN print,'Exporting: ',basename
+print,'Exporting: ',basename
 export_path=filepath(basename,root=dirpath,sub='export')
 export_dir=file_dirname(export_path)
 
