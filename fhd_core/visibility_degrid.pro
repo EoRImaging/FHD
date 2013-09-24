@@ -117,8 +117,25 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;    base_i=baseline_i[bt_i]
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
-    
+     
     vis_n=bin_n[bin_i[bi]]
+    xyf_n=histogram(x_off+y_off*psf_resolution+fbin*psf_resolution^2.,min=0,/bin,reverse_indices=rxyf_i)
+    xyf_i=where(xyf_n,n_xyf_bin)   
+    
+    IF vis_n GT n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+        inds_use=rxyf_i[rxyf_i[xyf_i]] ;only want one element from each grouping
+        inds_use=inds_use[Sort(inds_use)]
+        x_off=x_off[inds_use] 
+        y_off=y_off[inds_use]
+        fbin=fbin[inds_use]
+        
+        IF n_xyf_bin EQ 1 THEN ind_remap=lonarr(vis_n) ELSE ind_remap=Value_locate(inds_use,lindgen(vis_n))
+        
+        vis_n=n_xyf_bin
+        ind_remap_flag=1
+    ENDIF ELSE $
+        ind_remap_flag=0
+    
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) ;NOTE!!! THIS IS THE TRANSPOSE OF box_matrix IN visibility_grid!!!!
     
     box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
@@ -135,7 +152,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     
-    visibility_array[inds]+=vis_box
+    IF ind_remap_flag THEN visibility_array[inds]+=vis_box[ind_remap] ELSE visibility_array[inds]+=vis_box
     
     t5_1=Systime(1)
     t5+=t5_1-t5_0

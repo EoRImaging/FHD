@@ -382,7 +382,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
     ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
     ;        ELSE $
-
+            
             
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
@@ -425,7 +425,7 @@ IF Keyword_Set(export_images) THEN BEGIN
     ENDIF ELSE BEGIN
         IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
             IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav' 
-            source_array=cal.source_list
+            IF N_Elements(cal) GT 0 THEN source_array=cal.source_list
         ENDIF
         fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
             model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra

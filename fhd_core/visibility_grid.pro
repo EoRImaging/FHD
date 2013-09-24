@@ -67,8 +67,8 @@ frequency_array=frequency_array[fi_use]
 
 IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
 psf_base=psf.base
-psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
-psf_resolution=(Size(psf_base,/dimension))[2]
+psf_dim=psf.dim
+psf_resolution=psf.resolution
 
 flag_switch=Keyword_Set(flag_ptr)
 weights_flag=Keyword_Set(weights)
@@ -160,7 +160,7 @@ bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should 
 bin_i=where(bin_n,n_bin_use)
 
 n_vis=Float(Total(bin_n))
-IF Keyword_Set(grid_uniform_weight) THEN n_vis=n_bin_use
+;IF Keyword_Set(grid_uniform_weight) THEN n_vis=n_bin_use
 
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
@@ -233,11 +233,33 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     freq_i=(inds mod n_freq1)
     fbin=freq_bin_i[freq_i]
     
+    xyf_n=histogram(x_off+y_off*psf_resolution+fbin*psf_resolution^2.,min=0,/bin,reverse_indices=rxyf_i)
+    xyf_i=where(xyf_n,n_xyf_bin)    
     vis_n=bin_n[bin_i[bi]]
-    vis_n_arr=Replicate(1.,vis_n)
     
-    vis_box=vis_arr_use[inds]*freq_norm[freq_i]
-    IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
+    IF vis_n GT n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+        vis_box1=vis_arr_use[inds]*freq_norm[freq_i]
+        inds_use=rxyf_i[rxyf_i[xyf_i]] ;only want one element from each grouping
+        x_off=x_off[inds_use] 
+        y_off=y_off[inds_use]
+        fbin=fbin[inds_use]
+        psf_weight=xyf_n[xyf_i]
+        vis_box=Complexarr(n_xyf_bin)
+        FOR bin_ii=0,n_xyf_bin-1 DO vis_box[bin_ii]=(xyf_n[xyf_i[bin_ii]] GT 1) ? Mean(vis_box1[rxyf_i[rxyf_i[xyf_i[bin_ii]]:rxyf_i[xyf_i[bin_ii]+1]-1]]):vis_box1[inds_use[bin_ii]]
+        IF Keyword_Set(model_flag) THEN BEGIN
+            model_box=Complexarr(n_xyf_bin)
+            model_box1=model_use[inds]*freq_norm[freq_i]
+            FOR bin_ii=0,n_xyf_bin-1 DO model_box[bin_ii]=(xyf_n[xyf_i] GT 1) ? Mean(model_box1[rxyf_i[rxyf_i[xyf_i[bin_ii]]:rxyf_i[xyf_i[bin_ii]+1]-1]]):model_box1[inds_use[bin_ii]]
+        ENDIF
+        
+        vis_n=n_xyf_bin
+    ENDIF ELSE BEGIN
+        IF Keyword_Set(model_flag) THEN model_box=model_use[inds]*freq_norm[freq_i]
+        vis_box=vis_arr_use[inds]*freq_norm[freq_i]
+;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
+    ENDELSE
+    vis_n_arr=Replicate(1.,vis_n)
+
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
@@ -248,7 +270,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t4_0=Systime(1)
     t3+=t4_0-t3_0   
     IF Keyword_Set(model_flag) THEN BEGIN
-        model_box=model_use[inds]
         box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
         model_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     ENDIF
@@ -259,12 +280,12 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     IF weights_flag THEN BEGIN
         wts_box=matrix_multiply(vis_n_arr/n_vis,box_matrix_dag,/atranspose,/btranspose)
-        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
+;        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
     ENDIF
     IF variance_flag THEN BEGIN
         var_box=matrix_multiply(vis_n_arr/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
-        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
+;        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
     
@@ -275,7 +296,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/btranspose)
         t6b_0=Systime(1)
         t6a+=t6b_0-t6a_0
-        IF Keyword_Set(grid_uniform_weight) THEN box_arr_map/=vis_n
+;        IF Keyword_Set(grid_uniform_weight) THEN box_arr_map/=vis_n
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
             (*map_fn[xmin_use+i,ymin_use+j])[*map_fn_inds[i,j]]+=box_arr_map[*,ij]
