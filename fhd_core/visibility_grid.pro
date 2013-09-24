@@ -274,6 +274,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             vis_box[repeat_i[rep_ii]]=Mean(vis_box1[xyf_ui_rep])
             IF Keyword_Set(model_flag) THEN model_box[repeat_i[rep_ii]]=Mean(model_box1[xyf_ui_rep])
         ENDFOR
+        vis_n=n_xyf_bin
     ENDIF ELSE BEGIN
         rep_flag=0
         IF Keyword_Set(model_flag) THEN model_box=model_use[inds]*freq_norm[freq_i]
