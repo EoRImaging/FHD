@@ -123,7 +123,7 @@ t2=t3_a-t2_a
 
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 
-if arg_present(vis_baseline_hist) then begin
+if Keyword_Set(vis_baseline_hist) then begin
   IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_ptr[pol_i]
   
   kx_arr=cal.uu[0:n_baselines-1]/obs.kpix ;ignore slight variation with time
@@ -147,6 +147,7 @@ if arg_present(vis_baseline_hist) then begin
     endif
   endfor
   vis_baseline_hist = {baseline_length:dist_locs, vis_res_ratio_mean:vis_res_ratio_mean, vis_res_sigma:vis_res_sigma}
+  SAVE,vis_baseline_hist,filename=file_path_fhd+'_cal_hist.sav'
 endif else IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
 
 t3=Systime(1)-t3_a

@@ -87,10 +87,10 @@ beam_correction_out=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     beam_base=Sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
     *beam_base_out[pol_i]=Rebin(beam_base,dimension,elements) ;should be fine even if pad_uv_image is not set
-    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-4)
+    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-2)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
-    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[1e-4,Max(beam_mask_test)])
+    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[1e-2,Max(beam_mask_test)])
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
     beam_avg+=*beam_base_out[pol_i]
     beam_mask*=beam_mask0
