@@ -1,7 +1,7 @@
 PRO eor_firstpass,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,$
-    julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,_Extra=extra
+    julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -21,6 +21,7 @@ IF N_Elements(flag) EQ 0 THEN flag=1
 IF N_Elements(julian_day) EQ 0 THEN julian_day=2456528
 IF N_Elements(uvfits_version) EQ 0 THEN uvfits_version=2
 IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
+IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 ;NEED TO FIGURE OUT THE PROPER DIRECTORY AND output_directory TO USE AT MIT
@@ -54,6 +55,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,$
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
     ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,max_calibration_sources=max_calibration_sources,$
-    calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,_Extra=extra
+    calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,$
+    vis_baseline_hist=vis_baseline_hist,_Extra=extra
 !except=except
 END
