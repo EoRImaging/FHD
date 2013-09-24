@@ -237,7 +237,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xyf_i=where(xyf_n,n_xyf_bin)    
     vis_n=bin_n[bin_i[bi]]
     
-    IF vis_n GT n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         vis_box1=vis_arr_use[inds]*freq_norm[freq_i]
         inds_use=rxyf_i[rxyf_i[xyf_i]] ;only want one element from each grouping
         x_off=x_off[inds_use] 

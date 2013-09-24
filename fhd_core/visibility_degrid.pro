@@ -122,7 +122,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xyf_n=histogram(x_off+y_off*psf_resolution+fbin*psf_resolution^2.,min=0,/bin,reverse_indices=rxyf_i)
     xyf_i=where(xyf_n,n_xyf_bin)   
     
-    IF vis_n GT n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         inds_use=rxyf_i[rxyf_i[xyf_i]] ;only want one element from each grouping
         inds_use=inds_use[Sort(inds_use)]
         x_off=x_off[inds_use] 
