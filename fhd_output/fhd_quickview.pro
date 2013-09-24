@@ -241,7 +241,16 @@ IF source_flag THEN BEGIN
     IF n_pol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
     source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list'
 ENDIF
+
+; plot calibration solutions, export to png
+IF N_Elements(cal) GT 0 THEN plot_cals,cal=cal,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png'
+
+
 END
+
+
+
+
 ;
 ;
 ;;,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,beam_base,$
