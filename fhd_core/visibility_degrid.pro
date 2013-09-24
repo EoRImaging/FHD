@@ -119,22 +119,50 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
      
     vis_n=bin_n[bin_i[bi]]
-    xyf_n=histogram(x_off+y_off*psf_resolution+fbin*psf_resolution^2.,min=0,/bin,reverse_indices=rxyf_i)
-    xyf_i=where(xyf_n,n_xyf_bin)   
+    x1=x_off-Min(x_off)
+    y1=y_off-Min(y_off)
+    f1=fbin-Min(fbin)
+    
+    xyf_i=x1+y1*(Max(x1)+1)+f1*((Max(x1)+1)*(Max(y1)+1))
+    xyf_si=Sort(xyf_i)
+    xyf_i=xyf_i[xyf_si]
+    xyf_ui=Uniq(xyf_i)
+    n_xyf_bin=N_Elements(xyf_ui)
     
     IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
-        inds_use=rxyf_i[rxyf_i[xyf_i]] ;only want one element from each grouping
-        inds_use=inds_use[Sort(inds_use)]
+        ind_remap_flag=1
+        inds=inds[xyf_si]
+        freq_i=freq_i[xyf_si]
+        
+        inds_use=xyf_si[xyf_ui]
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
+        inds_use=[-1,xyf_ui]
         
-        IF n_xyf_bin EQ 1 THEN ind_remap=lonarr(vis_n) ELSE ind_remap=Value_locate(inds_use,lindgen(vis_n))
+        ind_remap=lonarr(vis_n)
+        FOR ii=0,n_xyf_bin-1 DO ind_remap[inds_use[ii]+1:inds_use[ii+1]]=ii
         
         vis_n=n_xyf_bin
-        ind_remap_flag=1
     ENDIF ELSE $
         ind_remap_flag=0
+    
+;    xyf_n=histogram(x1+y1*(Max(x1)+1)+f1*((Max(x1)+1)*(Max(y1)+1)),min=0,/bin,reverse_indices=rxyf_i)
+;    xyf_i=where(xyf_n,n_xyf_bin)   
+;    
+;    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+;        inds_use=rxyf_i[rxyf_i[xyf_i]] ;only want one element from each grouping
+;        inds_use=inds_use[Sort(inds_use)]
+;        x_off=x_off[inds_use] 
+;        y_off=y_off[inds_use]
+;        fbin=fbin[inds_use]
+;        
+;        IF n_xyf_bin EQ 1 THEN ind_remap=lonarr(vis_n) ELSE ind_remap=Value_locate(inds_use,lindgen(vis_n))
+;        
+;        vis_n=n_xyf_bin
+;        ind_remap_flag=1
+;    ENDIF ELSE $
+;        ind_remap_flag=0
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) ;NOTE!!! THIS IS THE TRANSPOSE OF box_matrix IN visibility_grid!!!!
     
@@ -151,8 +179,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
     t5_0=Systime(1)
     t4+=t5_0-t4_0
-    
-    IF ind_remap_flag THEN visibility_array[inds]+=vis_box[ind_remap] ELSE visibility_array[inds]+=vis_box
+    IF ind_remap_flag THEN vis_box=vis_box[ind_remap]
+    visibility_array[inds]+=vis_box
     
     t5_1=Systime(1)
     t5+=t5_1-t5_0
