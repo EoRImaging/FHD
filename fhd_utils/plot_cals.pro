@@ -71,9 +71,12 @@ IF Keyword_Set(vis_baseline_hist) and Keyword_Set(vis_hist_filename) THEN BEGIN
    PS_START,filename=vis_hist_filename,/quiet,/nomatch
    !p.multi=[0,2,1]
    FOR pol=0,1 DO BEGIN
-      cgplot,base_len,ratio[pol,*],/xlog,yrange=[0,max(ratio+sigma)]
-      cgerrplot,base_len,ratio[pol,*]-sigma[pol,*],ratio[pol,*]+sigma[pol,*]
-      cgoplot,base_len,ratio[pol,*],color='red'
+      ;cgplot,base_len,ratio[pol,*],/xlog,yrange=[0,max(ratio+sigma)]
+      ;cgerrplot,base_len,ratio[pol,*]-sigma[pol,*],ratio[pol,*]+sigma[pol,*]
+      ;cgoplot,base_len,ratio[pol,*],color='red'
+      cgplot,base_len,ratio[pol,*],color='red',/xlog,yrange=[0,max(ratio+sigma)]
+      cgoplot,base_len,ratio[pol,*]+sigma[pol,*],linestyle=2
+      cgoplot,base_len,ratio[pol,*]-sigma[pol,*],linestyle=2
    ENDFOR
    PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 ENDIF
