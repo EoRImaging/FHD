@@ -129,7 +129,7 @@ if Keyword_Set(vis_baseline_hist) then begin
   kx_arr=cal.uu/obs.kpix ;ignore slight variation with time
   ky_arr=cal.vv/obs.kpix
   kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
-  dist_arr=(freq_arr#double(kr_arr))*obs.kpix
+  dist_arr=(freq_arr#kr_arr)*obs.kpix
   dist_hist = histogram(dist_arr, min=obs.min_baseline, binsize=5, max=obs.max_baseline, locations = dist_locs, reverse_indices = dist_ri)
   vis_res_ratio_mean = fltarr(n_pol, n_elements(dist_locs))
   vis_res_sigma = fltarr(n_pol, n_elements(dist_locs))
