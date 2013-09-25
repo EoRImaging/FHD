@@ -18,7 +18,7 @@ freq=cal.freq[freqi_use]
 plot_pos=calculate_plot_positions(.8, nplots=128, /no_colorbar, ncol=16, nrow=8, plot_margin = [.05, .05, .02, .25])
 plot_pos=plot_pos.plot_pos
 
-PS_START,phase_filename,scale_factor=2
+PS_START,phase_filename,scale_factor=2,/quiet,/nomatch
 
 FOR tile=1,8 DO BEGIN
   FOR rec=1,16 DO BEGIN
@@ -39,7 +39,7 @@ ENDFOR
 
 PS_END,/png
     
-PS_START,amp_filename,scale_factor=2
+PS_START,amp_filename,scale_factor=2,/quiet,/nomatch
 
 ; TODO: More intelligent plot max - a single value can throw
 ;                                   everything off.
