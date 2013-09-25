@@ -37,7 +37,7 @@ FOR tile=1,8 DO BEGIN
   ENDFOR
 ENDFOR
 
-PS_END,/png
+PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
     
 PS_START,amp_filename,scale_factor=2,/quiet,/nomatch
 
@@ -61,5 +61,5 @@ FOR tile=1,8 DO BEGIN
   ENDFOR
 ENDFOR
 
-PS_END,/png
+PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 END    
