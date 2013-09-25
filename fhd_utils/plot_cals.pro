@@ -1,4 +1,4 @@
-pro plot_cals,cal=cal,phase_filename=phase_filename,amp_filename=amp_filename
+pro plot_cals,cal=cal,phase_filename=phase_filename,amp_filename=amp_filename,vis_baseline_hist=vis_baseline_hist,cal_hist_filename=cal_hist_filename
 ; Make plot of the cal solutions, save to png
 ; PS_START/PS_END write .ps first, then converts to png. Supply .png
 ; filename to automatically overwrite .ps.
@@ -62,4 +62,20 @@ FOR tile=1,8 DO BEGIN
 ENDFOR
 
 PS_END,/png
+
+IF Keyword_Set(vis_baseline_hist) and Keyword_Set(cal_hist_filename) THEN BEGIN
+   ratio=vis_baseline_hist.vis_res_ratio_mean ; just save some typing
+   sigma=vis_baseline_hist.vis_res_sigma
+   base_len=vis_baseline_hist.baseline_length
+
+   PS_START,filename=cal_hist_filename
+   !p.multi=[0,2,1]
+   FOR pol=0,1 DO BEGIN
+      cgplot,base_len,ratio[pol,*],/xlog,yrange=[0,max(ratio+sigma)]
+      cgerrplot,base_len,ratio[pol,*]-sigma[pol,*],ratio[pol,*]+sigma[pol,*]
+      cgoplot,base_len,ratio[pol,*],color='red'
+   ENDFOR
+   PS_END,/png
+ENDIF
+
 END    
