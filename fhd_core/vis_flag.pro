@@ -33,19 +33,11 @@ tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
 IF Tag_exist(obs,'freq') THEN freq=obs.freq ELSE freq=(*obs.baseline_info).freq
 n_tiles=obs.n_tile
-;now taken care of in a more appropriate place
-;flag_center=1
-;flag_edge=3
-;coarse_channel_id=Floor(indgen(n_freq)/24.)
-;coarse_channel_pos=indgen(n_freq) mod 32
-;flag_arr[*,where(coarse_channel_pos EQ 16),*]=0
-;flag_arr[*,where((coarse_channel_pos LT flag_edge) OR (coarse_channel_pos GT 32-flag_edge-1)),*]=0
+tile_names=(*obs.baseline_info).tile_names
 
-;IF Keyword_Set(cut_baselines) THEN BEGIN
 uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(freq)
 cut_baselines_i=where((uv_dist LT min_baseline) OR (uv_dist GT max_baseline),n_baselines_cut)
 IF N_baselines_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,cut_baselines_i]=0
-;ENDIF
 
 tile_fom=fltarr(n_tiles)
 FOR tile_i=0L,n_tiles-1 DO BEGIN
@@ -99,7 +91,7 @@ tile_cut=where((Abs(tile_mean2-tile_fom) GT flag_nsigma*tile_dev2) OR (tile_fom 
 freq_cut=where((Abs(freq_mean2-freq_fom) GT flag_nsigma*freq_dev2) OR (freq_fom EQ 0.),n_freq_cut,complement=freq_i_use)
         
 IF n_tile_cut GT 0 THEN BEGIN
-    print,'Tiles cut:',tile_cut+1
+    print,'Tiles cut:',tile_names[tile_cut]
     FOR bad_i=0,n_tile_cut-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             (*flag_ptr[pol_i])[*,where(tile_A EQ (tile_cut[bad_i]+1))]=0

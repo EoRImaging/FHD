@@ -95,9 +95,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 
     FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
+        gain_curr=Reform(gain_arr[fi,tile_use]) 
         ;Reuse same gain solution between successive frequency channels IF input gains are default values
-        IF fii EQ 0 THEN gain_curr=Reform(gain_arr[fi,tile_use]) 
-        IF Stddev(gain_arr[fi,tile_use]) GT 0 THEN gain_curr=Reform(gain_arr[fi,tile_use]) 
+;        IF fii EQ 0 THEN gain_curr=Reform(gain_arr[fi,tile_use]) 
+;        IF Stddev(gain_arr[fi,tile_use]) GT 0 THEN gain_curr=Reform(gain_arr[fi,tile_use]) 
         vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)] 
         vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]
         weight2=Reform(weight[fi,baseline_use]) & weight2=[weight2,weight2]
