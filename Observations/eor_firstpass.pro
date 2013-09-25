@@ -44,8 +44,9 @@ min_baseline=12.
 flag_nsigma=20.
 ring_radius=6.*pad_uv_image
 nfreq_avg=16
-max_calibration_sources=100.
+max_calibration_sources=300.
 weights_grid=0
+psf_resolution=8.
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
@@ -56,6 +57,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
     ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,max_calibration_sources=max_calibration_sources,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,$
-    vis_baseline_hist=vis_baseline_hist,_Extra=extra
+    vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,_Extra=extra
 !except=except
 END
