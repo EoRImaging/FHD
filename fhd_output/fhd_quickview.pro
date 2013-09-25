@@ -1,6 +1,6 @@
 PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,$
-    gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,$
+    gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     zoom_low=zoom_low,zoom_high=zoom_high,grid_spacing=grid_spacing,reverse_image=reverse_image,$
     no_fits=no_fits,no_png=no_png,_Extra=extra
 
