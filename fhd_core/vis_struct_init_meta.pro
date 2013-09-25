@@ -30,6 +30,9 @@ IF file_test(metafits_path) THEN BEGIN
     hdr0=headfits(metafits_path,exten=0,/silent)
     
     data=mrdfits(metafits_path,1,hdr1,/silent)
+    tile_nums=data.antenna
+    tile_nums=radix_sort(tile_nums,index=tile_order)
+    data=data[tile_order]
     pol_names=data.pol
     single_i=where(pol_names EQ pol_names[0],n_single)
     tile_names=data.tile

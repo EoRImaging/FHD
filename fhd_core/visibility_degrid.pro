@@ -81,6 +81,8 @@ ENDIF
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
 bin_i=where(bin_n,n_bin_use);+bin_min
 
+ind_ref=indgen(max(bin_n))
+
 ;initialize ONLY those elements of the map_fn array that will receive data
 index_arr=Lindgen(dimension,elements)
 CASE 1 OF
@@ -138,31 +140,20 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
-        inds_use=[-1,xyf_ui]
         
-        ind_remap=lonarr(vis_n)
-        FOR ii=0,n_xyf_bin-1 DO ind_remap[inds_use[ii]+1:inds_use[ii+1]]=ii
+        IF n_xyf_bin EQ 1 THEN ind_remap=intarr(vis_n) ELSE BEGIN
+            hist_inds_u=histogram(xyf_ui,/binsize,min=0,reverse_ind=ri_xyf)
+            ind_remap=ind_ref[ri_xyf[0:n_elements(hist_inds_u)-1]-ri_xyf[0]]
+        ENDELSE
+        
+;        inds_use=[-1,xyf_ui]
+;        
+;        ind_remap=lonarr(vis_n)
+;        FOR ii=0,n_xyf_bin-1 DO ind_remap[inds_use[ii]+1:inds_use[ii+1]]=ii
         
         vis_n=n_xyf_bin
     ENDIF ELSE $
         ind_remap_flag=0
-    
-;    xyf_n=histogram(x1+y1*(Max(x1)+1)+f1*((Max(x1)+1)*(Max(y1)+1)),min=0,/bin,reverse_indices=rxyf_i)
-;    xyf_i=where(xyf_n,n_xyf_bin)   
-;    
-;    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
-;        inds_use=rxyf_i[rxyf_i[xyf_i]] ;only want one element from each grouping
-;        inds_use=inds_use[Sort(inds_use)]
-;        x_off=x_off[inds_use] 
-;        y_off=y_off[inds_use]
-;        fbin=fbin[inds_use]
-;        
-;        IF n_xyf_bin EQ 1 THEN ind_remap=lonarr(vis_n) ELSE ind_remap=Value_locate(inds_use,lindgen(vis_n))
-;        
-;        vis_n=n_xyf_bin
-;        ind_remap_flag=1
-;    ENDIF ELSE $
-;        ind_remap_flag=0
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) ;NOTE!!! THIS IS THE TRANSPOSE OF box_matrix IN visibility_grid!!!!
     
