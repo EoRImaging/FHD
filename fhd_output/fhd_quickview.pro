@@ -2,7 +2,7 @@ PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     zoom_low=zoom_low,zoom_high=zoom_high,grid_spacing=grid_spacing,reverse_image=reverse_image,$
-    no_fits=no_fits,no_png=no_png,_Extra=extra
+    no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,_Extra=extra
 
 
 basename=file_basename(file_path_fhd)
@@ -140,7 +140,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         instr_sources[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
-            dimension=dimension,width=restored_beam_width,_Extra=extra))
+            dimension=dimension,width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))
     ENDIF
 ENDFOR
 stokes_images=stokes_cnv(instr_images,beam=beam_base_out)
@@ -201,11 +201,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
     IF pol_i EQ 0 THEN log=0 ELSE log=0
     IF source_flag THEN BEGIN
+        IF Keyword_Set(ring_radius) THEN restored_name='_Restored_rings_' ELSE restored_name='_Restored_'
         IF ~Keyword_Set(no_fits) THEN BEGIN
     ;        FitsFast,instr_source,fits_header,/write,file_path=export_path+filter_name+'_Sources_'+pol_names[pol_i]
-            FitsFast,instr_restored,fits_header,/write,file_path=export_path+filter_name+'_Restored_'+pol_names[pol_i]
+            FitsFast,instr_restored,fits_header,/write,file_path=export_path+filter_name+restored_name+pol_names[pol_i]
     ;        FitsFast,stokes_sources,fits_header,/write,file_path=export_path+'_Sources_'+pol_names[pol_i+4]
-            FitsFast,stokes_restored,fits_header,/write,file_path=export_path+filter_name+'_Restored_'+pol_names[pol_i+4]
+            FitsFast,stokes_restored,fits_header,/write,file_path=export_path+filter_name+restored_name+pol_names[pol_i+4]
         ENDIF
         IF ~Keyword_Set(no_png) THEN BEGIN
             instrS_high=Max(instr_restored[beam_i])
@@ -214,14 +215,14 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
-            Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i+4],$
+            Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+restored_name+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokes_high,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
             
     ;        Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Sources_'+pol_names[pol_i],$
     ;            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high,/invert_color,_Extra=extra
-            Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Restored_'+pol_names[pol_i],$
+            Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+restored_name+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,_Extra=extra
         ENDIF
     ENDIF
