@@ -1,4 +1,4 @@
-pro plot_cals,cal=cal,phase_filename=phase_filename,amp_filename=amp_filename,vis_baseline_hist=vis_baseline_hist,cal_hist_filename=cal_hist_filename
+pro plot_cals,cal=cal,phase_filename=phase_filename,amp_filename=amp_filename,vis_baseline_hist=vis_baseline_hist,vis_hist_filename=vis_hist_filename
 ; Make plot of the cal solutions, save to png
 ; PS_START/PS_END write .ps first, then converts to png. Supply .png
 ; filename to automatically overwrite .ps.

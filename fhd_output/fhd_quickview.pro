@@ -248,7 +248,7 @@ ENDIF
 IF N_Elements(cal) GT 0 THEN BEGIN
    IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
       plot_cals,cal=cal,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png',$
-                vis_baseline_hist=vis_baseline_hist,cal_hist_filename=image_path+'_cal_hist.png'
+                vis_baseline_hist=vis_baseline_hist,vis_hist_filename=image_path+'_cal_hist.png'
    ENDIF ELSE BEGIN
       plot_cals,cal=cal,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png'
    ENDELSE
