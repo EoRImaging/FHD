@@ -300,30 +300,32 @@ IF Keyword_Set(data_flag) THEN BEGIN
             SAVE,flag_arr,filename=flags_filepath,/compress
     ENDELSE
     
-    flag_freq_test=fltarr(obs.n_freq)
-    flag_tile_test=fltarr(obs.n_tile)
-    FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_arr[pol_i],dimension=2)>0
-    flag_freq_use_i=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
-    IF n_freq_use EQ 0 THEN print,'All frequencies flagged!' ELSE BEGIN
-        (*obs.baseline_info).freq_use[*]=0
-        (*obs.baseline_info).freq_use[flag_freq_use_i]=1
-    ENDELSE
-    tile_A=(*obs.baseline_info).tile_A
-    tile_B=(*obs.baseline_info).tile_B
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        FOR tile_i=0,obs.n_tile-1 DO BEGIN
-            tA_i=where(tile_A EQ (tile_i+1),nA)
-            tB_i=where(tile_B EQ (tile_i+1),nB)
-            
-            IF nA GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tA_i])>0
-            IF nB GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tB_i])>0
-        ENDFOR
-    ENDFOR
-    flag_tile_use_i=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
-    IF n_tile_use EQ 0 THEN print,'All tiles flagged!' ELSE BEGIN
-        (*obs.baseline_info).tile_use[*]=0
-        (*obs.baseline_info).tile_use[flag_tile_use_i]=1
-    ENDELSE
+;    flag_freq_test=fltarr(obs.n_freq)
+;    flag_tile_test=fltarr(obs.n_tile)
+;    FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_arr[pol_i],dimension=2)>0
+;    flag_freq_use_i=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
+;    IF n_freq_use EQ 0 THEN print,'All frequencies flagged!' ELSE BEGIN
+;        (*obs.baseline_info).freq_use[*]=0
+;        (*obs.baseline_info).freq_use[flag_freq_use_i]=1
+;    ENDELSE
+;    tile_A=(*obs.baseline_info).tile_A
+;    tile_B=(*obs.baseline_info).tile_B
+;    FOR pol_i=0,n_pol-1 DO BEGIN
+;        FOR tile_i=0,obs.n_tile-1 DO BEGIN
+;            tA_i=where(tile_A EQ (tile_i+1),nA)
+;            tB_i=where(tile_B EQ (tile_i+1),nB)
+;            
+;            IF nA GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tA_i])>0
+;            IF nB GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tB_i])>0
+;        ENDFOR
+;    ENDFOR
+;    flag_tile_use_i=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
+;    IF n_tile_use EQ 0 THEN print,'All tiles flagged!' ELSE BEGIN
+;        (*obs.baseline_info).tile_use[*]=0
+;        (*obs.baseline_info).tile_use[flag_tile_use_i]=1
+;    ENDELSE
+    tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
+    freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
     print,String(format='(A," frequency channels used and ",A," in-band channels flagged")',$
         Strn(n_freq_use),Strn(n_freq_cut-nf_cut_end-nf_cut_start))
     print,String(format='(A," tiles used and ",A," tiles flagged")',$
