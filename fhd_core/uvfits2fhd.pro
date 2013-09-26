@@ -350,7 +350,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     hpx_cnv=0
     
-    autocorr_i=where(tile_A EQ tile_B,n_autocorr)
+    autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
     auto_corr=Ptrarr(n_pol)
     IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
         auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
