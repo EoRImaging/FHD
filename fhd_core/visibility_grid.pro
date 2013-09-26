@@ -1,6 +1,6 @@
 FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
-    GPU_enable=GPU_enable,complex=complex,double=double,time_arr=time_arr,fi_use=fi_use,bi_use=bi_use,$
+    GPU_enable=GPU_enable,complex_flag=complex_flag,double=double,time_arr=time_arr,fi_use=fi_use,bi_use=bi_use,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
@@ -65,7 +65,7 @@ freq_norm/=Mean(freq_norm)
 freq_norm=freq_norm[fi_use]
 frequency_array=frequency_array[fi_use]
 
-IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
+IF tag_exist(psf,'complex_flag') THEN complex_flag=psf.complex_flag ELSE IF N_Elements(complex_flag) EQ 0 THEN complex_flag=1
 psf_base=psf.base
 psf_dim=psf.dim
 psf_resolution=psf.resolution
@@ -159,13 +159,14 @@ ENDIF
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
 bin_i=where(bin_n,n_bin_use)
 
+ind_ref=indgen(max(bin_n))
 n_vis=Float(Total(bin_n))
 ;IF Keyword_Set(grid_uniform_weight) THEN n_vis=n_bin_use
 
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
 CASE 1 OF
-    Keyword_Set(complex) AND Keyword_Set(double): BEGIN
+    complex_flag AND Keyword_Set(double): BEGIN
         init_arr=Dcomplexarr(psf_dim2,psf_dim2)
 ;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Dcomplex(*psf_base[i])
     END
@@ -173,7 +174,7 @@ CASE 1 OF
         init_arr=Dblarr(psf_dim2,psf_dim2)
 ;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Double(Abs(*psf_base[i]))
     END
-    Keyword_Set(complex): BEGIN
+    complex_flag: BEGIN
         init_arr=Complexarr(psf_dim2,psf_dim2)
 ;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Complex(*psf_base[i])
     END
@@ -258,26 +259,31 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
          
         vis_box=Complexarr(n_xyf_bin)
         vis_box1=vis_arr_use[inds]*freq_norm[freq_i]
-        IF Keyword_Set(model_flag) THEN BEGIN
-            model_box=Complexarr(n_xyf_bin)
-            model_box1=model_use[inds]*freq_norm[freq_i]
-        ENDIF
         
         repeat_i=where(psf_weight GT 1,n_rep,complement=single_i,ncom=n_single)
         IF n_single GT 0 THEN BEGIN
             xyf_ui_single=xyf_ui[single_i]
             vis_box[single_i]=vis_box1[xyf_ui_single]
-            IF Keyword_Set(model_flag) THEN model_box[single_i]=model_box1[xyf_ui_single]
         ENDIF
+        
         FOR rep_ii=0,n_rep-1 DO BEGIN
             xyf_ui_rep=xyf_ui[repeat_i[rep_ii]]+indgen(psf_weight[repeat_i[rep_ii]])
-            vis_box[repeat_i[rep_ii]]=Mean(vis_box1[xyf_ui_rep])
-            IF Keyword_Set(model_flag) THEN model_box[repeat_i[rep_ii]]=Mean(model_box1[xyf_ui_rep])
+            vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui_rep])
         ENDFOR
+        vis_box/=psf_weight
+        
+        IF model_flag THEN BEGIN
+            model_box=Complexarr(n_xyf_bin)
+            model_box1=model_use[inds]*freq_norm[freq_i]
+            model_box[single_i]=model_box1[xyf_ui_single]
+            FOR rep_ii=0,n_rep-1 DO model_box[repeat_i[rep_ii]]=Total(model_box1[xyf_ui_rep])
+            model_box/=psf_weight
+        ENDIF
+        
         vis_n=n_xyf_bin
     ENDIF ELSE BEGIN
         rep_flag=0
-        IF Keyword_Set(model_flag) THEN model_box=model_use[inds]*freq_norm[freq_i]
+        IF model_flag THEN model_box=model_use[inds]*freq_norm[freq_i]
         vis_box=vis_arr_use[inds]*freq_norm[freq_i]
 ;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
     ENDELSE
@@ -295,7 +301,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;        psf_weight=xyf_n[xyf_i]
 ;        vis_box=Complexarr(n_xyf_bin)
 ;        FOR bin_ii=0,n_xyf_bin-1 DO vis_box[bin_ii]=(xyf_n[xyf_i[bin_ii]] GT 1) ? Mean(vis_box1[rxyf_i[rxyf_i[xyf_i[bin_ii]]:rxyf_i[xyf_i[bin_ii]+1]-1]]):vis_box1[inds_use[bin_ii]]
-;        IF Keyword_Set(model_flag) THEN BEGIN
+;        IF model_flag THEN BEGIN
 ;            model_box=Complexarr(n_xyf_bin)
 ;            model_box1=model_use[inds]*freq_norm[freq_i]
 ;            FOR bin_ii=0,n_xyf_bin-1 DO model_box[bin_ii]=(xyf_n[xyf_i] GT 1) ? Mean(model_box1[rxyf_i[rxyf_i[xyf_i[bin_ii]]:rxyf_i[xyf_i[bin_ii]+1]-1]]):model_box1[inds_use[bin_ii]]
@@ -303,7 +309,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;        
 ;        vis_n=n_xyf_bin
 ;    ENDIF ELSE BEGIN
-;        IF Keyword_Set(model_flag) THEN model_box=model_use[inds]*freq_norm[freq_i]
+;        IF model_flag THEN model_box=model_use[inds]*freq_norm[freq_i]
 ;        vis_box=vis_arr_use[inds]*freq_norm[freq_i]
 ;;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
 ;    ENDELSE
@@ -316,11 +322,11 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
     t3a+=Systime(1)-t3_0
-    IF Keyword_Set(complex) THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
+    IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0   
-    IF Keyword_Set(model_flag) THEN BEGIN
+    IF model_flag THEN BEGIN
         box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
         model_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     ENDIF
