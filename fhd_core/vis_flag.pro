@@ -101,11 +101,15 @@ IF n_tile_cut GT 0 THEN BEGIN
             IF n_cut_B GT 0 THEN (*flag_ptr[pol_i])[*,cut_B_i]=0
         ENDFOR
     ENDFOR
-    ((*obs.baseline_info).tile_use)[tile_cut]=0
+    tile_use1=((*obs.baseline_info).tile_use)
+    tile_use1[tile_cut]=0
+    ((*obs.baseline_info).tile_use)=tile_use1
 ENDIF
 IF n_freq_cut GT 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut,*]=0
-    ((*obs.baseline_info).freq_use)[freq_cut]=0
+    freq_use1=((*obs.baseline_info).freq_use)
+    freq_use1[freq_cut]=0
+    ((*obs.baseline_info).freq_use)=freq_use1
 ENDIF
 obs.n_vis=N_Elements(where(*flag_ptr[0] GT 0))
 END
