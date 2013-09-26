@@ -95,8 +95,10 @@ IF n_tile_cut GT 0 THEN BEGIN
     print,'Tiles cut:',tile_names[tile_cut]
     FOR bad_i=0,n_tile_cut-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            (*flag_ptr[pol_i])[*,where(tile_A EQ (tile_cut[bad_i]+1))]=0
-            (*flag_ptr[pol_i])[*,where(tile_B EQ (tile_cut[bad_i]+1))]=0
+            cut_A_i=where(tile_A EQ (tile_cut[bad_i]+1),n_cut_A)
+            cut_B_i=where(tile_B EQ (tile_cut[bad_i]+1),n_cut_B)
+            IF n_cut_A GT 0 THEN (*flag_ptr[pol_i])[*,cut_A_i]=0
+            IF n_cut_B GT 0 THEN (*flag_ptr[pol_i])[*,cut_B_i]=0
         ENDFOR
     ENDFOR
     ((*obs.baseline_info).tile_use)[tile_cut]=0
