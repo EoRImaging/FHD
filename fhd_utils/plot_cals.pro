@@ -29,14 +29,15 @@ FOR tile=1,8 DO BEGIN
     tilei = where(tile_names eq tile_name,n_tile_match)
     
     IF n_tile_match EQ 0 THEN BEGIN
-      ; no tile found... must of been flagged
-;      xcolor=(ycolor=cgColor('red'))
-      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],/noerase,charsize=.5
+      ; no tile found... must have been flagged
+      axiscolor='yellow'
+      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],$
+        /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN
-;      IF tile_use[tilei] EQ 0 THEN xcolor=(ycolor=cgColor('red')) ELSE xcolor=(ycolor=cgColor('black'))
+      IF tile_use[tilei] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
       cgplot,freq,phunwrap(atan(gains0[*,tilei],/phase)),color='blue',title=strtrim(tile_name,2),$
           XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],yrange=[-1.5*!pi,1.5*!pi],$
-             charsize=.5,/noerase
+          charsize=.5,/noerase,axiscolor=axiscolor
        cgoplot,freq,phunwrap(atan(gains1[*,tilei],/phase)),color='red'
     ENDELSE
   ENDFOR
@@ -54,13 +55,17 @@ FOR tile=1,8 DO BEGIN
   FOR rec=1,16 DO BEGIN
     tile_name = 10*rec + tile ; correspond to cal structure's names
     tile_index = 8*(rec-1) + tile - 1 ; index starting at 0
-    tilei = where(tile_names eq tile_name)
-    IF (tilei eq -1) THEN BEGIN
-      ; no tile found... must of been flagged
-      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],/noerase,charsize=.5
+    tilei = where(tile_names eq tile_name,n_tile_match)
+    IF n_tile_match EQ 0  THEN BEGIN
+      ; no tile found... must have been flagged
+      axiscolor='yellow'
+      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],$
+        /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN
+      IF tile_use[tilei] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
       cgplot,freq,abs(gains0[*,tilei]),color='blue',title=strtrim(tile_name,2),$
-          XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],yrange=[0,max_amp],/noerase,charsize=.5
+          XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],yrange=[0,max_amp],$
+          /noerase,charsize=.5,axiscolor=axiscolor
       cgoplot,freq,abs(gains1[*,tilei]),color='red'
     ENDELSE
   ENDFOR
