@@ -255,7 +255,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
         inds_use=[0,xyf_ui] ;Uniq() returns the LAST index 
-        psf_weight=inds_use[1:n_xyf_bin]-inds_use[0:n_xyf_bin-1]
+        psf_weight=(inds_use[1:n_xyf_bin]-inds_use[0:n_xyf_bin-1])>1
          
         vis_box=Complexarr(n_xyf_bin)
         vis_box1=vis_arr_use[inds]*freq_norm[freq_i]
