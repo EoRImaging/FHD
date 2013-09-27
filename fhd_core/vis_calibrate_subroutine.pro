@@ -69,13 +69,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     vis_avg*=weight_invert(weight)
     vis_model*=weight_invert(weight)
     
+    tile_use_flag=(*obs.baseline_info).tile_use
+    freq_use_flag=(*obs.baseline_info).freq_use
+    
     freq_weight=Total(weight,2)
     baseline_weight=Total(weight,1)
-    freq_use=where(freq_weight,n_freq_use)
+    freq_use=where(freq_weight AND freq_use_flag,n_freq_use)
     baseline_use=where(baseline_weight,n_baseline_use)
     hist_tile_A=histogram(tile_A_i[baseline_use],min=0,/bin,max=n_tile-1,reverse_ind=riA)
     hist_tile_B=histogram(tile_B_i[baseline_use],min=0,/bin,max=n_tile-1,reverse_ind=riB)
-    tile_use=where(hist_tile_A+hist_tile_B,n_tile_use)
+    tile_use=where((hist_tile_A+hist_tile_B) AND tile_use_flag,n_tile_use)
     
     tile_A_i_use=Lonarr(n_baseline_use)
     tile_B_i_use=Lonarr(n_baseline_use)
