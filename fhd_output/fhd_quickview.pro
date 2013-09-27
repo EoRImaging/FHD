@@ -135,6 +135,7 @@ ENDIF ELSE source_flag=0
 
 instr_images=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
+instr_rings=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i]))
@@ -254,10 +255,10 @@ ENDIF
 IF N_Elements(cal) GT 0 THEN BEGIN
    IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
       restore,file_path_fhd+'_cal_hist.sav'
-      plot_cals,cal=cal,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png',$
+      plot_cals,cal,obs,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png',$
                 vis_baseline_hist=vis_baseline_hist,vis_hist_filename=image_path+'_cal_hist.png'
    ENDIF ELSE BEGIN
-      plot_cals,cal=cal,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png'
+      plot_cals,cal,obs,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png'
    ENDELSE
 ENDIF
 
