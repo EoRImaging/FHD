@@ -168,7 +168,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         instr_source=*instr_sources[pol_i]
         instr_restored=instr_residual+(Keyword_Set(ring_radius) ? *instr_rings[pol_i]:instr_sourc)
         stokes_source=(*stokes_sources[pol_i])*beam_mask
-        stokes_restored=stokes_residual+(Keyword_Set(ring_radius) ? *stokes_rings[pol_i]:stokes_source)
+        stokes_restored=stokes_residual+(Keyword_Set(ring_radius) ? *stokes_rings[0]:stokes_source) ;use stokes I sources only if using rings
     ENDIF
     beam_use=*beam_base_out[pol_i]
     
