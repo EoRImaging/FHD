@@ -74,11 +74,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     
     freq_weight=Total(weight,2)
     baseline_weight=Total(weight,1)
-    freq_use=where(freq_weight AND freq_use_flag,n_freq_use)
+    freq_use=where((freq_weight GT 0) AND (freq_use_flag GT 0),n_freq_use)
     baseline_use=where(baseline_weight,n_baseline_use)
     hist_tile_A=histogram(tile_A_i[baseline_use],min=0,/bin,max=n_tile-1,reverse_ind=riA)
     hist_tile_B=histogram(tile_B_i[baseline_use],min=0,/bin,max=n_tile-1,reverse_ind=riB)
-    tile_use=where((hist_tile_A+hist_tile_B) AND tile_use_flag,n_tile_use)
+    tile_use=where(((hist_tile_A+hist_tile_B) GT 0) AND (tile_use_flag GT 0),n_tile_use)
     
     tile_A_i_use=Lonarr(n_baseline_use)
     tile_B_i_use=Lonarr(n_baseline_use)
@@ -157,10 +157,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         gain_arr[fi,tile_use]=gain_curr
     ENDFOR
     
-    ;need some error checking in case bad tile_use or freq_use
-    gain_freq_test=Median(Abs(gain_arr[*,tile_use]),dimension=2)
-    gain_tile_test=Median(Abs(gain_arr[freq_use,*]),dimension=1)
-    
+;    ;need some error checking in case bad tile_use or freq_use
+;    gain_freq_test=Median(Abs(gain_arr[*,tile_use]),dimension=2)
+;    gain_tile_test=Median(Abs(gain_arr[freq_use,*]),dimension=1)
+;    
 ;    sigma_threshold=10.
 ;    tile_mask=fltarr(n_tile) & tile_mask[tile_use]=1
 ;    freq_mask=fltarr(n_freq) & freq_mask[freq_use]=1
