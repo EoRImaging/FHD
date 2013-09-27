@@ -1,4 +1,4 @@
-PRO source_comp_init,source_comp,n_sources=n_sources,xvals=xvals,yvals=yvals,frequency=frequency,$
+FUNCTION source_comp_init,source_comp,n_sources=n_sources,xvals=xvals,yvals=yvals,frequency=frequency,$
     ra=ra,dec=dec,flux=flux,id=id,StoN=StoN,alpha=alpha,extend=extend,overwrite=overwrite
 
 IF N_Elements(n_sources) EQ 0 THEN $
@@ -20,5 +20,6 @@ IF Keyword_Set(alpha) THEN source_comp_new.alpha=alpha ;spectral index
 IF Keyword_Set(extend) THEN source_comp_new.extend=extend ;extended source component list (not an extended source if Ptr_valid(source_comp[si].extend)=0)
 IF Keyword_Set(frequency) THEN source_comp_new.freq=frequency ;frequency in MHz
 
-IF N_Elements(source_comp) GT 0 AND not Keyword_Set(overwrite) THEN source_comp=[source_comp,source_comp_new] ELSE source_comp=source_comp_new
+IF N_Elements(source_comp) GT 0 AND ~Keyword_Set(overwrite) THEN source_comp=[source_comp,source_comp_new] ELSE source_comp=source_comp_new
+RETURN,source_comp
 END  

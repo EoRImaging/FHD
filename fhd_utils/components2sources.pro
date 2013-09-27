@@ -20,13 +20,11 @@ FOR si=0L,ns-1 DO BEGIN
 ENDFOR
 
 ng=max(group_id)
-IF ng LE 0 THEN BEGIN
-    source_comp_init,source_arr,n_sources=1
-    RETURN,source_arr
-ENDIF
+IF ng LE 0 THEN RETURN,source_comp_init(n_sources=1)
+
 hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
 
-source_comp_init,source_arr,n_sources=ng
+source_arr=source_comp_init(n_sources=ng)
 FOR gi=0L,ng-1 DO BEGIN
     si_g=gri[gri[gi]:gri[gi+1]-1]; guaranteed at least one source per group
     
