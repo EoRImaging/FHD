@@ -50,7 +50,7 @@ IF n_use GT 0 THEN BEGIN
         AND (source_list.flux.I GT calibration_flux_threshold),n_src_use)
     
     IF n_src_use EQ 0 THEN RETURN,source_comp_init(n_sources=0,freq=obs.freq_center);
-    src_use2=where(beam_mask[Round(x_arr[src_use]),Round(y_arr[src_arr])],n_src_use)
+    src_use2=where(beam_mask[Round(x_arr[src_use]),Round(y_arr[src_use])],n_src_use)
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
     source_list=source_list[src_use]
     
