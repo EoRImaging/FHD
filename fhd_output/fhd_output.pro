@@ -1,4 +1,4 @@
-PRO fhd_output,obs,fhd, file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
+PRO fhd_output,obs,fhd,cal, file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
     noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,$
     fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
@@ -497,6 +497,16 @@ source_array_export,comp_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file
 residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
     file_path_base=image_path_fg,_Extra=extra
 
+; plot calibration solutions, export to png
+IF N_Elements(cal) GT 0 THEN BEGIN
+   IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
+      restore,file_path_fhd+'_cal_hist.sav'
+      plot_cals,cal,obs,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png',$
+                vis_baseline_hist=vis_baseline_hist,vis_hist_filename=image_path+'_cal_hist.png'
+   ENDIF ELSE BEGIN
+      plot_cals,cal,obs,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png'
+   ENDELSE
+ENDIF
 t10=Systime(1)-t10b
 t00=Systime(1)-t0a
 

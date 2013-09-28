@@ -420,7 +420,7 @@ ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     IF file_test(file_path_fhd+'_fhd.sav') THEN BEGIN
-        fhd_output,obs,fhd,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
+        fhd_output,obs,fhd,cal,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
             image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra 
     ENDIF ELSE BEGIN
         IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
