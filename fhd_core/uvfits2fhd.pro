@@ -334,7 +334,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     SAVE,params,filename=params_filepath,/compress
     SAVE,hdr,filename=hdr_filepath,/compress
         
-    vis_flag_update,flag_arr,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
+    vis_flag_update,flag_arr,obs,psf,params
     SAVE,obs,filename=obs_filepath,/compress
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
     
@@ -386,7 +386,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             
             
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
-                timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
+                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0

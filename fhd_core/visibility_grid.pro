@@ -31,14 +31,11 @@ ENDIF
 
 IF N_Elements(bi_use) EQ 0 THEN BEGIN
     IF Keyword_Set(flag_ptr) THEN BEGIN
-        b_info=*(obs.baseline_info)
-        tile_use=(b_info.tile_names)[where(b_info.tile_use)]
         flag_test=Total(flag_arr>0,1)
-        bi_use=where((flag_test GT 0) AND (b_info.tile_A EQ tile_use) OR (b_info.tile_B EQ tile_use))
+        bi_use=where((flag_test GT 0))
     ENDIF ELSE BEGIN
-        b_info=*(obs.baseline_info)
+        b_info=(*obs.baseline_info)
         tile_use=(b_info.tile_names)[where(b_info.tile_use)]
-        
         bi_use=where((b_info.tile_A EQ tile_use) OR (b_info.tile_B EQ tile_use))
     ENDELSE
 ENDIF
