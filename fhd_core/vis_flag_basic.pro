@@ -5,6 +5,7 @@ IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(
 
 n_pol=obs.n_pol
 n_freq=obs.n_freq
+n_tile=obs.n_tile
 
 IF Keyword_Set(mask_mirror_indices) AND Keyword_Set(params) THEN BEGIN
     conj_i=where(params.uu GT 0,n_conj)
@@ -43,9 +44,34 @@ CASE instrument OF
     ELSE:
 END
 
+tile_A_i=(*obs.baseline_info).tile_A-1
+tile_B_i=(*obs.baseline_info).tile_B-1
+freq_use=Replicate(1,n_freq)
+tile_use=Replicate(1,n_tile)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    freq_flag=Min(*flag_ptr[pol_i],dimension=1)>0
-    baseline_flag=Min(*flag_ptr[pol_i],dimension=2)>0
+    baseline_flag=Max(*flag_ptr[pol_i],dimension=1)>0
+    freq_flag=Max(*flag_ptr[pol_i],dimension=2)>0
+    
+    fi_use=where(freq_flag GT 0)
+    
+    bi_use=where(baseline_flag GT 0)
+    
+    freq_use1=intarr(n_freq) 
+    freq_use1[fi_use]=1.
+    freq_use*=freq_use1
+    
+    tile_use1=intarr(n_tile)
+    tile_use1[bi_use[tile_A_i]]=1
+    tile_use1[bi_use[tile_B_i]]=1
+    tile_use*=tile_use1
+    
 ENDFOR
+freq_use=0>freq_use<1
+tile_use=0>tile_use<1
+
+tile_use_new=tile_use AND (*obs.baseline_info).tile_use
+freq_use_new=freq_use AND (*obs.baseline_info).freq_use
+(*obs.baseline_info).tile_use=tile_use_new
+(*obs.baseline_info).freq_use=freq_use_new
 RETURN,flag_ptr
 END
