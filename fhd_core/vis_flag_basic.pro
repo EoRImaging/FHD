@@ -61,8 +61,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     freq_use*=freq_use1
     
     tile_use1=intarr(n_tile)
-    tile_use1[bi_use[tile_A_i]]=1
-    tile_use1[bi_use[tile_B_i]]=1
+    tile_use1[tile_A_i[bi_use]]=1
+    tile_use1[tile_B_i[bi_use]]=1
     tile_use*=tile_use1
     
 ENDFOR
