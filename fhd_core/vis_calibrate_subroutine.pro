@@ -191,7 +191,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         freq_nan_i=nan_i mod n_freq
         freq_nan_i=freq_nan_i[Uniq(freq_nan_i,Sort(freq_nan_i))]
         FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[freq_nan_i,*]=0
-        gain_arr[nan_i]=1.
+        gain_arr[nan_i]=0.
     ENDIF
     *cal_return.gain[pol_i]=gain_arr
 ENDFOR

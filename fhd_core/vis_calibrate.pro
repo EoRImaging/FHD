@@ -121,6 +121,7 @@ cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,prese
 t3_a=Systime(1)
 t2=t3_a-t2_a
 
+vis_calibration_flag,obs,cal
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 
 if Keyword_Set(vis_baseline_hist) then begin
