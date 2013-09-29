@@ -253,7 +253,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
-        inds_use=[0,xyf_ui] ;Uniq() returns the LAST index 
+        inds_use=[-1,xyf_ui] ;Uniq() returns the LAST index 
         psf_weight=(inds_use[1:n_xyf_bin]-inds_use[0:n_xyf_bin-1])>1
          
         vis_box=Complexarr(n_xyf_bin)
@@ -269,6 +269,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             xyf_ui_rep=xyf_ui[repeat_i[rep_ii]]+indgen(psf_weight[repeat_i[rep_ii]])
             vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui_rep])
         ENDFOR
+        psf_weight=sqrt(psf_weight)
         vis_box/=psf_weight
         
         IF model_flag THEN BEGIN
@@ -287,31 +288,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
     ENDELSE
     
-;    xyf_n=histogram(x1+y1*(Max(x1)+1)+f1*((Max(x1)+1)*(Max(y1)+1)),min=0,/bin,reverse_indices=rxyf_i)
-;    xyf_i=where(xyf_n,n_xyf_bin)    
-;    vis_n=bin_n[bin_i[bi]]
-;    
-;    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
-;        vis_box1=vis_arr_use[inds]*freq_norm[freq_i]
-;        inds_use=rxyf_i[rxyf_i[xyf_i]] ;only want one element from each grouping
-;        x_off=x_off[inds_use] 
-;        y_off=y_off[inds_use]
-;        fbin=fbin[inds_use]
-;        psf_weight=xyf_n[xyf_i]
-;        vis_box=Complexarr(n_xyf_bin)
-;        FOR bin_ii=0,n_xyf_bin-1 DO vis_box[bin_ii]=(xyf_n[xyf_i[bin_ii]] GT 1) ? Mean(vis_box1[rxyf_i[rxyf_i[xyf_i[bin_ii]]:rxyf_i[xyf_i[bin_ii]+1]-1]]):vis_box1[inds_use[bin_ii]]
-;        IF model_flag THEN BEGIN
-;            model_box=Complexarr(n_xyf_bin)
-;            model_box1=model_use[inds]*freq_norm[freq_i]
-;            FOR bin_ii=0,n_xyf_bin-1 DO model_box[bin_ii]=(xyf_n[xyf_i] GT 1) ? Mean(model_box1[rxyf_i[rxyf_i[xyf_i[bin_ii]]:rxyf_i[xyf_i[bin_ii]+1]-1]]):model_box1[inds_use[bin_ii]]
-;        ENDIF
-;        
-;        vis_n=n_xyf_bin
-;    ENDIF ELSE BEGIN
-;        IF model_flag THEN model_box=model_use[inds]*freq_norm[freq_i]
-;        vis_box=vis_arr_use[inds]*freq_norm[freq_i]
-;;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
-;    ENDELSE
     vis_n_arr=Replicate(1.,vis_n)
 
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
