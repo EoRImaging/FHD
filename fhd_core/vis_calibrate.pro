@@ -116,7 +116,7 @@ ENDIF
 
 ;calibration loop
 t2_a=Systime(1)
-IF Keyword_Set(calibration_visibilities_subtract) THEN preserve_visibilities=1
+IF Keyword_Set(calibration_visibilities_subtract) or Keyword_Set(vis_baseline_hist) THEN preserve_visibilities=1
 cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,_Extra=extra)
 t3_a=Systime(1)
 t2=t3_a-t2_a
