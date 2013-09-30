@@ -35,8 +35,7 @@ rad_i_use=where(rad_vals)
 thresh=Max(rad_vals)/1000.
 rad_vals_use=1./rad_vals[rad_i_use]
 
-filter_use=Reform(interpol(rad_vals_use,rad_i_use,reform(radial_map,dimension*Float(elements)),$
-    /LSQUADRATIC),dimension,elements)
+filter_use=Reform(interpol(rad_vals_use,rad_i_use,reform(radial_map,dimension*Float(elements))),dimension,elements)
 
 ;degree=7.
 ;fit=poly_fit(rad_i_use,rad_vals[rad_i_use],degree,measure_errors=1./Sqrt(rad_vals[rad_i_use]))
