@@ -397,7 +397,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_arr[pol_i]=Temporary(dirty_img)
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
-            IF N_Elements(weights_grid) GT 0 THEN *weights_arr[pol_i]=Temporary(weights_grid)
+            IF N_Elements(weights_grid) GT 0 THEN BEGIN
+                *weights_arr[pol_i]=Temporary(weights_grid)
+                weights_grid=1
+            ENDIF
         ENDFOR
         print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
