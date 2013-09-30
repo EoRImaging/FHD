@@ -266,8 +266,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         ENDIF
         
         FOR rep_ii=0,n_rep-1 DO BEGIN
-            xyf_ui_rep=xyf_ui[repeat_i[rep_ii]]+indgen(psf_weight[repeat_i[rep_ii]])
-            vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui_rep])
+;            xyf_ui_rep=xyf_ui[repeat_i[rep_ii]]+ind_ref[0:psf_weight[repeat_i[rep_ii]]-1]
+;            vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui_rep])
+            xyf_ui_rep_i=xyf_ui[repeat_i[rep_ii]]
+            vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui_rep_i-(psf_weight[repeat_i[rep_ii]]-1):xyf_ui_rep_i])
         ENDFOR
         psf_weight=sqrt(psf_weight)
         vis_box/=psf_weight
