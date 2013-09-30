@@ -85,21 +85,21 @@ beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
 beam_correction_out=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    beam_base=Sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
+    beam_base=beam_image(psf,obs,pol_i=pol_i)
     *beam_base_out[pol_i]=Rebin(beam_base,dimension,elements) ;should be fine even if pad_uv_image is not set
     *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-2)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
-    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[1e-2,Max(beam_mask_test)])
+    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[0.05,Max(beam_mask_test)])
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
     beam_avg+=*beam_base_out[pol_i]^2.
     beam_mask*=beam_mask0
 ENDFOR
 beam_mask[0:dimension/4.-1,*]=0 & beam_mask[3.*dimension/4.:dimension-1,*]=0 
 beam_mask[*,0:elements/4.-1]=0 & beam_mask[*,3.*elements/4.:elements-1]=0 
-beam_i=where(beam_mask)
 beam_avg/=(n_pol<2)
 beam_avg=Sqrt(beam_avg>0)*beam_mask
+beam_i=where(beam_mask)
 
 IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1
