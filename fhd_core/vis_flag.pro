@@ -32,17 +32,18 @@ IF n_pol GT 1 THEN data_abs=SQRT(data_abs^2.+Abs(*vis_arr[1])^2.)
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
 IF Tag_exist(obs,'freq') THEN freq=obs.freq ELSE freq=(*obs.baseline_info).freq
-n_tiles=obs.n_tile
+n_tiles_use=Max(tile_A)>Max(tile_B)
 tile_names=(*obs.baseline_info).tile_names
 
 uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(freq)
 cut_baselines_i=where((uv_dist LT min_baseline) OR (uv_dist GT max_baseline),n_baselines_cut)
 IF N_baselines_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,cut_baselines_i]=0
 
-tile_fom=fltarr(n_tiles)
-FOR tile_i=0L,n_tiles-1 DO BEGIN
+tile_fom=fltarr(n_tiles_use)
+FOR tile_i=0L,n_tiles_use-1 DO BEGIN
     tile_Ai=where((tile_A-1) EQ tile_i,nA,/L64)
     tile_Bi=where((tile_B-1) EQ tile_i,nB,/L64)
+    IF nA+nB EQ 0 THEN CONTINUE
     IF nB GT 0 THEN IF nA GT 0 THEN tile_ABi=[tile_Ai,tile_Bi] ELSE tile_ABi=tile_Bi ELSE IF nA GT 0 THEN tile_ABi=tile_Ai 
     data_subset=data_abs[*,tile_ABi]
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -60,19 +61,19 @@ FOR freq_i=0,n_freq-1 DO BEGIN
     ENDFOR
 ENDFOR
 
-tile_freq_fom=fltarr(n_tiles,n_freq)
-FOR tile_i=0,n_tiles-1 DO BEGIN
-    tile_Ai=where((tile_A-1) EQ tile_i,nA)
-    tile_Bi=where((tile_B-1) EQ tile_i,nB)
-    IF nB GT 0 THEN IF nA GT 0 THEN tile_ABi=[tile_Ai,tile_Bi] ELSE tile_ABi=tile_Bi ELSE IF nA GT 0 THEN tile_ABi=tile_Ai 
-    FOR freq_i=0,n_freq-1 DO BEGIN
-        data_subset=Reform(data_abs[freq_i,tile_ABi])
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            i_use=where(((*flag_ptr[pol_i])[freq_i,tile_ABi] GT 0) AND (data_subset GT 0),n_use)
-            IF n_use GT 10 THEN tile_freq_fom[tile_i,freq_i]+=Stddev(data_subset[i_use])
-        ENDFOR
-    ENDFOR
-ENDFOR
+;tile_freq_fom=fltarr(n_tiles_use,n_freq)
+;FOR tile_i=0,n_tiles_use-1 DO BEGIN
+;    tile_Ai=where((tile_A-1) EQ tile_i,nA)
+;    tile_Bi=where((tile_B-1) EQ tile_i,nB)
+;    IF nB GT 0 THEN IF nA GT 0 THEN tile_ABi=[tile_Ai,tile_Bi] ELSE tile_ABi=tile_Bi ELSE IF nA GT 0 THEN tile_ABi=tile_Ai 
+;    FOR freq_i=0,n_freq-1 DO BEGIN
+;        data_subset=Reform(data_abs[freq_i,tile_ABi])
+;        FOR pol_i=0,n_pol-1 DO BEGIN
+;            i_use=where(((*flag_ptr[pol_i])[freq_i,tile_ABi] GT 0) AND (data_subset GT 0),n_use)
+;            IF n_use GT 10 THEN tile_freq_fom[tile_i,freq_i]+=Stddev(data_subset[i_use])
+;        ENDFOR
+;    ENDFOR
+;ENDFOR
 freq_nonzero_i=where(freq_fom,complement=freq_zero_i,ncomp=nf_zero)
 tile_mean=Median(tile_fom[where(tile_fom)])
 tile_dev=Stddev(tile_fom[where(tile_fom)])    
@@ -94,11 +95,21 @@ IF n_tile_cut GT 0 THEN BEGIN
     print,'Tiles cut:',tile_names[tile_cut]
     FOR bad_i=0,n_tile_cut-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
-            (*flag_ptr[pol_i])[*,where(tile_A EQ (tile_cut[bad_i]+1))]=0
-            (*flag_ptr[pol_i])[*,where(tile_B EQ (tile_cut[bad_i]+1))]=0
+            cut_A_i=where(tile_A EQ (tile_cut[bad_i]+1),n_cut_A)
+            cut_B_i=where(tile_B EQ (tile_cut[bad_i]+1),n_cut_B)
+            IF n_cut_A GT 0 THEN (*flag_ptr[pol_i])[*,cut_A_i]=0
+            IF n_cut_B GT 0 THEN (*flag_ptr[pol_i])[*,cut_B_i]=0
         ENDFOR
     ENDFOR
+    tile_use1=((*obs.baseline_info).tile_use)
+    tile_use1[tile_cut]=0
+    ((*obs.baseline_info).tile_use)=tile_use1
 ENDIF
-IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut,*]=0
+IF n_freq_cut GT 0 THEN BEGIN
+    FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut,*]=0
+    freq_use1=((*obs.baseline_info).freq_use)
+    freq_use1[freq_cut]=0
+    ((*obs.baseline_info).freq_use)=freq_use1
+ENDIF
 obs.n_vis=N_Elements(where(*flag_ptr[0] GT 0))
 END

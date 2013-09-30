@@ -116,8 +116,8 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     IF N_Elements(nside) EQ 0 THEN nside=nside_chk
     IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_sourcefind_mask,radius=radius,restore_last=0)
     
-    source_comp_init,comp_arr0,n_sources=max_sources
-    *comp_arr[obs_i]=comp_arr0
+    
+    *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
     
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid

@@ -47,6 +47,7 @@ nfreq_avg=16
 max_calibration_sources=300.
 weights_grid=0
 psf_resolution=8.
+no_rephase=1 ;set to use obsra, obsdec for phase center even if phasera, phasedec present in a .metafits file
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
@@ -57,6 +58,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
     ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,max_calibration_sources=max_calibration_sources,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,$
-    vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,_Extra=extra
+    vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,no_rephase=no_rephase,_Extra=extra
 !except=except
 END

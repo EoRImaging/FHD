@@ -58,14 +58,19 @@ calibration=fltarr(4)+1.
 IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
 n_tile=hdr.n_tile
 n_freq=hdr.n_freq
-freq_use=Lonarr(n_freq)+1
-tile_use=Lonarr(n_tile)+1
 n_vis=(n_vis_raw=(n_vis_in=(Float(N_Elements(time))*n_freq)))
 
 ;256 tile upper limit is hard-coded in CASA format
 ;these tile numbers have been verified to be correct
 tile_A=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
 tile_B=Long(Fix(params.baseline_arr mod 256))
+IF (max(tile_A)>max(tile_B)) NE n_tile THEN BEGIN
+    print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
+    n_tile=max(tile_A)>max(tile_B)
+ENDIF
+freq_use=Lonarr(n_freq)+1
+tile_use=Lonarr(n_tile)+1
+
 ;tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
 ;tile_B1=Long(Fix(params.baseline_arr mod 256))
 ;hist_A1=histogram(tile_A1,min=0,max=256,/binsize,reverse_ind=ria)
@@ -100,6 +105,14 @@ IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)])
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 
 meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,_Extra=extra)
+
+tile_use1=intarr(n_tile)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    tile_use_i=where(*(meta.tile_flag[pol_i]) EQ 0,n_use)
+    IF n_use GT 0 THEN tile_use1[tile_use_i]+=1
+ENDFOR
+tile_flag_i=where(tile_use1 EQ 0,n_flag)
+IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}

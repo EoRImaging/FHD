@@ -38,7 +38,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,quickview=quickview,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
-    no_rephase=no_rephase,weights_grid=weights_grid,_Extra=extra
+    weights_grid=weights_grid,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -141,8 +141,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;free memory
     data_array=0 
     flag_arr0=0
-;    IF ~Keyword_Set(no_rephase) THEN IF (obs.phasera NE obs.obsra) OR (obs.phasedec NE obs.obsdec) THEN $
-;        vis_arr=visibility_rephase(obs,params,vis_arr)
     
     IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
     
@@ -182,6 +180,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     beam=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
     
+    flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
 ;    IF file_test(flags_filepath) AND ~Keyword_Set(flag) THEN BEGIN
 ;        flag_arr=getvar_savefile(flags_filepath,'flag_arr')
 ;    ENDIF ELSE BEGIN
@@ -300,30 +299,32 @@ IF Keyword_Set(data_flag) THEN BEGIN
             SAVE,flag_arr,filename=flags_filepath,/compress
     ENDELSE
     
-    flag_freq_test=fltarr(obs.n_freq)
-    flag_tile_test=fltarr(obs.n_tile)
-    FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_arr[pol_i],dimension=2)>0
-    flag_freq_use_i=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
-    IF n_freq_use EQ 0 THEN print,'All frequencies flagged!' ELSE BEGIN
-        (*obs.baseline_info).freq_use[*]=0
-        (*obs.baseline_info).freq_use[flag_freq_use_i]=1
-    ENDELSE
-    tile_A=(*obs.baseline_info).tile_A
-    tile_B=(*obs.baseline_info).tile_B
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        FOR tile_i=0,obs.n_tile-1 DO BEGIN
-            tA_i=where(tile_A EQ (tile_i+1),nA)
-            tB_i=where(tile_B EQ (tile_i+1),nB)
-            
-            IF nA GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tA_i])>0
-            IF nB GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tB_i])>0
-        ENDFOR
-    ENDFOR
-    flag_tile_use_i=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
-    IF n_tile_use EQ 0 THEN print,'All tiles flagged!' ELSE BEGIN
-        (*obs.baseline_info).tile_use[*]=0
-        (*obs.baseline_info).tile_use[flag_tile_use_i]=1
-    ENDELSE
+;    flag_freq_test=fltarr(obs.n_freq)
+;    flag_tile_test=fltarr(obs.n_tile)
+;    FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_arr[pol_i],dimension=2)>0
+;    flag_freq_use_i=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
+;    IF n_freq_use EQ 0 THEN print,'All frequencies flagged!' ELSE BEGIN
+;        (*obs.baseline_info).freq_use[*]=0
+;        (*obs.baseline_info).freq_use[flag_freq_use_i]=1
+;    ENDELSE
+;    tile_A=(*obs.baseline_info).tile_A
+;    tile_B=(*obs.baseline_info).tile_B
+;    FOR pol_i=0,n_pol-1 DO BEGIN
+;        FOR tile_i=0,obs.n_tile-1 DO BEGIN
+;            tA_i=where(tile_A EQ (tile_i+1),nA)
+;            tB_i=where(tile_B EQ (tile_i+1),nB)
+;            
+;            IF nA GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tA_i])>0
+;            IF nB GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tB_i])>0
+;        ENDFOR
+;    ENDFOR
+;    flag_tile_use_i=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
+;    IF n_tile_use EQ 0 THEN print,'All tiles flagged!' ELSE BEGIN
+;        (*obs.baseline_info).tile_use[*]=0
+;        (*obs.baseline_info).tile_use[flag_tile_use_i]=1
+;    ENDELSE
+    tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
+    freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
     print,String(format='(A," frequency channels used and ",A," in-band channels flagged")',$
         Strn(n_freq_use),Strn(n_freq_cut-nf_cut_end-nf_cut_start))
     print,String(format='(A," tiles used and ",A," tiles flagged")',$
@@ -333,7 +334,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     SAVE,params,filename=params_filepath,/compress
     SAVE,hdr,filename=hdr_filepath,/compress
         
-    vis_flag_update,flag_arr,obs,psf,params,file_path_fhd,fi_use=fi_use,_Extra=extra
+    vis_flag_update,flag_arr,obs,psf,params
     SAVE,obs,filename=obs_filepath,/compress
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
     
@@ -348,7 +349,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
     hpx_cnv=0
     
-    autocorr_i=where(tile_A EQ tile_B,n_autocorr)
+    autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
     auto_corr=Ptrarr(n_pol)
     IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
         auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
@@ -385,7 +386,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             
             
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
-                timing=t_grid0,fi_use=fi_use,polarization=pol_i,weights=weights_grid,silent=silent,$
+                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
@@ -419,7 +420,7 @@ ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     IF file_test(file_path_fhd+'_fhd.sav') THEN BEGIN
-        fhd_output,obs,fhd,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
+        fhd_output,obs,fhd,cal,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
             image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra 
     ENDIF ELSE BEGIN
         IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN

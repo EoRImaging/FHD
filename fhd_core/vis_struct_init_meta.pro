@@ -1,7 +1,7 @@
 FUNCTION vis_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,$
     zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
-    obsx=obsx,obsy=obsy,mirror_X=mirror_X,mirror_Y=mirror_Y,_Extra=extra
+    obsx=obsx,obsy=obsy,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,_Extra=extra
 
 IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees
@@ -43,8 +43,13 @@ IF file_test(metafits_path) THEN BEGIN
     
     obsra=sxpar(hdr0,'RA')
     obsdec=sxpar(hdr0,'Dec')
-    phasera=sxpar(hdr0,'RAPHASE')
-    phasedec=sxpar(hdr0,'DECPHASE')
+    IF Keyword_Set(no_rephase) THEN BEGIN
+        phasera=obsra
+        phasedec=obsdec
+    ENDIF ELSE BEGIN
+        phasera=sxpar(hdr0,'RAPHASE')
+        phasedec=sxpar(hdr0,'DECPHASE')
+    ENDELSE
     LST=sxpar(hdr0,'LST')
 ;    HA=sxpar(hdr0,'HA')
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
