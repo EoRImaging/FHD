@@ -1,6 +1,6 @@
 PRO eor_firstpass,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,show_obsname=show_obsname$
+    grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,show_obsname=show_obsname,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,_Extra=extra
 except=!except
 !except=0 
