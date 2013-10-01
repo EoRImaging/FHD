@@ -2,7 +2,7 @@ PRO fhd_output,obs,fhd,cal, file_path_fhd=file_path_fhd,version=version,map_fn_a
     noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,$
     fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
-    gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,$
+    gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,$
     image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
@@ -29,6 +29,7 @@ dirpath=file_dirname(file_path_fhd)
 print,'Exporting: ',basename
 export_path=filepath(basename,root=dirpath,sub='export')
 export_dir=file_dirname(export_path)
+IF Keyword_Set(show_obsname) THEN title_fhd=basename
 
 image_path=filepath(basename,root=dirpath,sub='images')
 image_dir=file_dirname(image_path)
@@ -377,7 +378,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     t8+=t9a-t8a
     Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
-        low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
+        low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),title=title_fhd,_Extra=extra
 ;    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
 ;        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
     
@@ -388,16 +389,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     log_dirty=0
     log_source=1
     Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Dirty_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,_Extra=extra
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,title=title_fhd,_Extra=extra
     Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Residual_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high,_Extra=extra
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high,title=title_fhd,_Extra=extra
     Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Sources_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high,/invert_color,_Extra=extra
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high,/invert_color,title=title_fhd,_Extra=extra
     Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Restored_'+pol_names[pol_i],$
-        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,_Extra=extra
+        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,title=title_fhd,_Extra=extra
     Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
-        low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),/invert,_Extra=extra
+        low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),/invert,title=title_fhd,_Extra=extra
     
     t8b=Systime(1)
     t9+=t8b-t9a
@@ -418,15 +419,18 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Residual_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+        show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
     Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Sources_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+        show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
     Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Restored_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokes_high,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+        offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+        show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
     
     IF pol_i EQ 0 THEN BEGIN
         IF Keyword_Set(gridline_image_show) THEN Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path_fg+'_Grid',$
@@ -453,21 +457,24 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             imagefast,(*stokes_gal_model[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalModel_'+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high*2.,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+                show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
             imagefast,(*gal_holo_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalHolo_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=0,low=instr_low,high=instr_high,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+                show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
             imagefast,(*gal_model_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+                show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
             imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalSources_'+pol_names[pol_i],$
-                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,_Extra=extra
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
             imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
-                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,_Extra=extra
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
             imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i+4],$
-                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high2,_Extra=extra
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high2,title=title_fhd,_Extra=extra
             debug_gal=0
             dummyval=0
         endwhile
