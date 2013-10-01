@@ -46,7 +46,7 @@ ENDIF ELSE filter_name=''
 ;    beam_base,beam_correction,ra_arr,dec_arr,astr
 restore,file_path_fhd+'_fhd.sav'
 
-restore,file_path_fhd+'_params.sav' ;params
+restore,file_path_fhd+'_fhd_params.sav' ;params
 restore,file_path_fhd+'_hdr.sav' ;hdr
 
 IF N_Elements(normalization_arr) GT 0 THEN normalization=Mean(normalization_arr)/2.
