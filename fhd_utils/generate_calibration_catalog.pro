@@ -3,8 +3,8 @@ PRO generate_calibration_catalog,source_list,file_path=file_path,spectral_index=
 
 IF StrLowCase(Strmid(file_path,2,3,/reverse)) NE 'sav' THEN file_path_use=file_path+'.sav' $
     ELSE file_path_use=file_path
-    
-catalog=source_list
+
+IF size(source_list,/type) EQ 7 THEN catalog=getvar_savefile(source_list,'source_array') ELSE catalog=source_list
 
 IF Keyword_Set(flux_threshold) THEN BEGIN
     src_i_use=where(catalog.flux.I GT flux_threshold,n_use)

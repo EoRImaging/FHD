@@ -374,7 +374,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF Keyword_Set(grid_recalculate) THEN BEGIN
         print,'Gridding visibilities'
         IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol,/allocate)
-        image_arr=Ptrarr(n_pol,/allocate)
+;        image_arr=Ptrarr(n_pol,/allocate)
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
         IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
@@ -390,12 +390,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
-            dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
+;            dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
             IF N_Elements(weights_grid) GT 0 THEN SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
-            SAVE,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav',/compress
+;            SAVE,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav',/compress
 
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
-            *image_arr[pol_i]=Temporary(dirty_img)
+;            *image_arr[pol_i]=Temporary(dirty_img)
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
             IF N_Elements(weights_grid) GT 0 THEN BEGIN
                 *weights_arr[pol_i]=Temporary(weights_grid)
