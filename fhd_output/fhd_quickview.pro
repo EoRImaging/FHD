@@ -266,7 +266,7 @@ IF source_flag THEN BEGIN
 ENDIF
 
 ; plot calibration solutions, export to png
-IF N_Elements(cal) GT 0 THEN BEGIN
+IF cal.n_cal_src GT 0 THEN BEGIN
    IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
       restore,file_path_fhd+'_cal_hist.sav'
       plot_cals,cal,obs,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png',$

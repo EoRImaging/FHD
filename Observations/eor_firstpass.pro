@@ -1,6 +1,6 @@
 PRO eor_firstpass,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,show_obsname=show_obsname$
+    grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,show_obsname=show_obsname,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,_Extra=extra
 except=!except
 !except=0 
@@ -34,6 +34,7 @@ fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=outp
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+;calibration_catalog_file_path=filepath('eor1_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=2048.
 max_sources=0
