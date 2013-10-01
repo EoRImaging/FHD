@@ -26,7 +26,7 @@ PS_START,phase_filename,scale_factor=2,/quiet,/nomatch
 n_baselines=obs2.bin_offset[1]
 tile_A=obs2.tile_A[0:n_baselines-1]
 tile_B=obs2.tile_B[0:n_baselines-1]
-tile_exist=(histogram(tile_A,min=0,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=0,/bin,max=(max(tile_A)>max(tile_B))))<1
+tile_exist=(histogram(tile_A,min=1,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=1,/bin,max=(max(tile_A)>max(tile_B))))<1
 
 FOR tile_i=0L,n_tiles-1 DO BEGIN
     tile_name=tile_names[tile_i]
@@ -35,7 +35,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
     
     IF tile_exist[tile_i] EQ 0 THEN BEGIN
       ; no tile found... must have been flagged in pre-processing
-      axiscolor='yellow'
+      axiscolor='grey'
       cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
         /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN
@@ -62,7 +62,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
     
     IF tile_exist[tile_i] EQ 0  THEN BEGIN
       ; no tile found... must have been flagged in pre-processing
-      axiscolor='yellow'
+      axiscolor='grey'
       cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
         /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN

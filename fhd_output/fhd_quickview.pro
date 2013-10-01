@@ -92,7 +92,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-2)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
-    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[0.05,Max(beam_mask_test)])
+    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[0.025,Max(beam_mask_test)])
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
     beam_avg+=*beam_base_out[pol_i]^2.
     beam_mask*=beam_mask0
@@ -192,10 +192,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     
     IF Keyword_Set(mark_zenith) THEN BEGIN
         mark_zenith=fltarr(dimension,elements)
-        mark_width=3.
-        mark_length=5.
-        mark_zenith[obs_out.zenx-mark_length:obs_out.zenx+mark_length,obs_out.zeny-mark_width/2:obs_out.zeny+mark_width/2.]=stokes_low_use<instr_low_use
-        mark_zenith[obs_out.zenx-mark_width/2:obs_out.zenx+mark_width/2.,obs_out.zeny-mark_length:obs_out.zeny+mark_length]=stokes_low_use<instr_low_use
+        mark_width=2.
+        mark_length=6.
+        mark_amp=(stokes_low_use<instr_low_use<(-100.))
+        mark_zenith[obs_out.zenx-mark_length:obs_out.zenx+mark_length,obs_out.zeny-mark_width/2:obs_out.zeny+mark_width/2.]=stokes_low_use<instr_low_use<(-1.)
+        mark_zenith[obs_out.zenx-mark_width/2:obs_out.zenx+mark_width/2.,obs_out.zeny-mark_length:obs_out.zeny+mark_length]=stokes_low_use<instr_low_use<(-1.)
         mark_zenith=mark_zenith[zoom_low:zoom_high,zoom_low:zoom_high]
     ENDIF ELSE mark_zenith=0
     
