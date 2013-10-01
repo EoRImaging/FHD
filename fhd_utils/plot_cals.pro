@@ -23,7 +23,7 @@ plot_pos=plot_pos.plot_pos
 
 PS_START,phase_filename,scale_factor=2,/quiet,/nomatch
 
-n_baselines=obs.bin_offset[0]
+n_baselines=obs2.bin_offset[0]
 tile_A=obs2.tile_A[0:n_baselines-1]
 tile_B=obs2.tile_B[0:n_baselines-1]
 tile_exist=(histogram(tile_A,min=0,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=0,/bin,max=(max(tile_A)>max(tile_B))))<1
