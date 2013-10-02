@@ -29,7 +29,7 @@ ftest=file_test(file_list+'_obs.sav')
 ;FOR file_i=0,n_obs-1 DO ftest[file_i]=file_test(file_list[file_i]+'_obs.sav')   
 file_i_use=where(ftest,n_obs) 
 file_list_use=file_list[file_i_use]
-fhd_test=file_test(file_list_use+'_obs.sav')
+fhd_test=file_test(file_list_use+'_fhd.sav')
 IF max(fhd_test) GT 0 THEN BEGIN
     fhd_flag=1
     IF min(fhd_test) EQ 0 THEN file_list_use=file_list_use[where(fhd_test)]
