@@ -192,11 +192,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     
     IF Keyword_Set(mark_zenith) THEN BEGIN
         mark_zenith=fltarr(dimension,elements)
-        mark_width=2.
+        mark_thick=1.
         mark_length=6.
         mark_amp=(stokes_low_use<instr_low_use<(-100.))
-        mark_zenith[obs_out.zenx-mark_length:obs_out.zenx+mark_length,obs_out.zeny-mark_width/2:obs_out.zeny+mark_width/2.]=stokes_low_use<instr_low_use<(-1.)
-        mark_zenith[obs_out.zenx-mark_width/2:obs_out.zenx+mark_width/2.,obs_out.zeny-mark_length:obs_out.zeny+mark_length]=stokes_low_use<instr_low_use<(-1.)
+        mark_zenith[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
+        mark_zenith[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
         mark_zenith=mark_zenith[zoom_low:zoom_high,zoom_low:zoom_high]
     ENDIF ELSE mark_zenith=0
     
