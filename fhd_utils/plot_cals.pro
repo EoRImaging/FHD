@@ -40,6 +40,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
         /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN
       IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
+      IF tile_i EQ cal.ref_antenna THEN axiscolor='blue'
       cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
           XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[-1.5*!pi,1.5*!pi],$
           charsize=.5,/noerase,axiscolor=axiscolor

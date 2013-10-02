@@ -172,7 +172,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     stokes_residual=(*stokes_images[pol_i])*beam_mask
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]
-        instr_restored=instr_residual+(Keyword_Set(ring_radius) ? *instr_rings[pol_i]:instr_sourc)
+        instr_restored=instr_residual+(Keyword_Set(ring_radius) ? *instr_rings[pol_i]:instr_source)
         stokes_source=(*stokes_sources[pol_i])*beam_mask
         stokes_restored=stokes_residual+(Keyword_Set(ring_radius) ? *stokes_rings[0]:stokes_source) ;use stokes I sources only if using rings
     ENDIF
