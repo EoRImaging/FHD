@@ -41,7 +41,7 @@ IF ~Keyword_Set(uv_mask) THEN uv_mask=Fltarr(dimension,elements)+1
 ;only the LOWER half of the u-v plane is used for gridding/degridding. 
 ; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half
 psf_beam_pix=psf.dim ;be careful of visibilities in the lower half, that spill over into the upper half
-uv_mask[*,elements/2+psf_beam_pix/2:*]=0.  
+uv_mask[*,elements/2+psf_beam_pix:*]=0.  
 
 IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1

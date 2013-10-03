@@ -4,8 +4,9 @@ pro plot_cals,cal,obs,phase_filename=phase_filename,amp_filename=amp_filename,vi
 ; filename to automatically overwrite .ps.
 
 tile_names = cal.tile_names
-n_tiles=N_Elements(tile_names)
-IF N_Elements(obs) GT 0 THEN tile_use=(*obs.baseline_info).tile_use ELSE tile_use=replicate(1.,n_tiles)
+n_tiles=obs.n_tile
+obs2=*obs.baseline_info
+tile_use=obs2.tile_use
 
 gains0 = *cal.gain[0] ; save on typing
 gains1 = *cal.gain[1]
@@ -22,25 +23,29 @@ plot_pos=plot_pos.plot_pos
 
 PS_START,phase_filename,scale_factor=2,/quiet,/nomatch
 
-FOR tile=1,8 DO BEGIN
-  FOR rec=1,16 DO BEGIN
-    tile_name = 10*rec + tile ; correspond to cal structure's names
-    tile_index = 8*(rec-1) + tile - 1 ; index starting at 0
-    tilei = where(tile_names eq tile_name,n_tile_match)
+n_baselines=obs2.bin_offset[1]
+tile_A=obs2.tile_A[0:n_baselines-1]
+tile_B=obs2.tile_B[0:n_baselines-1]
+tile_exist=(histogram(tile_A,min=1,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=1,/bin,max=(max(tile_A)>max(tile_B))))<1
+
+FOR tile_i=0L,n_tiles-1 DO BEGIN
+    tile_name=tile_names[tile_i]
+    rec=Floor(tile_name/10)
+    tile=tile_name mod 10
     
-    IF n_tile_match EQ 0 THEN BEGIN
-      ; no tile found... must have been flagged
-      axiscolor='yellow'
-      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],$
+    IF tile_exist[tile_i] EQ 0 THEN BEGIN
+      ; no tile found... must have been flagged in pre-processing
+      axiscolor='grey'
+      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
         /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN
-      IF tile_use[tilei] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
-      cgplot,freq,phunwrap(atan(gains0[*,tilei],/phase)),color='blue',title=strtrim(tile_name,2),$
-          XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],yrange=[-1.5*!pi,1.5*!pi],$
+      IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
+      IF tile_i EQ cal.ref_antenna THEN axiscolor='blue'
+      cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+          XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[-1.5*!pi,1.5*!pi],$
           charsize=.5,/noerase,axiscolor=axiscolor
-       cgoplot,freq,phunwrap(atan(gains1[*,tilei],/phase)),color='red'
+       cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red'
     ENDELSE
-  ENDFOR
 ENDFOR
 
 PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
@@ -51,24 +56,23 @@ PS_START,amp_filename,scale_factor=2,/quiet,/nomatch
 ;                                   everything off.
 ;max_amp = max(abs([gains0,gains1]))
 max_amp = mean(abs([gains0,gains1])) + 2*stddev(abs([gains0,gains1]))
-FOR tile=1,8 DO BEGIN
-  FOR rec=1,16 DO BEGIN
-    tile_name = 10*rec + tile ; correspond to cal structure's names
-    tile_index = 8*(rec-1) + tile - 1 ; index starting at 0
-    tilei = where(tile_names eq tile_name,n_tile_match)
-    IF n_tile_match EQ 0  THEN BEGIN
-      ; no tile found... must have been flagged
-      axiscolor='yellow'
-      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],$
+FOR tile_i=0L,n_tiles-1 DO BEGIN
+    tile_name=tile_names[tile_i]
+    rec=Floor(tile_name/10)
+    tile=tile_name mod 10
+    
+    IF tile_exist[tile_i] EQ 0  THEN BEGIN
+      ; no tile found... must have been flagged in pre-processing
+      axiscolor='grey'
+      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
         /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN
-      IF tile_use[tilei] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
-      cgplot,freq,abs(gains0[*,tilei]),color='blue',title=strtrim(tile_name,2),$
-          XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_index,*],yrange=[0,max_amp],$
+      IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
+      cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+          XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[0,max_amp],$
           /noerase,charsize=.5,axiscolor=axiscolor
-      cgoplot,freq,abs(gains1[*,tilei]),color='red'
+      cgoplot,freq,abs(gains1[*,tile_i]),color='red'
     ENDELSE
-  ENDFOR
 ENDFOR
 
 PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
