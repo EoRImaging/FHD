@@ -258,7 +258,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         psf_weight=xyf_ui-xyf_ui0+1
          
 ;        vis_box=Complexarr(n_xyf_bin)
-        vis_box1=vis_arr_use[inds]*freq_norm[freq_i]
+        vis_box1=vis_arr_use[inds];*freq_norm[freq_i]
         vis_box=vis_box1[xyf_ui]
         
         repeat_i=where(psf_weight GT 1,n_rep,complement=single_i,ncom=n_single)
@@ -276,7 +276,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         ENDFOR
         
         IF model_flag THEN BEGIN
-            model_box1=model_use[inds]*freq_norm[freq_i]
+            model_box1=model_use[inds];*freq_norm[freq_i]
             model_box=model_box1[xyf_ui]
 ;            model_box=Complexarr(n_xyf_bin)
 ;            model_box[single_i]=model_box1[xyf_ui_single]
@@ -286,8 +286,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         vis_n=n_xyf_bin
     ENDIF ELSE BEGIN
         rep_flag=0
-        IF model_flag THEN model_box=model_use[inds]*freq_norm[freq_i]
-        vis_box=vis_arr_use[inds]*freq_norm[freq_i]
+        IF model_flag THEN model_box=model_use[inds];*freq_norm[freq_i]
+        vis_box=vis_arr_use[inds];*freq_norm[freq_i]
         psf_weight=Replicate(1.,vis_n)
 ;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
     ENDELSE
@@ -303,10 +303,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
     IF map_flag THEN BEGIN
-        IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
+        IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=real_part(box_matrix) 
         IF rep_flag THEN box_matrix*=Rebin(Transpose(psf_weight),psf_dim3,vis_n)
     ENDIF ELSE BEGIN
-        IF complex_flag THEN box_matrix_dag=Conj(Temporary(box_matrix)) ELSE box_matrix_dag=Temporary(box_matrix)
+        IF complex_flag THEN box_matrix_dag=Conj(Temporary(box_matrix)) ELSE box_matrix_dag=Real_part(Temporary(box_matrix))
     ENDELSE
     IF verbose THEN BEGIN
         t4_0=Systime(1)

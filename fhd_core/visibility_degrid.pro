@@ -22,8 +22,8 @@ bin_offset=(*obs.baseline_info).bin_offset
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
 
 psf_base=psf.base
-psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
-psf_resolution=(Size(psf_base,/dimension))[2]
+psf_dim=psf.dim
+psf_resolution=psf.resolution
 
 flag_switch=Keyword_Set(flag_ptr)
 kx_arr=params.uu/kbinsize
