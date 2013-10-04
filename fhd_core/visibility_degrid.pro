@@ -83,8 +83,6 @@ bin_i=where(bin_n,n_bin_use);+bin_min
 
 ind_ref=indgen(max(bin_n))
 
-;initialize ONLY those elements of the map_fn array that will receive data
-index_arr=Lindgen(dimension,elements)
 CASE 1 OF
     Keyword_Set(complex) AND Keyword_Set(double): init_arr=Dcomplexarr(psf_dim2,psf_dim2)
     Keyword_Set(double): init_arr=Dblarr(psf_dim2,psf_dim2)
@@ -99,13 +97,10 @@ t2=0
 t3=0
 t4=0
 t5=0
-t6=0
 image_uv_use=image_uv
 psf_dim3=psf_dim*psf_dim
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
-    ;MUST use double precision!
-;    box_arr=Make_array(psf_dim3,psf_dim3,type=arr_type)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     ind0=inds[0]
     
@@ -115,17 +110,16 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
 
-;    bt_i=Floor(inds/n_frequencies)
-;    base_i=baseline_i[bt_i]
     freq_i=(inds mod n_frequencies)
     fbin=freq_bin_i[freq_i]
      
     vis_n=bin_n[bin_i[bi]]
-    x1=x_off-Min(x_off)
-    y1=y_off-Min(y_off)
-    f1=fbin-Min(fbin)
+;    x1=x_off-Min(x_off)
+;    y1=y_off-Min(y_off)
+;    f1=fbin-Min(fbin)
     
-    xyf_i=x1+y1*(Max(x1)+1)+f1*((Max(x1)+1)*(Max(y1)+1))
+    xyf_i=x_off+y_off*psf_resolution+fbin*psf_resolution^2.
+;    xyf_i=x1+y1*(Max(x1)+1)+f1*((Max(x1)+1)*(Max(y1)+1))
     xyf_si=Sort(xyf_i)
     xyf_i=xyf_i[xyf_si]
     xyf_ui=Uniq(xyf_i)
@@ -146,23 +140,15 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             ind_remap=ind_ref[ri_xyf[0:n_elements(hist_inds_u)-1]-ri_xyf[0]]
         ENDELSE
         
-;        inds_use=[-1,xyf_ui]
-;        
-;        ind_remap=lonarr(vis_n)
-;        FOR ii=0,n_xyf_bin-1 DO ind_remap[inds_use[ii]+1:inds_use[ii+1]]=ii
-        
         vis_n=n_xyf_bin
     ENDIF ELSE $
         ind_remap_flag=0
     
-    box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) ;NOTE!!! THIS IS THE TRANSPOSE OF box_matrix IN visibility_grid!!!!
+    box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) 
     
     box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-;    FOR ii=0L,vis_n-1 DO BEGIN
-;        box_matrix[*,ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]     
-;    ENDFOR
     FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
 
     t4_0=Systime(1)
@@ -171,7 +157,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     IF ind_remap_flag THEN vis_box=vis_box[ind_remap]
-    visibility_array[inds]+=vis_box
+    visibility_array[inds]=vis_box
     
     t5_1=Systime(1)
     t5+=t5_1-t5_0
@@ -181,7 +167,7 @@ IF n_conj GT 0 THEN BEGIN
     visibility_array[*,conj_i]=Conj(visibility_array[*,conj_i])
 ENDIF
 
-IF not Keyword_Set(silent) THEN print,t1,t2,t3,t4,t5
 timing=Systime(1)-t0
+IF not Keyword_Set(silent) THEN print,timing,t1,t2,t3,t4,t5
 RETURN,Ptr_new(visibility_array)
 END
