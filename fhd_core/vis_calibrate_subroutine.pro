@@ -235,7 +235,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
           vis_model_matrix=total(vis_model2*Conj(freq_func_B), 1)
           FOR tile_i=0L,n_tile_use-1 DO begin
             IF n_arr[tile_i] GE min_cal_solutions THEN begin
-              freq_func = calib_freq_poly(fi, complex(dblarr(n_arr[tile_i])+1.), tile_freq_flag[*, tile_i])
+              freq_func = calib_freq_poly(fi, complex(dblarr(n_arr[tile_i])+1.), weight2[*,*A_ind_arr[tile_i]] gt 0)
               
               gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],total(vis_use[*, *A_ind_arr[tile_i]]*freq_func, 1),method=2)
             endif
