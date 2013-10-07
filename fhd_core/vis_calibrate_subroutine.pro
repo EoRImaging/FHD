@@ -16,14 +16,15 @@ function calib_freq_poly, mode, val, mask
   
   if n_elements(val) ne n_val then stop
   
-  if n_val eq 1 then val_arr = dblarr(n_val) + val else val_arr = matrix_multiply(dblarr(n_freq)+1, val)
+  if n_val eq 1 then val_arr = dblarr(n_freq) + val else val_arr = matrix_multiply(dblarr(n_freq)+1, val)
   x_arr = dindgen(n_freq)/(n_freq-1)-0.5
   if n_val gt 1 then x_arr = rebin(x_arr, n_freq, n_val)
   
+  ;; use Legendre Polynomials for orthogonality
   case mode of
     0: freq_arr = val_arr
     1: freq_arr = val_arr * x_arr
-    2: freq_arr = val_arr * (x_arr^2 - mean(x_arr^2))
+    2: freq_arr = val_arr * (3.*x_arr^2. - 1.) / 2.
   endcase
   
   return, freq_arr*mask
