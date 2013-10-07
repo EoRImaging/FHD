@@ -17,10 +17,10 @@ function calib_freq_poly, mode, val, mask
   if n_elements(val) ne n_val then stop
   
   if n_val eq 1 then val_arr = dblarr(n_freq) + val else val_arr = matrix_multiply(dblarr(n_freq)+1, val)
-  x_arr = dindgen(n_freq)/(n_freq-1)-0.5
-  if n_val gt 1 then x_arr = rebin(x_arr, n_freq, n_val)
+  x_arr = (dindgen(n_freq)/(n_freq-1))*2.-1.
+  if n_val gt 1 then x_arr = rebin(x_arr, n_freq, n_val,/sample)
   
-  ;; use Legendre Polynomials for orthogonality
+  ;; use Legendre Polynomials for orthogonality (x_arr runs -1 to 1)
   case mode of
     0: freq_arr = val_arr
     1: freq_arr = val_arr * x_arr
@@ -235,7 +235,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
           vis_model_matrix=total(vis_model2*Conj(freq_func_B), 1)
           FOR tile_i=0L,n_tile_use-1 DO begin
             IF n_arr[tile_i] GE min_cal_solutions THEN begin
-              freq_func = calib_freq_poly(fi, complex(dblarr(n_arr[tile_i])+1.), tile_freq_flag[*, tile_i])
+              freq_func = calib_freq_poly(fi, complex(dblarr(n_arr[tile_i])+1.), weight2[*,*A_ind_arr[tile_i]] gt 0)
               
               gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],total(vis_use[*, *A_ind_arr[tile_i]]*freq_func, 1),method=2)
             endif
