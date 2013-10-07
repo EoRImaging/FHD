@@ -272,34 +272,6 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       
     endelse
     
-;    ;need some error checking in case bad tile_use or freq_use
-;    gain_freq_test=Median(Abs(gain_arr[*,tile_use]),dimension=2)
-;    gain_tile_test=Median(Abs(gain_arr[freq_use,*]),dimension=1)
-;    
-;    sigma_threshold=10.
-;    tile_mask=fltarr(n_tile) & tile_mask[tile_use]=1
-;    freq_mask=fltarr(n_freq) & freq_mask[freq_use]=1
-;    gain_arr_sub=extract_subarray(Abs(gain_arr),freq_use,tile_use)
-;    gain_vals=gain_arr_sub[sort(gain_arr_sub)]
-;    n_vals=N_Elements(gain_vals)
-;    sigma_use=stddev(gain_vals[n_vals/4.:(3.*n_vals/4.)],/nan,/double)
-;    tile_use=where((Abs(gain_tile_test-Median(gain_tile_test[tile_use])) LE sigma_threshold*sigma_use) AND tile_mask,$
-;        n_tile_use,complement=tile_cut,ncomplement=n_tile_cut)
-;    IF n_tile_cut GT 0 THEN tile_mask[tile_cut]=0
-;    freq_use=where((Abs(gain_freq_test-Median(gain_freq_test[freq_use])) LE sigma_threshold*sigma_use) AND freq_mask,$
-;        n_freq_use,complement=freq_cut,ncomplement=n_freq_cut)
-;    IF n_freq_cut GT 0 THEN freq_mask[freq_cut]=0
-;    
-;    IF n_tile_cut GT 0 THEN BEGIN
-;        gain_arr[*,tile_cut]=1.
-;        tile_cut_full=tile_cut#Replicate(1.,n_time)+Replicate(1.,n_tile_cut)#bin_offset
-;        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[*,tile_cut_full]=0
-;    ENDIF
-;    IF n_freq_cut GT 0 THEN BEGIN
-;        gain_arr[freq_cut,*]=1.
-;        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[freq_cut,*]=0
-;    ENDIF
-    
     nan_i=where(Finite(gain_arr,/nan),n_nan)
     IF n_nan GT 0 THEN BEGIN
         ;any gains with NANs -> all tiles for that freq will have NANs

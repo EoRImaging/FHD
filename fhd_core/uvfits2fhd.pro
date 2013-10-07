@@ -197,7 +197,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         freq_end_cut=where(frequency_array_MHz GT freq_end,nf_cut_end)
         IF nf_cut_end GT 0 THEN FOR pol_i=0,n_pol-1 DO *flag_arr[freq_end_cut,*]=0
     ENDIF ELSE nf_cut_end=0
-    
+
     IF Keyword_Set(tile_flag_list) THEN BEGIN
         tile_A=(*obs.baseline_info).tile_A
         tile_B=(*obs.baseline_info).tile_B
@@ -213,9 +213,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
             FOR ci=0,n_cut-1 DO BEGIN
                 ti=tile_cut_i[ci]
                 na=ra[ra[ti+1]-1]-ra[ra[ti]]
-                IF na GT 0 THEN FOR pol_i=0,n_pol-1 DO *flag_arr[*,ra[ra[ti]:ra[ti+1]-1]]=0
+                IF na GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_arr[pol_i])[*,ra[ra[ti]:ra[ti+1]-1]]=0
                 nb=rb[rb[ti+1]-1]-rb[rb[ti]]
-                IF nb GT 0 THEN FOR pol_i=0,n_pol-1 DO *flag_arr[*,rb[rb[ti]:rb[ti+1]-1]]=0
+                IF nb GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_arr[pol_i])[*,rb[rb[ti]:rb[ti+1]-1]]=0
             ENDFOR
             SAVE,flag_arr,filename=flags_filepath,/compress
         ENDIF

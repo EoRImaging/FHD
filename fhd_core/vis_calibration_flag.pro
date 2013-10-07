@@ -1,5 +1,6 @@
 PRO vis_calibration_flag,obs,cal
 
+sigma_threshold=5.
 n_tile=obs.n_tile
 n_freq=obs.n_freq
 n_pol=obs.n_pol
@@ -28,6 +29,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     tile_cut_i=where(gain_tile_fom EQ 0,n_tile_cut)
     IF n_freq_cut GT 0 THEN freq_use[freq_use_i0[freq_cut_i]]=0
     IF n_tile_cut GT 0 THEN tile_use[tile_use_i0[tile_cut_i]]=0
+    
 ;    tile_use_i1=where(tile_use,n_tile_use)
 ;    freq_use_i1=where(freq_use,n_freq_use)
 ;    
@@ -35,10 +37,21 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    gain_freq_test=Median(amp_sub,dimension=2)
 ;    gain_tile_test=Median(amp_sub,dimension=1)
 ;    
+;    gain_freq_test-=Median(gain_freq_test)
+;    gain_tile_test-=Median(gain_tile_test)
+;     
 ;    freq_fit_params=svdfit(freq_use_i1,gain_freq_test,4,yfit=freq_fit)
 ;    tile_fit_params=svdfit(tile_use_i1,gain_tile_test,4,yfit=tile_fit)
 ;    
-;    sigma_threshold=10.
+;    gain_freq_test-=freq_fit
+;    gain_tile_test-=tile_fit
+;    
+;    tile_cut=where(Abs(gain_tile_test) GT sigma_threshold*Stddev(gain_tile_test),n_tile_cut)
+;    freq_cut=where(Abs(gain_freq_test) GT sigma_threshold*Stddev(gain_freq_test),n_freq_cut)
+;    IF n_freq_cut GT 0 THEN freq_use[freq_use_i1[freq_cut_i]]=0
+;    IF n_tile_cut GT 0 THEN tile_use[tile_use_i1[tile_cut_i]]=0
+    
+    
 
 
 ;    tile_mask=fltarr(n_tile) & tile_mask[tile_use_i]=1
