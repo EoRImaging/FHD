@@ -1,6 +1,6 @@
 FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
-    no_restrict_cal_sources=no_restrict_cal_sources,_Extra=extra
+    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,_Extra=extra
 catalog=getvar_savefile(catalog_path,'catalog')
 
 IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
@@ -60,6 +60,16 @@ IF n_use GT 0 THEN BEGIN
     order=Reverse(sort(influence))
     source_list=source_list[order]
     source_list.id=Lindgen(n_src_use)
+    IF Keyword_Set(no_extend) THEN source_list.extend=Ptrarr(n_src_use) ELSE BEGIN
+        extend_i=where(Ptr_valid(source_list.extend),n_extend)
+        FOR ext_i=0L,n_extend-1 DO BEGIN
+            extend_list=*source_list[extend_i[ext_i]].extend
+            ad2xy,extend_list.ra,extend_list.dec,astr,x_arr,y_arr
+            extend_list.x=x_arr
+            extend_list.y=y_arr
+            *source_list[extend_i[ext_i]].extend=extend_list
+        ENDFOR
+    ENDELSE
 ENDIF ELSE RETURN,source_comp_init(n_sources=0,freq=obs.freq_center)
 
 IF Keyword_Set(max_calibration_sources) THEN IF N_Elements(source_list) GT max_calibration_sources $
