@@ -235,10 +235,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     xyf_i=x_off+y_off*psf_resolution+fbin*psf_resolution^2.
     
-;    x1=x_off-Min(x_off)
-;    y1=y_off-Min(y_off)
-;    f1=fbin-Min(fbin)
-;    xyf_i=x1+y1*(Max(x1)+1)+f1*((Max(x1)+1)*(Max(y1)+1))
     xyf_si=Sort(xyf_i)
     xyf_i=xyf_i[xyf_si]
     xyf_ui=[Uniq(xyf_i)]
@@ -250,63 +246,53 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         freq_i=freq_i[xyf_si]
         inds_use=xyf_si[xyf_ui]
         
-;        inds_use=xyf_ui
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
         IF n_xyf_bin GT 1 THEN xyf_ui0=[0,xyf_ui[0:n_xyf_bin-2]+1] ELSE xyf_ui0=0
         psf_weight=xyf_ui-xyf_ui0+1
          
-;        vis_box=Complexarr(n_xyf_bin)
-        vis_box1=vis_arr_use[inds]*freq_norm[freq_i]
+        vis_box1=vis_arr_use[inds];*freq_norm[freq_i]
         vis_box=vis_box1[xyf_ui]
         
         repeat_i=where(psf_weight GT 1,n_rep,complement=single_i,ncom=n_single)
-;        IF n_single GT 0 THEN BEGIN
-;            xyf_ui_single=xyf_ui[single_i]
-;            vis_box[single_i]=vis_box1[xyf_ui_single]
-;        ENDIF
         
         xyf_ui=xyf_ui[repeat_i]
-        xyf_ui0=xyf_ui0[repeat_i]
 ;        xyf_ui0=xyf_ui0[repeat_i]+1 ;add 1, since first value already inserted
+        xyf_ui0=xyf_ui0[repeat_i]
         FOR rep_ii=0,n_rep-1 DO BEGIN
-;            vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
-            vis_box[repeat_i[rep_ii]]+=Total(vis_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
+;            vis_box[repeat_i[rep_ii]]+=Total(vis_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]]) ; use += since first value already inserted
+            vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
         ENDFOR
         
         IF model_flag THEN BEGIN
-            model_box1=model_use[inds]*freq_norm[freq_i]
+            model_box1=model_use[inds];*freq_norm[freq_i]
             model_box=model_box1[xyf_ui]
-;            model_box=Complexarr(n_xyf_bin)
-;            model_box[single_i]=model_box1[xyf_ui_single]
             FOR rep_ii=0,n_rep-1 DO model_box[repeat_i[rep_ii]]+=Total(model_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
         ENDIF
         
         vis_n=n_xyf_bin
     ENDIF ELSE BEGIN
         rep_flag=0
-        IF model_flag THEN model_box=model_use[inds]*freq_norm[freq_i]
-        vis_box=vis_arr_use[inds]*freq_norm[freq_i]
+        IF model_flag THEN model_box=model_use[inds];*freq_norm[freq_i]
+        vis_box=vis_arr_use[inds];*freq_norm[freq_i]
         psf_weight=Replicate(1.,vis_n)
 ;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
     ENDELSE
-
+    
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
     IF verbose THEN BEGIN
         t3_0=Systime(1)
         t2+=t3_0-t1_0
     ENDIF
-;    IF rep_flag THEN FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]*psf_weight[ii] $
-;        ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
     FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
     IF map_flag THEN BEGIN
-        IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=box_matrix 
+        IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=real_part(box_matrix) 
         IF rep_flag THEN box_matrix*=Rebin(Transpose(psf_weight),psf_dim3,vis_n)
     ENDIF ELSE BEGIN
-        IF complex_flag THEN box_matrix_dag=Conj(Temporary(box_matrix)) ELSE box_matrix_dag=Temporary(box_matrix)
+        IF complex_flag THEN box_matrix_dag=Conj(Temporary(box_matrix)) ELSE box_matrix_dag=Real_part(Temporary(box_matrix))
     ENDELSE
     IF verbose THEN BEGIN
         t4_0=Systime(1)
