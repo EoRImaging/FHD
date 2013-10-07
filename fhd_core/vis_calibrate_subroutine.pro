@@ -27,7 +27,7 @@ function calib_freq_poly, mode, val, mask
     2: freq_arr = val_arr * (3.*x_arr^2. - 1.) / 2.
   endcase
   
-  return, freq_arr*mask / rebin(reform(total(mask, 1), 1, n_val), n_freq, n_val,/sample)
+  return, freq_arr*mask
 end
 
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
