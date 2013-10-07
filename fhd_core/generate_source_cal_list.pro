@@ -61,7 +61,7 @@ IF n_use GT 0 THEN BEGIN
     source_list=source_list[order]
     source_list.id=Lindgen(n_src_use)
     IF Keyword_Set(no_extend) THEN source_list.extend=Ptrarr(n_src_use) ELSE BEGIN
-        extend_i=where(Ptr_valid(source_list),n_extend)
+        extend_i=where(Ptr_valid(source_list.extend),n_extend)
         FOR ext_i=0L,n_extend-1 DO BEGIN
             extend_list=*source_list[extend_i[ext_i]].extend
             ad2xy,extend_list.ra,extend_list.dec,astr,x_arr,y_arr
