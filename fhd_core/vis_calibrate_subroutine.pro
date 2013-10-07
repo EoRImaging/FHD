@@ -18,7 +18,7 @@ function calib_freq_poly, mode, val, mask
   
   if n_val eq 1 then val_arr = dblarr(n_freq) + val else val_arr = matrix_multiply(dblarr(n_freq)+1, val)
   x_arr = dindgen(n_freq)/(n_freq-1)-0.5
-  if n_val gt 1 then x_arr = rebin(x_arr, n_freq, n_val)
+  if n_val gt 1 then x_arr = rebin(x_arr, n_freq, n_val,/sample)
   
   ;; use Legendre Polynomials for orthogonality
   case mode of
@@ -27,7 +27,7 @@ function calib_freq_poly, mode, val, mask
     2: freq_arr = val_arr * (3.*x_arr^2. - 1.) / 2.
   endcase
   
-  return, freq_arr*mask
+  return, freq_arr*mask / rebin(reform(total(mask, 1), 1, n_val), n_freq, n_val,/sample)
 end
 
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
