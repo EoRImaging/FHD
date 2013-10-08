@@ -254,7 +254,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
         phase_fit_iter=Floor(max_cal_iter/4.)
         
-        gain_new_mode=Complexarr(n_modes, n_tile_use)
+        gain_new_mode=dblarr(n_modes, n_tile_use)
         conv_test=fltarr(max_cal_iter)
         
         FOR fi=0L,n_modes-1 DO BEGIN
@@ -278,7 +278,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
           
             FOR tile_i=0L,n_tile_use-1 DO begin
               IF n_arr[tile_i] GE min_cal_solutions THEN begin
-                gain_new_mode[fi, tile_i]=LA_Least_Squares(dblarr(n_arr[tile_i])+1, $
+                gain_new_mode[fi, tile_i]=LA_Least_Squares(dblarr(1, n_arr[tile_i])+1, $
                   total(atan(vis_use[*, *A_ind_arr[tile_i]],/phase)-atan(vis_model2[*A_ind_arr[tile_i]],/phase)-freq_func_B, 1),method=2)
               endif
             endfor
