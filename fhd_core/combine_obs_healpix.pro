@@ -114,8 +114,8 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     dimension=obs.dimension
     elements=obs.elements
     n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
-    file_path=file_list_use[obs_i]
-    IF file_test(file_path+'_fhd_params.sav') EQ 0 THEN fhd=fhd_init() ELSE fhd=getvar_savefile(file_path+'_fhd_params.sav','fhd')
+    file_path_fhd=file_list_use[obs_i]
+    IF file_test(file_path_fhd+'_fhd_params.sav') EQ 0 THEN fhd=fhd_init() ELSE fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
     
     image_uv_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv');*obs.cal[pol_i]
@@ -124,8 +124,8 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 
     beam_base=*beam_arr[obs_i]
     IF fhd_flag THEN BEGIN
-        source_array=getvar_savefile(file_path+'_fhd.sav','source_array')
-        model_uv_holo=getvar_savefile(file_path+'_fhd.sav','model_uv_holo')
+        source_array=getvar_savefile(file_path_fhd+'_fhd.sav','source_array')
+        model_uv_holo=getvar_savefile(file_path_fhd+'_fhd.sav','model_uv_holo')
         si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
         IF ns_use EQ 0 THEN CONTINUE
         source_arr=source_array[si_use]
