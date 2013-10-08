@@ -39,8 +39,8 @@ function calc_gain, gain_modes, mode_types, mode_num, mask
   if dims_gain[0] ne n_modes then message, 'first dimension of gain_modes must match length of mode_types'
   if dims_gain[1] ne dims_mask[1] then message, 'second dimension of gain_modes and mask must match'
   
-  amp = dblarr(n_freq, n_tile_use)
-  phase = dblarr(n_freq, n_tile_use)
+  amp = dblarr(dims_mask)
+  phase = dblarr(dims_mask)
   for fi=0L,n_modes-1 do begin
     if mode_types[fi] eq 'amp' then amp += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), tile_freq_flag) $
     else phase += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), tile_freq_flag)
