@@ -1,7 +1,12 @@
-pro plot_cals,cal,obs,phase_filename=phase_filename,amp_filename=amp_filename,vis_baseline_hist=vis_baseline_hist,vis_hist_filename=vis_hist_filename
+pro plot_cals,cal,obs,vis_baseline_hist=vis_baseline_hist,file_path_base=file_path_base,no_ps=no_ps
 ; Make plot of the cal solutions, save to png
 ; PS_START/PS_END write .ps first, then converts to png. Supply .png
 ; filename to automatically overwrite .ps.
+
+IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='ps'
+phase_filename=file_path_base+'_cal_phase'+ext_name
+amp_filename=file_path_base+'_cal_amp'+ext_name
+vis_hist_filename=file_path_base+'_cal_hist'+ext_name
 
 tile_names = cal.tile_names
 n_tiles=obs.n_tile
@@ -77,7 +82,7 @@ ENDFOR
 
 PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 
-IF Keyword_Set(vis_baseline_hist) and Keyword_Set(vis_hist_filename) THEN BEGIN
+IF Keyword_Set(vis_baseline_hist) THEN BEGIN
    ratio=vis_baseline_hist.vis_res_ratio_mean ; just save some typing
    sigma=vis_baseline_hist.vis_res_sigma
    base_len=vis_baseline_hist.baseline_length

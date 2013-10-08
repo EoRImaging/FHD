@@ -508,11 +508,10 @@ residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radiu
 IF N_Elements(cal) GT 0 THEN BEGIN
    IF cal.n_cal_src GT 0 THEN BEGIN
       IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
-         restore,file_path_fhd+'_cal_hist.sav'
-         plot_cals,cal,obs,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png',$
-                   vis_baseline_hist=vis_baseline_hist,vis_hist_filename=image_path+'_cal_hist.png'
+         vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
+         plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist,_Extra=extra
       ENDIF ELSE BEGIN
-         plot_cals,cal,obs,phase_filename=image_path+'_cal_phase.png',amp_filename=image_path+'_cal_amp.png'
+         plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
       ENDELSE
    ENDIF
 ENDIF
