@@ -1,6 +1,10 @@
-function calib_freq_poly, mode, val, mask
+function calc_freq_mode, mode, val, mask, mode_type, return_complex = return_complex
 
   dims = size(mask, /dim)
+  
+  ;; using flat, linear modes in phase then flat, linear, quadratic in amp
+  if mode gt 1 then mode_type = 'amp' else mode_type = 'phase'
+  
   case n_elements(dims) of
     1: begin
       n_freq = dims
@@ -17,22 +21,23 @@ function calib_freq_poly, mode, val, mask
   if n_elements(val) ne n_val then stop
   
   if n_val eq 1 then val_arr = dblarr(n_freq) + val else val_arr = matrix_multiply(dblarr(n_freq)+1, val)
-  x_arr = (dindgen(n_freq)/(n_freq-1))*2.-1.
+  x_arr = dindgen(n_freq)/(n_freq-1)
   if n_val gt 1 then x_arr = rebin(x_arr, n_freq, n_val,/sample)
   
-  ;; use Legendre Polynomials for orthogonality (x_arr runs -1 to 1)
   case mode of
     0: freq_arr = val_arr
     1: freq_arr = val_arr * x_arr
-    2: freq_arr = val_arr * (3.*x_arr^2. - 1.) / 2.
+    2: freq_arr = val_arr
+    3: freq_arr = val_arr * x_arr
+    4: freq_arr = val_arr * x_arr^2.
   endcase
   
-  return, freq_arr*mask
+  if keyword_set(return_complex) and mode_type eq 'phase' then return, exp(complex(0,1)*freq_arr*mask) else return, freq_arr*mask
 end
 
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
     calib_freq_func=calib_freq_func,_Extra=extra
-     
+    
   IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
   reference_tile=cal.ref_antenna
   min_cal_baseline=cal.min_cal_baseline
@@ -192,8 +197,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
     endif else begin
       ;; calibrate using a 3rd order polynomial in frequency rather than fitting each frequency independently
     
-      n_modes=3
-      gain_arr_mode = complex(dblarr(n_modes, n_tile)+1)
+      n_modes=5
+      gain_arr_mode = dblarr(n_modes, n_tile)
+      gain_arr_mode[2:*,*] = 1.
       
       ;; keep frequency direction around
       vis_data2=vis_avg[*,baseline_use] & vis_data2=[[vis_data2],[Conj(vis_data2)]]
@@ -221,65 +227,88 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
         n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
       ENDFOR
       
-      FOR fi=0L,n_modes-1 DO BEGIN
-        gain_curr=Reform(gain_arr_mode[fi,tile_use])
-        
+      
+      vis_use=vis_data2
+      gain_curr_mode=gain_arr_mode[*,tile_use]
+
+      gain_curr = dblarr(n_freq, n_tile_use)
+      for fi=0L,n_modes-1 do gain_curr += calc_freq_mode(fi, reform(gain_curr_mode[fi,tile_use]), tile_freq_flag, /return_complex)
+      
+      
+      FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
         phase_fit_iter=Floor(max_cal_iter/4.)
         
-        gain_new=Complexarr(n_tile_use)
+        gain_new_mode=Complexarr(n_modes, n_tile_use)
         conv_test=fltarr(max_cal_iter)
-        FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
-          vis_use=vis_data2
+        
+        FOR fi=0L,n_modes-1 DO BEGIN
+        
+          freq_func_B = calc_freq_mode(fi, reform(gain_curr_mode[fi, B_ind]), weight2[*,B_ind] gt 0, mode_type)
           
-          freq_func_B = calib_freq_poly(fi, reform(gain_curr[fi, B_ind]), weight2[*,B_ind] gt 0)
-          vis_model_matrix=total(vis_model2*Conj(freq_func_B), 1)
-          FOR tile_i=0L,n_tile_use-1 DO begin
-            IF n_arr[tile_i] GE min_cal_solutions THEN begin
-              freq_func = calib_freq_poly(fi, complex(dblarr(n_arr[tile_i])+1.), weight2[*,*A_ind_arr[tile_i]] gt 0)
-              
-              gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],total(vis_use[*, *A_ind_arr[tile_i]]*freq_func, 1),method=2)
-            endif
-          endfor
+          if mode_type eq 'amp' then begin
+            IF phase_fit_iter-i GT 0 then continue ;fit only phase at first
+            
+            vis_model_matrix=total(abs(vis_model2)*freq_func_B, 1)
+            
+            FOR tile_i=0L,n_tile_use-1 DO begin
+              IF n_arr[tile_i] GE min_cal_solutions THEN begin
+                freq_func = calc_freq_mode(fi, dblarr(n_arr[tile_i])+1., weight2[*,*A_ind_arr[tile_i]] gt 0)
+                
+                gain_new_mode[fi, tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],total(abs(vis_use[*, *A_ind_arr[tile_i]])*freq_func, 1),method=2)
+              endif
+            endfor
+            
+          endif else begin
           
-          IF Total(Abs(gain_new)) EQ 0 THEN BEGIN
-            gain_curr=gain_new
-            BREAK
-          ENDIF
-          IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
-          IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
-            gain_new*=Mean(Abs(gain_new[where(gain_new)]))*weight_invert(Abs(gain_new)) ;then fit only average amplitude
-          gain_old=gain_curr
-          gain_curr=(gain_new+gain_old)/2.
-          dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
-          diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
-          IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
-          IF nan_test(gain_curr) GT 0 THEN gain_curr[where(Finite(gain_curr,/nan))]=gain_old[where(Finite(gain_curr,/nan))]
-          gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
-          conv_test[i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
-          IF i GE 1 THEN $
-            IF conv_test[i] LE conv_thresh THEN BREAK $
-          ELSE IF Abs(conv_test[i]-conv_test[i-1]) LE conv_thresh/2. THEN BREAK
-        ENDFOR
-        gain_arr_mode[fi,tile_use]=gain_curr
+            FOR tile_i=0L,n_tile_use-1 DO begin
+              IF n_arr[tile_i] GE min_cal_solutions THEN begin
+                gain_new_mode[fi, tile_i]=LA_Least_Squares(dblarr(n_arr[tile_i])+1, $
+                  total(atan(vis_use[*, *A_ind_arr[tile_i]],/phase)-atan(vis_model2[*A_ind_arr[tile_i]],/phase)-freq_func_B, 1),method=2)
+              endif
+            endfor
+            
+          endelse
+          
+        endfor
+        
+        IF Total(Abs(gain_new)) EQ 0 THEN BEGIN
+          gain_curr_mode=gain_new_mode
+          BREAK
+        ENDIF
+        
+        gain_old_mode=gain_curr_mode
+        gain_curr_mode=(gain_new_mode+gain_old_mode)/2.
+        
+        gain_old = gain_curr
+        gain_curr = dblarr(n_freq, n_tile_use)
+        for fi=0L,n_modes-1 do gain_curr += calc_freq_mode(fi, reform(gain_curr_mode[fi,tile_use]), tile_freq_flag, /return_complex)      
+        
+        dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
+        diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
+        IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
+        IF nan_test(gain_curr) GT 0 THEN gain_curr[where(Finite(gain_curr,/nan))]=gain_old[where(Finite(gain_curr,/nan))]
+        gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
+        conv_test[i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
+        IF i GE 1 THEN $
+          IF conv_test[i] LE conv_thresh THEN BREAK $
+        ELSE IF Abs(conv_test[i]-conv_test[i-1]) LE conv_thresh/2. THEN BREAK
+        
       ENDFOR
+      gain_arr_mode[fi,tile_use]=gain_curr_mode
       Ptr_free,A_ind_arr
-      
-      ;; make a new [n_freq, n_tile] gain array from gain_arr_model:[n_modes, n_baselines]
-      temp = dblarr(n_freq, n_tile_use)
-      for fi=0L,n_modes-1 do temp += calib_freq_poly(fi, reform(gain_arr_mode[fi,tile_use]), tile_freq_flag)
-      
-      gain_arr[*,tile_use] = temp
+           
+      gain_arr[*,tile_use] = gain_curr
       
     endelse
     
     nan_i=where(Finite(gain_arr,/nan),n_nan)
     IF n_nan GT 0 THEN BEGIN
-        ;any gains with NANs -> all tiles for that freq will have NANs
-        freq_nan_i=nan_i mod n_freq
-        freq_nan_i=freq_nan_i[Uniq(freq_nan_i,Sort(freq_nan_i))]
-        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[freq_nan_i,*]=0
-        gain_arr[nan_i]=0.
-
+      ;any gains with NANs -> all tiles for that freq will have NANs
+      freq_nan_i=nan_i mod n_freq
+      freq_nan_i=freq_nan_i[Uniq(freq_nan_i,Sort(freq_nan_i))]
+      FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[freq_nan_i,*]=0
+      gain_arr[nan_i]=0.
+      
     ENDIF
     *cal_return.gain[pol_i]=gain_arr
   ENDFOR

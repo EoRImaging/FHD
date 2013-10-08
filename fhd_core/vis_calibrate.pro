@@ -124,34 +124,11 @@ t2=t3_a-t2_a
 vis_calibration_flag,obs,cal
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 
-if Keyword_Set(vis_baseline_hist) then begin
-  IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_ptr[pol_i]
-  
-  kx_arr=cal.uu/obs.kpix ;ignore slight variation with time
-  ky_arr=cal.vv/obs.kpix
-  kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
-  dist_arr=(freq_arr#kr_arr)*obs.kpix
-  dist_hist = histogram(dist_arr, min=obs.min_baseline, binsize=5, max=obs.max_baseline, locations = dist_locs, reverse_indices = dist_ri)
-  vis_res_ratio_mean = fltarr(n_pol, n_elements(dist_locs))
-  vis_res_sigma = fltarr(n_pol, n_elements(dist_locs))
-  for pol_i=0,n_pol-1 do begin
-    vis_model_arr = Temporary(*vis_model_ptr[pol_i])
-    for i=0, n_elements(dist_locs)-1 do if dist_hist[i] gt 0 then begin
-    inds = dist_ri[dist_ri[i]:dist_ri[i+1]-1]
-    wh_noflag = where(vis_model_arr[inds] gt 0, count_noflag)
-    if count_noflag eq 0 then continue else inds = inds[wh_noflag]
-      if Keyword_Set(calibration_visibilities_subtract) then begin
-        vis_res_ratio_mean[i] = mean(abs((*vis_cal[pol_i])[inds]))/mean(abs(vis_model_arr[inds]))
-        vis_res_sigma[i] = sqrt(variance(abs((*vis_cal[pol_i])[inds])))/mean(abs(vis_model_arr[inds]))
-      endif else begin
-        vis_res_ratio_mean[i] = mean(abs((*vis_cal[pol_i])[inds]-vis_model_arr[inds]))/mean(abs(vis_model_arr[inds]))
-        vis_res_sigma[i] = sqrt(variance(abs((*vis_cal[pol_i])[inds]-vis_model_arr[inds])))/mean(abs(vis_model_arr[inds]))
-      endelse
-    endif
-  endfor
-  vis_baseline_hist = {baseline_length:dist_locs, vis_res_ratio_mean:vis_res_ratio_mean, vis_res_sigma:vis_res_sigma}
-  SAVE,vis_baseline_hist,filename=file_path_fhd+'_cal_hist.sav'
-endif else IF Keyword_Set(calibration_visibilities_subtract) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
+IF Keyword_Set(vis_baseline_hist) THEN $
+    vis_baseline_hist,obs,params,vis_ptr=vis_cal,vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd
+
+IF Keyword_Set(calibration_visibilities_subtract) THEN $
+    FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
 
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0
