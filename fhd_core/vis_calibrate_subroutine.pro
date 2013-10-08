@@ -42,8 +42,8 @@ function calc_gain, gain_modes, mode_types, mode_num, mask
   amp = dblarr(dims_mask)
   phase = dblarr(dims_mask)
   for fi=0L,n_modes-1 do begin
-    if mode_types[fi] eq 'amp' then amp += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), tile_freq_flag) $
-    else phase += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), tile_freq_flag)
+    if mode_types[fi] eq 'amp' then amp += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), mask) $
+    else phase += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), mask)
   endfor
   gain = amp * exp(complex(0,1)*phase)
   
