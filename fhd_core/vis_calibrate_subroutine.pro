@@ -1,9 +1,6 @@
-function calc_freq_mode, mode, val, mask, mode_type, return_complex = return_complex
+function calc_freq_mode, mode, val, mask
 
   dims = size(mask, /dim)
-  
-  ;; using flat, linear modes in phase then flat, linear, quadratic in amp
-  if mode gt 1 then mode_type = 'amp' else mode_type = 'phase'
   
   case n_elements(dims) of
     1: begin
@@ -27,12 +24,30 @@ function calc_freq_mode, mode, val, mask, mode_type, return_complex = return_com
   case mode of
     0: freq_arr = val_arr
     1: freq_arr = val_arr * x_arr
-    2: freq_arr = val_arr
-    3: freq_arr = val_arr * x_arr
-    4: freq_arr = val_arr * x_arr^2.
+    2: freq_arr = val_arr * x_arr^2.
   endcase
   
-  if keyword_set(return_complex) and mode_type eq 'phase' then return, exp(complex(0,1)*freq_arr*mask) else return, freq_arr*mask
+  return, freq_arr*mask
+end
+
+function calc_gain, gain_modes, mode_types, mode_num, mask
+
+  n_modes = n_elements(mode_types)
+  dims_gain = size(gain_modes, /dimension)
+  dims_mask = size(mask, /dimension)
+  
+  if dims_gain[0] ne n_modes then message, 'first dimension of gain_modes must match length of mode_types'
+  if dims_gain[1] ne dims_mask[1] then message, 'second dimension of gain_modes and mask must match'
+  
+  amp = dblarr(n_freq, n_tile_use)
+  phase = dblarr(n_freq, n_tile_use)
+  for fi=0L,n_modes-1 do begin
+    if mode_types[fi] eq 'amp' then amp += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), tile_freq_flag) $
+    else phase += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), tile_freq_flag)
+  endfor
+  gain = amp * exp(complex(0,1)*phase)
+  
+  return, gain
 end
 
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
@@ -197,9 +212,13 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
     endif else begin
       ;; calibrate using a 3rd order polynomial in frequency rather than fitting each frequency independently
     
-      n_modes=5
+      phase_modes = 2
+      amp_modes = 3
+      n_modes = phase_modes + amp_modes
+      mode_type = [strarr(phase_modes) + 'phase', strarr(amp_modes) + 'amp']
+      mode_num = [indgen(phase_modes), indgen(amp_modes)]
       gain_arr_mode = dblarr(n_modes, n_tile)
-      gain_arr_mode[2:*,*] = 1.
+      gain_arr_mode[where(mode_type eq 'amp')] = 1.
       
       ;; keep frequency direction around
       vis_data2=vis_avg[*,baseline_use] & vis_data2=[[vis_data2],[Conj(vis_data2)]]
@@ -230,10 +249,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       
       vis_use=vis_data2
       gain_curr_mode=gain_arr_mode[*,tile_use]
-
-      gain_curr = dblarr(n_freq, n_tile_use)
-      for fi=0L,n_modes-1 do gain_curr += calc_freq_mode(fi, reform(gain_curr_mode[fi,tile_use]), tile_freq_flag, /return_complex)
-      
+      gain_curr = calc_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
       
       FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
         phase_fit_iter=Floor(max_cal_iter/4.)
@@ -243,16 +259,16 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
         
         FOR fi=0L,n_modes-1 DO BEGIN
         
-          freq_func_B = calc_freq_mode(fi, reform(gain_curr_mode[fi, B_ind]), weight2[*,B_ind] gt 0, mode_type)
+          freq_func_B = calc_freq_mode(mode_num[fi], reform(gain_curr_mode[fi, B_ind]), weight2[*,B_ind] gt 0)
           
-          if mode_type eq 'amp' then begin
+          if mode_type[fi] eq 'amp' then begin
             IF phase_fit_iter-i GT 0 then continue ;fit only phase at first
             
             vis_model_matrix=total(abs(vis_model2)*freq_func_B, 1)
             
             FOR tile_i=0L,n_tile_use-1 DO begin
               IF n_arr[tile_i] GE min_cal_solutions THEN begin
-                freq_func = calc_freq_mode(fi, dblarr(n_arr[tile_i])+1., weight2[*,*A_ind_arr[tile_i]] gt 0)
+                freq_func = calc_freq_mode(mode_num[fi], dblarr(n_arr[tile_i])+1., weight2[*,*A_ind_arr[tile_i]] gt 0)
                 
                 gain_new_mode[fi, tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],total(abs(vis_use[*, *A_ind_arr[tile_i]])*freq_func, 1),method=2)
               endif
@@ -280,8 +296,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
         gain_curr_mode=(gain_new_mode+gain_old_mode)/2.
         
         gain_old = gain_curr
-        gain_curr = dblarr(n_freq, n_tile_use)
-        for fi=0L,n_modes-1 do gain_curr += calc_freq_mode(fi, reform(gain_curr_mode[fi,tile_use]), tile_freq_flag, /return_complex)      
+        gain_curr = calc_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
         
         dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
         diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
@@ -296,7 +311,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       ENDFOR
       gain_arr_mode[fi,tile_use]=gain_curr_mode
       Ptr_free,A_ind_arr
-           
+      
       gain_arr[*,tile_use] = gain_curr
       
     endelse
