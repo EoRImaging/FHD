@@ -263,7 +263,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
             FOR tile_i=0L,n_tile_use-1 DO begin
               IF n_arr[tile_i] GE min_cal_solutions THEN begin
                 gain_new_mode[fi, tile_i]=LA_Least_Squares(dblarr(n_arr[tile_i])+1, $
-                  total(atan(vis_use[*, *A_ind_arr[tile_i]],/phase)-atan(vis_model2[*A_ind_arr[tile_i]],/phase)-freq_func, 1),method=2)
+                  total(atan(vis_use[*, *A_ind_arr[tile_i]],/phase)-atan(vis_model2[*A_ind_arr[tile_i]],/phase)-freq_func_B, 1),method=2)
               endif
             endfor
             
