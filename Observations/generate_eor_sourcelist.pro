@@ -54,6 +54,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,psf_dim=psf_dim,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,$
-    no_fits=no_fits,no_rephase=no_rephase,_Extra=extra
+    no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
 !except=except
 END
