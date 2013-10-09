@@ -1,7 +1,7 @@
 PRO vis_calibration_flag,obs,cal,error=error
 
 amp_sigma_threshold=5.
-phase_sigma_threshold=10.
+phase_sigma_threshold=5.
 n_tile=obs.n_tile
 n_freq=obs.n_freq
 n_pol=obs.n_pol
@@ -65,7 +65,20 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     phase_sub=extract_subarray(phase,freq_use_i1,tile_use_i1)
     
     phase_slope_arr=fltarr(n_tile_use)
-    FOR tile_i=0L,n_tile_use-1 DO phase_slope_arr[tile_i]=(linfit(freq_use_i1,phase_sub[*,tile_i]))[1]
+    FOR tile_i=0L,n_tile_use-1 DO BEGIN
+        phase_use=phase_sub[*,tile_i]
+        phase_fit=fltarr(n_freq_use)
+        fi_use2=indgen(n_freq_use)
+        FOR iter=0,2 DO BEGIN
+            phase_use2=phase_use[fi_use2]-phase_fit
+            slope=(linfit(freq_use_i1[fi_use2],phase_use2,yfit=phase_fit))[1]
+            phase_sigma2=Stddev(phase_use2-phase_fit)
+            fi_use2_i=where(Abs(phase_use2-phase_fit) LT 3.*phase_sigma2,n_fi2)
+            IF n_fi2 LE 2 THEN BREAK
+            fi_use2=fi_use2[fi_use2_i]
+        ENDFOR
+        phase_slope_arr[tile_i]=slope
+    ENDFOR
     iter=0
     n_addl_cut=1
     n_cut=0
