@@ -257,35 +257,27 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
         
         FOR fi=0L,n_modes-1 DO BEGIN
         
-          freq_func_B = calc_freq_mode(mode_num[fi], reform(gain_curr_mode[fi, B_ind]), weight2[*,B_ind] gt 0)
+          freq_func = calc_freq_mode(mode_num[fi], dblarr(n_arr[tile_i])+1., weight2[*,*A_ind_arr[tile_i]] gt 0)
+          gain_curr = calc_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
           
           if mode_type[fi] eq 'amp' then begin
             IF phase_fit_iter-i GT 0 then continue ;fit only phase at first
             
-            vis_model_matrix=total(abs(vis_model2)*freq_func_B, 1)
+            vis_model_matrix=total(abs(vis_model2*Conj(gain_curr[*,B_ind])*exp(complex(0,1)*atan(gain_curr[*,A_ind],/phase)))*freq_func, 1)
             
-            FOR tile_i=0L,n_tile_use-1 DO begin
-              IF n_arr[tile_i] GE min_cal_solutions THEN begin
-                freq_func = calc_freq_mode(mode_num[fi], dblarr(n_arr[tile_i])+1., weight2[*,*A_ind_arr[tile_i]] gt 0)
-                
-                gain_new_mode[fi, tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],total(abs(vis_use[*, *A_ind_arr[tile_i]])*freq_func, 1),method=2)
-              endif
-            endfor
-            
+            FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN $
+              gain_new_mode[fi, tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],total(abs(vis_use[*, *A_ind_arr[tile_i]])*freq_func, 1),method=2)
+              
           endif else begin
           
-            FOR tile_i=0L,n_tile_use-1 DO begin
-              IF n_arr[tile_i] GE min_cal_solutions THEN begin
-                gain_new_mode[fi, tile_i]=LA_Least_Squares(dblarr(1, n_arr[tile_i])+1, $
-                  total(atan(vis_use[*, *A_ind_arr[tile_i]],/phase)-atan(vis_model2[*A_ind_arr[tile_i]],/phase)-freq_func_B, 1),method=2)
-              endif
-            endfor
-            
+            FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN gain_new_mode[fi, tile_i]=LA_Least_Squares(dblarr(1, n_arr[tile_i])+1, $
+              total((atan(vis_use[*, *A_ind_arr[tile_i]],/phase)-atan(vis_model2[*A_ind_arr[tile_i]],/phase)+atan(gain_curr[*,B_ind]))*freq_func, 1),method=2)
+              
           endelse
           
         endfor
         
-        IF Total(Abs(gain_new)) EQ 0 THEN BEGIN
+        IF Total(Abs(gain_new_mode)) EQ 0 THEN BEGIN
           gain_curr_mode=gain_new_mode
           BREAK
         ENDIF
