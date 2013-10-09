@@ -32,7 +32,7 @@ CASE instrument OF
     END
     'mwa':BEGIN
         freq_avg=Round(768./n_freq)
-        channel_edge_flag_width=Ceil(4./freq_avg)
+        channel_edge_flag_width=Ceil(2./freq_avg)
         coarse_channel_width=Round(32./freq_avg)
         fine_channel_i=lindgen(n_freq) mod coarse_channel_width
         channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)

@@ -43,7 +43,8 @@ antenna_spacing=1.1 ;meters (Same as M&C SetDelays script) ; Was 1.071 before?
 antenna_length=29.125*2.54/100. ;meters (measured)
 antenna_height=0.35 ;meters (rumor)
 c_light_vacuum=299792458.
-c_light_cable=210000000. ;not used
+velocity_factor=0.673
+c_light_cable=c_light_vacuum*velocity_factor ;not used
 
 Kconv=(2.*!Pi)*(frequency/c_light_vacuum) ;wavenumber (radians/meter)
 wavelength=c_light_vacuum/frequency
@@ -95,7 +96,7 @@ D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 ;groundplane=Reform(groundplane,psf_dim2,psf_dim2,16)
 
 groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength)) ;should technically have zc_arr, but until that is nonzero this is the same and faster
-;groundplane0=2.*Sin(2.*!Pi*antenna_height/wavelength) ;normalization factor
+;groundplane=2.*Sin((Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength))>0.1)
 groundplane0=2.*Sin(Cos(za*!DtoR)*2.*!Pi*antenna_height/wavelength) ;normalization factor
 
 IF polarization EQ 0 THEN projection=Sqrt(1.-proj_east^2.) ELSE projection=Sqrt(1.-proj_north^2.) 
