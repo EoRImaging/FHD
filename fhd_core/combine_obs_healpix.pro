@@ -71,7 +71,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         IF file_test(file_path_fhd+'_beams.sav') THEN psf=getvar_savefile(file_path_fhd+'_beams.sav','psf') $
             ELSE psf=beam_setup(obs,file_path_fhd,restore_last=0,silent=1,no_save=1,_Extra=extra)
         beam_base=Ptrarr(n_pol)
-        FOR pol_i=0,n_pol-1 DO beam_base=Ptr_new(beam_image(psf,obs,pol_i=pol_i))
+        FOR pol_i=0,n_pol-1 DO beam_base[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i))
     ENDELSE
     *beam_arr[obs_i]=beam_base
         
