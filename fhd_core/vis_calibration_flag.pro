@@ -18,7 +18,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     
     gain=*gain_arr[pol_i]
     phase=Atan(gain,/phase)
-    phase=PhUnwrap(phase)
     amp=Abs(gain)
     
     ;first flag based on overall amplitude
@@ -65,26 +64,28 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     phase_sub=extract_subarray(phase,freq_use_i1,tile_use_i1)
     
     phase_slope_arr=fltarr(n_tile_use)
+    phase_sigma_arr=fltarr(n_tile_use)
     FOR tile_i=0L,n_tile_use-1 DO BEGIN
-        phase_use=phase_sub[*,tile_i]
+        phase_use=PhUnwrap(phase_sub[*,tile_i])
         phase_fit=fltarr(n_freq_use)
         fi_use2=indgen(n_freq_use)
-        FOR iter=0,2 DO BEGIN
+;        FOR iter=0,2 DO BEGIN
             phase_use2=phase_use[fi_use2]-phase_fit
             slope=(linfit(freq_use_i1[fi_use2],phase_use2,yfit=phase_fit))[1]
             phase_sigma2=Stddev(phase_use2-phase_fit)
             fi_use2_i=where(Abs(phase_use2-phase_fit) LT 3.*phase_sigma2,n_fi2)
-            IF n_fi2 LE 2 THEN BREAK
-            fi_use2=fi_use2[fi_use2_i]
-        ENDFOR
+;            IF n_fi2 LE 2 THEN BREAK
+;            fi_use2=fi_use2[fi_use2_i]
+;        ENDFOR
         phase_slope_arr[tile_i]=slope
+        phase_sigma_arr[tile_i]=phase_sigma2
     ENDFOR
     iter=0
     n_addl_cut=1
     n_cut=0
     WHILE n_addl_cut GT 0 DO BEGIN
         slope_sigma=Stddev(phase_slope_arr)
-        tile_cut_i=where((Abs(phase_slope_arr)-Median(Abs(phase_slope_arr))-phase_sigma_threshold*slope_sigma) GT 0,n_tile_cut,ncomp=n_tile_uncut,complement=tile_uncut_i)
+        tile_cut_i=where(((Abs(phase_slope_arr)-Median(Abs(phase_slope_arr))) GT phase_sigma_threshold*slope_sigma) OR ((phase_sigma_arr-Median(phase_sigma_arr)) GT phase_sigma_threshold*Stddev(phase_sigma_arr)),n_tile_cut,ncomp=n_tile_uncut,complement=tile_uncut_i)
         n_addl_cut=(n_tile_cut)-n_cut
         n_cut=n_tile_cut
         iter+=1
