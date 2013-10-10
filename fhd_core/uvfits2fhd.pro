@@ -23,8 +23,7 @@
 ;    
 ;    n_pol - 1: use xx only, 2: use xx and xy, 4: use xx, yy, xy, and yx (Default: as many as are available)
 ;    
-;    flag - set to look for anomalous visibility data and update flags 
-;       (default=1, also set to 1 if '_flags.sav' does not exist)
+;    flag_visibilities - set to look for anomalous visibility data and update flags 
 ;    
 ;    Extra - pass any non-default parameters to fast_holographic_deconvolution through this parameter 
 ;
@@ -32,13 +31,13 @@
 ;-
 PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
-    n_pol=n_pol,flag=flag,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
+    n_pol=n_pol,flag_visibilities=flag_visibilities,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     rephase_to_zenith=rephase_to_zenith,healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,quickview=quickview,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
-    weights_grid=weights_grid,_Extra=extra
+    weights_grid=weights_grid,flag_calibration=flag_calibration,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -52,10 +51,11 @@ IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
-IF N_Elements(flag) EQ 0 THEN flag=0.
+IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
+IF N_Elements(flag_calibration) EQ 0 THEN flag_calibration=1
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
-IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1
+IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the mapping function to disk if it will be just deleted later anyway
 
 ;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
 ;IF Keyword_Set(GPU_enable) THEN BEGIN
@@ -80,7 +80,6 @@ fhd_filepath=file_path_fhd+'_fhd.sav'
 autocorr_filepath=file_path_fhd+'_autos.sav'
 cal_filepath=file_path_fhd+'_cal.sav'
 IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
-;IF Keyword_Set(export_images) THEN IF file_test(file_path_fhd+'_fhd.sav') EQ 0 THEN deconvolve=1
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
@@ -181,11 +180,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
-;    IF file_test(flags_filepath) AND ~Keyword_Set(flag) THEN BEGIN
-;        flag_arr=getvar_savefile(flags_filepath,'flag_arr')
-;    ENDIF ELSE BEGIN
-;        flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,_Extra=extra)
-;    ENDELSE
     
     IF Keyword_Set(freq_start) THEN BEGIN
         frequency_array_MHz=freq_arr/1E6
@@ -241,6 +235,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
              calibration_source_list=calibration_source_list,return_cal_model=return_cal_model,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
+        IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
         save,cal,filename=cal_filepath,/compress
         IF Keyword_Set(return_cal_model) THEN save,model_uv_arr,filename=file_path_fhd+'_cal_uv.sav'
     ENDIF
@@ -248,7 +243,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr
         IF basename EQ transfer_mapfn THEN BEGIN 
-            IF Keyword_Set(flag) THEN BEGIN
+            IF Keyword_Set(flag_visibilities) THEN BEGIN
                 print,'Flagging anomalous data'
                 vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
             ENDIF
@@ -299,30 +294,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
             SAVE,flag_arr,filename=flags_filepath,/compress
     ENDELSE
     
-;    flag_freq_test=fltarr(obs.n_freq)
-;    flag_tile_test=fltarr(obs.n_tile)
-;    FOR pol_i=0,n_pol-1 DO flag_freq_test+=Max(*flag_arr[pol_i],dimension=2)>0
-;    flag_freq_use_i=where(flag_freq_test,n_freq_use,ncomp=n_freq_cut)
-;    IF n_freq_use EQ 0 THEN print,'All frequencies flagged!' ELSE BEGIN
-;        (*obs.baseline_info).freq_use[*]=0
-;        (*obs.baseline_info).freq_use[flag_freq_use_i]=1
-;    ENDELSE
-;    tile_A=(*obs.baseline_info).tile_A
-;    tile_B=(*obs.baseline_info).tile_B
-;    FOR pol_i=0,n_pol-1 DO BEGIN
-;        FOR tile_i=0,obs.n_tile-1 DO BEGIN
-;            tA_i=where(tile_A EQ (tile_i+1),nA)
-;            tB_i=where(tile_B EQ (tile_i+1),nB)
-;            
-;            IF nA GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tA_i])>0
-;            IF nB GT 0 THEN flag_tile_test[tile_i]+=Max((*flag_arr[pol_i])[*,tB_i])>0
-;        ENDFOR
-;    ENDFOR
-;    flag_tile_use_i=where(flag_tile_test,n_tile_use,ncomp=n_tile_cut)
-;    IF n_tile_use EQ 0 THEN print,'All tiles flagged!' ELSE BEGIN
-;        (*obs.baseline_info).tile_use[*]=0
-;        (*obs.baseline_info).tile_use[flag_tile_use_i]=1
-;    ENDELSE
     tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
     freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
     print,String(format='(A," frequency channels used and ",A," in-band channels flagged")',$
@@ -374,7 +345,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF Keyword_Set(grid_recalculate) THEN BEGIN
         print,'Gridding visibilities'
         IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol,/allocate)
-;        image_arr=Ptrarr(n_pol,/allocate)
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
         IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
@@ -390,12 +360,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
-;            dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
             IF N_Elements(weights_grid) GT 0 THEN SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
+;            dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
 ;            SAVE,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav',/compress
 
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
-;            *image_arr[pol_i]=Temporary(dirty_img)
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
             IF N_Elements(weights_grid) GT 0 THEN BEGIN
                 *weights_arr[pol_i]=Temporary(weights_grid)
