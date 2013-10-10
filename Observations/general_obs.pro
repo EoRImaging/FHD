@@ -131,7 +131,7 @@ IF Keyword_Set(simultaneous) THEN BEGIN
     ENDFOR
 ENDIF
 
-    combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
+combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
 map_projection='orth'
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=recalculate_all*(n_files_use GT 1)
 IF Keyword_Set(combine_healpix) THEN BEGIN
