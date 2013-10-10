@@ -43,12 +43,12 @@ FOR j=0L,n_rep-1 DO BEGIN
             FOR pol_i=0,n_pol-1 DO BEGIN
                 dirty_array[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix)*(*beam_correction[pol_i]))
             ENDFOR
-            IF N_Elements(quickview) EQ 0 THEN quickview=1
-            IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
-                beam_base,file_path_fhd=file_path_fhd,_Extra=extra
-            IF Keyword_Set(individual_save) THEN $
+;            IF N_Elements(quickview) EQ 0 THEN quickview=1
+;            IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
+;                beam_base,file_path_fhd=file_path_fhd,_Extra=extra
+;            IF Keyword_Set(individual_save) THEN $
                 save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
-                    beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav'
+                    beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav',/compress
         ENDFOR
 ;    ENDIF
 ENDFOR
