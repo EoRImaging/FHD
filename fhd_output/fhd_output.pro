@@ -2,7 +2,7 @@ PRO fhd_output,obs,fhd,cal, file_path_fhd=file_path_fhd,version=version,map_fn_a
     noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,$
     fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
-    gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,$
+    gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
@@ -382,21 +382,31 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
 ;        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
     
+    IF Keyword_Set(mark_zenith) THEN BEGIN
+        mark_zenith=fltarr(dimension,elements)
+        mark_thick=1.
+        mark_length=6.
+        mark_amp=(stokes_low_use<instr_low_use<(-100.))
+        mark_zenith[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
+        mark_zenith[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
+        mark_zenith=mark_zenith[zoom_low:zoom_high,zoom_low:zoom_high]
+    ENDIF ELSE mark_zenith=0
+    
     instr_low=Min(instr_residual[beam_i])
     instr_high=Max(instr_residual[beam_i])
     instr_low=instr_low>(-instr_high)
     instrS_high=Max(instr_restored[beam_i])
     log_dirty=0
     log_source=1
-    Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Dirty_'+pol_names[pol_i],$
+    Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Dirty_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,title=title_fhd,_Extra=extra
-    Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Residual_'+pol_names[pol_i],$
+    Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Residual_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low,high=instr_high,title=title_fhd,_Extra=extra
-    Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Sources_'+pol_names[pol_i],$
+    Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Sources_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high,/invert_color,title=title_fhd,_Extra=extra
-    Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Restored_'+pol_names[pol_i],$
+    Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Restored_'+pol_names[pol_i],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low,high=instr_high,title=title_fhd,_Extra=extra
-    Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
+    Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
         low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),/invert,title=title_fhd,_Extra=extra
     
@@ -416,17 +426,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     stokesS_high=Max((stokes_restored*Sqrt(beam_avg>0))[beam_i])
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
     IF pol_i EQ 0 THEN log=0 ELSE log=0
-    Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Residual_'+pol_names[pol_i+4],$
+    Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Residual_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low,high=stokes_high,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
         show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-    Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Sources_'+pol_names[pol_i+4],$
+    Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Sources_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high,/invert_color,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
         show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-    Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_Restored_'+pol_names[pol_i+4],$
+    Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Restored_'+pol_names[pol_i+4],$
         /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low,high=stokes_high,$
         lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
         offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
@@ -454,26 +464,26 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         gal_log=0
         debug_gal=1
         while debug_gal GT 0 DO BEGIN
-            imagefast,(*stokes_gal_model[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalModel_'+pol_names[pol_i+4],$
+            imagefast,(*stokes_gal_model[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high*2.,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
                 show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-            imagefast,(*gal_holo_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalHolo_'+pol_names[pol_i],$
+            imagefast,(*gal_holo_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalHolo_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=0,low=instr_low,high=instr_high,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
                 show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-            imagefast,(*gal_model_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
+            imagefast,(*gal_model_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
                 show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-            imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalSources_'+pol_names[pol_i],$
+            imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalSources_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
-            imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
+            imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
-            imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i+4],$
+            imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high2,title=title_fhd,_Extra=extra
             debug_gal=0
             dummyval=0

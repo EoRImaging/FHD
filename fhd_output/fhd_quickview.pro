@@ -1,9 +1,9 @@
 PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
-    grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,$
+    grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
-    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,mark_zenith=mark_zenith,_Extra=extra
+    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,_Extra=extra
 
 
 basename=file_basename(file_path_fhd)
