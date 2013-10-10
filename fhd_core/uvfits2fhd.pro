@@ -360,7 +360,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
-            IF N_Elements(weights_grid) GT 0 THEN SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
+            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
 ;            dirty_img=dirty_image_generate(dirty_UV,baseline_threshold=0,degpix=degpix)
 ;            SAVE,dirty_img,filename=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav',/compress
 
