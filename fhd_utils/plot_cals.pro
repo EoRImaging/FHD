@@ -3,7 +3,8 @@ pro plot_cals,cal,obs,vis_baseline_hist=vis_baseline_hist,file_path_base=file_pa
 ; PS_START/PS_END write .ps first, then converts to png. Supply .png
 ; filename to automatically overwrite .ps.
 
-IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='ps'
+no_ps=1
+IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
 phase_filename=file_path_base+'_cal_phase'+ext_name
 amp_filename=file_path_base+'_cal_amp'+ext_name
 vis_hist_filename=file_path_base+'_cal_hist'+ext_name
