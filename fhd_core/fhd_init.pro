@@ -7,8 +7,14 @@ FUNCTION fhd_init,obs,restore=restore,pol_use=pol_use,freq_use=freq_use,time_i_u
     beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,transfer_mapfn=transfer_mapfn
 
 
-IF N_Elements(obs) EQ 0 THEN obs=vis_struct_init_obs()
-npol=obs.n_pol
+IF N_Elements(obs) EQ 0 THEN BEGIN
+    dimension=1024. 
+    npol=4
+ENDIF ELSE BEGIN
+    dimension=obs.dimension
+    npol=obs.n_pol
+ENDELSE
+
 ext='.UVFITS'
 
 IF N_Elements(pol_use) EQ 0 THEN pol_use=indgen(npol)
