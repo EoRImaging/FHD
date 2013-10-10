@@ -49,8 +49,8 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
       IF tile_i EQ cal.ref_antenna THEN axiscolor='blue'
       cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
           XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[-1.5*!pi,1.5*!pi],$
-          charsize=.5,/noerase,axiscolor=axiscolor
-       cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red'
+          charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+       cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red',psym=3
     ENDELSE
 ENDFOR
 
@@ -76,8 +76,8 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
       IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
       cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
           XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[0,max_amp],$
-          /noerase,charsize=.5,axiscolor=axiscolor
-      cgoplot,freq,abs(gains1[*,tile_i]),color='red'
+          /noerase,charsize=.5,axiscolor=axiscolor,psym=3
+      cgoplot,freq,abs(gains1[*,tile_i]),color='red',psym=3
     ENDELSE
 ENDFOR
 
