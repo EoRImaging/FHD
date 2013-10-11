@@ -425,21 +425,8 @@ ENDFOR
 
 t10b=Systime(1)
 ;write sources to a text file
-radius=angle_difference(obs_out.obsdec,obs_out.obsra,source_arr_out.dec,source_arr_out.ra,/degree)
-Ires=(Qres=fltarr(N_Elements(source_arr_out)))
-cx=Round(source_arr_out.x) & cy=Round(source_arr_out.y)
-ind_use=where((cx<cy GE 0) AND (cx>cy LE (obs_out.dimension<obs_out.elements)-1))  
-Ires[ind_use]=(*stokes_images[0])[cx[ind_use],cy[ind_use]]
-IF n_pol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
-source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list2'
-
-radius=angle_difference(obs_out.obsdec,obs_out.obsra,comp_arr.dec,comp_arr.ra,/degree)
-Ires=(Qres=fltarr(N_Elements(comp_arr_out)))
-cx=Round(comp_arr_out.x) & cy=Round(comp_arr_out.y)
-ind_use=where((cx<cy GE 0) AND (cx>cy LE (obs_out.dimension<obs_out.elements)-1))  
-Ires[ind_use]=(*stokes_images[0])[cx[ind_use],cy[ind_use]]
-IF n_pol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
-source_array_export,comp_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_component_list2'
+source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list2'
+source_array_export,comp_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_component_list2'
 
 residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
     file_path_base=image_path_fg,_Extra=extra
