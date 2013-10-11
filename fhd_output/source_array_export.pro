@@ -4,7 +4,7 @@ radius=angle_difference(obs.obsdec,obs.obsra,source_array.dec,source_array.ra,/d
 Ires=(Qres=fltarr(N_Elements(source_array)))
 n_pol=obs.n_pol
 
-IF N_Elements(stokes_images) THEN BEGIN 
+IF N_Elements(stokes_images) GT 0 THEN BEGIN 
     cx=Round(source_array.x) & cy=Round(source_array.y)
     ind_use=where((cx<cy GE 0) AND (cx>cy LE (obs.dimension<obs.elements)-1))  
     Ires[ind_use]=(*stokes_images[0])[cx[ind_use],cy[ind_use]]
