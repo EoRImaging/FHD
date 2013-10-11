@@ -2,8 +2,6 @@ FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=m
     weights_arr=weights_arr,variance_arr=variance_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
     fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,_Extra=extra
-;no need to specify data_directory or filename if obs exists
-;vis_path_default,data_directory,filename,file_path,obs=obs
 ext='.UVFITS'
 t0=Systime(1)
 
