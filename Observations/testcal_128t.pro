@@ -19,6 +19,7 @@ vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('eor01_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 ;noise_calibrate=0
 ;align=0
@@ -41,6 +42,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,psf_dim=psf_dim,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,$
-    no_fits=no_fits,no_rephase=no_rephase,_Extra=extra
+    no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
 !except=except
 END
