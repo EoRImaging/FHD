@@ -1,6 +1,5 @@
 PRO fhd_output,obs,fhd,cal, file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
-    noise_calibrate=noise_calibrate,restore_last=restore_last,coord_debug=coord_debug,silent=silent,show_grid=show_grid,$
-    fluxfix=fluxfix,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
+    silent=silent,show_grid=show_grid,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
     gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
@@ -8,34 +7,31 @@ PRO fhd_output,obs,fhd,cal, file_path_fhd=file_path_fhd,version=version,map_fn_a
 
 compile_opt idl2,strictarrsubs  
 heap_gc
-t0a=Systime(1)
-t0=0
-t1=0
-t2=0
-t3=0
-t4=0
-t5=0
-t6=0
-t7=0
-t8=0
-t9=0
-t10=0
-
-IF not Keyword_Set(obs) THEN restore,file_path_fhd+'_obs.sav'
-IF not Keyword_Set(fhd) THEN restore,file_path_fhd+'_fhd_params.sav'
-IF N_Elements(show_grid) EQ 0 THEN show_grid=1
-
+t0a=Systime(1) & t0=0 & t1=0 & t2=0 & t3=0 & t4=0 & t5=0 & t6=0 & t7=0 & t8=0 & t9=0 & t10=0
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
 print,'Exporting: ',basename
 export_path=filepath(basename,root=dirpath,sub='export')
 export_dir=file_dirname(export_path)
-IF Keyword_Set(show_obsname) THEN title_fhd=basename
 
 image_path=filepath(basename,root=dirpath,sub='images')
 image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
+
+IF not Keyword_Set(obs) THEN obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
+IF not Keyword_Set(fhd) THEN fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
+IF N_Elements(show_grid) EQ 0 THEN show_grid=1
+stats_radius=10. ;degrees
+pol_names=['xx','yy','xy','yx','I','Q','U','V']
+
+grid_spacing=10.
+offset_lat=5.;15. paper 10 memo
+offset_lon=5.;15. paper 10 memo
+reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
+map_reverse=0;1 paper 3 memo
+label_spacing=1.
+IF Keyword_Set(show_obsname) THEN title_fhd=basename
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
@@ -46,9 +42,6 @@ ENDIF ELSE filter_name=''
 ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization_arr,weights_arr,$
 ;    beam_base,beam_correction,ra_arr,dec_arr,astr
 restore,file_path_fhd+'_fhd.sav'
-
-restore,file_path_fhd+'_fhd_params.sav' ;params
-restore,file_path_fhd+'_hdr.sav' ;hdr
 
 IF N_Elements(normalization_arr) GT 0 THEN normalization=Mean(normalization_arr)/2.
 n_pol=fhd.npol
@@ -78,15 +71,6 @@ degpix=obs_out.degpix
 astr_out=obs_out.astr
 ;pix_area_cnv=pixel_area(astr_out,dimension=dimension)/degpix^2.
 
-stats_radius=10. ;degrees
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
-
-grid_spacing=10.
-offset_lat=5.;15. paper 10 memo
-offset_lon=5.;15. paper 10 memo
-reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
-map_reverse=0;1 paper 3 memo
-label_spacing=1.
 
 si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]
@@ -141,7 +125,6 @@ IF Keyword_Set(model_recalculate) THEN BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
     ENDFOR
 ENDIF
-psf=beam_setup(obs_out,file_path_fhd,/restore_last,/silent)
 t2a=Systime(1)
 t1+=t2a-t1a
 
@@ -272,21 +255,6 @@ IF n_mrc GT 2 THEN BEGIN
         width=pad_uv_image,ring=6.*pad_uv_image)
 ENDIF
 
-IF Keyword_Set(noise_calibrate) THEN BEGIN
-    res_I=*instr_images[0]+*instr_images[1]
-    res_Is=(res_I-median(res_I,5))
-    noise_floor=noise_calibrate
-    calibration=noise_floor/Stddev(res_Is[beam_i])
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *instr_images[pol_i]*=calibration
-        *dirty_images[pol_i]*=calibration
-        *stokes_images[pol_i]*=calibration
-        *instr_sources[pol_i]*=calibration
-        *stokes_sources[pol_i]*=calibration
-    ENDFOR
-    IF n_mrc GT 0 THEN mrc_image*=calibration
-ENDIF ELSE calibration=1.
-
 t6a=Systime(1)
 t5+=t6a-t5a
 
@@ -410,7 +378,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
     
-        IF n_mrc GT 0 THEN BEGIN
+        IF Keyword_Set(mrc_image) THEN BEGIN
             mrc_comp=(stokes_source+mrc_image)[zoom_low:zoom_high,zoom_low:zoom_high]
             Imagefast,mrc_comp,file_path=image_path_fg+'_Sources_MRCrings_'+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=0,high=5.,/invert_color,_Extra=extra 
