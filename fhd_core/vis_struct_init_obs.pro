@@ -71,20 +71,6 @@ ENDIF
 freq_use=Lonarr(n_freq)+1
 tile_use=Lonarr(n_tile)+1
 
-;tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
-;tile_B1=Long(Fix(params.baseline_arr mod 256))
-;hist_A1=histogram(tile_A1,min=0,max=256,/binsize,reverse_ind=ria)
-;hist_B1=histogram(tile_B1,min=0,max=256,/binsize,reverse_ind=rib)
-;hist_AB=hist_A1+hist_B1
-;tile_nums=where(hist_AB,n_tile)
-;
-;tile_A=(tile_B=Lonarr(N_Elements(params.baseline_arr)))
-;FOR i0=0,n_tile-1 DO BEGIN
-;    tile_i=tile_nums[i0]
-;    IF hist_A1[tile_i] GT 0 THEN tile_A[ria[ria[tile_i]:ria[tile_i+1]-1]]=i0+1
-;    IF hist_B1[tile_i] GT 0 THEN tile_B[rib[rib[tile_i]:rib[tile_i+1]-1]]=i0+1
-;ENDFOR
-
 kx_arr=params.uu#frequency_array
 ky_arr=params.vv#frequency_array
 kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)

@@ -17,7 +17,7 @@ IF N_Elements(version) EQ 0 THEN version=1
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=0
 IF N_Elements(mapfn_recalculate) THEN mapfn_recalculate=0
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
-IF N_Elements(flag) EQ 0 THEN flag=1
+IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=1
 IF N_Elements(julian_day) EQ 0 THEN julian_day=2456528
 IF N_Elements(uvfits_version) EQ 0 THEN uvfits_version=2
 IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
@@ -57,7 +57,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,psf_dim=psf_dim,$
-    FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,$
+    FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,flag_visibilities=flag_visibilities,flag_calibration=flag_calibration,$
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
     ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,max_calibration_sources=max_calibration_sources,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,$

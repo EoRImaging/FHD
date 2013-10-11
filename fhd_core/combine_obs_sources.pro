@@ -47,7 +47,7 @@ FOR fi=0,n_files-1 DO BEGIN
     *src_i[fi]=src_i0
     *source_array[fi]=sa
 ENDFOR
-IF fi_c LT 0 THEN RETURN
+IF fi_c LE 1 THEN RETURN
 degpix=Median(obs_arr.degpix)
 n_pol=Min(obs_arr.n_pol)
 
