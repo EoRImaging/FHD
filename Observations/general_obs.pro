@@ -95,7 +95,7 @@ WHILE fi LT n_files DO BEGIN
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
-        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,$
+        gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,$
         calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
         flag_calibration=flag_calibration,_Extra=extra
     IF Keyword_Set(cleanup) AND cleanup GT 1 THEN fhd_cleanup,fhd_file_list[fi],/minimal
@@ -120,14 +120,14 @@ IF Keyword_Set(simultaneous) THEN BEGIN
     fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,n_pol=n_pol,$
         independent_fit=independent_fit,/silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
         export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
+        gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
         uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,noise_calibrate=noise_calibrate,align=align,$
             dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-            error=error,quickview=0,_Extra=extra
+            error=error,_Extra=extra
     ENDFOR
 ENDIF
 

@@ -10,18 +10,21 @@ t00=Systime(1)
 IF N_Elements(obs_arr) EQ 0 THEN BEGIN
     n_obs=N_Elements(fhd_file_list)
     FOR obs_i=0,n_obs-1 DO BEGIN
-        file_path=fhd_file_list[obs_i]
-        restore,file_path+'_obs.sav'
+        file_path_fhd=fhd_file_list[obs_i]
+        restore,file_path_fhd+'_obs.sav'
         IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs)
         obs_arr[obs_i]=obs
     ENDFOR
 ENDIF
 
 n_obs=N_Elements(obs_arr)
-fhd=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little here!
+fhd=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little in here!
 FOR obs_i=0,n_obs-1 DO BEGIN
-    file_path=fhd_file_list[obs_i]
-    save,fhd,filename=file_path+'_fhd_params.sav'
+    file_path_fhd=fhd_file_list[obs_i]
+    fhd1=fhd
+    IF Keyword_Set(transfer_mapfn) THEN IF N_Elements(transfer_mapfn) GT 1 THEN fhd1.transfer_mapfn=transfer_mapfn[obs_i] ELSE fhd1.transfer_mapfn=transfer_mapfn
+    fhd_log_settings,file_path_fhd,fhd=fhd1,obs=obs_arr[obs_i] ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
+    save,fhd1,filename=file_path_fhd+'_fhd_params.sav',/compress
 ENDFOR
 
 
@@ -74,13 +77,24 @@ uv_i_arr=Ptrarr(n_obs,/allocate)
 box_coords=Lonarr(n_obs,4)
 norm_arr=Fltarr(n_obs)
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
-    file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(fhd_file_list[0])) 
-    print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;restores a variable named map_fn
-        map_fn_ptr=Ptr_new(map_fn)
-        FOR obs_i=0L,n_obs-1 DO map_fn_arr[pol_i,obs_i]=map_fn_ptr
-    ENDFOR
+    IF N_Elements(transfer_mapfn) EQ 1 THEN BEGIN
+        file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(fhd_file_list[0])) 
+        print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            map_fn_ptr=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav',map_fn,/pointer)
+            FOR obs_i=0L,n_obs-1 DO map_fn_arr[pol_i,obs_i]=map_fn_ptr
+        ENDFOR
+    ENDIF ELSE BEGIN
+        transfer_mapfn_uniq=transfer_mapfn[Uniq(transfer_mapfn,sort(transfer_mapfn))]
+        n_mapfn=N_Elements(transfer_mapfn_uniq)
+        FOR trans_map_i=0L,n_mapfn-1 DO BEGIN
+            transfer_mapfn_use=transfer_mapfn_uniq[trans_map_i]
+            file_path_mapfn=filepath(transfer_mapfn_use+'_mapfn_',root=file_dirname(fhd_file_list[0])) 
+            map_fn_ptr=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav',map_fn,/pointer)
+            obs_trans_i=where(transfer_mapfn EQ transfer_mapfn_use,n_obs_match)
+            IF n_obs_match GT 0 THEN map_fn_arr[pol_i,obs_trans_i]=map_fn_ptr
+        ENDFOR
+    ENDELSE
 ENDIF
 
 FOR obs_i=0.,n_obs-1 DO BEGIN
@@ -134,11 +148,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
 ;        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
-        IF N_Elements(*map_fn_arr[pol_i,obs_i]) EQ 0 THEN BEGIN
-            file_path_mapfn=file_path_fhd+'_mapfn_'
-            restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-            *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
-        ENDIF
+        IF N_Elements(*map_fn_arr[pol_i,obs_i]) EQ 0 THEN *map_fn_arr[pol_i,obs_i]=Getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn')
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
         *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
