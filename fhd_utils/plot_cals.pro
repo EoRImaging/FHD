@@ -83,7 +83,7 @@ ENDFOR
 
 PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 
-IF Keyword_Set(vis_baseline_hist) THEN BEGIN
+IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
    ratio=vis_baseline_hist.vis_res_ratio_mean ; just save some typing
    sigma=vis_baseline_hist.vis_res_sigma
    base_len=vis_baseline_hist.baseline_length
