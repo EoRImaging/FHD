@@ -85,57 +85,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     n_cut=0
     WHILE n_addl_cut GT 0 DO BEGIN
         slope_sigma=Stddev(phase_slope_arr)
-        tile_cut_i=where(((Abs(phase_slope_arr)-Median(Abs(phase_slope_arr))) GT phase_sigma_threshold*slope_sigma) OR ((phase_sigma_arr-Median(phase_sigma_arr)) GT phase_sigma_threshold*Stddev(phase_sigma_arr)),n_tile_cut,ncomp=n_tile_uncut,complement=tile_uncut_i)
+        tile_cut_i=where(((Abs(phase_slope_arr)-Median(Abs(phase_slope_arr))) GT phase_sigma_threshold*slope_sigma) $
+            OR ((phase_sigma_arr-Median(phase_sigma_arr)) GT phase_sigma_threshold*Stddev(phase_sigma_arr)),$
+            n_tile_cut,ncomp=n_tile_uncut,complement=tile_uncut_i)
         n_addl_cut=(n_tile_cut)-n_cut
         n_cut=n_tile_cut
         iter+=1
         IF iter GE 3 THEN BREAK
     ENDWHILE
     IF n_tile_cut GT 0 THEN tile_use[tile_use_i1[tile_cut_i]]=0
-    test_point=1
-    
-;    gain_freq_test=Median(amp_sub,dimension=2)
-;    gain_tile_test=Median(amp_sub,dimension=1)
-;    
-;    gain_freq_test-=Median(gain_freq_test)
-;    gain_tile_test-=Median(gain_tile_test)
-;     
-;    freq_fit_params=svdfit(freq_use_i1,gain_freq_test,4,yfit=freq_fit)
-;    tile_fit_params=svdfit(tile_use_i1,gain_tile_test,4,yfit=tile_fit)
-;    
-;    gain_freq_test-=freq_fit
-;    gain_tile_test-=tile_fit
-;    
-;    tile_cut=where(Abs(gain_tile_test) GT sigma_threshold*Stddev(gain_tile_test),n_tile_cut)
-;    freq_cut=where(Abs(gain_freq_test) GT sigma_threshold*Stddev(gain_freq_test),n_freq_cut)
-;    IF n_freq_cut GT 0 THEN freq_use[freq_use_i1[freq_cut_i]]=0
-;    IF n_tile_cut GT 0 THEN tile_use[tile_use_i1[tile_cut_i]]=0
-    
-    
-
-
-;    tile_mask=fltarr(n_tile) & tile_mask[tile_use_i]=1
-;    freq_mask=fltarr(n_freq) & freq_mask[freq_use_i]=1
-;    gain_sub=extract_subarray(amp,freq_use_i,tile_use_i)
-;    gain_vals=gain_sub[sort(gain_sub)]
-;    n_vals=N_Elements(gain_vals)
-;    sigma_use=stddev(gain_vals[n_vals/4.:(3.*n_vals/4.)],/nan,/double)
-;    tile_use_i2=where((Abs(gain_tile_test-Median(gain_tile_test[tile_use_i])) LE sigma_threshold*sigma_use) AND tile_mask,$
-;        n_tile_use2,complement=tile_cut,ncomplement=n_tile_cut)
-;    IF n_tile_cut GT 0 THEN tile_mask[tile_cut]=0
-;    freq_use_i2=where((Abs(gain_freq_test-Median(gain_freq_test[freq_use_i])) LE sigma_threshold*sigma_use) AND freq_mask,$
-;        n_freq_use2,complement=freq_cut,ncomplement=n_freq_cut)
-;    IF n_freq_cut GT 0 THEN freq_mask[freq_cut]=0
-;    
-;    IF n_tile_cut GT 0 THEN BEGIN
-;        gain[*,tile_cut]=1.
-;        tile_cut_full=tile_cut#Replicate(1.,n_time)+Replicate(1.,n_tile_cut)#bin_offset
-;        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[*,tile_cut_full]=0
-;    ENDIF
-;    IF n_freq_cut GT 0 THEN BEGIN
-;        gain[freq_cut,*]=1.
-;        FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[freq_cut,*]=0
-;    ENDIF
 ENDFOR
 obs_info.tile_use=tile_use
 obs_info.freq_use=freq_use

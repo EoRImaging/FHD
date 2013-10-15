@@ -264,16 +264,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
 ENDFOR
 
-IF source_flag THEN BEGIN
-    ;write sources to a text file
-    radius=angle_difference(obs_out.obsdec,obs_out.obsra,source_arr_out.dec,source_arr_out.ra,/degree)
-    Ires=(Qres=fltarr(N_Elements(source_arr_out)))
-    cx=Round(source_arr_out.x) & cy=Round(source_arr_out.y)
-    ind_use=where((cx<cy GE 0) AND (cx>cy LE (obs_out.dimension<obs_out.elements)-1))  
-    Ires[ind_use]=(*stokes_images[0])[cx[ind_use],cy[ind_use]]
-    IF n_pol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
-    source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list'
-ENDIF
+IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list'
 
 ; plot calibration solutions, export to png
 IF N_Elements(cal) GT 0 THEN BEGIN
@@ -286,6 +277,5 @@ IF N_Elements(cal) GT 0 THEN BEGIN
       ENDELSE
    ENDIF
 ENDIF
-
 
 END

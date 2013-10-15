@@ -41,8 +41,8 @@ IF n_use GT 0 THEN BEGIN
 ;    source_list.StoN=catalog.StoN
     
     beam=fltarr(dimension,elements)
-    FOR pol_i=0,n_pol-1 DO beam+=(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)^2.
-    beam=Sqrt(beam/n_pol)
+    FOR pol_i=0,(n_pol<2)-1 DO beam+=(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)^2.
+    beam=Sqrt(beam/(n_pol<2))
     beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<cal_beam_threshold,Max(beam)>1.])
     beam_mask=fltarr(dimension,elements) & beam_mask[beam_i]=1.
 

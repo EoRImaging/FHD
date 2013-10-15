@@ -111,6 +111,8 @@ xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1
 valid_i=where(Finite(ra_arr_use1),n_valid)
 
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+obsalt=Float(obsalt)
+obsaz=Float(obsaz)
 obsza=90.-obsalt
 ;intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
 ;norm=Float(Sqrt(2.)*[ex0,ey0])
@@ -152,6 +154,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain1_full=(pol1 EQ 0) ? gain_array_X:gain_array_Y
     gain2_full=(pol2 EQ 0) ? gain_array_X:gain_array_Y
     
+    freq_norm_check=fltarr(nfreq_bin)+1.
+    
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
         t2_a=Systime(1)
         antenna_beam_arr1=Ptrarr(16,/allocate)
@@ -177,13 +181,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
-;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*proj[pol_i]*2.),/no_real)
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real) ;projection now inside tile beam function
-;        psf_base1=Conj(dirty_image_generate(beam1_0*Conj(beam2_0),/no_real))
-;        psf_base1=Shift(Reverse(Reverse(dirty_image_generate(beam1_0*Conj(beam2_0),/no_real),1),2),1,1)
-;        IF real_part(psf_base1[obsx2,obsy2]) LT 0 THEN sign=-1. ELSE sign=1.
-;        psf_base1*=sign
-        
+;        psf_base1=dirty_image_generate(beam1_0*(beam2_0),/no_real)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
         beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
@@ -195,6 +194,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
         IF n_phase_cut GT 0 THEN uv_mask2[phase_cut]=0
         psf_base2*=uv_mask2
+        freq_norm_check[freq_i]=Total(Abs(psf_base2))/psf_resolution^2.
         gain_normalization=1./(Total(Abs(psf_base2))/psf_resolution^2.)
 ;        psf_base2*=gain_normalization
 ;        psf_base2*=freq_norm[freq_i]
@@ -238,6 +238,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         breakpoint0=0
         t4+=Systime(1)-t4_a
     ENDFOR
+    freq_norm_check/=mean(freq_norm_check)
+    FOR freq_i=0L,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
+        *psf_base[pol_i,freq_i,i,j]/=freq_norm_check[freq_i]
 ENDFOR
 
 complex_flag=Max(complex_flag_arr)
