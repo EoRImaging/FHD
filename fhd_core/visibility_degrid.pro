@@ -48,17 +48,17 @@ IF n_conj GT 0 THEN BEGIN
     ycen[*,conj_i]=-ycen[*,conj_i]
 ENDIF
 
-x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
 xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
+
+x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
 ;xmax=xmin+psf_dim-1
 range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
 ;xmax=0
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 range_test_x_i=0
 
-
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
-ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
 ;ymax=ymin+psf_dim-1
 range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 ;ymax=0
