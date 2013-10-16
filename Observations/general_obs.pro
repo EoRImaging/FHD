@@ -1,6 +1,6 @@
 PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,n_pol=n_pol,precess=precess,$
+    grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,output_directory=output_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag_visibilities=flag_visibilities,$
@@ -24,13 +24,14 @@ IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
 IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(data_directory) EQ 0 THEN data_directory=$
     rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
+IF N_Elements(output_directory) EQ 0 THEN output_directory=data_directory
 IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 IF StrLowCase(Strmid(vis_file_list[0],3,/reverse)) EQ '.txt' THEN $
     vis_file_list=string_list_read(vis_file_list)
 
 IF N_Elements(fhd_file_list) EQ 0 THEN fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 IF N_Elements(healpix_path) EQ 0 THEN healpix_path=$
-    fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
+    fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=$
     filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 IF N_Elements(calibration_catalog_file_path) EQ 0 THEN calibration_catalog_file_path=$
