@@ -26,6 +26,7 @@ catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),sub
 dimension=2048.
 max_sources=10000.
 pad_uv_image=2.
+IF dimension GT 2048 THEN pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FoV=100.
 no_ps=1 ;don't save postscript copy of images
