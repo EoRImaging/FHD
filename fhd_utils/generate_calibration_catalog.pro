@@ -1,6 +1,6 @@
 PRO generate_calibration_catalog,source_list,file_path=file_path,spectral_index=spectral_index,$
     no_polarization=no_polarization,no_extend=no_extend,flux_threshold=flux_threshold,$
-    combined_obs=combined_obs,frequency=frequency
+    combined_obs=combined_obs,frequency=frequency,ston_threshold=ston_threshold
 
 IF StrLowCase(Strmid(file_path,2,3,/reverse)) NE 'sav' THEN file_path_use=file_path+'.sav' $
     ELSE file_path_use=file_path
@@ -27,6 +27,11 @@ IF Keyword_Set(flux_threshold) THEN BEGIN
     src_i_use=where(catalog.flux.I GT flux_threshold,n_use)
     catalog=catalog[src_i_use]
 ENDIF
+IF Keyword_Set(ston_threshold) THEN BEGIN ;signal to noise threshold
+    src_i_use=where(catalog.ston GT ston_threshold,n_use)
+    catalog=catalog[src_i_use]
+ENDIF
+
 n_src=N_Elements(catalog)
 
 FOR i=0,3 DO catalog.flux.(i)=0.

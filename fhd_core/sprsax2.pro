@@ -29,7 +29,7 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(X2) THEN X2_use=X2
 ENDELSE
 
-;To use a douple precision or complex B, supply it from the calling program
+;To use a double precision or complex B, supply it from the calling program
 IF N_Elements(B) EQ 0 THEN BEGIN
     CASE 1 OF
         Keyword_Set(complex) AND Keyword_Set(double): B=Dcomplexarr(N_Elements(X))
