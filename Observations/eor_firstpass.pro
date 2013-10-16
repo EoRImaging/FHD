@@ -26,8 +26,8 @@ IF N_Elements(show_obsname) EQ 0 THEN show_obsname=1
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 ;NEED TO FIGURE OUT THE PROPER DIRECTORY AND output_directory TO USE AT MIT
-data_directory='/nfs/eor-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
-output_directory='/nfs/eor-09/r1/djc/EoR2013/Aug23/'
+data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
+output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)
