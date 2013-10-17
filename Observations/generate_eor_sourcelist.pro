@@ -35,8 +35,8 @@ calibration_catalog_file_path=filepath('mwa_calibration_source_list_nofornax.sav
 
 ;noise_calibrate=0
 ;align=0
-dimension=2048.
-max_sources=10000.
+dimension=3072.
+max_sources=50000.
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FoV=100.
