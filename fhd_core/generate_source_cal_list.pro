@@ -54,7 +54,6 @@ IF n_use GT 0 THEN BEGIN
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
     source_list=source_list[src_use]
     
-    
     influence=source_list.flux.I*beam[source_list.x,source_list.y]
     
     order=Reverse(sort(influence))

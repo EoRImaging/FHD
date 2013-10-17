@@ -1,4 +1,4 @@
-FUNCTION structure_to_text,str,delimiter=delimiter,heading=heading,indent=indent
+FUNCTION structure_to_text,str,delimiter=delimiter,heading=heading,indent=indent,max_len=max_len
 IF N_Elements(str) EQ 0 THEN RETURN,''
 IF N_Elements(indent) EQ 0 THEN indent=0
 
@@ -11,7 +11,7 @@ ENDIF ELSE BEGIN
     n_tags=n_tags(str)
     tag_name_arr=tag_names(str)
 ENDELSE
-max_len=128.
+IF N_Elements(max_len) EQ 0 THEN max_len=128.
 
 IF Keyword_Set(heading) THEN BEGIN
     result=Strarr(2,n_tags+1) 
@@ -36,7 +36,7 @@ FOR ti=0L,n_tags-1 DO BEGIN
             ti_use+=1
             CONTINUE
         ENDIF
-        result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent)
+        result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent,max_len=max_len-1)
         IF size(result_insert,/n_dim) LT 2 THEN BEGIN
             ti_use+=1
             CONTINUE
@@ -57,7 +57,7 @@ FOR ti=0L,n_tags-1 DO BEGIN
                 CONTINUE
             ENDIF
             result[1,ti_use]='Pointer' 
-            result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent)
+            result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent,max_len=max_len-1)
             IF size(result_insert,/n_dim) LT 2 THEN BEGIN
                 ti_use+=1
                 CONTINUE
@@ -79,7 +79,7 @@ FOR ti=0L,n_tags-1 DO BEGIN
 ;                    ti_use+=1
 ;                    CONTINUE
 ;                ENDIF
-;                result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent)
+;                result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent,max_len=max_len-1)
 ;                IF size(result_insert,/n_dim) LT 2 THEN BEGIN
 ;                    ti_use+=1
 ;                    CONTINUE
