@@ -1,6 +1,6 @@
 PRO generate_eor_sourcelist,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,combine_healpix=combine_healpix,_Extra=extra
+    grid=grid,deconvolve=deconvolve,channel=channel,combine_healpix=combine_healpix,silent=silent,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -13,7 +13,6 @@ IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version='apb_gen_sourcelist_1'
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
-
 
 data_directory='/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0'
 output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
