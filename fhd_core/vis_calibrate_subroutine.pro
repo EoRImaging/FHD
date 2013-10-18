@@ -1,10 +1,10 @@
-function calc_freq_mode, mode, val, mask
+function poly_cal_freq_mode, mode, val, mask
 
   dims = size(mask, /dim)
   
   case n_elements(dims) of
     1: begin
-      n_freq = dims
+      n_freq = dims[0]
       n_val = 1
     end
     
@@ -17,38 +17,89 @@ function calc_freq_mode, mode, val, mask
   
   if n_elements(val) ne n_val then stop
   
-  if n_val eq 1 then val_arr = dblarr(n_freq) + val else val_arr = matrix_multiply(dblarr(n_freq)+1, val)
-  x_arr = dindgen(n_freq)/(n_freq-1)
+  val_arr = matrix_multiply(dblarr(n_freq)+1, val)
+  x_arr = (dindgen(n_freq)/(n_freq-1))*2-1
   if n_val gt 1 then x_arr = rebin(x_arr, n_freq, n_val,/sample)
   
   case mode of
     0: freq_arr = val_arr
     1: freq_arr = val_arr * x_arr
-    2: freq_arr = val_arr * x_arr^2.
+    2: freq_arr = val_arr * (3*x_arr^2. - 1)/2.
   endcase
+  
+  ;freq_arr = sqrt((2*mode+1)/2.)*freq_arr
   
   return, freq_arr*mask
 end
 
-function calc_gain, gain_modes, mode_types, mode_num, mask
+function poly_cal_gain, gain_modes, mode_types, mode_num, mask, amp=amp, phase=phase
 
   n_modes = n_elements(mode_types)
   dims_gain = size(gain_modes, /dimension)
   dims_mask = size(mask, /dimension)
   
+  if n_elements(dims_gain) gt 1 then if dims_gain[1] ne dims_mask[1] then message, 'second dimension of gain_modes and mask must match'
+  
   if dims_gain[0] ne n_modes then message, 'first dimension of gain_modes must match length of mode_types'
-  if dims_gain[1] ne dims_mask[1] then message, 'second dimension of gain_modes and mask must match'
+  
   
   amp = dblarr(dims_mask)
   phase = dblarr(dims_mask)
   for fi=0L,n_modes-1 do begin
-    if mode_types[fi] eq 'amp' then amp += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), mask) $
-    else phase += calc_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), mask)
+    if mode_types[fi] eq 'amp' then amp += poly_cal_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), mask) $
+    else phase += poly_cal_freq_mode(mode_num[fi], reform(gain_modes[fi,*]), mask)
   endfor
-  gain = amp * exp(complex(0,1)*phase)
+  
+  if total(abs(phase)) gt 0 then gain = amp * exp(complex(0,1)*phase) else gain = amp
   
   return, gain
 end
+
+function poly_cal_chi2, params
+
+  common poly_cal_data, model_vis, data_vis, poly_cal_gain_B, f_arr, mode_types, mode_num, mask, ab_switch
+  
+  dims = size(mask, /dimension)
+  if n_elements(dims) gt 1 then n_vis = dims[1] else n_vis = 1
+  
+  if n_vis gt 1 then p = rebin(params, n_elements(params), n_vis) else p=params
+  gain_A = poly_cal_gain(p, mode_types, mode_num, mask)
+  
+  if ab_switch then data_use = Conj(data_vis) else data_use = data_vis
+  
+  diff = model_vis*Conj(poly_cal_gain_B)*gain_A - data_use
+  
+  return, total(abs(diff)^2.)
+  
+end
+
+function poly_cal_grad, params
+
+  common poly_cal_data, model_vis, data_vis, poly_cal_gain_B, f_arr, mode_types, mode_num, mask, ab_switch
+  
+  dims = size(mask, /dimension)
+  if n_elements(dims) gt 1 then n_vis = dims[1] else n_vis = 1
+  
+  if n_vis gt 1 then p = rebin(params, n_elements(params), n_vis) else p=params
+  gain_A = poly_cal_gain(p, mode_types, mode_num, mask, phase=phase_A)
+  
+  if ab_switch then data_use = Conj(data_vis) else data_use = data_vis
+  
+  amp_grad_factor = 2.*abs(model_vis)^2.*abs(poly_cal_gain_B)^2.*abs(gain_A) - 2*Real_part(model_vis*Conj(poly_cal_gain_B)*Conj(data_use)*exp(complex(0,1)*phase_A))
+  phase_grad_factor = 2*Imaginary(model_vis*gain_A*Conj(poly_cal_gain_B)*Conj(data_use))
+  
+  
+  grad = params*0
+  for i=0, n_elements(mode_types)-1 do begin
+    if mode_types[i] eq 'amp' then grad[i] = total(amp_grad_factor*f_arr^(mode_num[i])) $
+    else grad[i] = total(phase_grad_factor*f_arr^(mode_num[i]))
+    
+  endfor
+  
+  return, grad
+  
+end
+
 
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
     calib_freq_func=calib_freq_func,_Extra=extra
@@ -208,85 +259,122 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
         gain_arr[fi,tile_use]=gain_curr
       ENDFOR
     endif else begin
-      ;; calibrate using a 3rd order polynomial in frequency rather than fitting each frequency independently
+      ;; calibrate using polynomials in frequency rather than fitting each frequency independently
     
+      common poly_cal_data, model_vis, data_vis, poly_cal_gain_B, f_arr, mode_type, mode_num, mask, ab_switch
+      
       phase_modes = 2
       amp_modes = 3
-      n_modes = phase_modes + amp_modes
-      mode_type = [strarr(phase_modes) + 'phase', strarr(amp_modes) + 'amp']
-      mode_num = [indgen(phase_modes), indgen(amp_modes)]
-      gain_arr_mode = dblarr(n_modes, n_tile)
-      gain_arr_mode[where(mode_type eq 'amp')] = 1.
+      n_mode = phase_modes + amp_modes
+      if phase_modes gt 0 then begin
+        mode_type = [strarr(phase_modes) + 'phase', strarr(amp_modes) + 'amp']
+        mode_num = [indgen(phase_modes), indgen(amp_modes)]
+      endif else begin
+        mode_type = strarr(amp_modes) + 'amp'
+        mode_num = indgen(amp_modes)
+      endelse
+      gain_arr_mode = dblarr(n_mode, n_tile)
+      gain_arr_mode[where(mode_type eq 'amp' and mode_num eq 0),*] = 1.
       
       ;; keep frequency direction around
-      vis_data2=vis_avg[*,baseline_use] & vis_data2=[[vis_data2],[Conj(vis_data2)]]
-      vis_model2=vis_model[*,baseline_use] & vis_model2=[[vis_model2],[Conj(vis_model2)]]
-      weight2=weight[*,baseline_use] & weight2=[[weight2],[weight2]]
+      vis_data2=vis_avg[*,baseline_use]
+      vis_model2=vis_model[*,baseline_use]
+      weight2=weight[*,baseline_use]
       
       b_i_use=where(total(weight2,1) GT 0,n_baseline_use2)
       weight2=weight2[*, b_i_use]
       vis_data2=vis_data2[*, b_i_use];*weight_invert(weight2)
       vis_model2=vis_model2[*, b_i_use];*weight_invert(weight2)
       
-      A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
-      B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
+      hist_A = histogram(tile_A_i_use, min=0, max = n_tile-1, reverse_indices = ri_A)
+      hist_B = histogram(tile_B_i_use, min=0, max = n_tile-1, reverse_indices = ri_B)
+      for i=0, n_tile-1 do begin
+        if hist_A[i] ne 0 then begin
+          inds = ri_A[ri_A[i]:ri_A[i+1]-1]
+          if hist_B[i] ne 0 then inds = [inds, ri_B[ri_B[i]:ri_B[i+1]-1]]
+        endif else if hist_B[i] ne 0 then inds = ri_B[ri_B[i]:ri_B[i+1]-1] else continue
+        
+        if i eq 0 then vis_tile_inds = create_struct('t'+number_formatter(i), inds) $
+        else vis_tile_inds = create_struct(vis_tile_inds, 't'+number_formatter(i), inds)
+      endfor
       
-      A_ind_arr=Ptrarr(n_tile_use,/allocate)
-      n_arr=Fltarr(n_tile_use)
       tile_freq_flag = bytarr(n_freq, n_tile_use)
+      n_arr=Fltarr(n_tile_use)
       FOR tile_i=0L,n_tile_use-1 DO BEGIN
-        ;should be set up so that using where is okay
-        inds=where(A_ind EQ tile_i,n1)
-        IF n1 GT 1 THEN begin
-          *A_ind_arr[tile_i]=Reform(inds,1,n1)
+        inds=vis_tile_inds.(tile_i)
+        IF n_elements(inds) GT 1 THEN begin
           tile_freq_flag[*,tile_i] = total(weight2[*, inds],2) gt 0
-        endif ELSE *A_ind_arr[tile_i]=-1
-        n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
+        endif
+        n_arr[tile_i]=n_elements(inds) ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
       ENDFOR
       
       
       vis_use=vis_data2
       gain_curr_mode=gain_arr_mode[*,tile_use]
-      gain_curr = calc_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
+      gain_curr = poly_cal_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
       
+      gain_track = dblarr(n_mode, n_tile, max_cal_iter)
+      ncalls_track = lonarr(max_cal_iter)
+stop      
+      time0 = systime(1)
       FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
         phase_fit_iter=Floor(max_cal_iter/4.)
         
         gain_new_mode=dblarr(n_modes, n_tile_use)
+        gain_track[*, *, i] = gain_curr_mode
         conv_test=fltarr(max_cal_iter)
         
         FOR fi=0L,n_modes-1 DO BEGIN
         
-          freq_func = calc_freq_mode(mode_num[fi], dblarr(n_arr[tile_i])+1., weight2[*,*A_ind_arr[tile_i]] gt 0)
-          gain_curr = calc_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
+          gain_curr = poly_cal_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
           
-          if mode_type[fi] eq 'amp' then begin
-            IF phase_fit_iter-i GT 0 then continue ;fit only phase at first
-            
-            vis_model_matrix=total(abs(vis_model2*Conj(gain_curr[*,B_ind])*exp(complex(0,1)*atan(gain_curr[*,A_ind],/phase)))*freq_func, 1)
-            
-            FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN $
-              gain_new_mode[fi, tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],total(abs(vis_use[*, *A_ind_arr[tile_i]])*freq_func, 1),method=2)
-              
-          endif else begin
+          IF phase_fit_iter-i GT 0 then continue ;fit only phase at first
           
-            FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN gain_new_mode[fi, tile_i]=LA_Least_Squares(dblarr(1, n_arr[tile_i])+1, $
-              total((atan(vis_use[*, *A_ind_arr[tile_i]],/phase)-atan(vis_model2[*A_ind_arr[tile_i]],/phase)+atan(gain_curr[*,B_ind]))*freq_func, 1),method=2)
-              
-          endelse
+          vis_model_matrix=total(abs(vis_model2*Conj(gain_curr[*,B_ind])*exp(complex(0,1)*atan(gain_curr[*,A_ind],/phase)))*freq_func, 1)
+          
+          FOR tile_i=0L,n_tile-1 DO begin
+            wh_A = where(tile_A_i eq tile_i, n_vis_A)
+            
+            if n_vis_A eq 0 then begin
+              wh_B = where(tile_B_i eq tile_i, n_vis_B)
+             
+              f_arr = rebin((dindgen(n_freq)/(n_freq-1))*2-1, n_freq, n_vis_B)
+              model_vis = vis_model1[*,wh_B]
+              data_vis = vis_data1[*, wh_B]
+              poly_cal_gain_B = gain_curr[*,tile_A_i[wh_B]]
+              mask = tile_freq_flag[*,tile_B_i[wh_B]]
+              ab_switch = 1
+            endif else begin
+            
+              f_arr = rebin((dindgen(n_freq)/(n_freq-1))*2-1, n_freq, n_vis_A)
+              model_vis = vis_model1[*,wh_A]
+              data_vis = vis_data1[*, wh_A]
+              poly_cal_gain_B = gain_curr[*,tile_B_i[wh_A]]
+              mask = tile_freq_flag[*,tile_A_i[wh_A]]
+              ab_switch=0
+            endelse
+            
+            p=gain_curr_mode[*, tile_i]
+            dfpmin, p, 1.0e-3, fval, 'poly_cal_chi2', 'poly_cal_grad', iter=ncalls
+            gain_new_mode[*, tile_i]=p
+          endfor
+          ncalls_track[i] = ncalls
           
         endfor
         
-        IF Total(Abs(gain_new_mode)) EQ 0 THEN BEGIN
+        IF Total(Abs(gain_new_mode[where(mode_type eq 'amp')])) EQ 0 THEN BEGIN
           gain_curr_mode=gain_new_mode
           BREAK
         ENDIF
         
         gain_old_mode=gain_curr_mode
         gain_curr_mode=(gain_new_mode+gain_old_mode)/2.
-        
+        IF phase_fit_iter-i GT 0 then gain_curr_mode[where(mode_type eq 'amp'),*] = gain_old_mode[where(mode_type eq 'amp'),*]
+        if min(gain_curr_mode[where(mode_type eq 'amp' and mode_num eq 0),*]) lt 0 then $
+          gain_curr_mode[where(mode_type eq 'amp' and mode_num eq 0),*] = abs(gain_curr_mode[where(mode_type eq 'amp' and mode_num eq 0),*])
+          
         gain_old = gain_curr
-        gain_curr = calc_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
+        gain_curr = poly_cal_gain(gain_curr_mode, mode_type, mode_num, tile_freq_flag)
         
         dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
         diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
@@ -299,11 +387,14 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
         ELSE IF Abs(conv_test[i]-conv_test[i-1]) LE conv_thresh/2. THEN BREAK
         
       ENDFOR
-      gain_arr_mode[fi,tile_use]=gain_curr_mode
+      time1 = systime(1)
+      print, 'polynomial cal loop time: ', time1-time0
+      
+      gain_arr_mode[*,tile_use]=gain_curr_mode
       Ptr_free,A_ind_arr
       
       gain_arr[*,tile_use] = gain_curr
-      
+stop      
     endelse
     
     nan_i=where(Finite(gain_arr,/nan),n_nan)
