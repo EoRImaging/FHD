@@ -101,7 +101,8 @@ IF Keyword_Set(galaxy_calibrate) THEN BEGIN
 ;    model*=weight_invert(pixel_area)
     Ptr_free,model_arr
     
-    model_uv=fft_shift(FFT(fft_shift(model),/inverse)*(degpix*!DtoR)^2.)
+    edge_match,model
+    model_uv=fft_shift(FFT(fft_shift(model),/inverse)*(dimension*degpix*!DtoR)^2.)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=model_uv
 ENDIF
 

@@ -119,7 +119,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   n_tile=cal.n_tile
   n_time=cal.n_time
   
-  flag_ptr_use=flag_ptr ;flags WILL be over-written!
+  flag_ptr_use=flag_ptr ;flags WILL be over-written! (Only for NAN gain solutions)
   tile_A_i=cal.tile_A-1
   tile_B_i=cal.tile_B-1
   freq_arr=cal.freq
@@ -253,9 +253,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
           IF nan_test(gain_curr) GT 0 THEN gain_curr[where(Finite(gain_curr,/nan))]=gain_old[where(Finite(gain_curr,/nan))]
           gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
           conv_test[i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
-          IF i GE 1 THEN $
-            IF conv_test[i] LE conv_thresh THEN BREAK $
-          ELSE IF Abs(conv_test[i]-conv_test[i-1]) LE conv_thresh/2. THEN BREAK
+          IF i GE phase_fit_iter THEN IF conv_test[i] LE conv_thresh THEN BREAK 
         ENDFOR
         Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr

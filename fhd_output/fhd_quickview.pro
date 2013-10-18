@@ -1,9 +1,9 @@
 PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
-    model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,$
+    model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
-    grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,$
+    grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
-    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,mark_zenith=mark_zenith,_Extra=extra
+    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,_Extra=extra
 
 
 basename=file_basename(file_path_fhd)
@@ -16,8 +16,9 @@ image_path=filepath(basename,root=dirpath,sub='images')
 image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
-IF Keyword_Set(show_obsname) THEN title_fhd=basename
-
+IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
+IF N_Elements(show_grid) EQ 0 THEN show_grid=1
+IF N_Elements(no_fits) EQ 0 THEN no_fits=1
 
 IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav' 
 IF N_Elements(psf) EQ 0 THEN IF file_test(file_path_fhd+'_beams.sav') THEN RESTORE,file_path_fhd+'_beams.sav' ELSE $
@@ -41,8 +42,15 @@ IF N_Elements(weights_arr) EQ 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid'))
 ENDIF 
 
-IF Min(Ptr_valid(weights_arr)) EQ 0 THEN FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
-FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
+weights_flag=1
+IF Min(Ptr_valid(weights_arr)) EQ 0 THEN BEGIN
+    FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
+    weights_flag=0
+ENDIF
+FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN BEGIN
+    weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
+    weights_flag=0
+ENDIF
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
@@ -154,6 +162,20 @@ IF source_flag THEN BEGIN
     IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,beam=beam_base_out) 
 ENDIF    
 
+IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list'
+
+; plot calibration solutions, export to png
+IF N_Elements(cal) GT 0 THEN BEGIN
+   IF cal.n_cal_src GT 0 THEN BEGIN
+      IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
+         vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
+         plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist
+      ENDIF ELSE BEGIN
+         plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
+      ENDELSE
+   ENDIF
+ENDIF
+
 ;Build a fits header
 mkhdr,fits_header,*instr_images[0]
 putast, fits_header, astr_out;, cd_type=1
@@ -201,9 +223,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF ELSE mark_zenith=0
     
     IF ~Keyword_Set(no_png) THEN BEGIN
-;        Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
-;            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
-;            low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
+        IF weights_flag THEN Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
+            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
+            low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
         
         Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path+filter_name+'_Residual_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
@@ -222,7 +244,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FitsFast,stokes_residual,fits_header,/write,file_path=export_path+filter_name+'_Residual_'+pol_names[pol_i+4]
         FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+'_Residual_'+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
-;        FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
+        IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
     ENDIF
     
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
@@ -263,29 +285,4 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=1,/sphere,_Extra=extra
     ENDIF
 ENDFOR
-
-IF source_flag THEN BEGIN
-    ;write sources to a text file
-    radius=angle_difference(obs_out.obsdec,obs_out.obsra,source_arr_out.dec,source_arr_out.ra,/degree)
-    Ires=(Qres=fltarr(N_Elements(source_arr_out)))
-    cx=Round(source_arr_out.x) & cy=Round(source_arr_out.y)
-    ind_use=where((cx<cy GE 0) AND (cx>cy LE (obs_out.dimension<obs_out.elements)-1))  
-    Ires[ind_use]=(*stokes_images[0])[cx[ind_use],cy[ind_use]]
-    IF n_pol GT 1 THEN Qres[ind_use]=(*stokes_images[1])[cx[ind_use],cy[ind_use]]
-    source_array_export,source_arr_out,beam_avg,radius=radius,Ires=Ires,Qres=Qres,file_path=export_path+'_source_list'
-ENDIF
-
-; plot calibration solutions, export to png
-IF N_Elements(cal) GT 0 THEN BEGIN
-   IF cal.n_cal_src GT 0 THEN BEGIN
-      IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
-         vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
-         plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist,_Extra=extra
-      ENDIF ELSE BEGIN
-         plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
-      ENDELSE
-   ENDIF
-ENDIF
-
-
 END

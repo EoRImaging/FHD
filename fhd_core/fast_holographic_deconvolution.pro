@@ -223,11 +223,17 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     max_sources+=n_cal_src
     
     comp_arr=source_comp_init(n_sources=max_sources,alpha=alpha,freq=obs.freq_center)
-    IF n_cal_src GT 0 THEN comp_arr[0:n_cal_src-1]=cal.source_list ;if this breaks, use a FOR loop
-    FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]*calibration_model_subtract ;this allows you to subtract less than 100% of the model!
+    cal_sources=cal.source_list
+    IF calibration_model_subtract LT 1 THEN BEGIN
+        FOR tag_i=0,n_tags(cal_sources.flux)-1 DO cal_sources.flux.(tag_i)*=(0.>calibration_model_subtract<1.)
+    ENDIF
+    IF n_cal_src GT 0 THEN comp_arr[0:n_cal_src-1]=cal_sources ;if this breaks, use a FOR loop
+    
+    FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]*(0.>calibration_model_subtract<1.) ;this allows you to subtract less than 100% of the model!
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
+    
     model_image_composite=fltarr(dimension,elements)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN 
         model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix)

@@ -5,8 +5,6 @@
 ; :Params:
 ;    obs - structure containing details of the observation
 ;    
-;    params - structure containing u and v coordinates of the baselines, in meters/c.
-;    
 ;    psf - structure containing the high-resolution gridded beam model.
 ;
 ; :Keywords:
@@ -14,7 +12,7 @@
 ;
 ; :Author: isullivan May 6, 2012
 ;-
-PRO fhd_wrap,obs,params,psf,fhd,cal,file_path_fhd=file_path_fhd,beam_threshold=beam_threshold,quickview=quickview,$
+PRO fhd_wrap,obs,psf,fhd,cal,file_path_fhd=file_path_fhd,beam_threshold=beam_threshold,quickview=quickview,$
     data_directory=data_directory,filename=filename,version=version,silent=silent,transfer_mapfn=transfer_mapfn,$
     map_fn_arr=map_fn_arr,GPU_enable=GPU_enable,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     calibration_image_subtract=calibration_image_subtract,model_uv_arr=model_uv_arr,_Extra=extra
@@ -27,10 +25,12 @@ PRO fhd_wrap,obs,params,psf,fhd,cal,file_path_fhd=file_path_fhd,beam_threshold=b
 heap_gc
 compile_opt idl2,strictarrsubs  
 
-IF size(cal,/type) NE 8 THEN IF file_test(file_path_fhd+'_cal.sav') EQ 1 THEN RESTORE,filename=file_path_fhd+'_params.sav' $
-    ELSE cal=vis_struct_init_cal(obs,params)
-
 IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
+IF size(cal,/type) NE 8 THEN IF file_test(file_path_fhd+'_cal.sav') EQ 1 THEN RESTORE,filename=file_path_fhd+'_cal.sav' ELSE BEGIN
+    IF N_Elements(params) EQ 0 THEN RESTORE,filename=file_path_fhd+'_params.sav'
+    cal=vis_struct_init_cal(obs,params)
+ENDELSE
+
 fhd=fhd_init(obs,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,_Extra=extra)
 
 n_pol=fhd.npol
@@ -40,7 +40,6 @@ elements=obs.elements
 pol_names=['xx','yy','xy','yx']
 ext='.UVFITS'
 
-IF N_Elements(params) EQ 0 THEN RESTORE,filename=file_path_fhd+'_params.sav'
 IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,file_path_fhd,/restore_last) 
 
 ;set to fit each polarization independantly 

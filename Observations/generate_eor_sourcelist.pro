@@ -35,8 +35,8 @@ calibration_catalog_file_path=filepath('mwa_calibration_source_list_nofornax.sav
 
 ;noise_calibrate=0
 ;align=0
-dimension=2048.
-max_sources=10000.
+dimension=3072.
+max_sources=50000.
 pad_uv_image=2.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FoV=100.
@@ -54,6 +54,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,psf_dim=psf_dim,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,$
-    no_fits=no_fits,no_rephase=no_rephase,_Extra=extra
+    no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
 !except=except
 END

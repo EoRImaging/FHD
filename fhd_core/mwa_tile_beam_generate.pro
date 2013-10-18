@@ -23,27 +23,15 @@ IF N_Elements(normalization) EQ 0 THEN normalization=1.
 psf_dim=Float(psf_dim)
 psf_dim2=dimension
 
-;kbinsize_use=kbinsize;/psf_resolution
-;degpix_use=!RaDeg/(kbinsize_use*psf_dim2) 
-;IF N_Elements(xvals) EQ 0 THEN xvals=(meshgrid(psf_dim2,psf_dim2,1)-psf_dim2/2.)*degpix_use
-;IF N_Elements(yvals) EQ 0 THEN yvals=(meshgrid(psf_dim2,psf_dim2,2)-psf_dim2/2.)*degpix_use
-;IF (N_Elements(obsaz)EQ 0) OR (N_Elements(obsza) EQ 0) THEN BEGIN
-;    x1=reform(xvals[*,psf_dim2/2.]) & x1i=where(x1)
-;    y1=reform(yvals[psf_dim2/2.,*]) & y1i=where(y1)
-;    x0=interpol(x1i,x1[x1i],0.)
-;    y0=interpol(y1i,y1[y1i],0.)
-;    za=Interpolate(za_arr,x0,y0,cubic=-0.5)
-;    az=Interpolate(az_arr,x0,y0,cubic=-0.5)
-;ENDIF ELSE BEGIN
-    za=obsza
-    az=obsaz
-;ENDELSE
+za=Float(obsza)
+az=Float(obsaz)
 
 antenna_spacing=1.1 ;meters (Same as M&C SetDelays script) ; Was 1.071 before?
 antenna_length=29.125*2.54/100. ;meters (measured)
 antenna_height=0.35 ;meters (rumor)
 c_light_vacuum=299792458.
-c_light_cable=210000000. ;not used
+velocity_factor=0.673
+c_light_cable=c_light_vacuum*velocity_factor ;not used
 
 Kconv=(2.*!Pi)*(frequency/c_light_vacuum) ;wavenumber (radians/meter)
 wavelength=c_light_vacuum/frequency
@@ -78,10 +66,6 @@ D0_d=*delay_settings*c_light_vacuum*4.35E-10
 D0_d=Float(D0_d)
 D0_d-=Min(D0_d)
 
-;proj_east=Reform(xvals,(psf_dim2)^2.)
-;proj_north=Reform(yvals,(psf_dim2)^2.)
-;proj_z=Cos(za_arr_use*!DtoR)
-
 proj_east=Sin(za_arr*!DtoR)*Sin(az_arr*!DtoR) & proj_east_use=Reform(proj_east,(psf_dim2)^2.)
 proj_north=Sin(za_arr*!DtoR)*Cos(az_arr*!DtoR) & proj_north_use=Reform(proj_north,(psf_dim2)^2.)
 proj_z=Cos(za_arr*!DtoR) & proj_z_use=Reform(proj_z,(psf_dim2)^2.)
@@ -95,23 +79,22 @@ D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 ;groundplane=Reform(groundplane,psf_dim2,psf_dim2,16)
 
 groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength)) ;should technically have zc_arr, but until that is nonzero this is the same and faster
-;groundplane0=2.*Sin(2.*!Pi*antenna_height/wavelength) ;normalization factor
-groundplane0=2.*Sin(Cos(za*!DtoR)*2.*!Pi*antenna_height/wavelength) ;normalization factor
+;groundplane=2.*Sin((Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength))>0.1)
+groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength) ;normalization factor
+
 
 IF polarization EQ 0 THEN projection=Sqrt(1.-proj_east^2.) ELSE projection=Sqrt(1.-proj_north^2.) 
+;IF polarization EQ 0 THEN projection=(1.-proj_east^2.) ELSE projection=(1.-proj_north^2.)
 ;IF polarization EQ 0 THEN projection0=Sqrt(1.-(Sin(za*!DtoR)*Sin(az*!DtoR))^2.) $
 ;    ELSE projection0=Sqrt(1.-(Sin(za*!DtoR)*Cos(az*!DtoR))^2.) 
 ;projection/=projection0
 
-;projection=Sqrt(projection)
-;projection=1.
-
 ii=Complex(0,1)
 
 dipole_gain_arr=Exp(-ii*Kconv*D_d)
-;horizon_test=where(abs(za_arr_use) GE 90.,n_horizon_test)
-;horizon_mask=fltarr(psf_dim2,psf_dim2)+1
-;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
+horizon_test=where(abs(za_arr) GE 90.,n_horizon_test)
+horizon_mask=fltarr(psf_dim2,psf_dim2)+1
+IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
 
 IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(16,/allocate)
 FOR i=0,15 DO *antenna_beam_arr[i]=dipole_gain_arr[*,*,i]*groundplane*projection/(16.*groundplane0);*pol
@@ -119,9 +102,8 @@ FOR i=0,15 DO *antenna_beam_arr[i]=dipole_gain_arr[*,*,i]*groundplane*projection
 tile_beam=fltarr(psf_dim2,psf_dim2)
 FOR i=0,15 DO tile_beam+=*antenna_beam_arr[i]*antenna_gain_arr[i]
 
-tile_beam*=normalization;*horizon_mask;*uv_mask
+tile_beam*=normalization*horizon_mask
 
-;tile_beam=tile_beam>0.
 RETURN,tile_beam
 
 END

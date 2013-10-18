@@ -1,10 +1,10 @@
 PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,n_pol=n_pol,precess=precess,$
+    grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,output_directory=output_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
-    update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag=flag,$
-    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,$
+    update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag_visibilities=flag_visibilities,$
+    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
     calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,_Extra=extra
 
 except=!except
@@ -24,13 +24,14 @@ IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
 IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(data_directory) EQ 0 THEN data_directory=$
     rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift'])
+IF N_Elements(output_directory) EQ 0 THEN output_directory=data_directory
 IF N_Elements(vis_file_list) EQ 0 THEN vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 IF StrLowCase(Strmid(vis_file_list[0],3,/reverse)) EQ '.txt' THEN $
     vis_file_list=string_list_read(vis_file_list)
 
 IF N_Elements(fhd_file_list) EQ 0 THEN fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 IF N_Elements(healpix_path) EQ 0 THEN healpix_path=$
-    fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
+    fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 IF N_Elements(catalog_file_path) EQ 0 THEN catalog_file_path=$
     filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 IF N_Elements(calibration_catalog_file_path) EQ 0 THEN calibration_catalog_file_path=$
@@ -42,7 +43,8 @@ IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
-IF N_Elements(flag) EQ 0 THEN flag=0
+IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
+IF N_Elements(flag_calibration) EQ 0 THEN flag_calibration=1
 IF N_Elements(grid) EQ 0 THEN grid=recalculate_all
 IF Keyword_Set(simultaneous) THEN BEGIN
     deconvolve=0
@@ -89,13 +91,14 @@ WHILE fi LT n_files DO BEGIN
 ;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
     uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
-        mapfn_recalculate=mapfn_recalculate,flag=flag,grid=grid,healpix_recalculate=healpix_recalculate,$
+        mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid=grid,healpix_recalculate=healpix_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
         dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
-        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,$
-        calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,_Extra=extra
+        gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,$
+        calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
+        flag_calibration=flag_calibration,_Extra=extra
     IF Keyword_Set(cleanup) AND cleanup GT 1 THEN fhd_cleanup,fhd_file_list[fi],/minimal
     IF Keyword_Set(error) THEN BEGIN
         print,'Error encountered!'
@@ -118,22 +121,22 @@ IF Keyword_Set(simultaneous) THEN BEGIN
     fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,n_pol=n_pol,$
         independent_fit=independent_fit,/silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
         export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-        quickview=quickview,gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
+        gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
         uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
-            beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag=0,grid=0,healpix_recalculate=0,$
+            beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,noise_calibrate=noise_calibrate,align=align,$
             dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-            error=error,quickview=0,_Extra=extra
+            error=error,_Extra=extra
     ENDFOR
 ENDIF
 
+combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
 map_projection='orth'
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=recalculate_all*(n_files_use GT 1)
 IF Keyword_Set(combine_healpix) THEN BEGIN
     IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
-    combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
     combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx=mrc_hpx,obs_arr=obs_arr,$
         nside=nside,restore_last=0,flux_scale=flux_scale,output_path=healpix_path,image_filter_fn=image_filter_fn,catalog_file_path=catalog_file_path,_Extra=extra
     combine_obs_hpx_image,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx=mrc_hpx,$

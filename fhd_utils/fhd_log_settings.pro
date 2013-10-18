@@ -10,8 +10,10 @@ cal_delimiter='##CAL'
 fhd_delimiter='##FHD'
 end_delimiter='##END'
 filler='##'
+max_len=128
 
 main_insert=Strarr(2,4) +filler
+main_insert[1,0]+=delimiter
 main_insert[0,*]=[main_delimiter,'Calling program','Machine','User']
 call_name=scope_traceback()
 IF N_Elements(call_name) GT 1 THEN call_name=call_name[1] ELSE call_name=call_name[0]
@@ -21,7 +23,6 @@ machine=StrCompress(login.machine_name,/remove_all)
 user=StrCompress(login.user_name,/remove_all)
 main_insert[1,2]=machine
 main_insert[1,3]=user
-
 
 info_out=main_insert
 ;info_out=[[main_delimiter,filler],[main_insert,filler],[obs_delimiter,filler],[psf_delimiter,filler],$
@@ -44,10 +45,10 @@ IF file_test(descr_file_path) THEN BEGIN
     ENDIF
 ENDIF    
 
-IF Keyword_Set(obs) THEN obs_insert=structure_to_text(obs,head=obs_delimiter,delimiter=delimiter)
-IF Keyword_Set(psf) THEN psf_insert=structure_to_text(psf,head=psf_delimiter,delimiter=delimiter)
-IF Keyword_Set(cal) THEN cal_insert=structure_to_text(cal,head=cal_delimiter,delimiter=delimiter)
-IF Keyword_Set(fhd) THEN fhd_insert=structure_to_text(fhd,head=fhd_delimiter,delimiter=delimiter)
+IF Keyword_Set(obs) THEN obs_insert=structure_to_text(obs,head=obs_delimiter,delimiter=delimiter,max_len=max_len)
+IF Keyword_Set(psf) THEN psf_insert=structure_to_text(psf,head=psf_delimiter,delimiter=delimiter,max_len=max_len)
+IF Keyword_Set(cal) THEN cal_insert=structure_to_text(cal,head=cal_delimiter,delimiter=delimiter,max_len=max_len)
+IF Keyword_Set(fhd) THEN fhd_insert=structure_to_text(fhd,head=fhd_delimiter,delimiter=delimiter,max_len=max_len)
 
 IF N_Elements(obs_insert) EQ 0 THEN obs_insert=[obs_delimiter,filler]
 IF N_Elements(psf_insert) EQ 0 THEN psf_insert=[psf_delimiter,filler]

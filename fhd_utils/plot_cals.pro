@@ -3,7 +3,8 @@ pro plot_cals,cal,obs,vis_baseline_hist=vis_baseline_hist,file_path_base=file_pa
 ; PS_START/PS_END write .ps first, then converts to png. Supply .png
 ; filename to automatically overwrite .ps.
 
-IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='ps'
+no_ps=1
+IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
 phase_filename=file_path_base+'_cal_phase'+ext_name
 amp_filename=file_path_base+'_cal_amp'+ext_name
 vis_hist_filename=file_path_base+'_cal_hist'+ext_name
@@ -48,8 +49,8 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
       IF tile_i EQ cal.ref_antenna THEN axiscolor='blue'
       cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
           XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[-1.5*!pi,1.5*!pi],$
-          charsize=.5,/noerase,axiscolor=axiscolor
-       cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red'
+          charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+       cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red',psym=3
     ENDELSE
 ENDFOR
 
@@ -57,9 +58,6 @@ PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
     
 PS_START,amp_filename,scale_factor=2,/quiet,/nomatch
 
-; TODO: More intelligent plot max - a single value can throw
-;                                   everything off.
-;max_amp = max(abs([gains0,gains1]))
 max_amp = mean(abs([gains0,gains1])) + 2*stddev(abs([gains0,gains1]))
 FOR tile_i=0L,n_tiles-1 DO BEGIN
     tile_name=tile_names[tile_i]
@@ -75,14 +73,14 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
       IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
       cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
           XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[0,max_amp],$
-          /noerase,charsize=.5,axiscolor=axiscolor
-      cgoplot,freq,abs(gains1[*,tile_i]),color='red'
+          /noerase,charsize=.5,axiscolor=axiscolor,psym=3
+      cgoplot,freq,abs(gains1[*,tile_i]),color='red',psym=3
     ENDELSE
 ENDFOR
 
 PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 
-IF Keyword_Set(vis_baseline_hist) THEN BEGIN
+IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
    ratio=vis_baseline_hist.vis_res_ratio_mean ; just save some typing
    sigma=vis_baseline_hist.vis_res_sigma
    base_len=vis_baseline_hist.baseline_length
@@ -90,9 +88,6 @@ IF Keyword_Set(vis_baseline_hist) THEN BEGIN
    PS_START,filename=vis_hist_filename,/quiet,/nomatch
    !p.multi=[0,2,1]
    FOR pol=0,1 DO BEGIN
-      ;cgplot,base_len,ratio[pol,*],/xlog,yrange=[0,max(ratio+sigma)]
-      ;cgerrplot,base_len,ratio[pol,*]-sigma[pol,*],ratio[pol,*]+sigma[pol,*]
-      ;cgoplot,base_len,ratio[pol,*],color='red'
       cgplot,base_len,ratio[pol,*],color='red',/xlog,yrange=[0,max(ratio+sigma)]
       cgoplot,base_len,ratio[pol,*]+sigma[pol,*],linestyle=2
       cgoplot,base_len,ratio[pol,*]-sigma[pol,*],linestyle=2

@@ -12,7 +12,7 @@ IF N_Elements(u_loc) EQ 0 THEN u_loc=params.uu
 IF N_Elements(v_loc) EQ 0 THEN v_loc=params.vv
 
 IF N_Elements(n_vis_cal) EQ 0 THEN n_vis_cal=obs.n_vis
-IF N_Elements(n_pol) EQ 0 THEN n_pol=obs.n_pol
+IF N_Elements(n_pol) EQ 0 THEN n_pol=obs.n_pol<2 ; since only x and y pols, not xx, yy, xy, yx
 IF N_Elements(n_freq) EQ 0 THEN n_freq=obs.n_freq
 IF N_Elements(n_tile) EQ 0 THEN n_tile=obs.n_tile
 IF N_Elements(n_time) EQ 0 THEN n_time=N_Elements(bin_offset)

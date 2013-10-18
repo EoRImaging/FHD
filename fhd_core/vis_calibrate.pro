@@ -3,7 +3,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
     calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,$
     return_cal_model=return_cal_model,silent=silent,initial_calibration=initial_calibration,$
-    calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,_Extra=extra
+    calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
+    calibration_polyfit=calibration_polyfit,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
@@ -121,7 +122,7 @@ cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,prese
 t3_a=Systime(1)
 t2=t3_a-t2_a
 
-vis_calibration_flag,obs,cal
+IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 
 IF Keyword_Set(vis_baseline_hist) THEN $
