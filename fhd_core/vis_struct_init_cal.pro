@@ -1,7 +1,7 @@
 FUNCTION vis_struct_init_cal,obs,params,gain_arr_ptr=gain_arr_ptr,n_pol=n_pol,n_freq=n_freq,n_tile=n_tile,n_time=n_time,source_list=source_list,$
     tile_A=tile_A,tile_B=tile_B,freq=freq,bin_offset=bin_offset,tile_names=tile_names,u_loc=u_loc,v_loc=v_loc,n_cal_src=n_cal_src,$
     galaxy_cal=galaxy_cal,min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,n_vis_cal=n_vis_cal,$
-    cal_time_average=cal_time_average,ref_antenna=ref_antenna,cal_convergence_threshold=cal_convergence_threshold,$
+    cal_time_average=cal_time_average,ref_antenna=ref_antenna,cal_convergence_threshold=cal_convergence_threshold,max_cal_iter=max_cal_iter,$
     calibration_origin=calibration_origin,_Extra=extra
 IF N_Elements(tile_A) EQ 0 THEN tile_A=(*obs.baseline_info).tile_A
 IF N_Elements(tile_B) EQ 0 THEN tile_B=(*obs.baseline_info).tile_B
@@ -27,7 +27,8 @@ IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=10L
 IF N_Elements(ref_antenna) EQ 0 THEN ref_antenna=1L
 ref_antenna_name=(*obs.baseline_info).tile_names[ref_antenna]
 IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-3
-IF N_Elements(calibration_origin) EQ 0 THEN calibration_origin='Calibration not transferred'
+IF N_Elements(calibration_origin) EQ 0 THEN $
+    IF Tag_exist(obs,'obsname') THEN calibration_origin=obs.obsname ELSE calibration_origin=''
 
 IF N_Elements(gain_arr_ptr) EQ 0 THEN BEGIN
     gain_arr=Complexarr(n_freq,n_tile)+1 

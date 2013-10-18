@@ -17,30 +17,35 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
             RETURN,vis_ptr
         ENDIF
         CASE StrLowCase(Strmid(transfer_calibration[0],3,/reverse)) OF
-            '.sav':cal=getvar_savefile(transfer_calibration,'cal')
+            '.sav':BEGIN
+                cal=getvar_savefile(transfer_calibration,'cal')
+                gain_arr_ptr=cal.gain
+                IF ~Keyword_Set(cal.cal_origin) THEN cal.cal_origin=transfer_calibration
+                cal=vis_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
+            END
             '.txt':BEGIN
                 textfast,gain_arr,/read,file_path=transfer_calibration
                 gain_arr_ptr=Ptr_new(gain_arr)
-                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-                    transfer_calibration=1,timing=timing,error=error,gain_arr_ptr=gain_arr_ptr,$
-                    calibration_source_list=calibration_source_list,_Extra=extra)
-                RETURN,vis_cal
+                cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
+;                    transfer_calibration=1,timing=timing,error=error,calibration_source_list=calibration_source_list,_Extra=extra)
+;                RETURN,vis_cal
             END
             '.npz':BEGIN
                 gain_arr=read_numpy(transfer_calibration)
                 gain_arr_ptr=Ptr_new(gain_arr)
-                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-                    transfer_calibration=1,timing=timing,error=error,gain_arr_ptr=gain_arr_ptr,$
-                    calibration_source_list=calibration_source_list,_Extra=extra)
-                RETURN,vis_cal
+                cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
+;                    transfer_calibration=1,timing=timing,error=error,calibration_source_list=calibration_source_list,_Extra=extra)
+;                RETURN,vis_cal
             END
             '.npy':BEGIN
                 gain_arr=read_numpy(transfer_calibration)
                 gain_arr_ptr=Ptr_new(gain_arr)
-                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-                    transfer_calibration=1,timing=timing,error=error,gain_arr_ptr=gain_arr_ptr,$
-                    calibration_source_list=calibration_source_list,_Extra=extra)
-                RETURN,vis_cal
+                cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
+;                    transfer_calibration=1,timing=timing,error=error,calibration_source_list=calibration_source_list,_Extra=extra)
+;                RETURN,vis_cal
             END
             ELSE: BEGIN
                 print,'Unknown file format: ',transfer_calibration
@@ -49,21 +54,17 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
             ENDELSE
         ENDCASE
     ENDIF
-    IF size(cal,/type) EQ 8 THEN BEGIN
-        vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=preserve_visibilities)
+;    IF size(cal,/type) EQ 8 THEN BEGIN
+;;        cal=vis_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
+        vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=0)
         timing=Systime(1)-t0_0
         RETURN,vis_cal
-    ENDIF ELSE IF Max(Ptr_valid(gain_arr_ptr)) THEN BEGIN
-        cal=vis_struct_init_cal(obs,params)
-        vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=preserve_visibilities)
-        timing=Systime(1)-t0_0
-        RETURN,vis_cal
-    ENDIF ELSE BEGIN
-        print,"Invalid calibration supplied!"
-        error=1
-        timing=Systime(1)-t0_0
-        RETURN,vis_ptr
-    ENDELSE
+;    ENDIF ELSE BEGIN
+;        print,"Invalid calibration supplied!"
+;        error=1
+;        timing=Systime(1)-t0_0
+;        RETURN,vis_ptr
+;    ENDELSE
 ENDIF
 
 cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list,_Extra=extra)

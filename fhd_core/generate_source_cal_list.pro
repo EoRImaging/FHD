@@ -1,8 +1,8 @@
 FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
     no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,_Extra=extra
-catalog=getvar_savefile(catalog_path,'catalog')
-
+;catalog=getvar_savefile(catalog_path,'catalog')
+RESTORE,catalog_path,/relaxed ;catalog
 IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
 astr=obs.astr
 dimension=obs.dimension

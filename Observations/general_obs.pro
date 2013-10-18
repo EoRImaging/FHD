@@ -59,6 +59,7 @@ IF size(transfer_mapfn,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_mapfn[0],3
 IF N_Elements(transfer_calibration) EQ 0 THEN transfer_calibration=0
 IF size(transfer_calibration,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_calibration[0],3,/reverse)) EQ '.txt' THEN $
     transfer_calibration=string_list_read(transfer_calibration,data_directory=data_directory)
+IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
 
 ;Set up gridding and deconvolution parameters
 IF N_Elements(complex_beam) EQ 0 THEN complex_beam=1
@@ -101,7 +102,13 @@ WHILE fi LT n_files DO BEGIN
         flag_calibration=flag_calibration,_Extra=extra
     IF Keyword_Set(cleanup) AND cleanup GT 1 THEN fhd_cleanup,fhd_file_list[fi],/minimal
     IF Keyword_Set(error) THEN BEGIN
+        print,'###########################################################################'
+        print,'###########################################################################'
+        print,'###########################################################################'
         print,'Error encountered!'
+        print,'###########################################################################'
+        print,'###########################################################################'
+        print,'###########################################################################'
     ENDIF ELSE $
         IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi
     fi+=1.
@@ -134,7 +141,6 @@ ENDIF
 
 combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
 map_projection='orth'
-IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=recalculate_all*(n_files_use GT 1)
 IF Keyword_Set(combine_healpix) THEN BEGIN
     IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
     combine_obs_healpix,fhd_file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx=mrc_hpx,obs_arr=obs_arr,$

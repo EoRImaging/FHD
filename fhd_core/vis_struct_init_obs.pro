@@ -8,6 +8,7 @@ FUNCTION vis_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
 IF N_Elements(pflag) EQ 0 THEN pflag=0
 IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
+obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
 
 time=params.time
 b0i=Uniq(time)
@@ -103,7 +104,8 @@ IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
-struct={instrument:String(instrument),dimension:Float(dimension),elements:Float(elements),kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,$
+struct={instrument:String(instrument),obsname:String(obsname),dimension:Float(dimension),elements:Float(elements),$
+    kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,$
     obsra:meta.obsra,obsdec:meta.obsdec,zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,$
     zenx:meta.zenx,zeny:meta.zeny,phasera:meta.phasera,orig_phasedec:meta.phasedec,phasedec:meta.phasedec,orig_phasera:meta.phasera,$
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),$
