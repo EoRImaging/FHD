@@ -1,7 +1,8 @@
 PRO eor_firstpass,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,show_obsname=show_obsname,$
-    julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,_Extra=extra
+    julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,$
+    silent=silent,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -23,7 +24,9 @@ IF N_Elements(uvfits_version) EQ 0 THEN uvfits_version=2
 IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(show_obsname) EQ 0 THEN show_obsname=1
-image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
+IF N_Elements(silent) EQ 0 THEN silent=0
+;image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
+image_filter_fn=''
 
 ;NEED TO FIGURE OUT THE PROPER DIRECTORY AND output_directory TO USE AT MIT
 data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
@@ -37,6 +40,7 @@ catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),sub
 ;calibration_catalog_file_path=filepath('eor1_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('mwa_calibration_source_list_nofornax.sav',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('eor01_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+;calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=2048.
 max_sources=0
@@ -62,6 +66,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
     ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,max_calibration_sources=max_calibration_sources,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,/mark_zenith,$
-    vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,no_rephase=no_rephase,show_obsname=show_obsname,_Extra=extra
+    vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,no_rephase=no_rephase,show_obsname=show_obsname,$
+    silent=silent,_Extra=extra
 !except=except
 END
