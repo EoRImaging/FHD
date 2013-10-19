@@ -190,8 +190,8 @@ t4=0 ;Holographic mapping function
 i2=0. 
 t0=Systime(1)
 
-converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter>1))>2)
-converge_check2=Fltarr(max_iter>2)
+converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter>1))>2+1)
+converge_check2=Fltarr(max_iter>2+1)
 
 sm_xmin=(Min(xvals[where(source_mask)])+dimension/2.-smooth_width)>0
 sm_xmax=(Max(xvals[where(source_mask)])+dimension/2.+smooth_width)<(dimension-1)
