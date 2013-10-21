@@ -73,7 +73,7 @@ CASE size(initial_calibration,/type) OF
     
     7:BEGIN
         file_path_use=initial_calibration
-        IF StrLowCase(Strmid(file_path_use,0,3,/reverse_offset)) NE 'sav' THEN file_path_use+='.sav'
+        IF StrLowCase(Strmid(file_path_use,2,3,/reverse_offset)) NE 'sav' THEN file_path_use+='.sav'
         IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=file_dirname(file_path_fhd))
         IF file_test(file_path_use) THEN BEGIN
             cal_init=getvar_savefile(file_path_use,'cal')
