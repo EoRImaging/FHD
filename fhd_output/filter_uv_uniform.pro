@@ -32,8 +32,9 @@ FOR i=1L,n_bin-1 DO BEGIN
 ENDFOR
 
 rad_i_use=where(rad_vals)
-thresh=Max(rad_vals)/1000.
-rad_vals_use=1./rad_vals[rad_i_use]
+thresh=Max(rad_vals)/100.
+rad_vals_use=(1./rad_vals[rad_i_use])<(1./thresh)
+;rad_vals_use=1./rad_vals[rad_i_use]
 
 filter_use=Reform(interpol(rad_vals_use,rad_i_use,reform(radial_map,dimension*Float(elements))),dimension,elements)
 
