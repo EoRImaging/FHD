@@ -281,9 +281,10 @@ FOR i=i0,max_iter-1 DO BEGIN
         t2_0=Systime(1)
         t1+=t2_0-t1_0 
         
-        image_filtered=dirty_image_composite-model_image_composite
-        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+        image_unfiltered=dirty_image_composite-model_image_composite
+        image_smooth=Median(image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+        image_filtered=fltarr(dimension,elements)
+        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-image_smooth
         
         IF Keyword_Set(independent_fit) THEN BEGIN
             image_use_Q=dirty_image_composite_Q-model_image_composite_Q
@@ -301,10 +302,11 @@ FOR i=i0,max_iter-1 DO BEGIN
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF  
     ENDIF ELSE t2_0=Systime(1)
-    image_unfiltered=dirty_image_composite-model_image_composite
     source_find_image=image_filtered*beam_avg*source_mask
     image_use=image_filtered*source_mask
    
+    IF i EQ 0 THEN converge_check[i]=Stddev(source_find_image[where(source_mask)],/nan)
+    converge_check2[i]=Stddev(source_find_image[where(source_mask)],/nan)
     ;use the composite image to locate sources, but then fit for flux independently
     source_flux=Max(source_find_image,source_i)
     
@@ -314,7 +316,10 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 
     flux_ref=source_find_image[source_i]*add_threshold
-    additional_i=where(source_find_image GT flux_ref,n_sources)
+    additional_i1=where(source_find_image GE flux_ref,n_sources1)
+    additional_i2=where(source_find_image GE 5.*converge_check2[i],n_sources2)
+    additional_i=(n_sources1 GT n_sources2) ? additional_i1:additional_i2 
+    n_sources=n_sources1>n_sources2
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod dimension
     add_y=Floor(additional_i/dimension)
@@ -331,8 +336,6 @@ FOR i=i0,max_iter-1 DO BEGIN
     ENDIF
     n_mask=0
     
-    IF i EQ 0 THEN converge_check[i]=Stddev(source_find_image[where(source_mask)],/nan)
-    converge_check2[i]=Stddev(source_find_image[where(source_mask)],/nan)
     ;fit flux here, and fill comp_arr for each pol
     flux_arr=fltarr(4)
     fit_threshold=-2.*converge_check2[i]
