@@ -298,6 +298,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF (Ptr_valid(flag_arr))[0] THEN Ptr_free,flag_arr
 ENDIF
 
+IF N_Elements(cal) EQ 0 THEN IF file_test(cal_filepath) THEN cal=getvar_savefile(cal_filepath,'cal')
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
