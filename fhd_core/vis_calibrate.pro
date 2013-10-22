@@ -4,10 +4,11 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr
     calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,$
     return_cal_model=return_cal_model,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
-    calibration_polyfit=calibration_polyfit,_Extra=extra
+    calibration_polyfit=calibration_polyfit,flag_calibration=flag_calibration,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
+IF N_Elements(flag_calibration) EQ 0 THEN flag_calibration=1
 
 IF Keyword_Set(transfer_calibration) THEN BEGIN
     IF size(transfer_calibration,/type) EQ 7 THEN BEGIN
@@ -56,6 +57,8 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     ENDIF
 ;    IF size(cal,/type) EQ 8 THEN BEGIN
 ;;        cal=vis_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
+        IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
+        IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
         vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=0)
         timing=Systime(1)-t0_0
         RETURN,vis_cal
@@ -73,18 +76,18 @@ CASE size(initial_calibration,/type) OF
     
     7:BEGIN
         file_path_use=initial_calibration
-        IF StrLowCase(Strmid(file_path_use,0,3,/reverse_offset)) NE 'sav' THEN file_path_use+='.sav'
+        IF StrLowCase(Strmid(file_path_use,2,3,/reverse_offset)) NE 'sav' THEN file_path_use+='.sav'
         IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=file_dirname(file_path_fhd))
         IF file_test(file_path_use) THEN BEGIN
             cal_init=getvar_savefile(file_path_use,'cal')
             cal.gain=cal_init.gain
-        ENDIF
+            print,'Using initial calibration solution from '+initial_calibration
+        ENDIF else print, 'Initial calibration file not found'
     END
     8:cal.gain=initial_calibration.gain
     10:cal.gain=initial_calibration
     ELSE:IF Keyword_Set(initial_calibration) THEN initial_calibration=file_path_fhd+'_cal' ;if set to a numeric type, assume this calibration solution will be wanted for future iterations
 ENDCASE
-IF size(initial_calibration,/type) EQ 7 THEN print,'Using initial calibration solution from '+initial_calibration ;put here to catch the ELSE statement
 
 vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,$
     timing=model_timing,silent=silent,error=error,_Extra=extra)    
@@ -122,6 +125,8 @@ IF Keyword_Set(calibration_visibilities_subtract) or Keyword_Set(vis_baseline_hi
 cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,_Extra=extra)
 t3_a=Systime(1)
 t2=t3_a-t2_a
+
+IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
 
 IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
 vis_cal=vis_calibration_apply(vis_ptr,cal)

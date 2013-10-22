@@ -37,7 +37,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
-    weights_grid=weights_grid,flag_calibration=flag_calibration,_Extra=extra
+    weights_grid=weights_grid,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -51,7 +51,6 @@ IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
-IF N_Elements(flag_calibration) EQ 0 THEN flag_calibration=1
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 
 IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the mapping function to disk if it will be just deleted later anyway
@@ -168,7 +167,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
              calibration_source_list=calibration_source_list,return_cal_model=return_cal_model,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
-        IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
         save,cal,filename=cal_filepath,/compress
         IF Keyword_Set(return_cal_model) THEN save,model_uv_arr,filename=model_filepath
     ENDIF
@@ -300,6 +298,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF (Ptr_valid(flag_arr))[0] THEN Ptr_free,flag_arr
 ENDIF
 
+IF N_Elements(cal) EQ 0 THEN IF file_test(cal_filepath) THEN cal=getvar_savefile(cal_filepath,'cal')
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
