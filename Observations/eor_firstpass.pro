@@ -25,8 +25,8 @@ IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(show_obsname) EQ 0 THEN show_obsname=1
 IF N_Elements(silent) EQ 0 THEN silent=0
-;image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
-image_filter_fn=''
+image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
+;image_filter_fn=''
 
 ;NEED TO FIGURE OUT THE PROPER DIRECTORY AND output_directory TO USE AT MIT
 data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
@@ -39,8 +39,9 @@ catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),sub
 ;calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('eor1_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('mwa_calibration_source_list_nofornax.sav',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('eor01_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+;calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('test_component_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=2048.
 max_sources=0
@@ -52,7 +53,7 @@ min_baseline=1.
 flag_nsigma=20.
 ring_radius=6.*pad_uv_image
 nfreq_avg=16
-max_calibration_sources=300.
+max_calibration_sources=10000.
 weights_grid=0
 psf_resolution=8.
 no_rephase=1 ;set to use obsra, obsdec for phase center even if phasera, phasedec present in a .metafits file
