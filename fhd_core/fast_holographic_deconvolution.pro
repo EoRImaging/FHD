@@ -439,13 +439,13 @@ FOR i=i0,max_iter-1 DO BEGIN
     flux_Q=comp_arr[si_use].flux.Q;*area_cnv
     flux_U=comp_arr[si_use].flux.U;*area_cnv
     flux_V=comp_arr[si_use].flux.V;*area_cnv
-    *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
+    *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I,/conserve_memory)
     IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
-        ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 
+        ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q,/conserve_memory) 
     IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
-        ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U)
+        ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U,/conserve_memory)
     IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
-        ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V)
+        ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V,/conserve_memory)
     SWITCH n_pol OF
         4:(*model_uv_full[3])[uv_i_use2]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
         3:(*model_uv_full[2])[uv_i_use2]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.
