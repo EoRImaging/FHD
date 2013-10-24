@@ -24,10 +24,10 @@ IF N_Elements(uvfits_version) EQ 0 THEN uvfits_version=2
 IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(silent) EQ 0 THEN silent=0
-image_filter_fn='filter_uv_uniform_fourier' ;applied ONLY to output images
+image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 ;image_filter_fn=''
 
-;NEED TO FIGURE OUT THE PROPER DIRECTORY AND output_directory TO USE AT MIT
+; This file structure works at MIT
 data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
 output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 
@@ -39,8 +39,8 @@ catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),sub
 ;calibration_catalog_file_path=filepath('eor1_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('mwa_calibration_source_list_nofornax.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('eor01_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-;calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('test_component_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+;calibration_catalog_file_path=filepath('test_component_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=3072.
 max_sources=20000.
