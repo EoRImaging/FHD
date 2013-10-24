@@ -45,7 +45,7 @@ IF Keyword_Set(conserve_memory) AND (element_check GT 1E8) THEN BEGIN
         source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux[inds])
         sin_term=Sin(Temporary(phase))
         source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux[inds])
-        source_uv_vals=+Complex(source_uv_real_vals,source_uv_im_vals)
+        source_uv_vals+=Complex(source_uv_real_vals,source_uv_im_vals)
     ENDFOR
 ENDIF ELSE BEGIN
     phase=matrix_multiply(xvals,x_use)+matrix_multiply(yvals,y_use)
