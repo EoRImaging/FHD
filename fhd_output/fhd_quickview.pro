@@ -114,8 +114,10 @@ beam_i=where(beam_mask)
 IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1
     source_arr_out=source_array
-    sx=(source_array.x-obs.dimension/2.)*2.+obs_out.dimension/2.
-    sy=(source_array.y-obs.elements/2.)*2.+obs_out.elements/2.
+    IF Keyword_set(pad_uv_image) THEN BEGIN
+        sx=(source_array.x-obs.dimension/2.)*pad_uv_image+obs_out.dimension/2.
+        sy=(source_array.y-obs.elements/2.)*pad_uv_image+obs_out.elements/2.
+    ENDIF
     source_arr_out.x=sx & source_arr_out.y=sy
     IF Total(source_arr_out.flux.(0)) EQ 0 THEN BEGIN
         source_arr_out.flux.(0)=(*beam_base_out[0])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.I+source_arr_out.flux.Q)/2.
