@@ -29,7 +29,7 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
+PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     rephase_to_zenith=rephase_to_zenith,healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
@@ -37,7 +37,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
-    weights_grid=weights_grid,_Extra=extra
+    weights_grid=weights_grid,save_visibilities=save_visibilities,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -45,13 +45,15 @@ except=!except
 error=0
 heap_gc 
 t0=Systime(1)
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(calibrate_visibilities) EQ 0 THEN calibrate_visibilities=0
-IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=1
-IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=1
-IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=1
+IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
+IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
+IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
+IF N_Elements(save_visibilities) THEN save_visibilities=0
 
 IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the mapping function to disk if it will be just deleted later anyway
 
@@ -84,7 +86,7 @@ pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
 IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE n_pol1=1
 test_mapfn=1 & FOR pol_i=0,n_pol1-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
-IF test_mapfn EQ 0 THEN grid_recalculate=1
+IF test_mapfn EQ 0 THEN IF Keyword_Set(recalculate_all) THEN grid_recalculate=1
 test_mapfn=1 & FOR pol_i=0,n_pol1-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav')
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
     IF size(transfer_mapfn,/type) NE 7 THEN transfer_mapfn=basename
@@ -93,7 +95,7 @@ IF Keyword_Set(transfer_mapfn) THEN BEGIN
         test_mapfn=1
     ENDIF
 ENDIF
-IF test_mapfn EQ 0 THEN IF Keyword_Set(deconvolve) THEN mapfn_recalculate=(grid_recalculate=1)
+IF test_mapfn EQ 0 THEN IF Keyword_Set(deconvolve) THEN mapfn_recalculate=1
 IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 
 data_flag=file_test(hdr_filepath) AND file_test(flags_filepath) AND file_test(obs_filepath) AND file_test(params_filepath)
@@ -258,6 +260,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
         auto_corr[pol_i]=Ptr_new(auto_vals)
     ENDFOR
     SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
+    
+    IF Keyword_Set(save_visibilities) THEN vis_export,obs,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
         
     t_grid=fltarr(n_pol)
     t_mapfn_gen=fltarr(n_pol)
