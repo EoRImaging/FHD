@@ -190,7 +190,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *instr_images[pol_i]=dirty_image_generate(instr_img_uv,degpix=degpix,weights=*weights_arr[pol_i],$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i])
     *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
-        dimension=dimension,width=restored_beam_width)
+        dimension=dimension,restored_beam_width=restored_beam_width)
 ENDFOR
 
 stokes_images=stokes_cnv(instr_images,beam=beam_base_out) ;NOTE one factor of the beam already corrected for
@@ -254,7 +254,7 @@ t4+=t5a-t4a
 IF n_mrc GT 2 THEN BEGIN
     mrc_cat=mrc_cat[mrc_i_use]
     mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
-        width=pad_uv_image,ring=6.*pad_uv_image)
+        restored_beam_width=pad_uv_image,ring=6.*pad_uv_image)
 ENDIF
 
 t6a=Systime(1)
