@@ -25,7 +25,7 @@ filter_use=weight_invert(filter_use)<(1./thresh)
 IF Max(filter_use) EQ 0 THEN RETURN,image_uv 
 
 wts_i=where(weights,n_wts)
-IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)
+IF n_wts GT 0 THEN filter_use=filter_use*mean(weights[wts_i])/Mean(weights[wts_i]*filter_use[wts_i]) ELSE filter_use=filter_use*mean(weights)/Mean(weights*filter_use)
 
 IF Ptr_valid(filter) THEN *filter=filter_use
 
