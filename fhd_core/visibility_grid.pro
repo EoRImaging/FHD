@@ -93,6 +93,7 @@ xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 
 conj_i=where(ky_arr GT 0,n_conj)
+ky_arr=(kx_arr=0)
 IF n_conj GT 0 THEN BEGIN
     xcen[*,conj_i]=-xcen[*,conj_i]
     ycen[*,conj_i]=-ycen[*,conj_i]
