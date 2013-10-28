@@ -2,6 +2,10 @@ PRO vis_export,obs,vis_ptr_arr,flag_ptr,file_path_fhd=file_path_fhd,pol_i=pol_i,
 IF N_Elements(compress) EQ 0 THEN compress=1
 pol_names=['xx','yy','xy','yx']
 
+res_name='Residual'
+IF tag_exist(obs_out,'residual') THEN IF obs_out.residual EQ 0 THEN res_name='Dirty'
+print,"Exporting "+res_name+" visibilities"
+
 IF N_Elements(pol_i) NE 1 THEN pol_i=indgen(obs.n_pol)
 n_pol=N_Elements(pol_i)
 IF N_Elements(flag_ptr) LT n_pol THEN flag_ptr_use=Ptrarr(n_pol) ELSE flag_ptr_use=flag_ptr
