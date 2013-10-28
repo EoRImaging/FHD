@@ -1,6 +1,6 @@
 FUNCTION fhd_init,obs,restore=restore,pol_use=pol_use,freq_use=freq_use,time_i_use=time_i_use,$
     gain_factor=gain_factor,mapfn_interval=mapfn_interval,calibration_image_subtract=calibration_image_subtract,$
-    max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,$
+    max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,smooth_width=smooth_width,$
     mapfn_threshold=mapfn_threshold,baseline_threshold=baseline_threshold,beam_threshold=beam_threshold,add_threshold=add_threshold,$
     polarization_map=polarization_map,polarization_correction=polarization_correction,ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,$
     beam_base=beam_base,beam_correction=beam_correction,independent_fit=independent_fit,reject_pol_sources=reject_pol_sources,$
