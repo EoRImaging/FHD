@@ -24,7 +24,8 @@ IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
 IF N_Elements(psf) EQ 0 THEN IF file_test(file_path_fhd+'_beams.sav') THEN RESTORE,file_path_fhd+'_beams.sav' ELSE $
     psf=beam_setup(obs,file_path_fhd,silent=silent,timing=t_beam,_Extra=extra)
 IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav'
-    
+vis_count=visibility_count(obs,psf,cal)
+
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
 astr=obs.astr
@@ -149,7 +150,7 @@ instr_images=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
 instr_rings=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
+    instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$

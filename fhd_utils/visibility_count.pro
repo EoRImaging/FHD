@@ -7,7 +7,6 @@ SWITCH N_Params() OF
     ELSE:
 ENDSWITCH
 
-
 ;extract information from the structures
 n_pol=obs.n_pol
 n_tile=obs.n_tile
@@ -20,7 +19,6 @@ ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 b_info=*obs.baseline_info
-freq_cut_i=where(b_info.freq_use,n_freq_cut)
 
 freq_bin_i=b_info.fbin_i
 fi_use=where(b_info.freq_use)
@@ -29,13 +27,17 @@ freq_bin_i=freq_bin_i[fi_use]
 frequency_array=b_info.freq
 frequency_array=frequency_array[fi_use]
 
+tile_use=(b_info.tile_names)[where(b_info.tile_use)]
+bi_use=where((b_info.tile_A EQ tile_use) OR (b_info.tile_B EQ tile_use))
+n_b_use=N_Elements(bi_use)
+n_f_use=N_Elements(fi_use)
+
 psf_base=psf.base
 psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
 psf_resolution=(Size(psf_base,/dimension))[2]
 
-kx_arr=params.uu/kbinsize
-ky_arr=params.vv/kbinsize
-n_frequencies=N_Elements(frequency_array)
+kx_arr=params.uu[bi_use]/kbinsize
+ky_arr=params.vv[bi_use]/kbinsize
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
