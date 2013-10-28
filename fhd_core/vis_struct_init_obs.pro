@@ -111,6 +111,6 @@ struct={instrument:String(instrument),obsname:String(obsname),dimension:Float(di
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
-    baseline_info:Ptr_new(arr)}    
+    residual:0,baseline_info:Ptr_new(arr)}    
 RETURN,struct
 END

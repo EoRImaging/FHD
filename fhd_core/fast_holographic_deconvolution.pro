@@ -317,7 +317,7 @@ FOR i=i0,max_iter-1 DO BEGIN
 
     flux_ref=source_find_image[source_i]*add_threshold
     additional_i1=where(source_find_image GE flux_ref,n_sources1)
-    additional_i2=where(source_find_image GE 5.*converge_check2[i],n_sources2)
+    additional_i2=where((source_find_image GE 5.*converge_check2[i]) AND (source_find_image GE source_find_image[source_i]/10.),n_sources2)
     additional_i=(n_sources1 GT n_sources2) ? additional_i1:additional_i2 
     n_sources=n_sources1>n_sources2
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest

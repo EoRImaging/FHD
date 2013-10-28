@@ -1,10 +1,10 @@
 FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolution,threshold=threshold,$
-    dimension=dimension,elements=elements,width=width,ring_radius=ring_radius,n_sources=n_sources,_Extra=extra
+    dimension=dimension,elements=elements,restored_beam_width=restored_beam_width,ring_radius=ring_radius,n_sources=n_sources,_Extra=extra
 IF Keyword_Set(obs) THEN BEGIN
     dimension=obs.dimension
     elements=obs.elements
 ENDIF ELSE IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF N_Elements(width) EQ 0 THEN width=1. ;width of gaussian to use to restore sources
+IF N_Elements(restored_beam_width) EQ 0 THEN restored_beam_width=1. ;width of gaussian to use to restore sources
 IF N_Elements(ring_radius) EQ 0 THEN ring_radius=0 ;set to restore sources with a ring with a gaussian radial profile
 IF N_Elements(pol_i) EQ 0 THEN pol_i=4 ;pol_i corresponds to 0-3: xx, yy, xy, yx in apparent brightness; 4-7: I, Q, U, V in sky brightness
 IF Keyword_Set(n_sources) THEN ns=n_sources>(size(source_array,/dimension))[0] ELSE ns=(size(source_array,/dimension))[0]
@@ -16,8 +16,8 @@ x_vals=meshgrid(dimension,elements,1)-dimension/2.
 y_vals=meshgrid(dimension,elements,2)-elements/2.
 
 IF Keyword_Set(ring_radius) THEN $
-    beam_use=Exp(-Abs(((x_vals)/width)^2.+((y_vals)/width)^2.-2.*(ring_radius+1)/width)/2.) $
-ELSE beam_use=Exp(-Abs(((x_vals)/width)^2.+((y_vals)/width)^2.)/2.)
+    beam_use=Exp(-Abs(((x_vals)/restored_beam_width)^2.+((y_vals)/restored_beam_width)^2.-2.*(ring_radius+1)/restored_beam_width)/2.) $
+ELSE beam_use=Exp(-Abs(((x_vals)/restored_beam_width)^2.+((y_vals)/restored_beam_width)^2.)/2.)
 beam_use/=Max(beam_use) ;make sure it is normalized to 1
 cut=reform(beam_use[*,elements/2.])
 cut_endpoints=minmax(where(cut GE threshold))
@@ -30,8 +30,8 @@ xvals_i=meshgrid(box_dim,box_dim,1)*resolution
 yvals_i=meshgrid(box_dim,box_dim,2)*resolution
 
 IF Keyword_Set(ring_radius) THEN $
-    beam_useR=Exp(-Abs(((x_valsR)/(width*resolution))^2.+((y_valsR)/(width*resolution))^2.-2.*(ring_radius+1)/width)/2.) $
-ELSE beam_useR=Exp(-Abs(((x_valsR)/(width*resolution))^2.+((y_valsR)/(width*resolution))^2.)/2.)
+    beam_useR=Exp(-Abs(((x_valsR)/(restored_beam_width*resolution))^2.+((y_valsR)/(restored_beam_width*resolution))^2.-2.*(ring_radius+1)/restored_beam_width)/2.) $
+ELSE beam_useR=Exp(-Abs(((x_valsR)/(restored_beam_width*resolution))^2.+((y_valsR)/(restored_beam_width*resolution))^2.)/2.)
 ;beam_useR/=Total(beam_useR)/resolution^2. ;make sure it is normalized
 ;beam_useR/=Max(beam_useR) ;make sure it is normalized to 1
 IF Keyword_Set(ring_radius) THEN beam_useR*=ring_radius
@@ -76,9 +76,9 @@ FOR si=0L,ns-1L DO BEGIN
 ENDFOR
 ;source_image=fltarr(dimension,elements)
 ;IF Keyword_Set(ring_radius) THEN FOR si=0,ns-1 DO $
-;    source_image+=sf[si]*Exp(-Abs(((x_vals-sx[si])/width)^2.+((y_vals-sy[si])/width)^2.-2.*ring_radius)/2.) $
+;    source_image+=sf[si]*Exp(-Abs(((x_vals-sx[si])/restored_beam_width)^2.+((y_vals-sy[si])/restored_beam_width)^2.-2.*ring_radius)/2.) $
 ;ELSE FOR si=0.,ns-1 DO $
-;    source_image+=sf[si]*Exp(-(((x_vals-sx[si])/width)^2.+((y_vals-sy[si])/width)^2.)/2.) 
+;    source_image+=sf[si]*Exp(-(((x_vals-sx[si])/restored_beam_width)^2.+((y_vals-sy[si])/restored_beam_width)^2.)/2.) 
 Ptr_free,beam_useR_arr
 RETURN,source_image
 END

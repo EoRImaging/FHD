@@ -134,8 +134,10 @@ vis_cal=vis_calibration_apply(vis_ptr,cal)
 IF Keyword_Set(vis_baseline_hist) THEN $
     vis_baseline_hist,obs,params,vis_ptr=vis_cal,vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd
 
-IF Keyword_Set(calibration_visibilities_subtract) THEN $
+IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
+    IF tag_exist(obs,'residual') THEN obs.residual=1
+ENDIF
 
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0
