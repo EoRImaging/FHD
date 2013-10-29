@@ -28,9 +28,6 @@ frequency_array=b_info.freq
 frequency_array=frequency_array[fi_use]
 
 tile_use=where(b_info.tile_use)
-hist_A=histogram(tile_A,min=1,/bin,reverse=ra)
-hist_B=histogram(tile_B,min=1,/bin,reverse=rb)
-hist_AB=hist_A+hist_B
 bi_use=array_match(b_info.tile_A,b_info.tile_B,value_match=tile_use)
 n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
