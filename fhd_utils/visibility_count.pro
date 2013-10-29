@@ -27,8 +27,8 @@ freq_bin_i=freq_bin_i[fi_use]
 frequency_array=b_info.freq
 frequency_array=frequency_array[fi_use]
 
-tile_use=(b_info.tile_names)[where(b_info.tile_use)]
-bi_use=where((b_info.tile_A EQ tile_use) OR (b_info.tile_B EQ tile_use))
+tile_use=where(b_info.tile_use)
+bi_use=array_match(b_info.tile_A,b_info.tile_B,value_match=tile_use)
 n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
 
