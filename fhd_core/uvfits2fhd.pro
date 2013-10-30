@@ -148,7 +148,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,_Extra=extra)
-    
+    vis_flag_update,flag_arr,obs,psf,params
     ;print informational messages
     obs_status,obs
     
@@ -238,7 +238,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     SAVE,params,filename=params_filepath,/compress
     SAVE,hdr,filename=hdr_filepath,/compress
         
-    vis_flag_update,flag_arr,obs,psf,params
     SAVE,obs,filename=obs_filepath,/compress
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
     

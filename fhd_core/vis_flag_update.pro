@@ -18,39 +18,10 @@ freq_cut_i=where(b_info.freq_use,n_freq_cut)
 
 freq_bin_i=b_info.fbin_i
 fi_use=where(b_info.freq_use)
-freq_bin_i=freq_bin_i[fi_use]
-
-;tile_cut_i=where(b_info.tile_use,n_tile_cut)
-;FOR pol_i=0,n_pol-1 DO BEGIN
-;    flag_arr=Temporary(*flag_ptr[pol_i])
-;    
-;    IF n_tile_cut GT 0 THEN BEGIN
-;        tile_cut_i=(b_info.tile_names)[tile_cut_i]
-;        tile_A=b_info.tile_A
-;        tile_B=b_info.tile_B
-;        
-;        hist_A=histogram(tile_A,/bin,min=1,max=n_tile,reverse_ind=ria)
-;        hist_B=histogram(tile_B,/bin,min=1,max=n_tile,reverse_ind=rib)
-;        hist_AB=hist_A+hist_B
-;        
-;        hist_cut=histogram(tile_cut_i+1,min=1,max=n_tile)
-;        
-;        ti_cut=where(hist_AB*hist_cut,n_cut)
-;        FOR ci=0,n_cut-1 DO BEGIN
-;            IF hist_A[ti_cut[ci]] GT 0 THEN flag_arr[*,ria[ria[ti_cut[ci]]:ria[ti_cut[ci]+1]-1]]=0
-;            IF hist_B[ti_cut[ci]] GT 0 THEN flag_arr[*,rib[rib[ti_cut[ci]]:rib[ti_cut[ci]+1]-1]]=0
-;        ENDFOR
-;        ria=0
-;        rib=0
-;    ENDIF
-;        
-;    IF n_freq_cut GT 0 THEN flag_arr[freq_cut_i,*]=0
-;
-;    *flag_ptr[pol_i]=Temporary(flag_arr)
-;ENDFOR
+freq_bin_i=freq_bin_i;[fi_use]
 
 frequency_array=b_info.freq
-frequency_array=frequency_array[fi_use]
+frequency_array=frequency_array;[fi_use]
 
 psf_base=psf.base
 psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
@@ -62,29 +33,38 @@ n_frequencies=N_Elements(frequency_array)
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
-x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
-y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
-xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.) 
-ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.) 
-xmax=xmin+psf_dim-1
-ymax=ymin+psf_dim-1
 
-range_test_x_i=where((xmin LE 0) OR (xmax GE dimension-1),n_test_x)
-range_test_y_i=where((ymin LE 0) OR (ymax GE elements-1),n_test_y)
-xmax=(ymax=0)
+conj_i=where(ky_arr GT 0,n_conj)
+IF n_conj GT 0 THEN BEGIN
+    xcen[*,conj_i]=-xcen[*,conj_i]
+    ycen[*,conj_i]=-ycen[*,conj_i]
+ENDIF
+
+xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
+
+range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
+range_test_x_i=0
+
+range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
+range_test_y_i=0
 
 dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+xcen=(ycen=(dist_test=0))
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1
     ymin[flag_dist_i]=-1
+    flag_dist_i=0
 ENDIF
 
 IF Keyword_Set(flag_ptr) THEN BEGIN
     n_flag_dim=size(*flag_ptr[0],/n_dimension)
     flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
+    flag_i_new=where(xmin LT 0,n_flag_new)
+    IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[flag_i_new]=-1
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
