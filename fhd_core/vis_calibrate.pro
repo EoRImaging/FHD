@@ -1,7 +1,7 @@
 FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr=model_uv_arr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
-    calibration_source_list=calibration_source_list,debug=debug,gain_arr_ptr=gain_arr_ptr,$
+    debug=debug,gain_arr_ptr=gain_arr_ptr,$
     return_cal_model=return_cal_model,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     calibration_polyfit=calibration_polyfit,flag_calibration=flag_calibration,_Extra=extra
@@ -29,7 +29,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
                 gain_arr_ptr=Ptr_new(gain_arr)
                 cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
 ;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-;                    transfer_calibration=1,timing=timing,error=error,calibration_source_list=calibration_source_list,_Extra=extra)
+;                    transfer_calibration=1,timing=timing,error=error,_Extra=extra)
 ;                RETURN,vis_cal
             END
             '.npz':BEGIN
@@ -37,7 +37,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
                 gain_arr_ptr=Ptr_new(gain_arr)
                 cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
 ;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-;                    transfer_calibration=1,timing=timing,error=error,calibration_source_list=calibration_source_list,_Extra=extra)
+;                    transfer_calibration=1,timing=timing,error=error,_Extra=extra)
 ;                RETURN,vis_cal
             END
             '.npy':BEGIN
@@ -45,7 +45,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
                 gain_arr_ptr=Ptr_new(gain_arr)
                 cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
 ;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-;                    transfer_calibration=1,timing=timing,error=error,calibration_source_list=calibration_source_list,_Extra=extra)
+;                    transfer_calibration=1,timing=timing,error=error,_Extra=extra)
 ;                RETURN,vis_cal
             END
             ELSE: BEGIN
@@ -70,7 +70,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
 ;    ENDELSE
 ENDIF
 
-cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list,_Extra=extra)
+;IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
 CASE size(initial_calibration,/type) OF
     0:;do nothing if undefined
     
@@ -89,7 +89,7 @@ CASE size(initial_calibration,/type) OF
     ELSE:IF Keyword_Set(initial_calibration) THEN initial_calibration=file_path_fhd+'_cal' ;if set to a numeric type, assume this calibration solution will be wanted for future iterations
 ENDCASE
 
-vis_model_ptr=vis_source_model(calibration_source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,$
+vis_model_ptr=vis_source_model(cal.source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,$
     timing=model_timing,silent=silent,error=error,_Extra=extra)    
 t1=Systime(1)-t0_0
 

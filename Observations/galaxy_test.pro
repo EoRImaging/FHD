@@ -34,8 +34,8 @@ ring_radius=10.*pad_uv_image
 nfreq_avg=16
 psf_resolution=8.
 no_rephase=0 ;set to use obsra, obsdec for phase center even if phasera, phasedec present in a .metafits file
-no_fits=1
-combine_obs=1
+no_fits=0
+combine_healpix=1
 gain_factor=2./3.
 smooth_width=11.
 
@@ -47,7 +47,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,$
     no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,/mark_zenith,$
-    psf_resolution=psf_resolution,show_obsname=1,silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_obs=combine_obs,$
+    psf_resolution=psf_resolution,show_obsname=1,silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_healpix=combine_healpix,$
     min_cal_baseline=min_cal_baseline,_Extra=extra
 !except=except
 END
