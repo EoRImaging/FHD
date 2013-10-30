@@ -18,7 +18,7 @@ IF Keyword_Set(StoN) THEN source_comp_new.ston=StoN ;signal to noise
 IF Keyword_Set(id) THEN source_comp_new.id=id ;unique source id
 IF Keyword_Set(alpha) THEN source_comp_new.alpha=alpha ;spectral index
 IF Keyword_Set(extend) THEN source_comp_new.extend=extend ;extended source component list (not an extended source if Ptr_valid(source_comp[si].extend)=0)
-IF Keyword_Set(frequency) THEN source_comp_new.freq=frequency ;frequency in MHz
+IF Keyword_Set(frequency) THEN IF frequency GT 1E5 THEN source_comp_new.freq=frequency/1E6 ELSE source_comp_new.freq=frequency ;frequency in MHz
 
 IF N_Elements(source_comp) GT 0 AND ~Keyword_Set(overwrite) THEN source_comp=[source_comp,source_comp_new] ELSE source_comp=source_comp_new
 RETURN,source_comp

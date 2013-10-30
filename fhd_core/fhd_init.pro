@@ -1,6 +1,6 @@
 FUNCTION fhd_init,obs,restore=restore,pol_use=pol_use,freq_use=freq_use,time_i_use=time_i_use,$
     gain_factor=gain_factor,mapfn_interval=mapfn_interval,calibration_image_subtract=calibration_image_subtract,$
-    max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,$
+    max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,smooth_width=smooth_width,$
     mapfn_threshold=mapfn_threshold,baseline_threshold=baseline_threshold,beam_threshold=beam_threshold,add_threshold=add_threshold,$
     polarization_map=polarization_map,polarization_correction=polarization_correction,ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,$
     beam_base=beam_base,beam_correction=beam_correction,independent_fit=independent_fit,reject_pol_sources=reject_pol_sources,$
@@ -28,7 +28,7 @@ IF N_Elements(max_sources) EQ 0 THEN max_sources=5000.
 IF N_Elements(gain_factor) EQ 0 THEN gain_factor=.15
 IF N_Elements(mapfn_interval) EQ 0 THEN mapfn_interval=0 ;maximum number of iterations before applying the mapping function. 
 IF N_Elements(mapfn_threshold) EQ 0 THEN mapfn_threshold=0.86;(1-gain_factor)*1.01 ;factor of 1.01 is to ensure that a fit to the same component has had the mapping function run first
-IF N_Elements(add_threshold) EQ 0 THEN add_threshold=0.9 ;also fit additional components brighter than this threshold
+IF N_Elements(add_threshold) EQ 0 THEN add_threshold=(1.-gain_factor*1.1)>0.5 ;also fit additional components brighter than this threshold
 IF N_Elements(max_add_sources) EQ 0 THEN max_add_sources=(Floor(obs.dimension/2./(2.*smooth_width)))^2.
 IF N_Elements(max_iter) EQ 0 THEN IF max_add_sources EQ 1 THEN max_iter=max_sources ELSE max_iter=500.
 IF N_Elements(check_iter) EQ 0 THEN IF max_add_sources EQ 1 THEN check_iter=Round(5./gain_factor) ELSE check_iter=Round(1./gain_factor)

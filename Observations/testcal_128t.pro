@@ -23,17 +23,23 @@ calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=
 
 ;noise_calibrate=0
 ;align=0
+combine_obs=0
 dimension=2048.
 max_sources=10000.
 pad_uv_image=2.
 IF dimension GT 2048 THEN pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
-FoV=100.
+FoV=80.
 no_ps=1 ;don't save postscript copy of images
-psf_dim=10
-min_baseline=12.
+psf_dim=8
+gain_factor=2./3.
+min_baseline=1.
+min_cal_baseline=50.
 no_fits=1
+silent=0
+smooth_width=11.
 nfreq_avg=16.
+psf_resolution=8.
 no_rephase=Keyword_Set(data_version)
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
@@ -43,6 +49,8 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,psf_dim=psf_dim,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,$
-    no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,_Extra=extra
+    no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,$
+    gain_factor=gain_factor,smooth_width=smooth_width,min_cal_baseline=min_cal_baseline,silent=silent,$
+    combine_obs=combine_obs,psf_resolution=psf_resolution,_Extra=extra
 !except=except
 END

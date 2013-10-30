@@ -1,27 +1,27 @@
-FUNCTION vis_source_model,source_list,obs,psf,params,flag_arr,cal,model_uv_arr=model_uv_arr,file_path=file_path,$
+FUNCTION vis_source_model,source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
     timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,_Extra=extra
 
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
-IF N_Elements(file_path) EQ 0 THEN file_path=''
-flags_filepath=file_path+'_flags.sav'
-;vis_filepath=file_path+'_vis.sav'
-params_filepath=file_path+'_params.sav'
-psf_filepath=file_path+'_beams.sav'
-obs_filepath=file_path+'_obs.sav'
+IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
+flags_filepath=file_path_fhd+'_flags.sav'
+;vis_filepath=file_path_fhd+'_vis.sav'
+params_filepath=file_path_fhd+'_params.sav'
+psf_filepath=file_path_fhd+'_beams.sav'
+obs_filepath=file_path_fhd+'_obs.sav'
 IF N_Elements(silent) EQ 0 THEN silent=1
 
 SWITCH N_Params() OF
-    1:restore,obs_filepath
-    2:restore,psf_filepath
-    3:restore,params_filepath
-    4:restore,flags_filepath
+    1:obs=getvar_savefile(obs_filepath,'obs')
+    2:psf=getvar_savefile(psf_filepath,'psf')
+    3:params=getvar_savefile(params_filepath,'params')
+    4:flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
     ELSE:
 ENDSWITCH
 
 heap_gc
 
-IF Keyword_Set(flag_arr) THEN flag_switch=1 ELSE flag_switch=0
+IF Keyword_Set(flag_ptr) THEN flag_switch=1 ELSE flag_switch=0
 
 pol_names=['xx','yy','xy','yx']
 
@@ -37,11 +37,16 @@ icomp=Complex(0,1)
 
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
-IF ~Keyword_Set(uv_mask) THEN uv_mask=Fltarr(dimension,elements)+1
+
+
 ;only the LOWER half of the u-v plane is used for gridding/degridding. 
-; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half
-psf_beam_pix=psf.dim ;be careful of visibilities in the lower half, that spill over into the upper half
-uv_mask[*,elements/2+psf_beam_pix:*]=0.  
+; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half 
+IF ~Keyword_Set(uv_mask) THEN BEGIN
+    uv_mask=Fltarr(dimension,elements)
+    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1)
+    mask_i_use=where(vis_count)
+    uv_mask[mask_i_use]=1
+ENDIF ELSE uv_mask[*,elements/2+psf.dim:*]=0. 
 
 IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
@@ -126,7 +131,7 @@ ENDIF
 
 t_degrid=Fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_arr[pol_i],obs,psf,params,silent=silent,timing=t_degrid0,polarization=pol_i)
+    vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,timing=t_degrid0,polarization=pol_i)
     t_degrid[pol_i]=t_degrid0
 ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid)

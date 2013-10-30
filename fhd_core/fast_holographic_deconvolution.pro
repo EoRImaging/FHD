@@ -281,9 +281,10 @@ FOR i=i0,max_iter-1 DO BEGIN
         t2_0=Systime(1)
         t1+=t2_0-t1_0 
         
-        image_filtered=dirty_image_composite-model_image_composite
-        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+        image_unfiltered=dirty_image_composite-model_image_composite
+        image_smooth=Median(image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+        image_filtered=fltarr(dimension,elements)
+        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-image_smooth
         
         IF Keyword_Set(independent_fit) THEN BEGIN
             image_use_Q=dirty_image_composite_Q-model_image_composite_Q
@@ -301,10 +302,11 @@ FOR i=i0,max_iter-1 DO BEGIN
             image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF  
     ENDIF ELSE t2_0=Systime(1)
-    image_unfiltered=dirty_image_composite-model_image_composite
     source_find_image=image_filtered*beam_avg*source_mask
     image_use=image_filtered*source_mask
    
+    IF i EQ 0 THEN converge_check[i]=Stddev(source_find_image[where(source_mask)],/nan)
+    converge_check2[i]=Stddev(source_find_image[where(source_mask)],/nan)
     ;use the composite image to locate sources, but then fit for flux independently
     source_flux=Max(source_find_image,source_i)
     
@@ -314,7 +316,10 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 
     flux_ref=source_find_image[source_i]*add_threshold
-    additional_i=where(source_find_image GT flux_ref,n_sources)
+    additional_i1=where(source_find_image GE flux_ref,n_sources1)
+    additional_i2=where((source_find_image GE 5.*converge_check2[i]) AND (source_find_image GE source_find_image[source_i]/10.),n_sources2)
+    additional_i=(n_sources1 GT n_sources2) ? additional_i1:additional_i2 
+    n_sources=n_sources1>n_sources2
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod dimension
     add_y=Floor(additional_i/dimension)
@@ -331,8 +336,6 @@ FOR i=i0,max_iter-1 DO BEGIN
     ENDIF
     n_mask=0
     
-    IF i EQ 0 THEN converge_check[i]=Stddev(source_find_image[where(source_mask)],/nan)
-    converge_check2[i]=Stddev(source_find_image[where(source_mask)],/nan)
     ;fit flux here, and fill comp_arr for each pol
     flux_arr=fltarr(4)
     fit_threshold=-2.*converge_check2[i]
@@ -436,13 +439,13 @@ FOR i=i0,max_iter-1 DO BEGIN
     flux_Q=comp_arr[si_use].flux.Q;*area_cnv
     flux_U=comp_arr[si_use].flux.U;*area_cnv
     flux_V=comp_arr[si_use].flux.V;*area_cnv
-    *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I)
+    *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I,/conserve_memory)
     IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
-        ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q) 
+        ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q,/conserve_memory) 
     IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
-        ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U)
+        ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U,/conserve_memory)
     IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
-        ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V)
+        ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V,/conserve_memory)
     SWITCH n_pol OF
         4:(*model_uv_full[3])[uv_i_use2]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
         3:(*model_uv_full[2])[uv_i_use2]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.
@@ -501,7 +504,7 @@ IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,reject_sigma_threshold=sigma_threshold)
 t3_0=Systime(1)
-model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2)
+model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,/conserve_memory)
 t4_0=Systime(1)
 t3+=t4_0-t3_0
 FOR pol_i=0,n_pol-1 DO BEGIN

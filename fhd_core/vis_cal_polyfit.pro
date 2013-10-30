@@ -1,4 +1,4 @@
-FUNCTION vis_cal_polyfit,cal,obs,degree=degree
+FUNCTION vis_cal_polyfit,cal,obs,degree=degree;,phase_degree=phase_degree
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
 n_pol=cal.n_pol
@@ -13,9 +13,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain_arr=*cal.gain[pol_i]
     gain_amp=Abs(gain_arr)
     FOR tile_i=0L,n_tile-1 DO BEGIN
-        gain=reform(gain_amp[*,tile_i])
-        fit_params=poly_fit(freq_use,gain[freq_use],degree,yfit=gain_fit)
-        gain_arr[freq_use,tile_i]*=mean(gain_fit)/gain_fit
+        gain=reform(gain_amp[freq_use,tile_i])
+        fit_params=poly_fit(freq_use,gain,degree,yfit=gain_fit)
+        gain_arr[freq_use,tile_i]*=gain_fit*weight_invert(gain)
     ENDFOR
     *cal_return.gain[pol_i]=gain_arr
 ENDFOR

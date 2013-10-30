@@ -1,25 +1,21 @@
-PRO fhd_cleanup,file_path_fhd,all=all,minimal=minimal
+PRO fhd_cleanup,file_path_fhd,cleanup_all=cleanup_all
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
-vis_filepath=file_path_fhd+'_vis.sav' & file_path_list=Strarr(1)+vis_filepath
-header_filepath=file_path_fhd+'_header.sav' & file_path_list=[file_path_list,header_filepath]
-flags_filepath=file_path_fhd+'_flags.sav' & file_path_list=[file_path_list,flags_filepath]
+hdr_filepath=file_path_fhd+'_hdr.sav' & file_path_list=Strarr(1)+hdr_filepath
 params_filepath=file_path_fhd+'_params.sav' & file_path_list=[file_path_list,params_filepath]
-hdr_filepath=file_path_fhd+'_hdr.sav' & file_path_list=[file_path_list,hdr_filepath]
-output_filepath=file_path_fhd+'_output.sav' & file_path_list=[file_path_list,output_filepath]
+autos_filepath=file_path_fhd+'_autos.sav' & file_path_list=[file_path_list,autos_filepath]
+cal_hist_filepath=file_path_fhd+'_cal_hist.sav' & file_path_list=[file_path_list,cal_hist_filepath]
 
-FOR pol_i=0,3 DO BEGIN
-    dirty_filepath=file_path_fhd+'_dirty_'+pol_names[pol_i]+'.sav' & file_path_list=[file_path_list,dirty_filepath]
-    mapfn_filepath=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' & file_path_list=[file_path_list,mapfn_filepath]
-ENDFOR
+FOR pol_i=0,3 DO BEGIN mapfn_filepath=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' & file_path_list=[file_path_list,mapfn_filepath] & ENDFOR
 
-IF not Keyword_Set(minimal) THEN BEGIN
+hpx_filepath=file_path_fhd+'_hpxcnv.sav' & file_path_list=[file_path_list,hpx_filepath]
+IF Keyword_Set(cleanup_all) THEN BEGIN
     beams_filepath=file_path_fhd+'_beams.sav' & file_path_list=[file_path_list,beams_filepath]
-    hpx_filepath=file_path_fhd+'_hpxcnv.sav' & file_path_list=[file_path_list,hpx_filepath]
-ENDIF ELSE all=0
-
-IF Keyword_Set(all) THEN BEGIN 
+    cal_filepath=file_path_fhd+'_cal.sav' & file_path_list=[file_path_list,cal_filepath]
+    FOR pol_i=0,3 DO BEGIN vis_filepath=file_path_fhd+'_vis_'+pol_names[pol_i]+'.sav' & file_path_list=[file_path_list,vis_filepath] & ENDFOR
+    settings_filepath=file_path_fhd+'_settings.txt' & file_path_list=[file_path_list,settings_filepath]
+    flags_filepath=file_path_fhd+'_flags.sav' & file_path_list=[file_path_list,flags_filepath]
     obs_filepath=file_path_fhd+'_obs.sav' & file_path_list=[file_path_list,obs_filepath]
     fhd_filepath=file_path_fhd+'_fhd.sav' & file_path_list=[file_path_list,fhd_filepath] 
     fhd_params_filepath=file_path_fhd+'_fhd_params.sav' & file_path_list=[file_path_list,fhd_params_filepath]
