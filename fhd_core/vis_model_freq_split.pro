@@ -12,14 +12,12 @@ psf_filepath=fhd_file_path+'_beams.sav'
 obs_filepath=fhd_file_path+'_obs.sav'
 
 SWITCH N_Params() OF
-    0:
-    1:restore,obs_filepath ;obs
-    2:restore,psf_filepath ;psf
-    3:restore,params_filepath ;params
-    4:restore,flags_filepath ;flag_arr
+    1:obs=getvar_savefile(obs_filepath,'obs')
+    2:psf=getvar_savefile(psf_filepath,'psf')
+    3:params=getvar_savefile(params_filepath,'params')
+    4:flag_arr=getvar_savefile(flags_filepath,'flag_arr')
     ELSE:
 ENDSWITCH
-
 
 n_freq=obs.n_freq
 n_pol=obs.n_pol

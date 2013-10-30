@@ -3,7 +3,7 @@ PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,$
 heap_gc
 
 n_obs=N_Elements(fhd_file_list)
-base_filename_range=file_basename([vis_file_list[0],vis_file_list[n_obs-1]],'_cal.uvfits')
+base_filename_range=file_basename(file_basename([vis_file_list[0],vis_file_list[n_obs-1]],'.uvfits'),'_cal')
 obs_range=strjoin(base_filename_range,'-',/single)
 ;cube_filepath=output_path+'_'+obs_range+'_cube.sav'
 cube_filepath=output_path+'_'+obs_range
@@ -97,17 +97,18 @@ t_hpx=Systime(1)-t_hpx
 FOR obs_i=0,n_obs-1 DO BEGIN 
     fhd_path=fhd_file_list[obs_i]
     vis_path=vis_file_list[obs_i]
+    obs=obs_arr[obs_i]
+    dimension=obs.dimension
+    elements=obs.elements    
     
-    print,"Frequency splitting: "+file_basename(vis_path,'_cal.uvfits',/fold_case)
-    restore,fhd_path+'_beams.sav' ;psf
+    print,"Frequency splitting: "+file_basename(fhd_path)
+    psf=beam_setup(obs,fhd_path,/restore_last,/silent,/no_save,_Extra=extra)
+
     ; *_fhd.sav contains:
     ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
     ;    beam_base,beam_correction,ra_arr,dec_arr,astr
     restore,fhd_path+'_fhd.sav'
     
-    obs=obs_arr[obs_i]
-    dimension=obs.dimension
-    elements=obs.elements    
     
     uv_mask=fltarr(dimension,elements)
     uv_mask[where(*weights_arr[0] OR *weights_arr[1])]=1
