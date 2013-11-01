@@ -193,6 +193,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         dimension=dimension,restored_beam_width=restored_beam_width)
 ENDFOR
 
+; renormalize based on weights
+renorm_factor = get_image_renormalization(weights_arr=weights_arr,beam_base_out=beam_base_out,$
+  beam_correction_out=beam_correction_out,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix)
+for pol_i=0,n_pol-1 do begin
+  *dirty_images[pol_i]*=renorm_factor
+  *res_uv_arr[pol_i]*=renorm_factor
+  *instr_images[pol_i]*=renorm_factor
+endfor
+
 stokes_images=stokes_cnv(instr_images,beam=beam_base_out) ;NOTE one factor of the beam already corrected for
 stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out)
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
