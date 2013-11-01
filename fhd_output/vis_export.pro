@@ -3,7 +3,7 @@ IF N_Elements(compress) EQ 0 THEN compress=1
 pol_names=['xx','yy','xy','yx']
 
 res_name='Residual'
-IF tag_exist(obs_out,'residual') THEN IF obs_out.residual EQ 0 THEN res_name='Dirty'
+IF tag_exist(obs,'residual') THEN IF obs.residual EQ 0 THEN res_name='Dirty'
 print,"Exporting "+res_name+" visibilities"
 
 IF N_Elements(pol_i) NE 1 THEN pol_i=indgen(obs.n_pol)
