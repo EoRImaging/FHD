@@ -337,15 +337,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ;    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
     ;        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
         
-        IF Keyword_Set(mark_zenith) THEN BEGIN
-            mark_zenith=fltarr(dimension,elements)
-            mark_thick=1.
-            mark_length=6.
+        mark_image=0
+        mark_thick=1.
+        mark_length=6.
+        IF Keyword_Set(mark_zenith) AND (Floor(obs_out.zenx) GT mark_length) AND (Floor(obs_out.zenx) LT dimension-mark_length) $
+            AND (Floor(obs_out.zeny) GT mark_length) AND (Floor(obs_out.zeny) LT elements-mark_length) THEN BEGIN 
+            mark_image=fltarr(dimension,elements)
             mark_amp=(stokes_low_use<instr_low_use<(-100.))
-            mark_zenith[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
-            mark_zenith[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
-            mark_zenith=mark_zenith[zoom_low:zoom_high,zoom_low:zoom_high]
-        ENDIF ELSE mark_zenith=0
+            mark_image[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
+            mark_image[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
+            mark_image=mark_image[zoom_low:zoom_high,zoom_low:zoom_high]
+        ENDIF
         
         instrS_high=Max(instr_restored[beam_i])
         log_dirty=0
