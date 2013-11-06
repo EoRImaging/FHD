@@ -73,7 +73,7 @@ ENDIF
 
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
-    IF ~Keyword_Set(silent) THEN print,"DFT timing: ",strn(t_model)
+    IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF
 
 IF Keyword_Set(galaxy_calibrate) THEN BEGIN
