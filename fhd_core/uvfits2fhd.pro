@@ -310,6 +310,8 @@ IF Keyword_Set(deconvolve) THEN BEGIN
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
 ENDELSE
+
+IF tag_exist(obs,'residual') THEN IF obs.residual GT 0 THEN calibration_visibilities_subtract=1
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     IF file_test(file_path_fhd+'_fhd.sav') THEN BEGIN

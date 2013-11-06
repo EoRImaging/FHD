@@ -25,7 +25,7 @@ ENDIF
 
 IF Keyword_Set(mask) THEN di_uv_use*=mask 
 
-IF Arg_present(filter) THEN BEGIN
+IF Keyword_Set(filter) THEN BEGIN
     IF Ptr_valid(filter) THEN BEGIN
         IF N_Elements(*filter) EQ N_Elements(di_uv_use) THEN di_uv_use*=*filter $
             ELSE BEGIN

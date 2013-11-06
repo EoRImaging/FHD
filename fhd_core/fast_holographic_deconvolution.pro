@@ -18,7 +18,7 @@
 PRO fast_holographic_deconvolution,fhd,obs,psf,cal,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
-    beam_base=beam_base,beam_correction=beam_correction,normalization=normalization,file_path_fhd=file_path_fhd,$
+    beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
     galaxy_model_fit=galaxy_model_fit,scale_gain=scale_gain,model_uv_arr=model_uv_arr,_Extra=extra
 ;calibration_model_subtract is passed through the fhd structure
 compile_opt idl2,strictarrsubs  
@@ -44,6 +44,7 @@ independent_fit=fhd.independent_fit
 reject_pol_sources=fhd.reject_pol_sources
 sigma_threshold=2.
 calibration_model_subtract=fhd.cal_subtract
+filter_background=fhd.filter_background
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -137,14 +138,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     source_uv_mask2[where(weights_single)]=1
     weights_single=(weights_single+weights_single_conj)/2.
     *weights_arr[pol_i]=weights_single
-    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix))[dimension/2.,elements/2.]
-    normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
-gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
-;pix_area_cnv=pixel_area(astr,dimension=dimension);/degpix^2.
-;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
-gain_use*=gain_normalization
-normalization=1.
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
@@ -156,8 +150,8 @@ ENDIF
 filter_arr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN    
     filter_single=1
-    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix)*(*beam_correction[pol_i])^2.;,$
-;        weights=*weights_arr[pol_i],image_filter='filter_uv_radial',filter=filter_single)*(*beam_correction[pol_i])^2.
+    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
+        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_single)*(*beam_correction[pol_i])^2.
     IF Ptr_valid(filter_single) THEN filter_arr[pol_i]=filter_single
     IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
@@ -175,6 +169,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
 
+FOR pol_i=0,n_pol-1 DO BEGIN    
+    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
+        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_arr[pol_i]))[dimension/2.,elements/2.]
+    normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
+ENDFOR
+gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+;pix_area_cnv=pixel_area(astr,dimension=dimension);/degpix^2.
+;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
+gain_use*=gain_normalization
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
 print,"Fractional uv coverage: ",uv_use_frac
@@ -205,8 +208,10 @@ source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
 source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
 
 image_filtered=dirty_image_composite
-image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+IF Keyword_Set(filter_background) THEN BEGIN
+    image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+    image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+ENDIF
 source_find_image=image_filtered*beam_avg*source_mask
 converge_check[0]=Stddev(source_find_image[where(source_mask)],/nan)
 converge_check2[0]=Stddev(source_find_image[where(source_mask)],/nan)
@@ -236,14 +241,16 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     
     model_image_composite=fltarr(dimension,elements)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN 
-        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix)
+        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i])
         model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
         model_image_composite+=model_image
     ENDFOR
     
     image_filtered=dirty_image_composite-model_image_composite
-    image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-    image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+    IF Keyword_Set(filter_background) THEN BEGIN
+        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+    ENDIF
     source_find_image=image_filtered*beam_avg*source_mask
     converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
     converge_check2[i2]=Stddev(source_find_image[where(source_mask)],/nan)
@@ -262,7 +269,7 @@ FOR i=i0,max_iter-1 DO BEGIN
         model_image_composite_U=fltarr(dimension,elements)
         model_image_composite_V=fltarr(dimension,elements)
         FOR pol_i=0,n_pol-1 DO BEGIN 
-            model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix)
+            model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i])
             model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
             
             *model_arr[pol_i]=model_image
@@ -282,24 +289,27 @@ FOR i=i0,max_iter-1 DO BEGIN
         t1+=t2_0-t1_0 
         
         image_unfiltered=dirty_image_composite-model_image_composite
-        image_smooth=Median(image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-        image_filtered=fltarr(dimension,elements)
-        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-image_smooth
+        image_filtered=image_unfiltered
+        IF Keyword_Set(filter_background) THEN BEGIN
+            image_smooth=Median(image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+            image_filtered=fltarr(dimension,elements)
+            image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-image_smooth
+        ENDIF
         
         IF Keyword_Set(independent_fit) THEN BEGIN
             image_use_Q=dirty_image_composite_Q-model_image_composite_Q
             image_use_U=dirty_image_composite_U-model_image_composite_U
             image_use_V=dirty_image_composite_V-model_image_composite_V
-            image_smooth_Q=Median(image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q
-            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
-            image_smooth_V=Median(image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
+;            image_smooth_Q=Median(image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+;            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q
+;            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
+;            image_smooth_V=Median(image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+;            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
         ENDIF ELSE IF n_pol GT 2 THEN BEGIN
             image_use_U=dirty_image_composite_U-model_image_composite_U
-            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
+;            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF  
     ENDIF ELSE t2_0=Systime(1)
     source_find_image=image_filtered*beam_avg*source_mask
@@ -345,31 +355,34 @@ FOR i=i0,max_iter-1 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=(additional_i[src_i] mod dimension)
         sy=Floor(additional_i[src_i]/dimension)
+        gcntrd,source_find_image,sx,sy,xcen,ycen,1.5,/keepcenter,/silent
         source_box=source_find_image[sx-local_max_radius:sx+local_max_radius,$
-            sy-local_max_radius:sy+local_max_radius]*source_fit_fn
-        box_i=where(source_box GT fit_threshold,n_fit)
-        IF n_fit EQ 0 THEN BEGIN
-            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-            source_mask[sx-1:sx+1,sy-1:sy+1]=0
-            CONTINUE
-        ENDIF
-        IF Total(source_fit_fn[box_i]) LT source_fit_fn_ref THEN BEGIN
-            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-            source_mask[sx-1:sx+1,sy-1:sy+1]=0
-            CONTINUE
-        ENDIF
-        
-        source_box=source_box>0
-;        source_box-=Min(source_box)
-;        xcen0=Total(source_box[box_i]*source_box_xvals[box_i])/Total(source_box[box_i])
-;        ycen0=Total(source_box[box_i]*source_box_yvals[box_i])/Total(source_box[box_i])
-        xcen0=Total(source_box*source_box_xvals)/Total(source_box)
-        ycen0=Total(source_box*source_box_yvals)/Total(source_box)
-        xcen=sx-local_max_radius+xcen0
-        ycen=sy-local_max_radius+ycen0
+            sy-local_max_radius:sy+local_max_radius];*source_fit_fn
+;        box_i=where(source_box GT fit_threshold,n_fit)
+;        IF n_fit EQ 0 THEN BEGIN
+;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
+;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+;            CONTINUE
+;        ENDIF
+;        IF Total(source_fit_fn[box_i]) LT source_fit_fn_ref THEN BEGIN
+;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
+;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+;            CONTINUE
+;        ENDIF
+;        
+;        source_box=source_box>0
+;;        source_box-=Min(source_box)
+;;        xcen0=Total(source_box[box_i]*source_box_xvals[box_i])/Total(source_box[box_i])
+;;        ycen0=Total(source_box[box_i]*source_box_yvals[box_i])/Total(source_box[box_i])
+;        xcen0=Total(source_box*source_box_xvals)/Total(source_box)
+;        ycen0=Total(source_box*source_box_yvals)/Total(source_box)
+;        xcen=sx-local_max_radius+xcen0
+;        ycen=sy-local_max_radius+ycen0
         IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius/2. THEN BEGIN
             CONTINUE
         ENDIF
+        xcen0=xcen-sx+local_max_radius
+        ycen0=ycen-sy+local_max_radius
         xy2ad,xcen,ycen,astr,ra,dec
         
         beam_corr_src=fltarr(n_pol)
