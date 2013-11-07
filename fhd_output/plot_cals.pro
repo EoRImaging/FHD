@@ -23,9 +23,21 @@ freqi_use = where(total(abs(gains0),2) ne cal.n_tile) ; if total is exactly the 
 gains0=gains0[freqi_use,*]
 gains1=gains1[freqi_use,*]
 freq=cal.freq[freqi_use]
+freq=freq/10^6. ; in MHz
 
-plot_pos=calculate_plot_positions(.8, nplots=128, /no_colorbar, ncol=16, nrow=8, plot_margin = [.05, .05, .02, .25])
-plot_pos=plot_pos.plot_pos
+plot_pos=calculate_plot_positions(.8, nplots=128, /no_colorbar, ncol=17, nrow=9, plot_margin = [.05, .05, .02, .25]); use 1 extra row/column to leave room for title and axes
+plot_pos=reform(plot_pos.plot_pos,17,9,4)
+; Now remove unwanted row/column
+plot_pos = plot_pos[1:*,*,*]
+plot_pos = plot_pos[*,1:*,*]
+plot_pos = reform(plot_pos,128,4)
+; Shift a half a width over and up
+width = plot_pos[1,0]-plot_pos[0,0]
+height = abs(plot_pos[16,1]-plot_pos[0,1])
+plot_pos[*,0] -= width/2
+plot_pos[*,1] += height/2
+plot_pos[*,2] -= width/2
+plot_pos[*,3] += height/2
 
 PS_START,phase_filename,scale_factor=2,/quiet,/nomatch
 
@@ -33,6 +45,14 @@ n_baselines=obs2.bin_offset[1]
 tile_A=obs2.tile_A[0:n_baselines-1]
 tile_B=obs2.tile_B[0:n_baselines-1]
 tile_exist=(histogram(tile_A,min=1,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=1,/bin,max=(max(tile_A)>max(tile_B))))<1
+
+ytickv=[-!pi,0,!pi]
+ytickname=['-pi','0','pi']
+yrange=[-1.5*!pi,1.5*!pi]
+xtickv=[ceil(min(freq)/10)*10,floor(max(freq)/10)*10]
+;xtickv=[min(freq),max(freq)]
+xtickname=strtrim(round(xtickv),2)
+xrange=[min(freq)-(max(freq)-min(freq))/8,max(freq)+(max(freq)-min(freq))/8]
 
 FOR tile_i=0L,n_tiles-1 DO BEGIN
     tile_name=tile_names[tile_i]
@@ -47,18 +67,43 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
     ENDIF ELSE BEGIN
       IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
       IF tile_i EQ cal.ref_antenna THEN axiscolor='blue'
-      cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
-          XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[-1.5*!pi,1.5*!pi],$
-          charsize=.5,/noerase,axiscolor=axiscolor,psym=3
-       cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red',psym=3
+      IF ~(tile_i mod 16) THEN BEGIN
+        IF (tile_i gt (n_tiles-17)) THEN BEGIN
+          ; both axes
+          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+            xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,ytickname=ytickname,position=plot_pos[tile_i,*],$
+            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        ENDIF ELSE BEGIN
+          ; just the y-axis
+          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,ytickname=ytickname,position=plot_pos[tile_i,*],$
+            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        ENDELSE
+      ENDIF ELSE BEGIN
+        IF (tile_i gt (n_tiles-17)) THEN BEGIN
+          ; just x-axis
+          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+            xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        ENDIF ELSE BEGIN
+          ; No axes
+          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
+            yticklen=0.04,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        ENDELSE
+      ENDELSE
+      cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red',psym=3
     ENDELSE
 ENDFOR
-
+cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
 PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
     
 PS_START,amp_filename,scale_factor=2,/quiet,/nomatch
 
 max_amp = mean(abs([gains0,gains1])) + 2*stddev(abs([gains0,gains1]))
+yrange=[0,max_amp]
+ytickv=[0,max_amp/2,max_amp]
+
 FOR tile_i=0L,n_tiles-1 DO BEGIN
     tile_name=tile_names[tile_i]
     rec=Floor(tile_name/10)
@@ -71,13 +116,36 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
         /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN
       IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
-      cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
-          XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=[0,max_amp],$
-          /noerase,charsize=.5,axiscolor=axiscolor,psym=3
+      IF ~(tile_i mod 16) THEN BEGIN
+        IF (tile_i gt (n_tiles-17)) THEN BEGIN
+          ; both axes
+          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+            xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
+            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        ENDIF ELSE BEGIN
+          ; just the y-axis
+          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
+            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        ENDELSE
+      ENDIF ELSE BEGIN
+        IF (tile_i gt (n_tiles-17)) THEN BEGIN
+          ; just x-axis
+          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+            xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        ENDIF ELSE BEGIN
+          ; No axes
+          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
+            yticklen=0.04,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        ENDELSE
+      ENDELSE
       cgoplot,freq,abs(gains1[*,tile_i]),color='red',psym=3
     ENDELSE
 ENDFOR
 
+cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
 PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 
 IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
