@@ -28,10 +28,17 @@ pol_names=['xx','yy','xy','yx','I','Q','U','V']
 grid_spacing=10.
 offset_lat=5.;15. paper 10 memo
 offset_lon=5.;15. paper 10 memo
-reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
-map_reverse=0;1 paper 3 memo
+reverse_image=1   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
+map_reverse=reverse_image;1 paper 3 memo
 label_spacing=1.
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
+
+CASE reverse_image OF
+    0:cd_mod=[1.,1.]
+    1:cd_mod=[-1.,1.]
+    2:cd_mod=[1.,-1.]
+    3:cd_mod=[-1.,-1.]
+ENDCASE
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
@@ -47,11 +54,12 @@ IF N_Elements(normalization_arr) GT 0 THEN normalization=Mean(normalization_arr)
 n_pol=fhd.npol
 dimension_uv=obs.dimension
 astr=obs.astr
+obs_out=obs
+obs_out.astr.cdelt*=cd_mod
 
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     pad_uv_image=pad_uv_image>1.
 
-    obs_out=obs
     astr_out=astr
     astr_out.cdelt/=pad_uv_image
     astr_out.crpix*=pad_uv_image
@@ -64,7 +72,8 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
     obs_out.zenx*=pad_uv_image
     obs_out.zeny*=pad_uv_image
     obs_out.degpix/=pad_uv_image
-ENDIF ELSE obs_out=obs
+ENDIF 
+
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
@@ -76,17 +85,11 @@ si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]
 source_arr_out=source_arr
 comp_arr_out=comp_arr
-IF Keyword_Set(pad_uv_image) THEN BEGIN
-    sx=(source_arr.x-obs.dimension/2.)*pad_uv_image+obs_out.dimension/2.
-    sy=(source_arr.y-obs.elements/2.)*pad_uv_image+obs_out.elements/2.
-    ;ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
-    source_arr_out.x=sx & source_arr_out.y=sy
-    
-    sx=(comp_arr.x-obs.dimension/2.)*pad_uv_image+obs_out.dimension/2.
-    sy=(comp_arr.y-obs.elements/2.)*pad_uv_image+obs_out.elements/2.
-    ;ad2xy,comp_arr.ra,comp_arr.dec,astr_out,sx,sy
-    comp_arr_out.x=sx & comp_arr_out.y=sy
-ENDIF
+
+adxy,source_arr.ra,source_arr.dec,astr_out,sx,sy
+adxy,comp_arr.ra,comp_arr.dec,astr_out,cx,cy
+source_arr_out.x=sx & source_arr_out.y=sy
+comp_arr_out.x=cx & comp_arr_out.y=cy
 
 extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
 IF n_extend GT 0 THEN BEGIN
@@ -112,10 +115,16 @@ IF Keyword_Set(model_recalculate) OR Keyword_Set(galaxy_model_fit) THEN BEGIN
     IF N_Elements(*map_fn_arr[0]) EQ 0 THEN BEGIN
         IF Keyword_Set(transfer_mapfn) THEN file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) $
             ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-            *map_fn_arr[pol_i]=map_fn
-        ENDFOR
+        IF Min(file_test(file_path_mapfn+pol_names+'.sav')) EQ 0 THEN BEGIN
+            IF Keyword_Set(model_recalculate) THEN print,'No mapping function supplied, and .sav files not found! Model not recalculated'
+            IF Keyword_Set(galaxy_model_fit) THEN print,'No mapping function supplied, and .sav files not found! Galactic emission model not calculated'
+            model_recalculate=(galaxy_model_fit=0)
+        ENDIF ELSE BEGIN
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+                *map_fn_arr[pol_i]=map_fn
+            ENDFOR
+        ENDELSE
     ENDIF
 ENDIF
 
