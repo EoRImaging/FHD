@@ -1,4 +1,4 @@
-PRO vis_flag_update,flag_ptr,obs,psf,params
+PRO vis_flag_update,flag_ptr,obs,psf,params,xmin=xmin,xcen=xcen,ymin=ymin
 t0_0=Systime(1)
 heap_gc
 

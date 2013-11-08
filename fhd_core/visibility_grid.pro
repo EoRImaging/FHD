@@ -47,7 +47,7 @@ vis_inds_use=matrix_multiply(fi_use,replicate(1L,n_b_use))+matrix_multiply(repli
 IF Keyword_Set(flag_ptr) THEN flag_arr=flag_arr[vis_inds_use]
 IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[vis_inds_use] ELSE vis_arr_use=(Temporary(*visibility_ptr))[vis_inds_use] 
 model_flag=0
-IF Keyword_Set(model_ptr) THEN BEGIN
+IF Ptr_valid(model_ptr) THEN BEGIN
     IF Arg_present(model_return) THEN BEGIN
         IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[vis_inds_use] $
         ELSE model_use=(Temporary(*model_ptr))[vis_inds_use]

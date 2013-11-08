@@ -1,21 +1,22 @@
-FUNCTION vis_model_freq_split,source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,$
-    weights_arr=weights_arr,variance_arr=variance_arr,n_avg=n_avg,timing=timing,no_data=no_data,fft=fft,uv_mask=uv_mask,$
-    fhd_file_path=fhd_file_path,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,$
-    vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,_Extra=extra
+FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
+    weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
+    file_path_fhd=file_path_fhd,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,$
+    vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,_Extra=extra
 ext='.UVFITS'
 t0=Systime(1)
 
-flags_filepath=fhd_file_path+'_flags.sav'
-;vis_filepath=file_path+'_vis.sav'
-params_filepath=fhd_file_path+'_params.sav'
-psf_filepath=fhd_file_path+'_beams.sav'
-obs_filepath=fhd_file_path+'_obs.sav'
+pol_names=['xx','yy','xy','yx']
+flags_filepath=file_path_fhd+'_flags.sav'
+params_filepath=file_path_fhd+'_params.sav'
+psf_filepath=file_path_fhd+'_beams.sav'
+obs_filepath=file_path_fhd+'_obs.sav'
+vis_filepath=file_path_fhd+'_vis_'
 
 SWITCH N_Params() OF
-    1:obs=getvar_savefile(obs_filepath,'obs')
-    2:psf=getvar_savefile(psf_filepath,'psf')
-    3:params=getvar_savefile(params_filepath,'params')
-    4:flag_arr=getvar_savefile(flags_filepath,'flag_arr')
+    0:obs=getvar_savefile(obs_filepath,'obs')
+    1:psf=getvar_savefile(psf_filepath,'psf')
+    2:params=getvar_savefile(params_filepath,'params')
+    3:flag_arr=getvar_savefile(flags_filepath,'flag_arr')
     ELSE:
 ENDSWITCH
 
@@ -23,22 +24,11 @@ n_freq=obs.n_freq
 n_pol=obs.n_pol
 dimension=obs.dimension
 degpix=obs.degpix
-real_index=0
-imaginary_index=1
 
-IF Keyword_Set(source_list) + Keyword_Set(model_uv_arr) EQ 0 THEN model_flag=0. ELSE model_flag=1.
-IF model_flag EQ 0 THEN no_data=0
-IF N_Elements(no_data) EQ 0 THEN no_data=0
-IF N_Elements(vis_data_arr) EQ 0 AND ~Keyword_Set(no_data) THEN BEGIN
-    data_flag=1
-    data_struct=mrdfits(vis_file_path,0,/silent)
-    data_array=data_struct.array
-    data_struct=0. ;free memory
-    vis_data_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *vis_data_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))
-    ENDFOR
-ENDIF ELSE data_flag=1-no_data
+IF Min(Ptr_valid(vis_data_arr)) EQ 0 THEN BEGIN
+    vis_data_arr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO vis_data_arr[pol_i]=getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr')
+ENDIF
 
 IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
     bin_start=(*obs.baseline_info).bin_offset
@@ -64,92 +54,83 @@ flag_test=Total(*flag_arr[0]>0,1)
 bi_use=where(flag_test)
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
-    IF Tag_exist(obs,'fbin_i') THEN freq_bin_i2=obs.fbin_i ELSE freq_bin_i2=(*obs.baseline_info).fbin_i
+    freq_bin_i2=(*obs.baseline_info).fbin_i
     n_avg=Round(n_freq/Max(freq_bin_i2+1))
 ENDIF ELSE BEGIN
     freq_bin_i2=Floor(lindgen(n_freq)/n_avg)
 ENDELSE
 
 nf=Max(freq_bin_i2)+1L
-IF model_flag THEN BEGIN
-   vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,$
-        file_path=fhd_file_path,timing=t_model,silent=silent,uv_mask=uv_mask)
-   IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
+IF Keyword_Set(source_list) OR Keyword_Set(model_uv_arr) THEN model_flag=1
+IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
+    IF model_flag THEN BEGIN
+       vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,$
+            file_path_fhd=file_path_fhd,timing=t_model,silent=silent)
+       IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
+    ENDIF ELSE vis_model_arr=Ptrarr(n_pol)
 ENDIF
-residual_arr=Ptrarr(n_pol,nf,/allocate)
+dirty_arr=Ptrarr(n_pol,nf,/allocate)
 weights_arr=Ptrarr(n_pol,nf,/allocate)
 variance_arr=Ptrarr(n_pol,nf,/allocate)
+model_arr=Ptrarr(n_pol,nf,/allocate)
 vis_n_arr=Fltarr(n_pol,nf)
 
 t_grid=0
-tarr=fltarr(8)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    CASE 1 OF 
-        (data_flag AND model_flag):BEGIN
-            vis_ptr=vis_data_arr[pol_i]
-            model_ptr=vis_model_arr[pol_i];/n_avg
-        END
-        data_flag:BEGIN
-            vis_ptr=vis_data_arr[pol_i]
-            model_ptr=Ptr_new() ;null pointer
-        END
-        model_flag:BEGIN
-            vis_ptr=vis_model_arr[pol_i];/n_avg
-            model_ptr=Ptr_new() ;null pointer
-        END
-    ENDCASE
+    vis_ptr=vis_data_arr[pol_i]
+    model_ptr=vis_model_arr[pol_i]
     freq_use=(*obs.baseline_info).freq_use
     n_vis_use=0.
     IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
     IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=extract_subarray(init_arr,x_range,y_range)
     FOR fi=0L,nf-1 DO BEGIN
         fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
-;        flags_use1=(*flag_arr[pol_i])[fi_use,*]
-;        vis_use1=vis_use[fi_use,*]
         IF Ptr_valid(model_ptr) THEN model_return=1
         variance_holo=1 ;initialize
         weights_holo=1 ;initialize
         IF nf_use EQ 0 THEN n_vis=0 ELSE IF Keyword_Set(inds_patch) THEN $
             dirty_UV=visibility_patch_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
-                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,$
+                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
                 model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return,inds_patch=inds_patch,$
                 obs_patch=obs_patch,psf_patch=psf_patch,rephase_vis_flag=rephase_vis_flag,_Extra=extra) $
         ELSE $
             dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
-                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,time_arr=tarr0,$
+                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
                 model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
         IF n_vis EQ 0 THEN BEGIN
-            *residual_arr[pol_i,fi]=init_arr
+            *dirty_arr[pol_i,fi]=init_arr
             *weights_arr[pol_i,fi]=init_arr
             *variance_arr[pol_i,fi]=init_arr
+            IF N_Elements(model_return) GT 1 THEN *model_arr[pol_i,fi]=init_arr
             CONTINUE
         ENDIF
         n_vis_use+=n_vis
         vis_n_arr[pol_i,fi]=n_vis
         IF Keyword_Set(fft) THEN BEGIN
             IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN BEGIN
-                *residual_arr[pol_i,fi]=extract_subarray(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis,x_range,y_range)
+                *dirty_arr[pol_i,fi]=extract_subarray(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis,x_range,y_range)
                 *weights_arr[pol_i,fi]=extract_subarray(dirty_image_generate(weights_holo,degpix=degpix)*n_vis,x_range,y_range)
                 *variance_arr[pol_i,fi]=extract_subarray(dirty_image_generate(variance_holo,degpix=degpix)*n_vis,x_range,y_range)
+                IF N_Elements(model_return) GT 1 THEN *model_arr[pol_i,fi]=extract_subarray(dirty_image_generate(model_return,degpix=degpix)*n_vis,x_range,y_range)
             ENDIF ELSE BEGIN 
-                *residual_arr[pol_i,fi]=dirty_image_generate(dirty_uv,degpix=degpix)*n_vis
+                *dirty_arr[pol_i,fi]=dirty_image_generate(dirty_uv,degpix=degpix)*n_vis
                 *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo,degpix=degpix)*n_vis
                 *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo,degpix=degpix)*n_vis
+                IF N_Elements(model_return) GT 1 THEN *model_arr[pol_i,fi]=dirty_image_generate(model_return,degpix=degpix)*n_vis
             ENDELSE
         ENDIF ELSE BEGIN
-            *residual_arr[pol_i,fi]=dirty_uv*n_vis
+            *dirty_arr[pol_i,fi]=dirty_uv*n_vis
             *weights_arr[pol_i,fi]=weights_holo*n_vis
             *variance_arr[pol_i,fi]=variance_holo*n_vis
+            IF N_Elements(model_return) GT 1 THEN *model_arr[pol_i,fi]=model_return*n_vis
         ENDELSE
-        IF Keyword_Set(tarr0) THEN tarr+=tarr0
         IF Keyword_Set(t_grid0) THEN t_grid+=t_grid0
     ENDFOR  
-;    vis_use=0 ;free memory  
+    IF ~Keyword_Set(preserve_visibilities) THEN ptr_free,vis_ptr,model_ptr
 ENDFOR
 obs.n_vis=n_vis_use
     
 IF ~Keyword_Set(silent) THEN print,"Gridding timing: ",strn(t_grid)
-IF ~Keyword_Set(silent) THEN print,tarr
 timing=Systime(1)-t0
-RETURN,residual_arr
+RETURN,dirty_arr
 END

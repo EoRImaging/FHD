@@ -40,15 +40,18 @@ max_baseline=900.
 max_sources=25000.
 pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
-FoV=100.
+FoV=80.
 no_ps=1 ;don't save postscript copy of images
-psf_dim=10
+psf_dim=8
 min_baseline=1.
-ring_radius=6.*pad_uv_image
+min_cal_baseline=50.
+ring_radius=10.*pad_uv_image
+max_calibration_sources=10000.
 psf_resolution=8.
 nfreq_avg=16.
 no_rephase=1
-gain_factor=0.3
+gain_factor=2./3.
+smooth_width=11.
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$

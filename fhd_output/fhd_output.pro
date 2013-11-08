@@ -193,6 +193,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         dimension=dimension,restored_beam_width=restored_beam_width)
 ENDFOR
 
+; renormalize based on weights
+renorm_factor = get_image_renormalization(weights_arr=weights_arr,beam_base_out=beam_base_out,$
+  beam_correction_out=beam_correction_out,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix)
+for pol_i=0,n_pol-1 do begin
+  *dirty_images[pol_i]*=renorm_factor
+  *res_uv_arr[pol_i]*=renorm_factor
+  *instr_images[pol_i]*=renorm_factor
+endfor
+
 stokes_images=stokes_cnv(instr_images,beam=beam_base_out) ;NOTE one factor of the beam already corrected for
 stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out)
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
@@ -328,28 +337,30 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ;    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
     ;        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
         
-        IF Keyword_Set(mark_zenith) THEN BEGIN
-            mark_zenith=fltarr(dimension,elements)
-            mark_thick=1.
-            mark_length=6.
+        mark_image=0
+        mark_thick=1.
+        mark_length=6.
+        IF Keyword_Set(mark_zenith) AND (Floor(obs_out.zenx) GT mark_length) AND (Floor(obs_out.zenx) LT dimension-mark_length) $
+            AND (Floor(obs_out.zeny) GT mark_length) AND (Floor(obs_out.zeny) LT elements-mark_length) THEN BEGIN 
+            mark_image=fltarr(dimension,elements)
             mark_amp=(stokes_low_use<instr_low_use<(-100.))
-            mark_zenith[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
-            mark_zenith[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
-            mark_zenith=mark_zenith[zoom_low:zoom_high,zoom_low:zoom_high]
-        ENDIF ELSE mark_zenith=0
+            mark_image[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
+            mark_image[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
+            mark_image=mark_image[zoom_low:zoom_high,zoom_low:zoom_high]
+        ENDIF
         
         instrS_high=Max(instr_restored[beam_i])
         log_dirty=0
         log_source=1
-        Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Dirty_'+pol_names[pol_i],$
+        Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Dirty_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low_use,high=instr_high_use,title=title_fhd,_Extra=extra
-        Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Residual_'+pol_names[pol_i],$
+        Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Residual_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,title=title_fhd,_Extra=extra
-        Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Sources_'+pol_names[pol_i],$
+        Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Sources_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high_use,/invert_color,title=title_fhd,_Extra=extra
-        Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Restored_'+pol_names[pol_i],$
+        Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Restored_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low_use,high=instr_high_use,title=title_fhd,_Extra=extra
-        Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
+        Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image*100.,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,$
             low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),/invert,title=title_fhd,_Extra=extra
         
@@ -362,17 +373,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         stokesS_high=Max((stokes_restored*Sqrt(beam_avg>0))[beam_i])
         IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
         IF pol_i EQ 0 THEN log=0 ELSE log=0
-        Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Residual_'+pol_names[pol_i+4],$
+        Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Residual_'+pol_names[pol_i+4],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low_use,high=stokes_high_use,$
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
             show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-        Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Sources_'+pol_names[pol_i+4],$
+        Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Sources_'+pol_names[pol_i+4],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
             show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-        Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_Restored_'+pol_names[pol_i+4],$
+        Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Restored_'+pol_names[pol_i+4],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low_use,high=stokes_high_use,$
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
@@ -404,26 +415,26 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         debug_gal=1
         IF ~Keyword_Set(no_png) THEN BEGIN
             while debug_gal GT 0 DO BEGIN
-                imagefast,(*stokes_gal_model[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i+4],$
+                imagefast,(*stokes_gal_model[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i+4],$
                     /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high*2.,$
                     lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                     offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
                     show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-                imagefast,(*gal_holo_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalHolo_'+pol_names[pol_i],$
+                imagefast,(*gal_holo_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalHolo_'+pol_names[pol_i],$
                     /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=0,low=instr_low_use,high=instr_high_use,$
                     lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                     offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
                     show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-                imagefast,(*gal_model_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
+                imagefast,(*gal_model_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
                     /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,$
                     lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                     offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
                     show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-                imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalSources_'+pol_names[pol_i],$
+                imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalSources_'+pol_names[pol_i],$
                     /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
-                imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
+                imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
                     /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
-                imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_zenith,file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i+4],$
+                imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i+4],$
                     /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high2,title=title_fhd,_Extra=extra
                 debug_gal=0
                 dummyval=0

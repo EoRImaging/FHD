@@ -1,4 +1,5 @@
-PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,$
+PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
+    ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,even_only=even_only,odd_only=odd_only,_Extra=extra
 heap_gc
 
