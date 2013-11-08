@@ -59,6 +59,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,max_baseline=max_baseline,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,gain_factor=gain_factor,$
     no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,psf_resolution=psf_resolution,$
-    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,Extra=extra
+    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,_Extra=extra
 !except=except
 END
