@@ -50,7 +50,6 @@ ENDIF ELSE filter_name=''
 ;    beam_base,beam_correction,ra_arr,dec_arr,astr
 restore,file_path_fhd+'_fhd.sav'
 
-IF N_Elements(normalization_arr) GT 0 THEN normalization=Mean(normalization_arr)/2.
 n_pol=fhd.npol
 dimension_uv=obs.dimension
 astr=obs.astr
@@ -60,7 +59,7 @@ obs_out.astr.cdelt*=cd_mod
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     pad_uv_image=pad_uv_image>1.
 
-    astr_out=astr
+    astr_out=obs_out.astr
     astr_out.cdelt/=pad_uv_image
     astr_out.crpix*=pad_uv_image
     
@@ -80,14 +79,13 @@ degpix=obs_out.degpix
 astr_out=obs_out.astr
 ;pix_area_cnv=pixel_area(astr_out,dimension=dimension)/degpix^2.
 
-
 si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
 source_arr=source_array[si_use]
 source_arr_out=source_arr
 comp_arr_out=comp_arr
 
-adxy,source_arr.ra,source_arr.dec,astr_out,sx,sy
-adxy,comp_arr.ra,comp_arr.dec,astr_out,cx,cy
+ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
+ad2xy,comp_arr.ra,comp_arr.dec,astr_out,cx,cy
 source_arr_out.x=sx & source_arr_out.y=sy
 comp_arr_out.x=cx & comp_arr_out.y=cy
 
@@ -133,7 +131,7 @@ IF Keyword_Set(model_recalculate) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
     model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd.sigma_cut)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)*normalization
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
 ENDIF
 t2a=Systime(1)

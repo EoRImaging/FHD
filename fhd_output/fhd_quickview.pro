@@ -20,6 +20,19 @@ IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=b
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 IF N_Elements(no_fits) EQ 0 THEN no_fits=1
 
+grid_spacing=10.
+offset_lat=5.;15. paper 10 memo
+offset_lon=5.;15. paper 10 memo
+reverse_image=1   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
+map_reverse=reverse_image;1 paper 3 memo
+label_spacing=1.
+CASE reverse_image OF
+    0:cd_mod=[1.,1.]
+    1:cd_mod=[-1.,1.]
+    2:cd_mod=[1.,-1.]
+    3:cd_mod=[-1.,-1.]
+ENDCASE
+
 IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav' 
 IF N_Elements(psf) EQ 0 THEN IF file_test(file_path_fhd+'_beams.sav') THEN RESTORE,file_path_fhd+'_beams.sav' ELSE $
     psf=beam_setup(obs,file_path_fhd,silent=silent,timing=t_beam,_Extra=extra)
@@ -58,13 +71,15 @@ IF Keyword_Set(image_filter_fn) THEN BEGIN
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
 ENDIF ELSE filter_name=''
 
+
+obs_out=obs
+obs_out.astr.cdelt*=cd_mod
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     pad_uv_image=pad_uv_image>1.
     
     restored_beam_width*=pad_uv_image
-    
-    obs_out=obs
-    astr_out=astr
+
+    astr_out=obs_out.astr
     astr_out.cdelt/=pad_uv_image
     astr_out.crpix*=pad_uv_image
     
@@ -76,20 +91,11 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
     obs_out.zenx*=pad_uv_image
     obs_out.zeny*=pad_uv_image
     obs_out.degpix/=pad_uv_image
-ENDIF ELSE obs_out=obs
+ENDIF
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
-
-;stats_radius=10. ;degrees
-
-grid_spacing=10.
-offset_lat=5.;15. paper 10 memo
-offset_lon=5.;15. paper 10 memo
-reverse_image=0   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
-map_reverse=0;1 paper 3 memo
-label_spacing=1.
 
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
@@ -115,17 +121,9 @@ beam_i=where(beam_mask)
 IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1
     source_arr_out=source_array
-    IF Keyword_set(pad_uv_image) THEN BEGIN
-        sx=(source_array.x-obs.dimension/2.)*pad_uv_image+obs_out.dimension/2.
-        sy=(source_array.y-obs.elements/2.)*pad_uv_image+obs_out.elements/2.
-    ENDIF
+    
+    ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
     source_arr_out.x=sx & source_arr_out.y=sy
-    IF Total(source_arr_out.flux.(0)) EQ 0 THEN BEGIN
-        source_arr_out.flux.(0)=(*beam_base_out[0])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.I+source_arr_out.flux.Q)/2.
-        source_arr_out.flux.(1)=(*beam_base_out[1])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.I-source_arr_out.flux.Q)/2.
-;        source_arr_out.flux.(2)=(*beam_base_out[2])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.Q+source_arr_out.flux.U)/2.
-;        source_arr_out.flux.(3)=(*beam_base_out[3])[source_arr_out.x,source_arr_out.y]*(source_arr_out.flux.Q-source_arr_out.flux.U)/2.
-    ENDIF
     
     extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
     IF n_extend GT 0 THEN BEGIN
