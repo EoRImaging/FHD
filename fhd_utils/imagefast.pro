@@ -1,4 +1,4 @@
-PRO imagefast,Image,file_path=file_path,no_ps=no_ps,$
+PRO imagefast,Image,astr=astr,file_path=file_path,no_ps=no_ps,$
     no_colorbar=no_colorbar,vertical_colorbar=vertical_colorbar,colorbar_title=colorbar_title,color_table=color_table,$
     right_colorbar=right_colorbar,left_colorbar=left_colorbar,$
     layout=layout,margin=margin,background=background,over_plot=over_plot,charsize=charsize,$
@@ -266,32 +266,40 @@ cgImage,image_use,/keep_aspect,background=background,layout=layout,margin=margin
     scale=scale,title=title,/axes,axkeywords={XSTYLE:4,YSTYLE:4}
 
 IF Keyword_Set(show_grid) THEN BEGIN
-    IF Keyword_Set(sphere) THEN BEGIN
-        earth_circumference= 24901.55;miles
-        earth_circumference*=5280.*12 ;inches
-;        pixres=72. ; pixels/inch ;now set above!
-        earth_circumference*=pixres ;pixels
-        earth_circumference*=degpix/360.
-        mapscale=earth_circumference
-        
-;        grid_color=Long((palette[255,*]#[2.^16.,2.^8.,1.])[0])
-        IF Mean(image_use) LT 128. THEN grid_color=Long((palette[255,*]#[2.^16.,2.^8.,1.])[0]) $
-            ELSE grid_color=Long((palette[0,*]#[2.^16.,2.^8.,1.])[0])
-;        grid_color=(Mean(image_use)*2^16.+2^23.) mod 2^24. 
-
-        map_pos=oposition        
-;        map_struct=map_proj_init(114,SPHERE_RADIUS=mapscale,CENTER_LONGITUDE=lon_center,CENTER_LATITUDE=lat_center,FALSE_EASTING=zenith_ra-lon_center,FALSE_NORTHING=zenith_dec-lat_center)
- 
-        map_set, lat_center, lon_center, rotation, name=projection, /isotropic, /noborder, $
-                scale=mapscale,xmargin=0,ymargin=0,reverse=map_reverse,/noerase,position=map_pos;,e_grid={MAP_STRUCTURE:map_struct}
-        
-       
-        map_grid, latdel=grid_spacing,londel=grid_spacing,lats=offset_lat+Round(lat_center/grid_spacing)*grid_spacing,$
-            lons=offset_lon+Round(lon_center/grid_spacing)*grid_spacing,LATLAB=offset_lon+Round(lon_center/grid_spacing)*grid_spacing,$
-            glinestyle=0,GLINETHICK=round(charsize*2.),charsize=charsize,charthick=round(charsize*2),label=label_spacing,$
-            lonalign=1,latalign=0,color=grid_color
+    IF Keyword_Set(astr) THEN BEGIN
+        xvals=meshgrid(dimension,elements,1)
+        yvals=meshgrid(dimension,elements,2)
+        xy2ad,xvals,yvals,astr,ra_arr,dec_arr
+        cgcontour,ra_arr,levels=indgen(360./grid_spacing)*grid_spacing,/overplot,/noerase
+        cgcontour,dec_arr,levels=indgen(1+180./grid_spacing)*grid_spacing-90,/overplot,/noerase
     ENDIF ELSE BEGIN
-        ;write something to overlay a rectilinear grid
+        IF Keyword_Set(sphere) THEN BEGIN
+            earth_circumference= 24901.55;miles
+            earth_circumference*=5280.*12 ;inches
+    ;        pixres=72. ; pixels/inch ;now set above!
+            earth_circumference*=pixres ;pixels
+            earth_circumference*=degpix/360.
+            mapscale=earth_circumference
+            
+    ;        grid_color=Long((palette[255,*]#[2.^16.,2.^8.,1.])[0])
+            IF Mean(image_use) LT 128. THEN grid_color=Long((palette[255,*]#[2.^16.,2.^8.,1.])[0]) $
+                ELSE grid_color=Long((palette[0,*]#[2.^16.,2.^8.,1.])[0])
+    ;        grid_color=(Mean(image_use)*2^16.+2^23.) mod 2^24. 
+    
+            map_pos=oposition        
+    ;        map_struct=map_proj_init(114,SPHERE_RADIUS=mapscale,CENTER_LONGITUDE=lon_center,CENTER_LATITUDE=lat_center,FALSE_EASTING=zenith_ra-lon_center,FALSE_NORTHING=zenith_dec-lat_center)
+     
+            map_set, lat_center, lon_center, rotation, name=projection, /isotropic, /noborder, $
+                    scale=mapscale,xmargin=0,ymargin=0,reverse=map_reverse,/noerase,position=map_pos;,e_grid={MAP_STRUCTURE:map_struct}
+            
+           
+            map_grid, latdel=grid_spacing,londel=grid_spacing,lats=offset_lat+Round(lat_center/grid_spacing)*grid_spacing,$
+                lons=offset_lon+Round(lon_center/grid_spacing)*grid_spacing,LATLAB=offset_lon+Round(lon_center/grid_spacing)*grid_spacing,$
+                glinestyle=0,GLINETHICK=round(charsize*2.),charsize=charsize,charthick=round(charsize*2),label=label_spacing,$
+                lonalign=1,latalign=0,color=grid_color
+        ENDIF ELSE BEGIN
+            ;write something to overlay a rectilinear grid
+        ENDELSE
     ENDELSE
 ENDIF  
 IF not Keyword_Set(no_colorbar) THEN BEGIN

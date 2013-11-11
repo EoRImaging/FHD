@@ -190,6 +190,10 @@ IF N_Elements(zoom_radius) GT 0 THEN BEGIN
 ENDIF
 IF N_Elements(zoom_low) EQ 0 THEN zoom_low=min(x_inc)<min(y_inc)
 IF N_Elements(zoom_high) EQ 0 THEN zoom_high=max(x_inc)>max(y_inc)
+astr_out2=astr_out
+astr_out2.crpix-=zoom_low
+astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
+
 res_name='_Residual_'
 IF tag_exist(obs_out,'residual') THEN IF obs_out.residual EQ 0 THEN res_name='_Dirty_'
 
@@ -235,16 +239,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
         Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
-            title=title_fhd,show_grid=show_grid,_Extra=extra
+            title=title_fhd,show_grid=show_grid,astr=astr_out2,_Extra=extra
         Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.+mark_image,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
             low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),$
-            title=title_fhd,/invert,_Extra=extra
+            title=title_fhd,/invert,astr=astr_out2,_Extra=extra
         Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i+4],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low_use,high=stokes_high_use,$
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
-            title=title_fhd,/sphere,_Extra=extra
+            title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
     ENDIF
     IF ~Keyword_Set(no_fits) THEN BEGIN
         FitsFast,stokes_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i+4]
@@ -270,24 +274,24 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
-                title=title_fhd,/sphere,_Extra=extra
+                title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
             Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+restored_name+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low_use,high=stokes_high_use,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
-                title=title_fhd,/sphere,_Extra=extra
+                title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
             
     ;        Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Sources_'+pol_names[pol_i],$
     ;            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high_use,/invert_color,_Extra=extra
             Imagefast,instr_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+restored_name+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low_use,high=instr_high_use,$
-                title=title_fhd,show_grid=show_grid,_Extra=extra
+                title=title_fhd,show_grid=show_grid,astr=astr_out2,_Extra=extra
         ENDIF
     ENDIF
     IF pol_i EQ 0 THEN BEGIN
         IF Keyword_Set(gridline_image_show) THEN Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path+filter_name+'_Grid',$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
-            lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+            lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,astr=astr_out2,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=1,/sphere,_Extra=extra
     ENDIF
 ENDFOR
