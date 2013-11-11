@@ -26,12 +26,6 @@ offset_lon=5.;15. paper 10 memo
 reverse_image=1   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=reverse_image;1 paper 3 memo
 label_spacing=1.
-CASE reverse_image OF
-    0:cd_mod=[1.,1.]
-    1:cd_mod=[-1.,1.]
-    2:cd_mod=[1.,-1.]
-    3:cd_mod=[-1.,-1.]
-ENDCASE
 
 IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav' 
 IF N_Elements(psf) EQ 0 THEN IF file_test(file_path_fhd+'_beams.sav') THEN RESTORE,file_path_fhd+'_beams.sav' ELSE $
@@ -73,7 +67,6 @@ ENDIF ELSE filter_name=''
 
 
 obs_out=obs
-obs_out.astr.cdelt*=cd_mod
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     pad_uv_image=pad_uv_image>1.
     

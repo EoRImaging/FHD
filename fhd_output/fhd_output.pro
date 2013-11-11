@@ -33,13 +33,6 @@ map_reverse=reverse_image;1 paper 3 memo
 label_spacing=1.
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
 
-CASE reverse_image OF
-    0:cd_mod=[1.,1.]
-    1:cd_mod=[-1.,1.]
-    2:cd_mod=[1.,-1.]
-    3:cd_mod=[-1.,-1.]
-ENDCASE
-
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
@@ -54,7 +47,6 @@ n_pol=fhd.npol
 dimension_uv=obs.dimension
 astr=obs.astr
 obs_out=obs
-obs_out.astr.cdelt*=cd_mod
 
 IF Keyword_Set(pad_uv_image) THEN BEGIN
     pad_uv_image=pad_uv_image>1.
