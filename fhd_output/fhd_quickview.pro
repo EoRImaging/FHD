@@ -115,7 +115,7 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1
     source_arr_out=source_array
     
-    ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
+    ad2xy,source_array.ra,source_array.dec,astr_out,sx,sy
     source_arr_out.x=sx & source_arr_out.y=sy
     
     extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
