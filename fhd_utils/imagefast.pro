@@ -60,13 +60,14 @@ IF N_Elements(background) EQ 0 THEN background='white'
 IF Keyword_Set(over_plot) THEN noerase=1 ELSE noerase=0
 IF Keyword_Set(hist_equal) THEN scale=1 ELSE scale=0
 
-IF N_Elements(map_reverse) EQ 0 THEN map_reverse=1
-IF N_Elements(projection) EQ 0 THEN projection='orthographic' ;2
-IF N_Elements(rotation) EQ 0 THEN rotation=0
-IF N_Elements(lat_center) EQ 0 THEN lat_center=0
-IF N_Elements(lon_center) EQ 0 THEN lon_center=0
-IF N_Elements(offset_lat) EQ 0 THEN offset_lat=0
-IF N_Elements(offset_lon) EQ 0 THEN offset_lon=0
+;OBSOLETE KEYWORDS! Supply astr structure instead
+;IF N_Elements(map_reverse) EQ 0 THEN map_reverse=1
+;IF N_Elements(projection) EQ 0 THEN projection='orthographic' ;2
+;IF N_Elements(rotation) EQ 0 THEN rotation=0
+;IF N_Elements(lat_center) EQ 0 THEN lat_center=0
+;IF N_Elements(lon_center) EQ 0 THEN lon_center=0
+;IF N_Elements(offset_lat) EQ 0 THEN offset_lat=0
+;IF N_Elements(offset_lon) EQ 0 THEN offset_lon=0
 IF N_Elements(grid_spacing) EQ 0 THEN grid_spacing=10. ;degrees
 IF N_Elements(label_spacing) EQ 0 THEN label_spacing=1
 
@@ -269,37 +270,27 @@ IF Keyword_Set(show_grid) THEN BEGIN
     IF Keyword_Set(astr) THEN BEGIN
         xvals=meshgrid(dimension,elements,1)
         yvals=meshgrid(dimension,elements,2)
+        CASE reverse_image OF
+            0:cd_mod=[1.,1.]
+            1:BEGIN
+                cd_mod=[-1.,1.]
+                astr.crpix=[dimension+1-(astr.crpix)[0],(astr.crpix)[1]]
+            END
+            2:BEGIN
+                cd_mod=[1.,-1.]
+                astr.crpix=[(astr.crpix)[0],elements+1-(astr.crpix)[1]]
+            END
+            3:BEGIN
+                cd_mod=[-1.,-1.]
+                astr.crpix=[dimension+1-(astr.crpix)[0],elements+1-(astr.crpix)[1]]
+            END
+        ENDCASE
+        astr.cdelt=astr.cdelt*cd_mod
         xy2ad,xvals,yvals,astr,ra_arr,dec_arr
         cgcontour,ra_arr,levels=indgen(360./grid_spacing)*grid_spacing,/overplot,/noerase
         cgcontour,dec_arr,levels=indgen(1+180./grid_spacing)*grid_spacing-90,/overplot,/noerase
     ENDIF ELSE BEGIN
-        IF Keyword_Set(sphere) THEN BEGIN
-            earth_circumference= 24901.55;miles
-            earth_circumference*=5280.*12 ;inches
-    ;        pixres=72. ; pixels/inch ;now set above!
-            earth_circumference*=pixres ;pixels
-            earth_circumference*=degpix/360.
-            mapscale=earth_circumference
-            
-    ;        grid_color=Long((palette[255,*]#[2.^16.,2.^8.,1.])[0])
-            IF Mean(image_use) LT 128. THEN grid_color=Long((palette[255,*]#[2.^16.,2.^8.,1.])[0]) $
-                ELSE grid_color=Long((palette[0,*]#[2.^16.,2.^8.,1.])[0])
-    ;        grid_color=(Mean(image_use)*2^16.+2^23.) mod 2^24. 
-    
-            map_pos=oposition        
-    ;        map_struct=map_proj_init(114,SPHERE_RADIUS=mapscale,CENTER_LONGITUDE=lon_center,CENTER_LATITUDE=lat_center,FALSE_EASTING=zenith_ra-lon_center,FALSE_NORTHING=zenith_dec-lat_center)
-     
-            map_set, lat_center, lon_center, rotation, name=projection, /isotropic, /noborder, $
-                    scale=mapscale,xmargin=0,ymargin=0,reverse=map_reverse,/noerase,position=map_pos;,e_grid={MAP_STRUCTURE:map_struct}
-            
-           
-            map_grid, latdel=grid_spacing,londel=grid_spacing,lats=offset_lat+Round(lat_center/grid_spacing)*grid_spacing,$
-                lons=offset_lon+Round(lon_center/grid_spacing)*grid_spacing,LATLAB=offset_lon+Round(lon_center/grid_spacing)*grid_spacing,$
-                glinestyle=0,GLINETHICK=round(charsize*2.),charsize=charsize,charthick=round(charsize*2),label=label_spacing,$
-                lonalign=1,latalign=0,color=grid_color
-        ENDIF ELSE BEGIN
-            ;write something to overlay a rectilinear grid
-        ENDELSE
+        ;Obsolete
     ENDELSE
 ENDIF  
 IF not Keyword_Set(no_colorbar) THEN BEGIN
