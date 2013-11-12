@@ -41,7 +41,11 @@ IF n_use GT 0 THEN BEGIN
 ;    source_list.StoN=catalog.StoN
     
     beam=fltarr(dimension,elements)
-    FOR pol_i=0,(n_pol<2)-1 DO beam+=(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)^2.
+    beam_arr=Ptrarr(n_pol<2)
+    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
+        beam_arr[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)
+        beam+=*beam_arr[pol_i]^2.
+    ENDFOR
     beam=Sqrt(beam/(n_pol<2))
     beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<cal_beam_threshold,Max(beam)>1.])
     beam_mask=fltarr(dimension,elements) & beam_mask[beam_i]=1.
@@ -53,6 +57,11 @@ IF n_use GT 0 THEN BEGIN
     src_use2=where(beam_mask[Round(x_arr[src_use]),Round(y_arr[src_use])],n_src_use)
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
     source_list=source_list[src_use]
+    beam_list=Ptrarr(n_pol<2)
+    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
+        beam_list[pol_i]=(*beam_arr[pol_i])[source_list.x,source_list.y]
+        source_list.flux.(pol_i)=source_list.flux.I*(*beam_list[pol_i])
+    ENDFOR
     
     influence=source_list.flux.I*beam[source_list.x,source_list.y]
     
@@ -66,6 +75,7 @@ IF n_use GT 0 THEN BEGIN
             ad2xy,extend_list.ra,extend_list.dec,astr,x_arr,y_arr
             extend_list.x=x_arr
             extend_list.y=y_arr
+            FOR pol_i=0,(n_pol<2)-1 DO extend_list.flux.(pol_i)=extend_list.flux.I*(*beam_list[pol_i])[extend_i[ext_i]]
             *source_list[extend_i[ext_i]].extend=extend_list
         ENDFOR
     ENDELSE
