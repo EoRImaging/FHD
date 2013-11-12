@@ -352,9 +352,11 @@ FOR i=i0,max_iter-1 DO BEGIN
     source_fit_fn_ref=Total(source_fit_fn)/2.
     
     si_use=Lonarr(n_sources)-1
+    sx_arr=additional_i mod dimension
+    sy_arr=Floor(additional_i/dimension)
     FOR src_i=0L,n_sources-1 DO BEGIN
-        sx=(additional_i[src_i] mod dimension)
-        sy=Floor(additional_i[src_i]/dimension)
+        sx=sx_arr[src_i]
+        sy=sy_arr[src_i]
         gcntrd,source_find_image,sx,sy,xcen,ycen,1.5,/keepcenter,/silent
         source_box=source_find_image[sx-local_max_radius:sx+local_max_radius,$
             sy-local_max_radius:sy+local_max_radius];*source_fit_fn
@@ -408,8 +410,8 @@ FOR i=i0,max_iter-1 DO BEGIN
         ENDFOR
         
         IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
-            n_mask+=Total(source_mask[sx,sy])
-            source_mask[sx,sy]=0
+;            n_mask+=Total(source_mask[sx,sy])
+;            source_mask[sx,sy]=0
             CONTINUE
         ENDIF
         

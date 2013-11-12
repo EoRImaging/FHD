@@ -86,7 +86,7 @@ pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
 IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE n_pol1=1
 test_mapfn=1 & FOR pol_i=0,n_pol1-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
-IF test_mapfn EQ 0 THEN IF Keyword_Set(recalculate_all) THEN grid_recalculate=1
+IF test_mapfn EQ 0 THEN grid_recalculate=1
 test_mapfn=1 & FOR pol_i=0,n_pol1-1 DO test_mapfn*=file_test(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav')
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
     IF size(transfer_mapfn,/type) NE 7 THEN transfer_mapfn=basename

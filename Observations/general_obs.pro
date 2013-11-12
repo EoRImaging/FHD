@@ -159,5 +159,6 @@ IF Keyword_Set(ps_export) THEN BEGIN
 ENDIF
 IF Keyword_Set(cleanup) THEN FOR fi=0L,n_files_use-1 DO fhd_cleanup,fhd_file_list[fi],_Extra=extra
 
+heap_gc
 !except=except
 END
