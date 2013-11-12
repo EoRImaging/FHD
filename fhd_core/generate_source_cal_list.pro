@@ -59,7 +59,7 @@ IF n_use GT 0 THEN BEGIN
     source_list=source_list[src_use]
     beam_list=Ptrarr(n_pol<2)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
-        beam_list[pol_i]=(*beam_arr[pol_i])[source_list.x,source_list.y]
+        beam_list[pol_i]=Ptr_new((*beam_arr[pol_i])[source_list.x,source_list.y])
         source_list.flux.(pol_i)=source_list.flux.I*(*beam_list[pol_i])
     ENDFOR
     
