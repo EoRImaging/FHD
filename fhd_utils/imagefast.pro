@@ -268,6 +268,7 @@ cgImage,image_use,/keep_aspect,background=background,layout=layout,margin=margin
 
 IF Keyword_Set(show_grid) THEN BEGIN
     IF Keyword_Set(astr) THEN BEGIN
+        astr_use=astr
         xvals=meshgrid(dimension,elements,1)
         yvals=meshgrid(dimension,elements,2)
         CASE reverse_image OF
@@ -285,8 +286,8 @@ IF Keyword_Set(show_grid) THEN BEGIN
                 astr.crpix=[dimension+1-(astr.crpix)[0],elements+1-(astr.crpix)[1]]
             END
         ENDCASE
-        astr.cdelt=astr.cdelt*cd_mod
-        xy2ad,xvals,yvals,astr,ra_arr,dec_arr
+        astr_use.cdelt=astr_use.cdelt*cd_mod
+        xy2ad,xvals,yvals,astr_use,ra_arr,dec_arr
         cgcontour,ra_arr,levels=indgen(360./grid_spacing)*grid_spacing,/overplot,/noerase
         cgcontour,dec_arr,levels=indgen(1+180./grid_spacing)*grid_spacing-90,/overplot,/noerase
     ENDIF ELSE BEGIN
