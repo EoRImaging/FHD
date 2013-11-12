@@ -288,8 +288,8 @@ IF Keyword_Set(show_grid) THEN BEGIN
         ENDCASE
         astr_use.cdelt=astr_use.cdelt*cd_mod
         xy2ad,xvals,yvals,astr_use,ra_arr,dec_arr
-        cgcontour,ra_arr,levels=indgen(360./grid_spacing)*grid_spacing,/overplot,/noerase
-        cgcontour,dec_arr,levels=indgen(1+180./grid_spacing)*grid_spacing-90,/overplot,/noerase
+        cgcontour,ra_arr,levels=indgen(360./grid_spacing)*grid_spacing,/overplot,/noerase,position=oposition
+        cgcontour,dec_arr,levels=indgen(1+180./grid_spacing)*grid_spacing-90,/overplot,/noerase,position=oposition
     ENDIF ELSE BEGIN
         ;Obsolete
     ENDELSE
