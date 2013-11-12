@@ -302,6 +302,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
 ENDIF
 
 IF N_Elements(cal) EQ 0 THEN IF file_test(cal_filepath) THEN cal=getvar_savefile(cal_filepath,'cal')
+IF N_Elements(obs) EQ 0 THEN IF file_test(obs_filepath) THEN obs=getvar_savefile(obs_filepath,'obs')
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
@@ -311,14 +312,13 @@ ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
 ENDELSE
 
-IF N_Elements(obs) GT 0 THEN IF tag_exist(obs,'residual') THEN IF obs.residual GT 0 THEN calibration_visibilities_subtract=1
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     IF file_test(file_path_fhd+'_fhd.sav') THEN BEGIN
         fhd_output,obs,fhd,cal,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
             image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra 
     ENDIF ELSE BEGIN
-        IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
+        IF obs.residual GT 0 THEN BEGIN
             IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav' 
             IF N_Elements(cal) GT 0 THEN source_array=cal.source_list
         ENDIF

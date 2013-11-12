@@ -75,6 +75,7 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
     astr_out=obs_out.astr
     astr_out.cdelt/=pad_uv_image
     astr_out.crpix*=pad_uv_image
+    astr_out.naxis*=pad_uv_image
     
     obs_out.astr=astr_out
     obs_out.dimension*=pad_uv_image
@@ -115,7 +116,7 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1
     source_arr_out=source_array
     
-    ad2xy,source_arr.ra,source_arr.dec,astr_out,sx,sy
+    ad2xy,source_array.ra,source_array.dec,astr_out,sx,sy
     source_arr_out.x=sx & source_arr_out.y=sy
     
     extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
