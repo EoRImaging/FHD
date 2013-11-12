@@ -75,6 +75,7 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
     astr_out=obs_out.astr
     astr_out.cdelt/=pad_uv_image
     astr_out.crpix*=pad_uv_image
+    astr_out.naxis*=pad_uv_image
     
     obs_out.astr=astr_out
     obs_out.dimension*=pad_uv_image
