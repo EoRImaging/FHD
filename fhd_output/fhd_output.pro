@@ -54,6 +54,7 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
     astr_out=obs_out.astr
     astr_out.cdelt/=pad_uv_image
     astr_out.crpix*=pad_uv_image
+    astr_out.naxis*=pad_uv_image
     
     obs_out.astr=astr_out
     obs_out.dimension*=pad_uv_image
@@ -286,6 +287,9 @@ IF N_Elements(zoom_radius) GT 0 THEN BEGIN
 ENDIF
 IF N_Elements(zoom_low) EQ 0 THEN zoom_low=min(x_inc)<min(y_inc)
 IF N_Elements(zoom_high) EQ 0 THEN zoom_high=max(x_inc)>max(y_inc)
+astr_out2=astr_out
+astr_out2.crpix-=zoom_low
+astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 
 image_path_fg=image_path+filter_name+gal_name
 export_path_fg=export_path+filter_name+gal_name
@@ -376,22 +380,22 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low_use,high=stokes_high_use,$
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
-            show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
+            show_grid=show_grid,/sphere,title=title_fhd,astr=astr_out2,_Extra=extra
         Imagefast,stokes_source[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Sources_'+pol_names[pol_i+4],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
-            show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
+            show_grid=show_grid,/sphere,title=title_fhd,astr=astr_out2,_Extra=extra
         Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_Restored_'+pol_names[pol_i+4],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low_use,high=stokes_high_use,$
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
-            show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
+            show_grid=show_grid,/sphere,title=title_fhd,astr=astr_out2,_Extra=extra
         
         IF pol_i EQ 0 THEN BEGIN
             IF Keyword_Set(gridline_image_show) THEN Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path_fg+'_Grid',$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
-                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,astr=astr_out2,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
         
             IF Keyword_Set(mrc_image) THEN BEGIN
