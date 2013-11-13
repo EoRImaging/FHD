@@ -1,6 +1,6 @@
 FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
-    file_path_fhd=file_path_fhd,vis_file_path=vis_file_path,even_only=even_only,odd_only=odd_only,$
+    file_path_fhd=file_path_fhd,even_only=even_only,odd_only=odd_only,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,_Extra=extra
 ext='.UVFITS'
 t0=Systime(1)
@@ -50,7 +50,7 @@ IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
         *flag_arr[pol_i]*=flag_arr1
     ENDFOR
 ENDIF 
-flag_test=Total(*flag_arr[0]>0,1)
+IF n_pol GT 1 THEN flag_test=Total(*flag_arr[1]>*flag_arr[0]>0,1) ELSE flag_test=Total(*flag_arr[0]>0,1)
 bi_use=where(flag_test)
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
@@ -65,7 +65,7 @@ IF Keyword_Set(source_list) OR Keyword_Set(model_uv_arr) THEN model_flag=1
 IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
     IF model_flag THEN BEGIN
        vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,$
-            file_path_fhd=file_path_fhd,timing=t_model,silent=silent)
+            file_path_fhd=file_path_fhd,timing=t_model,silent=silent,_Extra=extra)
        IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
     ENDIF ELSE vis_model_arr=Ptrarr(n_pol)
 ENDIF
