@@ -2,7 +2,7 @@ FUNCTION vis_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
-    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_offset=time_offset,spectral_index=spectral_index,_Extra=extra
+    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_offset=time_offset,spectral_index=spectral_index,antenna_size=antenna_size,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
@@ -92,6 +92,7 @@ IF N_Elements(max_baseline) EQ 0 THEN $
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) ELSE min_baseline=min_baseline>Min(kr_arr[where(kr_arr)])
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 
+IF N_Elements(antenna_size) EQ 0 THEN antenna_size=3. ;meters (MWA groundscreen size)
 meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,_Extra=extra)
 
 tile_use1=intarr(n_tile)
@@ -104,7 +105,7 @@ IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
-struct={instrument:String(instrument),obsname:String(obsname),dimension:Float(dimension),elements:Float(elements),$
+struct={instrument:String(instrument),antenna_size:Float(antenna_size),obsname:String(obsname),dimension:Float(dimension),elements:Float(elements),$
     kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,$
     obsra:meta.obsra,obsdec:meta.obsdec,zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,$
     zenx:meta.zenx,zeny:meta.zeny,phasera:meta.phasera,orig_phasedec:meta.phasedec,phasedec:meta.phasedec,orig_phasera:meta.phasera,$

@@ -1,6 +1,5 @@
 FUNCTION healpix_cnv_generate,obs,file_path_fhd=file_path_fhd,nside=nside,mask=mask,radius=radius,$
-    restore_last=restore_last,silent=silent,$
-    _Extra=extra
+    restore_last=restore_last,silent=silent,pointer_return=pointer_return,no_save=no_save,_Extra=extra
 
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
     IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
@@ -118,7 +117,6 @@ ENDFOR
 
 hpx_cnv={nside:nside,ija:ija,sa:sa,i_use:i_use,inds:hpx_inds}
 
-save,hpx_cnv,filename=file_path_fhd+'_hpxcnv'+'.sav'
-;print,Systime(1)-t00 ; currently takes 4 - 8 seconds (43MB file). Takes ~ 0.17s to apply
-RETURN,hpx_cnv
+IF ~Keyword_Set(no_save) THEN save,hpx_cnv,filename=file_path_fhd+'_hpxcnv'+'.sav',/compress
+IF Keyword_Set(pointer_return) THEN RETURN,Ptr_new(hpx_cnv) ELSE RETURN,hpx_cnv
 END
