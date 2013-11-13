@@ -47,7 +47,7 @@ tile_B=obs2.tile_B[0:n_baselines-1]
 tile_exist=(histogram(tile_A,min=1,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=1,/bin,max=(max(tile_A)>max(tile_B))))<1
 
 ytickv=[-!pi,0,!pi]
-ytickname=['-pi','0','pi']
+ytickname=['-!9p','0','!9p']
 yrange=[-1.5*!pi,1.5*!pi]
 xtickv=[ceil(min(freq)/10)*10,floor(max(freq)/10)*10]
 ;xtickv=[min(freq),max(freq)]

@@ -288,8 +288,14 @@ IF Keyword_Set(show_grid) THEN BEGIN
         ENDCASE
         astr_use.cdelt=astr_use.cdelt*cd_mod
         xy2ad,xvals,yvals,astr_use,ra_arr,dec_arr
-        cgcontour,ra_arr,levels=indgen(360./grid_spacing)*grid_spacing,/overplot,/noerase,position=oposition
-        cgcontour,dec_arr,levels=indgen(1+180./grid_spacing)*grid_spacing-90,/overplot,/noerase,position=oposition
+        ra_levels=indgen(360./grid_spacing)*grid_spacing
+        dec_levels=indgen(1+180./grid_spacing)*grid_spacing-90
+        ra_cut=where((ra_arr GT 360.-0.75*grid_spacing) AND (ra_arr LT 360.-0.25*grid_spacing),n_ra_cut)
+        ra_mod=where(ra_arr GE 360.-0.25*grid_spacing,n_ra_mod)
+        IF n_ra_mod THEN ra_arr[ra_mod]-=360.
+        IF n_ra_cut GT 0 THEN ra_arr[ra_cut]=!Values.F_NAN
+        cgcontour,ra_arr,levels=ra_levels,/overplot,/noerase,position=oposition,/onimage
+        cgcontour,dec_arr,levels=dec_levels,/overplot,/noerase,position=oposition,/onimage
     ENDIF ELSE BEGIN
         ;Obsolete
     ENDELSE
