@@ -114,12 +114,12 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     t_hpx0=Systime(1)
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
         IF Total(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
-        (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(Temporary(*weights_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
-        (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(Temporary(*variance_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
+        (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
+        (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
-        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(Temporary(*residual_arr1[pol_i,freq_i]),*hpx_cnv[obs_i])
-        IF dirty_flag THEN (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(Temporary(*dirty_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
-        IF model_flag THEN (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(Temporary(*model_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
+        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),*hpx_cnv[obs_i])
+        IF dirty_flag THEN (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
+        IF model_flag THEN (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
     ENDFOR
     t_hpx1=Systime(1)
     t_hpx+=t_hpx1-t_hpx0
