@@ -255,6 +255,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
          
         vis_box1=vis_arr_use[inds];*freq_norm[freq_i]
         vis_box=vis_box1[xyf_ui]
+        IF model_flag THEN BEGIN
+            model_box1=model_use[inds];*freq_norm[freq_i]
+            model_box=model_box1[xyf_ui]
+        ENDIF
         
         repeat_i=where(psf_weight GT 1,n_rep,complement=single_i,ncom=n_single)
         
@@ -266,11 +270,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
         ENDFOR
         
-        IF model_flag THEN BEGIN
-            model_box1=model_use[inds];*freq_norm[freq_i]
-            model_box=model_box1[xyf_ui]
-            FOR rep_ii=0,n_rep-1 DO model_box[repeat_i[rep_ii]]+=Total(model_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
-        ENDIF
+        IF model_flag THEN FOR rep_ii=0,n_rep-1 DO model_box[repeat_i[rep_ii]]=Total(model_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
         
         vis_n=n_xyf_bin
     ENDIF ELSE BEGIN
