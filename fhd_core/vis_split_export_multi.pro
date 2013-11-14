@@ -49,7 +49,7 @@ obs_flag=intarr(n_obs)+1
 FOR obs_i=0.,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
     model_flag[obs_i]=file_test(file_path_fhd+'_fhd.sav')
-    obs=vis_struct_update_obs(obs_arr[obs_i],n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use,_Extra=extra)
+    obs=vis_struct_update_obs(obs_arr[obs_i],n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
     obs_arr[obs_i]=obs
     dimension=obs.dimension
     elements=obs.elements

@@ -15,7 +15,7 @@ frequency_array=b_info.freq
 freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
 nfreq_bin=N_Elements(freq_hist)
 freq_bin_i=fltarr(n_freq)
-FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
+FOR bin=0L,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
 freq_center=Median(frequency_array)
 
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
@@ -37,6 +37,11 @@ struct.min_baseline=Float(min_baseline)
 
 struct.n_pol=Fix(n_pol,type=2)
 struct.alpha=Float(spectral_index)
+
+projection_slant_orthographic,astr=astr,degpix=degpix,obsra=obs.obsra,obsdec=obs.obsdec,zenra=obs.zenra,zendec=obs.zendec,$
+    dimension=dimension,elements=elements,phasera=obs.phasera,phasedec=obs.phasedec,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny,$
+    epoch=2000.,JDate=obs.JD0,date_obs=obs.astr.dateobs
+
 
 struct.obsx=Float(obsx)
 struct.obsy=Float(obsy)

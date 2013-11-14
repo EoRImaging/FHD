@@ -67,10 +67,10 @@ x_c=obsx
 y_c=obsy
 lon_c=phasera
 lat_c=phasedec
-MAKE_ASTR, astr, CD = cd , DELT = delt, CRPIX = [x_c+1.,y_c+1.], $
-    CRVAL = [lon_c,lat_c], CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
+MAKE_ASTR, astr, CD = Float(cd) , DELT = Float(delt), CRPIX = Float([x_c+1.,y_c+1.]), $
+    CRVAL = Double([lon_c,lat_c]), CTYPE = CTYPE, PV2=[PV2_1,PV2_2],$
     LATPOLE = 0., LONGPOLE = 180.,EQUINOX=epoch,MJD_OBS=JDate-2400000.5,$
-    DATE_OBS=date_obs,NAXIS=[dimension,elements],axes=[1,2]
+    DATE_OBS=date_obs,NAXIS=Float([dimension,elements]),axes=[1,2]
 
 ad2xy,zenra,zendec,astr,zenx,zeny
 ad2xy,obsra,obsdec,astr,obsx,obsy
