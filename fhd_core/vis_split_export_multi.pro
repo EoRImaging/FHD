@@ -81,7 +81,7 @@ n_hpx=N_Elements(hpx_inds)
 t_hpx=0.
 
 
-IF model_flag AND ~residual_flag THEN dirty_flag=1
+IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
 residual_hpx_arr=Ptrarr(n_pol,n_freq_use)
 model_hpx_arr=Ptrarr(n_pol,n_freq_use)
 dirty_hpx_arr=Ptrarr(n_pol,n_freq_use)
