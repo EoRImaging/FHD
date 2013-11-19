@@ -398,13 +398,13 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
           if i lt phase_0_iter then p=gain_curr_mode[phase_modes[0], tile_i] else $
             if i lt phase_fit_iter then p=gain_curr_mode[phase_modes, tile_i] else p=gain_curr_mode[*, tile_i]
             
-          p2=p
-          ;          dfpmin, p, 1.0e-3, fval, 'poly_cal_chi2', 'poly_cal_grad', iter=ncalls, itmax=5000, stepmax = !pi/180.
+          ;p2=p
+          dfpmin, p, 1.0e-3, fval, 'poly_cal_chi2', 'poly_cal_grad', iter=ncalls, itmax=5000, stepmax = !pi/180.
           
-          dfpmin2, p2, 1.0e-3, fval2, 'poly_cal_chi2', 'poly_cal_grad', iter=ncalls2, itmax=50, stepmax = !pi/180.
+          ;dfpmin2, p2, 1.0e-3, fval2, 'poly_cal_chi2', 'poly_cal_grad', iter=ncalls2, itmax=50, stepmax = !pi/180.
           
-          p=p2
-          ncalls=ncalls2
+          ;p=p2
+          ;ncalls=ncalls2
           ;stop
           if i lt phase_fit_iter then begin
             if i lt phase_0_iter then begin
@@ -532,7 +532,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       endif
       
       undefine, kicked_tiles
-
+      
       gain_arr_mode[*,tile_use]=gain_curr_mode
       
       gain_arr[*,tile_use] = gain_curr
