@@ -21,6 +21,16 @@ tile_beam_fn=instrument+'_tile_beam_generate' ;mwa_tile_beam_generate
 IF instrument EQ 'paper' THEN base_gain=fltarr(1)+1.
 ;Fixed parameters 
 IF N_Elements(obs) EQ 0 THEN restore,file_path+'_obs.sav'
+;extract information from the structures
+n_tiles=obs.n_tile
+n_freq=obs.n_freq
+n_pol=obs.n_pol
+IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
+nfreq_bin=Max(freq_bin_i)+1
+
+tile_A=(*obs.baseline_info).tile_A
+tile_B=(*obs.baseline_info).tile_B
 dimension=obs.dimension
 elements=obs.elements
 kbinsize=obs.kpix
@@ -29,9 +39,12 @@ ky_span=kx_span
 degpix=obs.degpix
 IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
+
+speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=8. ;=32?
-IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) ;=16?
-psf_dim=Ceil(psf_dim/2)*2.
+IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize) $
+    ELSE IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) 
+psf_dim=Ceil(psf_dim/2)*2. ;dimension MUST be even
 
 psf_dim2=psf_dim*psf_resolution
 degpix_use=degpix*dimension/psf_dim2
@@ -49,18 +62,6 @@ yvals2=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
 IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
 ;residual_threshold is minimum residual above which to include
 IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
-
-;extract information from the structures
-n_tiles=obs.n_tile
-n_freq=obs.n_freq
-n_pol=obs.n_pol
-
-tile_A=(*obs.baseline_info).tile_A
-tile_B=(*obs.baseline_info).tile_B
-
-IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
-IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
-nfreq_bin=Max(freq_bin_i)+1
 
 freq_center=fltarr(nfreq_bin)
 FOR fi=0L,nfreq_bin-1 DO BEGIN

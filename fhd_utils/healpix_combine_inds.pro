@@ -5,19 +5,24 @@ FUNCTION healpix_combine_inds,hpx_cnv,hpx_inds=hpx_inds,reverse_ind_reference=re
 n_obs=N_Elements(hpx_cnv)
 hpx_min=Lon64arr(n_obs) 
 hpx_max=Lon64arr(n_obs) 
+
+obs_valid=Ptr_valid(hpx_cnv)
+obs_use=where(obs_valid,n_obs_valid)
 FOR obs_i=0,n_obs-1 DO BEGIN
+    IF obs_valid[obs_i] EQ 0 THEN CONTINUE
     hpx_min[obs_i]=Min((*hpx_cnv[obs_i]).inds)
     hpx_max[obs_i]=Max((*hpx_cnv[obs_i]).inds)
 ENDFOR
-hpx_min=Min(hpx_min)
-hpx_max=Max(hpx_max)
+hpx_min=Min(hpx_min[obs_use])
+hpx_max=Max(hpx_max[obs_use])
 n_hpx=hpx_max-hpx_min+1
-n_hpx_full=nside2npix((*hpx_cnv[0]).nside)
+n_hpx_full=nside2npix((*hpx_cnv[obs_use[0]]).nside)
 
 ind_hist=lonarr(n_hpx)
 hist_arr=Ptrarr(n_obs)
 ri_arr=Ptrarr(n_obs)
 FOR obs_i=0,n_obs-1 DO BEGIN
+    IF obs_valid[obs_i] EQ 0 THEN CONTINUE
     ind_hist1=histogram((*hpx_cnv[obs_i]).inds,min=hpx_min,max=hpx_max,/bin,reverse_ind=ri1)
     hist_arr[obs_i]=Ptr_new(ind_hist1)
     ri_arr[obs_i]=Ptr_new(ri1)
@@ -30,6 +35,7 @@ hpx_inds=ind_use+hpx_min
 
 hpx_ind_map=Ptrarr(size(hpx_cnv,/dimension))
 FOR obs_i=0,n_obs-1 DO BEGIN
+    IF obs_valid[obs_i] EQ 0 THEN CONTINUE
     ri=*ri_arr[obs_i]
     ;only include indices that have data, and are inside the set of indices
     ind_use2=where((*hist_arr[obs_i])[ind_use],n_use2) 
