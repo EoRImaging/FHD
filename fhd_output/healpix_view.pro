@@ -27,6 +27,7 @@ if n_elements(filepath) ne 0 then begin
       if froot eq '.' then froot = rootdir('mwa')
       
       fbase = file_basename(filepath)
+
       temp = strpos(fbase, '.', /reverse_search)
       if temp gt -1 then exten = strmid(fbase, temp) else exten = ''
       if exten eq '.fits' then file_path_img = froot + strmid(fbase, 0, temp) else file_path_img = froot + fbase
