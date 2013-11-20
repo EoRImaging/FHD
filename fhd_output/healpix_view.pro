@@ -21,20 +21,18 @@ if n_elements(filepath) ne 0 then begin
    if file_test(filepath, /directory) then begin
       ;; this is a directory, add default filename
       file_path_img = file_dirname(filepath, /mark_directory) + file_basename(filepath, /mark_directory) + $
-                      path_sep + 'Healpix_tmp.fits'
+                      path_sep + 'Healpix_tmp'
    endif else begin
       ;; this is a filename, if no directory add default path, ensure extension is .fits
       froot = file_dirname(filepath, /mark_directory)
       if froot eq '.' then froot = rootdir('mwa')
       
       fbase = file_basename(filepath)
-      UPNAME=StrUpCase(fbase)
-      pfits=strpos(UPNAME,'.FIT')
-      IF pfits EQ -1 THEN file_path_img = froot + fbase + '.fits' ELSE file_path_img = froot + fbase
+      file_path_img = froot + fbase
    endelse
-endif else file_path_img=rootdir('mwa')+'Healpix_tmp.fits'
+endif else file_path_img=rootdir('mwa')+'Healpix_tmp'
 
-write_fits_cut4,file_path_img,hpx_inds,hpx_vals,/ring,Coords='C',nside=nside
+write_fits_cut4,file_path_img+'.fits',hpx_inds,hpx_vals,/ring,Coords='C',nside=nside
 healpix_image,file_path_img,moll=1,cart=0,gnom=0,orth=1,ps_write=0,png_write=1,silent=1,$
         lon=lon_use,lat=lat_use,min=min(hpx_vals),max=max(hpx_vals),/half,color_table=color_table
 END
