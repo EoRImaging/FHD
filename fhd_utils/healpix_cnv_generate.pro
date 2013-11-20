@@ -1,4 +1,4 @@
-FUNCTION healpix_cnv_generate,obs,file_path_fhd=file_path_fhd,nside=nside,mask=mask,radius=radius,$
+FUNCTION healpix_cnv_generate,obs,file_path_fhd=file_path_fhd,nside=nside,mask=mask,hpx_radius=hpx_radius,$
     restore_last=restore_last,silent=silent,pointer_return=pointer_return,no_save=no_save,_Extra=extra
 
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
@@ -16,7 +16,7 @@ t00=Systime(1)
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
-IF N_Elements(radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4.
+IF N_Elements(hpx_radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4. ELSE radius=hpx_radius
 ;all angles in DEGREES
 ;uses RING index scheme
 IF ~Keyword_Set(nside) THEN BEGIN
