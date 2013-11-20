@@ -20,15 +20,17 @@ ENDIF ELSE BEGIN lon_use=lon & lat_use=lat & ENDELSE
 if n_elements(filepath) ne 0 then begin
    if file_test(filepath, /directory) then begin
       ;; this is a directory, add default filename
-      file_path_img = file_dirname(filepath, /mark_directory) + file_basename(filepath, /mark_directory) + $
-                      path_sep + 'Healpix_tmp'
+      file_path_img = file_dirname(filepath, /mark_directory) + file_basename(filepath) + path_sep() + 'Healpix_tmp'
    endif else begin
       ;; this is a filename, if no directory add default path, ensure extension is .fits
       froot = file_dirname(filepath, /mark_directory)
       if froot eq '.' then froot = rootdir('mwa')
       
       fbase = file_basename(filepath)
-      file_path_img = froot + fbase
+
+      temp = strpos(fbase, '.', /reverse_search)
+      if temp gt -1 then exten = strmid(fbase, temp) else exten = ''
+      if exten eq '.fits' then file_path_img = froot + strmid(fbase, 0, temp) else file_path_img = froot + fbase
    endelse
 endif else file_path_img=rootdir('mwa')+'Healpix_tmp'
 
