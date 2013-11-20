@@ -28,9 +28,9 @@ if n_elements(filepath) ne 0 then begin
       if froot eq '.' then froot = rootdir('mwa')
       
       fbase = file_basename(filepath)
-      temp = strpos(fbase, '.', /reverse_search)
-      if temp gt -1 then exten = strmid(fbase, temp) else exten = ''
-      if exten eq '.fits' then file_path_img = froot + fbase else file_path_img = froot + fbase + '.fits'
+      UPNAME=StrUpCase(fbase)
+      pfits=strpos(UPNAME,'.FIT')
+      IF pfits EQ -1 THEN file_path_img = froot + fbase + '.fits' ELSE file_path_img = froot + fbase
    endelse
 endif else file_path_img=rootdir('mwa')+'Healpix_tmp.fits'
 
