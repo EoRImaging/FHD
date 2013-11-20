@@ -84,9 +84,9 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     ENDFOR
 
     ;supply beam_mask in case file is missing and needs to be generated
-    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_chk,mask=beam_mask,restore_last=0) 
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_chk,mask=beam_mask,restore_last=0,_Extra=extra) 
     IF N_Elements(nside) EQ 0 THEN nside=nside_chk
-    IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,restore_last=0)
+    IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,restore_last=0,_Extra=extra)
 ENDFOR
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds);,reverse_ind=reverse_inds)
 

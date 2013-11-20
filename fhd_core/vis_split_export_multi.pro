@@ -71,7 +71,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         CONTINUE
     ENDIF
 
-    hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_use,mask=beam_mask,/no_save,/pointer) 
+    hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_use,mask=beam_mask,/no_save,/pointer,_Extra=extra) 
 ENDFOR
 model_flag=Min(model_flag)
 IF Total(obs_flag) EQ 0 THEN RETURN
