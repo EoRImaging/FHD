@@ -1,6 +1,6 @@
 PRO eor_firstpass,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,$
+    grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,$
     silent=silent,_Extra=extra
 except=!except
@@ -12,7 +12,7 @@ calibration_visibilities_subtract=1
 calibrate_visibilities=1
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=1
-IF N_Elements(cleanup) EQ 0 THEN cleanup=1
+IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=1
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=0
@@ -24,6 +24,7 @@ IF N_Elements(uvfits_version) EQ 0 THEN uvfits_version=2
 IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(silent) EQ 0 THEN silent=0
+IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
 image_filter_fn='filter_uv_tapered_uniform' ;applied ONLY to output images
 ;image_filter_fn=''
 
@@ -72,6 +73,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,/mark_zenith,$
     vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,no_rephase=no_rephase,show_obsname=show_obsname,$
     silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_obs=combine_obs,no_fits=no_fits,$
-    min_cal_baseline=min_cal_baseline,_Extra=extra
+    min_cal_baseline=min_cal_baseline,save_visibilities=save_visibilities,_Extra=extra
 !except=except
 END
