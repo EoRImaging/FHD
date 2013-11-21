@@ -1,6 +1,6 @@
 PRO generate_eor_sourcelist,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,combine_healpix=combine_healpix,silent=silent,_Extra=extra
+    grid=grid,deconvolve=deconvolve,combine_healpix=combine_healpix,silent=silent,save_visibilities=save_visibilities,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -8,12 +8,13 @@ heap_gc
 calibrate_visibilities=1
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(export_images) EQ 0 THEN export_images=1
-IF N_Elements(cleanup) EQ 0 THEN cleanup=1
+IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version='apb_gen_sourcelist_1'
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
 IF N_Elements(silent) EQ 0 THEN silent=0
-image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
+IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
+image_filter_fn='filter_uv_tapered_uniform' ;applied ONLY to output images
 
 data_directory='/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0'
 output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
@@ -59,6 +60,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,max_baseline=max_baseline,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,gain_factor=gain_factor,$
     no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,psf_resolution=psf_resolution,$
-    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,_Extra=extra
+    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,_Extra=extra
 !except=except
 END
