@@ -75,8 +75,6 @@ IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q
 ;Set up output image parameters
 IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=2. ;grid output images at a higher resolution if set (ignored for quickview images)
 IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
-noise_calibrate=0
-align=0
 
 IF N_Elements(start_fi) EQ 0 THEN start_fi=0
 fi=start_fi
@@ -95,8 +93,7 @@ WHILE fi LT n_files DO BEGIN
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid_recalculate=grid_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
-        export_images=export_images,noise_calibrate=noise_calibrate,align=align,$
-        dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
+        export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,save_visibilities=save_visibilities,$
         calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
@@ -133,8 +130,7 @@ IF Keyword_Set(simultaneous) THEN BEGIN
         uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
-            export_images=1,noise_calibrate=noise_calibrate,align=align,$
-            dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
+            export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,_Extra=extra
     ENDFOR
 ENDIF

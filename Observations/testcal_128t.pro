@@ -38,6 +38,7 @@ silent=0
 smooth_width=11.
 nfreq_avg=16.
 no_rephase=Keyword_Set(data_version)
+calibrate_visibilities=1
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     image_filter_fn=image_filter_fn,data_directory=data_directory,$
@@ -46,6 +47,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,nfreq_avg=nfreq_avg,$
     no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,$
     gain_factor=gain_factor,smooth_width=smooth_width,min_cal_baseline=min_cal_baseline,silent=silent,$
-    combine_obs=combine_obs,_Extra=extra
+    combine_obs=combine_obs,calibrate_visibilities=calibrate_visibilities,_Extra=extra
 !except=except
 END
