@@ -67,7 +67,7 @@ IF Keyword_Set(square) THEN BEGIN
         freq_bin_use=freq_bin_i[freq_i_use]
         fbin_use=freq_bin_use[Uniq(freq_bin_use,Sort(freq_bin_use))]
         nbin=N_Elements(Uniq(freq_bin_use,Sort(freq_bin_use)))
-        beam_arr=Ptrarr(nbin)
+;        beam_arr=Ptrarr(nbin)
         FOR bin0=0L,nbin-1 DO BEGIN
             fbin=fbin_use[bin0]
             nf_bin=Float(Total(freq_bin_use EQ fbin))
@@ -81,7 +81,7 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base+=nf_bin*Real_part(beam_base_single*Conj(beam_base_single))>0
             n_bin_use+=nf_bin*freq_norm[fbin]
             
-            beam_arr[bin0]=Ptr_new(beam_base_single)
+;            beam_arr[bin0]=Ptr_new(beam_base_single)
         ENDFOR
     ENDELSE
 ENDIF ELSE BEGIN
