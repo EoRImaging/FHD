@@ -57,10 +57,6 @@ degpix=obs.degpix
 astr=obs.astr
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
-rvals=Sqrt(xvals^2.+yvals^2.)
-xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
-
-;projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr
 
 ;the particular set of beams read will be the ones specified by file_path_fhd.
 ;that will include all polarizations and frequencies, at ONE time snapshot
@@ -150,8 +146,10 @@ ENDIF
 filter_arr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN    
     filter_single=1
+;    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
+;        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_single)*(*beam_correction[pol_i])^2.
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_single)*(*beam_correction[pol_i])^2.
+        weights=*weights_arr[pol_i])*(*beam_correction[pol_i])^2.
     IF Ptr_valid(filter_single) THEN filter_arr[pol_i]=filter_single
     IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
@@ -170,8 +168,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
+;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
+;        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_arr[pol_i]))[dimension/2.,elements/2.]
     normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_arr[pol_i]))[dimension/2.,elements/2.]
+        weights=*weights_arr[pol_i]))[dimension/2.,elements/2.]
     normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
 gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
