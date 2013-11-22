@@ -1,6 +1,5 @@
 PRO testcal_128T,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,data_version=data_version,_Extra=extra
+    channel=channel,data_version=data_version,_Extra=extra
 except=!except
 !except=0 
 heap_gc
