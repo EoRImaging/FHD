@@ -93,7 +93,7 @@ source_mask*=alias_mask
 beam_avg/=nbeam_avg
 beam_avg=Sqrt(beam_avg>0.)
 beam_corr_avg=weight_invert(beam_avg,beam_threshold)
-
+source_taper=beam_avg*(beam_corr_avg<1./sqrt(beam_threshold))
 
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
 weights_arr=Ptrarr(n_pol,/allocate)
@@ -146,10 +146,10 @@ ENDIF
 filter_arr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN    
     filter_single=1
-;    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-;        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_single)*(*beam_correction[pol_i])^2.
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i])*(*beam_correction[pol_i])^2.
+        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_single)*(*beam_correction[pol_i])^2.
+;    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
+;        weights=*weights_arr[pol_i])*(*beam_correction[pol_i])^2.
     IF Ptr_valid(filter_single) THEN filter_arr[pol_i]=filter_single
     IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
@@ -168,10 +168,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
-;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
-;        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_arr[pol_i]))[dimension/2.,elements/2.]
     normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i]))[dimension/2.,elements/2.]
+        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_arr[pol_i]))[dimension/2.,elements/2.]
+;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
+;        weights=*weights_arr[pol_i]))[dimension/2.,elements/2.]
     normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
 gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
@@ -212,7 +212,7 @@ IF Keyword_Set(filter_background) THEN BEGIN
     image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
     image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
 ENDIF
-source_find_image=image_filtered*beam_avg*source_mask
+source_find_image=image_filtered*beam_avg*source_mask*source_taper
 converge_check[0]=Stddev(source_find_image[where(source_mask)],/nan)
 converge_check2[0]=Stddev(source_find_image[where(source_mask)],/nan)
 print,"Gain factor used:",Strn(fhd.gain_factor)
@@ -312,11 +312,11 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF  
     ENDIF ELSE t2_0=Systime(1)
-    source_find_image=image_filtered*beam_avg*source_mask
-    image_use=image_filtered*source_mask
+    source_find_image=image_filtered*beam_avg*source_mask*source_taper
+    image_use=image_filtered*beam_avg*source_mask*source_taper
    
-    IF i EQ 0 THEN converge_check[i]=Stddev(source_find_image[where(source_mask)],/nan)
-    converge_check2[i]=Stddev(source_find_image[where(source_mask)],/nan)
+    IF i EQ 0 THEN converge_check[i]=Stddev(image_use[where(source_mask)],/nan)
+    converge_check2[i]=Stddev(image_use[where(source_mask)],/nan)
     ;use the composite image to locate sources, but then fit for flux independently
     source_flux=Max(source_find_image,source_i)
     
@@ -357,8 +357,8 @@ FOR i=i0,max_iter-1 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
-        gcntrd,source_find_image,sx,sy,xcen,ycen,1.5,/keepcenter,/silent
-        source_box=source_find_image[sx-local_max_radius:sx+local_max_radius,$
+        gcntrd,image_use,sx,sy,xcen,ycen,1.5,/keepcenter,/silent
+        source_box=image_use[sx-local_max_radius:sx+local_max_radius,$
             sy-local_max_radius:sy+local_max_radius];*source_fit_fn
 ;        box_i=where(source_box GT fit_threshold,n_fit)
 ;        IF n_fit EQ 0 THEN BEGIN
@@ -381,6 +381,8 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;        xcen=sx-local_max_radius+xcen0
 ;        ycen=sy-local_max_radius+ycen0
         IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius/2. THEN BEGIN
+            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
+            source_mask[sx-1:sx+1,sy-1:sy+1]=0
             CONTINUE
         ENDIF
         xcen0=xcen-sx+local_max_radius
@@ -410,8 +412,8 @@ FOR i=i0,max_iter-1 DO BEGIN
         ENDFOR
         
         IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
-;            n_mask+=Total(source_mask[sx,sy])
-;            source_mask[sx,sy]=0
+            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
+            source_mask[sx-1:sx+1,sy-1:sy+1]=0
             CONTINUE
         ENDIF
         
@@ -479,8 +481,8 @@ FOR i=i0,max_iter-1 DO BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
         print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
-        converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
+            i,t10,si,Stddev(image_use[where(source_mask)],/nan)))
+        converge_check[i2]=Stddev(image_use[where(source_mask)],/nan)
         BREAK
     ENDIF
     
@@ -488,18 +490,18 @@ FOR i=i0,max_iter-1 DO BEGIN
         i2+=1
         t10=Systime(1)-t0
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
-            i,si,t10,Stddev(source_find_image[where(source_mask)],/nan)))
-        converge_check[i2]=Stddev(source_find_image[where(source_mask)],/nan)
-        IF sigma_threshold*converge_check[i2] GT source_find_image[source_i] THEN BEGIN
+            i,si,t10,Stddev(image_use[where(source_mask)],/nan)))
+        converge_check[i2]=Stddev(image_use[where(source_mask)],/nan)
+        IF sigma_threshold*converge_check[i2] GT image_use[source_i] THEN BEGIN
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
+                i,t10,si,Stddev(image_use[where(source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
         IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
+                i,t10,si,Stddev(image_use[where(source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
@@ -509,11 +511,11 @@ ENDFOR
 IF i EQ max_iter THEN BEGIN
     t10=Systime(1)-t0
     print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds with ",I," sources (convergence:",F,")")',$
-        i,t10,si,Stddev(source_find_image[where(source_mask)],/nan)))
+        i,t10,si,Stddev(image_use[where(source_mask)],/nan)))
 ENDIF
 
 ;condense clean components
-noise_map=Stddev(source_find_image[where(source_mask)],/nan)*beam_corr_avg
+noise_map=Stddev(image_use[where(source_mask)],/nan)*beam_corr_avg
 noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si-1]

@@ -37,7 +37,7 @@ IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q
 IF N_Elements(reject_pol_sources) EQ 0 THEN reject_pol_sources=0 ;set to exclude source candidates with high Stokes Q/I
 IF N_Elements(calibration_image_subtract) EQ 0 THEN calibration_image_subtract=0. ELSE calibration_image_subtract=Float(calibration_image_subtract)
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn='False'
-IF N_Elements(filter_background) EQ 0 THEN filter_background=1
+IF N_Elements(filter_background) EQ 0 THEN filter_background=0
 
 fhd={npol:npol,baseline_threshold:baseline_threshold,$
     beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
