@@ -103,7 +103,6 @@ model_arr=Ptrarr(n_pol,/allocate)
 normalization_arr=fltarr(n_pol) ;factor to normalize holo_mapfn_apply
 model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
-model_uv_stks=Ptrarr(4,/allocate)
 IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
@@ -456,6 +455,7 @@ FOR i=i0,max_iter-1 DO BEGIN
     flux_Q=comp_arr[si_use].flux.Q;*area_cnv
     flux_U=comp_arr[si_use].flux.U;*area_cnv
     flux_V=comp_arr[si_use].flux.V;*area_cnv
+    model_uv_stks=Ptrarr(4,/allocate)
     *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I,/conserve_memory)
     IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
         ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q,/conserve_memory) 
@@ -469,6 +469,7 @@ FOR i=i0,max_iter-1 DO BEGIN
         2:(*model_uv_full[1])[uv_i_use2]+=(*model_uv_stks[0]-*model_uv_stks[1])/2.
         1:(*model_uv_full[0])[uv_i_use2]+=(*model_uv_stks[0]+*model_uv_stks[1])/2.
     ENDSWITCH
+    Ptr_free,model_uv_stks
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
