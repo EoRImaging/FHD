@@ -23,6 +23,8 @@ IF ~Keyword_Set(kbinsize) THEN kbinsize=0.5 ;k-space resolution, in wavelengths 
 IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline ELSE k_span=!RaDeg/degpix 
 dimension_test=2.^Round(ALOG10(k_span/kbinsize)/ALOG10(2.))
 
+max_baseline=max_baseline<(k_span/sqrt(2.))
+
 IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ELSE dimension=Float(dimension);dimension of the image in pixels; dimension = x direction
 IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
 degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel

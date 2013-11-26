@@ -327,7 +327,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t5+=t6_0-t5_0
     ENDIF
     IF map_flag THEN BEGIN
-        box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/btranspose)
+        box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/btranspose,TPOOL_MIN_ELTS=20000.)
 ;        IF Keyword_Set(grid_uniform_weight) THEN box_arr_map/=vis_n
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim

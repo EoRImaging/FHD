@@ -131,8 +131,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     vis_arr=Ptrarr(n_pol,/allocate)
     flag_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),$
-            Reform(data_array[imaginary_index,pol_i,*,*]));*phase_shift
+        *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))
         *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
     ENDFOR
     ;free memory
@@ -236,9 +235,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     SAVE,obs,filename=obs_filepath,/compress
     SAVE,params,filename=params_filepath,/compress
-    SAVE,hdr,filename=hdr_filepath,/compress
-        
-    SAVE,obs,filename=obs_filepath,/compress
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
     
     IF obs.n_vis EQ 0 THEN BEGIN
@@ -297,8 +293,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
-    IF (Ptr_valid(vis_arr))[0] THEN Ptr_free,vis_arr
-    IF (Ptr_valid(flag_arr))[0] THEN Ptr_free,flag_arr
+    undefine,vis_arr,flag_arr,params
 ENDIF
 
 IF N_Elements(cal) EQ 0 THEN IF file_test(cal_filepath) THEN cal=getvar_savefile(cal_filepath,'cal')
@@ -306,7 +301,7 @@ IF N_Elements(obs) EQ 0 THEN IF file_test(obs_filepath) THEN obs=getvar_savefile
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,psf,fhd,cal,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
+    fhd_wrap,obs,psf,params,fhd,cal,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,model_uv_arr=model_uv_arr,_Extra=extra
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
@@ -327,7 +322,8 @@ IF Keyword_Set(export_images) THEN BEGIN
     ENDELSE
 ENDIF
 
-IF N_Elements(map_fn_arr) GT 0 THEN IF Max(Ptr_valid(map_fn_arr)) THEN Ptr_free,map_fn_arr
+undefine,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,params
+
 ;;generate images showing the uv contributions of each tile. Very helpful for debugging!
 ;print,'Calculating individual tile uv coverage'
 ;mwa_tile_locate,obs=obs,params=params,psf=psf

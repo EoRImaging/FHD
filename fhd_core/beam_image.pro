@@ -47,7 +47,7 @@ IF N_Elements(freq_i) GT 0 THEN freq_i_use=freq_i
 
 n_bin_use=0.
 IF Keyword_Set(square) THEN BEGIN
-    beam_base=Complexarr(dimension,elements)
+    beam_base=Fltarr(dimension,elements)
     IF N_Elements(freq_bin_i) EQ 0 THEN BEGIN
         dims=Size(psf_base_ptr,/dimension)
         n_freq_bin=dims[1]
@@ -57,7 +57,7 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
             beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
-            beam_base+=beam_base_single*Conj(beam_base_single)
+            beam_base+=Real_part(beam_base_single*Conj(beam_base_single))>0
             n_bin_use+=1.*freq_norm[fi]
         ENDFOR
     ENDIF ELSE BEGIN
@@ -67,19 +67,21 @@ IF Keyword_Set(square) THEN BEGIN
         freq_bin_use=freq_bin_i[freq_i_use]
         fbin_use=freq_bin_use[Uniq(freq_bin_use,Sort(freq_bin_use))]
         nbin=N_Elements(Uniq(freq_bin_use,Sort(freq_bin_use)))
-        beam_arr=Ptrarr(nbin)
+;        beam_arr=Ptrarr(nbin)
         FOR bin0=0L,nbin-1 DO BEGIN
             fbin=fbin_use[bin0]
             nf_bin=Float(Total(freq_bin_use EQ fbin))
             beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
-            beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
+            beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)            
             beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
-            beam_base+=nf_bin*beam_base_single*Conj(beam_base_single)
+            neg_inds=where(real_part(beam_base_single) LT 0,n_neg)
+            IF n_neg GT 0 THEN beam_base_single[neg_inds]=0.
+            beam_base+=nf_bin*Real_part(beam_base_single*Conj(beam_base_single))>0
             n_bin_use+=nf_bin*freq_norm[fbin]
             
-            beam_arr[bin0]=Ptr_new(beam_base_single)
+;            beam_arr[bin0]=Ptr_new(beam_base_single)
         ENDFOR
     ENDELSE
 ENDIF ELSE BEGIN
