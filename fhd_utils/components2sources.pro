@@ -1,8 +1,9 @@
-FUNCTION Components2Sources,comp_arr,fhd,radius=radius,noise_map=noise_map,extend_allow=extend_allow,$
+FUNCTION Components2Sources,comp_arr,obs,fhd,radius=radius,noise_map=noise_map,extend_allow=extend_allow,$
     gain_recapture=gain_recapture,reject_sigma_threshold=reject_sigma_threshold
 compile_opt idl2,strictarrsubs  
 
 IF N_Elements(radius) EQ 0 THEN radius=1.
+astr=obs.astr
 
 ns=(size(comp_arr,/dimension))[0]
 group_id=fltarr(ns)-1
@@ -30,10 +31,13 @@ FOR gi=0L,ng-1 DO BEGIN
     
     flux_I=(comp_arr[si_g].flux.I)>0.
     IF Total(flux_I) LE 0 THEN CONTINUE
-    source_arr[gi].x=Total(comp_arr[si_g].x*flux_I)/Total(flux_I) ;flux_I is guaranteed to be non-zero from above
-    source_arr[gi].y=Total(comp_arr[si_g].y*flux_I)/Total(flux_I) ;flux_I is guaranteed to be non-zero from above
-    source_arr[gi].ra=Total(comp_arr[si_g].ra*flux_I)/Total(flux_I) ;flux_I is guaranteed to be non-zero from above
-    source_arr[gi].dec=Total(comp_arr[si_g].dec*flux_I)/Total(flux_I) ;flux_I is guaranteed to be non-zero from above
+    sx=Total(comp_arr[si_g].x*flux_I)/Total(flux_I)
+    sy=Total(comp_arr[si_g].y*flux_I)/Total(flux_I)
+    xy2ad,sx,sy,astr,sra,sdec
+    source_arr[gi].x=sx ;flux_I is guaranteed to be non-zero from above
+    source_arr[gi].y=sy ;flux_I is guaranteed to be non-zero from above
+    source_arr[gi].ra=sra ;flux_I is guaranteed to be non-zero from above
+    source_arr[gi].dec=sdec ;flux_I is guaranteed to be non-zero from above
     FOR pol_i=0,7 DO source_arr[gi].flux.(pol_i)=Total(comp_arr[si_g].flux.(pol_i))
     source_arr[gi].id=gi
     comp_arr[si_g].id=gi

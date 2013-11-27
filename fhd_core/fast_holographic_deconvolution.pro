@@ -538,7 +538,7 @@ noise_map=Stddev(image_use[where(beam_mask*source_mask)],/nan)*beam_corr_avg
 noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si-1]
-source_array=Components2Sources(comp_arr,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,reject_sigma_threshold=sigma_threshold)
+source_array=Components2Sources(comp_arr,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,reject_sigma_threshold=sigma_threshold)
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,/conserve_memory)
 t4_0=Systime(1)
