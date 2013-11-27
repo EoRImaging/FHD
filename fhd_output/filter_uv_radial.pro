@@ -1,5 +1,7 @@
-FUNCTION filter_uv_radial,image_uv,name=name,weights=weights,filter=filter,radial_power=radial_power,_Extra=extra
+FUNCTION filter_uv_radial,image_uv,name=name,weights=weights,filter=filter,$
+    radial_power=radial_power,return_name_only=return_name_only,_Extra=extra
 name='radial'
+IF Keyword_Set(return_name_only) THEN RETURN,image_uv
 ;IF N_Elements(filter) EQ N_Elements(image_uv) THEN RETURN,image_uv*filter
 IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
 dimension=(size(image_uv,/dimension))[0]

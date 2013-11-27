@@ -1,5 +1,7 @@
-FUNCTION filter_uv_natural,image_uv,name=name,weights=weights,filter=filter,_Extra=extra
+FUNCTION filter_uv_natural,image_uv,name=name,weights=weights,filter=filter,$
+    return_name_only=return_name_only,_Extra=extra
 name='natural'
+IF Keyword_Set(return_name_only) THEN RETURN,image_uv
 IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
 dimension=(size(image_uv,/dimension))[0]
 elements=(size(image_uv,/dimension))[1]
