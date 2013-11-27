@@ -9,8 +9,8 @@ IF ~(Keyword_Set(obs) AND Keyword_Set(psf) AND Keyword_Set(params)) THEN BEGIN
     IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
     vis_count=weights 
 ENDIF ELSE vis_count=visibility_count(obs,psf,params)
-vis_count[where(vis_count)]=vis_count[where(vis_count)]>(Max(vis_count)/1000.)
-filter_use=weight_invert(vis_count) ;should have psf.dim^2. factor, but that would divided out in the normalization later anyway
+;vis_count[where(vis_count)]=vis_count[where(vis_count)]>(Max(vis_count)/1000.)
+filter_use=weight_invert(vis_count,1.) ;should have psf.dim^2. factor, but that would divide out in the normalization later anyway
 
 IF N_Elements(weights) EQ N_Elements(image_uv) THEN wts_i=where(weights,n_wts) ELSE wts_i=where(filter_use,n_wts)
 IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)

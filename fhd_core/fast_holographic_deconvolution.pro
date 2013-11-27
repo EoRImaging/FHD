@@ -38,7 +38,7 @@ mapfn_threshold=fhd.mapfn_threshold
 beam_threshold=fhd.beam_threshold
 add_threshold=fhd.add_threshold
 max_add_sources=fhd.max_add_sources
-local_max_radius=fhd.local_max_radius
+;local_max_radius=fhd.local_max_radius
 pol_use=fhd.pol_use
 independent_fit=fhd.independent_fit
 reject_pol_sources=fhd.reject_pol_sources
@@ -55,6 +55,9 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 astr=obs.astr
+beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
+local_max_radius=beam_width*2.
+box_radius=Ceil(local_max_radius)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 
@@ -167,7 +170,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 FOR pol_i=0,n_pol-1 DO BEGIN    
-    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
+    normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
         weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_arr[pol_i]))[dimension/2.,elements/2.]
 ;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
 ;        weights=*weights_arr[pol_i]))[dimension/2.,elements/2.]
@@ -177,6 +180,7 @@ gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two account
 ;pix_area_cnv=pixel_area(astr,dimension=dimension);/degpix^2.
 ;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
 gain_use*=gain_normalization
+gain_array=source_taper*gain_use
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
 print,"Fractional uv coverage: ",uv_use_frac
@@ -312,7 +316,7 @@ FOR i=i0,max_iter-1 DO BEGIN
         ENDIF  
     ENDIF ELSE t2_0=Systime(1)
     source_find_image=image_filtered*beam_avg*source_mask*source_taper
-    image_use=image_filtered*beam_avg*source_mask*source_taper
+    image_use=image_filtered*beam_avg*source_mask
    
     IF i EQ 0 THEN converge_check[i]=Stddev(image_use[where(source_mask)],/nan)
     converge_check2[i]=Stddev(image_use[where(source_mask)],/nan)
@@ -356,9 +360,9 @@ FOR i=i0,max_iter-1 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
-        gcntrd,image_use,sx,sy,xcen,ycen,1.5,/keepcenter,/silent
-        source_box=image_use[sx-local_max_radius:sx+local_max_radius,$
-            sy-local_max_radius:sy+local_max_radius];*source_fit_fn
+        gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent
+;        gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/silent
+        source_box=image_use[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius];*source_fit_fn
 ;        box_i=where(source_box GT fit_threshold,n_fit)
 ;        IF n_fit EQ 0 THEN BEGIN
 ;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
@@ -377,35 +381,35 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;;        ycen0=Total(source_box[box_i]*source_box_yvals[box_i])/Total(source_box[box_i])
 ;        xcen0=Total(source_box*source_box_xvals)/Total(source_box)
 ;        ycen0=Total(source_box*source_box_yvals)/Total(source_box)
-;        xcen=sx-local_max_radius+xcen0
-;        ycen=sy-local_max_radius+ycen0
-        IF Abs(sx-xcen)>Abs(sy-ycen) GE local_max_radius/2. THEN BEGIN
+;        xcen=sx-box_radius+xcen0
+;        ycen=sy-box_radius+ycen0
+        IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
             n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
             source_mask[sx-1:sx+1,sy-1:sy+1]=0
             CONTINUE
         ENDIF
-        xcen0=xcen-sx+local_max_radius
-        ycen0=ycen-sy+local_max_radius
+        xcen0=xcen-sx+box_radius
+        ycen0=ycen-sy+box_radius
         xy2ad,xcen,ycen,astr,ra,dec
         
         beam_corr_src=fltarr(n_pol)
         beam_src=fltarr(n_pol)
         beam_corr_avg_src=beam_corr_avg[additional_i[src_i]]
         FOR pol_i=0,n_pol-1 DO BEGIN   
-            beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
+;            beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
             beam_src[pol_i]=(*beam_base[pol_i])[additional_i[src_i]]
             
             IF Keyword_Set(independent_fit) THEN BEGIN
                 sign=(pol_i mod 2) ? -1:1
-                IF pol_i EQ 0 THEN sbQ=image_use_Q[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+                IF pol_i EQ 0 THEN sbQ=image_use_Q[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
                 IF pol_i EQ 2 THEN BEGIN
-                    sbU=image_use_U[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
-                    sbV=image_use_V[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]*source_fit_fn
+                    sbU=image_use_U[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
+                    sbV=image_use_V[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
                 ENDIF
                 IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbQ,xcen0,ycen0,cubic=-0.5)
                 IF pol_i GE 2 THEN flux_use=Interpolate(sbU,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbV,xcen0,ycen0,cubic=-0.5)
             ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5) $
-                ELSE flux_use=Interpolate(image_use_U[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius],xcen0,ycen0,cubic=-0.5)
+                ELSE flux_use=Interpolate(image_use_U[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius],xcen0,ycen0,cubic=-0.5)
             
             flux_arr[pol_i]=flux_use*beam_corr_avg_src/2. ;"True sky" instrumental pol
         ENDFOR
@@ -416,10 +420,11 @@ FOR i=i0,max_iter-1 DO BEGIN
             CONTINUE
         ENDIF
         
+        gain_factor_use=gain_array[sx,sy]
         IF Keyword_Set(scale_gain) THEN BEGIN
             ston_single=(flux_arr[0]+flux_arr[1])/(converge_check2[i]*gain_normalization)
-            gain_factor_use=((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))>gain_factor
-        ENDIF ELSE gain_factor_use=gain_use
+            gain_factor_use=(((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))*gain_normalization)>gain_factor_use
+        ENDIF
         flux_arr*=gain_factor_use
         
         ;Apparent brightness, instrumental polarization X gain (a scalar)
