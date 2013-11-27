@@ -341,10 +341,10 @@ FOR i=i0,max_iter-1 DO BEGIN
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod dimension
     add_y=Floor(additional_i/dimension)
-    add_dist=fltarr(n_sources)-1
-    FOR addi=1,n_sources-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
+    add_dist=fltarr(n_sources)+dimension
+    FOR addi=1,n_sources-1 DO add_dist[addi]=Min(abs(add_x[addi]-add_x[0:addi-1]))<Min(abs(add_y[addi]-add_y[0:addi-1]))
     
-;    additional_i_usei=where(add_dist LT 0,n_sources)
+;    additional_i_usei=where(add_dist GT 1,n_sources)
 ;    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     
     IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
@@ -366,7 +366,7 @@ FOR i=i0,max_iter-1 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
-        IF add_dist[src_i] LT 0 THEN gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent ELSE xcen=(ycen=-1)
+        IF add_dist[src_i] GT local_max_radius THEN gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent ELSE xcen=(ycen=-1)
         IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
 ;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
 ;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
