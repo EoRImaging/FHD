@@ -356,13 +356,13 @@ FOR i=i0,max_iter-1 DO BEGIN
     
     si_use=Lonarr(n_sources)-1
     sx_arr=additional_i mod dimension
-    sy_arr=Floor(additional_i/dimension)
+    sy_arr=Float(Floor(additional_i/dimension))
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
         gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent
 ;        gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/silent
-        source_box=image_use[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius];*source_fit_fn
+;        source_box=image_use[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius];*source_fit_fn
 ;        box_i=where(source_box GT fit_threshold,n_fit)
 ;        IF n_fit EQ 0 THEN BEGIN
 ;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
@@ -383,13 +383,24 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;        ycen0=Total(source_box*source_box_yvals)/Total(source_box)
 ;        xcen=sx-box_radius+xcen0
 ;        ycen=sy-box_radius+ycen0
+;        IF (xcen LT 0) OR (ycen LT 0) THEN BEGIN
+;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
+;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+;            CONTINUE
+;        ENDIF
         IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
-            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-            source_mask[sx-1:sx+1,sy-1:sy+1]=0
-            CONTINUE
-        ENDIF
-        xcen0=xcen-sx+box_radius
-        ycen0=ycen-sy+box_radius
+;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
+;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+;            CONTINUE
+            xcen=sx
+            ycen=sy
+            gain_mod=0.5
+        ENDIF ELSE gain_mod=1.
+        sx0=Floor(xcen)
+        sy0=Floor(ycen)
+        source_box=image_use[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius]
+        xcen0=xcen-sx0+box_radius
+        ycen0=ycen-sy0+box_radius
         xy2ad,xcen,ycen,astr,ra,dec
         
         beam_corr_src=fltarr(n_pol)
@@ -415,8 +426,8 @@ FOR i=i0,max_iter-1 DO BEGIN
         ENDFOR
         
         IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
-            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
+;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
             CONTINUE
         ENDIF
         
@@ -426,6 +437,7 @@ FOR i=i0,max_iter-1 DO BEGIN
             gain_factor_use=(((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))*gain_normalization)>gain_factor_use
         ENDIF
         flux_arr*=gain_factor_use
+        flux_arr*=gain_mod
         
         ;Apparent brightness, instrumental polarization X gain (a scalar)
         FOR pol_i=0,n_pol-1 DO comp_arr[si].flux.(pol_i)=flux_arr[pol_i]*beam_src[pol_i]
