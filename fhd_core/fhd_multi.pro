@@ -557,7 +557,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     beam_avg=*beam_model[0,obs_i] & IF n_pol GT 1 THEN beam_avg=(beam_avg+*beam_model[1,obs_i])/2.
     noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
     comp_arr1=*comp_arr[obs_i]
-    source_array1=Components2Sources(comp_arr1,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
+    source_array1=Components2Sources(comp_arr1,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
     source_array[obs_i]=Ptr_new(source_array1)
 ENDFOR
 

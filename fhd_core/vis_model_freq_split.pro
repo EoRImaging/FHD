@@ -43,8 +43,8 @@ IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
     bi_n=findgen(nb)
     even_bi_use=where(bin_i mod 2 EQ 0)
     odd_bi_use=where(bin_i mod 2 EQ 1)
-    flag_arr1=fltarr(size(*flag_arr[0],/dimension))
     FOR pol_i=0,n_pol-1 DO BEGIN
+        flag_arr1=fltarr(size(*flag_arr[pol_i],/dimension))
         IF Keyword_Set(even_only) THEN flag_arr1[*,even_bi_use]=(*flag_arr[pol_i])[*,even_bi_use]
         IF Keyword_Set(odd_only) THEN flag_arr1[*,odd_bi_use]=(*flag_arr[pol_i])[*,odd_bi_use]
         *flag_arr[pol_i]*=flag_arr1

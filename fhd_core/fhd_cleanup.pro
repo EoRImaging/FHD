@@ -3,7 +3,6 @@ PRO fhd_cleanup,file_path_fhd,cleanup_all=cleanup_all
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
 hdr_filepath=file_path_fhd+'_hdr.sav' & file_path_list=Strarr(1)+hdr_filepath
-params_filepath=file_path_fhd+'_params.sav' & file_path_list=[file_path_list,params_filepath]
 autos_filepath=file_path_fhd+'_autos.sav' & file_path_list=[file_path_list,autos_filepath]
 cal_hist_filepath=file_path_fhd+'_cal_hist.sav' & file_path_list=[file_path_list,cal_hist_filepath]
 
@@ -11,6 +10,7 @@ FOR pol_i=0,3 DO BEGIN mapfn_filepath=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'
 
 hpx_filepath=file_path_fhd+'_hpxcnv.sav' & file_path_list=[file_path_list,hpx_filepath]
 IF Keyword_Set(cleanup_all) THEN BEGIN
+    params_filepath=file_path_fhd+'_params.sav' & file_path_list=[file_path_list,params_filepath]
     beams_filepath=file_path_fhd+'_beams.sav' & file_path_list=[file_path_list,beams_filepath]
     cal_filepath=file_path_fhd+'_cal.sav' & file_path_list=[file_path_list,cal_filepath]
     FOR pol_i=0,3 DO BEGIN vis_filepath=file_path_fhd+'_vis_'+pol_names[pol_i]+'.sav' & file_path_list=[file_path_list,vis_filepath] & ENDFOR

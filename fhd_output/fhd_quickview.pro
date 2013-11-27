@@ -61,7 +61,7 @@ FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN BEGIN
 ENDIF
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
-    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name)
+    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
 ENDIF ELSE filter_name=''
 
@@ -141,9 +141,10 @@ ENDIF ELSE source_flag=0
 instr_images=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
 instr_rings=Ptrarr(n_pol)
+filter_arr=Ptrarr(n_pol,/allocate) 
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))
@@ -153,8 +154,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 ; renormalize based on weights
-renorm_factor = get_image_renormalization(weights_arr=weights_arr,beam_base_out=beam_base_out,$
-  beam_correction_out=beam_correction_out,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix)
+renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
+  image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix)
 for pol_i=0,n_pol-1 do begin
   *instr_images[pol_i]*=renorm_factor
 endfor

@@ -117,7 +117,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
-        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),*hpx_cnv[obs_i])
+        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         IF dirty_flag THEN (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         IF model_flag THEN (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
     ENDFOR

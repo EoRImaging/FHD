@@ -27,7 +27,7 @@ freq_bin_i=freq_bin_i[fi_use]
 frequency_array=b_info.freq
 frequency_array=frequency_array[fi_use]
 
-tile_use=where(b_info.tile_use)
+tile_use=where(b_info.tile_use)+1
 bi_use=array_match(b_info.tile_A,b_info.tile_B,value_match=tile_use)
 n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
@@ -48,25 +48,27 @@ IF n_conj GT 0 THEN BEGIN
     ycen[*,conj_i]=-ycen[*,conj_i]
 ENDIF
 
-x_offset=Round((Ceil(xcen)-xcen)*psf_resolution) mod psf_resolution    
-y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
-xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.) 
-ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.) 
-xmax=xmin+psf_dim-1
-ymax=ymin+psf_dim-1
-
-range_test_x_i=where((xmin LE 0) OR (xmax GE dimension-1),n_test_x)
-range_test_y_i=where((ymin LE 0) OR (ymax GE elements-1),n_test_y)
-xmax=(ymax=0)
-IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
-IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
-
 dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test=0
+
+xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
+;xmax=xmin+psf_dim-1
+;ymax=ymin+psf_dim-1
+
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1
     ymin[flag_dist_i]=-1
+    flag_dist_i=0
 ENDIF
+
+range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
+IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
+range_test_x_i=0
+range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
+IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
+range_test_y_i=0
 
 IF Keyword_Set(flag_ptr) THEN BEGIN
     n_flag_dim=size(*flag_ptr[0],/n_dimension)
