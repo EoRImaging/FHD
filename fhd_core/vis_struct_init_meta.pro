@@ -43,13 +43,9 @@ IF file_test(metafits_path) THEN BEGIN
     
     obsra=sxpar(hdr0,'RA')
     obsdec=sxpar(hdr0,'Dec')
-    IF Keyword_Set(no_rephase) THEN BEGIN
-        phasera=obsra
-        phasedec=obsdec
-    ENDIF ELSE BEGIN
-        phasera=sxpar(hdr0,'RAPHASE')
-        phasedec=sxpar(hdr0,'DECPHASE')
-    ENDELSE
+    phasera=sxpar(hdr0,'RAPHASE')
+    phasedec=sxpar(hdr0,'DECPHASE')
+    
     LST=sxpar(hdr0,'LST')
 ;    HA=sxpar(hdr0,'HA')
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
@@ -109,6 +105,13 @@ ENDIF ELSE BEGIN
     beamformer_delays=Ptr_new()
 ENDELSE
 
+orig_phasera=phasera
+orig_phasedec=phasedec
+IF Keyword_Set(no_rephase) THEN BEGIN
+    phasera=obsra
+    phasedec=obsdec
+ENDIF
+
 ;IF Abs(obsra-zenra) LT degpix THEN zenra=obsra
 ;IF Abs(obsdec-zendec) LT degpix THEN zendec=obsdec
 
@@ -126,7 +129,7 @@ Eq2Hor,obsra,obsdec,JD0,obsalt,obsaz,lat=lat,lon=lon,alt=Mean(alt)
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),astr:astr,$
     obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),obsaz:Float(obsaz),obsalt:Float(obsalt),$
-    delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag}
+    delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Float(orig_phasera),orig_phasedec:Float(orig_phasedec)}
 
 RETURN,meta
 END
