@@ -1,5 +1,6 @@
 FUNCTION fhd_galaxy_deconvolve,obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,model_uv_holo=model_uv_holo,$
-    galaxy_model_img=galaxy_model_img,galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=restore,uv_return=uv_return,_Extra=extra
+    galaxy_model_img=galaxy_model_img,galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=restore,$
+    image_filter=image_filter,filter_arr=filter_arr,uv_return=uv_return,_Extra=extra
 
 IF Keyword_Set(file_path_fhd) THEN file_path_galmodel=file_path_fhd+'_GalaxyModel.sav' ELSE file_path_galmodel=''
 IF Keyword_Set(restore) AND file_test(file_path_galmodel) THEN BEGIN
@@ -11,13 +12,14 @@ dimension=obs.dimension
 elements=obs.elements
 astr=obs.astr
 degpix=obs.degpix
+n_pol=obs.n_pol
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
 ;pixel_area=pixel_area(astr,dimension=dimension,elements=elements)
 i_use=where(Finite(ra_arr))
 glactc,ra_arr[i_use],dec_Arr[i_use],2000.,gl_vals,gb_vals,1,/degree
 gal_lat_weights=fltarr(dimension,elements) & gal_lat_weights[i_use]=(1./(Abs(gb_vals)>5))
 
-
+IF N_Elements(filter_arr) EQ 0 THEN filter_arr=intarr(n_pol)
 freq_use=where((*obs.baseline_info).freq_use,nf_use)
 IF Tag_exist(obs,'fbin_i') THEN f_bin=obs.fbin_i ELSE f_bin=(*obs.baseline_info).fbin_i
 fb_use=Uniq(f_bin[freq_use])
@@ -45,7 +47,6 @@ IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
 ;    model*=weight_invert(pixel_area)
     Ptr_free,model_arr
     
-    n_pol=N_Elements(image_uv_arr)
     IF N_Elements(map_fn_arr) EQ 0 THEN BEGIN
         
         map_fn_free_flag=1
@@ -95,7 +96,8 @@ IF ~Keyword_Set(galaxy_component_fit) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv[pol_i]*=scale;/dimension*elements
         *model_uv_holo[pol_i]*=scale
-        *model_img_holo[pol_i]*=scale
+        *model_img_holo[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,$
+            image_filter=image_filter,filter=filter_arr[pol_i],file_path_fhd=file_path_fhd))
     ENDFOR
     galaxy_model_img=model
     galaxy_model_uv=model_uv

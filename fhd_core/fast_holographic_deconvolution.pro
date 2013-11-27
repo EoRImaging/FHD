@@ -45,6 +45,7 @@ reject_pol_sources=fhd.reject_pol_sources
 sigma_threshold=2.
 calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
+IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform2'
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -138,21 +139,36 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *weights_arr[pol_i]=weights_single
 ENDFOR
 
+filter_arr=Ptrarr(n_pol,/allocate)
+FOR pol_i=0,n_pol-1 DO BEGIN    
+    filter_single=filter_arr[pol_i]
+    normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
+        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_single))[dimension/2.,elements/2.]
+;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
+;        weights=*weights_arr[pol_i]))[dimension/2.,elements/2.]
+    filter_arr[pol_i]=filter_single
+    normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
+ENDFOR
+gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
+;pix_area_cnv=pixel_area(astr,dimension=dimension);/degpix^2.
+;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
+gain_use*=gain_normalization
+gain_array=source_taper*gain_use
+
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
-        galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0,_Extra=extra)
+    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,file_path_fhd=file_path_fhd,$
+        galaxy_model_uv=galaxy_model_uv,restore=0,image_filter=decon_filter,filter_arr=filter_arr,_Extra=extra)
 ;    gal_model_composite=fltarr(dimension,elements)
 ;    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
 ENDIF 
 
-filter_arr=Ptrarr(n_pol)
-FOR pol_i=0,n_pol-1 DO BEGIN    
-    filter_single=1
+
+FOR pol_i=0,n_pol-1 DO BEGIN 
     dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_single)*(*beam_correction[pol_i])^2.
+        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i])*(*beam_correction[pol_i])^2.
 ;    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
 ;        weights=*weights_arr[pol_i])*(*beam_correction[pol_i])^2.
-    IF Ptr_valid(filter_single) THEN filter_arr[pol_i]=filter_single
+
     IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
     
@@ -169,18 +185,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
 
-FOR pol_i=0,n_pol-1 DO BEGIN    
-    normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter='filter_uv_uniform2',filter=filter_arr[pol_i]))[dimension/2.,elements/2.]
-;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
-;        weights=*weights_arr[pol_i]))[dimension/2.,elements/2.]
-    normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
-ENDFOR
-gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
-;pix_area_cnv=pixel_area(astr,dimension=dimension);/degpix^2.
-;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
-gain_use*=gain_normalization
-gain_array=source_taper*gain_use
+
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
 print,"Fractional uv coverage: ",uv_use_frac
@@ -330,7 +335,7 @@ FOR i=i0,max_iter-1 DO BEGIN
 
     flux_ref=source_find_image[source_i]*add_threshold
     additional_i1=where(source_find_image GE flux_ref,n_sources1)
-    additional_i2=where((source_find_image GE 5.*converge_check2[i]) AND (source_find_image GE source_find_image[source_i]/10.),n_sources2)
+    additional_i2=where((source_find_image GE 10.*converge_check2[i]) AND (source_find_image GE source_find_image[source_i]/10.),n_sources2)
     additional_i=(n_sources1 GT n_sources2) ? additional_i1:additional_i2 
     n_sources=n_sources1>n_sources2
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
@@ -338,8 +343,9 @@ FOR i=i0,max_iter-1 DO BEGIN
     add_y=Floor(additional_i/dimension)
     add_dist=fltarr(n_sources)-1
     FOR addi=1,n_sources-1 DO add_dist[addi]=(local_max_radius-Min(abs(add_x[addi]-add_x[0:addi-1])))<(local_max_radius-Min(abs(add_y[addi]-add_y[0:addi-1])))
-    additional_i_usei=where(add_dist LT 0,n_sources)
-    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
+    
+;    additional_i_usei=where(add_dist LT 0,n_sources)
+;    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     
     IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     IF max_add_sources EQ 0 THEN BREAK
@@ -360,41 +366,14 @@ FOR i=i0,max_iter-1 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
-        gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent
-;        gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/silent
-;        source_box=image_use[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius];*source_fit_fn
-;        box_i=where(source_box GT fit_threshold,n_fit)
-;        IF n_fit EQ 0 THEN BEGIN
-;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
-;            CONTINUE
-;        ENDIF
-;        IF Total(source_fit_fn[box_i]) LT source_fit_fn_ref THEN BEGIN
-;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
-;            CONTINUE
-;        ENDIF
-;        
-;        source_box=source_box>0
-;;        source_box-=Min(source_box)
-;;        xcen0=Total(source_box[box_i]*source_box_xvals[box_i])/Total(source_box[box_i])
-;;        ycen0=Total(source_box[box_i]*source_box_yvals[box_i])/Total(source_box[box_i])
-;        xcen0=Total(source_box*source_box_xvals)/Total(source_box)
-;        ycen0=Total(source_box*source_box_yvals)/Total(source_box)
-;        xcen=sx-box_radius+xcen0
-;        ycen=sy-box_radius+ycen0
-;        IF (xcen LT 0) OR (ycen LT 0) THEN BEGIN
-;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
-;            CONTINUE
-;        ENDIF
+        IF add_dist[src_i] LT 0 THEN gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent ELSE xcen=(ycen=-1)
         IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
 ;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
 ;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
 ;            CONTINUE
             xcen=sx
             ycen=sy
-            gain_mod=0.5
+            gain_mod=1./beam_width^2.
         ENDIF ELSE gain_mod=1.
         sx0=Floor(xcen)
         sy0=Floor(ycen)

@@ -3,7 +3,7 @@ FUNCTION fhd_init,obs,restore=restore,pol_use=pol_use,freq_use=freq_use,time_i_u
     max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,smooth_width=smooth_width,$
     mapfn_threshold=mapfn_threshold,baseline_threshold=baseline_threshold,beam_threshold=beam_threshold,add_threshold=add_threshold,$
     polarization_map=polarization_map,polarization_correction=polarization_correction,ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,$
-    beam_base=beam_base,beam_correction=beam_correction,independent_fit=independent_fit,$
+    beam_base=beam_base,beam_correction=beam_correction,independent_fit=independent_fit,deconvolution_filter=deconvolution_filter,$
     beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,$
     reject_pol_sources=reject_pol_sources,filter_background=filter_background,transfer_mapfn=transfer_mapfn
 
@@ -38,6 +38,7 @@ IF N_Elements(reject_pol_sources) EQ 0 THEN reject_pol_sources=0 ;set to exclude
 IF N_Elements(calibration_image_subtract) EQ 0 THEN calibration_image_subtract=0. ELSE calibration_image_subtract=Float(calibration_image_subtract)
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn='False'
 IF N_Elements(filter_background) EQ 0 THEN filter_background=0
+IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_uniform2'
 
 fhd={npol:npol,baseline_threshold:baseline_threshold,$
     beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
@@ -45,7 +46,7 @@ fhd={npol:npol,baseline_threshold:baseline_threshold,$
     add_threshold:add_threshold,max_add_sources:max_add_sources,independent_fit:independent_fit,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,smooth_width:smooth_width,$
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
-    cal_subtract:calibration_image_subtract,filter_background:filter_background}
+    cal_subtract:calibration_image_subtract,filter_background:filter_background,decon_filter:deconvolution_filter}
 
 RETURN,fhd
 END
