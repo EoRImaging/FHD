@@ -343,9 +343,26 @@ FOR i=i0,max_iter-1 DO BEGIN
     add_y=Floor(additional_i/dimension)
     add_dist=fltarr(n_sources)+dimension
     FOR addi=1,n_sources-1 DO add_dist[addi]=Min(abs(add_x[addi]-add_x[0:addi-1]))<Min(abs(add_y[addi]-add_y[0:addi-1]))
+        
+    source_map=intarr(dimension,elements)
+    source_map[add_x,add_y]=addi+1
+    background_dist=morph_distance(source_map,neighbor=3)
+    extended_pix=where(background_dist GE beam_width,n_extend)
+    extended_flag=fltarr(n_sources)
+    IF n_extend GT 0 THEN BEGIN
+        src_inds=source_map[extended_pix]-1
+        FOR ext_i=0L,n_extend-1 DO BEGIN
+            src_i=src_inds[ext_i]
+            IF extended_flag[src_i] THEN CONTINUE ;skip sources already dealt with
+            pix_i=region_grow(background_dist,extended_pix[ext_i],thresh=[1,dimension])
+            extended_flag[source_map[pix_i]-1]=1.
+        ENDFOR
+    ENDIF
     
-;    additional_i_usei=where(add_dist GT 1,n_sources)
-;    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
+    additional_i_usei=where((add_dist GE local_max_radius) OR extended_flag,n_sources)
+    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
+    add_dist=add_dist[additional_i_usei]
+    extended_flag=extended_flag[additional_i_usei]
     
     IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     IF max_add_sources EQ 0 THEN BREAK
@@ -366,14 +383,14 @@ FOR i=i0,max_iter-1 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
-        IF add_dist[src_i] GT local_max_radius THEN gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent ELSE xcen=(ycen=-1)
+        IF add_dist[src_i] GE local_max_radius THEN gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent ELSE xcen=(ycen=-1)
         IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
 ;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
 ;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
 ;            CONTINUE
             xcen=sx
             ycen=sy
-            gain_mod=1./beam_width^2.
+            gain_mod=1./beam_width^2. ;divide by the area of the beam for diffuse sources
         ENDIF ELSE gain_mod=1.
         sx0=Floor(xcen)
         sy0=Floor(ycen)
