@@ -345,7 +345,7 @@ FOR i=i0,max_iter-1 DO BEGIN
     FOR addi=1,n_sources-1 DO add_dist[addi]=Min(abs(add_x[addi]-add_x[0:addi-1]))<Min(abs(add_y[addi]-add_y[0:addi-1]))
         
     source_map=intarr(dimension,elements)
-    source_map[add_x,add_y]=addi+1
+    source_map[add_x,add_y]=indgen(n_sources)+1
     background_dist=morph_distance(source_map,neighbor=3)
     extended_pix=where(background_dist GT (beam_width>1.),n_extend)
     extended_flag=fltarr(n_sources)
