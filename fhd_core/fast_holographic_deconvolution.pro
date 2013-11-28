@@ -347,7 +347,7 @@ FOR i=i0,max_iter-1 DO BEGIN
     source_map=intarr(dimension,elements)
     source_map[add_x,add_y]=addi+1
     background_dist=morph_distance(source_map,neighbor=3)
-    extended_pix=where(background_dist GE beam_width,n_extend)
+    extended_pix=where(background_dist GT (beam_width>1.),n_extend)
     extended_flag=fltarr(n_sources)
     IF n_extend GT 0 THEN BEGIN
         src_inds=source_map[extended_pix]-1
