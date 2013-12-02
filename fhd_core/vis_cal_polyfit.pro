@@ -1,4 +1,4 @@
-FUNCTION vis_cal_polyfit,cal,obs,degree=degree;,phase_degree=phase_degree
+FUNCTION vis_cal_polyfit,cal,obs,degree=degree,remove_polyfit=remove_polyfit;,phase_degree=phase_degree
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
 n_pol=cal.n_pol
@@ -15,7 +15,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR tile_i=0L,n_tile-1 DO BEGIN
         gain=reform(gain_amp[freq_use,tile_i])
         fit_params=poly_fit(freq_use,gain,degree,yfit=gain_fit)
-        gain_arr[freq_use,tile_i]*=gain_fit*weight_invert(gain)
+        IF Keyword_Set(remove_polyfit) THEN gain_arr[freq_use,tile_i]*=weight_invert(gain_fit) ELSE gain_arr[freq_use,tile_i]*=gain_fit*weight_invert(gain)
     ENDFOR
     *cal_return.gain[pol_i]=gain_arr
 ENDFOR
