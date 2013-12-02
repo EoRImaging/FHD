@@ -293,7 +293,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
-    undefine,vis_arr,flag_arr,params
+    Ptr_free,vis_arr,flag_arr
 ENDIF
 
 IF N_Elements(cal) EQ 0 THEN IF file_test(cal_filepath) THEN cal=getvar_savefile(cal_filepath,'cal')
