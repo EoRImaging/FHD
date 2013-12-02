@@ -335,14 +335,14 @@ FOR i=i0,max_iter-1 DO BEGIN
 
     flux_ref=source_find_image[source_i]*add_threshold
     additional_i1=where(source_find_image GE flux_ref,n_sources1)
-    additional_i2=where((source_find_image GE 10.*converge_check2[i]) AND (source_find_image GE source_find_image[source_i]/10.),n_sources2)
+    additional_i2=where((source_find_image GE 10.*converge_check2[i]) AND (source_find_image GE source_find_image[source_i]/2.),n_sources2)
     additional_i=(n_sources1 GT n_sources2) ? additional_i1:additional_i2 
     n_sources=n_sources1>n_sources2
     additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod dimension
     add_y=Floor(additional_i/dimension)
     add_dist=fltarr(n_sources)+dimension
-    FOR addi=1,n_sources-1 DO add_dist[addi]=Min(abs(add_x[addi]-add_x[0:addi-1]))<Min(abs(add_y[addi]-add_y[0:addi-1]))
+    FOR addi=1,n_sources-1 DO add_dist[addi]=Min(Sqrt((add_x[addi]-add_x[0:addi-1])^2+(add_y[addi]-add_y[0:addi-1])^2.))
         
     source_map=intarr(dimension,elements)
     source_map[add_x,add_y]=indgen(n_sources)+1
@@ -353,13 +353,19 @@ FOR i=i0,max_iter-1 DO BEGIN
         src_inds=source_map[extended_pix]-1
         FOR ext_i=0L,n_extend-1 DO BEGIN
             src_i=src_inds[ext_i]
-            IF extended_flag[src_i] THEN CONTINUE ;skip sources already dealt with
+            IF extended_flag[src_i] NE 0 THEN CONTINUE ;skip sources already dealt with
             pix_i=region_grow(background_dist,extended_pix[ext_i],thresh=[1,dimension])
-            extended_flag[source_map[pix_i]-1]=1.
+            add_i_use=source_map[pix_i]-1
+            flux_vals=image_use[additional_i[add_i_use]]
+            ii_use=where(flux_vals GE Max(flux_vals)/2.,nii_use,complement=ii_unused,ncomplement=nii_unused)
+            IF nii_use GT 3 THEN BEGIN
+                extended_flag[add_i_use[ii_use]]=1.
+                IF nii_unused GT 0 THEN extended_flag[add_i_use[ii_unused]]=-1.
+            ENDIF ELSE extended_flag[add_i_use]=-1
         ENDFOR
     ENDIF
     
-    additional_i_usei=where((add_dist GE local_max_radius) OR extended_flag,n_sources)
+    additional_i_usei=where((add_dist GE local_max_radius) OR (extended_flag GT 0),n_sources)
     additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
     add_dist=add_dist[additional_i_usei]
     extended_flag=extended_flag[additional_i_usei]
@@ -454,8 +460,15 @@ FOR i=i0,max_iter-1 DO BEGIN
     IF n_si_use EQ 0 THEN BEGIN
         ;do something to end loop if n_mask EQ 0
         
+        i2+=1
+        t10=Systime(1)-t0
+        converge_check[i2]=Stddev(image_use[where(beam_mask)],/nan)
+        print,StrCompress(String(format='("Break after iteration ",I," from failure to fit any sources after ",I," seconds with ",I," sources (convergence:",F,")")',$
+            i,t10,si,Stddev(image_use[where(beam_mask)],/nan)))
+        converge_check2=converge_check2[0:i]
+        converge_check=converge_check[0:i2]
+        BREAK
         recalc_flag=0
-        CONTINUE
     ENDIF ELSE recalc_flag=1
     
     si_use=si_use[si_use_i]
