@@ -320,7 +320,7 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF  
     ENDIF ELSE t2_0=Systime(1)
-    source_find_image=image_filtered*beam_avg*beam_mask*source_taper
+    source_find_image=image_filtered*beam_avg*beam_mask*source_taper*source_mask
     image_use=image_filtered*beam_avg*beam_mask
    
     IF i EQ 0 THEN converge_check[i]=Stddev(image_use[where(beam_mask)],/nan)
@@ -429,8 +429,8 @@ FOR i=i0,max_iter-1 DO BEGIN
         ENDFOR
         
         IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
-;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+            n_mask+=Total(source_mask[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
+            source_mask[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]=0
             CONTINUE
         ENDIF
         
