@@ -97,7 +97,7 @@ beam_mask*=alias_mask
 beam_avg/=nbeam_avg
 beam_avg=Sqrt(beam_avg>0.)
 beam_corr_avg=weight_invert(beam_avg,beam_threshold)
-source_taper=beam_avg*(beam_corr_avg<1./sqrt(beam_threshold))
+source_taper=Sqrt((beam_avg*(beam_corr_avg<1./sqrt(beam_threshold)))>0.)
 
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
 weights_arr=Ptrarr(n_pol,/allocate)
