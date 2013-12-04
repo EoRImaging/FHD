@@ -58,7 +58,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
 ;    IF size(cal,/type) EQ 8 THEN BEGIN
 ;;        cal=vis_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
         IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
-        IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
+        IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
         vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=0)
         timing=Systime(1)-t0_0
         RETURN,vis_cal
