@@ -1,9 +1,10 @@
 PRO vis_split_export_multi,hpx_inds,n_avg=n_avg,output_path=output_path,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_model_cube=ps_model_cube,$
-    fhd_file_list=fhd_file_list,even_only=even_only,odd_only=odd_only,_Extra=extra
+    fhd_file_list=fhd_file_list,even_only=even_only,odd_only=odd_only,rephase_weights=rephase_weights,_Extra=extra
 heap_gc
 
 n_obs=N_Elements(fhd_file_list)
+IF N_Elements(rephase_weights) EQ 0 THEN rephase_weights=1
 base_filename_range=file_basename([fhd_file_list[0],fhd_file_list[n_obs-1]])
 obs_range=strjoin(base_filename_range,'-',/single)
 cube_filepath=output_path+'_'+obs_range
@@ -106,7 +107,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     
     print,"Frequency splitting: "+file_basename(file_path_fhd)
     IF model_flag THEN source_array=getvar_savefile(file_path_fhd+'_fhd.sav','source_array')
-    residual_arr1=vis_model_freq_split(obs,psf,source_list=source_array,$
+    residual_arr1=vis_model_freq_split(obs,psf,source_list=source_array,rephase_weights=rephase_weights,$
         weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
         file_path_fhd=file_path_fhd,even_only=even_only,odd_only=odd_only,vis_n_arr=vis_n_arr,/preserve_visibilities,_Extra=extra)
     
