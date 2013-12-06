@@ -8,6 +8,7 @@ IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
 phase_filename=file_path_base+'_cal_phase'+ext_name
 amp_filename=file_path_base+'_cal_amp'+ext_name
 vis_hist_filename=file_path_base+'_cal_hist'+ext_name
+IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
 tile_names = cal.tile_names
 n_tiles=obs.n_tile

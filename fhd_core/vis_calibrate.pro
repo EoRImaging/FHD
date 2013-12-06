@@ -139,6 +139,13 @@ IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
     IF tag_exist(obs,'residual') THEN obs.residual=1
 ENDIF
 
+IF ~Keyword_Set(silent) THEN BEGIN
+    basename=file_basename(file_path_fhd)
+    dirpath=file_dirname(file_path_fhd)
+    image_path=filepath(basename,root=dirpath,sub='images')
+    plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
+ENDIF
+
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0
 IF ~Keyword_Set(silent) THEN print,timing,t1,t2,t3

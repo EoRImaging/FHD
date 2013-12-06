@@ -18,18 +18,18 @@ vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_galactic_center_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_galactic_center_catalog2.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 ;calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=3072.
-max_sources=20000.
+max_sources=200000.
 pad_uv_image=2.
+IF dimension GT 2048 THEN pad_uv_image=1.
 FoV=80.
 no_ps=1 ;don't save postscript copy of images
-psf_dim=8
 min_baseline=1.
-min_cal_baseline=100.
+min_cal_baseline=10.
 ring_radius=10.*pad_uv_image
 nfreq_avg=16
 psf_resolution=8.
@@ -43,7 +43,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
-    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,psf_dim=psf_dim,$
+    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,$
     no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,/mark_zenith,$
