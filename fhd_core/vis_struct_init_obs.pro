@@ -2,14 +2,17 @@ FUNCTION vis_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
-    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_offset=time_offset,spectral_index=spectral_index,antenna_size=antenna_size,_Extra=extra
+    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_offset=time_offset,spectral_index=spectral_index,$
+    psf_dim=psf_dim,antenna_size=antenna_size,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
 IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
+IF N_Elements(antenna_size) EQ 0 THEN antenna_size=3. ;meters (MWA groundscreen size)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
 
+speed_light=299792458.
 time=params.time
 b0i=Uniq(time)
 time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600.
@@ -78,6 +81,13 @@ kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr)) $
     ELSE max_baseline_use=max_baseline
 
+;psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize)+1
+;psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
+IF Keyword_Set(psf_dim) THEN BEGIN
+    psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
+    kbinsize=(antenna_size*2.*Max(frequency_array)/speed_light)/(psf_dim-1.)
+    FoV=!RaDeg/kbinsize
+ENDIF
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
 IF ~Keyword_Set(kbinsize) THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
 IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline_use ELSE k_span=!RaDeg/degpix 
@@ -92,7 +102,6 @@ IF N_Elements(max_baseline) EQ 0 THEN $
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) ELSE min_baseline=min_baseline>Min(kr_arr[where(kr_arr)])
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 
-IF N_Elements(antenna_size) EQ 0 THEN antenna_size=3. ;meters (MWA groundscreen size)
 meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,_Extra=extra)
 
 tile_use1=intarr(n_tile)
