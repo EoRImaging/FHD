@@ -19,13 +19,9 @@ n_hpx=hpx_max-hpx_min+1
 n_hpx_full=nside2npix((*hpx_cnv[obs_use[0]]).nside)
 
 ind_hist=lonarr(n_hpx)
-hist_arr=Ptrarr(n_obs)
-ri_arr=Ptrarr(n_obs)
 FOR obs_i=0,n_obs-1 DO BEGIN
     IF obs_valid[obs_i] EQ 0 THEN CONTINUE
-    ind_hist1=histogram((*hpx_cnv[obs_i]).inds,min=hpx_min,max=hpx_max,/bin,reverse_ind=ri1)
-    hist_arr[obs_i]=Ptr_new(ind_hist1)
-    ri_arr[obs_i]=Ptr_new(ri1)
+    ind_hist1=histogram((*hpx_cnv[obs_i]).inds,min=hpx_min,max=hpx_max,/bin)
     ind_hist+=ind_hist1
 ENDFOR
 ind_hist1=0 ;free memory
@@ -36,19 +32,21 @@ hpx_inds=ind_use+hpx_min
 hpx_ind_map=Ptrarr(size(hpx_cnv,/dimension))
 FOR obs_i=0,n_obs-1 DO BEGIN
     IF obs_valid[obs_i] EQ 0 THEN CONTINUE
-    ri=*ri_arr[obs_i]
+    ind_hist1=histogram((*hpx_cnv[obs_i]).inds,min=hpx_min,max=hpx_max,/bin,reverse_ind=ri)
     ;only include indices that have data, and are inside the set of indices
-    ind_use2=where((*hist_arr[obs_i])[ind_use],n_use2) 
+    ind_use2=where(ind_hist1[ind_use],n_use2) 
+    ind_hist1=0 ;free memory
     ;convert these indices of the full index back to a subset of the original indices
     ind_use3=ri[ri[ind_use[ind_use2]]]
-    ;
+    ri=0 ;free memory
+    
     order=Sort(ind_use3)
+    ind_use3=0 ;free memory
 ;    ind_use2_ordered=Lon64arr(n_use2)
     ind_use2_ordered=ind_use2[order]
+    ind_use2=0 ;free memory
     hpx_ind_map[obs_i]=Ptr_new(ind_use2_ordered)
-    *hist_arr[obs_i]=0  ;free memory
 ENDFOR
-Ptr_free,hist_arr,ri_arr
 
 IF Arg_Present(reverse_ind_reference) THEN BEGIN
     reverse_ind_reference=Lon64arr(n_hpx_full)-1
