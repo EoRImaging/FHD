@@ -1,36 +1,31 @@
-FUNCTION filter_uv_uniform,image_uv,name=name,weights=weights,filter=filter,return_name_only=return_name_only,_Extra=extra
+FUNCTION filter_uv_uniform,image_uv,obs=obs,psf=psf,params=params,weights=weights,name=name,filter=filter,$
+    file_path_fhd=file_path_fhd,return_name_only=return_name_only,_Extra=extra
+;NOTE: 'params' can actually be EITHER params OR 'cal' structure!
+
 name='uniform'
 IF Keyword_Set(return_name_only) THEN RETURN,image_uv
-;IF N_Elements(filter) EQ N_Elements(image_uv) THEN RETURN,image_uv*filter
-IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
-dimension=(size(image_uv,/dimension))[0]
-elements=(size(image_uv,/dimension))[1]
+;NOTE: This does not make use of fine-grained flagging, but relies on coarse flags from the obs structure 
+; (i.e. a list of tiles completely flagged, and of frequencies completely flagged)
 
-filter_use=fltarr(dimension,elements)
-radial_smooth=dimension/40.
-val0=0.
+IF ~(Keyword_Set(obs) AND Keyword_Set(psf) AND Keyword_Set(params)) THEN BEGIN
+    IF Keyword_Set(file_path_fhd) THEN BEGIN
+        IF ~Keyword_Set(obs) THEN obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
+        IF ~Keyword_Set(psf) THEN psf=getvar_savefile(file_path_fhd+'_beams.sav','psf') 
+        IF ~Keyword_Set(params) THEN params=getvar_savefile(file_path_fhd+'_params.sav','params')
+        vis_count=visibility_count(obs,psf,params)
+    ENDIF ELSE BEGIN
+        IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
+        vis_count=weights/Min(weights[where(weights GT 0)])
+    ENDELSE
+ENDIF ELSE vis_count=visibility_count(obs,psf,params)
+;vis_count[where(vis_count)]=vis_count[where(vis_count)]>(Max(vis_count)/1000.)
+filter_use=weight_invert(vis_count,1.) ;should have psf.dim^2. factor, but that would divide out in the normalization later anyway
 
-xv=meshgrid(dimension,elements,1)-dimension/2
-yv=meshgrid(dimension,elements,2)-elements/2
-radial_map=Sqrt(xv^2.+yv^2.)
-
-ft_kernel = exp(-(radial_map/radial_smooth)^2.)
-
-filter_use = fft_shift(fft(fft_shift(weights)))
-filter_use = filter_use * ft_kernel
-filter_use = Abs(fft_shift(fft(fft_shift(filter_use),1)))
-
-thresh=Max(filter_use)/1e4 ; 10e-10
-filter_use=weight_invert(filter_use)<(1./thresh)
-
-IF Max(filter_use) EQ 0 THEN RETURN,image_uv 
-
-wts_i=where(weights,n_wts)
-IF n_wts GT 0 THEN filter_use=filter_use*mean(weights[wts_i])/Mean(weights[wts_i]*filter_use[wts_i]) ELSE filter_use=filter_use*mean(weights)/Mean(weights*filter_use)
+IF N_Elements(weights) EQ N_Elements(image_uv) THEN wts_i=where(weights,n_wts) ELSE wts_i=where(filter_use,n_wts)
+IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)
 
 IF Ptr_valid(filter) THEN *filter=filter_use
 
-;filter/=Mean(filter) ;preserve mean value
 image_uv_filtered=image_uv*filter_use
 RETURN,image_uv_filtered
 END

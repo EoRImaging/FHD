@@ -38,7 +38,7 @@ IF N_Elements(reject_pol_sources) EQ 0 THEN reject_pol_sources=0 ;set to exclude
 IF N_Elements(calibration_image_subtract) EQ 0 THEN calibration_image_subtract=0. ELSE calibration_image_subtract=Float(calibration_image_subtract)
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn='False'
 IF N_Elements(filter_background) EQ 0 THEN filter_background=0
-IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_uniform2'
+IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_uniform'
 
 fhd={npol:npol,baseline_threshold:baseline_threshold,$
     beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$

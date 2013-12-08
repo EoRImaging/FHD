@@ -8,7 +8,7 @@ except=!except
 !except=0 
 heap_gc
 
-IF not Keyword_Set(color_table) THEN color_table=0.1 ;written intentionally to overwrite color_table=0
+IF ~Keyword_Set(color_table) THEN color_table=0.1 ;written intentionally to overwrite color_table=0
 
 IF N_Elements(map_projection) EQ 0 THEN map_projection='orth' ELSE map_projection=StrLowCase(map_projection)
 proj_list=['mollweide','orthographic','gnomic','cartesian']
@@ -28,7 +28,7 @@ Stokes_inds=Ptrarr(2,/allocate)
 sign=[[1.,1.],[1.,-1.]]
 Stk_nm=['I','Q']
 npix=nside2npix(nside)
-;IF not Keyword_Set(nside) THEN nside=npix2nside(npix)
+;IF ~Keyword_Set(nside) THEN nside=npix2nside(npix)
 n_obs=N_Elements(obs_arr)
 IF n_obs EQ 1 THEN BEGIN
     lon_avg=obs_arr.obsra
@@ -52,7 +52,7 @@ IF n_pol EQ 1 THEN sign*=2. ;hack to get the factor of two in all the right plac
 IF ~Keyword_Set(hpx_inds) THEN hpx_inds=Lindgen(npix)
 
 mrc_flag=(Ptr_valid(mrc_hpx))[0]
-;IF not Keyword_Set(restore_last) THEN BEGIN
+;IF ~Keyword_Set(restore_last) THEN BEGIN
     FOR stk_i=0,n_pol-1 DO BEGIN
         Stokes_single=fltarr(npix)
         Stokes_weights_single=fltarr(npix)
