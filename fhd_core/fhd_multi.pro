@@ -50,7 +50,7 @@ local_radius=local_max_radius*Mean(obs_arr.degpix)
 source_alias_radius=Mean(obs_arr.degpix*obs_arr.dimension)/4.
 calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
-IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform2'
+IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform'
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -246,7 +246,7 @@ recalc_flag=Intarr(n_obs)+1
 FOR i=0L,max_iter-1 DO BEGIN 
     FOR pol_i=0,n_pol-1 DO BEGIN
         *healpix_map[pol_i]=Fltarr(n_hpx)
-        *smooth_map[pol_i]=Fltarr(n_hpx)
+        IF Keyword_Set(filter_background) THEN *smooth_map[pol_i]=Fltarr(n_hpx) ELSE *smooth_map[pol_i]=0.
         FOR obs_i=0,n_obs-1 DO BEGIN
             t1_0=Systime(1)
             residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i])
@@ -408,14 +408,6 @@ FOR i=0L,max_iter-1 DO BEGIN
             comp_arr1[si1].dec=dec_arr[src_i]
             si_use[src_i]=si1
             
-            ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
-;            IF Total(Abs(flux_arr)) GT 0 THEN BEGIN
-;;                source_uv_vals=Exp(icomp*(2.*!Pi/dimension)*((comp_arr1[si1].x-dimension/2.)*(*xv_arr[obs_i])+(comp_arr1[si1].y-elements/2.)*(*yv_arr[obs_i])))
-;                source_uv_vals=source_dft(comp_arr1[si1].x,comp_arr1[si1].y,*xv_arr[obs_i],*yv_arr[obs_i],$
-;                    dimension=dimension,elements=elements,degpix=obs_arr[obs_i].degpix)
-;                FOR pol_i=0,n_pol-1 DO $
-;                    (*model_uv_full[pol_i,obs_i])[*uv_i_arr[obs_i]]+=flux_arr[pol_i]*source_uv_vals
-;            ENDIF
         ENDFOR
         
         si_use_i=where(si_use GE 0,n_si_use)
@@ -434,13 +426,13 @@ FOR i=0L,max_iter-1 DO BEGIN
         flux_V_use=comp_arr1[si_use].flux.V
         x_vec=comp_arr1[si_use].x
         y_vec=comp_arr1[si_use].y
-        *model_uv_stks[0]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_I_use)
+        *model_uv_stks[0]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_I_use,/conserve)
         IF Total(flux_Q_use) EQ 0 THEN *model_uv_stks[1]=0. $
-            ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q_use) 
+            ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q_use,/conserve) 
         IF Total(flux_U_use) EQ 0 THEN *model_uv_stks[2]=0. $
-            ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_U_use)
+            ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_U_use,/conserve)
         IF Total(flux_V_use) EQ 0 THEN *model_uv_stks[3]=0. $
-            ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_V_use)
+            ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,*xv_arr[obs_i],*yv_arr[obs_i],dimension=dimension,elements=elements,degpix=degpix,flux=flux_V_use,/conserve)
         SWITCH n_pol OF
             4:(*model_uv_full[3,obs_i])[*uv_i_arr[obs_i]]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
             3:(*model_uv_full[2,obs_i])[*uv_i_arr[obs_i]]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.
@@ -476,11 +468,12 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDIF
     
     ;check convergence
-    IF (Round(i mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
+    IF (Round(i mod check_iter) EQ 0) THEN BEGIN
+        IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
+        IF i EQ 0 THEN BREAK
         i2+=1
         t10=Systime(1)-t0
         conv_chk=Stddev(source_find_hpx[where(source_mask)],/nan)
-        IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
         converge_check[i2]=conv_chk
         IF 2.*converge_check[i2] GT flux_ref THEN BEGIN
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
