@@ -18,15 +18,16 @@ IF N_Elements(obs_arr) EQ 0 THEN BEGIN
 ENDIF
 
 n_obs=N_Elements(obs_arr)
-fhd=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little in here!
+fhd0=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little in here!
+
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
-    fhd1=fhd
-    IF Keyword_Set(transfer_mapfn) THEN IF N_Elements(transfer_mapfn) GT 1 THEN fhd1.transfer_mapfn=transfer_mapfn[obs_i] ELSE fhd1.transfer_mapfn=transfer_mapfn
-    fhd_log_settings,file_path_fhd,fhd=fhd1,obs=obs_arr[obs_i] ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
-    save,fhd1,filename=file_path_fhd+'_fhd_params.sav',/compress
+    fhd=fhd0
+    IF Keyword_Set(transfer_mapfn) THEN IF N_Elements(transfer_mapfn) GT 1 THEN fhd.transfer_mapfn=transfer_mapfn[obs_i] ELSE fhd.transfer_mapfn=transfer_mapfn
+    fhd_log_settings,file_path_fhd,fhd=fhd,obs=obs_arr[obs_i] ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
+    save,fhd,filename=file_path_fhd+'_fhd_params.sav',/compress
 ENDFOR
-
+fhd=fhd0
 
 n_pol=fhd.npol
 baseline_threshold=fhd.baseline_threshold
@@ -515,7 +516,7 @@ print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/
 print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
 print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.))
 print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
-Ptr_free,map_fn_arr,hpx_cnv,hpx_ind_map,res_arr,smooth_arr,healpix_map
+undefine,map_fn_arr,hpx_cnv,hpx_ind_map,res_arr,smooth_arr,healpix_map
 timing=[t00,t1,t2,t3,t4]
 !except=except
 END

@@ -32,6 +32,7 @@ reverse_image=1   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=reverse_image;1 paper 3 memo
 label_spacing=1.
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
+IF N_Elements(mark_zenith) EQ 0 THEN mark_zenith=1
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
