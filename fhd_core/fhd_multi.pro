@@ -470,23 +470,24 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     ;check convergence
     IF (Round(i mod check_iter) EQ 0) THEN BEGIN
-        IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
-        IF i EQ 0 THEN BREAK
-        i2+=1
         t10=Systime(1)-t0
         conv_chk=Stddev(source_find_hpx[where(source_mask)],/nan)
-        converge_check[i2]=conv_chk
-        IF 2.*converge_check[i2] GT flux_ref THEN BEGIN
-            print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
-            converge_check2=converge_check2[0:i]
-            converge_check=converge_check[0:i2]
-            BREAK
-        ENDIF
-        IF converge_check[i2] GE Max(converge_check[((i2-Ceil(Alog10(i)))>0):i2-1]) THEN BEGIN ;add more tolerance for small variations
-            print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
-            converge_check2=converge_check2[0:i]
-            converge_check=converge_check[0:i2]
-            BREAK
+        IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
+        IF i GT 0 THEN BEGIN
+            i2+=1
+            converge_check[i2]=conv_chk
+            IF 2.*converge_check[i2] GT flux_ref THEN BEGIN
+                print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
+                converge_check2=converge_check2[0:i]
+                converge_check=converge_check[0:i2]
+                BREAK
+            ENDIF
+            IF converge_check[i2] GE Max(converge_check[((i2-Ceil(Alog10(i)))>0):i2-1]) THEN BEGIN ;add more tolerance for small variations
+                print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
+                converge_check2=converge_check2[0:i]
+                converge_check=converge_check[0:i2]
+                BREAK
+            ENDIF
         ENDIF
     ENDIF
 ENDFOR
