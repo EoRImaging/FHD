@@ -29,7 +29,7 @@ IF Keyword_Set(filter) THEN BEGIN
     IF Ptr_valid(filter) THEN BEGIN
         IF N_Elements(*filter) EQ N_Elements(di_uv_use) THEN di_uv_use*=*filter $
             ELSE BEGIN
-                IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform'
+                IF ~Keyword_Set(image_filter_fn) THEN image_filter_fn='filter_uv_uniform'
                 di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
             ENDELSE
     ENDIF ELSE BEGIN

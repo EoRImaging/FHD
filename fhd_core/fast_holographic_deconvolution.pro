@@ -211,10 +211,6 @@ sm_ymax=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
 beam_avg_box=beam_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 
-source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
-source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
-source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
-
 image_filtered=dirty_image_composite
 IF Keyword_Set(filter_background) THEN BEGIN
     image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
@@ -326,138 +322,15 @@ FOR i=i0,max_iter-1 DO BEGIN
     IF i EQ 0 THEN converge_check[i]=Stddev(image_use[where(beam_mask)],/nan)
     converge_check2[i]=Stddev(image_use[where(beam_mask)],/nan)
     ;use the composite image to locate sources, but then fit for flux independently
-    source_flux=Max(source_find_image,source_i)
     
-;    Find additional sources:
-;       require that they be isolated ; This is local_max_radius
-;       should put some cap on the absolute number of them ; This is max_add_sources
-;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
-
-    flux_ref=source_find_image[source_i]*add_threshold
-    additional_i1=where(source_find_image GE flux_ref,n_sources1)
-    additional_i2=where((source_find_image GE 10.*converge_check2[i]) AND (source_find_image GE source_find_image[source_i]/2.),n_sources2)
-    additional_i=(n_sources1 GT n_sources2) ? additional_i1:additional_i2 
-    n_sources=n_sources1>n_sources2
-    additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
-    add_x=additional_i mod dimension
-    add_y=Floor(additional_i/dimension)
-    add_dist=fltarr(n_sources)+dimension
-    FOR addi=1,n_sources-1 DO add_dist[addi]=Min(Sqrt((add_x[addi]-add_x[0:addi-1])^2+(add_y[addi]-add_y[0:addi-1])^2.))
-        
-    source_map=lonarr(dimension,elements)
-    source_map[add_x,add_y]=lindgen(n_sources)+1
-    background_dist=morph_distance(source_map,neighbor=3)
-    extended_pix=where(background_dist GT (beam_width>1.),n_extend)
-    extended_flag=fltarr(n_sources)
-    IF n_extend GT 0 THEN BEGIN
-        src_inds=source_map[extended_pix]-1
-        FOR ext_i=0L,n_extend-1 DO BEGIN
-            src_i=src_inds[ext_i]
-            IF extended_flag[src_i] NE 0 THEN CONTINUE ;skip sources already dealt with
-            pix_i=region_grow(background_dist,extended_pix[ext_i],thresh=[1,dimension])
-            add_i_use=source_map[pix_i]-1
-            flux_vals=image_use[additional_i[add_i_use]]
-            ii_use=where(flux_vals GE Max(flux_vals)/2.,nii_use,complement=ii_unused,ncomplement=nii_unused)
-            IF nii_use GT 3 THEN BEGIN
-                extended_flag[add_i_use[ii_use]]=1.
-                IF nii_unused GT 0 THEN extended_flag[add_i_use[ii_unused]]=-1.
-            ENDIF ELSE extended_flag[add_i_use]=-1
-        ENDFOR
+    comp_arr1=fhd_source_detect(obs,fhd,source_find_image,image_I=image_use,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+        gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,beam_arr=beam_base,beam_corr_avg=beam_corr_avg)
+    
+    IF si+n_sources GE max_sources THEN BEGIN
+        n_sources=max_sources-si-1
+        IF n_sources GT 0 THEN comp_arr1=comp_arr1[0:n_sources-1]
     ENDIF
-    
-    additional_i_usei=where((add_dist GE local_max_radius) OR (extended_flag GT 0),n_sources)
-    additional_i=additional_i[additional_i_usei] ;guaranteed at least one, so this is safe
-    add_dist=add_dist[additional_i_usei]
-    extended_flag=extended_flag[additional_i_usei]
-    
-    IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
-    IF max_add_sources EQ 0 THEN BREAK
-    IF n_sources GT max_add_sources THEN BEGIN
-        additional_i=additional_i[0:max_add_sources-1]
-        n_sources=max_add_sources
-    ENDIF
-    n_mask=0
-    
-    ;fit flux here, and fill comp_arr for each pol
-    flux_arr=fltarr(4)
-    fit_threshold=-2.*converge_check2[i]
-    source_fit_fn_ref=Total(source_fit_fn)/2.
-    
-    si_use=Lonarr(n_sources)-1
-    sx_arr=additional_i mod dimension
-    sy_arr=Float(Floor(additional_i/dimension))
-    FOR src_i=0L,n_sources-1 DO BEGIN
-        sx=sx_arr[src_i]
-        sy=sy_arr[src_i]
-        IF add_dist[src_i] GE local_max_radius THEN gcntrd,image_use,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent ELSE xcen=(ycen=-1)
-        IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
-;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
-;            CONTINUE
-            xcen=sx
-            ycen=sy
-            gain_mod=1./beam_width^2. ;divide by the area of the beam for diffuse sources
-        ENDIF ELSE gain_mod=1.
-        sx0=Floor(xcen)
-        sy0=Floor(ycen)
-        IF source_mask[sx0,sy0] EQ 0 THEN CONTINUE
-        source_box=image_use[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius]
-        xcen0=xcen-sx0+box_radius
-        ycen0=ycen-sy0+box_radius
-        xy2ad,xcen,ycen,astr,ra,dec
-        
-        beam_corr_src=fltarr(n_pol)
-        beam_src=fltarr(n_pol)
-        beam_corr_avg_src=beam_corr_avg[additional_i[src_i]]
-        FOR pol_i=0,n_pol-1 DO BEGIN   
-;            beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
-            beam_src[pol_i]=(*beam_base[pol_i])[additional_i[src_i]]
-            
-            IF Keyword_Set(independent_fit) THEN BEGIN
-                sign=(pol_i mod 2) ? -1:1
-                IF pol_i EQ 0 THEN sbQ=image_use_Q[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
-                IF pol_i EQ 2 THEN BEGIN
-                    sbU=image_use_U[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
-                    sbV=image_use_V[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
-                ENDIF
-                IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbQ,xcen0,ycen0,cubic=-0.5)
-                IF pol_i GE 2 THEN flux_use=Interpolate(sbU,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbV,xcen0,ycen0,cubic=-0.5)
-            ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5) $
-                ELSE flux_use=Interpolate(image_use_U[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius],xcen0,ycen0,cubic=-0.5)
-            
-            flux_arr[pol_i]=flux_use*beam_corr_avg_src/2. ;"True sky" instrumental pol
-        ENDFOR
-        
-        IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
-            n_mask+=Total(source_mask[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
-            source_mask[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]=0
-            CONTINUE
-        ENDIF
-        
-        gain_factor_use=gain_array[sx,sy]
-        IF Keyword_Set(scale_gain) THEN BEGIN
-            ston_single=(flux_arr[0]+flux_arr[1])/(converge_check2[i]*gain_normalization)
-            gain_factor_use=(((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))*gain_normalization)>gain_factor_use
-        ENDIF
-        flux_arr*=gain_factor_use
-        flux_arr*=gain_mod
-        
-        ;Apparent brightness, instrumental polarization X gain (a scalar)
-        FOR pol_i=0,n_pol-1 DO comp_arr[si].flux.(pol_i)=flux_arr[pol_i]*beam_src[pol_i]
-        comp_arr[si].x=xcen
-        comp_arr[si].y=ycen
-        comp_arr[si].ra=ra
-        comp_arr[si].dec=dec
-        comp_arr[si].flux.I=flux_arr[0]+flux_arr[1]
-        comp_arr[si].flux.Q=flux_arr[0]-flux_arr[1]
-        comp_arr[si].flux.U=flux_arr[2]+flux_arr[3]
-        comp_arr[si].flux.V=flux_arr[2]-flux_arr[3]
-        si_use[src_i]=si
-        si+=1
-    ENDFOR
-    
-    si_use_i=where(si_use GE 0,n_si_use)
-    IF n_si_use EQ 0 THEN BEGIN
+    IF n_sources LE 0 THEN BEGIN
         ;do something to end loop if n_mask EQ 0
         
         i2+=1
@@ -471,32 +344,12 @@ FOR i=i0,max_iter-1 DO BEGIN
         recalc_flag=0
     ENDIF ELSE recalc_flag=1
     
-    si_use=si_use[si_use_i]
+    comp_arr[si:si+n_sources-1]=comp_arr1
+    si+=n_sources
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    x_vec=comp_arr[si_use].x
-    y_vec=comp_arr[si_use].y
-;    area_cnv=pix_area_cnv[x_vec,y_vec]
-    flux_I=comp_arr[si_use].flux.I;*area_cnv
-    flux_Q=comp_arr[si_use].flux.Q;*area_cnv
-    flux_U=comp_arr[si_use].flux.U;*area_cnv
-    flux_V=comp_arr[si_use].flux.V;*area_cnv
-    model_uv_stks=Ptrarr(4,/allocate)
-    *model_uv_stks[0]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I,/conserve_memory)
-    IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
-        ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q,/conserve_memory) 
-    IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
-        ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U,/conserve_memory)
-    IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
-        ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals2,yvals2,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V,/conserve_memory)
-    SWITCH n_pol OF
-        4:(*model_uv_full[3])[uv_i_use2]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
-        3:(*model_uv_full[2])[uv_i_use2]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.
-        2:(*model_uv_full[1])[uv_i_use2]+=(*model_uv_stks[0]-*model_uv_stks[1])/2.
-        1:(*model_uv_full[0])[uv_i_use2]+=(*model_uv_stks[0]+*model_uv_stks[1])/2.
-    ENDSWITCH
-    Ptr_free,model_uv_stks
+    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -520,7 +373,7 @@ FOR i=i0,max_iter-1 DO BEGIN
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
             i,si,t10,Stddev(image_use[where(beam_mask)],/nan)))
         converge_check[i2]=Stddev(image_use[where(beam_mask)],/nan)
-        IF sigma_threshold*converge_check[i2] GT image_use[source_i] THEN BEGIN
+        IF sigma_threshold*converge_check[i2] GT Max(source_find_image) THEN BEGIN
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
                 i,t10,si,Stddev(image_use[where(beam_mask)],/nan)))
             converge_check2=converge_check2[0:i]
