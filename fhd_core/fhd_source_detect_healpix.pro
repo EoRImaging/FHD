@@ -1,6 +1,6 @@
 FUNCTION fhd_source_detect_healpix,obs_arr,fhd,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
     residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,ra_hpx=ra_hpx,dec_hpx=dec_hpx,gain_factor_use=gain_factor_use,$
-    beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,gain_array=gain_array,recalc_flag=recalc_flag,n_sources=n_sources,$
+    beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,$
     nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr
 
 n_obs=N_Elements(obs_arr)
