@@ -297,6 +297,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     
     converge_check2[i]=Stddev(source_find_hpx[where(source_mask_hpx)],/nan)
     IF i EQ 0 THEN converge_check[0]=converge_check2[0]
+    t3_0=Systime(1)
     
     comp_arr1=fhd_source_detect_healpix(obs_arr,fhd,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
         residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
