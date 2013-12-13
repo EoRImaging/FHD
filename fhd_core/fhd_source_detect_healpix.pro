@@ -1,12 +1,15 @@
 FUNCTION fhd_source_detect_healpix,obs_arr,fhd,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
-    residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,$
-    beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,gain_array=gain_array,recalc_flag=recalc_flag,n_sources=n_sources
+    residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,ra_hpx=ra_hpx,dec_hpx=dec_hpx,gain_factor_use=gain_factor_use,$
+    beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,gain_array=gain_array,recalc_flag=recalc_flag,n_sources=n_sources,$
+    nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr
 
 n_obs=N_Elements(obs_arr)
 recalc_flag=Intarr(n_obs)
 beam_width=(!RaDeg/Median(obs_arr.degpix*obs_arr.MAX_BASELINE/obs_arr.KPIX))>1.
 local_max_radius=beam_width*2.
 local_radius=local_max_radius*Mean(obs_arr.degpix)
+smooth_width=Ceil(local_max_radius*2.)
+filter_background=fhd.filter_background
 
 add_threshold=fhd.add_threshold
 max_add_sources=fhd.max_add_sources
@@ -37,7 +40,7 @@ source_i=source_i[where(source_i_use,n_src)]
 source_ra=ra_hpx[source_i]
 source_dec=dec_hpx[source_i]
 
-IF (n_src<max_add_sources)+si GE max_sources THEN max_add_sources=max_sources-(si+1)
+;IF (n_src<max_add_sources)+si GE max_sources THEN max_add_sources=max_sources-(si+1)
 IF n_src GT max_add_sources THEN source_i=source_i[0:max_add_sources-1]
 n_src=Long(N_Elements(source_i))
 
@@ -58,8 +61,6 @@ FOR src_i=0L,n_src-1 DO BEGIN
     ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
     dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
 ENDFOR
-t3_0=Systime(1)
-t2+=t3_0-t2_0b
 
 ;update models
 flux_I=residual_I[source_i]
@@ -76,10 +77,11 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     dist_test=angle_difference(obs_arr[obs_i].obsdec,obs_arr[obs_i].obsra,dec_arr,ra_arr,/degree)
     dist_cut=where(dist_test GT source_alias_radius,n_dist_cut)
 
-    comp_arr1=source_comp_init(n_src)
+    comp_arr1=source_comp_init(n_sources=n_src)
     dimension=obs_arr[obs_i].dimension
     elements=obs_arr[obs_i].elements
     beam_mask=*beam_mask_arr[obs_i]
+    
     
     si_use=lonarr(n_src)-1
     si_cut=lonarr(n_src)

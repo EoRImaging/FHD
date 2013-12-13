@@ -299,8 +299,9 @@ FOR i=0L,max_iter-1 DO BEGIN
     IF i EQ 0 THEN converge_check[0]=converge_check2[0]
     
     comp_arr1=fhd_source_detect_healpix(obs_arr,fhd,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
-        residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,beam_mask_arr=beam_mask_arr,$
-        source_mask_arr=source_mask_arr,gain_array=gain_array,recalc_flag=recalc_flag,n_sources=n_sources)
+        residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
+        source_mask_arr=source_mask_arr,gain_array=gain_array,recalc_flag=recalc_flag,n_sources=n_sources,$
+        nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr,gain_factor_use=gain_factor_use)
 ;    ;detect sources
 ;    flux_ref=Max(source_find_hpx*source_mask_hpx,max_i)
 ;    flux_ref1=flux_ref*add_threshold
@@ -430,9 +431,12 @@ FOR i=0L,max_iter-1 DO BEGIN
 ;    si_use=where(source_cut_arr,n_src_use,complement=si_mask,ncomplement=n_si_mask)
 ;    IF n_si_mask GT 0 THEN source_mask_hpx[source_i[si_mask]]=0.
     
+    n_src_use=(max_sources-si-1.)<n_sources
     FOR obs_i=0L,n_obs-1 DO BEGIN
-        (*comp_arr[obs_i])[si:si+n_src_use-1]=*comp_arr1[obs_i]
-        source_dft_multi,obs_arr[obs_i],*comp_arr1[obs_i],model_uv_full[*,obs_i],xvals=*xv_arr[obs_i],yvals=*yv_arr[obs_i],uv_i_use=*uv_i_arr[obs_i]
+        IF ~Ptr_valid(comp_arr1[obs_i]) THEN BEGIN recalc_flag[obs_i]=0 & ENDIF & CONTINUE
+        IF n_src_use EQ n_sources THEN comp_single=*comp_arr1[obs_i] ELSE comp_single=(*comp_arr1[obs_i])[0:n_src_use-1]
+        (*comp_arr[obs_i])[si:si+n_src_use-1]=comp_single
+        source_dft_multi,obs_arr[obs_i],comp_single,model_uv_full[*,obs_i],xvals=*xv_arr[obs_i],yvals=*yv_arr[obs_i],uv_i_use=*uv_i_arr[obs_i]
     ENDFOR
     si+=n_src_use
     t4_0=Systime(1)
