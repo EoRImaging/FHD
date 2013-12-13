@@ -1,7 +1,8 @@
 FUNCTION fhd_source_detect_healpix,obs_arr,fhd,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
     residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,ra_hpx=ra_hpx,dec_hpx=dec_hpx,gain_factor_use=gain_factor_use,$
     beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,$
-    nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr
+    nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr,$
+    source_mask_hpx=source_mask_hpx
 
 n_obs=N_Elements(obs_arr)
 recalc_flag=Intarr(n_obs)
@@ -150,6 +151,11 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
 ENDFOR
 
 si_use=where(source_cut_arr,n_sources,complement=si_mask,ncomplement=n_si_mask)
-IF n_si_mask GT 0 THEN source_mask[source_i[si_mask]]=0.
+IF n_si_mask GT 0 THEN BEGIN
+    source_mask_hpx[source_i[si_mask]]=0.
+    FOR obs_i=0L,n_bos-1 DO BEGIN
+        *source_array[obs_i]=(*source_array[obs_i])[si_use]
+    ENDFOR
+ENDIF
 RETURN,source_array
 END
