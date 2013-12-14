@@ -303,7 +303,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     comp_arr1=fhd_source_detect_healpix(obs_arr,fhd,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
         residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
         source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,gain_factor_use=gain_factor_use,$
-        nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr)
+        nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr,source_mask_hpx=source_mask_hpx)
     
     n_src_use=(max_sources-si-1.)<n_sources
     ;generate UV model from source list

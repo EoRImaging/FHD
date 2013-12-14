@@ -153,7 +153,7 @@ ENDFOR
 si_use=where(source_cut_arr,n_sources,complement=si_mask,ncomplement=n_si_mask)
 IF n_si_mask GT 0 THEN BEGIN
     source_mask_hpx[source_i[si_mask]]=0.
-    FOR obs_i=0L,n_bos-1 DO BEGIN
+    FOR obs_i=0L,n_obs-1 DO BEGIN
         *source_array[obs_i]=(*source_array[obs_i])[si_use]
     ENDFOR
 ENDIF
