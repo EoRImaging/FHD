@@ -384,7 +384,7 @@ print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/
 print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
 print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.))
 print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
-undefine,map_fn_arr,hpx_cnv,hpx_ind_map,res_arr,smooth_arr,healpix_map,filter_arr
+undefine_fhd,map_fn_arr,hpx_cnv,hpx_ind_map,res_arr,smooth_arr,healpix_map,filter_arr
 timing=[t00,t1,t2,t3,t4]
 !except=except
 END
