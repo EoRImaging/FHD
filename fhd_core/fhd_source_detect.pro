@@ -8,10 +8,8 @@ pol_use=fhd.pol_use
 independent_fit=fhd.independent_fit
 reject_pol_sources=fhd.reject_pol_sources
 sigma_threshold=2.
-filter_background=fhd.filter_background
-smooth_width=fhd.smooth_width
 
-n_pol=obs.n_pol
+n_pol=fhd.npol
 dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
