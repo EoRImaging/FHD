@@ -25,7 +25,7 @@ IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(silent) EQ 0 THEN silent=0
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
-image_filter_fn='filter_uv_tapered_uniform' ;applied ONLY to output images
+image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 ;image_filter_fn=''
 
 ; This file structure works at MIT
