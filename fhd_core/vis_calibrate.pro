@@ -4,7 +4,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr
     debug=debug,gain_arr_ptr=gain_arr_ptr,$
     return_cal_model=return_cal_model,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
-    calibration_polyfit=calibration_polyfit,flag_calibration=flag_calibration,_Extra=extra
+    calibration_polyfit=calibration_polyfit,flag_calibration=flag_calibration,bandpass_calibrate=bandpass_calibrate,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
@@ -28,25 +28,16 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
                 textfast,gain_arr,/read,file_path=transfer_calibration
                 gain_arr_ptr=Ptr_new(gain_arr)
                 cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
-;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-;                    transfer_calibration=1,timing=timing,error=error,_Extra=extra)
-;                RETURN,vis_cal
             END
             '.npz':BEGIN
                 gain_arr=read_numpy(transfer_calibration)
                 gain_arr_ptr=Ptr_new(gain_arr)
                 cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
-;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-;                    transfer_calibration=1,timing=timing,error=error,_Extra=extra)
-;                RETURN,vis_cal
             END
             '.npy':BEGIN
                 gain_arr=read_numpy(transfer_calibration)
                 gain_arr_ptr=Ptr_new(gain_arr)
                 cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
-;                vis_cal=vis_calibrate(vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-;                    transfer_calibration=1,timing=timing,error=error,_Extra=extra)
-;                RETURN,vis_cal
             END
             ELSE: BEGIN
                 print,'Unknown file format: ',transfer_calibration
@@ -55,19 +46,11 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
             ENDELSE
         ENDCASE
     ENDIF
-;    IF size(cal,/type) EQ 8 THEN BEGIN
-;;        cal=vis_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
-        IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
-        IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
-        vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=0)
-        timing=Systime(1)-t0_0
-        RETURN,vis_cal
-;    ENDIF ELSE BEGIN
-;        print,"Invalid calibration supplied!"
-;        error=1
-;        timing=Systime(1)-t0_0
-;        RETURN,vis_ptr
-;    ENDELSE
+    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
+    IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
+    vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=0)
+    timing=Systime(1)-t0_0
+    RETURN,vis_cal
 ENDIF
 
 ;IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
@@ -128,7 +111,13 @@ t2=t3_a-t2_a
 
 IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
 
-IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
+IF Keyword_Set(bandpass_calibrate) THEN BEGIN
+    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder)
+    IF Keyword_Set(calibration_polyfit) THEN BEGIN
+        cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit)
+        cal=vis_cal_combine(cal_bandpass,cal_polyfit)
+    ENDIF ELSE cal=cal_bandpass
+ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 
 IF Keyword_Set(vis_baseline_hist) THEN $
