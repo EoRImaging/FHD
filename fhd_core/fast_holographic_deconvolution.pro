@@ -140,35 +140,26 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 filter_arr=Ptrarr(n_pol,/allocate)
-FOR pol_i=0,n_pol-1 DO BEGIN    
+
+FOR pol_i=0,n_pol-1 DO BEGIN 
     filter_single=filter_arr[pol_i]
-    normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_single,/antialias))[dimension/2.,elements/2.]
-;    normalization_arr[pol_i]=1./(dirty_image_generate(weights_single,degpix=degpix,obs=obs,psf=psf,params=params,$
-;        weights=*weights_arr[pol_i],/antialias))[dimension/2.,elements/2.]
+    *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
+        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_single,/antialias)*(*beam_correction[pol_i])
     filter_arr[pol_i]=filter_single
-    normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
-gain_normalization=mean(normalization_arr[0:n_pol-1]);/2. ;factor of two accounts for complex conjugate
-;pix_area_cnv=pixel_area(astr,dimension=dimension);/degpix^2.
-;gain_normalization=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);^2.
+
+gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_base,filter_arr=filter_arr,$
+    image_filter_fn=decon_filter,degpix=degpix,/antialias)
 gain_use*=gain_normalization
 gain_array=source_taper*gain_use
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,file_path_fhd=file_path_fhd,$
         galaxy_model_uv=galaxy_model_uv,restore=0,image_filter=decon_filter,filter_arr=filter_arr,_Extra=extra)
-;    gal_model_composite=fltarr(dimension,elements)
-;    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
 ENDIF 
 
-
 FOR pol_i=0,n_pol-1 DO BEGIN 
-    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],/antialias)*(*beam_correction[pol_i])^2.
-;    dirty_image_single=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-;        weights=*weights_arr[pol_i],/antialias)*(*beam_correction[pol_i])^2.
-
+    dirty_image_single=*dirty_array[pol_i]*(*beam_correction[pol_i])
     IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
     

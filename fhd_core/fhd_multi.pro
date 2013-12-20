@@ -162,7 +162,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
         *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
         normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i,obs_i],degpix=obs.degpix,obs=obs,psf=psf,params=params,$
-            weights=*weights_arr[pol_i,obs_i],image_filter=decon_filter,filter=filter_single))[dimension/2.,elements/2.]
+            weights=*weights_arr[pol_i,obs_i],image_filter=decon_filter,filter=filter_single,/antialias))[dimension/2.,elements/2.]
         filter_arr[pol_i,obs_i]=filter_single
         normalization_arr[pol_i]*=((*beam_model[pol_i,obs_i])[obs.obsx,obs.obsy])^2.
         source_uv_mask[where(*weights_arr[pol_i,obs_i])]=1.
@@ -171,8 +171,8 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
         gal_model_holo=fhd_galaxy_deconvolve(obs,dirty_uv_arr[*,obs_i],map_fn_arr=map_fn_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
-            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0,/uv_return)
-        FOR pol_i=0,n_pol-1 DO *dirty_uv_arr[pol_i,obs_i] -=*gal_model_holo[pol_i]
+            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0,image_filter=decon_filter,filter_arr=filter_arr[*,obs_i],/uv_return)
+        FOR pol_i=0,n_pol-1 DO *dirty_uv_arr[pol_i,obs_i]-=*gal_model_holo[pol_i]
     ;    gal_model_composite=fltarr(dimension,elements)
     ;    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
     ENDIF
@@ -250,7 +250,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF Keyword_Set(filter_background) THEN *smooth_map[pol_i]=Fltarr(n_hpx) ELSE *smooth_map[pol_i]=0.
         FOR obs_i=0,n_obs-1 DO BEGIN
             t1_0=Systime(1)
-            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i])
+            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias)
             
             t2_0a=Systime(1)
             t1+=t2_0a-t1_0
@@ -366,7 +366,7 @@ FOR obs_i=0L,n_obs-1 DO *comp_arr[obs_i]=(*comp_arr[obs_i])[0:si-1] ;truncate co
 FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
-            degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i])*(*beam_corr[pol_i,obs_i])
+            degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias)*(*beam_corr[pol_i,obs_i])
     ENDFOR
     
     image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]
