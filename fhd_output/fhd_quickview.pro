@@ -143,7 +143,7 @@ instr_sources=Ptrarr(n_pol)
 instr_rings=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,/allocate) 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,$
+    instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
@@ -155,7 +155,7 @@ ENDFOR
 
 ; renormalize based on weights
 renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
-  image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix)
+  image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix,/antialias)
 for pol_i=0,n_pol-1 do begin
   *instr_images[pol_i]*=renorm_factor
 endfor
