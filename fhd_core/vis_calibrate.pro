@@ -112,7 +112,7 @@ t2=t3_a-t2_a
 IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder)
+    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
         cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit)
         cal=vis_cal_combine(cal_bandpass,cal_polyfit)

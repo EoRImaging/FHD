@@ -46,11 +46,17 @@ IF Keyword_Set(file_path_fhd) THEN BEGIN
     IF file_test(file_dirname(export_path),/directory) EQ 0 THEN file_mkdir,file_dirname(export_path)
     Textfast,bandpass_arr,/write,file_path=export_path+'_bandpass'
     
-    PS_START,image_path+'_bandpass.png',scale_factor=2,/quiet,/nomatch
-    cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
-        xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
-        yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
-    cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
+    freq=freq_arr/1E6
+    xtickv=[ceil(min(freq)/10)*10,floor(max(freq)/10)*10]
+    xtickname=strtrim(round(xtickv),2)
+    xrange=[min(freq)-(max(freq)-min(freq))/8,max(freq)+(max(freq)-min(freq))/8]
+    yrange=[min(bandpass_arr[1:n_pol,freq_use]),max(bandpass_arr[1:n_pol,freq_use])]
+    ytickv=[yrange[0],mean(yrange),yrange[1]]
+    axiscolor='black'
+    PS_START,image_path+'_bandpass.png',/quiet,/nomatch
+    cgplot,freq[freq_use],bandpass_arr[1,freq_use],color='blue',title=obs.obsname,xtitle='Frequency [MHz]',ytitle='Gain',$
+        yrange=yrange,xrange=xrange,/noerase,axiscolor=axiscolor,psym=10
+    IF n_pol GT 1 THEN cgoplot,freq[freq_use],bandpass_arr[2,freq_use],color='red',psym=10
     PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 ENDIF
 
