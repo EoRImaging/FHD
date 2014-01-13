@@ -5,7 +5,10 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     
     
   IF N_Elements(silent) EQ 0 THEN silent=1
-  IF N_Elements(nside) NE 1 THEN print, 'nside must be specified', RETURN
+  IF N_Elements(nside) NE 1 THEN begin
+    print, 'nside must be specified'
+    return
+  endif 
   
   data_range = minmax(data)
   
