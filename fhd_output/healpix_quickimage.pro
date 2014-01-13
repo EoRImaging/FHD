@@ -153,9 +153,8 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
         print, 'map covers more than one hemisphere, lat/lon ranges are likely to be wrong'
       endelse
     endif
-    
-    
-    quick_image, new_map, xvals, yvals, missing_val = bad_val, data_range = data_range, xtitle = 'longitude (degrees)', ytitle = 'latitude (degrees)', $
+        
+    quick_image, new_map, missing_val = bad_val, data_range = data_range, xtitle = 'longitude (degrees)', ytitle = 'latitude (degrees)', $
       title = title, noerase = noerase, xrange = lon_range, yrange = lat_range
       
   endif else begin
