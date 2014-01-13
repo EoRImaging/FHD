@@ -48,7 +48,9 @@ FOR j=0L,n_rep-1 DO BEGIN
         ENDFOR
         save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
             beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav',/compress
+        undefine_fhd,weights_arr,residual_array,image_uv_arr,model_uv_full,model_uv_holo,beam_base,beam_correction,dirty_array
     ENDFOR
+    undefine_fhd,weights_arr2,residual_array2,dirty_uv_arr2,model_uv_full2,model_uv_holo2,beam_model2,beam_corr2,source_mask2,hpx_inds2
 ENDFOR
 
 END

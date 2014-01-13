@@ -176,9 +176,9 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         filter_single=filter_arr[pol_i]
         gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
-            image_filter_fn='',degpix=degpix,_Extra=extra)*(*beam_base_out[pol_i])/(obs.degpix*obs.dimension)^2.)
+            image_filter_fn='',degpix=degpix,/antialias,_Extra=extra)*(*beam_base_out[pol_i])/(obs.degpix*obs.dimension)^2.)
         gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,weights=*weights_arr[pol_i],$
-            image_filter_fn=image_filter_fn,degpix=degpix,file_path_fhd=file_path_fhd,filter=filter_single,_Extra=extra)*(*beam_correction_out[pol_i]))
+            image_filter_fn=image_filter_fn,degpix=degpix,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i]))
         filter_arr[pol_i]=filter_single
     ENDFOR
 ENDIF ELSE BEGIN
@@ -189,11 +189,11 @@ ENDELSE
 FOR pol_i=0,n_pol-1 DO BEGIN
     filter_single=filter_arr[pol_i]
     *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,_Extra=extra)*(*beam_correction_out[pol_i])
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i])
     instr_img_uv=*image_uv_arr[pol_i]-*model_holo_arr[pol_i]-*gal_holo_uv[pol_i]
     *res_uv_arr[pol_i]=instr_img_uv
     *instr_images[pol_i]=dirty_image_generate(instr_img_uv,degpix=degpix,weights=*weights_arr[pol_i],$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,_Extra=extra)*(*beam_correction_out[pol_i])
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i])
     *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
         dimension=dimension,restored_beam_width=restored_beam_width)
     filter_arr[pol_i]=filter_single
@@ -201,7 +201,7 @@ ENDFOR
 
 ; renormalize based on weights
 renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
-  image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix)
+  image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix,/antialias)
 for pol_i=0,n_pol-1 do begin
   *dirty_images[pol_i]*=renorm_factor
   *res_uv_arr[pol_i]*=renorm_factor

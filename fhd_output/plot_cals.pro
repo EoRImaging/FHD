@@ -14,16 +14,15 @@ tile_names = cal.tile_names
 n_tiles=obs.n_tile
 obs2=*obs.baseline_info
 tile_use=obs2.tile_use
+freq_use=obs2.freq_use
+freq_i_use=where(freq_use,nf_use) & IF nf_use EQ 0 THEN freq_i_use=lindgen(obs.n_freq)
 
 gains0 = *cal.gain[0] ; save on typing
 gains1 = *cal.gain[1]
 
-; find the non-flagged frequencies
-freqi_use = where(total(abs(gains0),2) ne cal.n_tile) ; if total is exactly the number of tiles, it's probably set to exactly 1
-
-gains0=gains0[freqi_use,*]
-gains1=gains1[freqi_use,*]
-freq=cal.freq[freqi_use]
+gains0=gains0[freq_i_use,*]
+gains1=gains1[freq_i_use,*]
+freq=cal.freq[freq_i_use]
 freq=freq/10^6. ; in MHz
 
 plot_pos=calculate_plot_positions(.8, nplots=128, /no_colorbar, ncol=17, nrow=9, plot_margin = [.05, .05, .02, .25]); use 1 extra row/column to leave room for title and axes
