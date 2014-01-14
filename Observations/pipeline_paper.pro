@@ -48,6 +48,9 @@ endif else if keyword_set(all) then begin
   ps_export=1
   split_ps_export=1
   combine_healpix=1
+  IF N_Elements(n_avg) EQ 0 THEN n_avg=2
+  IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=3.
+  IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
 endif else if keyword_set(single) then begin
   start_i=88
   end_i=88
