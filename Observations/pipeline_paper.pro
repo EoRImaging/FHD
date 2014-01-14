@@ -27,10 +27,10 @@ IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=0 ; Do we want to s
 if keyword_set(subset) then begin
   ; running a subset of observation in parallel to go faster
   if n_elements(version) eq 0 then version='apb_pipeline_paper_deep_1'
-  start_arr=[33,50,66,81,96,111,126,144]
-  end_arr=[49,65,80,95,110,125,143,147]
-  start_i=start_arr(subset-1)
-  end_i=end_arr(subset-1)
+  start_arr=[50,66,81,96,111,126]
+  end_arr=[65,80,95,110,125,143]
+  start_fi=start_arr(subset-1)
+  end_fi=end_arr(subset-1)
   deconvolve=0
   export_images=1
   ps_export=0
@@ -38,8 +38,8 @@ if keyword_set(subset) then begin
   combine_healpix=0
 endif else if keyword_set(all) then begin
   ; re-running with all observations to generate healpix images and cubes
-  start_i=33
-  end_i=143
+  start_fi=50
+  end_fi=143
   if n_elements(version) eq 0 then version='apb_pipeline_paper_deep_1'
   recalculate_all=0
   deconvolve=0
@@ -52,8 +52,8 @@ endif else if keyword_set(all) then begin
   IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=3.
   IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
 endif else if keyword_set(single) then begin
-  start_i=88
-  end_i=88
+  start_fi=88
+  end_fi=88
   if n_elements(version) eq 0 then version='apb_pipeline_paper_snapshot_1'
   recalculate_all=1
   deconvolve=1
@@ -100,7 +100,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,split_ps_export=split_ps_export,
     deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,combine_healpix=combine_healpix,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,silent=silent,$
-    FoV=FoV,no_ps=no_ps,max_baseline=max_baseline,$
+    FoV=FoV,no_ps=no_ps,max_baseline=max_baseline,start_fi=start_fi,end_fi=end_fi$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,gain_factor=gain_factor,$
     no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,psf_resolution=psf_resolution,$
     min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,$
