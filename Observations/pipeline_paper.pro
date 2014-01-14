@@ -91,6 +91,7 @@ no_rephase=1
 gain_factor=0.2
 bandpass_calibrate=1
 calibration_polyfit=2
+no_restrict_cal_sources=1
 
 general_obs,cleanup=cleanup,ps_export=ps_export,split_ps_export=split_ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,combine_healpix=combine_healpix,$
@@ -100,7 +101,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,split_ps_export=split_ps_export,
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,gain_factor=gain_factor,$
     no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,psf_resolution=psf_resolution,$
     min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,$
-    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,_Extra=extra
+    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,_Extra=extra
 
 !except=except
 END
