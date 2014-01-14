@@ -80,11 +80,10 @@ calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=
 dimension=3072.
 ;max_baseline=900.
 max_sources=25000.
-pad_uv_image=2.
+pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FoV=80.
 no_ps=1 ;don't save postscript copy of images
-psf_dim=8
 min_baseline=1.
 min_cal_baseline=50.
 ring_radius=10.*pad_uv_image
@@ -93,13 +92,19 @@ psf_resolution=8.
 nfreq_avg=16.
 no_rephase=1
 gain_factor=0.2
+bandpass_calibrate=1
+calibration_polyfit=2
+no_restrict_cal_sources=1
+
 general_obs,cleanup=cleanup,ps_export=ps_export,split_ps_export=split_ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,combine_healpix=combine_healpix,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
-    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,psf_dim=psf_dim,silent=silent,$
+    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,silent=silent,$
     FoV=FoV,no_ps=no_ps,max_baseline=max_baseline,$
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,gain_factor=gain_factor,$
     no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,psf_resolution=psf_resolution,$
-    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,_Extra=extra
+    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,$
+    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,_Extra=extra
+
 !except=except
 END
