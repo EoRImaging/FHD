@@ -133,7 +133,7 @@ IF N_Elements(low_source) EQ 0 THEN low_source=0.
 IF N_Elements(fraction_polarized) EQ 0 THEN fraction_polarized=0.5
 
 ;free memory
-undefine_fhd,Stokes_images,Stokes_weights,Stokes_inds,
+undefine_fhd,Stokes_images,Stokes_weights,Stokes_inds
 
 FOR stk_i=0,n_pol-1 DO BEGIN
     CASE stk_i OF
