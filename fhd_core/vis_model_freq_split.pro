@@ -1,10 +1,11 @@
 FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
-    file_path_fhd=file_path_fhd,even_only=even_only,odd_only=odd_only,rephase_weights=rephase_weights,$
+    file_path_fhd=file_path_fhd,even_only=even_only,odd_only=odd_only,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,_Extra=extra
 ext='.UVFITS'
 t0=Systime(1)
 
+IF N_Elements(silent) EQ 0 THEN silent=0
 pol_names=['xx','yy','xy','yx']
 flags_filepath=file_path_fhd+'_flags.sav'
 params_filepath=file_path_fhd+'_params.sav'
@@ -27,7 +28,7 @@ degpix=obs.degpix
 
 IF Min(Ptr_valid(vis_data_arr)) EQ 0 THEN BEGIN
     vis_data_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO vis_data_arr[pol_i]=getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr')
+    FOR pol_i=0,n_pol-1 DO vis_data_arr[pol_i]=getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
 ENDIF
 
 IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN

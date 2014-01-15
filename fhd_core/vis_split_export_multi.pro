@@ -111,7 +111,10 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
         file_path_fhd=file_path_fhd,even_only=even_only,odd_only=odd_only,vis_n_arr=vis_n_arr,/preserve_visibilities,_Extra=extra)
     
-    IF dirty_flag THEN dirty_arr1=residual_arr1
+    IF dirty_flag THEN BEGIN
+        dirty_arr1=residual_arr1
+        residual_arr1=Ptrarr(size(residual_arr1,/dimension),/allocate)
+    ENDIF
     t_hpx0=Systime(1)
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
         IF Total(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE

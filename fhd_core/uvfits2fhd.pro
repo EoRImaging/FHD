@@ -100,8 +100,9 @@ IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 
 data_flag=file_test(hdr_filepath) AND file_test(flags_filepath) AND file_test(obs_filepath) AND file_test(params_filepath)
 
+vis_file_list=file_search(file_path_fhd+'_vis*',count=vis_file_flag)
 IF Keyword_Set(beam_recalculate) OR Keyword_Set(grid_recalculate) OR Keyword_Set(mapfn_recalculate) OR $
-   Keyword_Set(save_visibilities) THEN data_flag=1 ELSE data_flag=0
+   (Keyword_Set(save_visibilities) AND (vis_file_flag EQ 0)) THEN data_flag=1 ELSE data_flag=0
 
 IF Keyword_Set(force_data) THEN data_flag=1
 IF Keyword_Set(force_no_data) THEN data_flag=0
