@@ -51,7 +51,7 @@ IF Keyword_Set(simultaneous) THEN BEGIN
     export_sim=export_images
     export_images=0
 ENDIF
-IF N_Elements(save_visibilities) EQ 0 THEN IF Keyword_Set(ps_export) THEN save_visibilities=1 ELSE save_visibilities=0
+IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1 
 IF Keyword_Set(recalculate_all) AND (N_Elements(deconvolve) EQ 0) THEN deconvolve=1
 ;IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
