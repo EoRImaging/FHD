@@ -1,4 +1,4 @@
-PRO pipeline_paper,subset=subset,all=all,single=single
+PRO pipeline_paper,subset=subset,all=all,single=single,version=version
 
 ;;;;;;
 ; A simple wrapper to organize the commands being used to generate
@@ -92,7 +92,7 @@ no_ps=1 ;don't save postscript copy of images
 min_baseline=1.
 min_cal_baseline=50.
 ring_radius=10.*pad_uv_image
-;max_calibration_sources=10000.
+;max_calibration_sources=300.
 psf_resolution=8.
 nfreq_avg=16.
 no_rephase=1
@@ -111,7 +111,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,split_ps_export=split_ps_export,
     min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,$
     bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,$
     flag_visibilities=flag_visibilities,calibration_visibilities_subtract=calibration_visibilities_subtract,ps_kspan=ps_kspan,ps_kbinsize=ps_kbinsize,$
-    n_avg=n_avg,_Extra=extra
+    n_avg=n_avg,force_no_data=force_no_data,_Extra=extra
 
 !except=except
 END
