@@ -25,6 +25,7 @@ n_freq=obs.n_freq
 n_pol=obs.n_pol
 dimension=obs.dimension
 degpix=obs.degpix
+residual_flag=obs.residual
 
 IF Min(Ptr_valid(vis_data_arr)) EQ 0 THEN BEGIN
     vis_data_arr=Ptrarr(n_pol)
@@ -63,6 +64,7 @@ ENDELSE
 
 nf=Max(freq_bin_i2)+1L
 IF Keyword_Set(source_list) OR Keyword_Set(model_uv_arr) THEN model_flag=1 ELSE model_flag=0
+IF Keyword_Set(residual_flag) THEN model_flag=0
 IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
     IF model_flag THEN BEGIN
        vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,$

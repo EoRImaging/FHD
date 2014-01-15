@@ -41,7 +41,7 @@ IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
 nside_use=nside_use>Nside_chk
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 
-residual_flag=Mean(obs_arr.residual)
+residual_flag=Round(Mean(obs_arr.residual)) ;use Mean() not Median() because Median() will give an error if there is only one element
 model_flag=intarr(n_obs)+1
 hpx_cnv=Ptrarr(n_obs)
 psf_arr=Ptrarr(n_obs)
