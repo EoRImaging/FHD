@@ -86,18 +86,18 @@ psym_res=10
 psym_gauss=0
 
 
-PS_Start,filename=file_path_base+name+'.ps',/quiet,/nomatch,charsize=charsize,xsize=10.35,ysize=8
+cgPS_Open,filename=file_path_base+name+'.ps',/quiet,/nomatch,charsize=charsize,xsize=10.35,ysize=8
 cgPlot,residual_vals,residual_hist,color='black',linestyle=0,/ylog,yrange=[0.1,max(residual_hist)],xrange=[xlow,xhigh],xtitle=xtitle,ytitle=ytitle,Title=title,ymargin=ymargin,psym=psym_res
 cgPlot,residual_vals_gauss,residual_gauss_fit,/over,color='red',linestyle=2,psym=psym_gauss
 Al_Legend,['Residual','Gaussian fit'],linestyle=[0,2],psym=[0,0],charsize=1.,color=['black','red'],/left
 Al_Legend,[amp_str,center_str,sig_str],charsize=1.,color='black',/right
 
 ;IF !version.os_family EQ 'unix' THEN BEGIN
-    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
-        ELSE PS_End,Density=300,Resize=25.,/png,/allow_transparent,/nomessage
+    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
+        ELSE cgPS_Close,Density=300,Resize=25.,/png,/allow_transparent,/nomessage
 ;ENDIF ELSE BEGIN
-;    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
-;        ELSE PS_End,Density=300,Resize=25.,/png,/NoWait,/allow_transparent,/nomessage
+;    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
+;        ELSE cgPS_Close,Density=300,Resize=25.,/png,/NoWait,/allow_transparent,/nomessage
 ;ENDELSE
 
 END

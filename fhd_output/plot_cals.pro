@@ -1,6 +1,6 @@
 pro plot_cals,cal,obs,vis_baseline_hist=vis_baseline_hist,file_path_base=file_path_base,no_ps=no_ps
 ; Make plot of the cal solutions, save to png
-; PS_START/PS_END write .ps first, then converts to png. Supply .png
+; cgPS_Open/cgPS_Close write .ps first, then converts to png. Supply .png
 ; filename to automatically overwrite .ps.
 
 no_ps=1
@@ -39,7 +39,7 @@ plot_pos[*,1] += height/2
 plot_pos[*,2] -= width/2
 plot_pos[*,3] += height/2
 
-PS_START,phase_filename,scale_factor=2,/quiet,/nomatch
+cgPS_Open,phase_filename,scale_factor=2,/quiet,/nomatch
 
 n_baselines=obs2.bin_offset[1]
 tile_A=obs2.tile_A[0:n_baselines-1]
@@ -96,9 +96,9 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
     ENDELSE
 ENDFOR
 cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
     
-PS_START,amp_filename,scale_factor=2,/quiet,/nomatch
+cgPS_Open,amp_filename,scale_factor=2,/quiet,/nomatch
 
 max_amp = mean(abs([gains0,gains1])) + 2*stddev(abs([gains0,gains1]))
 yrange=[0,max_amp]
@@ -146,21 +146,21 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
 ENDFOR
 
 cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 
 IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
    ratio=vis_baseline_hist.vis_res_ratio_mean ; just save some typing
    sigma=vis_baseline_hist.vis_res_sigma
    base_len=vis_baseline_hist.baseline_length
 
-   PS_START,filename=vis_hist_filename,/quiet,/nomatch
+   cgPS_Open,filename=vis_hist_filename,/quiet,/nomatch
    !p.multi=[0,2,1]
    FOR pol=0,1 DO BEGIN
       cgplot,base_len,ratio[pol,*],color='red',/xlog,yrange=[0,max(ratio+sigma)]
       cgoplot,base_len,ratio[pol,*]+sigma[pol,*],linestyle=2
       cgoplot,base_len,ratio[pol,*]-sigma[pol,*],linestyle=2
    ENDFOR
-   PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+   cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 ENDIF
 
 END    

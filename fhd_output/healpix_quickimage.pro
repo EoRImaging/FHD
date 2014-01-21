@@ -1,4 +1,4 @@
-pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, noerase = noerase, $
+pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, noerase = noerase, savefile = savefile, png = png, eps = eps, $
     map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
     max=max,min=min,png_write=png_write,ps_write=ps_write,silent=silent,title=title,degpix=degpix,logplot=logplot,hist_equal=hist_equal,$
     lon_center=lon_center,lat_center=lat_center,color_table=color_table,projection=projection, coord_in=coord_in, coord_out = coord_out
@@ -155,7 +155,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     endif
         
     quick_image, new_map, missing_val = bad_val, data_range = data_range, xtitle = 'longitude (degrees)', ytitle = 'latitude (degrees)', $
-      title = title, noerase = noerase, xrange = lon_range, yrange = lat_range
+      title = title, noerase = noerase, xrange = lon_range, yrange = lat_range, savefile = savefile, png = png, eps = eps
       
   endif else begin
   
@@ -167,7 +167,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
       planmap, Tmax, Tmin, color_bar, 0., title, $
       'Jy', coord_out, do_rot, eul_mat, $
       CHARSIZE=charsize, COLT=colt, CROP=crop, GIF = gif, GRATICULE = 20., $
-      HXSIZE=hxsize, NOBAR = nobar, NOLABELS = nolabels, PNG = png, PREVIEW = 0, PS=ps, PXSIZE=pxsize, $
+      HXSIZE=hxsize, NOBAR = nobar, NOLABELS = nolabels, PNG = png, PREVIEW = 0, PS=eps, PXSIZE=pxsize, $
       SUBTITLE = subtitle, TITLEPLOT = titleplot, XPOS = xpos, YPOS = ypos, $
       POLARIZATION=polarization, OUTLINE=outline, PROJECTION=projection, FLIP=flip, HALF_SKY=half_sky, COORD_IN=coord_in, $
       IGRATICULE=igraticule, HBOUND = hbound, WINDOW = window, SILENT=silent, GLSIZE=.5, IGLSIZE=iglsize, $
