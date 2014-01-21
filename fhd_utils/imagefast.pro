@@ -259,7 +259,7 @@ pixres=72.
 xsize2=xsize/pixres
 ysize2=ysize/pixres
 
-PS_Start,filename=file_path_use+'.ps',/quiet,/nomatch,charsize=charsize,xsize=xsize2,ysize=ysize2
+cgPS_Open,filename=file_path_use+'.ps',/quiet,/nomatch,charsize=charsize,xsize=xsize2,ysize=ysize2
 ;position_default=[x0, y0, x1, y1]
 image_position=[xstart/xsize,ystart/ysize,(xstart+dimension)/xsize,(ystart+elements)/ysize]
 cgImage,image_use,/keep_aspect,background=background,layout=layout,margin=margin,noerase=noerase,$
@@ -311,13 +311,13 @@ IF not Keyword_Set(no_colorbar) THEN BEGIN
 ENDIF
 
 ;;IF !version.os_family EQ 'unix' THEN BEGIN
-;    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
-;        ELSE PS_End,Density=300,Resize=25.,/png,/allow_transparent,/nomessage
+;    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
+;        ELSE cgPS_Close,Density=300,Resize=25.,/png,/allow_transparent,/nomessage
 ;;ENDIF ELSE BEGIN
-;;    IF Keyword_Set(no_ps) THEN PS_End,Density=300,Resize=25.,/png,/DELETE_PS $
-;;        ELSE PS_End,Density=300,Resize=25.,/png,/NoWait
+;;    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=300,Resize=25.,/png,/DELETE_PS $
+;;        ELSE cgPS_Close,Density=300,Resize=25.,/png,/NoWait
 ;;ENDELSE
-    IF Keyword_Set(no_ps) THEN PS_End,Density=75,Resize=100.,/png,/DELETE_PS,/allow_transparent,/nomessage $
-        ELSE PS_End,Density=75,Resize=100.,/png,/allow_transparent,/nomessage
+    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=75,Resize=100.,/png,/DELETE_PS,/allow_transparent,/nomessage $
+        ELSE cgPS_Close,Density=75,Resize=100.,/png,/allow_transparent,/nomessage
 
 END

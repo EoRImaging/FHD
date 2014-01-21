@@ -53,11 +53,11 @@ IF Keyword_Set(file_path_fhd) THEN BEGIN
     yrange=[min(bandpass_arr[1:n_pol,freq_use]),max(bandpass_arr[1:n_pol,freq_use])]
     ytickv=[yrange[0],mean(yrange),yrange[1]]
     axiscolor='black'
-    PS_START,image_path+'_bandpass.png',/quiet,/nomatch
+    cgPS_Open,image_path+'_bandpass.png',/quiet,/nomatch
     cgplot,freq[freq_use],bandpass_arr[1,freq_use],color='blue',title=obs.obsname,xtitle='Frequency [MHz]',ytitle='Gain',$
         yrange=yrange,xrange=xrange,/noerase,axiscolor=axiscolor,psym=10
     IF n_pol GT 1 THEN cgoplot,freq[freq_use],bandpass_arr[2,freq_use],color='red',psym=10
-    PS_END,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+    cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 ENDIF
 
 RETURN,cal_bandpass
