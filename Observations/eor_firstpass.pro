@@ -25,12 +25,13 @@ IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(silent) EQ 0 THEN silent=0
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
+if n_elements(output_directory) eq 0 then output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 ;image_filter_fn=''
 
 ; This file structure works at MIT
 data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
-output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+
 
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)
@@ -43,9 +44,9 @@ catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),sub
 calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('test_component_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
 
-dimension=3072.
+dimension=2048.
 max_sources=20000.
-pad_uv_image=1.
+pad_uv_image=2.
 FoV=80.
 no_ps=1 ;don't save postscript copy of images
 psf_dim=8
@@ -53,7 +54,7 @@ min_baseline=1.
 min_cal_baseline=50.
 ring_radius=10.*pad_uv_image
 nfreq_avg=16
-max_calibration_sources=10000.
+;max_calibration_sources=10000.
 weights_grid=0
 psf_resolution=8.
 no_rephase=1 ;set to use obsra, obsdec for phase center even if phasera, phasedec present in a .metafits file
@@ -61,6 +62,10 @@ no_fits=1
 combine_obs=0
 gain_factor=2./3.
 smooth_width=11.
+bandpass_calibrate=1
+calibration_polyfit=2
+no_restrict_cal_sources=1
+
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
@@ -69,7 +74,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,psf_dim=psf_dim,$
     FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,flag_visibilities=flag_visibilities,flag_calibration=flag_calibration,$
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
-    ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,max_calibration_sources=max_calibration_sources,$
+    ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,/mark_zenith,$
     vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,no_rephase=no_rephase,show_obsname=show_obsname,$
     silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_obs=combine_obs,no_fits=no_fits,$
