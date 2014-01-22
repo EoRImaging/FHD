@@ -45,7 +45,7 @@ reject_pol_sources=fhd.reject_pol_sources
 sigma_threshold=2.
 calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
-IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform2'
+IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform'
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold

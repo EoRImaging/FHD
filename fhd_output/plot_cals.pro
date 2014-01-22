@@ -1,4 +1,4 @@
-pro plot_cals,cal,obs,vis_baseline_hist=vis_baseline_hist,file_path_base=file_path_base,no_ps=no_ps
+pro plot_cals,cal,obs,cal_res=cal_res,vis_baseline_hist=vis_baseline_hist,file_path_base=file_path_base,no_ps=no_ps
 ; Make plot of the cal solutions, save to png
 ; cgPS_Open/cgPS_Close write .ps first, then converts to png. Supply .png
 ; filename to automatically overwrite .ps.
@@ -7,6 +7,7 @@ no_ps=1
 IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
 phase_filename=file_path_base+'_cal_phase'+ext_name
 amp_filename=file_path_base+'_cal_amp'+ext_name
+res_filename=file_path_base+'_cal_residual'+ext_name
 vis_hist_filename=file_path_base+'_cal_hist'+ext_name
 IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
@@ -147,6 +148,66 @@ ENDFOR
 
 cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
 cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+
+IF Keyword_Set(cal_res) THEN BEGIN
+    cgPS_Open,res_filename,scale_factor=2,/quiet,/nomatch
+    
+    gains0r=*cal_res.gain[0]
+    gains1r=*cal_res.gain[1]
+    gains0r=gains0r[freq_i_use,*]
+    gains1r=gains1r[freq_i_use,*]
+    sign0r=Real_part(gains0r)*weight_invert(Abs(real_part(gains0r)))
+    gains0r=Abs(gains0r)*sign0r
+    sign1r=Real_part(gains1r)*weight_invert(Abs(real_part(gains1r)))
+    gains1r=Abs(gains1r)*sign1r
+    max_amp = mean(abs([gains0r,gains1r])) + 2*stddev(abs([gains0r,gains1r]))
+    yrange=[-max_amp,max_amp]
+    ytickv=[-max_amp,0,max_amp]
+    
+    FOR tile_i=0L,n_tiles-1 DO BEGIN
+        tile_name=tile_names[tile_i]
+        rec=Floor(tile_name/10)
+        tile=tile_name mod 10
+        
+        IF tile_exist[tile_i] EQ 0  THEN BEGIN
+          ; no tile found... must have been flagged in pre-processing
+          axiscolor='grey'
+          cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+            /noerase,charsize=.5,axiscolor=axiscolor
+        ENDIF ELSE BEGIN
+          IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
+          IF ~(tile_i mod 16) THEN BEGIN
+            IF (tile_i gt (n_tiles-17)) THEN BEGIN
+              ; both axes
+              cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
+                xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
+                yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+            ENDIF ELSE BEGIN
+              ; just the y-axis
+              cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
+                xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
+                yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+            ENDELSE
+          ENDIF ELSE BEGIN
+            IF (tile_i gt (n_tiles-17)) THEN BEGIN
+              ; just x-axis
+              cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
+                xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+                yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+            ENDIF ELSE BEGIN
+              ; No axes
+              cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
+                xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
+                yticklen=0.04,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+            ENDELSE
+          ENDELSE
+          cgoplot,freq,gains1r[*,tile_i],color='red',psym=3
+        ENDELSE
+    ENDFOR
+    
+    cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
+    cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+ENDIF
 
 IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
    ratio=vis_baseline_hist.vis_res_ratio_mean ; just save some typing
