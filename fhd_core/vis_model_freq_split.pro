@@ -1,7 +1,8 @@
 FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
     file_path_fhd=file_path_fhd,even_only=even_only,odd_only=odd_only,rephase_weights=rephase_weights,silent=silent,$
-    vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,_Extra=extra
+    vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
+    obs_out=obs_out,psf_out=psf_out,_Extra=extra
 ext='.UVFITS'
 t0=Systime(1)
 
@@ -72,19 +73,27 @@ IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
        IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
     ENDIF ELSE vis_model_arr=Ptrarr(n_pol)
 ENDIF
+
+IF Keyword_Set(obs_out) THEN BEGIN
+    n_freq=obs.n_freq
+    n_pol=obs.n_pol
+    dimension=obs.dimension
+    degpix=obs.degpix
+    residual_flag=obs.residual
+ENDIF ELSE obs_out=obs
+IF N_Elements(psf_out) EQ 0 THEN psf_out=psf
 dirty_arr=Ptrarr(n_pol,nf,/allocate)
 weights_arr=Ptrarr(n_pol,nf,/allocate)
 variance_arr=Ptrarr(n_pol,nf,/allocate)
 model_arr=Ptrarr(n_pol,nf,/allocate)
 vis_n_arr=Fltarr(n_pol,nf)
 
-
-IF Keyword_Set(rephase_weights) THEN rephase_use=phase_shift_uv_image(obs,/to_orig_phase) ELSE rephase_use=1.
+IF Keyword_Set(rephase_weights) THEN rephase_use=phase_shift_uv_image(obs_out,/to_orig_phase) ELSE rephase_use=1.
 t_grid=0
 FOR pol_i=0,n_pol-1 DO BEGIN
     vis_ptr=vis_data_arr[pol_i]
     model_ptr=vis_model_arr[pol_i]
-    freq_use=(*obs.baseline_info).freq_use
+    freq_use=(*obs_out.baseline_info).freq_use
     n_vis_use=0.
     IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
     IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=extract_subarray(init_arr,x_range,y_range)
@@ -94,12 +103,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         variance_holo=1 ;initialize
         weights_holo=1 ;initialize
         IF nf_use EQ 0 THEN n_vis=0 ELSE IF Keyword_Set(inds_patch) THEN $
-            dirty_UV=visibility_patch_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
+            dirty_UV=visibility_patch_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
                 polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
                 model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return,inds_patch=inds_patch,$
                 obs_patch=obs_patch,psf_patch=psf_patch,rephase_vis_flag=rephase_vis_flag,_Extra=extra) $
         ELSE $
-            dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs,psf,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
+            dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
                 polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
                 model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
         IF n_vis EQ 0 THEN BEGIN
@@ -134,6 +143,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF ~Keyword_Set(preserve_visibilities) THEN ptr_free,vis_ptr,model_ptr
 ENDFOR
 obs.n_vis=n_vis_use
+obs_out.n_vis=n_vis_use
     
 IF ~Keyword_Set(silent) THEN print,"Gridding timing: ",strn(t_grid)
 timing=Systime(1)-t0

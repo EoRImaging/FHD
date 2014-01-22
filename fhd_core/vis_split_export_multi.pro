@@ -47,23 +47,29 @@ hpx_cnv=Ptrarr(n_obs)
 psf_arr=Ptrarr(n_obs)
 obs_flag=intarr(n_obs)+1
 
+obs_out_arr=obs_arr
+psf_out_arr=Ptrarr(n_obs)
+
 FOR obs_i=0.,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
     model_flag[obs_i]=file_test(file_path_fhd+'_fhd.sav')
-    obs=vis_struct_update_obs(obs_arr[obs_i],n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
-    obs_arr[obs_i]=obs
-    dimension=obs.dimension
-    elements=obs.elements
+    obs_out=vis_struct_update_obs(obs_arr[obs_i],n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
+    obs_out_arr[obs_i]=obs_out
+    dimension=obs_out.dimension
+    elements=obs_out.elements
     
-    psf=beam_setup(obs,file_path_fhd,/no_save)
+    psf=beam_setup(obs,file_path_fhd,/no_save,/silent)
     psf_arr[obs_i]=Ptr_new(psf)
+    ps_psf_resolution=Round(psf.resolution*obs_out.kpix/obs.kpix)
+    psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resolution,/silent)
+    psf_out_arr[obs_i]=Ptr_new(psf_out)
     
     beam_base=Ptrarr(n_pol<2)
-    FOR pol_i=0,n_pol-1 DO beam_base[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,/fast))
+    FOR pol_i=0,n_pol-1 DO beam_base[pol_i]=Ptr_new(beam_image(psf_out,obs_out,pol_i=pol_i,/fast))
     beam_mask=fltarr(dimension,elements)+1.
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
         mask0=fltarr(dimension,elements)
-        mask_i=region_grow(*beam_base[pol_i],Floor(obs.obsx)+Floor(dimension)*Floor(obs.obsy),thresh=[beam_threshold,max(*beam_base[pol_i])])
+        mask_i=region_grow(*beam_base[pol_i],Floor(obs_out.obsx)+Floor(dimension)*Floor(obs_out.obsy),thresh=[beam_threshold,max(*beam_base[pol_i])])
         mask0[mask_i]=1
         beam_mask*=mask0
     ENDFOR
@@ -72,14 +78,14 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         CONTINUE
     ENDIF
 
-    hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_use,mask=beam_mask,/no_save,/pointer,_Extra=extra) 
+    hpx_cnv[obs_i]=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,mask=beam_mask,/no_save,/pointer,_Extra=extra) 
 ENDFOR
 model_flag=Min(model_flag)
 IF Total(obs_flag) EQ 0 THEN RETURN
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds);,reverse_ind=reverse_inds)
 
 n_hpx=N_Elements(hpx_inds)
-t_hpx=0.
+t_hpx=Systime(1)
 
 
 IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
@@ -103,11 +109,13 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     IF obs_flag[obs_i] EQ 0 THEN CONTINUE
     file_path_fhd=fhd_file_list[obs_i]
     obs=obs_arr[obs_i]
+    obs_out=obs_out_arr[obs_i]
     psf=*psf_arr[obs_i]  
+    psf_out=*psf_out_arr[obs_i]  
     
     print,"Frequency splitting: "+file_basename(file_path_fhd)
     IF model_flag THEN source_array=getvar_savefile(file_path_fhd+'_fhd.sav','source_array')
-    residual_arr1=vis_model_freq_split(obs,psf,source_list=source_array,rephase_weights=rephase_weights,$
+    residual_arr1=vis_model_freq_split(obs,psf,obs_out=obs_out,psf_out=psf_out,source_list=source_array,rephase_weights=rephase_weights,$
         weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
         file_path_fhd=file_path_fhd,even_only=even_only,odd_only=odd_only,vis_n_arr=vis_n_arr,/preserve_visibilities,_Extra=extra)
     
@@ -130,6 +138,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     t_hpx+=t_hpx1-t_hpx0
     
 ENDFOR
+obs_arr=obs_out_arr
 
 IF dirty_flag THEN BEGIN
     dirty_xx_cube=fltarr(n_hpx,n_freq_use)
