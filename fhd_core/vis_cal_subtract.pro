@@ -3,10 +3,10 @@ IF N_Params() LT 2 THEN RETURN,cal_base
 
 n_pol=cal_base.n_pol
 gain0a=*cal_base.gain[0]
-gain1a=*cal_base.gain[0]
+gain1a=*cal.gain[0]
 IF n_pol GT 1 THEN BEGIN
     gain0b=*cal_base.gain[1]
-    gain1b=*cal_base.gain[1]
+    gain1b=*cal.gain[1]
 ENDIF
 
 cal_residual=cal_base
