@@ -1,6 +1,6 @@
 pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, noerase = noerase, savefile = savefile, png = png, eps = eps, $
     map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
-    max=max,min=min,png_write=png_write,ps_write=ps_write,silent=silent,title=title,degpix=degpix,logplot=logplot,hist_equal=hist_equal,$
+    max=max,min=min,silent=silent,title=title,degpix=degpix,logplot=logplot,hist_equal=hist_equal,$
     lon_center=lon_center,lat_center=lat_center,color_table=color_table,projection=projection, coord_in=coord_in, coord_out = coord_out
     
     
@@ -8,7 +8,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   IF N_Elements(nside) NE 1 THEN begin
     print, 'nside must be specified'
     return
-  endif 
+  endif
   
   data_range = minmax(data)
   
@@ -87,8 +87,6 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   rot=[lon0,lat0]
   
   hsize_cm=26.
-  IF Keyword_Set(png_write) THEN png_filename=file_path+'.png' ELSE png_filename=0
-  IF Keyword_Set(ps_write) THEN ps_filename=file_path+'.ps' ELSE ps_filename=0
   
   
   
@@ -153,7 +151,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
         print, 'map covers more than one hemisphere, lat/lon ranges are likely to be wrong'
       endelse
     endif
-        
+    
     quick_image, new_map, missing_val = bad_val, data_range = data_range, xtitle = 'longitude (degrees)', ytitle = 'latitude (degrees)', $
       title = title, noerase = noerase, xrange = lon_range, yrange = lat_range, savefile = savefile, png = png, eps = eps
       
@@ -163,11 +161,14 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     ;    retain=1,silent=silent,transparent=1,title=title,asinh=logplot,hist_equal=hist_equal,preview=0,$
     ;    rot=rot,graticule=20.,charsize=charsize,pxsize=pxsize,glsize=1.,window=-1,units='Jy',colt=color_table;,Coord=['C'];,hxsize=hsize_cm
   
+    IF Keyword_Set(png) THEN png_filename=file_path+'.png' ELSE png_filename=0
+    IF Keyword_Set(eps) THEN ps_filename=file_path+'.ps' ELSE ps_filename=0
+    
     proj2out, $
       planmap, Tmax, Tmin, color_bar, 0., title, $
       'Jy', coord_out, do_rot, eul_mat, $
       CHARSIZE=charsize, COLT=colt, CROP=crop, GIF = gif, GRATICULE = 20., $
-      HXSIZE=hxsize, NOBAR = nobar, NOLABELS = nolabels, PNG = png, PREVIEW = 0, PS=eps, PXSIZE=pxsize, $
+      HXSIZE=hxsize, NOBAR = nobar, NOLABELS = nolabels, PNG = png_filename, PREVIEW = 0, PS=ps_filename, PXSIZE=pxsize, $
       SUBTITLE = subtitle, TITLEPLOT = titleplot, XPOS = xpos, YPOS = ypos, $
       POLARIZATION=polarization, OUTLINE=outline, PROJECTION=projection, FLIP=flip, HALF_SKY=half_sky, COORD_IN=coord_in, $
       IGRATICULE=igraticule, HBOUND = hbound, WINDOW = window, SILENT=silent, GLSIZE=.5, IGLSIZE=iglsize, $
