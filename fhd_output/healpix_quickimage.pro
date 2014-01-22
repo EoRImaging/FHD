@@ -1,7 +1,7 @@
 pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, noerase = noerase, savefile = savefile, png = png, eps = eps, $
     map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
-    max=max,min=min,silent=silent,title=title,degpix=degpix,logplot=logplot,hist_equal=hist_equal,$
-    lon_center=lon_center,lat_center=lat_center,color_table=color_table,projection=projection, coord_in=coord_in, coord_out = coord_out
+    data_range = data_range, max=max,min=min, silent=silent, title=title, degpix=degpix, logplot=logplot, hist_equal=hist_equal,$
+    lon_center=lon_center, lat_center=lat_center, projection=projection, coord_in=coord_in, coord_out = coord_out
     
     
   IF N_Elements(silent) EQ 0 THEN silent=1
@@ -10,7 +10,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     return
   endif
   
-  data_range = minmax(data)
+  if n_elements(data_range) eq 0 then data_range = minmax(data)
   
   data_dims = size(data, /dimension)
   if n_elements(data_dims) gt 1 then begin
@@ -19,11 +19,11 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
       slice_ind = data_dims[1] - 1
     endif
     
-    title = 'slice: ' + number_formatter(slice_ind)
+    if n_elements(title) eq 0 then title = 'slice: ' + number_formatter(slice_ind)
     data_plot = data[*,slice_ind]
   endif else begin
     data_plot = data
-    title = ''
+    if n_elements(title) eq 0 then title = ''
   endelse
   
   if n_elements(ordering) eq 0 then ordering='ring'
@@ -56,8 +56,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   hpx_res = sqrt(3./!pi)*(60./nside)
   
   IF Keyword_Set(degpix) THEN resolution=degpix ELSE resolution=.1 ;output resolution in degrees
-  IF N_Elements(color_table) EQ 0 THEN color_table=33
-  
+
   if keyword_set(map) then begin
     half_sky = 1
     pxsize=360./resolution
