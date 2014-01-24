@@ -247,6 +247,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
 ;        hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
 ;            mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
 ;    hpx_cnv=0
+    IF Keyword_Set(healpix_snapshot_cube) THEN healpix_snapshot_cube_generate,obs,vis_arr,$
+        vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,_Extra=extra
     
     autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
     auto_corr=Ptrarr(n_pol)

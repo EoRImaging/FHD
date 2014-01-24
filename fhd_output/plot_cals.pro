@@ -150,7 +150,7 @@ cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
 cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 
 IF Keyword_Set(cal_res) THEN BEGIN
-    cgPS_Open,res_filename,scale_factor=2,/quiet,/nomatch
+
     
     gains0r=*cal_res.gain[0]
     gains1r=*cal_res.gain[1]
@@ -161,52 +161,55 @@ IF Keyword_Set(cal_res) THEN BEGIN
     sign1r=Real_part(gains1r)*weight_invert(Abs(real_part(gains1r)))
     gains1r=Abs(gains1r)*sign1r
     max_amp = mean(abs([gains0r,gains1r])) + 2*stddev(abs([gains0r,gains1r]))
-    yrange=[-max_amp,max_amp]
-    ytickv=[-max_amp,0,max_amp]
-    
-    FOR tile_i=0L,n_tiles-1 DO BEGIN
-        tile_name=tile_names[tile_i]
-        rec=Floor(tile_name/10)
-        tile=tile_name mod 10
+    IF max_amp GT 0 THEN BEGIN
+        cgPS_Open,res_filename,scale_factor=2,/quiet,/nomatch
+        yrange=[-max_amp,max_amp]
+        ytickv=[-max_amp,0,max_amp]
         
-        IF tile_exist[tile_i] EQ 0  THEN BEGIN
-          ; no tile found... must have been flagged in pre-processing
-          axiscolor='grey'
-          cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
-            /noerase,charsize=.5,axiscolor=axiscolor
-        ENDIF ELSE BEGIN
-          IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
-          IF ~(tile_i mod 16) THEN BEGIN
-            IF (tile_i gt (n_tiles-17)) THEN BEGIN
-              ; both axes
-              cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
-                xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
-                yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+        FOR tile_i=0L,n_tiles-1 DO BEGIN
+            tile_name=tile_names[tile_i]
+            rec=Floor(tile_name/10)
+            tile=tile_name mod 10
+            
+            IF tile_exist[tile_i] EQ 0  THEN BEGIN
+              ; no tile found... must have been flagged in pre-processing
+              axiscolor='grey'
+              cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+                /noerase,charsize=.5,axiscolor=axiscolor
             ENDIF ELSE BEGIN
-              ; just the y-axis
-              cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
-                xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
-                yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+              IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
+              IF ~(tile_i mod 16) THEN BEGIN
+                IF (tile_i gt (n_tiles-17)) THEN BEGIN
+                  ; both axes
+                  cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
+                    xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
+                    yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+                ENDIF ELSE BEGIN
+                  ; just the y-axis
+                  cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
+                    xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
+                    yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+                ENDELSE
+              ENDIF ELSE BEGIN
+                IF (tile_i gt (n_tiles-17)) THEN BEGIN
+                  ; just x-axis
+                  cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
+                    xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+                    yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+                ENDIF ELSE BEGIN
+                  ; No axes
+                  cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
+                    xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
+                    yticklen=0.04,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
+                ENDELSE
+              ENDELSE
+              cgoplot,freq,gains1r[*,tile_i],color='red',psym=3
             ENDELSE
-          ENDIF ELSE BEGIN
-            IF (tile_i gt (n_tiles-17)) THEN BEGIN
-              ; just x-axis
-              cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
-                xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
-                yticklen=0.04,yrange=yrange,xrange=xrange,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
-            ENDIF ELSE BEGIN
-              ; No axes
-              cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
-                xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
-                yticklen=0.04,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
-            ENDELSE
-          ENDELSE
-          cgoplot,freq,gains1r[*,tile_i],color='red',psym=3
-        ENDELSE
-    ENDFOR
-    
-    cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-    cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+        ENDFOR
+        
+        cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
+        cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+    ENDIF
 ENDIF
 
 IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
