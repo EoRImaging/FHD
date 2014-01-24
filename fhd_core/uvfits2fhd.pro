@@ -79,7 +79,7 @@ hdr_filepath=file_path_fhd+'_hdr.sav'
 fhd_filepath=file_path_fhd+'_fhd.sav'
 autocorr_filepath=file_path_fhd+'_autos.sav'
 cal_filepath=file_path_fhd+'_cal.sav'
-model_filepath=file_path_fhd+'_cal_uv.sav'
+model_filepath=file_path_fhd+'_vis_cal.sav'
 IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
@@ -163,14 +163,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
             calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path,_Extra=extra)
         cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list,catalog_path=calibration_catalog_file_path,_Extra=extra)
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
-        IF Keyword_Set(calibration_image_subtract) THEN return_cal_model=1
+        IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
-             return_cal_model=return_cal_model,$
+             return_cal_visibilities=return_cal_visibilities,vis_model_ptr=vis_model_ptr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
-        IF Keyword_Set(return_cal_model) THEN save,model_uv_arr,filename=model_filepath
     ENDIF
     
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
@@ -257,7 +256,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDFOR
     SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
     
-    IF Keyword_Set(save_visibilities) THEN vis_export,obs,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
+    IF Keyword_Set(save_visibilities) THEN BEGIN
+        vis_export,obs,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
+        IF Keyword_Set(return_cal_visibilities) THEN vis_export,obs,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+    ENDIF
         
     t_grid=fltarr(n_pol)
     t_mapfn_gen=fltarr(n_pol)
@@ -268,6 +270,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol,/allocate)
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
+        IF Keyword_Set(return_cal_visibilities) THEN model_uv_arr=Ptrarr(n_pol,/allocate)
         IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
         FOR pol_i=0,n_pol-1 DO BEGIN
     ;        IF Keyword_Set(GPU_enable) THEN $
@@ -275,10 +278,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
     ;        ELSE $
             
-            
+            IF Keyword_Set(return_cal_visibilities) THEN model_return=return_cal_visibilities
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
                 timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
-                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,_Extra=extra)
+                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
+                model_return=model_return,model_ptr=vis_model_ptr,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
             SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
@@ -289,6 +293,11 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 *weights_arr[pol_i]=Temporary(weights_grid)
                 weights_grid=1
             ENDIF
+            IF Keyword_Set(return_cal_visibilities) THEN BEGIN
+                *model_uv_arr[pol_i]=Temporary(model_return)
+                model_return=1
+            ENDIF
+            
         ENDFOR
         print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
