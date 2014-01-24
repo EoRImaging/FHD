@@ -33,6 +33,7 @@ psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resoluti
 hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside,$
     mask=beam_mask,radius=radius,restore_last=0,/no_save,hpx_radius=FoV_use/2.,_Extra=extra)
 
-
+beam=Ptrarr(n_pol,/allocate)
+FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
 
 END

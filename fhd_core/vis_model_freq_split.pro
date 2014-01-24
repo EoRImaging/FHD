@@ -102,15 +102,19 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF Ptr_valid(model_ptr) THEN model_return=1
         variance_holo=1 ;initialize
         weights_holo=1 ;initialize
-        IF nf_use EQ 0 THEN n_vis=0 ELSE IF Keyword_Set(inds_patch) THEN $
-            dirty_UV=visibility_patch_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
-                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
-                model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return,inds_patch=inds_patch,$
-                obs_patch=obs_patch,psf_patch=psf_patch,rephase_vis_flag=rephase_vis_flag,_Extra=extra) $
-        ELSE $
+        IF nf_use EQ 0 THEN n_vis=0 ELSE $
             dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
                 polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
                 model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
+;        IF nf_use EQ 0 THEN n_vis=0 ELSE IF Keyword_Set(inds_patch) THEN $
+;            dirty_UV=visibility_patch_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
+;                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
+;                model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return,inds_patch=inds_patch,$
+;                obs_patch=obs_patch,psf_patch=psf_patch,rephase_vis_flag=rephase_vis_flag,_Extra=extra) $
+;        ELSE $
+;            dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
+;                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
+;                model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
         IF n_vis EQ 0 THEN BEGIN
             *dirty_arr[pol_i,fi]=init_arr
             *weights_arr[pol_i,fi]=init_arr
