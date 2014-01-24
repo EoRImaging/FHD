@@ -75,11 +75,11 @@ IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
 ENDIF
 
 IF Keyword_Set(obs_out) THEN BEGIN
-    n_freq=obs.n_freq
-    n_pol=obs.n_pol
-    dimension=obs.dimension
-    degpix=obs.degpix
-    residual_flag=obs.residual
+    n_freq=obs_out.n_freq
+    n_pol=obs_out.n_pol
+    dimension=obs_out.dimension
+    degpix=obs_out.degpix
+    residual_flag=obs_out.residual
 ENDIF ELSE obs_out=obs
 IF N_Elements(psf_out) EQ 0 THEN psf_out=psf
 dirty_arr=Ptrarr(n_pol,nf,/allocate)
