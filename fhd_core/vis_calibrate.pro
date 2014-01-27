@@ -130,7 +130,6 @@ IF ~Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=0
 IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
     IF Keyword_Set(return_cal_visibilities) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_ptr[pol_i] $
         ELSE FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
-    FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
     IF tag_exist(obs,'residual') THEN obs.residual=1
 ENDIF
 
