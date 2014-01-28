@@ -51,12 +51,12 @@ model_flag=0
 IF Ptr_valid(model_ptr) THEN BEGIN
     IF Keyword_Set(model_return) THEN BEGIN
         IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[vis_inds_use] $
-        ELSE model_use=(Temporary(*model_ptr))[vis_inds_use]
+            ELSE model_use=(Temporary(*model_ptr))[vis_inds_use]
         model_return=Complexarr(dimension,elements)
         model_flag=1
     ENDIF ELSE BEGIN
-        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[vis_inds_use] $
-        ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
+;        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[vis_inds_use] $
+;            ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
     ENDELSE
 ENDIF
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
