@@ -171,6 +171,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
     ENDIF
+    IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr
@@ -272,6 +273,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol,/allocate)
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
+        
         IF Keyword_Set(return_cal_visibilities) THEN model_uv_arr=Ptrarr(n_pol,/allocate)
         IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
         FOR pol_i=0,n_pol-1 DO BEGIN
