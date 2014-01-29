@@ -19,16 +19,16 @@ odd_bi_use=odd_bi_use[0:n_use-1]
 
 n_pol=obs.n_pol
 n_freq=Long(obs.n_freq)
-noise_arr=fltarr(n_freq)
+noise_arr=fltarr(n_pol,n_freq)
 FOR pol_i=0,n_pol-1 DO BEGIN
     data_diff = (*vis_arr[pol_i])[*,even_bi_use]-(*vis_arr[pol_i])[*,odd_bi_use]
     flag_diff = ((*flag_arr[pol_i])[*,even_bi_use]>0)*((*flag_arr[pol_i])[*,odd_bi_use]>0)
     FOR fi=0L,n_freq-1 DO BEGIN
         ind_use=where(flag_diff[fi,*],n_use)
-        IF n_use GT 1 THEN noise_arr[fi]=Stddev(data_diff[fi,ind_use])/Sqrt(2.)
+        IF n_use GT 1 THEN noise_arr[pol_i,fi]=Stddev(data_diff[fi,ind_use])/Sqrt(2.)
     ENDFOR
 ENDFOR
-IF Tag_exist(obs,'vis_noise') THEN obs.vis_noise=noise_arr
+IF Tag_exist(obs,'vis_noise') THEN obs.vis_noise=Ptr_new(noise_arr)
 END
 ;  
 ;  IF n_elements(ntile) eq 0 then ntile=total((*obs.baseline_info).tile_use)

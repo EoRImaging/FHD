@@ -102,7 +102,7 @@ IF N_Elements(max_baseline) EQ 0 THEN $
     ELSE max_baseline=max_baseline<Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) ELSE min_baseline=min_baseline>Min(kr_arr[where(kr_arr)])
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
-noise_arr=Fltarr(n_freq)
+noise_arr=Ptr_new()
 
 meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,_Extra=extra)
 
@@ -124,6 +124,6 @@ struct={instrument:String(instrument),antenna_size:Float(antenna_size),obsname:S
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
-    residual:0,vis_noise:Float(noise_arr),baseline_info:Ptr_new(arr)}    
+    residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr)}    
 RETURN,struct
 END

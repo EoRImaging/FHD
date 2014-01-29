@@ -30,8 +30,18 @@ residual_flag=obs.residual
 
 IF Min(Ptr_valid(vis_data_arr)) EQ 0 THEN BEGIN
     vis_data_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO vis_data_arr[pol_i]=getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
+    FOR pol_i=0,n_pol-1 DO vis_data_arr[pol_i]=$
+        getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
 ENDIF
+IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
+    model_flag=1
+    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(vis_filepath+'model_'+pol_names[pol_i]+'.sav')
+    IF model_flag THEN BEGIN
+        vis_model_arr=Ptrarr(n_pol)
+        FOR pol_i=0,n_pol-1 DO vis_model_arr[pol_i]=$
+            getvar_savefile(vis_filepath+'model_'+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
+    ENDIF
+ENDIF ELSE model_flag=1
 
 IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
     bin_start=(*obs.baseline_info).bin_offset
@@ -64,7 +74,7 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 nf=Max(freq_bin_i2)+1L
-IF Keyword_Set(source_list) OR Keyword_Set(model_uv_arr) THEN model_flag=1 ELSE model_flag=0
+IF Keyword_Set(source_list) OR Keyword_Set(model_uv_arr) THEN model_flag=1; ELSE model_flag=0 ;now set above
 IF Keyword_Set(residual_flag) THEN model_flag=0
 IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
     IF model_flag THEN BEGIN
