@@ -73,6 +73,7 @@ ENDIF ELSE BEGIN
         model_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_model_uv_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
 ENDELSE
 IF residual_flag THEN model_flag=0
+IF residual_flag OR model_flag THEN IF N_Elements(source_array) EQ 0 THEN source_array=cal.source_list
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
