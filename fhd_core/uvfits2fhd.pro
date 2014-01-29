@@ -53,7 +53,7 @@ IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
-IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=0
+IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
 
 IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the mapping function to disk if it will be just deleted later anyway
 
