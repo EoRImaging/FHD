@@ -60,6 +60,11 @@ FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN BEGIN
     weights_flag=0
 ENDIF
 
+IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN BEGIN
+    model_flag=1
+    FOR pol_i=0,n_pol-1 DO IF N_Elements(*model_uv_arr[pol_i]) EQ 0 THEN model_flag=0
+ENDIF
+
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
@@ -137,13 +142,16 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
         ENDFOR
     ENDIF
 ENDIF ELSE source_flag=0
+IF model_flag THEN instr_images=Ptrarr(n_pol)
 
-instr_images=Ptrarr(n_pol)
+dirty_images=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
 instr_rings=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,/allocate) 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
+    dirty_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
+    IF model_flag THEN instr_images[pol_i]=Ptr_new(dirty_image_generate(*model_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
@@ -157,10 +165,10 @@ ENDFOR
 renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
   image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix,/antialias)
 for pol_i=0,n_pol-1 do begin
-  *instr_images[pol_i]*=renorm_factor
+  *dirty_images[pol_i]*=renorm_factor
 endfor
 
-stokes_images=stokes_cnv(instr_images,beam=beam_base_out)
+stokes_images=stokes_cnv(dirty_images,beam=beam_base_out)
 IF source_flag THEN BEGIN
     stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out) ;returns null pointer if instr_sources is a null pointer 
     IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,beam=beam_base_out) 
@@ -181,7 +189,7 @@ IF N_Elements(cal) GT 0 THEN BEGIN
 ENDIF
 
 ;Build a fits header
-mkhdr,fits_header,*instr_images[0]
+mkhdr,fits_header,*dirty_images[0]
 putast, fits_header, astr_out;, cd_type=1
 
 x_inc=beam_i mod dimension
@@ -200,7 +208,7 @@ res_name='_Residual_'
 IF tag_exist(obs_out,'residual') THEN IF obs_out.residual EQ 0 THEN res_name='_Dirty_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_residual=*instr_images[pol_i]
+    instr_residual=*dirty_images[pol_i]
     stokes_residual=(*stokes_images[pol_i])*beam_mask
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]

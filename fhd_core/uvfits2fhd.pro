@@ -227,6 +227,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             SAVE,flag_arr,filename=flags_filepath,/compress
     ENDELSE
     
+    vis_noise_calc,obs,vis_arr,flag_arr
     tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
     freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
     print,String(format='(A," frequency channels used and ",A," channels flagged")',$
@@ -293,13 +294,15 @@ IF Keyword_Set(data_flag) THEN BEGIN
 
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
+            IF Keyword_Set(return_cal_visibilities) THEN BEGIN
+                model_uv=model_return
+                SAVE,model_uv,weights_grid,filename=file_path_fhd+'_model_uv_'+pol_names[pol_i]+'.sav',/compress
+                *model_uv_arr[pol_i]=Temporary(model_return)
+                model_return=1
+            ENDIF
             IF N_Elements(weights_grid) GT 0 THEN BEGIN
                 *weights_arr[pol_i]=Temporary(weights_grid)
                 weights_grid=1
-            ENDIF
-            IF Keyword_Set(return_cal_visibilities) THEN BEGIN
-                *model_uv_arr[pol_i]=Temporary(model_return)
-                model_return=1
             ENDIF
             
         ENDFOR
