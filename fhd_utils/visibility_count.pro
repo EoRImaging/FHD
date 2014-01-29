@@ -1,4 +1,5 @@
-FUNCTION visibility_count,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,no_conjugate=no_conjugate
+FUNCTION visibility_count,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
+    no_conjugate=no_conjugate,fill_model_vis=fill_model_vis
 
 SWITCH N_Params() OF
     0:obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
@@ -22,12 +23,14 @@ b_info=*obs.baseline_info
 
 freq_bin_i=b_info.fbin_i
 fi_use=where(b_info.freq_use)
+IF Keyword_Set(fill_model_vis) THEN fi_use=lindgen(n_freq)
 freq_bin_i=freq_bin_i[fi_use]
 
 frequency_array=b_info.freq
 frequency_array=frequency_array[fi_use]
 
 tile_use=where(b_info.tile_use)+1
+IF Keyword_Set(fill_model_vis) THEN tile_use=lindgen(n_tile)+1
 bi_use=array_match(b_info.tile_A,b_info.tile_B,value_match=tile_use)
 n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
@@ -73,6 +76,7 @@ range_test_y_i=0
 IF Keyword_Set(flag_ptr) THEN BEGIN
     n_flag_dim=size(*flag_ptr[0],/n_dimension)
     flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
+    IF Keyword_Set(fill_model_vis) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1

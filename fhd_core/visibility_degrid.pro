@@ -1,6 +1,6 @@
 FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
-    complex=complex,double=double,_Extra=extra
+    complex=complex,double=double,fill_model_vis=fill_model_vis,_Extra=extra
 t0=Systime(1)
 heap_gc
 
@@ -77,6 +77,7 @@ ENDIF
 
 IF Keyword_Set(flag_ptr) THEN BEGIN
     flag_i=where(*flag_ptr LE 0,n_flag)
+    IF Keyword_Set(fill_model_vis) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
