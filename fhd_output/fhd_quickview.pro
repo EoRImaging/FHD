@@ -39,6 +39,7 @@ astr=obs.astr
 restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
 restored_beam_width=restored_beam_width>0.75
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
+residual_flag=obs.residual
 
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     image_uv_arr=Ptrarr(n_pol,/allocate)
@@ -46,11 +47,12 @@ IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
 ENDIF
 IF N_Elements(weights_arr) EQ 0 THEN BEGIN
     weights_arr=Ptrarr(n_pol)
-    IF file_test(file_path_fhd+'_uv_'+pol_names[0]+'.sav') THEN $
-        FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid'))
-ENDIF 
+    weights_flag=1
+    FOR pol_i=0,n_pol-1 DO weights_flag*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
+    IF weights_flag THEN FOR pol_i=0,n_pol-1 DO $
+        weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid',/pointer)
+ENDIF ELSE weights_flag=1
 
-weights_flag=1
 IF Min(Ptr_valid(weights_arr)) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
     weights_flag=0
@@ -63,7 +65,13 @@ ENDIF
 IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN BEGIN
     model_flag=1
     FOR pol_i=0,n_pol-1 DO IF N_Elements(*model_uv_arr[pol_i]) EQ 0 THEN model_flag=0
-ENDIF
+ENDIF ELSE BEGIN
+    model_flag=1
+    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
+    IF model_flag THEN FOR pol_i=0,n_pol-1 DO $
+        model_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_model_uv_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
+ENDELSE
+IF residual_flag THEN model_flag=0
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
@@ -142,16 +150,16 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
         ENDFOR
     ENDIF
 ENDIF ELSE source_flag=0
-IF model_flag THEN instr_images=Ptrarr(n_pol)
+IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
-dirty_images=Ptrarr(n_pol)
+instr_dirty_arr=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
 instr_rings=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,/allocate) 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    dirty_images[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
+    instr_dirty_arr[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
-    IF model_flag THEN instr_images[pol_i]=Ptr_new(dirty_image_generate(*model_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
+    IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
@@ -165,16 +173,26 @@ ENDFOR
 renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
   image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix,/antialias)
 for pol_i=0,n_pol-1 do begin
-  *dirty_images[pol_i]*=renorm_factor
+  *instr_dirty_arr[pol_i]*=renorm_factor
+  IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor 
 endfor
 
-stokes_images=stokes_cnv(dirty_images,beam=beam_base_out)
+stokes_dirty_arr=stokes_cnv(instr_dirty_arr,beam=beam_base_out)
+IF model_flag THEN BEGIN
+    instr_residual_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *instr_residual_arr[pol_i]=*instr_dirty_arr[pol_i]-*instr_model_arr[pol_i]
+    stokes_residual_arr=stokes_cnv(instr_residual_arr,beam=beam_base_out)
+ENDIF ELSE BEGIN
+    instr_residual_arr=instr_dirty_arr
+    stokes_residual_arr=stokes_dirty_arr
+ENDELSE
+
 IF source_flag THEN BEGIN
     stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out) ;returns null pointer if instr_sources is a null pointer 
     IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,beam=beam_base_out) 
 ENDIF    
 
-IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list'
+IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=export_path+'_source_list'
 
 ; plot calibration solutions, export to png
 IF N_Elements(cal) GT 0 THEN BEGIN
@@ -189,7 +207,7 @@ IF N_Elements(cal) GT 0 THEN BEGIN
 ENDIF
 
 ;Build a fits header
-mkhdr,fits_header,*dirty_images[0]
+mkhdr,fits_header,*instr_dirty_arr[0]
 putast, fits_header, astr_out;, cd_type=1
 
 x_inc=beam_i mod dimension
@@ -204,12 +222,12 @@ astr_out2=astr_out
 astr_out2.crpix-=zoom_low
 astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 
-res_name='_Residual_'
-IF tag_exist(obs_out,'residual') THEN IF obs_out.residual EQ 0 THEN res_name='_Dirty_'
+IF (residual_flag EQ 0) AND (model_flag EQ 0) THEN res_name='_Dirty_' ELSE res_name='_Residual_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_residual=*dirty_images[pol_i]
-    stokes_residual=(*stokes_images[pol_i])*beam_mask
+    instr_residual=*instr_residual_arr[pol_i]
+    instr_dirty=*instr_dirty_arr[pol_i]
+    stokes_residual=(*stokes_residual_arr[pol_i])*beam_mask
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]
         instr_restored=instr_residual+(Keyword_Set(ring_radius) ? *instr_rings[pol_i]:instr_source)
@@ -246,7 +264,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF weights_flag THEN Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
             low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
-        
+        IF model_flag THEN Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
+            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
+            title=title_fhd,show_grid=show_grid,astr=astr_out2,_Extra=extra
         Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
             title=title_fhd,show_grid=show_grid,astr=astr_out2,_Extra=extra
@@ -262,6 +282,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
     IF ~Keyword_Set(no_fits) THEN BEGIN
         FitsFast,stokes_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i+4]
+        IF model_flag THEN FitsFast,instr_dirty,fits_header,/write,file_path=export_path+filter_name+'_Dirty_'+pol_names[pol_i]
         FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
         IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
