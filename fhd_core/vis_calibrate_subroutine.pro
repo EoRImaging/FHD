@@ -145,7 +145,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       tile_B_i=tile_B_i[0:n_baselines-1]
       flag_use=0>Reform(*flag_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
       IF Keyword_Set(preserve_visibilities) THEN vis_model=Reform(*vis_model_ptr[pol_i],n_freq,n_baselines,n_time) $
-      ELSE vis_model=Reform(Temporary(*vis_model_ptr[pol_i]),n_freq,n_baselines,n_time)
+        ELSE vis_model=Reform(Temporary(*vis_model_ptr[pol_i]),n_freq,n_baselines,n_time)
       vis_model=Total(Temporary(vis_model)*flag_use,3)
       vis_measured=Reform(*vis_ptr[pol_i],n_freq,n_baselines,n_time)
       vis_avg=Total(Temporary(vis_measured)*flag_use,3)
@@ -159,7 +159,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
     ENDIF ELSE BEGIN
       flag_use=0>*flag_ptr_use[pol_i]<1
       IF Keyword_Set(preserve_visibilities) THEN vis_model=*vis_model_ptr[pol_i] $
-      ELSE vis_model=Temporary(*vis_model_ptr[pol_i])
+        ELSE vis_model=Temporary(*vis_model_ptr[pol_i])
       vis_model=Temporary(vis_model)*flag_use
       vis_avg=*vis_ptr[pol_i]*flag_use
       weight=Temporary(flag_use)

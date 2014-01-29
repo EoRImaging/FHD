@@ -84,7 +84,7 @@ ENDIF
 pol_names=['xx','yy','xy','yx']
 
 ;extract information from the structures
-n_pol=cal.n_pol
+n_pol=obs.n_pol
 n_freq=cal.n_freq
 n_tile=cal.n_tile
 n_time=cal.n_time
