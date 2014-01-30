@@ -12,17 +12,14 @@ psf_filepath=file_path_fhd+'_beams.sav'
 obs_filepath=file_path_fhd+'_obs.sav'
 IF N_Elements(silent) EQ 0 THEN silent=1
 
-SWITCH N_Params() OF
-    1:obs=getvar_savefile(obs_filepath,'obs')
-    2:psf=getvar_savefile(psf_filepath,'psf')
-    3:params=getvar_savefile(params_filepath,'params')
-    4:flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
-    ELSE:
-ENDSWITCH
+IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
+IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
+IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
+IF N_Elements(flag_ptr) EQ 0 THEN flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
 
 heap_gc
 
-IF Keyword_Set(flag_ptr) THEN flag_switch=1 ELSE flag_switch=0
+;IF Keyword_Set(flag_ptr) THEN flag_switch=1 ELSE flag_switch=0
 
 pol_names=['xx','yy','xy','yx']
 

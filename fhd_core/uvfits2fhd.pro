@@ -37,7 +37,8 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,recalcu
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
-    weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,_Extra=extra
+    weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
+    snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -313,7 +314,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
-    Ptr_free,vis_arr,flag_arr
+    IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,flag_arr
 ENDIF
 
 IF N_Elements(cal) EQ 0 THEN IF file_test(cal_filepath) THEN cal=getvar_savefile(cal_filepath,'cal')
@@ -322,7 +323,9 @@ IF N_Elements(obs) EQ 0 THEN IF file_test(obs_filepath) THEN obs=getvar_savefile
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
     fhd_wrap,obs,psf,params,fhd,cal,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
-        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,model_uv_arr=model_uv_arr,_Extra=extra
+        transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
+        vis_model_ptr=vis_model_ptr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,flag_arr=flag_arr,_Extra=extra
+    IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
 ENDELSE
@@ -342,7 +345,7 @@ IF Keyword_Set(export_images) THEN BEGIN
     ENDELSE
 ENDIF
 
-undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,params
+undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr
 
 ;;generate images showing the uv contributions of each tile. Very helpful for debugging!
 ;print,'Calculating individual tile uv coverage'
