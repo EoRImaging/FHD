@@ -14,13 +14,11 @@ psf_filepath=file_path_fhd+'_beams.sav'
 obs_filepath=file_path_fhd+'_obs.sav'
 vis_filepath=file_path_fhd+'_vis_'
 
-SWITCH N_Params() OF
-    0:obs=getvar_savefile(obs_filepath,'obs')
-    1:psf=getvar_savefile(psf_filepath,'psf')
-    2:params=getvar_savefile(params_filepath,'params')
-    3:flag_arr=getvar_savefile(flags_filepath,'flag_arr')
-    ELSE:
-ENDSWITCH
+
+IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
+IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
+IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
+IF N_Elements(flag_ptr) EQ 0 THEN flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
 
 n_freq=obs.n_freq
 n_pol=obs.n_pol

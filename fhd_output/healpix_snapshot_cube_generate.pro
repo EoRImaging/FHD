@@ -1,11 +1,15 @@
-PRO healpix_snapshot_cube_generate,obs_in,psf_in,vis_arr,vis_model_ptr=vis_model_ptr,$
+PRO healpix_snapshot_cube_generate,obs_in,psf_in,params,vis_arr,vis_model_ptr=vis_model_ptr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
-    rephase_weights=rephase_weights,n_avg=n_avg,_Extra=extra
+    rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps=split_ps,_Extra=extra
 
+IF N_Elements(obs_in) EQ 0 THEN obs_in=getvar_savefile(file_path_fhd+'_obs.sav','obs')
+IF N_Elements(psf_in) EQ 0 THEN psf_in=beam_setup(obs_in,file_path_fhd,/no_save,/silent)
+IF N_Elements(params) EQ 0 THEN params=getvar_savefile(file_path_fhd+'_params.sav','params')
 
 n_pol=obs_in.n_pol
 n_freq=obs_in.n_freq
+
 IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/48.)) ;default of 48 output frequency bins
 n_freq_use=Floor(n_freq/n_avg)
 IF Keyword_Set(ps_beam_threshold) THEN beam_threshold=ps_beam_threshold ELSE beam_threshold=0.2
@@ -18,7 +22,6 @@ IF Keyword_Set(ps_kspan) THEN dimension_use=ps_kspan/kbinsize ELSE $
     IF Keyword_Set(ps_dimension) THEN dimension_use=ps_dimension ELSE $
     IF Keyword_Set(ps_degpix) THEN dimension_use=FoV_use/ps_degpix ELSE dimension_use=FoV_use/obs_in.degpix
 
-obs_out=vis_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
 degpix_use=FoV_use/dimension_use
 pix_sky=4.*!Pi*!RaDeg^2./degpix_use^2.
 Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
@@ -26,14 +29,132 @@ IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
 nside_use=nside_use>Nside_chk
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 
-IF N_Elements(psf_in) EQ 0 THEN psf_in=beam_setup(obs_in,file_path_fhd,/no_save,/silent)
+obs_out=vis_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
 ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
 psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resolution,/silent)
 
-hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside,$
-    mask=beam_mask,radius=radius,restore_last=0,/no_save,hpx_radius=FoV_use/2.,_Extra=extra)
+hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
+    mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/2.)
+hpx_inds=hpx_cnv.inds
+n_hpx=N_Elements(hpx_inds)
 
 beam=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
 
+IF N_Elements(flag_arr) LT n_pol THEN flag_arr=getvar_savefile(file_path_fhd+'_flags.sav','flag_arr')
+flags_use=Ptrarr(n_pol,/allocate)
+
+bin_start=(*obs_out.baseline_info).bin_offset
+nt=N_Elements(bin_start)
+nb=(size(*flag_arr[0],/dimension))[1]
+bin_end=fltarr(nt)
+bin_end[0:nt-2]=bin_start[1:nt-1]-1
+bin_end[nt-1]=nb-1
+bin_i=lonarr(nb)-1
+nt2=Floor(nt/2)
+FOR t_i=0,2*nt2-1 DO bin_i[bin_start[t_i]:bin_end[t_i]]=t_i
+bi_n=findgen(nb)
+
+IF Keyword_Set(split_ps) THEN BEGIN
+    n_iter=2
+    bi_use=Ptrarr(n_iter,/allocate)
+    *bi_use[0]=where(bin_i mod 2 EQ 0)
+    *bi_use[1]=where(bin_i mod 2 EQ 1)
+    filepath_cube=file_path_fhd+['_even_cube.sav','_odd_cube.sav']
+ENDIF ELSE BEGIN
+    n_iter=1
+    bi_use=Ptrarr(n_iter,/allocate)
+    *bi_use[0]=lindgen(nb)
+    filepath_cube=file_path_fhd+'_cube.sav'
+ENDELSE
+
+t_hpx=0.
+residual_flag=obs_out.residual
+model_flag=0
+IF Min(Ptr_valid(vis_model_ptr)) THEN IF N_Elements(*vis_model_ptr[0]) GT 0 THEN model_flag=1
+IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
+FOR iter=0,n_iter-1 DO BEGIN
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        flag_arr1=fltarr(size(*flag_arr[pol_i],/dimension))
+        flag_arr1[*,*bi_use[iter]]=(*flag_arr[pol_i])[*,*bi_use[iter]]
+        *flags_use[pol_i]=flag_arr1
+    ENDFOR
+    obs=obs_out ;will have some values over-written!
+    psf=psf_out
+    
+    residual_arr1=vis_model_freq_split(obs_in,psf_in,params,flags_use,obs_out=obs,psf_out=psf,/rephase_weights,$
+        weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
+        file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_ptr)
+    
+    IF dirty_flag THEN BEGIN
+        dirty_arr1=residual_arr1
+        residual_arr1=Ptrarr(size(residual_arr1,/dimension),/allocate)
+    ENDIF
+    
+    residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+    model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+    dirty_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+    weights_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+    variance_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+    t_hpx0=Systime(1)
+    FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
+        IF dirty_flag THEN IF Total(*dirty_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE 
+        IF ~dirty_flag THEN IF Total(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
+        *weights_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv)
+        *variance_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv)
+        IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
+        *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv)
+        IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv)
+        IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv)
+    ENDFOR
+    t_hpx+=Systime(1)-t_hpx0
+    
+    IF dirty_flag THEN BEGIN
+        dirty_xx_cube=fltarr(n_hpx,n_freq_use)
+        dirty_yy_cube=fltarr(n_hpx,n_freq_use)
+        FOR fi=0L,n_freq_use-1 DO BEGIN
+            ;write index in much more efficient memory access order
+            dirty_xx_cube[n_hpx*fi]=Temporary(*dirty_hpx_arr[0,fi])
+            dirty_yy_cube[n_hpx*fi]=Temporary(*dirty_hpx_arr[1,fi])
+        ENDFOR
+        Ptr_free,dirty_hpx_arr
+    ENDIF
+    
+    IF model_flag THEN BEGIN
+        model_xx_cube=fltarr(n_hpx,n_freq_use)
+        model_yy_cube=fltarr(n_hpx,n_freq_use)
+        FOR fi=0L,n_freq_use-1 DO BEGIN
+            model_xx_cube[n_hpx*fi]=Temporary(*model_hpx_arr[0,fi])
+            model_yy_cube[n_hpx*fi]=Temporary(*model_hpx_arr[1,fi])
+        ENDFOR
+        Ptr_free,model_hpx_arr
+    ENDIF
+    
+    res_xx_cube=fltarr(n_hpx,n_freq_use)
+    res_yy_cube=fltarr(n_hpx,n_freq_use)
+    FOR fi=0L,n_freq_use-1 DO BEGIN
+        res_xx_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[0,fi])
+        res_yy_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[1,fi])
+    ENDFOR
+    Ptr_free,residual_hpx_arr
+    
+    weights_xx_cube=fltarr(n_hpx,n_freq_use)
+    weights_yy_cube=fltarr(n_hpx,n_freq_use)
+    FOR fi=0L,n_freq_use-1 DO BEGIN
+        weights_xx_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[0,fi])
+        weights_yy_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[1,fi])
+    ENDFOR
+    Ptr_free,weights_hpx_arr
+    
+    variance_xx_cube=fltarr(n_hpx,n_freq_use)
+    variance_yy_cube=fltarr(n_hpx,n_freq_use)
+    FOR fi=0L,n_freq_use-1 DO BEGIN
+        variance_xx_cube[n_hpx*fi]=Temporary(*variance_hpx_arr[0,fi])
+        variance_yy_cube[n_hpx*fi]=Temporary(*variance_hpx_arr[1,fi])
+    ENDFOR
+    Ptr_free,variance_hpx_arr
+    
+    save,filename=filepath_cube[iter],/compress,dirty_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,res_xx_cube,$
+        dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,obs,nside,hpx_inds,n_avg,psf
+ENDFOR
 END
