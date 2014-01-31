@@ -20,7 +20,7 @@ n_pol=obs_in.n_pol
 n_freq=obs_in.n_freq
 IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
 IF N_Elements(*vis_arr[0]) EQ 0 THEN FOR pol_i=0,n_pol-1 DO vis_arr[pol_i]=$
-        getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
+    getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
 
 IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/48.)) ;default of 48 output frequency bins
 n_freq_use=Floor(n_freq/n_avg)
@@ -89,7 +89,7 @@ IF residual_flag EQ 0 THEN IF model_flag EQ 0 THEN BEGIN
     vis_model_ptr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO model_flag*=file_test(vis_filepath+'model_'+pol_names[pol_i]+'.sav')
     IF model_flag EQ 1 THEN FOR pol_i=0,n_pol-1 DO $
-        vis_model_ptr[pol_i]=getvar_savefile(vis_filepath+'model_'+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent,/pointer)
+        vis_model_ptr[pol_i]=getvar_savefile(vis_filepath+'model_'+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
 ENDIF
 
 IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
@@ -177,4 +177,6 @@ FOR iter=0,n_iter-1 DO BEGIN
     save,filename=filepath_cube[iter],/compress,dirty_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,res_xx_cube,$
         dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,obs,nside,hpx_inds,n_avg,psf
 ENDFOR
+timing=Systime(1)-t0
+IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing
 END
