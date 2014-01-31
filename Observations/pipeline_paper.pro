@@ -34,8 +34,8 @@ if keyword_set(subset) then begin
   end_fi=end_arr(subset-1)
   deconvolve=0
   export_images=1
-  ps_export=0
-  split_ps_export=0
+  ps_export=1
+  split_ps_export=1
   combine_healpix=0
   calibration_visibilities_subtract=1
   snapshot_healpix_export=1
