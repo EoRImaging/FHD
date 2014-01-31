@@ -3,12 +3,24 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,params,vis_arr,vis_model_ptr=vi
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
     rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps=split_ps,_Extra=extra
 
-IF N_Elements(obs_in) EQ 0 THEN obs_in=getvar_savefile(file_path_fhd+'_obs.sav','obs')
+t0=Systime(1)
+
+IF N_Elements(silent) EQ 0 THEN silent=0
+pol_names=['xx','yy','xy','yx']
+flags_filepath=file_path_fhd+'_flags.sav'
+params_filepath=file_path_fhd+'_params.sav'
+psf_filepath=file_path_fhd+'_beams.sav'
+obs_filepath=file_path_fhd+'_obs.sav'
+vis_filepath=file_path_fhd+'_vis_'
+IF N_Elements(obs_in) EQ 0 THEN obs_in=getvar_savefile(obs_filepath,'obs')
 IF N_Elements(psf_in) EQ 0 THEN psf_in=beam_setup(obs_in,file_path_fhd,/no_save,/silent)
-IF N_Elements(params) EQ 0 THEN params=getvar_savefile(file_path_fhd+'_params.sav','params')
+IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
 
 n_pol=obs_in.n_pol
 n_freq=obs_in.n_freq
+IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
+IF N_Elements(*vis_arr[0]) EQ 0 THEN FOR pol_i=0,n_pol-1 DO vis_arr[pol_i]=$
+        getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
 
 IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/48.)) ;default of 48 output frequency bins
 n_freq_use=Floor(n_freq/n_avg)
@@ -39,9 +51,9 @@ hpx_inds=hpx_cnv.inds
 n_hpx=N_Elements(hpx_inds)
 
 beam=Ptrarr(n_pol,/allocate)
-FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
+FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf_in,obs_in,pol_i=pol_i,/fast)>0.
 
-IF N_Elements(flag_arr) LT n_pol THEN flag_arr=getvar_savefile(file_path_fhd+'_flags.sav','flag_arr')
+IF N_Elements(flag_arr) LT n_pol THEN flag_arr=getvar_savefile(flags_filepath,'flag_arr')
 flags_use=Ptrarr(n_pol,/allocate)
 
 bin_start=(*obs_out.baseline_info).bin_offset
@@ -72,6 +84,14 @@ t_hpx=0.
 residual_flag=obs_out.residual
 model_flag=0
 IF Min(Ptr_valid(vis_model_ptr)) THEN IF N_Elements(*vis_model_ptr[0]) GT 0 THEN model_flag=1
+IF residual_flag EQ 0 THEN IF model_flag EQ 0 THEN BEGIN
+    model_flag=1
+    vis_model_ptr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(vis_filepath+'model_'+pol_names[pol_i]+'.sav')
+    IF model_flag EQ 1 THEN FOR pol_i=0,n_pol-1 DO $
+        vis_model_ptr[pol_i]=getvar_savefile(vis_filepath+'model_'+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent,/pointer)
+ENDIF
+
 IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
 FOR iter=0,n_iter-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
