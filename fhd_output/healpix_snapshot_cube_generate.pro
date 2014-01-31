@@ -1,7 +1,7 @@
 PRO healpix_snapshot_cube_generate,obs_in,psf_in,params,vis_arr,vis_model_ptr=vis_model_ptr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
-    rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps=split_ps,_Extra=extra
+    rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,_Extra=extra
 
 t0=Systime(1)
 
@@ -67,7 +67,7 @@ nt2=Floor(nt/2)
 FOR t_i=0,2*nt2-1 DO bin_i[bin_start[t_i]:bin_end[t_i]]=t_i
 bi_n=findgen(nb)
 
-IF Keyword_Set(split_ps) THEN BEGIN
+IF Keyword_Set(split_ps_export) THEN BEGIN
     n_iter=2
     bi_use=Ptrarr(n_iter,/allocate)
     *bi_use[0]=where(bin_i mod 2 EQ 0)
