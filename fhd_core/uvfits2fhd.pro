@@ -301,7 +301,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             *image_uv_arr[pol_i]=Temporary(dirty_UV)
             IF Keyword_Set(return_cal_visibilities) THEN BEGIN
                 model_uv=model_return
-                SAVE,model_uv,weights_grid,filename=file_path_fhd+'_model_uv_'+pol_names[pol_i]+'.sav',/compress
+                SAVE,model_uv,weights_grid,filename=file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav',/compress
                 *model_uv_arr[pol_i]=Temporary(model_return)
                 model_return=1
             ENDIF

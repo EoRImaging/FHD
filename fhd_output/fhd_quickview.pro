@@ -70,7 +70,7 @@ ENDIF ELSE BEGIN
     model_uv_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO model_flag*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
     IF model_flag THEN FOR pol_i=0,n_pol-1 DO $
-        model_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_model_uv_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
+        model_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
 ENDELSE
 IF residual_flag THEN model_flag=0
 IF residual_flag OR model_flag THEN IF N_Elements(source_array) EQ 0 THEN source_array=cal.source_list
