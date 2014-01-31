@@ -38,6 +38,8 @@ if keyword_set(subset) then begin
   split_ps_export=0
   combine_healpix=0
   calibration_visibilities_subtract=1
+  snapshot_healpix_export=1
+  return_decon_visibilities=1
 endif else if keyword_set(all) then begin
   ; re-running with all observations to generate healpix images and cubes
   start_fi=50
@@ -111,7 +113,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,split_ps_export=split_ps_export,
     min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,$
     bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,$
     flag_visibilities=flag_visibilities,calibration_visibilities_subtract=calibration_visibilities_subtract,ps_kspan=ps_kspan,ps_kbinsize=ps_kbinsize,$
-    n_avg=n_avg,force_no_data=force_no_data,_Extra=extra
+    n_avg=n_avg,force_no_data=force_no_data,snapshot_healpix_export=snapshot_healpix_export,return_decon_visibilities=return_decon_visibilities,_Extra=extra
 
 !except=except
 END
