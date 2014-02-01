@@ -38,7 +38,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,recalcu
     calibration_catalog_file_path=calibration_catalog_file_path,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
-    snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
+    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
