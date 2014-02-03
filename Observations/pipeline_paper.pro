@@ -98,7 +98,6 @@ min_baseline=1.
 min_cal_baseline=50.
 ring_radius=10.*pad_uv_image
 ;max_calibration_sources=300.
-psf_resolution=8.
 nfreq_avg=16.
 no_rephase=1
 gain_factor=0.2

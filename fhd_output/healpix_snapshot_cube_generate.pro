@@ -18,9 +18,6 @@ IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
 
 n_pol=obs_in.n_pol
 n_freq=obs_in.n_freq
-IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
-IF N_Elements(*vis_arr[0]) EQ 0 THEN FOR pol_i=0,n_pol-1 DO vis_arr[pol_i]=$
-    getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
 
 IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/48.)) ;default of 48 output frequency bins
 n_freq_use=Floor(n_freq/n_avg)
@@ -45,6 +42,7 @@ obs_out=vis_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dim
 ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
 psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resolution,/silent)
 
+fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out
 hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
     mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/2.)
 hpx_inds=hpx_cnv.inds
@@ -80,9 +78,13 @@ ENDIF ELSE BEGIN
     filepath_cube=file_path_fhd+'_cube.sav'
 ENDELSE
 
-t_hpx=0.
+IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
+IF N_Elements(*vis_arr[0]) EQ 0 THEN FOR pol_i=0,n_pol-1 DO vis_arr[pol_i]=$
+    getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
+
 residual_flag=obs_out.residual
 model_flag=0
+
 IF Min(Ptr_valid(vis_model_ptr)) THEN IF N_Elements(*vis_model_ptr[0]) GT 0 THEN model_flag=1
 IF residual_flag EQ 0 THEN IF model_flag EQ 0 THEN BEGIN
     model_flag=1
@@ -91,8 +93,9 @@ IF residual_flag EQ 0 THEN IF model_flag EQ 0 THEN BEGIN
     IF model_flag EQ 1 THEN FOR pol_i=0,n_pol-1 DO $
         vis_model_ptr[pol_i]=getvar_savefile(vis_filepath+'model_'+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
 ENDIF
-
 IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
+
+t_hpx=0.
 FOR iter=0,n_iter-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         flag_arr1=fltarr(size(*flag_arr[pol_i],/dimension))

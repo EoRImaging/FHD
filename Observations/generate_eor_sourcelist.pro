@@ -3,7 +3,7 @@ PRO generate_eor_sourcelist,cleanup=cleanup,ps_export=ps_export,recalculate_all=
     grid=grid,deconvolve=deconvolve,combine_healpix=combine_healpix,silent=silent,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,output_directory=output_directory,$
     split_ps_export=split_ps_export,flag_visibilities=flag_visibilities,vis_baseline_hist=vis_baseline_hist,snapshot_healpix_export=snapshot_healpix_export,$
-    n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
+    n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,return_decon_visibilities=return_decon_visibilities,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -27,6 +27,7 @@ IF N_Elements(julian_day) EQ 0 THEN julian_day=2456528
 IF N_Elements(uvfits_version) EQ 0 THEN uvfits_version=2
 IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
+IF N_Elements(return_decon_visibilities) EQ 0 THEN return_decon_visibilities=1
 IF N_Elements(snapshot_healpix_export) EQ 0 THEN snapshot_healpix_export=1
 IF N_Elements(n_avg) EQ 0 THEN n_avg=2
 IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=3.
@@ -64,20 +65,18 @@ calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=
 ;align=0
 dimension=3072.
 ;max_baseline=900.
-max_sources=25000.
+max_sources=30000.
 pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FoV=80.
 no_ps=1 ;don't save postscript copy of images
-psf_dim=8
 min_baseline=1.
 min_cal_baseline=50.
 ring_radius=10.*pad_uv_image
 ;max_calibration_sources=10000.
-psf_resolution=8.
 nfreq_avg=16.
 no_rephase=1
-gain_factor=2./3.
+gain_factor=.2
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,combine_healpix=combine_healpix,$
@@ -87,7 +86,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,gain_factor=gain_factor,$
     no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,psf_resolution=psf_resolution,$
     split_ps_export=split_ps_export,flag_visibilities=flag_visibilities,vis_baseline_hist=vis_baseline_hist,snapshot_healpix_export=snapshot_healpix_export,$
-    n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,$
+    n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,return_decon_visibilities=return_decon_visibilities,$
     min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,_Extra=extra
 !except=except
 END
