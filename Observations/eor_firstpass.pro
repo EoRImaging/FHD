@@ -2,18 +2,20 @@ PRO eor_firstpass,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculat
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,$
-    silent=silent,_Extra=extra
+    silent=silent,combine_healpix=combine_healpix,split_ps_export=split_ps_export,return_cal_visibilities=return_cal_visibilities,$
+    snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
 except=!except
 !except=0 
 heap_gc
 ;wrapper designed to generate decent images as quickly as possible
 
-calibration_visibilities_subtract=1
 calibrate_visibilities=1
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
+IF N_Elements(split_ps_export) EQ 0 THEN split_ps_export=1
+IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
 IF N_Elements(version) EQ 0 THEN version=1
 IF N_Elements(deconvolve) EQ 0 THEN deconvolve=0
 IF N_Elements(mapfn_recalculate) THEN mapfn_recalculate=0
@@ -25,6 +27,13 @@ IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(silent) EQ 0 THEN silent=0
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
+IF N_Elements(calibration_visibilities_subtract) EQ 0 THEN calibration_visibilities_subtract=0
+IF N_Elements(return_cal_visibilities) EQ 0 THEN return_cal_visibilities=1
+IF N_Elements(snapshot_healpix_export) EQ 0 THEN snapshot_healpix_export=1
+IF N_Elements(n_avg) EQ 0 THEN n_avg=2
+IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=3.
+IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
+
 if n_elements(output_directory) eq 0 then output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 ;image_filter_fn=''
@@ -74,11 +83,12 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,psf_dim=psf_dim,$
     FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,flag_visibilities=flag_visibilities,flag_calibration=flag_calibration,$
     calibrate_visibilities=calibrate_visibilities,calibration_catalog_file_path=calibration_catalog_file_path,$
-    ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,$
+    ring_radius=ring_radius,flag_nsigma=flag_nsigma,nfreq_avg=nfreq_avg,combine_healpix=combine_healpix,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,/mark_zenith,$
     vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,no_rephase=no_rephase,show_obsname=show_obsname,$
-    silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_obs=combine_obs,no_fits=no_fits,$
-    min_cal_baseline=min_cal_baseline,save_visibilities=save_visibilities,$
-    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,_Extra=extra
+    silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_obs=combine_obs,no_fits=no_fits,snapshot_healpix_export=snapshot_healpix_export,$
+    min_cal_baseline=min_cal_baseline,save_visibilities=save_visibilities,split_ps_export=split_ps_export,return_cal_visibilities=return_cal_visibilities,$
+    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,$
+    n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
 !except=except
 END
