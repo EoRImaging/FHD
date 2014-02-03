@@ -14,7 +14,7 @@ IF N_Elements(version) EQ 0 THEN version='apb_gen_sourcelist_1'
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
 IF N_Elements(silent) EQ 0 THEN silent=0
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
-image_filter_fn='filter_uv_tapered_uniform' ;applied ONLY to output images
+image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 data_directory='/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0'
 output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
