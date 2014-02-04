@@ -125,8 +125,8 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     ENDIF
     t_hpx0=Systime(1)
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-        IF dirty_flag THEN IF Total(*dirty_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE 
-        IF ~dirty_flag THEN IF Total(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
+        IF dirty_flag THEN IF stddev(*dirty_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE 
+        IF ~dirty_flag THEN IF stddev(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
         (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]

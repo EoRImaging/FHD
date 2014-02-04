@@ -131,8 +131,6 @@ FOR iter=0,n_iter-1 DO BEGIN
     beam_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
     t_hpx0=Systime(1)
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-        IF dirty_flag THEN IF Total(*dirty_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE 
-        IF ~dirty_flag THEN IF Total(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
         *weights_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv)
         *variance_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv)
         IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
