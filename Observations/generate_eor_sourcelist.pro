@@ -77,6 +77,12 @@ ring_radius=10.*pad_uv_image
 nfreq_avg=16.
 no_rephase=1
 gain_factor=.2
+
+
+bandpass_calibrate=1
+calibration_polyfit=2
+no_restrict_cal_sources=1
+
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,combine_healpix=combine_healpix,$
