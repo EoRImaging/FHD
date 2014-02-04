@@ -80,27 +80,9 @@ IF Keyword_Set(image_filter_fn) THEN BEGIN
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
 ENDIF ELSE filter_name=''
 
+IF Keyword_Set(pad_uv_image) THEN obs_out=vis_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
+    ELSE obs_out=obs
 
-obs_out=obs
-IF Keyword_Set(pad_uv_image) THEN BEGIN
-    pad_uv_image=pad_uv_image>1.
-    
-    restored_beam_width*=pad_uv_image
-
-    astr_out=obs_out.astr
-    astr_out.cdelt/=pad_uv_image
-    astr_out.crpix*=pad_uv_image
-    astr_out.naxis*=pad_uv_image
-    
-    obs_out.astr=astr_out
-    obs_out.dimension*=pad_uv_image
-    obs_out.elements*=pad_uv_image
-    obs_out.obsx*=pad_uv_image
-    obs_out.obsy*=pad_uv_image
-    obs_out.zenx*=pad_uv_image
-    obs_out.zeny*=pad_uv_image
-    obs_out.degpix/=pad_uv_image
-ENDIF
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix

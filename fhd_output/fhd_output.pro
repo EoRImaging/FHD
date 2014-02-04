@@ -46,26 +46,9 @@ restore,file_path_fhd+'_fhd.sav'
 
 n_pol=fhd.npol
 dimension_uv=obs.dimension
-astr=obs.astr
-obs_out=obs
+IF Keyword_Set(pad_uv_image) THEN obs_out=vis_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
+    ELSE obs_out=obs
 
-IF Keyword_Set(pad_uv_image) THEN BEGIN
-    pad_uv_image=pad_uv_image>1.
-
-    astr_out=obs_out.astr
-    astr_out.cdelt/=pad_uv_image
-    astr_out.crpix*=pad_uv_image
-    astr_out.naxis*=pad_uv_image
-    
-    obs_out.astr=astr_out
-    obs_out.dimension*=pad_uv_image
-    obs_out.elements*=pad_uv_image
-    obs_out.obsx*=pad_uv_image
-    obs_out.obsy*=pad_uv_image
-    obs_out.zenx*=pad_uv_image
-    obs_out.zeny*=pad_uv_image
-    obs_out.degpix/=pad_uv_image
-ENDIF 
 
 dimension=obs_out.dimension
 elements=obs_out.elements

@@ -94,6 +94,7 @@ model_hpx_arr=Ptrarr(n_pol,n_freq_use)
 dirty_hpx_arr=Ptrarr(n_pol,n_freq_use)
 weights_hpx_arr=Ptrarr(n_pol,n_freq_use)
 variance_hpx_arr=Ptrarr(n_pol,n_freq_use)
+beam_hpx_arr=Ptrarr(n_pol,n_freq_use)
 FOR pol_i=0,n_pol-1 DO BEGIN
     FOR freq_i=0,n_freq_use-1 DO BEGIN
         residual_hpx_arr[pol_i,freq_i]=Ptr_new(fltarr(n_hpx))
@@ -101,6 +102,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF dirty_flag THEN dirty_hpx_arr[pol_i,freq_i]=Ptr_new(fltarr(n_hpx))
         weights_hpx_arr[pol_i,freq_i]=Ptr_new(fltarr(n_hpx))
         variance_hpx_arr[pol_i,freq_i]=Ptr_new(fltarr(n_hpx))
+        beam_hpx_arr[pol_i,freq_i]=Ptr_new(fltarr(n_hpx))
     ENDFOR
 ENDFOR    
 
@@ -125,18 +127,18 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     ENDIF
     t_hpx0=Systime(1)
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
-        IF dirty_flag THEN IF Total(*dirty_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE 
-        IF ~dirty_flag THEN IF Total(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
+        IF dirty_flag THEN IF stddev(*dirty_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE 
+        IF ~dirty_flag THEN IF stddev(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
         (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
         (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         IF dirty_flag THEN (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
         IF model_flag THEN (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
+        (*beam_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*beam[pol_i,freq_i])^2.,hpx_cnv)
     ENDFOR
     t_hpx1=Systime(1)
     t_hpx+=t_hpx1-t_hpx0
-    
 ENDFOR
 obs_arr=obs_out_arr
 
@@ -185,6 +187,15 @@ FOR fi=0L,n_freq_use-1 DO BEGIN
 ENDFOR
 Ptr_free,variance_hpx_arr
 
+beam_xx_cube=fltarr(n_hpx,n_freq_use)
+    beam_yy_cube=fltarr(n_hpx,n_freq_use)
+    FOR fi=0L,n_freq_use-1 DO BEGIN
+        beam_xx_cube[n_hpx*fi]=Temporary(*beam_hpx_arr[0,fi])
+        beam_yy_cube[n_hpx*fi]=Temporary(*beam_hpx_arr[1,fi])
+    ENDFOR
+Ptr_free,beam_hpx_arr
+
 save,filename=cube_filepath,/compress,dirty_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,res_xx_cube,$
-    dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,obs_arr,nside,hpx_inds,n_avg,psf_arr
+    dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,beam_xx_cube,beam_yy_cube,$
+    obs_arr,nside,hpx_inds,n_avg,psf_arr
 END
