@@ -161,3 +161,5 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+catalog_data/eor0test_calibration_source_list.sav
+catalog_data/mwa_commissioning_source_list_compact_sources.sav

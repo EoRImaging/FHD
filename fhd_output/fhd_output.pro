@@ -49,7 +49,6 @@ dimension_uv=obs.dimension
 IF Keyword_Set(pad_uv_image) THEN obs_out=vis_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
-
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix

@@ -105,6 +105,7 @@ ENDIF
 IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
 
 t_hpx=0.
+t_split=0.
 FOR iter=0,n_iter-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         flag_arr1=fltarr(size(*flag_arr[pol_i],/dimension))
@@ -117,7 +118,7 @@ FOR iter=0,n_iter-1 DO BEGIN
     residual_arr1=vis_model_freq_split(obs_in,psf_in,params,flags_use,obs_out=obs,psf_out=psf,/rephase_weights,$
         weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
         file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_ptr)
-    
+    t_split+=t_split1
     IF dirty_flag THEN BEGIN
         dirty_arr1=residual_arr1
         residual_arr1=Ptrarr(size(residual_arr1,/dimension),/allocate)
@@ -199,5 +200,5 @@ FOR iter=0,n_iter-1 DO BEGIN
         obs,nside,hpx_inds,n_avg,psf
 ENDFOR
 timing=Systime(1)-t0
-IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing
+IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
 END
