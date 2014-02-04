@@ -137,7 +137,7 @@ FOR iter=0,n_iter-1 DO BEGIN
         *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv)
         IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv)
         IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv)
-        *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam[pol_i,freq_i]),hpx_cnv)
+        *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam[pol_i,freq_i])^2.,hpx_cnv)
     ENDFOR
     t_hpx+=Systime(1)-t_hpx0
     
