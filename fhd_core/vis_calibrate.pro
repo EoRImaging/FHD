@@ -2,7 +2,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
     debug=debug,gain_arr_ptr=gain_arr_ptr,$
-    return_cal_model=return_cal_model,silent=silent,initial_calibration=initial_calibration,$
+    return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     calibration_polyfit=calibration_polyfit,flag_calibration=flag_calibration,bandpass_calibrate=bandpass_calibrate,$
     vis_model_ptr=vis_model_ptr,_Extra=extra
@@ -48,8 +48,17 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
         ENDCASE
     ENDIF
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
-    IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
-    vis_cal=vis_calibration_apply(vis_ptr,cal,preserve_original=0)
+    cal_base=cal & FOR pol_i=0,n_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
+    
+    IF Keyword_Set(bandpass_calibrate) THEN BEGIN
+        cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
+        IF Keyword_Set(calibration_polyfit) THEN BEGIN
+            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit)
+            cal=vis_cal_combine(cal_bandpass,cal_polyfit)
+        ENDIF ELSE cal=cal_bandpass
+    ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
+    vis_cal=vis_calibration_apply(vis_ptr,cal)
+    cal_res=vis_cal_subtract(cal_base,cal,/abs)
     timing=Systime(1)-t0_0
     RETURN,vis_cal
 ENDIF
@@ -84,7 +93,7 @@ ENDIF
 pol_names=['xx','yy','xy','yx']
 
 ;extract information from the structures
-n_pol=cal.n_pol
+n_pol=obs.n_pol
 n_freq=cal.n_freq
 n_tile=cal.n_tile
 n_time=cal.n_time
@@ -105,7 +114,7 @@ ENDIF
 
 ;calibration loop
 t2_a=Systime(1)
-IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) OR Keyword_Set(return_cal_model) THEN preserve_visibilities=1
+IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
 cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,_Extra=extra)
 t3_a=Systime(1)
 t2=t3_a-t2_a
@@ -126,13 +135,12 @@ cal_res=vis_cal_subtract(cal_base,cal,/abs)
 IF Keyword_Set(vis_baseline_hist) THEN $
     vis_baseline_hist,obs,params,vis_ptr=vis_cal,vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd
 
-IF ~Keyword_Set(return_cal_model) THEN preserve_visibilities=0
+IF ~Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=0
 IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
-    IF Keyword_Set(return_cal_model) THEN FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_ptr[pol_i] $
-        ELSE FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
-    FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=Temporary(*vis_model_ptr[pol_i])
+    FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_ptr[pol_i] 
     IF tag_exist(obs,'residual') THEN obs.residual=1
 ENDIF
+IF ~Keyword_Set(return_cal_visibilities) THEN undefine_fhd,vis_model_ptr
 
 IF ~Keyword_Set(silent) THEN BEGIN
     basename=file_basename(file_path_fhd)

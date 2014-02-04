@@ -25,6 +25,7 @@ IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.base
 n_freq=Long(obs.n_freq)
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
+IF Tag_exist(obs,'nf_vis') THEN n_vis_arr=obs.nf_vis ELSE n_vis_arr=Lonarr(n_freq)
 
 IF Keyword_Set(flag_ptr) THEN BEGIN
     IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
@@ -50,12 +51,12 @@ model_flag=0
 IF Ptr_valid(model_ptr) THEN BEGIN
     IF Keyword_Set(model_return) THEN BEGIN
         IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[vis_inds_use] $
-        ELSE model_use=(Temporary(*model_ptr))[vis_inds_use]
+            ELSE model_use=(Temporary(*model_ptr))[vis_inds_use]
         model_return=Complexarr(dimension,elements)
         model_flag=1
     ENDIF ELSE BEGIN
-        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[vis_inds_use] $
-        ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
+;        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[vis_inds_use] $
+;            ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
     ENDELSE
 ENDIF
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
@@ -162,6 +163,9 @@ bin_i=where(bin_n,n_bin_use)
 
 ind_ref=indgen(max(bin_n))
 n_vis=Float(Total(bin_n))
+FOR fi=0L,n_f_use-1 DO n_vis_arr[fi_use[fi]]=Total(Long(xmin[fi,*] GT 0))
+IF Tag_exist(obs,'nf_vis') THEN obs.nf_vis=n_vis_arr
+
 ;IF Keyword_Set(grid_uniform_weight) THEN n_vis=n_bin_use
 
 index_arr=Lindgen(dimension,elements)

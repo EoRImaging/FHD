@@ -1,6 +1,6 @@
 PRO make_eor_cubes,cleanup=cleanup,recalculate_all=recalculate_all,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,output_directory=output_directory,$
+    grid=grid,output_directory=output_directory,force_no_data=force_no_data,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,$
     silent=silent,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
 ; wrapper to just make eor cubes. Nothing else. This wrapper assumes the data has already run through some form of FHD, and you just want the cubes.
@@ -29,6 +29,8 @@ IF N_Elements(uvfits_version) EQ 0 THEN uvfits_version=2
 IF N_Elements(uvfits_subversion) EQ 0 THEN uvfits_subversion=0
 IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=0
 IF N_Elements(silent) EQ 0 THEN silent=0
+if n_elements(force_no_data) eq 0 then force_no_data=1
+if n_elements(output_directory) eq 0 then output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 ; ps specific stuff
 IF N_Elements(n_avg) EQ 0 THEN n_avg=2
   IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=3.
@@ -36,9 +38,15 @@ IF N_Elements(n_avg) EQ 0 THEN n_avg=2
 
 ; This file structure works at MIT
 data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
-output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+;output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
+;vis_file_list = ['/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0/1061312520.uvfits',$
+;'/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0/1061314472.uvfits',$
+;'/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0/1061316296.uvfits',$
+;'/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0/1061318128.uvfits',$
+;'/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0/1061319960.uvfits']
+
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
@@ -74,7 +82,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,split_ps_export=split_ps_export,
     calibration_visibilities_subtract=calibration_visibilities_subtract,weights_grid=weights_grid,/mark_zenith,$
     vis_baseline_hist=vis_baseline_hist,psf_resolution=psf_resolution,no_rephase=no_rephase,show_obsname=show_obsname,$
     silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_obs=combine_obs,no_fits=no_fits,$
-    min_cal_baseline=min_cal_baseline,n_avg=n_avg,ps_kspan=ps_kspan,ps_kbinsize=ps_kbinsize,_Extra=extra
+    min_cal_baseline=min_cal_baseline,n_avg=n_avg,ps_kspan=ps_kspan,ps_kbinsize=ps_kbinsize,force_no_data=force_no_data,_Extra=extra
 !except=except
 END
   

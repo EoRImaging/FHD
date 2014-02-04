@@ -8,7 +8,7 @@ IF N_Elements(restored_beam_width) EQ 0 THEN restored_beam_width=1. ;width of ga
 IF N_Elements(ring_radius) EQ 0 THEN ring_radius=0 ;set to restore sources with a ring with a gaussian radial profile
 IF N_Elements(pol_i) EQ 0 THEN pol_i=4 ;pol_i corresponds to 0-3: xx, yy, xy, yx in apparent brightness; 4-7: I, Q, U, V in sky brightness
 IF Keyword_Set(n_sources) THEN ns=n_sources>(size(source_array,/dimension))[0] ELSE ns=(size(source_array,/dimension))[0]
-IF N_Elements(resolution) EQ 0 THEN resolution=8.
+IF N_Elements(resolution) EQ 0 THEN resolution=8. ELSE resolution=Float(resolution)
 IF N_Elements(threshold) EQ 0 THEN threshold=1E-4
 
 icomp=Complex(0,1)

@@ -63,6 +63,7 @@ IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
 n_tile=hdr.n_tile
 n_freq=hdr.n_freq
 n_vis=(n_vis_raw=(n_vis_in=(Float(N_Elements(time))*n_freq)))
+n_vis_arr=Lonarr(n_freq)
 
 ;256 tile upper limit is hard-coded in CASA format
 ;these tile numbers have been verified to be correct
@@ -101,6 +102,7 @@ IF N_Elements(max_baseline) EQ 0 THEN $
     ELSE max_baseline=max_baseline<Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) ELSE min_baseline=min_baseline>Min(kr_arr[where(kr_arr)])
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
+noise_arr=Ptr_new()
 
 meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,_Extra=extra)
 
@@ -115,12 +117,13 @@ IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
 struct={instrument:String(instrument),antenna_size:Float(antenna_size),obsname:String(obsname),dimension:Float(dimension),elements:Float(elements),$
-    kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,$
-    obsra:meta.obsra,obsdec:meta.obsdec,zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,$
-    zenx:meta.zenx,zeny:meta.zeny,phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$
-    n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),$
+    kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,obsra:meta.obsra,obsdec:meta.obsdec,$
+    zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,zenx:meta.zenx,zeny:meta.zeny,$
+    phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$
+    n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),$
+    n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
-    residual:0,baseline_info:Ptr_new(arr)}    
+    residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr)}    
 RETURN,struct
 END

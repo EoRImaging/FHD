@@ -5,7 +5,8 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag_visibilities=flag_visibilities,$
     transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
-    calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,save_visibilities=save_visibilities,_Extra=extra
+    calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
+    snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,_Extra=extra
 
 except=!except
 !except=0 
@@ -16,6 +17,7 @@ IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=0
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
+IF Keyword_Set(snapshot_healpix_export) THEN ps_export=0 ELSE snapshot_healpix_export=0
 
 ;Set up paths
 ;Convoluted way of setting up 'instrument' for use here, while still leaving it to be passed in Extra
@@ -70,6 +72,7 @@ IF N_Elements(gain_factor) EQ 0 THEN gain_factor=0.15
 IF N_Elements(max_sources) EQ 0 THEN max_sources=10000. ;maximum total number of source components to fit
 IF N_Elements(add_threshold) EQ 0 THEN add_threshold=0.8 ;also fit additional components brighter than this threshold
 IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q, (U, V) seperately. Otherwise, only I (and U) is fit
+
 ;dimension=1024.
 
 ;Set up output image parameters
@@ -97,7 +100,8 @@ WHILE fi LT n_files DO BEGIN
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,save_visibilities=save_visibilities,$
         calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
-        healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,_Extra=extra
+        healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,$
+        snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export,_Extra=extra
     IF Keyword_Set(error) THEN BEGIN
         print,'###########################################################################'
         print,'###########################################################################'

@@ -1,5 +1,6 @@
 FUNCTION vis_source_model,source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
-    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,_Extra=extra
+    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,$
+    fill_model_vis=fill_model_vis,_Extra=extra
 
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
@@ -11,17 +12,14 @@ psf_filepath=file_path_fhd+'_beams.sav'
 obs_filepath=file_path_fhd+'_obs.sav'
 IF N_Elements(silent) EQ 0 THEN silent=1
 
-SWITCH N_Params() OF
-    1:obs=getvar_savefile(obs_filepath,'obs')
-    2:psf=getvar_savefile(psf_filepath,'psf')
-    3:params=getvar_savefile(params_filepath,'params')
-    4:flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
-    ELSE:
-ENDSWITCH
+IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
+IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
+IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
+IF N_Elements(flag_ptr) EQ 0 THEN flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
 
 heap_gc
 
-IF Keyword_Set(flag_ptr) THEN flag_switch=1 ELSE flag_switch=0
+;IF Keyword_Set(flag_ptr) THEN flag_switch=1 ELSE flag_switch=0
 
 pol_names=['xx','yy','xy','yx']
 
@@ -43,7 +41,7 @@ yvals=meshgrid(dimension,elements,2)-elements/2
 ; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half 
 IF ~Keyword_Set(uv_mask) THEN BEGIN
     uv_mask=Fltarr(dimension,elements)
-    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1)
+    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1,fill_model_vis=fill_model_vis)
     mask_i_use=where(vis_count)
     uv_mask[mask_i_use]=1
 ENDIF ELSE uv_mask[*,elements/2+psf.dim:*]=0. 
@@ -131,7 +129,8 @@ ENDIF
 
 t_degrid=Fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,timing=t_degrid0,polarization=pol_i)
+    vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,$
+        timing=t_degrid0,polarization=pol_i,fill_model_vis=fill_model_vis)
     t_degrid[pol_i]=t_degrid0
 ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid)
