@@ -261,11 +261,12 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
           endelse ;; ~freq_match eq 1
         endelse ;; ~both match
         
-        undefine, this_cube, subpix, subhpx, subfreq, subthisf
-        if not keyword_set(discard_unmatched_pix) then undefine, combined_pix, subcmbpix, subcmbhpx
-        if not keyword_set(discard_unmatched_freq) then undefine, combined_freq, subcmbfreq, subcmbtf
+        undefine, this_cube
         int_struct.(j) = ptr_new(temporary(this_int_cube))
       endfor ;; loop over cubes
+      undefine, subpix, subhpx, subfreq, subthisf
+      if not keyword_set(discard_unmatched_pix) then undefine, combined_pix, subcmbpix, subcmbhpx
+      if not keyword_set(discard_unmatched_freq) then undefine, combined_freq, subcmbfreq, subcmbtf
     endelse ;; ~first file
   endfor ;; loop over files
   
@@ -321,7 +322,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     beam_yy_cube = *int_struct.beam_yy_cube
     ptr_free, int_struct.beam_yy_cube
   endif
-    
+  
   save, file = save_file, dirty_xx_cube,  dirty_yy_cube,  model_xx_cube,  model_yy_cube,  res_xx_cube,  res_yy_cube, $
     variance_xx_cube,  variance_yy_cube, weights_xx_cube,  weights_yy_cube, beam_xx_cube, beam_yy_cube, $
     nside,  n_avg,  obs_arr,  psf_arr, hpx_inds, frequencies, nfile_contrib_pix, nfile_contrib_freq
