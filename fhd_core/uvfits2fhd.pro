@@ -174,6 +174,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDIF
     IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     
+    IF min(Ptr_valid(vis_model_ptr)) EQ 0 THEN return_cal_visibilities=0 ;set if model visibilities not actually returned
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr
         IF basename EQ transfer_mapfn THEN BEGIN 
