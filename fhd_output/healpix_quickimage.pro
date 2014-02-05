@@ -1,6 +1,6 @@
 pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, noerase = noerase, savefile = savefile, png = png, eps = eps, $
     map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
-    data_range = data_range, max=max,min=min, silent=silent, title=title, degpix=degpix, logplot=logplot, hist_equal=hist_equal,$
+    data_range = data_range, max=max,min=min, silent=silent, title=title, charsize = charsize, degpix=degpix, logplot=logplot, hist_equal=hist_equal,$
     lon_center=lon_center, lat_center=lat_center, projection=projection, coord_in=coord_in, coord_out = coord_out
     
     
@@ -152,7 +152,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     endif
     
     quick_image, new_map, missing_val = bad_val, data_range = data_range, xtitle = 'longitude (degrees)', ytitle = 'latitude (degrees)', $
-      title = title, noerase = noerase, xrange = lon_range, yrange = lat_range, savefile = savefile, png = png, eps = eps
+      title = title, charsize = charsize, noerase = noerase, xrange = lon_range, yrange = lat_range, savefile = savefile, png = png, eps = eps
       
   endif else begin
   

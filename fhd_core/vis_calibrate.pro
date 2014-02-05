@@ -48,7 +48,8 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
         ENDCASE
     ENDIF
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
-    cal_base=cal & FOR pol_i=0,n_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
+    nc_pol=cal.n_pol
+    cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
     
     IF Keyword_Set(bandpass_calibrate) THEN BEGIN
         cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
@@ -94,6 +95,7 @@ pol_names=['xx','yy','xy','yx']
 
 ;extract information from the structures
 n_pol=obs.n_pol
+nc_pol=cal.n_pol
 n_freq=cal.n_freq
 n_tile=cal.n_tile
 n_time=cal.n_time
@@ -120,7 +122,7 @@ t3_a=Systime(1)
 t2=t3_a-t2_a
 
 IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
-cal_base=cal & FOR pol_i=0,n_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
+cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
     cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
