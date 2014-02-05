@@ -9,9 +9,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   obsids = long(stregex(filenames, '[0-9]+-[0-9]+', /extract))
   obs_range = minmax(obsids)
   
-  even_mask = stregex(filename, 'even', /boolean)
+  even_mask = stregex(filenames, 'even', /boolean)
   n_even = total(even_mask)
-  odd_mask = stregex(filename, 'odd', /boolean)
+  odd_mask = stregex(filenames, 'odd', /boolean)
   n_odd = total(odd_mask)
   
   if n_even eq nfiles then type = 'even' else if n_odd eq nfiles then type = 'odd' else begin
@@ -196,7 +196,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       obs_arr = [obs_arr, temporary(obs)]
       psf_arr = [psf_arr, temporary(psf)]
       
-      for j=0, n_tags(int_struct) do begin
+      for j=0, n_tags(int_struct)-1 do begin
         this_int_cube = *(int_struct.(j))
         this_cube = *(cube_struct.(j))
         ptr_free, int_struct.(j)
