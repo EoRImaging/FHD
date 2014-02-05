@@ -93,6 +93,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,psf_resolution=psf_resolution,$
     split_ps_export=split_ps_export,flag_visibilities=flag_visibilities,vis_baseline_hist=vis_baseline_hist,snapshot_healpix_export=snapshot_healpix_export,$
     n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,return_decon_visibilities=return_decon_visibilities,$
-    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,_Extra=extra
+    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,$
+    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,_Extra=extra
 !except=except
 END
