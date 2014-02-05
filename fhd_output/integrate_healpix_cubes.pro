@@ -10,9 +10,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   obs_range = minmax(obsids)
   
   even_mask = stregex(filename, 'even', /boolean)
-  n_even = total(even_cubes)
+  n_even = total(even_mask)
   odd_mask = stregex(filename, 'odd', /boolean)
-  n_odd = total(odd_cubes)
+  n_odd = total(odd_mask)
   
   if n_even eq nfiles then type = 'even' else if n_odd eq nfiles then type = 'odd' else begin
     if n_even gt 0 and n_odd gt 0 then begin
