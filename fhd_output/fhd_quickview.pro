@@ -35,9 +35,6 @@ vis_count=visibility_count(obs,psf,cal)
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
-astr=obs.astr
-restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-restored_beam_width=restored_beam_width>0.75
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 residual_flag=obs.residual
 
@@ -68,7 +65,7 @@ IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN BEGIN
 ENDIF ELSE BEGIN
     model_flag=1
     model_uv_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
+    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav')
     IF model_flag THEN FOR pol_i=0,n_pol-1 DO $
         model_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
 ENDELSE
@@ -83,6 +80,8 @@ ENDIF ELSE filter_name=''
 IF Keyword_Set(pad_uv_image) THEN obs_out=vis_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
+restored_beam_width=(!RaDeg/(obs_out.MAX_BASELINE/obs_out.KPIX)/obs_out.degpix)/(2.*Sqrt(2.*Alog(2.)))
+restored_beam_width=restored_beam_width>0.75
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
@@ -95,7 +94,7 @@ beam_correction_out=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     beam_base=beam_image(psf,obs,pol_i=pol_i)
     *beam_base_out[pol_i]=Rebin(beam_base,dimension,elements) ;should be fine even if pad_uv_image is not set
-    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-2)
+    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-3)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
     beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[0.025,Max(beam_mask_test)])
@@ -103,8 +102,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     beam_avg+=*beam_base_out[pol_i]^2.
     beam_mask*=beam_mask0
 ENDFOR
-beam_mask[0:dimension/4.-1,*]=0 & beam_mask[3.*dimension/4.:dimension-1,*]=0 
-beam_mask[*,0:elements/4.-1]=0 & beam_mask[*,3.*elements/4.:elements-1]=0 
+;beam_mask[0:dimension/4.-1,*]=0 & beam_mask[3.*dimension/4.:dimension-1,*]=0 
+;beam_mask[*,0:elements/4.-1]=0 & beam_mask[*,3.*elements/4.:elements-1]=0 
 beam_avg/=(n_pol<2)
 beam_avg=Sqrt(beam_avg>0)*beam_mask
 beam_i=where(beam_mask)
@@ -215,7 +214,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]
         instr_restored=instr_residual+(Keyword_Set(ring_radius) ? *instr_rings[pol_i]:instr_source)
-        stokes_source=(*stokes_sources[pol_i])*beam_mask
+        stokes_source=(*stokes_sources[pol_i])
         stokes_restored=stokes_residual+(Keyword_Set(ring_radius) ? *stokes_rings[0]:stokes_source) ;use stokes I sources only if using rings
     ENDIF
     beam_use=*beam_base_out[pol_i]
