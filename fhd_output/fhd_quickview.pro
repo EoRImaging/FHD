@@ -179,7 +179,7 @@ IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,sto
 
 ; plot calibration solutions, export to png
 IF N_Elements(cal) GT 0 THEN BEGIN
-   IF cal.n_cal_src GT 0 THEN BEGIN
+   IF cal.n_cal_src eq 0 THEN BEGIN
       IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
          vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
          plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist
