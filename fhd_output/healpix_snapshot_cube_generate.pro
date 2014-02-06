@@ -93,6 +93,7 @@ IF N_Elements(*vis_arr[0]) EQ 0 THEN FOR pol_i=0,n_pol-1 DO vis_arr[pol_i]=$
 
 residual_flag=obs_out.residual
 model_flag=0
+vis_noise_calc,obs_out,vis_arr,flag_arr
 
 IF Min(Ptr_valid(vis_model_ptr)) THEN IF N_Elements(*vis_model_ptr[0]) GT 0 THEN model_flag=1
 IF residual_flag EQ 0 THEN IF model_flag EQ 0 THEN BEGIN
