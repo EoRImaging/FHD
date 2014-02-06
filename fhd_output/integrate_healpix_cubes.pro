@@ -9,9 +9,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   obsids = long(stregex(filenames, '[0-9]+-[0-9]+', /extract))
   obs_range = minmax(obsids)
   
-  even_mask = stregex(filename, 'even', /boolean)
+  even_mask = stregex(filenames, 'even', /boolean)
   n_even = total(even_mask)
-  odd_mask = stregex(filename, 'odd', /boolean)
+  odd_mask = stregex(filenames, 'odd', /boolean)
   n_odd = total(odd_mask)
   
   if n_even eq nfiles then type = 'even' else if n_odd eq nfiles then type = 'odd' else begin
@@ -49,6 +49,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   pix_match_arr = intarr(nfiles)
   for i=0, nfiles-1 do begin
     void = getvar_savefile(filenames[i], names = this_varnames)
+    print,'Working on file '+filenames[i]+'   ('+strtrim(i+1,2)+'/'+strtrim(nfiles)+')'
     if i eq 0 then varnames = this_varnames else begin
       match, varnames, this_varnames, suba, subb, count = count_var
       if count_var ne n_elements(varnames) then begin
@@ -196,7 +197,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       obs_arr = [obs_arr, temporary(obs)]
       psf_arr = [psf_arr, temporary(psf)]
       
-      for j=0, n_tags(int_struct) do begin
+      for j=0, n_tags(int_struct)-1 do begin
         this_int_cube = *(int_struct.(j))
         this_cube = *(cube_struct.(j))
         ptr_free, int_struct.(j)
@@ -261,11 +262,12 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
           endelse ;; ~freq_match eq 1
         endelse ;; ~both match
         
-        undefine, this_cube, subpix, subhpx, subfreq, subthisf
-        if not keyword_set(discard_unmatched_pix) then undefine, combined_pix, subcmbpix, subcmbhpx
-        if not keyword_set(discard_unmatched_freq) then undefine, combined_freq, subcmbfreq, subcmbtf
+        undefine, this_cube
         int_struct.(j) = ptr_new(temporary(this_int_cube))
       endfor ;; loop over cubes
+      undefine, subpix, subhpx, subfreq, subthisf
+      if not keyword_set(discard_unmatched_pix) then undefine, combined_pix, subcmbpix, subcmbhpx
+      if not keyword_set(discard_unmatched_freq) then undefine, combined_freq, subcmbfreq, subcmbtf
     endelse ;; ~first file
   endfor ;; loop over files
   
@@ -273,55 +275,55 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   n_avg = n_avg_use
   hpx_inds = temporary(pixels_use)
   
-  if tag_exist(int_struct, dirty_xx_cube) then begin
+  if tag_exist(int_struct, 'dirty_xx_cube') then begin
     dirty_xx_cube = *int_struct.dirty_xx_cube
     ptr_free, int_struct.dirty_xx_cube
   endif
-  if tag_exist(int_struct, dirty_yy_cube) then begin
+  if tag_exist(int_struct, 'dirty_yy_cube') then begin
     dirty_yy_cube = *int_struct.dirty_yy_cube
     ptr_free, int_struct.dirty_yy_cube
   endif
-  if tag_exist(int_struct, model_xx_cube) then begin
+  if tag_exist(int_struct, 'model_xx_cube') then begin
     model_xx_cube = *int_struct.model_xx_cube
     ptr_free, int_struct.model_xx_cube
   endif
-  if tag_exist(int_struct, model_yy_cube) then begin
+  if tag_exist(int_struct, 'model_yy_cube') then begin
     model_yy_cube = *int_struct.model_yy_cube
     ptr_free, int_struct.model_yy_cube
   endif
-  if tag_exist(int_struct, res_xx_cube) then begin
+  if tag_exist(int_struct, 'res_xx_cube') then begin
     res_xx_cube = *int_struct.res_xx_cube
     ptr_free, int_struct.res_xx_cube
   endif
-  if tag_exist(int_struct, res_yy_cube) then begin
+  if tag_exist(int_struct, 'res_yy_cube') then begin
     res_yy_cube = *int_struct.res_yy_cube
     ptr_free, int_struct.res_yy_cube
   endif
-  if tag_exist(int_struct, weights_xx_cube) then begin
+  if tag_exist(int_struct, 'weights_xx_cube') then begin
     weights_xx_cube = *int_struct.weights_xx_cube
     ptr_free, int_struct.weights_xx_cube
   endif
-  if tag_exist(int_struct, weights_yy_cube) then begin
+  if tag_exist(int_struct, 'weights_yy_cube') then begin
     weights_yy_cube = *int_struct.weights_yy_cube
     ptr_free, int_struct.weights_yy_cube
   endif
-  if tag_exist(int_struct, variance_xx_cube) then begin
+  if tag_exist(int_struct, 'variance_xx_cube') then begin
     variance_xx_cube = *int_struct.variance_xx_cube
     ptr_free, int_struct.variance_xx_cube
   endif
-  if tag_exist(int_struct, variance_yy_cube) then begin
+  if tag_exist(int_struct, 'variance_yy_cube') then begin
     variance_yy_cube = *int_struct.variance_yy_cube
     ptr_free, int_struct.variance_yy_cube
   endif
-  if tag_exist(int_struct, beam_xx_cube) then begin
+  if tag_exist(int_struct, 'beam_xx_cube') then begin
     beam_xx_cube = *int_struct.beam_xx_cube
     ptr_free, int_struct.beam_xx_cube
   endif
-  if tag_exist(int_struct, beam_yy_cube) then begin
+  if tag_exist(int_struct, 'beam_yy_cube') then begin
     beam_yy_cube = *int_struct.beam_yy_cube
     ptr_free, int_struct.beam_yy_cube
   endif
-    
+  
   save, file = save_file, dirty_xx_cube,  dirty_yy_cube,  model_xx_cube,  model_yy_cube,  res_xx_cube,  res_yy_cube, $
     variance_xx_cube,  variance_yy_cube, weights_xx_cube,  weights_yy_cube, beam_xx_cube, beam_yy_cube, $
     nside,  n_avg,  obs_arr,  psf_arr, hpx_inds, frequencies, nfile_contrib_pix, nfile_contrib_freq
