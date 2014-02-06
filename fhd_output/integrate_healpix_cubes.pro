@@ -275,51 +275,51 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   n_avg = n_avg_use
   hpx_inds = temporary(pixels_use)
   
-  if tag_exist(int_struct, dirty_xx_cube) then begin
+  if tag_exist(int_struct, 'dirty_xx_cube') then begin
     dirty_xx_cube = *int_struct.dirty_xx_cube
     ptr_free, int_struct.dirty_xx_cube
   endif
-  if tag_exist(int_struct, dirty_yy_cube) then begin
+  if tag_exist(int_struct, 'dirty_yy_cube') then begin
     dirty_yy_cube = *int_struct.dirty_yy_cube
     ptr_free, int_struct.dirty_yy_cube
   endif
-  if tag_exist(int_struct, model_xx_cube) then begin
+  if tag_exist(int_struct, 'model_xx_cube') then begin
     model_xx_cube = *int_struct.model_xx_cube
     ptr_free, int_struct.model_xx_cube
   endif
-  if tag_exist(int_struct, model_yy_cube) then begin
+  if tag_exist(int_struct, 'model_yy_cube') then begin
     model_yy_cube = *int_struct.model_yy_cube
     ptr_free, int_struct.model_yy_cube
   endif
-  if tag_exist(int_struct, res_xx_cube) then begin
+  if tag_exist(int_struct, 'res_xx_cube') then begin
     res_xx_cube = *int_struct.res_xx_cube
     ptr_free, int_struct.res_xx_cube
   endif
-  if tag_exist(int_struct, res_yy_cube) then begin
+  if tag_exist(int_struct, 'res_yy_cube') then begin
     res_yy_cube = *int_struct.res_yy_cube
     ptr_free, int_struct.res_yy_cube
   endif
-  if tag_exist(int_struct, weights_xx_cube) then begin
+  if tag_exist(int_struct, 'weights_xx_cube') then begin
     weights_xx_cube = *int_struct.weights_xx_cube
     ptr_free, int_struct.weights_xx_cube
   endif
-  if tag_exist(int_struct, weights_yy_cube) then begin
+  if tag_exist(int_struct, 'weights_yy_cube') then begin
     weights_yy_cube = *int_struct.weights_yy_cube
     ptr_free, int_struct.weights_yy_cube
   endif
-  if tag_exist(int_struct, variance_xx_cube) then begin
+  if tag_exist(int_struct, 'variance_xx_cube') then begin
     variance_xx_cube = *int_struct.variance_xx_cube
     ptr_free, int_struct.variance_xx_cube
   endif
-  if tag_exist(int_struct, variance_yy_cube) then begin
+  if tag_exist(int_struct, 'variance_yy_cube') then begin
     variance_yy_cube = *int_struct.variance_yy_cube
     ptr_free, int_struct.variance_yy_cube
   endif
-  if tag_exist(int_struct, beam_xx_cube) then begin
+  if tag_exist(int_struct, 'beam_xx_cube') then begin
     beam_xx_cube = *int_struct.beam_xx_cube
     ptr_free, int_struct.beam_xx_cube
   endif
-  if tag_exist(int_struct, beam_yy_cube) then begin
+  if tag_exist(int_struct, 'beam_yy_cube') then begin
     beam_yy_cube = *int_struct.beam_yy_cube
     ptr_free, int_struct.beam_yy_cube
   endif
