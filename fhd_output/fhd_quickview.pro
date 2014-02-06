@@ -21,8 +21,8 @@ IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 IF N_Elements(no_fits) EQ 0 THEN no_fits=1
 
 grid_spacing=10.
-offset_lat=5.;15. paper 10 memo
-offset_lon=5.;15. paper 10 memo
+offset_lat=grid_spacing/2;15. paper 10 memo
+offset_lon=grid_spacing/2.;15. paper 10 memo
 reverse_image=1   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=reverse_image;1 paper 3 memo
 label_spacing=1.
