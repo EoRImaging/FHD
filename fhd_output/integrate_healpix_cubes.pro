@@ -49,6 +49,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   pix_match_arr = intarr(nfiles)
   for i=0, nfiles-1 do begin
     void = getvar_savefile(filenames[i], names = this_varnames)
+    print,'Working on file '+filenames[i]+'   ('+strtrim(i+1,2)+'/'+strtrim(nfiles)+')'
     if i eq 0 then varnames = this_varnames else begin
       match, varnames, this_varnames, suba, subb, count = count_var
       if count_var ne n_elements(varnames) then begin
