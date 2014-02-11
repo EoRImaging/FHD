@@ -96,7 +96,9 @@ si=0L
 FOR src_i=0L,n_sources-1 DO BEGIN
     sx=sx_arr[src_i]
     sy=sy_arr[src_i]
-    IF add_dist[src_i] GE local_max_radius THEN gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent ELSE xcen=(ycen=-1)
+    IF add_dist[src_i] GE local_max_radius THEN $
+        gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width*(2.*Sqrt(2.*Alog(2.))),/keepcenter,/silent $
+        ELSE xcen=(ycen=-1)
     IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
 ;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
 ;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
