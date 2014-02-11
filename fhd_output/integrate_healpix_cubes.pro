@@ -6,7 +6,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   if n_elements(discard_unmatched_pix) eq 0 then discard_unmatched_pix = 1
   if n_elements(discard_unmatched_freq) eq 0 then discard_unmatched_freq = 1
   
-  obsids = long(stregex(filenames, '[0-9]+-[0-9]+', /extract))
+  obsids = long(stregex(file_basename(filenames), '[0-9]+', /extract))
   obs_range = minmax(obsids)
   
   even_mask = stregex(filenames, 'even', /boolean)
