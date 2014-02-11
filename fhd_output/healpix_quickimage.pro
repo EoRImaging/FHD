@@ -1,7 +1,11 @@
+;; set log = 1 to get a log color scale
+;; for a log color scale that is symmetric around zero, set log=1 and color_profile='sym_log'
+
 pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, noerase = noerase, savefile = savefile, png = png, eps = eps, $
     map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
-    data_range = data_range, max=max,min=min, silent=silent, title=title, charsize = charsize, degpix=degpix, logplot=logplot, hist_equal=hist_equal,$
-    lon_center=lon_center, lat_center=lat_center, projection=projection, coord_in=coord_in, coord_out = coord_out
+    data_range = data_range, max=max,min=min, silent=silent, title=title, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
+    lon_center=lon_center, lat_center=lat_center, projection=projection, coord_in=coord_in, coord_out = coord_out, $
+    color_profile = color_profile, log = log
     
     
   IF N_Elements(silent) EQ 0 THEN silent=1
@@ -56,7 +60,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   hpx_res = sqrt(3./!pi)*(60./nside)
   
   IF Keyword_Set(degpix) THEN resolution=degpix ELSE resolution=.1 ;output resolution in degrees
-
+  
   if keyword_set(map) then begin
     half_sky = 1
     pxsize=360./resolution
@@ -107,9 +111,9 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   Call_procedure,proj_routine, $
     data_plot, 0, pix_type, nside, do_conv, do_rot, coord_in_use, coord_out_use, eul_mat, $
     planmap, Tmax, Tmin, color_bar, $
-    PXSIZE=pxsize, LOG=log, HIST_EQUAL=hist_equal, MAX=max, MIN=min, $
+    PXSIZE=pxsize, HIST_EQUAL=hist_equal, MAX=max, MIN=min, $
     UNITS='Jy', DATA_plot = data_plot, GAL_CUT=gal_cut, $
-    POLARIZATION=polarization, HALF_SKY=half_sky, SILENT=silent, PIXEL_LIST=pixels, ASINH=logplot, $
+    POLARIZATION=polarization, HALF_SKY=half_sky, SILENT=silent, PIXEL_LIST=pixels, $
     TRUECOLORS=truecolors, DATA_TC=data_tc, MAP_OUT=map_out, ROT=rot, FITS=fits, STAGGER=stagger
     
   if not keyword_set(map) then begin
@@ -152,7 +156,8 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     endif
     
     quick_image, new_map, missing_val = bad_val, data_range = data_range, xtitle = 'longitude (degrees)', ytitle = 'latitude (degrees)', $
-      title = title, charsize = charsize, noerase = noerase, xrange = lon_range, yrange = lat_range, savefile = savefile, png = png, eps = eps
+      title = title, charsize = charsize, noerase = noerase, xrange = lon_range, yrange = lat_range, savefile = savefile, png = png, eps = eps, $
+      log = log, color_profile = color_profile
       
   endif else begin
   
