@@ -1,8 +1,8 @@
-PRO git,command,args=args,message=message,result=result,error=error
+PRO git,command,args=args,message=message,result=result,error=error,project_name=project_name,repo_path=repo_path
 IF N_Elements(command) EQ 0 THEN command='describe'
-
-fhd_repo_path=rootdir('fhd')
-pushd,fhd_repo_path
+IF N_Elements(project_name) EQ 0 THEN project_name='fhd' 
+IF N_Elements(repo_path) EQ 0 THEN repo_path=rootdir(project_name)
+pushd,repo_path
 
 IF N_Elements(args) EQ 0 THEN args=''
 IF Keyword_Set(message) THEN args+=' -m ' ELSE message=''
