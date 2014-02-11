@@ -12,6 +12,7 @@ IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(
 IF N_Elements(antenna_size) EQ 0 THEN antenna_size=3. ;meters (MWA groundscreen size)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
 git,'describe',result=code_version,project='fhd'
+IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
 speed_light=299792458.
 time=params.time
