@@ -30,7 +30,7 @@ IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(return_decon_visibilities) EQ 0 THEN return_decon_visibilities=1
 IF N_Elements(snapshot_healpix_export) EQ 0 THEN snapshot_healpix_export=1
 IF N_Elements(n_avg) EQ 0 THEN n_avg=2
-IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=1.5
+IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=2.
 IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
 if n_elements(output_directory) eq 0 then output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 
