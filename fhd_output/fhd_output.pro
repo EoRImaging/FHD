@@ -457,5 +457,5 @@ IF N_Elements(cal) GT 0 THEN BEGIN
 ENDIF
 t10=Systime(1)-t10b
 t00=Systime(1)-t0a
-
+IF ~Keyword_Set(silent) THEN print,'Image output timing: ',t00
 END

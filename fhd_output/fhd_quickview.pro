@@ -4,7 +4,7 @@ PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,_Extra=extra
-
+t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
@@ -309,4 +309,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=1,/sphere,_Extra=extra
     ENDIF
 ENDFOR
+timing=Systime(1)-t0
+IF ~Keyword_Set(silent) THEN print,'Image output timing (quickview): ',timing
 END
