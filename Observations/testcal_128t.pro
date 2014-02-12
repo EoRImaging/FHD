@@ -10,7 +10,7 @@ IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=''
-image_filter_fn='' ;applied ONLY to output images
+image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 IF N_Elements(data_version) EQ 0 THEN data_version='2'
 data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+data_version])

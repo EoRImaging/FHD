@@ -60,6 +60,10 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
     vis_cal=vis_calibration_apply(vis_ptr,cal)
     cal_res=vis_cal_subtract(cal_base,cal,/abs)
+    
+    IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
+    
+    ENDIF
     timing=Systime(1)-t0_0
     RETURN,vis_cal
 ENDIF
