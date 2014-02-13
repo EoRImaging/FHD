@@ -104,15 +104,19 @@ IF Keyword_Set(galaxy_calibrate) THEN BEGIN
 ;    model*=weight_invert(pixel_area)
     Ptr_free,model_arr
     
+;    model*=(degpix*!DtoR)^2. ;flux unit conversion
     edge_match,model
     valid_i=where(Finite(ra_arr),n_valid)
     Jdate=obs.Jd0
     Eq2Hor,ra_arr[valid_i],dec_arr[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
     alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
     horizon_proj=Sin(alt_arr*!DtoR)
+    antialias_filter=Sqrt(Hanning(dimension,elements))
+    model_use=model
+    model_use*=horizon_proj
+    model_use*=antialias_filter
 ;    model_uv=dirty_image_generate(fft_shift(model),degpix=degpix,/no_real,/antialias)*uv_mask
-    model_uv=fft_shift(FFT(fft_shift(model*horizon_proj),/inverse))
-    model_uv*=(degpix*!DtoR)^2. ;flux unit conversion
+    model_uv=fft_shift(FFT(fft_shift(model_use),/inverse))
     model_uv/=dimension ;FFT normalization
     
 ;    model_uv=fft_shift(FFT(model*horizon_proj,/inverse)/(dimension*degpix*!DtoR)^2.)
