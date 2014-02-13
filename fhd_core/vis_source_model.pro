@@ -92,6 +92,8 @@ IF Keyword_Set(galaxy_calibrate) THEN BEGIN
     elements=obs.elements
     astr=obs.astr
     degpix=obs.degpix
+    beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
+    beam_area=2.*!Pi*beam_width^2. ;area under a 2D gaussian with sigma_x=sigma_y=beam_width
     xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
     
     model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra)
