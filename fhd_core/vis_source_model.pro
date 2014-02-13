@@ -109,9 +109,13 @@ IF Keyword_Set(galaxy_calibrate) THEN BEGIN
     Jdate=obs.Jd0
     Eq2Hor,ra_arr[valid_i],dec_arr[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
     alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
-    horizon_proj=Sin(alt_arr*!DtoR)^2.
+    horizon_proj=Sin(alt_arr*!DtoR)
 ;    model_uv=dirty_image_generate(fft_shift(model),degpix=degpix,/no_real,/antialias)*uv_mask
-    model_uv=fft_shift(FFT(fft_shift(model*horizon_proj),/inverse)/(dimension*degpix*!DtoR)^2.)
+    model_uv=fft_shift(FFT(fft_shift(model*horizon_proj),/inverse))
+    model_uv*=(degpix*!DtoR)^2. ;flux unit conversion
+    model_uv/=dimension ;FFT normalization
+    
+;    model_uv=fft_shift(FFT(model*horizon_proj,/inverse)/(dimension*degpix*!DtoR)^2.)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=model_uv
 ENDIF
 
