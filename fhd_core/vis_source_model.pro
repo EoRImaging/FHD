@@ -117,6 +117,7 @@ IF Keyword_Set(galaxy_calibrate) THEN BEGIN
     model_use=model
     model_use*=horizon_proj
     model_use*=antialias_filter
+    model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion
 ;    model_uv=dirty_image_generate(fft_shift(model),degpix=degpix,/no_real,/antialias)*uv_mask
     model_uv=fft_shift(FFT(fft_shift(model_use),/inverse))
     model_uv/=dimension ;FFT normalization
