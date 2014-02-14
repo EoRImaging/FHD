@@ -171,6 +171,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
+        vis_flag_update,flag_arr,obs,psf,params
     ENDIF
     IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     
@@ -203,23 +204,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
             error=1
             RETURN
         ENDIF
-;        CASE 1 OF
-;            n0 EQ n1:FOR pol_i=0,n_pol-1 DO *flag_arr1[pol_i]*=*flag_arr[pol_i] ;in case using different # of pol's
-;            n1 GT n0: BEGIN
-;                nf0=(size(*flag_arr[0],/dimension))[0]
-;                nb0=(size(*flag_arr[0],/dimension))[1]
-;                FOR pol_i=0,n_pol-1 DO (*flag_arr1[pol_i])[0:nf0-1,0:nb0-1]*=*flag_arr[pol_i]
-;            END
-;            ELSE: BEGIN
-;                nf1=(size(*flag_arr1[0],/dimension))[0]
-;                nb1=(size(*flag_arr1[0],/dimension))[1]
-;                print,"WARNING: restoring flags and Mapfn from mismatched data! Mapfn may be corrupted!"
-;                FOR pol_i=0,n_pol-1 DO *flag_arr1[pol_i]*=(*flag_arr[pol_i])[0:nf1-1,0:nb1-1]
-;            ENDELSE
-;        ENDCASE
-;        flag_arr=flag_arr
-;        SAVE,flag_arr,filename=flags_filepath,/compress
-;        flag_arr1=0
     ENDIF ELSE BEGIN
         IF Keyword_Set(flag) THEN BEGIN
             print,'Flagging anomalous data'

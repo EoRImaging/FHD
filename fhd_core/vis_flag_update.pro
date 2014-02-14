@@ -14,7 +14,6 @@ ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 b_info=*obs.baseline_info
-freq_cut_i=where(b_info.freq_use,n_freq_cut)
 
 freq_bin_i=b_info.fbin_i
 fi_use=where(b_info.freq_use)
@@ -60,15 +59,21 @@ IF n_dist_flag GT 0 THEN BEGIN
     flag_dist_i=0
 ENDIF
 
-IF Keyword_Set(flag_ptr) THEN BEGIN
-    n_flag_dim=size(*flag_ptr[0],/n_dimension)
-    flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
-    flag_i_new=where(xmin LT 0,n_flag_new)
-    IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[flag_i_new]=-1
-    IF n_flag GT 0 THEN BEGIN
-        xmin[flag_i]=-1
-        ymin[flag_i]=-1
-    ENDIF
+freq_cut_i=where(b_info.freq_use EQ 0,n_freq_cut)
+IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut_i,*]=-1
+tile_cut_i=where(b_info.tile_use EQ 0,n_tile_cut)
+IF n_tile_cut GT 0 THEN BEGIN
+    bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
+    IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,bi_cut]=-1
+ENDIF
+
+n_flag_dim=size(*flag_ptr[0],/n_dimension)
+flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
+flag_i_new=where(xmin LT 0,n_flag_new)
+IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[flag_i_new]=-1
+IF n_flag GT 0 THEN BEGIN
+    xmin[flag_i]=-1
+    ymin[flag_i]=-1
 ENDIF
 
 IF max(xmin)<max(ymin) LT 0 THEN BEGIN
