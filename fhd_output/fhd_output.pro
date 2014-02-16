@@ -21,6 +21,8 @@ IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
 
 IF not Keyword_Set(obs) THEN obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
 IF not Keyword_Set(fhd) THEN fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
+IF tag_exist(fhd,'galaxy_subtract') THEN galaxy_model_fit=fhd.galaxy_subtract 
+IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 stats_radius=10. ;degrees
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
@@ -84,15 +86,16 @@ t1a=Systime(1)
 t0+=t1a-t0a
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
-IF Keyword_Set(model_recalculate) OR Keyword_Set(galaxy_model_fit) THEN BEGIN
+IF Keyword_Set(model_recalculate) THEN BEGIN
     IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
     IF N_Elements(*map_fn_arr[0]) EQ 0 THEN BEGIN
         IF Keyword_Set(transfer_mapfn) THEN file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) $
             ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
         IF Min(file_test(file_path_mapfn+pol_names+'.sav')) EQ 0 THEN BEGIN
             IF Keyword_Set(model_recalculate) THEN print,'No mapping function supplied, and .sav files not found! Model not recalculated'
-            IF Keyword_Set(galaxy_model_fit) THEN print,'No mapping function supplied, and .sav files not found! Galactic emission model not calculated'
-            model_recalculate=(galaxy_model_fit=0)
+;            IF Keyword_Set(galaxy_model_fit) THEN print,'No mapping function supplied, and .sav files not found! Galactic emission model not calculated'
+;            galaxy_model_fit=0
+            model_recalculate=0
         ENDIF ELSE BEGIN
             FOR pol_i=0,n_pol-1 DO BEGIN
                 restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
@@ -150,34 +153,38 @@ restored_beam_width=restored_beam_width>0.75
 IF Keyword_Set(pad_uv_image) THEN restored_beam_width*=pad_uv_image
 model_holo_arr=model_uv_holo
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_holo_uv=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
-        galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1,uv_return=1,_Extra=extra)
+    gal_model_base=fhd_galaxy_model(obs_out,file_path_fhd=file_path_fhd,galaxy_model_uv=galaxy_model_uv,_Extra=extra)
+    gal_model_img=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *gal_model_img[pol_i]=gal_model_base*(*beam_base_out[pol_i])
+;    gal_holo_uv=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,$
+;        galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=1,uv_return=1,_Extra=extra)
     gal_name='_galfit'
-    gal_model_img=Ptrarr(n_pol)
-    gal_holo_img=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        filter_single=filter_arr[pol_i]
-        gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
-            image_filter_fn='',degpix=degpix,/antialias,_Extra=extra)*(*beam_base_out[pol_i])/(obs.degpix*obs.dimension)^2.)
-        gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,weights=*weights_arr[pol_i],$
-            image_filter_fn=image_filter_fn,degpix=degpix,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i]))
-        filter_arr[pol_i]=filter_single
-    ENDFOR
+;    gal_model_img=Ptrarr(n_pol)
+;    gal_holo_img=Ptrarr(n_pol)
+;    FOR pol_i=0,n_pol-1 DO BEGIN
+;        filter_single=filter_arr[pol_i]
+;        gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*galaxy_model_uv[pol_i],pad_uv_image=pad_uv_image,$
+;            image_filter_fn='',degpix=degpix,/antialias,_Extra=extra)*(*beam_base_out[pol_i])/(obs.degpix*obs.dimension)^2.)
+;        gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(*gal_holo_uv[pol_i],pad_uv_image=pad_uv_image,weights=*weights_arr[pol_i],$
+;            image_filter_fn=image_filter_fn,degpix=degpix,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i]))
+;        filter_arr[pol_i]=filter_single
+;    ENDFOR
 ENDIF ELSE BEGIN
     gal_name=''
-    gal_holo_uv=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO gal_holo_uv[pol_i]=Ptr_new(0.)
+;    gal_holo_uv=Ptrarr(n_pol)
+;    FOR pol_i=0,n_pol-1 DO gal_holo_uv[pol_i]=Ptr_new(0.)
 ENDELSE
 FOR pol_i=0,n_pol-1 DO BEGIN
     filter_single=filter_arr[pol_i]
     *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i])
-    instr_img_uv=*image_uv_arr[pol_i]-*model_holo_arr[pol_i]-*gal_holo_uv[pol_i]
+    instr_img_uv=*image_uv_arr[pol_i]-*model_holo_arr[pol_i];-*gal_holo_uv[pol_i]
     *res_uv_arr[pol_i]=instr_img_uv
     *instr_images[pol_i]=dirty_image_generate(instr_img_uv,degpix=degpix,weights=*weights_arr[pol_i],$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i])
     *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
         dimension=dimension,restored_beam_width=restored_beam_width)
+    IF Keyword_Set(galaxy_model_fit) THEN *instr_sources[pol_i]+=*gal_model_img[pol_i]
     filter_arr[pol_i]=filter_single
 ENDFOR
 
@@ -192,10 +199,10 @@ endfor
 
 stokes_images=stokes_cnv(instr_images,beam=beam_base_out) ;NOTE one factor of the beam already corrected for
 stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out)
-IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    stokes_gal_holo=stokes_cnv(gal_holo_img,beam=beam_base_out)
-    stokes_gal_model=stokes_cnv(gal_model_img,beam=beam_base_out)
-ENDIF
+;IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+;    stokes_gal_holo=stokes_cnv(gal_holo_img,beam=beam_base_out)
+;    stokes_gal_model=stokes_cnv(gal_model_img,beam=beam_base_out)
+;ENDIF
 
 t4a=Systime(1)
 t3+=t4a-t3a
@@ -393,45 +400,45 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             ENDIF
         ENDIF
     ENDIF
-    IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-        IF ~Keyword_Set(no_fits) THEN BEGIN
-            FitsFast,*stokes_gal_model[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i+4]
-            FitsFast,*gal_holo_img[pol_i],fits_header,/write,file_path=export_path+'_GalHolo_'+pol_names[pol_i]
-            FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i]
-        ENDIF
-        gal_low=0.
-        gal_high=Max((*gal_model_img[pol_i])[beam_i])
-        gal_high2=Max((*stokes_gal_model[pol_i])[beam_i])
-        gal_log=0
-        debug_gal=1
-        IF ~Keyword_Set(no_png) THEN BEGIN
-            while debug_gal GT 0 DO BEGIN
-                imagefast,(*stokes_gal_model[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i+4],$
-                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high*2.,$
-                    lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-                    offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
-                    show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-                imagefast,(*gal_holo_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalHolo_'+pol_names[pol_i],$
-                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=0,low=instr_low_use,high=instr_high_use,$
-                    lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-                    offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
-                    show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-                imagefast,(*gal_model_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
-                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,$
-                    lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
-                    offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
-                    show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
-                imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalSources_'+pol_names[pol_i],$
-                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
-                imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
-                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
-                imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i+4],$
-                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high2,title=title_fhd,_Extra=extra
-                debug_gal=0
-                dummyval=0
-            endwhile
-        ENDIF
-    ENDIF
+;    IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+;        IF ~Keyword_Set(no_fits) THEN BEGIN
+;            FitsFast,*stokes_gal_model[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i+4]
+;            FitsFast,*gal_holo_img[pol_i],fits_header,/write,file_path=export_path+'_GalHolo_'+pol_names[pol_i]
+;            FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i]
+;        ENDIF
+;        gal_low=0.
+;        gal_high=Max((*gal_model_img[pol_i])[beam_i])
+;        gal_high2=Max((*stokes_gal_model[pol_i])[beam_i])
+;        gal_log=0
+;        debug_gal=1
+;        IF ~Keyword_Set(no_png) THEN BEGIN
+;            while debug_gal GT 0 DO BEGIN
+;                imagefast,(*stokes_gal_model[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i+4],$
+;                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high*2.,$
+;                    lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+;                    offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+;                    show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
+;                imagefast,(*gal_holo_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalHolo_'+pol_names[pol_i],$
+;                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=0,low=instr_low_use,high=instr_high_use,$
+;                    lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+;                    offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+;                    show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
+;                imagefast,(*gal_model_img[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
+;                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,$
+;                    lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+;                    offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,$
+;                    show_grid=show_grid,/sphere,title=title_fhd,_Extra=extra
+;                imagefast,(*gal_model_img[pol_i]+instr_source)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalSources_'+pol_names[pol_i],$
+;                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
+;                imagefast,(*gal_model_img[pol_i]+instr_restored)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalRestored_'+pol_names[pol_i],$
+;                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high,title=title_fhd,_Extra=extra
+;                imagefast,(*stokes_gal_model[pol_i]+stokes_residual)[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalResidual_'+pol_names[pol_i+4],$
+;                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=gal_log,low=gal_low,high=gal_high2,title=title_fhd,_Extra=extra
+;                debug_gal=0
+;                dummyval=0
+;            endwhile
+;        ENDIF
+;    ENDIF
     t10a=Systime(1)
     t9+=t10a-t9b
 ENDFOR

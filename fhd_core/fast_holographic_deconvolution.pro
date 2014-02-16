@@ -19,7 +19,7 @@ PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,image_uv_arr,source_ar
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
-    galaxy_model_fit=galaxy_model_fit,scale_gain=scale_gain,model_uv_arr=model_uv_arr,_Extra=extra
+    scale_gain=scale_gain,model_uv_arr=model_uv_arr,_Extra=extra
 ;calibration_model_subtract is passed through the fhd structure
 compile_opt idl2,strictarrsubs  
 
@@ -46,6 +46,7 @@ sigma_threshold=2.
 calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
 IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform'
+galaxy_model_fit=fhd.galaxy_subtract
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -153,14 +154,8 @@ gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr,beam_
 gain_use*=gain_normalization
 gain_array=source_taper*gain_use
 
-IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,file_path_fhd=file_path_fhd,$
-        galaxy_model_uv=galaxy_model_uv,restore=0,image_filter=decon_filter,filter_arr=filter_arr,_Extra=extra)
-ENDIF 
-
 FOR pol_i=0,n_pol-1 DO BEGIN 
     dirty_image_single=*dirty_array[pol_i]*(*beam_correction[pol_i])
-    IF Keyword_Set(galaxy_model_fit) THEN dirty_image_single-=*gal_model_holo[pol_i]*(*beam_correction[pol_i])^2.
     *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
     
     ;xx, yy and xy, yx polarizations are treated seperately
@@ -176,6 +171,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
 
+IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+;    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,file_path_fhd=file_path_fhd,$
+;        galaxy_model_uv=galaxy_model_uv,restore=0,image_filter=decon_filter,filter_arr=filter_arr,_Extra=extra)
+    gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+    ENDFOR
+ENDIF 
 
 uv_i_use=where(source_uv_mask,n_uv_use)
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
@@ -394,6 +398,7 @@ comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,reject_sigma_threshold=sigma_threshold)
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,/conserve_memory)
+IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 t4_0=Systime(1)
 t3+=t4_0-t3_0
 FOR pol_i=0,n_pol-1 DO BEGIN
