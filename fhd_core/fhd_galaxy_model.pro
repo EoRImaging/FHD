@@ -1,10 +1,10 @@
 FUNCTION fhd_galaxy_model,obs,file_path_fhd=file_path_fhd,restore=restore,$
-    galaxy_model_img=galaxy_model_img,galaxy_model_uv=galaxy_model_uv,uv_return=uv_return,_Extra=extra
+    gal_model_img=gal_model_img,gal_model_uv=gal_model_uv,uv_return=uv_return,_Extra=extra
 
 IF Keyword_Set(file_path_fhd) THEN file_path_galmodel=file_path_fhd+'_GalaxyModel.sav' ELSE file_path_galmodel=''
 IF Keyword_Set(restore) AND file_test(file_path_galmodel) THEN BEGIN
     restore,file_path_galmodel
-    IF Keyword_Set(uv_return) THEN RETURN,galaxy_model_uv ELSE RETURN,galaxy_model_img 
+    IF Keyword_Set(uv_return) THEN RETURN,gal_model_uv ELSE RETURN,gal_model_img 
 ENDIF
 
 dimension=obs.dimension
@@ -60,10 +60,10 @@ nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
     model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion
     model_uv=fft_shift(FFT(fft_shift(model_use),/inverse))
     model_uv/=dimension ;FFT normalization   
-    galaxy_model_img=model
+    gal_model_img=model
     
-    galaxy_model_uv=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *galaxy_model_uv[pol_i]=model_uv
+    gal_model_uv=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *gal_model_uv[pol_i]=model_uv
 ;ENDIF ELSE BEGIN
 ;    comp_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/components)
 ;    n_comp=N_Elements(comp_arr)
@@ -97,12 +97,12 @@ nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 ;        *model_uv_holo[pol_i]*=scale
 ;        *model_img_holo[pol_i]*=scale
 ;    ENDFOR
-;    galaxy_model_img=model
-;    galaxy_model_uv=model_uv
+;    gal_model_img=model
+;    gal_model_uv=model_uv
 ;ENDELSE  
 ;IF map_fn_free_flag THEN Ptr_free,map_fn_arr
   
 IF Keyword_Set(file_path_galmodel) THEN $
-    save,galaxy_model_img,galaxy_model_uv,filename=file_path_galmodel,/compress
-IF Keyword_Set(uv_return) THEN RETURN,galaxy_model_uv ELSE RETURN,galaxy_model_img
+    save,gal_model_img,gal_model_uv,filename=file_path_galmodel,/compress
+IF Keyword_Set(uv_return) THEN RETURN,gal_model_uv ELSE RETURN,gal_model_img
 END

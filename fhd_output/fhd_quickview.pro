@@ -3,7 +3,7 @@ PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
-    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,_Extra=extra
+    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,galaxy_model_fit=galaxy_model_fit,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -37,6 +37,9 @@ n_pol=obs.n_pol
 dimension_uv=obs.dimension
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 residual_flag=obs.residual
+IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
+IF tag_exist(fhd,'galaxy_subtract') THEN galaxy_model_fit=fhd.galaxy_subtract 
+IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     image_uv_arr=Ptrarr(n_pol,/allocate)
@@ -134,6 +137,15 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
     ENDIF
 ENDIF ELSE source_flag=0
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
+
+gal_model_img=Ptrarr(n_pol)
+IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+    gal_model_base=fhd_galaxy_model(obs_out,file_path_fhd=file_path_fhd,_Extra=extra)
+    FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(gal_model_base*(*beam_base_out[pol_i]))
+    gal_name='_galfit'
+ENDIF ELSE BEGIN
+    gal_name=''
+ENDELSE
 
 instr_dirty_arr=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
@@ -262,6 +274,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
             title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+        IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+            gal_img=*gal_model_img[pol_i]
+            gal_low_use=Min(gal_img[beam_i])
+            gal_high_use=Max(gal_img[beam_i])
+            gal_low_use=gal_low_use>(-gal_high_use)    
+            Imagefast,gal_img[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_GalModel_'+pol_names[pol_i],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=gal_low_use,high=gal_high_use,$
+                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
+                title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+        ENDIF
     ENDIF
     IF ~Keyword_Set(no_fits) THEN BEGIN
         FitsFast,stokes_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i+4]
@@ -269,6 +292,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
         IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
+        IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i]
     ENDIF
     
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
