@@ -182,7 +182,7 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(gal_model_base*(*beam_base_out[pol_i]))
     gal_name='_galfit'
     IF Min(Ptr_valid(map_fn_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
-        gal_holo_uv=holo_mapfn_apply(gal_model_uv,map_fn_arr[pol_i],_Extra=extra,/indexed)
+        gal_holo_uv=holo_mapfn_apply(*gal_model_uv[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
         gal_holo_img[pol_i]=Ptr_new(dirty_image_generate(gal_holo_uv,pad_uv_image=pad_uv_image,weights=*weights_arr[pol_i],$
             image_filter_fn=image_filter_fn,degpix=degpix,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],/antialias,_Extra=extra)$
             *(*beam_correction_out[pol_i]))*renorm_factor
