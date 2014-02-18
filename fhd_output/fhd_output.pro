@@ -362,7 +362,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
         IF Keyword_Set(galaxy_model_fit) THEN BEGIN
             gal_img=*gal_model_img[pol_i]
-            IF Ptr_valid(gal_holo_img[pol_i]) THEN gal_holo=*gal_holo_img ELSE gal_holo=0
+            IF Ptr_valid(gal_holo_img[pol_i]) THEN gal_holo=*gal_holo_img[pol_i] ELSE gal_holo=0
             gal_low_use=Min(gal_img[beam_i])
             gal_high_use=Max(gal_img[beam_i])
             gal_low_use=gal_low_use>(-gal_high_use)    
