@@ -126,6 +126,7 @@ ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+        print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
         restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i]=Temporary(map_fn)
     ENDIF

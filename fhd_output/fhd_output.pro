@@ -98,7 +98,13 @@ IF Keyword_Set(model_recalculate) THEN BEGIN
             print,file_path_mapfn+pol_names[0]+'.sav'
             model_recalculate=0
         ENDIF ELSE BEGIN
-            FOR pol_i=0,n_pol-1 DO map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn',/pointer,verbose=~silent)
+            map_fn_arr=Ptrarr(n_pol,/allocate) ;NOTE: this approach appears to use the least memory overhead
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
+                restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+                *map_fn_arr[pol_i]=Temporary(map_fn)
+;                map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn',/pointer,verbose=~silent)
+            ENDFOR
         ENDELSE
     ENDIF
 ENDIF
@@ -176,7 +182,8 @@ for pol_i=0,n_pol-1 do begin
 endfor
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_base=fhd_galaxy_model(obs_out,file_path_fhd=file_path_fhd,gal_model_uv=gal_model_uv,_Extra=extra)
+    gal_model_base=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,gal_model_uv=gal_model_uv,_Extra=extra)
+    IF Keyword_Set(pad_uv_image) THEN gal_model_base=Rebin(gal_model_base,dimension,elements)
     FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(gal_model_base*(*beam_base_out[pol_i]))
     gal_name='_galfit'
     IF Min(Ptr_valid(map_fn_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
@@ -189,10 +196,6 @@ ENDIF ELSE  gal_name=''
 
 stokes_images=stokes_cnv(instr_images,beam=beam_base_out) ;NOTE one factor of the beam already corrected for
 stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out)
-;IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-;    stokes_gal_holo=stokes_cnv(gal_holo_img,beam=beam_base_out)
-;    stokes_gal_model=stokes_cnv(gal_model_img,beam=beam_base_out)
-;ENDIF
 
 t4a=Systime(1)
 t3+=t4a-t3a
@@ -255,10 +258,7 @@ t6a=Systime(1)
 t5+=t6a-t5a
 
 ;FREE MEMORY
-IF Max(Ptr_valid(map_fn_arr)) THEN Ptr_free,map_fn_arr
-Ptr_free,image_uv_arr
-Ptr_free,model_uv_full
-Ptr_free,model_uv_holo
+undefine_fhd,map_fn_arr,image_uv_arr,model_uv_full,model_uv_holo,gal_model_uv
     
 
 t7a=Systime(1)
@@ -362,9 +362,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             gal_img=*gal_model_img[pol_i]
             IF Ptr_valid(gal_holo_img[pol_i]) THEN gal_holo=*gal_holo_img[pol_i] ELSE gal_holo=0
             gal_low_use=Min(gal_img[beam_i])
-            gal_high_use=Max(gal_img[beam_i])
-            gal_low_use=gal_low_use>(-gal_high_use)    
-            Imagefast,gal_img[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
+            gal_high_use=Max(gal_img[beam_i])  
+            Imagefast,gal_img[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path_fg+'_GalModel_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=gal_low_use,high=gal_high_use,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$

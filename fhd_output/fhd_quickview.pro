@@ -38,7 +38,6 @@ dimension_uv=obs.dimension
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 residual_flag=obs.residual
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
-IF tag_exist(fhd,'galaxy_subtract') THEN galaxy_model_fit=fhd.galaxy_subtract 
 IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
@@ -140,8 +139,10 @@ IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
 gal_model_img=Ptrarr(n_pol)
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_base=fhd_galaxy_model(obs_out,file_path_fhd=file_path_fhd,_Extra=extra)
+    gal_model_base=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,_Extra=extra)
+    IF Keyword_Set(pad_uv_image) THEN gal_model_base=Rebin(gal_model_base,dimension,elements)
     FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(gal_model_base*(*beam_base_out[pol_i]))
+    
     gal_name='_galfit'
 ENDIF ELSE BEGIN
     gal_name=''
@@ -278,7 +279,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             gal_img=*gal_model_img[pol_i]
             gal_low_use=Min(gal_img[beam_i])
             gal_high_use=Max(gal_img[beam_i])
-            gal_low_use=gal_low_use>(-gal_high_use)    
             Imagefast,gal_img[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_GalModel_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=gal_low_use,high=gal_high_use,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
