@@ -58,8 +58,9 @@ vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 ;'/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0/1061319960.uvfits']
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
-catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
+;catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+catalog_file_path=calibration_catalog_file_path
 
 ;noise_calibrate=0
 ;align=0
