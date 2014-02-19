@@ -8,6 +8,7 @@ PRO fhd_output,obs,fhd,cal, file_path_fhd=file_path_fhd,version=version,map_fn_a
 compile_opt idl2,strictarrsubs  
 heap_gc
 t0a=Systime(1) & t0=0 & t1=0 & t2=0 & t3=0 & t4=0 & t5=0 & t6=0 & t7=0 & t8=0 & t9=0 & t10=0
+IF N_Elements(silent) EQ 0 THEN silent=0
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
 print,'Exporting: ',basename
@@ -88,25 +89,22 @@ t0+=t1a-t0a
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 IF Keyword_Set(model_recalculate) THEN BEGIN
-    IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
-    IF N_Elements(*map_fn_arr[0]) EQ 0 THEN BEGIN
+    IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
+    IF Min(Ptr_valid(map_fn_arr)) EQ 0 THEN BEGIN
         IF Keyword_Set(transfer_mapfn) THEN file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) $
             ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
-        IF Min(file_test(file_path_mapfn+pol_names+'.sav')) EQ 0 THEN BEGIN
-            IF Keyword_Set(model_recalculate) THEN print,'No mapping function supplied, and .sav files not found! Model not recalculated'
-;            IF Keyword_Set(galaxy_model_fit) THEN print,'No mapping function supplied, and .sav files not found! Galactic emission model not calculated'
-;            galaxy_model_fit=0
+        IF Min(file_test(file_path_mapfn+pol_names[0:n_pol-1]+'.sav')) EQ 0 THEN BEGIN
+            print,'No mapping function supplied, and .sav files not found! Model not recalculated'
+            print,file_path_mapfn+pol_names[0]+'.sav'
             model_recalculate=0
         ENDIF ELSE BEGIN
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-                *map_fn_arr[pol_i]=map_fn
-            ENDFOR
+            FOR pol_i=0,n_pol-1 DO map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn',/pointer,verbose=~silent)
         ENDELSE
     ENDIF
 ENDIF
 
-IF Keyword_Set(model_recalculate) THEN BEGIN
+IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
+    ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
     uv_mask=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
     model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd.sigma_cut)
