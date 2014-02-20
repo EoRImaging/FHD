@@ -31,16 +31,13 @@ n_src=fltarr(n_files)
 src_i=Ptrarr(n_files,/allocate)
 fi_c=-1
 FOR fi=0,n_files-1 DO BEGIN
-    file_path=file_list[fi]
-    IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(file_path+'_fhd.sav') EQ 0) THEN CONTINUE ELSE fi_c+=1
-    sa=getvar_savefile(file_path+'_fhd.sav','source_array')
+    file_path_fhd=file_list[fi]
+    IF (file_test(file_path_fhd+'_obs.sav') EQ 0) OR (file_test(file_path_fhd+'_fhd.sav') EQ 0) THEN CONTINUE ELSE fi_c+=1
     
-;    sa_path=filepath(file_basename(file_path),root=file_dirname(file_path),subdir='export')+'_source_list'
-    RESTORE,file_path+'_obs.sav'
+    sa=getvar_savefile(file_path_fhd+'_fhd.sav','source_array')
+    obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
     IF fi_c EQ 0 THEN obs_arr=Replicate(obs,n_files)
     obs_arr[fi]=obs
-    
-;    textfast,sa,/read,file_path=sa_path,first_line=1
     
     src_i0=where(sa.ston GE StoN,n_src0)
     n_src[fi]=n_src0
@@ -53,9 +50,9 @@ n_pol=Min(obs_arr.n_pol)
 
 beam_arr=Ptrarr(n_files,n_pol)
 FOR fi=0,n_files-1 DO BEGIN
-    file_path=file_list[fi]
-    IF (file_test(file_path+'_obs.sav') EQ 0) OR (file_test(file_path+'_fhd.sav') EQ 0) THEN CONTINUE
-    beam_arr_single=getvar_savefile(file_path+'_fhd.sav','beam_base')
+    file_path_fhd=file_list[fi]
+    IF (file_test(file_path_fhd+'_obs.sav') EQ 0) OR (file_test(file_path_fhd+'_fhd.sav') EQ 0) THEN CONTINUE
+    beam_arr_single=getvar_savefile(file_path_fhd+'_fhd.sav','beam_base')
     beam_arr[fi,*]=beam_arr_single[0:n_pol-1]
 ENDFOR
 
@@ -166,127 +163,3 @@ SAVE,source_list,filename=save_path,/compress
 print,Strn(ns_use)+" sources detected in at least "+Strn(min_detect)+" observations."
 
 END
-;source_matrix=fltarr(n_files,ng)
-;FOR gi=0L,ng-1 DO source_matrix[(*source_list[gi].sources).fi,gi]=(*source_list[gi].sources).flux
-;beam_matrix=fltarr(n_files,ng)
-;FOR gi=0L,ng-1 DO beam_matrix[(*source_list[gi].sources).fi,gi]=(*source_list[gi].sources).beam
-;
-;cal_matrix=fltarr(n_files,n_files)
-;sigma_matrix=fltarr(n_files,n_files)
-;FOR fi=0,n_files-1 DO BEGIN
-;    si_use=where(source_matrix[fi,*] AND (source_list.n_detect GE min_detect),n_use)
-;    IF n_use EQ 0 THEN CONTINUE
-;    
-;    sm_use=source_matrix[*,si_use]
-;    FOR si=0,n_use-1 DO sm_use[*,si]/=sm_use[fi,si]
-;    
-;    cal_single=fltarr(n_files)
-;    sigma_single=fltarr(n_files)
-;    FOR fi2=0,n_files-1 DO BEGIN
-;        IF fi2 EQ fi THEN BEGIN cal_single[fi2]=1 & CONTINUE & ENDIF
-;        si_use2=where(sm_use[fi2,*],n_use2)
-;        IF n_use2 EQ 0 THEN CONTINUE
-;        
-;        vals=sm_use[fi2,si_use2]
-;        beam_vals=beam_matrix[fi2,si_use[si_use2]]
-;        
-;        IF n_use2 LT 3 THEN BEGIN 
-;            cal_single[fi2]=Mean(vals) 
-;            sigma_single[fi2]=1./Min(beam_vals)
-;            CONTINUE 
-;        ENDIF
-;        
-;        
-;        sigma=Sqrt(Total((ALog(vals)-median(ALog(vals)))^2.)/n_use2)
-;        si_use3=where(Abs(ALog(vals)-Median(ALog(vals))) LE 2.*sigma,n_use3) ;this should ALWAYS return at least one valid index
-;;            sigma_single[fi2]=Exp(sigma)-1.
-;        sigma_single[fi2]=Sqrt(1./Total(beam_vals[si_use3]^2.))
-;        cal_single[fi2]=Median(vals[si_use3],/even)
-;        
-;    ENDFOR
-;    cal_matrix[fi,*]=cal_single
-;    sigma_matrix[fi,*]=sigma_single
-;    
-;ENDFOR
-;
-;sig_test=fltarr(n_files)
-;FOR i=0,n_files-1 DO sig_test[i]=Stddev(sigma_matrix[i,*])
-;file_use_i=where(sig_test,nf_use)
-;
-;calibration=fltarr(n_files) & calibration[0]=1.
-;error=fltarr(n_files)
-;reference_list=Ptrarr(n_files,/allocate)
-;*reference_list[0]=[0]
-;err_max=Max(sigma_matrix)
-;file_i_list=lindgen(n_files)
-;FOR fi=1,nf_use-1 DO BEGIN
-;    ref=sigma_matrix[0,fi]
-;    IF ref LE 0 THEN ref=max(sigma_matrix)
-;    inds=where((sigma_matrix[0,1:*] LE ref) AND (cal_matrix[0,1:*] GT 0),ni)+1
-;    IF ni LE 1 THEN BEGIN
-;        calibration[file_use_i[fi]]=cal_matrix[0,fi]
-;        error[file_use_i[fi]]=ref
-;        CONTINUE
-;    ENDIF
-;
-;    ref_list=Ptrarr(ni,/allocate)
-;    err_tot=fltarr(ni)
-;    FOR ni_i=0,ni-1 DO BEGIN
-;        
-;        err1=sigma_matrix[0,inds[ni_i]]
-;        
-;    ;        *ref_list[ni_i]=[inds[ni_i]]
-;    ;        err_tot[ni_i]=err1
-;        
-;        ref1=Sqrt((err1)^2.+(sigma_matrix[inds[ni_i],fi])^2.)
-;        IF ref1 GT 0 THEN IF ref1 LT ref THEN BEGIN
-;            ref=ref1
-;        ENDIF
-;        
-;        inds1=where((Sqrt((sigma_matrix[inds[ni_i],*])^2.+err1^2.) LE ref) $
-;            AND (cal_matrix[inds[ni_i],*] GT 0),ni1)
-;        
-;        IF ni1 EQ 0 THEN BEGIN
-;            err_tot[ni_i]=err_max
-;            *ref_list[ni_i]=[inds[ni_i],fi]
-;            CONTINUE
-;        ENDIF 
-;        
-;        err_tot2=fltarr(ni1)
-;        FOR ni1_i=0,ni1-1 DO $
-;            IF sigma_matrix[inds1[ni1_i],fi] EQ 0 THEN err_tot2[ni1_i]=err_max ELSE $
-;                err_tot2[ni1_i]=Sqrt(err1^2.+sigma_matrix[inds[ni_i],inds1[ni1_i]]^2.+sigma_matrix[inds1[ni1_i],fi]^2.)
-;        
-;        err_tot[ni_i]=Min(err_tot2,ni2_i)
-;        *ref_list[ni_i]=[inds[ni_i],inds1[ni2_i],fi]
-;        
-;    ENDFOR 
-;    error[file_use_i[fi]]=Min(err_tot,min_i)
-;    *reference_list[fi]=*ref_list[min_i]
-;    rl=*ref_list[min_i]
-;    
-;    cal_single=1.
-;    SWITCH N_Elements(rl) OF
-;        3:cal_single*=cal_matrix[rl[1],rl[2]]
-;        2:cal_single*=cal_matrix[rl[0],rl[1]]
-;        1:cal_single*=cal_matrix[0,rl[0]]
-;    ENDSWITCH
-;    
-;    calibration[file_use_i[fi]]=cal_single
-;    
-;    Ptr_free,ref_list
-;ENDFOR
-;
-;FOR gi=0L,ng-1 DO BEGIN
-;    ns1=source_list[gi].n_detect
-;    FOR si=0L,ns1-1 DO BEGIN
-;        cal_use=calibration[(*source_list[gi].sources)[si].fi]
-;        IF cal_use EQ 0 THEN cal_use=-1. 
-;        (*source_list[gi].sources)[si].flux/=cal_use
-;    ENDFOR
-;ENDFOR 
-;save,filename=save_path,source_list,source_matrix,sigma_matrix,cal_matrix,calibration,file_list,degpix
-;save,source_list,filename=save_path
-;print,Strn(ns_use)+" sources detected in at least "+Strn(min_detect)+" observations."
-;
-;END
