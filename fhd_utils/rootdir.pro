@@ -6,10 +6,13 @@ len=Strlen(project_name)
 os_type=!version.os_family
 CASE os_type OF
    'Windows':BEGIN
-      pos=Strpos(StrLOWcase(!Path),project_name)
+      pos=Strpos(StrLOWcase(!Path),project_name+';')
       IF pos EQ -1 THEN BEGIN
-        print,String(format='(A,": folder not found in IDL !Path, using empty string")',project_name)
-        RETURN,RootDirectory
+        pos=Strpos(StrLOWcase(!Path),project_name)
+        IF pos EQ -1 THEN BEGIN
+            print,String(format='(A,": folder not found in IDL !Path, using empty string")',project_name)
+            RETURN,RootDirectory
+        ENDIF
       ENDIF
       final_pos=pos+len
       ;'+1' handles the case of the directory being the first entry, and of stripping off the ';' in all other cases
@@ -19,8 +22,11 @@ CASE os_type OF
      'unix': BEGIN
       pos=Strpos(StrLOWcase(!Path),project_name+':')
       IF pos EQ -1 THEN BEGIN
-        print,String(format='(A,": folder not found in IDL !Path, using empty string")',project_name)
-        RETURN,RootDirectory
+        pos=Strpos(StrLOWcase(!Path),project_name)
+        IF pos EQ -1 THEN BEGIN
+            print,String(format='(A,": folder not found in IDL !Path, using empty string")',project_name)
+            RETURN,RootDirectory
+        ENDIF
       ENDIF
       ;'+1' handles the case of the directory being the first entry, and of stripping off the ':' in all other cases
       init_pos=Strpos(!Path,':',pos,/REVERSE_SEARCH)+1 
