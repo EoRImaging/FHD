@@ -1,5 +1,5 @@
 FUNCTION Components2Sources,comp_arr,obs,fhd,radius=radius,noise_map=noise_map,extend_allow=extend_allow,$
-    gain_recapture=gain_recapture,reject_sigma_threshold=reject_sigma_threshold
+    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold
 compile_opt idl2,strictarrsubs  
 
 IF N_Elements(radius) EQ 0 THEN radius=1.
@@ -61,24 +61,40 @@ IF Keyword_Set(reject_sigma_threshold) THEN BEGIN
     source_arr=source_arr[si_use]
 ENDIF
 
-;IF Keyword_Set(gain_recapture) THEN BEGIN
-;    IF ~Keyword_Set(fhd) THEN BREAK
-;    gain_factor=fhd.gain_factor
-;    ns=N_Elements(source_arr)
-;    comp_gi=comp_arr.id
-;    hcomp_gi=histogram(comp_gi,min=0,/bin)
-;    FOR si = 0L,ns-1L DO BEGIN
-;        gi=source_arr[si].id
-;        IF Ptr_valid(source_arr[si].extend) THEN BEGIN
-;        
-;        ENDIF ELSE BEGIN
-;            ncomp=hcomp_gi[gi]
-;            flux_frac=1.-(1.-gain_factor)^ncomp
-;            FOR pol_i=0,7 DO source_arr[gi].flux.(pol_i)=source_arr[gi].flux.(pol_i)/flux_frac
-;        ENDELSE
-;        
-;    ENDFOR
-;ENDIF
+IF Keyword_Set(clean_bias_threshold) THEN BEGIN
+    IF clean_bias_threshold GE 1 THEN clean_bias_threshold=0.5
+    ns=N_Elements(source_arr)
+    comp_gi=comp_arr.id
+    hcomp_gi=histogram(comp_gi,min=0,/bin)
+    gain_factor=gain_array[source_arr.x,source_arr.y]
+    flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi
+    
+    si_use=where(flux_frac_arr GE Abs(clean_bias_threshold),n_use)
+    IF n_use EQ 0 THEN RETURN,source_arr ; return if no valid values found
+    source_arr=source_arr[si_use]
+    
+    IF clean_bias_threshold LT 0 THEN RETURN,source_arr ; return trimmed source array if threshold is specified as negative, but don't correct any fluxes
+    
+    FOR si = 0L,n_use-1L DO BEGIN
+        gi=source_arr[si].id
+        ncomp=hcomp_gi[gi]
+        
+        IF Ptr_valid(source_arr[si].extend) THEN BEGIN
+            ;still need to handle extended sources properly!
+        ENDIF ELSE BEGIN
+            sx=source_arr[si].x & sy=source_arr[si].y
+            sra=source_arr[si].ra & sdec=source_arr[si].dec
+            salpha=source_arr[si].alpha & sfreq=source_arr[si].freq
+            comp_arr=source_comp_init(comp_arr,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi)
+            ci=N_Elements(comp_arr)-1
+            FOR pol_i=0,7 DO BEGIN
+                comp_arr[ci].flux.(pol_i)=source_arr[gi].flux.(pol_i)*(1.-flux_frac)
+                source_arr[gi].flux.(pol_i)+=comp_arr[ci].flux.(pol_i)
+            ENDFOR
+        ENDELSE
+        
+    ENDFOR
+ENDIF
 
 RETURN,source_arr
 END
