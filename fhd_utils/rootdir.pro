@@ -17,7 +17,7 @@ CASE os_type OF
       RootDirectory=Strmid(!Path,init_pos,final_pos-init_pos)+'\'
    END
      'unix': BEGIN
-      pos=Strpos(StrLOWcase(!Path),project_name)
+      pos=Strpos(StrLOWcase(!Path),project_name+':')
       IF pos EQ -1 THEN BEGIN
         print,String(format='(A,": folder not found in IDL !Path, using empty string")',project_name)
         RETURN,RootDirectory
