@@ -92,6 +92,8 @@ IF Keyword_Set(galaxy_calibrate) THEN BEGIN
     elements=obs.elements
     astr=obs.astr
     degpix=obs.degpix
+    beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
+    beam_area=2.*!Pi*beam_width^2. ;area under a 2D gaussian with sigma_x=sigma_y=beam_width
     xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
     
     model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra)
@@ -104,8 +106,23 @@ IF Keyword_Set(galaxy_calibrate) THEN BEGIN
 ;    model*=weight_invert(pixel_area)
     Ptr_free,model_arr
     
+;    model*=(degpix*!DtoR)^2. ;flux unit conversion
     edge_match,model
-    model_uv=fft_shift(FFT(fft_shift(model),/inverse)*(dimension*degpix*!DtoR)^2.)
+    valid_i=where(Finite(ra_arr),n_valid)
+    Jdate=obs.Jd0
+    Eq2Hor,ra_arr[valid_i],dec_arr[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
+    alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
+    horizon_proj=Sin(alt_arr*!DtoR)
+    antialias_filter=Sqrt(Hanning(dimension,elements))
+    model_use=model/2. ;convert Stokes I to "True sky" instrumental pol
+    model_use*=horizon_proj
+    model_use*=antialias_filter
+    model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion
+;    model_uv=dirty_image_generate(fft_shift(model),degpix=degpix,/no_real,/antialias)*uv_mask
+    model_uv=fft_shift(FFT(fft_shift(model_use),/inverse))
+    model_uv/=dimension ;FFT normalization
+    
+;    model_uv=fft_shift(FFT(model*horizon_proj,/inverse)/(dimension*degpix*!DtoR)^2.)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=model_uv
 ENDIF
 

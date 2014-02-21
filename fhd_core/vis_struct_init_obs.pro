@@ -11,6 +11,8 @@ IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
 IF N_Elements(antenna_size) EQ 0 THEN antenna_size=3. ;meters (MWA groundscreen size)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
+git,'describe',result=code_version,project='fhd'
+IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
 speed_light=299792458.
 time=params.time
@@ -116,7 +118,8 @@ IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
-struct={instrument:String(instrument),antenna_size:Float(antenna_size),obsname:String(obsname),dimension:Float(dimension),elements:Float(elements),$
+struct={code_version:String(code_version),instrument:String(instrument),antenna_size:Float(antenna_size),obsname:String(obsname),$
+    dimension:Float(dimension),elements:Float(elements),$
     kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,obsra:meta.obsra,obsdec:meta.obsdec,$
     zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,zenx:meta.zenx,zeny:meta.zeny,$
     phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$

@@ -170,11 +170,15 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     ENDFOR
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-        gal_model_holo=fhd_galaxy_deconvolve(obs,dirty_uv_arr[*,obs_i],map_fn_arr=map_fn_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
-            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0,image_filter=decon_filter,filter_arr=filter_arr[*,obs_i],/uv_return)
-        FOR pol_i=0,n_pol-1 DO *dirty_uv_arr[pol_i,obs_i]-=*gal_model_holo[pol_i]
-    ;    gal_model_composite=fltarr(dimension,elements)
-    ;    FOR pol_i=0,n_pol-1 DO gal_model_composite+=(*gal_model_holo[pol_i])*(*beam_correction[pol_i])^2.
+;        gal_model_holo=fhd_galaxy_deconvolve(obs,dirty_uv_arr[*,obs_i],map_fn_arr=map_fn_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
+;            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0,image_filter=decon_filter,filter_arr=filter_arr[*,obs_i],/uv_return)
+;        FOR pol_i=0,n_pol-1 DO *dirty_uv_arr[pol_i,obs_i]-=*gal_model_holo[pol_i]
+        gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *model_uv_full[pol_i,obs_i]+=*gal_model_uv[pol_i]
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],map_fn_arr[pol_i,obs_i],_Extra=extra,/indexed)
+        ENDFOR
+        Ptr_free,gal_model_uv
     ENDIF
     *uv_mask_arr[obs_i]=source_uv_mask
     norm_arr[obs_i]=Mean(normalization_arr[0:n_pol-1])

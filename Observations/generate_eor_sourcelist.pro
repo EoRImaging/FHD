@@ -30,7 +30,7 @@ IF N_Elements(vis_baseline_hist) EQ 0 THEN vis_baseline_hist=1
 IF N_Elements(return_decon_visibilities) EQ 0 THEN return_decon_visibilities=1
 IF N_Elements(snapshot_healpix_export) EQ 0 THEN snapshot_healpix_export=1
 IF N_Elements(n_avg) EQ 0 THEN n_avg=2
-IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=3.
+IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=2.
 IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
 if n_elements(output_directory) eq 0 then output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 
@@ -58,8 +58,9 @@ vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 ;'/nfs/mwa-09/r1/EoRuvfits/jd2456528v2_0/1061319960.uvfits']
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
-catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
+;catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+catalog_file_path=calibration_catalog_file_path
 
 ;noise_calibrate=0
 ;align=0
@@ -93,6 +94,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,psf_resolution=psf_resolution,$
     split_ps_export=split_ps_export,flag_visibilities=flag_visibilities,vis_baseline_hist=vis_baseline_hist,snapshot_healpix_export=snapshot_healpix_export,$
     n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,return_decon_visibilities=return_decon_visibilities,$
-    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,_Extra=extra
+    min_cal_baseline=min_cal_baseline,ring_radius=ring_radius,save_visibilities=save_visibilities,$
+    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,_Extra=extra
 !except=except
 END

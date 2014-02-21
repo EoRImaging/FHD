@@ -8,6 +8,11 @@ IF Keyword_Set(model) THEN BEGIN
     res_name='Model'
     path_insert='model_'
 ENDIF ELSE path_insert=''
+
+IF min(Ptr_valid(vis_ptr_arr)) EQ 0 THEN BEGIN
+    print,res_name+" visibilities NULL! Not exported!"
+    RETURN
+ENDIF
 print,"Exporting "+res_name+" visibilities"
 
 IF N_Elements(pol_i) NE 1 THEN pol_i=indgen(obs.n_pol)

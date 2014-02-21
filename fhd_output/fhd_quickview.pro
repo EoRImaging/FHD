@@ -3,8 +3,8 @@ PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
-    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,_Extra=extra
-
+    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,galaxy_model_fit=galaxy_model_fit,_Extra=extra
+t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
@@ -21,8 +21,8 @@ IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 IF N_Elements(no_fits) EQ 0 THEN no_fits=1
 
 grid_spacing=10.
-offset_lat=5.;15. paper 10 memo
-offset_lon=5.;15. paper 10 memo
+offset_lat=grid_spacing/2;15. paper 10 memo
+offset_lon=grid_spacing/2.;15. paper 10 memo
 reverse_image=1   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=reverse_image;1 paper 3 memo
 label_spacing=1.
@@ -35,11 +35,10 @@ vis_count=visibility_count(obs,psf,cal)
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
-astr=obs.astr
-restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-restored_beam_width=restored_beam_width>0.75
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 residual_flag=obs.residual
+IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
+IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     image_uv_arr=Ptrarr(n_pol,/allocate)
@@ -68,7 +67,7 @@ IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN BEGIN
 ENDIF ELSE BEGIN
     model_flag=1
     model_uv_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
+    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav')
     IF model_flag THEN FOR pol_i=0,n_pol-1 DO $
         model_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
 ENDELSE
@@ -83,6 +82,8 @@ ENDIF ELSE filter_name=''
 IF Keyword_Set(pad_uv_image) THEN obs_out=vis_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
+restored_beam_width=(!RaDeg/(obs_out.MAX_BASELINE/obs_out.KPIX)/obs_out.degpix)/(2.*Sqrt(2.*Alog(2.)))
+restored_beam_width=restored_beam_width>0.75
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
@@ -95,7 +96,7 @@ beam_correction_out=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     beam_base=beam_image(psf,obs,pol_i=pol_i)
     *beam_base_out[pol_i]=Rebin(beam_base,dimension,elements) ;should be fine even if pad_uv_image is not set
-    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-2)
+    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-3)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
     beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[0.025,Max(beam_mask_test)])
@@ -103,8 +104,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     beam_avg+=*beam_base_out[pol_i]^2.
     beam_mask*=beam_mask0
 ENDFOR
-beam_mask[0:dimension/4.-1,*]=0 & beam_mask[3.*dimension/4.:dimension-1,*]=0 
-beam_mask[*,0:elements/4.-1]=0 & beam_mask[*,3.*elements/4.:elements-1]=0 
+;beam_mask[0:dimension/4.-1,*]=0 & beam_mask[3.*dimension/4.:dimension-1,*]=0 
+;beam_mask[*,0:elements/4.-1]=0 & beam_mask[*,3.*elements/4.:elements-1]=0 
 beam_avg/=(n_pol<2)
 beam_avg=Sqrt(beam_avg>0)*beam_mask
 beam_i=where(beam_mask)
@@ -135,6 +136,17 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
     ENDIF
 ENDIF ELSE source_flag=0
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
+
+gal_model_img=Ptrarr(n_pol)
+IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+    gal_model_base=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,_Extra=extra)
+    IF Keyword_Set(pad_uv_image) THEN gal_model_base=Rebin(gal_model_base,dimension,elements)
+    FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(gal_model_base*(*beam_base_out[pol_i]))
+    
+    gal_name='_galfit'
+ENDIF ELSE BEGIN
+    gal_name=''
+ENDELSE
 
 instr_dirty_arr=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
@@ -180,7 +192,7 @@ IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,sto
 
 ; plot calibration solutions, export to png
 IF N_Elements(cal) GT 0 THEN BEGIN
-   IF cal.n_cal_src GT 0 THEN BEGIN
+   IF cal.n_cal_src ne 0 THEN BEGIN
       IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
          vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
          plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist
@@ -215,7 +227,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]
         instr_restored=instr_residual+(Keyword_Set(ring_radius) ? *instr_rings[pol_i]:instr_source)
-        stokes_source=(*stokes_sources[pol_i])*beam_mask
+        stokes_source=(*stokes_sources[pol_i])
         stokes_restored=stokes_residual+(Keyword_Set(ring_radius) ? *stokes_rings[0]:stokes_source) ;use stokes I sources only if using rings
     ENDIF
     beam_use=*beam_base_out[pol_i]
@@ -263,6 +275,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
             title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+        IF Keyword_Set(galaxy_model_fit) THEN BEGIN
+            gal_img=*gal_model_img[pol_i]
+            gal_low_use=Min(gal_img[beam_i])
+            gal_high_use=Max(gal_img[beam_i])
+            Imagefast,gal_img[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_GalModel_'+pol_names[pol_i],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=gal_low_use,high=gal_high_use,$
+                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
+                title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+        ENDIF
     ENDIF
     IF ~Keyword_Set(no_fits) THEN BEGIN
         FitsFast,stokes_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i+4]
@@ -270,6 +292,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
         IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
+        IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i]
     ENDIF
     
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
@@ -310,4 +333,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=1,/sphere,_Extra=extra
     ENDIF
 ENDFOR
+timing=Systime(1)-t0
+IF ~Keyword_Set(silent) THEN print,'Image output timing (quickview): ',timing
 END

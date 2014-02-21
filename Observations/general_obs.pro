@@ -6,11 +6,14 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag_visibilities=flag_visibilities,$
     transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
     calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
-    snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,_Extra=extra
+    snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,_Extra=extra
 
 except=!except
 !except=0 
 heap_gc
+
+IF N_Elements(error_method) EQ 0 THEN error_method=0
+ON_ERROR,error_method
 
 ;Set which procedures are to be run
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0

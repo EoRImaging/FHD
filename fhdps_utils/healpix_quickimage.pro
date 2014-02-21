@@ -1,7 +1,12 @@
-pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, noerase = noerase, savefile = savefile, png = png, eps = eps, $
+;; set log = 1 to get a log color scale
+;; for a log color scale that is symmetric around zero, set log=1 and color_profile='sym_log'
+
+pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, map_out = map_out, noplot = noplot, $
+    lat_range = lat_range, lon_range = lon_range, noerase = noerase, savefile = savefile, png = png, eps = eps, $
     map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
-    data_range = data_range, max=max,min=min, silent=silent, title=title, charsize = charsize, degpix=degpix, logplot=logplot, hist_equal=hist_equal,$
-    lon_center=lon_center, lat_center=lat_center, projection=projection, coord_in=coord_in, coord_out = coord_out
+    data_range = data_range, max=max,min=min, silent=silent, title=title, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
+    lon_center=lon_center, lat_center=lat_center, projection=projection, coord_in=coord_in, coord_out = coord_out, $
+    color_profile = color_profile, log = log
     
     
   IF N_Elements(silent) EQ 0 THEN silent=1
@@ -56,7 +61,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   hpx_res = sqrt(3./!pi)*(60./nside)
   
   IF Keyword_Set(degpix) THEN resolution=degpix ELSE resolution=.1 ;output resolution in degrees
-
+  
   if keyword_set(map) then begin
     half_sky = 1
     pxsize=360./resolution
@@ -107,9 +112,9 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   Call_procedure,proj_routine, $
     data_plot, 0, pix_type, nside, do_conv, do_rot, coord_in_use, coord_out_use, eul_mat, $
     planmap, Tmax, Tmin, color_bar, $
-    PXSIZE=pxsize, LOG=log, HIST_EQUAL=hist_equal, MAX=max, MIN=min, $
+    PXSIZE=pxsize, HIST_EQUAL=hist_equal, MAX=max, MIN=min, $
     UNITS='Jy', DATA_plot = data_plot, GAL_CUT=gal_cut, $
-    POLARIZATION=polarization, HALF_SKY=half_sky, SILENT=silent, PIXEL_LIST=pixels, ASINH=logplot, $
+    POLARIZATION=polarization, HALF_SKY=half_sky, SILENT=silent, PIXEL_LIST=pixels, $
     TRUECOLORS=truecolors, DATA_TC=data_tc, MAP_OUT=map_out, ROT=rot, FITS=fits, STAGGER=stagger
     
   if not keyword_set(map) then begin
@@ -120,7 +125,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     yrange_map = minmax(where(total(mask,1) gt 0))
     
     bad_val = min(map_out)
-    new_map = map_out[xrange_map[0]:xrange_map[1], yrange_map[0]:yrange_map[1]]
+    map_out = map_out[xrange_map[0]:xrange_map[1], yrange_map[0]:yrange_map[1]]
     
     lat_vals = (theta_vals*180./!pi)*(-1)+90.
     lat_range = minmax(lat_vals)
@@ -151,28 +156,31 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
       endelse
     endif
     
-    quick_image, new_map, missing_val = bad_val, data_range = data_range, xtitle = 'longitude (degrees)', ytitle = 'latitude (degrees)', $
-      title = title, charsize = charsize, noerase = noerase, xrange = lon_range, yrange = lat_range, savefile = savefile, png = png, eps = eps
-      
+    if not keyword_set(noplot) then begin
+      quick_image, map_out, missing_val = bad_val, data_range = data_range, xtitle = 'longitude (degrees)', ytitle = 'latitude (degrees)', $
+        title = title, charsize = charsize, noerase = noerase, xrange = lon_range, yrange = lat_range, savefile = savefile, png = png, eps = eps, $
+        log = log, color_profile = color_profile
+    endif
   endif else begin
   
     ;  Call_procedure,proj_routine,file_path+'.fits',_Extra=extra,max=max,min=min,png=png_filename,ps=ps_filename,$
     ;    retain=1,silent=silent,transparent=1,title=title,asinh=logplot,hist_equal=hist_equal,preview=0,$
     ;    rot=rot,graticule=20.,charsize=charsize,pxsize=pxsize,glsize=1.,window=-1,units='Jy',colt=color_table;,Coord=['C'];,hxsize=hsize_cm
   
-    IF Keyword_Set(png) THEN png_filename=file_path+'.png' ELSE png_filename=0
-    IF Keyword_Set(eps) THEN ps_filename=file_path+'.ps' ELSE ps_filename=0
-    
-    proj2out, $
-      planmap, Tmax, Tmin, color_bar, 0., title, $
-      'Jy', coord_out, do_rot, eul_mat, $
-      CHARSIZE=charsize, COLT=colt, CROP=crop, GIF = gif, GRATICULE = 20., $
-      HXSIZE=hxsize, NOBAR = nobar, NOLABELS = nolabels, PNG = png_filename, PREVIEW = 0, PS=ps_filename, PXSIZE=pxsize, $
-      SUBTITLE = subtitle, TITLEPLOT = titleplot, XPOS = xpos, YPOS = ypos, $
-      POLARIZATION=polarization, OUTLINE=outline, PROJECTION=projection, FLIP=flip, HALF_SKY=half_sky, COORD_IN=coord_in, $
-      IGRATICULE=igraticule, HBOUND = hbound, WINDOW = window, SILENT=silent, GLSIZE=.5, IGLSIZE=iglsize, $
-      SHADEMAP=shademap, EXECUTE=execute, RETAIN=retain, TRUECOLORS=truecolors, TRANSPARENT=transparent, $
-      CHARTHICK=charthick, STAGGER=stagger, JPEG=jpeg
+    if not keyword_set(noplot) then begin
+      IF Keyword_Set(png) THEN png_filename=file_path+'.png' ELSE png_filename=0
+      IF Keyword_Set(eps) THEN ps_filename=file_path+'.ps' ELSE ps_filename=0
       
+      proj2out, $
+        planmap, Tmax, Tmin, color_bar, 0., title, $
+        'Jy', coord_out, do_rot, eul_mat, $
+        CHARSIZE=charsize, COLT=colt, CROP=crop, GIF = gif, GRATICULE = 20., $
+        HXSIZE=hxsize, NOBAR = nobar, NOLABELS = nolabels, PNG = png_filename, PREVIEW = 0, PS=ps_filename, PXSIZE=pxsize, $
+        SUBTITLE = subtitle, TITLEPLOT = titleplot, XPOS = xpos, YPOS = ypos, $
+        POLARIZATION=polarization, OUTLINE=outline, PROJECTION=projection, FLIP=flip, HALF_SKY=half_sky, COORD_IN=coord_in, $
+        IGRATICULE=igraticule, HBOUND = hbound, WINDOW = window, SILENT=silent, GLSIZE=.5, IGLSIZE=iglsize, $
+        SHADEMAP=shademap, EXECUTE=execute, RETAIN=retain, TRUECOLORS=truecolors, TRANSPARENT=transparent, $
+        CHARTHICK=charthick, STAGGER=stagger, JPEG=jpeg
+    endif
   endelse
 end
