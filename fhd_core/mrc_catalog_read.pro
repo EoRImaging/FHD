@@ -4,7 +4,8 @@ FUNCTION mrc_catalog_read,astr,names=names,file_path=file_path,frequency=frequen
 ;data_dir='DATA'
 ;file_path=filepath('MRC full radio catalog.fits',root=rootdir('mwa'),subdir='DATA')
 ;catalog=mrdfits(file_path,1,header,/silent,columns=[1,2,3,4])
-IF size(file_path,/type) EQ 7 THEN BEGIN
+sav_test=0>Strpos(StrLowCase(file_path),'.sav')<1
+IF sav_test THEN BEGIN
   mrc_cat=getvar_savefile(file_path,'catalog') 
   ra=mrc_cat.ra
   dec=mrc_cat.dec

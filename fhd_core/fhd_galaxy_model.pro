@@ -49,11 +49,14 @@ Jdate=obs.Jd0
 
 beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
 beam_area=2.*!Pi*beam_width^2. ;area under a 2D gaussian with sigma_x=sigma_y=beam_width
+print,'beam area used in galaxy model: ',beam_area
 Eq2Hor,ra_arr[valid_i],dec_arr[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
 alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
 horizon_proj=Sin(alt_arr*!DtoR)
 antialias_filter=Sqrt(Hanning(dimension,elements))
-model_use=model/2. ;convert Stokes I to "True sky" instrumental pol
+model_use=model
+model_use/=2. ;convert Stokes I to "True sky" instrumental pol
+model_use/=2. ;fudge_factor!!!
 model_use*=horizon_proj
 IF Keyword_Set(antialias) THEN model_use*=antialias_filter
 model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion

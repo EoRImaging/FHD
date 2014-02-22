@@ -1,5 +1,5 @@
 FUNCTION Components2Sources,comp_arr,obs,fhd,radius=radius,noise_map=noise_map,extend_allow=extend_allow,$
-    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold
+    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array
 compile_opt idl2,strictarrsubs  
 
 IF N_Elements(radius) EQ 0 THEN radius=1.
@@ -67,11 +67,12 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     comp_gi=comp_arr.id
     hcomp_gi=histogram(comp_gi,min=0,/bin)
     gain_factor=gain_array[source_arr.x,source_arr.y]
-    flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi
+    flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi[source_arr.id]
     
     si_use=where(flux_frac_arr GE Abs(clean_bias_threshold),n_use)
     IF n_use EQ 0 THEN RETURN,source_arr ; return if no valid values found
     source_arr=source_arr[si_use]
+    flux_frac_arr=flux_frac_arr[si_use]
     
     IF clean_bias_threshold LT 0 THEN RETURN,source_arr ; return trimmed source array if threshold is specified as negative, but don't correct any fluxes
     
@@ -88,8 +89,8 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             comp_arr=source_comp_init(comp_arr,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi)
             ci=N_Elements(comp_arr)-1
             FOR pol_i=0,7 DO BEGIN
-                comp_arr[ci].flux.(pol_i)=source_arr[gi].flux.(pol_i)*(1.-flux_frac)
-                source_arr[gi].flux.(pol_i)+=comp_arr[ci].flux.(pol_i)
+                comp_arr[ci].flux.(pol_i)=source_arr[si].flux.(pol_i)*(1.-flux_frac_arr[si])
+                source_arr[si].flux.(pol_i)+=comp_arr[ci].flux.(pol_i)
             ENDFOR
         ENDELSE
         

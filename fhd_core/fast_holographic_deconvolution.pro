@@ -397,20 +397,17 @@ noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,$
-    reject_sigma_threshold=sigma_threshold,gain_array=gain_array)
+    reject_sigma_threshold=sigma_threshold,gain_array=gain_array/gain_normalization,clean_bias_threshold=0.667)
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,/conserve_memory)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 t4_0=Systime(1)
 t3+=t4_0-t3_0
-FOR pol_i=0,n_pol-1 DO BEGIN
-    *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
-ENDFOR
+FOR pol_i=0,n_pol-1 DO *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+
 t1_0=Systime(1)
 t4+=t1_0-t4_0    
-FOR pol_i=0,n_pol-1 DO BEGIN
-    *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,/antialias)*(*beam_correction[pol_i])
-ENDFOR  
+FOR pol_i=0,n_pol-1 DO *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias)*(*beam_correction[pol_i])
 t1+=Systime(1)-t1_0
 
 t00=Systime(1)-t00
