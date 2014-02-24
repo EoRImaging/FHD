@@ -80,7 +80,7 @@ IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
             file_path_fhd=file_path_fhd,timing=t_model,silent=silent,_Extra=extra)
        IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
     ENDIF ELSE vis_model_arr=Ptrarr(n_pol)
-ENDIF
+ENDIF ELSE IF ~Keyword_Set(residual_flag) THEN model_flag=1
 
 IF Keyword_Set(obs_out) THEN BEGIN
     n_freq=obs_out.n_freq
@@ -107,7 +107,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=extract_subarray(init_arr,x_range,y_range)
     FOR fi=0L,nf-1 DO BEGIN
         fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
-        IF Ptr_valid(model_ptr) THEN model_return=1
+        IF Keyword_Set(model_flag) THEN model_return=1
         variance_holo=1 ;initialize
         weights_holo=1 ;initialize
         IF nf_use EQ 0 THEN n_vis=0 ELSE $
@@ -127,7 +127,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             *dirty_arr[pol_i,fi]=init_arr
             *weights_arr[pol_i,fi]=init_arr
             *variance_arr[pol_i,fi]=init_arr
-            IF N_Elements(model_return) GT 1 THEN *model_arr[pol_i,fi]=init_arr
+            IF Keyword_Set(model_flag) THEN *model_arr[pol_i,fi]=init_arr
             CONTINUE
         ENDIF
         n_vis_use+=n_vis
@@ -137,12 +137,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 *dirty_arr[pol_i,fi]=extract_subarray(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis,x_range,y_range)
                 *weights_arr[pol_i,fi]=extract_subarray(dirty_image_generate(weights_holo*rephase_use,degpix=degpix)*n_vis,x_range,y_range)
                 *variance_arr[pol_i,fi]=extract_subarray(dirty_image_generate(variance_holo*rephase_use,degpix=degpix)*n_vis,x_range,y_range)
-                IF N_Elements(model_return) GT 1 THEN *model_arr[pol_i,fi]=extract_subarray(dirty_image_generate(model_return,degpix=degpix)*n_vis,x_range,y_range)
+                IF N_Elements(model_return) GT 1 THEN $
+                    *model_arr[pol_i,fi]=extract_subarray(dirty_image_generate(model_return,degpix=degpix)*n_vis,x_range,y_range) $
+                    ELSE IF Keyword_Set(model_flag) THEN *model_arr[pol_i,fi]=init_arr
             ENDIF ELSE BEGIN 
                 *dirty_arr[pol_i,fi]=dirty_image_generate(dirty_uv,degpix=degpix)*n_vis
                 *weights_arr[pol_i,fi]=dirty_image_generate(weights_holo*rephase_use,degpix=degpix)*n_vis
                 *variance_arr[pol_i,fi]=dirty_image_generate(variance_holo*rephase_use,degpix=degpix)*n_vis
-                IF N_Elements(model_return) GT 1 THEN *model_arr[pol_i,fi]=dirty_image_generate(model_return,degpix=degpix)*n_vis
+                IF N_Elements(model_return) GT 1 THEN $
+                    *model_arr[pol_i,fi]=dirty_image_generate(model_return,degpix=degpix)*n_vis $
+                    ELSE IF Keyword_Set(model_flag) THEN *model_arr[pol_i,fi]=init_arr
             ENDELSE
         ENDIF ELSE BEGIN
             *dirty_arr[pol_i,fi]=dirty_uv*n_vis
