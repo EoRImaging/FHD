@@ -131,10 +131,10 @@ cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[po
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
     cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
-        cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit)
+        cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
         cal=vis_cal_combine(cal_bandpass,cal_polyfit)
     ENDIF ELSE cal=cal_bandpass
-ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
+ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 cal_res=vis_cal_subtract(cal_base,cal,/abs)
 
