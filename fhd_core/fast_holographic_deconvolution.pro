@@ -345,7 +345,7 @@ FOR i=i0,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2
+    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0

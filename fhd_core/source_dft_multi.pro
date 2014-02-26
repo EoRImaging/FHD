@@ -1,4 +1,5 @@
-PRO source_dft_multi,obs,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use
+PRO source_dft_multi,obs,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,conserve_memory=conserve_memory
+IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
 dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
@@ -22,13 +23,13 @@ IF Max(Ptr_valid(model_uv_full)) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]=Complexarr(dimension,elements)
 ENDIF
 
-*model_uv_stks[0]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I,/conserve_memory)
+*model_uv_stks[0]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_I,conserve_memory=conserve_memory)
 IF Total(flux_Q) EQ 0 THEN *model_uv_stks[1]=0. $
-    ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q,/conserve_memory) 
+    ELSE *model_uv_stks[1]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_Q,conserve_memory=conserve_memory) 
 IF Total(flux_U) EQ 0 THEN *model_uv_stks[2]=0. $
-    ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U,/conserve_memory)
+    ELSE *model_uv_stks[2]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_U,conserve_memory=conserve_memory)
 IF Total(flux_V) EQ 0 THEN *model_uv_stks[3]=0. $
-    ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V,/conserve_memory)
+    ELSE *model_uv_stks[3]=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_V,conserve_memory=conserve_memory)
 SWITCH n_pol OF
     4:(*model_uv_full[3])[uv_i_use]+=(*model_uv_stks[2]-*model_uv_stks[3])/2.
     3:(*model_uv_full[2])[uv_i_use]+=(*model_uv_stks[2]+*model_uv_stks[3])/2.
