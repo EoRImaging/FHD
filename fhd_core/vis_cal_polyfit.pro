@@ -47,14 +47,18 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain_phase=Atan(gain_arr,/phase)
     FOR tile_i=0L,n_tile-1 DO BEGIN
         gain=reform(gain_amp[freq_use,tile_i])
-        fit_params=poly_fit(freq_use,gain,degree,yfit=gain_fit)
+        fit_params=poly_fit(freq_use,gain,degree)
+        gain_fit=fltarr(n_freq)
+        FOR di=0L,degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
         
         IF Keyword_Set(cal_step_fit) THEN FOR si=0L,n_step-1 DO gain_fit[freq_use[step_i[si]]:*,*]+=jump_test[step_i[si]]
         IF phase_degree GT 0 THEN BEGIN
             phase_use=PhUnwrap(reform(gain_phase[freq_use,tile_i]))
             phase_params=poly_fit(freq_use,phase_use,phase_degree,yfit=phase_fit)
-            gain_arr[freq_use,tile_i]=gain_fit*Exp(i_comp*phase_fit)
-        ENDIF ELSE gain_arr[freq_use,tile_i]*=gain_fit*weight_invert(gain) ;this preserves the original phase
+            phase_fit=fltarr(n_freq)
+            FOR di=0L,phase_degree DO phase_fit+=phase_params[di]*findgen(n_freq)^di
+            gain_arr[*,tile_i]=gain_fit*Exp(i_comp*phase_fit)
+        ENDIF ELSE gain_arr[*,tile_i]*=gain_fit*weight_invert(gain_amp[*,tile_i]) ;this preserves the original phase
     ENDFOR
     *cal_return.gain[pol_i]=gain_arr
 ENDFOR
