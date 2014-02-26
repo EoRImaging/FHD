@@ -50,6 +50,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     erase = 1
   endif else good_locs = indgen(n_elements(image))
   
+  tvlct, r, g, b, /get
+  if keyword_set(grey_scale) then cgloadct, 0, /reverse else cgloadct, 25, /brewer, /reverse
+  
   if keyword_set(log) then begin
   
     log_color_calc, image, plot_image, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
@@ -68,9 +71,6 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   
   if n_elements(xvals) gt 1 then xrange = minmax(xvals)
   if n_elements(yvals) gt 1 then yrange = minmax(yvals)
-  
-  tvlct, r, g, b, /get
-  if keyword_set(grey_scale) then cgloadct, 0, /reverse else cgloadct, 25, /brewer, /reverse
   
   if n_elements(xlog) ne 0 then axkeywords = create_struct('xlog', 1, 'xtickformat', 'exponent')
   if n_elements(ylog) ne 0 then $
