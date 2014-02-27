@@ -77,9 +77,23 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
                 spectrum+=spec0
             ENDFOR
         ENDFOR
-    ENDIF ELSE mode_use=cal_mode_fit
+        spec_mask=fltarr(n_freq)
+        spec_mask[freq_use]=1
+        spec_psf=Abs(FFT(spec_mask))
+        mode_test=spectrum*weight_invert(spec_psf)
+        mode_max=Max(mode_test,mode_i)
+    ENDIF ELSE mode_i=cal_mode_fit
     
+    FOR pol_i=0,n_pol-1 DO BEGIN
+            FOR ti=0L,nt_use-1 DO BEGIN
+                tile_i=tile_use[ti]
+                spec0=FFT(*gain_residual[pol_i,tile_i])
+                phase_use=Atan(spec0[mode_i],/phase)
+                amp_use=Abs(spec0[mode_i])
+                
+            ENDFOR
+        ENDFOR
 ENDIF
-
+undefine_fhd,gain_residual
 RETURN,cal_return
 END
