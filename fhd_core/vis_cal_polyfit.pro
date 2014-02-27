@@ -104,7 +104,7 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
             debug=1
         ENDFOR
     ENDFOR
-    cal_mode_fit=mode_i
+    IF tag_exist(cal_return,'mode_fit') THEN cal_return.mode_fit=mode_i
 ENDIF
 undefine_fhd,gain_residual
 RETURN,cal_return

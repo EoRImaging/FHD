@@ -4,8 +4,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr
     debug=debug,gain_arr_ptr=gain_arr_ptr,$
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
-    calibration_polyfit=calibration_polyfit,flag_calibration=flag_calibration,bandpass_calibrate=bandpass_calibrate,$
-    vis_model_ptr=vis_model_ptr,_Extra=extra
+    flag_calibration=flag_calibration,vis_model_ptr=vis_model_ptr,_Extra=extra
 t0_0=Systime(1)
 error=0
 heap_gc
@@ -50,6 +49,8 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
     nc_pol=cal.n_pol
     cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
+    IF tag_exist(cal,'bandpass') THEN bandpass_calibrate=cal.bandpass
+    IF tag_exist(cal,'polyfit') THEN calibration_polyfit=cal.polyfit
     
     IF Keyword_Set(bandpass_calibrate) THEN BEGIN
         cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
@@ -103,6 +104,9 @@ nc_pol=cal.n_pol
 n_freq=cal.n_freq
 n_tile=cal.n_tile
 n_time=cal.n_time
+
+IF tag_exist(cal,'bandpass') THEN bandpass_calibrate=cal.bandpass
+IF tag_exist(cal,'polyfit') THEN calibration_polyfit=cal.polyfit
 
 tile_A_i=cal.tile_A-1
 tile_B_i=cal.tile_B-1
