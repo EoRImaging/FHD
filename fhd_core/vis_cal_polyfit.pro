@@ -69,30 +69,42 @@ ENDFOR
 
 IF Keyword_Set(cal_mode_fit) THEN BEGIN
     IF cal_mode_fit EQ 1 THEN BEGIN
-        spectrum=fltarr(n_freq)
+        spec_mask=fltarr(n_freq)
+        spec_mask[freq_use]=1
+        freq_cut=where(spec_mask EQ 0,n_mask)
+        spec_psf=(Abs(FFT(spec_mask)))
+        spec_inds=lindgen(n_freq/2)
+        spec_psf=spec_psf[spec_inds]
+        spectrum=fltarr(n_freq/2)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR ti=0L,nt_use-1 DO BEGIN
                 tile_i=tile_use[ti]
                 spec0=Abs(FFT(*gain_residual[pol_i,tile_i]))
-                spectrum+=spec0
+                spectrum+=spec0[spec_inds]
             ENDFOR
         ENDFOR
-        spec_mask=fltarr(n_freq)
-        spec_mask[freq_use]=1
-        spec_psf=Abs(FFT(spec_mask))
-        mode_test=spectrum*weight_invert(spec_psf)
+        mode_test=spectrum
+        psf_mask=fltarr(n_freq/2)
+        IF n_mask GT 0 THEN BEGIN
+            psf_mask[where(spec_psf GT Max(spec_psf)/1E3)]=1
+            psf_mask=smooth(psf_mask,5,/edge_truncate)
+            mask_i=where(psf_mask,n_mask2)
+            IF n_mask2 GT 0 THEN mode_test[mask_i]=0
+        ENDIF
         mode_max=Max(mode_test,mode_i)
     ENDIF ELSE mode_i=cal_mode_fit
     
     FOR pol_i=0,n_pol-1 DO BEGIN
-            FOR ti=0L,nt_use-1 DO BEGIN
-                tile_i=tile_use[ti]
-                spec0=FFT(*gain_residual[pol_i,tile_i])
-                phase_use=Atan(spec0[mode_i],/phase)
-                amp_use=Abs(spec0[mode_i])
-                
-            ENDFOR
+        FOR ti=0L,nt_use-1 DO BEGIN
+            tile_i=tile_use[ti]
+            spec0=FFT(*gain_residual[pol_i,tile_i])
+            phase_use=Atan(spec0[mode_i],/phase)
+            amp_use=Abs(spec0[mode_i])
+            sin_fit=amp_use*Sin(Float(mode_i)*findgen(n_freq)/n_freq-phase_use)
+            debug=1
         ENDFOR
+    ENDFOR
+    cal_mode_fit=mode_i
 ENDIF
 undefine_fhd,gain_residual
 RETURN,cal_return
