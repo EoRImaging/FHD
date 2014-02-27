@@ -1,5 +1,5 @@
 FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
-    cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,_Extra=extra
+    cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,cal_mode_fit=cal_mode_fit,_Extra=extra
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
 IF N_Elements(phase_degree) EQ 0 THEN phase_degree=degree-1.
@@ -9,6 +9,7 @@ n_freq=cal.n_freq
 n_tile=cal.n_tile
 freq_arr=cal.freq
 IF N_Elements(obs) GT 0 THEN freq_use=where((*obs.baseline_info).freq_use,nf_use) ELSE freq_use=lindgen(n_freq)
+IF N_Elements(obs) GT 0 THEN tile_use=where((*obs.baseline_info).tile_use,nt_use) ELSE tile_use=lindgen(n_tile)
 IF Keyword_Set(cal_neighbor_freq_flag) THEN BEGIN
     freq_use=(*obs.baseline_info).freq_use
     freq_flag=where(freq_use EQ 0,nf_flag)
@@ -41,6 +42,7 @@ IF Keyword_Set(cal_step_fit) THEN BEGIN
     ENDFOR
 ENDIF
 
+gain_residual=ptrarr(n_pol,n_tile)
 FOR pol_i=0,n_pol-1 DO BEGIN
     gain_arr=*cal_return.gain[pol_i]
     gain_amp=Abs(gain_arr)
@@ -50,6 +52,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         fit_params=poly_fit(freq_use,gain,degree)
         gain_fit=fltarr(n_freq)
         FOR di=0L,degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
+        
+        gain_residual[pol_i,tile_i]=Ptr_new(Reform(gain_amp[*,tile_i])-gain_fit)
         
         IF Keyword_Set(cal_step_fit) THEN FOR si=0L,n_step-1 DO gain_fit[freq_use[step_i[si]]:*,*]+=jump_test[step_i[si]]
         IF phase_degree GT 0 THEN BEGIN
@@ -62,6 +66,20 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
     *cal_return.gain[pol_i]=gain_arr
 ENDFOR
+
+IF Keyword_Set(cal_mode_fit) THEN BEGIN
+    IF cal_mode_fit EQ 1 THEN BEGIN
+        spectrum=fltarr(n_freq)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            FOR ti=0L,nt_use-1 DO BEGIN
+                tile_i=tile_use[ti]
+                spec0=Abs(FFT(*gain_residual[pol_i,tile_i]))
+                spectrum+=spec0
+            ENDFOR
+        ENDFOR
+    ENDIF ELSE mode_use=cal_mode_fit
+    
+ENDIF
 
 RETURN,cal_return
 END
