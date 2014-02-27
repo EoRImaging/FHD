@@ -3,6 +3,7 @@ FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
 IF N_Elements(phase_degree) EQ 0 THEN phase_degree=degree-1.
+IF tag_exist(cal,'mode_fit') THEN cal_mode_fit=mode_fit
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq
@@ -95,12 +96,18 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
     ENDIF ELSE mode_i=cal_mode_fit
     
     FOR pol_i=0,n_pol-1 DO BEGIN
+        gain_arr=*cal_return.gain[pol_i]
+        gain_amp=Abs(gain_arr)
+        gain_phase=Atan(gain_arr,/phase)
         FOR ti=0L,nt_use-1 DO BEGIN
             tile_i=tile_use[ti]
             spec0=FFT(*gain_residual[pol_i,tile_i])
             phase_use=Atan(spec0[mode_i],/phase)
-            amp_use=Abs(spec0[mode_i])
-            sin_fit=amp_use*Sin(Float(mode_i)*findgen(n_freq)/n_freq-phase_use)
+            amp_use=2.*Abs(spec0[mode_i]) ;why factor of 2? Check FFT normalization
+            sin_fit=amp_use*Sin(2.*!Pi*Float(mode_i)*findgen(n_freq)/n_freq-phase_use)
+            gain_fit=Reform(gain_amp[*,tile_i])+sin_fit
+            phase_fit=Reform(gain_phase[*,tile_i])
+            gain_arr[*,tile_i]=gain_fit*Exp(i_comp*phase_fit)
             debug=1
         ENDFOR
     ENDFOR

@@ -41,13 +41,14 @@ nfreq_avg=16.
 ps_kbinsize=2.
 ps_kspan=600.
 split_ps=1
-bandpass_calibrate=0
+bandpass_calibrate=1
 calibration_polyfit=2.
 no_restrict_cal_sources=1
 no_rephase=1
 calibrate_visibilities=1
 cal_step_fit=1
 cal_neighbor_freq_flag=1
+cal_mode_fit=1
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     image_filter_fn=image_filter_fn,data_directory=data_directory,$
@@ -59,6 +60,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     combine_obs=combine_obs,calibrate_visibilities=calibrate_visibilities,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,split_ps=split_ps,$
     bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,$
-    cal_neighbor_freq_flag=cal_neighbor_freq_flag,cal_step_fit=cal_step_fit,_Extra=extra
+    cal_neighbor_freq_flag=cal_neighbor_freq_flag,cal_step_fit=cal_step_fit,cal_mode_fit=cal_mode_fit,_Extra=extra
 !except=except
 END
