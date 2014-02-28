@@ -56,7 +56,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
         cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
         IF Keyword_Set(calibration_polyfit) THEN BEGIN
             cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit)
-            cal=vis_cal_combine(cal_bandpass,cal_polyfit)
+            cal=vis_cal_combine(cal_polyfit,cal_bandpass)
         ENDIF ELSE cal=cal_bandpass
     ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
     vis_cal=vis_calibration_apply(vis_ptr,cal)
