@@ -354,11 +354,11 @@ FOR i=i0,max_iter-1 DO BEGIN
     ENDFOR
     t4+=Systime(1)-t4_0    
     
-    IF si GE max_sources THEN BEGIN
+    IF si+1 GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
         print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            i,t10,si,Stddev(image_use[where(beam_mask)],/nan)))
+            i,t10,si+1,Stddev(image_use[where(beam_mask)],/nan)))
         converge_check[i2]=Stddev(image_use[where(beam_mask)],/nan)
         BREAK
     ENDIF
