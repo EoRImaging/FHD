@@ -3,7 +3,7 @@ FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
 IF N_Elements(phase_degree) EQ 0 THEN phase_degree=degree-1.
-IF tag_exist(cal,'mode_fit') THEN cal_mode_fit=mode_fit
+IF tag_exist(cal,'mode_fit') THEN cal_mode_fit=cal.mode_fit
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq
