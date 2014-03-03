@@ -137,9 +137,6 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     IF N_Elements(nside) EQ 0 THEN nside=nside_chk
     IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_sourcefind_mask,hpx_radius=hpx_radius,restore_last=0)
     
-    
-    *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
-    
     FOR pol_i=0,n_pol-1 DO BEGIN
 ;        restore,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid
         *dirty_uv_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv')*obs.cal[pol_i];dirty_uv*obs.cal[pol_i]
@@ -148,32 +145,27 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         *beam_model_hpx_arr[pol_i,obs_i]=healpix_cnv_apply(*beam_model[pol_i,obs_i],*hpx_cnv[obs_i])
     ENDFOR
     
-    
     source_uv_mask=fltarr(dimension,elements)
     source_uv_mask2=fltarr(dimension,elements)
-;    normalization_arr=fltarr(n_pol)
     FOR pol_i=0,n_pol-1 DO BEGIN
-;        filter_single=filter_arr[pol_i,obs_i]
-;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
-;        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
-        IF N_Elements(*map_fn_arr[pol_i,obs_i]) EQ 0 THEN *map_fn_arr[pol_i,obs_i]=Getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn')
+        IF N_Elements(*map_fn_arr[pol_i,obs_i]) EQ 0 THEN BEGIN
+            ;IMPORTANT: this approach of restoring the map_fn uses the least memory
+            print,'Restoring: ' + file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav'
+            RESTORE,file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
+            *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
+        ENDIF
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
         *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
-;        normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i,obs_i],degpix=obs.degpix,obs=obs,psf=psf,params=params,$
-;            weights=*weights_arr[pol_i,obs_i],image_filter=decon_filter,filter=filter_single,/antialias))[dimension/2.,elements/2.]
-;        filter_arr[pol_i,obs_i]=filter_single
-;        normalization_arr[pol_i]*=((*beam_model[pol_i,obs_i])[obs.obsx,obs.obsy])^2.
         source_uv_mask[where(*weights_arr[pol_i,obs_i])]=1.
         source_uv_mask2[where(weights_single)]=1.
     ENDFOR
     gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr[*,obs_i],beam_base=beam_model[*,obs_i],filter_arr=filter_arr[*,obs_i],$
         image_filter_fn=decon_filter,degpix=obs.degpix,/antialias)
     
+    *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
+    
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-;        gal_model_holo=fhd_galaxy_deconvolve(obs,dirty_uv_arr[*,obs_i],map_fn_arr=map_fn_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
-;            galaxy_model_uv=galaxy_model_uv,file_path_fhd=file_path_fhd,restore=0,image_filter=decon_filter,filter_arr=filter_arr[*,obs_i],/uv_return)
-;        FOR pol_i=0,n_pol-1 DO *dirty_uv_arr[pol_i,obs_i]-=*gal_model_holo[pol_i]
         gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
         FOR pol_i=0,n_pol-1 DO BEGIN
             *model_uv_full[pol_i,obs_i]+=*gal_model_uv[pol_i]
