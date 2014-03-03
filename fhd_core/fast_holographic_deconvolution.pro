@@ -28,13 +28,10 @@ t00=Systime(1)
 ;image_uv_arr is a pointer array with dimensions (n_pol) 
 
 n_pol=fhd.npol
-baseline_threshold=fhd.baseline_threshold
 gain_factor=fhd.gain_factor
-mapfn_interval=fhd.mapfn_interval
 max_iter=fhd.max_iter
 max_sources=fhd.max_sources
 check_iter=fhd.check_iter
-mapfn_threshold=fhd.mapfn_threshold
 beam_threshold=fhd.beam_threshold
 add_threshold=fhd.add_threshold
 max_add_sources=fhd.max_add_sources

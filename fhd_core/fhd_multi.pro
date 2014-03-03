@@ -18,7 +18,8 @@ IF N_Elements(obs_arr) EQ 0 THEN BEGIN
 ENDIF
 
 n_obs=N_Elements(obs_arr)
-fhd0=fhd_init(obs_arr[0],_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little in here!
+;Note that defaults supplied here will be overwritten by any keywords passed through Extra
+fhd0=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_sources=Sqrt(n_obs)*10000.,joint_deconvolution_list=fhd_file_list,_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little in here!
 
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
@@ -30,10 +31,8 @@ ENDFOR
 fhd=fhd0
 
 n_pol=fhd.npol
-baseline_threshold=fhd.baseline_threshold
 gain_factor=fhd.gain_factor
 ;gain_factor_use=gain_factor*(!RaDeg/(obs_arr.MAX_BASELINE/obs_arr.KPIX)/obs_arr.degpix)^2. ;correct by approx. beam area
-mapfn_interval=fhd.mapfn_interval
 max_iter=fhd.max_iter
 max_sources=fhd.max_sources
 check_iter=fhd.check_iter
@@ -51,7 +50,7 @@ local_radius=local_max_radius*Mean(obs_arr.degpix)
 source_alias_radius=Mean(obs_arr.degpix*obs_arr.dimension)/4.
 calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
-IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform'
+decon_filter=fhd.decon_filter
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -152,22 +151,24 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     
     source_uv_mask=fltarr(dimension,elements)
     source_uv_mask2=fltarr(dimension,elements)
-    normalization_arr=fltarr(n_pol)
+;    normalization_arr=fltarr(n_pol)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        filter_single=filter_arr[pol_i,obs_i]
+;        filter_single=filter_arr[pol_i,obs_i]
 ;        restore,filename=file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
 ;        *map_fn_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn');map_fn
         IF N_Elements(*map_fn_arr[pol_i,obs_i]) EQ 0 THEN *map_fn_arr[pol_i,obs_i]=Getvar_savefile(file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav','map_fn')
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
         *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
-        normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i,obs_i],degpix=obs.degpix,obs=obs,psf=psf,params=params,$
-            weights=*weights_arr[pol_i,obs_i],image_filter=decon_filter,filter=filter_single,/antialias))[dimension/2.,elements/2.]
-        filter_arr[pol_i,obs_i]=filter_single
-        normalization_arr[pol_i]*=((*beam_model[pol_i,obs_i])[obs.obsx,obs.obsy])^2.
+;        normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i,obs_i],degpix=obs.degpix,obs=obs,psf=psf,params=params,$
+;            weights=*weights_arr[pol_i,obs_i],image_filter=decon_filter,filter=filter_single,/antialias))[dimension/2.,elements/2.]
+;        filter_arr[pol_i,obs_i]=filter_single
+;        normalization_arr[pol_i]*=((*beam_model[pol_i,obs_i])[obs.obsx,obs.obsy])^2.
         source_uv_mask[where(*weights_arr[pol_i,obs_i])]=1.
         source_uv_mask2[where(weights_single)]=1.
     ENDFOR
+    gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr[*,obs_i],beam_base=beam_model[*,obs_i],filter_arr=filter_arr[*,obs_i],$
+        image_filter_fn=decon_filter,degpix=obs.degpix,/antialias)
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ;        gal_model_holo=fhd_galaxy_deconvolve(obs,dirty_uv_arr[*,obs_i],map_fn_arr=map_fn_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
@@ -181,7 +182,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         Ptr_free,gal_model_uv
     ENDIF
     *uv_mask_arr[obs_i]=source_uv_mask
-    norm_arr[obs_i]=Mean(normalization_arr[0:n_pol-1])
+    norm_arr[obs_i]=gain_normalization
     
     uv_i_use=where(source_uv_mask,n_uv_use)
     uv_use_frac=Float(n_uv_use)/(dimension*elements)
@@ -197,11 +198,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
 ENDFOR
 gain_factor_use=gain_factor*norm_arr
 print,"Gain normalization factors used: ",norm_arr
-;print,"Normalization factors (ignored!): ",norm_arr 
-;norm_arr[*]=1.
-;FFT normalization factors:
-;norm_arr=(obs_arr.degpix*!DtoR)^2.*(obs_arr.dimension*obs_arr.elements)
-;print,"FFT Normalization factors used: ",norm_arr
+
 ;healpix indices are in sparse format. Need to combine them
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_inds)
 n_hpx=N_Elements(hpx_inds)
