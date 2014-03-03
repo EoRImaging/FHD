@@ -38,7 +38,7 @@ IF N_Elements(gain_arr_ptr) EQ 0 THEN BEGIN
 ENDIF
 IF N_Elements(calibration_polyfit) EQ 0 THEN calibration_polyfit=0
 IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
-IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0
+IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0. ELSE cal_mode_fit=Float(cal_mode_fit)
 
 cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,$
     tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,n_cal_src:n_cal_src,$

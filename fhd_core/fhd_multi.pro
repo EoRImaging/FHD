@@ -161,7 +161,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         source_uv_mask2[where(weights_single)]=1.
     ENDFOR
     gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr[*,obs_i],beam_base=beam_model[*,obs_i],filter_arr=filter_arr[*,obs_i],$
-        image_filter_fn=decon_filter,degpix=obs.degpix,/antialias)
+        image_filter_fn=decon_filter,degpix=obs.degpix,/antialias,file_path_fhd=file_path_fhd)
     
     *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
     
@@ -188,7 +188,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     box_coords[obs_i,2]=(Min(yvals[where(beam_mask)])+elements/2.-smooth_width)>0
     box_coords[obs_i,3]=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
 ENDFOR
-gain_factor_use=gain_factor*norm_arr
+gain_factor_use=gain_factor;*norm_arr
 print,"Gain normalization factors used: ",norm_arr
 
 ;healpix indices are in sparse format. Need to combine them
@@ -219,13 +219,13 @@ beam_corr_map2=Ptrarr(n_pol,/allocate)
 smooth_map=Ptrarr(n_pol,/allocate)
 source_mask_hpx=Fltarr(n_hpx)+1.
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *beam_map[pol_i]=Fltarr(n_hpx)
+;    *beam_map[pol_i]=Fltarr(n_hpx)
     *beam_map2[pol_i]=Fltarr(n_hpx)
     FOR obs_i=0,n_obs-1 DO BEGIN
-        (*beam_map[pol_i])[*hpx_ind_map[obs_i]]+=*beam_model_hpx_arr[pol_i,obs_i]^2.
+;        (*beam_map[pol_i])[*hpx_ind_map[obs_i]]+=*beam_model_hpx_arr[pol_i,obs_i]^2.
         (*beam_map2[pol_i])[*hpx_ind_map[obs_i]]+=*beam_model_hpx_arr[pol_i,obs_i]^2.
     ENDFOR
-    *beam_map[pol_i]=Sqrt(*beam_map[pol_i]>0)
+    *beam_map[pol_i]=Sqrt(*beam_map2[pol_i]>0)
     *beam_corr_map[pol_i]=weight_invert(*beam_map[pol_i])
     *beam_corr_map2[pol_i]=weight_invert(*beam_map2[pol_i])
 ENDFOR
@@ -243,7 +243,8 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF Keyword_Set(filter_background) THEN *smooth_map[pol_i]=Fltarr(n_hpx) ELSE *smooth_map[pol_i]=0.
         FOR obs_i=0,n_obs-1 DO BEGIN
             t1_0=Systime(1)
-            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias)
+            residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
+                degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias)*norm_arr[obs_i]
             
             t2_0a=Systime(1)
             t1+=t2_0a-t1_0

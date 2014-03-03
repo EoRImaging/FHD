@@ -11,6 +11,8 @@ local_max_radius=beam_width*2.
 local_radius=local_max_radius*Mean(obs_arr.degpix)
 smooth_width=Ceil(local_max_radius*2.)
 filter_background=fhd.filter_background
+IF N_Elements(gain_factor_use) EQ 0 THEN gain_factor_use=fhd.gain_factor
+IF N_Elements(gain_factor_use) EQ 1 THEN gain_factor_use=Replicate(gain_factor_use,n_obs)
 
 add_threshold=fhd.add_threshold
 max_add_sources=fhd.max_add_sources
