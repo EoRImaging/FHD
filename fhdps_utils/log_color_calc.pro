@@ -122,7 +122,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       
       neg_color_range = [0, floor(data_n_colors/2)-1]
       zero_color = floor(data_n_colors/2)
-      pos_color_range = [floor(data_n_colors/2)+1,data_n_colors]
+      pos_color_range = [floor(data_n_colors/2),data_n_colors]
       n_pos_neg_colors = floor(data_n_colors/2)
       
       cgLoadCT, 16, /brewer, /reverse, clip=[20, 220], bottom=0, ncolors=floor(data_n_colors/2)
@@ -170,27 +170,22 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
   
   if color_profile eq 'sym_log' then begin
   
-    neg_tick_vals = reverse(loglevels(10d^[floor(log_data_range[0])-.1, ceil(log_data_range[1])+.1], coarse=0))
     pos_tick_vals = loglevels(10d^[floor(log_data_range[0])-.1, ceil(log_data_range[1])+.1], coarse=0)
-    
-    wh_keep = where(neg_tick_vals gt 10^(log_data_range[0]-0.001) and neg_tick_vals lt 10^(log_data_range[1]+0.001), count_keep)
-    if count_keep gt 0 then neg_tick_vals = neg_tick_vals[wh_keep] else stop
     wh_keep = where(pos_tick_vals gt 10^(log_data_range[0]-0.001) and pos_tick_vals lt 10^(log_data_range[1]+0.001), count_keep)
     if count_keep gt 0 then pos_tick_vals = pos_tick_vals[wh_keep] else stop
     
+    neg_tick_vals = reverse(pos_tick_vals)
+    
     nloop = 0
-    while(n_elements(neg_tick_vals) + n_elements(pos_tick_vals) gt 10) do begin
+    while(n_elements(pos_tick_vals) gt 4) do begin
       nloop = nloop + 1
       factor = double(nloop+1)
       
-      neg_exp_vals = reverse((dindgen(ceil((alog10(max(neg_tick_vals))-alog10(min(neg_tick_vals)) + 1)/factor) + 1)*factor + alog10(min(neg_tick_vals))))
       pos_exp_vals = (dindgen(ceil((alog10(max(pos_tick_vals))-alog10(min(pos_tick_vals)) + 1)/factor) + 1)*factor + alog10(min(pos_tick_vals)))
-      
-      if max(neg_exp_vals) gt alog10(max(neg_tick_vals)) then neg_exp_vals = neg_exp_vals[1:*]
       if max(pos_exp_vals) gt alog10(max(pos_tick_vals)) then pos_exp_vals = pos_exp_vals[0:n_elements(pos_exp_vals)-2]
-      
-      neg_tick_vals = 10^neg_exp_vals
       pos_tick_vals = 10^pos_exp_vals
+      
+      neg_tick_vals = reverse(pos_tick_vals)
     endwhile
     
     top_neg_color = max((log_data_range[1] - alog10(neg_tick_vals)) * n_pos_neg_colors / (log_data_range[1] - log_data_range[0]) + neg_color_range[0])
