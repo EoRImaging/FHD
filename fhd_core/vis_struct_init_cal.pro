@@ -36,7 +36,7 @@ IF N_Elements(gain_arr_ptr) EQ 0 THEN BEGIN
     gain_arr_ptr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *gain_arr_ptr[pol_i]=gain_arr
 ENDIF
-IF N_Elements(calibration_polyfit) EQ 0 THEN calibration_polyfit=0
+IF N_Elements(calibration_polyfit) EQ 0 THEN calibration_polyfit=1
 IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
 IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0. ELSE cal_mode_fit=Float(cal_mode_fit)
 

@@ -377,6 +377,10 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
         variance_mirror=Shift(Reverse(reverse(variance,1),2),1,1)
         variance=(variance+variance_mirror)/4. ;2?
     ENDIF
+    IF model_flag THEN BEGIN
+        model_conj=Shift(Reverse(reverse(Conj(model_return),1),2),1,1)
+        model_return=(model_return+model_conj)/2.
+    ENDIF
 ENDIF
 ;normalization=dimension*elements
 ;image_uv*=normalization ;account for FFT convention
