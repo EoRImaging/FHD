@@ -1,11 +1,27 @@
-;; set log = 1 to get a log color scale
-;; for a log color scale that is symmetric around zero, set log=1 and color_profile='sym_log'
+;; Required inputs:
+;;   data: data values, either a vector corresponding to Healpix pixels
+;          or a 2 dimensional array with the first corresponding to Healpix pixels
+;;   pixels: Healpix pixel numbers corresponding to the first data dimension
+;;   nside: Healpix nside parameter
+;;
+;; Optional keywords:
+;;   slice_ind: for 2D data arrays, the 2nd dimension index to use
+;;   map: set to use Healpix library routines for plotting on projections, otherwise quick_image is used
+;;   degpix: use to specify map resolution (Healpix pixels are interpolated to a map with this resolution) default=.1
+;;   projection: set to specify which map projection to use, only works with map keyword set
+;;   log: set to get a log color scale
+;;   color_profile: only applicable if log keyword is set, set to 'sym_log' for color scale that is symmetric around zero
+;;   data_range: specifies data color bar range (data will be clipped to this range).
+;;     If data_range is set with color_profile='sym_log', the color bar range will actually be [-1,1]*max(abs(data_range))
+;;   ra_range/dec_range: return ra/dec range of image (does not work if map keyword is set)
+
+
 
 pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, map_out = map_out, noplot = noplot, $
     dec_range = dec_range, ra_range = ra_range, noerase = noerase, savefile = savefile, png = png, eps = eps, $
     map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
-    data_range = data_range, max=max,min=min, silent=silent, title=title, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
-    ra_center=ra_center, dec_center=dec_center, projection=projection, coord_in=coord_in, coord_out = coord_out, $
+    data_range = data_range, silent=silent, title=title, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
+    projection=projection, coord_in=coord_in, coord_out = coord_out, $
     color_profile = color_profile, log = log
     
     
@@ -18,6 +34,19 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   if n_elements(data_range) eq 0 then data_range = minmax(data)
   
   data_dims = size(data, /dimension)
+  if n_elements(data_dims) gt 2 or n_elements(data_dims) eq 0 then begin
+    print, 'data must be either a vector corresponding to Healpix pixels or a 2D array with the first dimension corresponding to Healpix pixels'
+    return
+  end
+  if data_dims[0] ne n_elements(pixels) then begin
+    print, 'first data dimension must match length of pixel vector'
+    return
+  end
+  if n_elements(nside) ne 1 then begin
+    print, 'nside must be a scalar corresponding to the Healpix nside parameter'
+    return
+  end
+  
   if n_elements(data_dims) gt 1 then begin
     if n_elements(slice_ind) eq 0 then slice_ind = 0 else if slice_ind ge data_dims[1] then begin
       print, 'slice_ind is too large for cube, Defaulting to max value (' + number_formatter(data_dims[1]-1) + ').'
@@ -81,8 +110,8 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   theta0 = acos(vec_mid[2]) ;; range is 0 -> pi
   phi0 = atan(vec_mid[1], vec_mid[0]) ;; range is -pi -> pi
   
-  IF Keyword_Set(ra_center) THEN ra0=ra_center ELSE ra0=phi0*180./!pi
-  IF Keyword_Set(dec_center) THEN dec0=dec_center ELSE dec0=theta0*180./!pi - 90.
+  ra0=phi0*180./!pi
+  dec0=theta0*180./!pi - 90.
   
   rot=[ra0,dec0+90.]
   
