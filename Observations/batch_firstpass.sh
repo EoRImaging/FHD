@@ -1,12 +1,14 @@
 #!/bin/bash
 
 #Parse flags for inputs
-while getopts ":f:s:e:" option
+while getopts ":f:s:e:o:v:" option
 do
    case $option in
 	f) obs_file_name="$OPTARG";;
 	s) starting_obs=$OPTARG;;
 	e) ending_obs=$OPTARG;;
+        o) outdir=$OPTARG;;
+        v) version=$OPTARG;;
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs) and -e (ending obs)" 
 	    exit 1;;
 	:) echo "Missing option argument for input flag"
@@ -24,6 +26,18 @@ then
    exit 1
 fi
 
+#Set default output directory if one is not supplied
+if [ -z ${outdir} ]; then
+    outdir=/nfs/mwa-09/r1/djc/EoR2013/Aug23
+    echo Using default output directory: $outdir
+fi
+#Use default version if not supplied
+if [ -z ${version} ]; then
+    version=test_batch_firstpass
+    echo Using default FHD version: $version
+fi
+
+### Should make these options
 nslots=10
 mem=30G
 
@@ -69,20 +83,23 @@ then
 fi
 
 #commands for idl
-idl_function_path="/nfs/grs1915/ha/nbarry/MWA/development"
-idl_function="eor_firstpass_spawn"
-export IDL_PATH=$IDL_PATH:+$idl_function_path
-idl_e="idl -e $idl_function -args"
-version="'nb_firstpass_script_test'"
+#idl_function_path="/nfs/grs1915/ha/nbarry/MWA/development"
+#idl_function="eor_firstpass_spawn"
+#export IDL_PATH=$IDL_PATH:+$idl_function_path
+#idl_e="idl -e $idl_function -args"
+#version="'nb_firstpass_script_test'"
+FHDpath=$(idl -e 'print,rootdir("fhd"))' ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 
 #Run idl for all specified obs_id using the above commands
 for obs_id in "${obs_id_array[@]}"
 do
     if [ $obs_id -ge $starting_obs ] && [ $obs_id -le $ending_obs ]
     then
-	### set errfile and outfile ###
+	### Might need to mkdir before using these files ###
+	errfile=${outdir}/fhd_${version}/${obs_id}_err.log
+	outfile=${outdir}/fhd_${version}/${obs_id}_out.log
 	echo "Starting observation id $obs_id"
-	qsub -l h_vmem=$mem,h_stack=512k -V -v obs_id=$obs_id,nslots=$nslots,version=$version -e $errfile -o $outfile -pe chost $nslots eor_firstpass_job.sh
+	qsub -l h_vmem=$mem,h_stack=512k -V -v obs_id=$obs_id,nslots=$nslots,outdir=$outdir,version=$version -e $errfile -o $outfile -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh
         #$idl_e $obs_id $version
     fi
 done

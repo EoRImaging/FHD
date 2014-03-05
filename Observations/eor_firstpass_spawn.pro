@@ -1,4 +1,4 @@
-PRO eor_firstpass_spawn,obs_id,version_inputcleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
+PRO eor_firstpass_spawn,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid=grid,deconvolve=deconvolve,channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,vis_baseline_hist=vis_baseline_hist,$
@@ -12,7 +12,8 @@ heap_gc
 compile_opt strictarr
 args = Command_Line_Args(count=nargs)
 obs_id = args[0]
-version = args[1]
+output_directory = args[1]
+version = args[2]
 
 calibrate_visibilities=1
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
