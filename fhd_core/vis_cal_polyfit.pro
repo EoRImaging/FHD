@@ -85,6 +85,9 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
         
         c_light=299792458.
         reflect_time=2.*cable_len/(c_light*cable_vf)
+        bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1)
+        mode_i_arr=Fltarr(n_pol,n_tile)
+        FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time
     ENDIF ELSE BEGIN
         IF cal_mode_fit EQ -1 THEN BEGIN
             spec_mask=fltarr(n_freq)
