@@ -37,7 +37,7 @@ IF N_Elements(gain_arr_ptr) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *gain_arr_ptr[pol_i]=gain_arr
 ENDIF
 gain_residual=Ptrarr(n_pol,/allocate)
-FOR pol_i=0,n_pol-1 DO *gain_residual[pol_i]=gain_arr
+FOR pol_i=0,n_pol-1 DO *gain_residual[pol_i]=Complexarr(n_freq,n_tile)
 IF N_Elements(calibration_polyfit) EQ 0 THEN calibration_polyfit=0
 amp_params=Ptrarr(n_pol,n_tile)
 phase_params=Ptrarr(n_pol,n_tile)
