@@ -127,7 +127,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       
       cgLoadCT, 16, /brewer, /reverse, clip=[20, 220], bottom=0, ncolors=floor(data_n_colors/2)
       cgloadct, 0, clip = [255, 255], bottom = zero_color, ncolors = 1
-      cgLoadCT, 13, /brewer, clip=[20, 220], bottom=zero_color+1, ncolors=data_n_colors-floor(data_n_colors/2)
+      cgLoadCT, 13, /brewer, clip=[20, 220], bottom=zero_color+1, ncolors=data_n_colors-(zero_color+1)
       
       
       ;; construct 2 separate data logs (for negative & positive)
