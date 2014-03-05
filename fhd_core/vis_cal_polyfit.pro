@@ -81,13 +81,17 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
         tile_name_file=Reform(data_array[1,*])
         cable_len=Reform(data_array[2,*])
         cable_vf=Reform(data_array[3,*])
-        tile_ref_flag=Reform(data_array[4,*])
+        tile_ref_flag=0>Reform(data_array[4,*])<1
+        IF cal_cable_reflection_fit GT 1 THEN BEGIN
+            cable_cut_i=where(cable_len NE cal_cable_reflection_fit,n_cable_cut)
+            IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
+        ENDIF
         
         c_light=299792458.
         reflect_time=2.*cable_len/(c_light*cable_vf)
         bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1)
         mode_i_arr=Fltarr(n_pol,n_tile)
-        FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time
+        FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time*tile_ref_flag
     ENDIF ELSE BEGIN
         IF cal_mode_fit EQ -1 THEN BEGIN
             spec_mask=fltarr(n_freq)
