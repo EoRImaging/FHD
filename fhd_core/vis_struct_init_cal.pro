@@ -2,7 +2,8 @@ FUNCTION vis_struct_init_cal,obs,params,gain_arr_ptr=gain_arr_ptr,n_pol=n_pol,n_
     tile_A=tile_A,tile_B=tile_B,freq=freq,bin_offset=bin_offset,tile_names=tile_names,u_loc=u_loc,v_loc=v_loc,n_cal_src=n_cal_src,$
     galaxy_cal=galaxy_cal,min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,n_vis_cal=n_vis_cal,$
     cal_time_average=cal_time_average,ref_antenna=ref_antenna,cal_convergence_threshold=cal_convergence_threshold,max_cal_iter=max_cal_iter,$
-    calibration_origin=calibration_origin,catalog_path=catalog_path,_Extra=extra
+    calibration_origin=calibration_origin,catalog_path=catalog_path,calibration_polyfit=calibration_polyfit,bandpass_calibrate=bandpass_calibrate,$
+    cal_mode_fit=cal_mode_fit,_Extra=extra
 IF N_Elements(tile_A) EQ 0 THEN tile_A=(*obs.baseline_info).tile_A
 IF N_Elements(tile_B) EQ 0 THEN tile_B=(*obs.baseline_info).tile_B
 IF N_Elements(freq) EQ 0 THEN freq=(*obs.baseline_info).freq
@@ -35,11 +36,15 @@ IF N_Elements(gain_arr_ptr) EQ 0 THEN BEGIN
     gain_arr_ptr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *gain_arr_ptr[pol_i]=gain_arr
 ENDIF
+IF N_Elements(calibration_polyfit) EQ 0 THEN calibration_polyfit=1
+IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
+IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0. ELSE cal_mode_fit=Float(cal_mode_fit)
 
 cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,$
     tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,n_cal_src:n_cal_src,$
     galaxy_cal:galaxy_cal,min_cal_baseline:min_cal_baseline,max_cal_baseline:max_cal_baseline,n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,ref_antenna_name:ref_antenna_name,$
-    conv_thresh:cal_convergence_threshold,cal_origin:calibration_origin,catalog_name:catalog_path_use}
+    conv_thresh:cal_convergence_threshold,polyfit:calibration_polyfit,bandpass:bandpass_calibrate,mode_fit:cal_mode_fit,$
+    cal_origin:calibration_origin,catalog_name:catalog_path_use}
 RETURN,cal_struct
 END

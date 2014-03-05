@@ -1,9 +1,11 @@
 FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
-    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,_Extra=extra
+    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,_Extra=extra
 ;catalog=getvar_savefile(catalog_path,'catalog')
 RESTORE,catalog_path,/relaxed ;catalog
 IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
+IF Keyword_Set(allow_sidelobe_cal_sources) THEN IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_cal_sources=1
+IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_cal_sources=1
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
@@ -21,7 +23,7 @@ i_use=where(Abs(angs) LE FoV/2.,n_use)
 
 IF Keyword_Set(no_restrict_cal_sources) THEN BEGIN
     fft_alias_range=0.
-    cal_beam_threshold=0.05
+    IF Keyword_Set(allow_sidelobe_cal_sources) THEN cal_beam_threshold=0.01 ELSE cal_beam_threshold=0.05
 ENDIF ELSE BEGIN
     fft_alias_range=dimension/4.
     cal_beam_threshold=0.2
@@ -47,11 +49,12 @@ IF n_use GT 0 THEN BEGIN
         beam+=*beam_arr[pol_i]^2.
     ENDFOR
     beam=Sqrt(beam/(n_pol<2))
-    beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<cal_beam_threshold,Max(beam)>1.])
+    IF Keyword_Set(allow_sidelobe_cal_sources) THEN beam_i=where(beam GT cal_beam_threshold) $
+        ELSE beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<cal_beam_threshold,Max(beam)>1.])
     beam_mask=fltarr(dimension,elements) & beam_mask[beam_i]=1.
 
-    src_use=where((x_arr GE fft_alias_range) AND (x_arr LE dimension-1-fft_alias_range) AND (y_arr GE fft_alias_range) AND (y_arr LE elements-1-fft_alias_range) $
-        AND (source_list.flux.I GT calibration_flux_threshold),n_src_use)
+    src_use=where((x_arr GE fft_alias_range) AND (x_arr LE dimension-1-fft_alias_range) AND (y_arr GE fft_alias_range) $
+        AND (y_arr LE elements-1-fft_alias_range) AND (source_list.flux.I GT calibration_flux_threshold),n_src_use)
     
     IF n_src_use EQ 0 THEN RETURN,source_comp_init(n_sources=0,freq=obs.freq_center);
     src_use2=where(beam_mask[Round(x_arr[src_use]),Round(y_arr[src_use])],n_src_use)

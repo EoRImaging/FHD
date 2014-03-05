@@ -3,6 +3,7 @@ FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=element
 icomp=Complex(0,1)
 fft_norm=1.
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
+IF conserve_memory GT 1E6 THEN mem_thresh=conserve_memory ELSE mem_thresh=1E8
 ;IF Keyword_Set(degpix) THEN fft_norm=(degpix*!DtoR)^2. ELSE fft_norm=1.
 
 IF N_Elements(xvals) EQ 0 THEN BEGIN
@@ -31,8 +32,8 @@ element_check=Float(N_Elements(xvals))*Float(N_Elements(x_use))
 
 ;phase=Exp(icomp*(2.*!Pi/dimension)*phase)
 ;source_uv_vals=matrix_multiply(phase,flux)
-IF Keyword_Set(conserve_memory) AND (element_check GT 1E8) THEN BEGIN
-    memory_bins=Round(element_check/1E8)
+IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
+    memory_bins=Round(element_check/mem_thresh)
     source_uv_vals=Complexarr(size(xvals,/dimension))
     n0=N_Elements(x_use)
     binsize=Lonarr(memory_bins)+Round(n0/memory_bins)

@@ -28,13 +28,10 @@ t00=Systime(1)
 ;image_uv_arr is a pointer array with dimensions (n_pol) 
 
 n_pol=fhd.npol
-baseline_threshold=fhd.baseline_threshold
 gain_factor=fhd.gain_factor
-mapfn_interval=fhd.mapfn_interval
 max_iter=fhd.max_iter
 max_sources=fhd.max_sources
 check_iter=fhd.check_iter
-mapfn_threshold=fhd.mapfn_threshold
 beam_threshold=fhd.beam_threshold
 add_threshold=fhd.add_threshold
 max_add_sources=fhd.max_add_sources
@@ -126,6 +123,7 @@ ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+        ;IMPORTANT: this approach of restoring the map_fn uses the least memory
         print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
         restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i]=Temporary(map_fn)
@@ -345,7 +343,7 @@ FOR i=i0,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2
+    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -354,11 +352,11 @@ FOR i=i0,max_iter-1 DO BEGIN
     ENDFOR
     t4+=Systime(1)-t4_0    
     
-    IF si GE max_sources THEN BEGIN
+    IF si+1 GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
         print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            i,t10,si,Stddev(image_use[where(beam_mask)],/nan)))
+            i,t10,si+1,Stddev(image_use[where(beam_mask)],/nan)))
         converge_check[i2]=Stddev(image_use[where(beam_mask)],/nan)
         BREAK
     ENDIF

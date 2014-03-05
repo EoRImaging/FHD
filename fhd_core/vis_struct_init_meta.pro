@@ -1,7 +1,8 @@
 FUNCTION vis_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,$
     zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
-    obsx=obsx,obsy=obsy,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,_Extra=extra
+    obsx=obsx,obsy=obsy,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
+    meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra
 
 IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees
@@ -27,29 +28,29 @@ IF Keyword_Set(mirror_Y) THEN degpix2[1]*=-1
 n_pol=hdr.n_pol
 
 IF file_test(metafits_path) THEN BEGIN
-    hdr0=headfits(metafits_path,exten=0,/silent)
+    meta_hdr=headfits(metafits_path,exten=0,/silent)
     
-    data=mrdfits(metafits_path,1,hdr1,/silent)
-    tile_nums=data.antenna
+    meta_data=mrdfits(metafits_path,1,hdr1,/silent)
+    tile_nums=meta_data.antenna
     tile_nums=radix_sort(tile_nums,index=tile_order)
-    data=data[tile_order]
-    pol_names=data.pol
+    meta_data=meta_data[tile_order]
+    pol_names=meta_data.pol
     single_i=where(pol_names EQ pol_names[0],n_single)
-    tile_names=data.tile
+    tile_names=meta_data.tile
     tile_names=tile_names[single_i]
-    tile_height=data.height
+    tile_height=meta_data.height
     tile_height=tile_height[single_i]-alt
-    tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(data(single_i+pol_i).flag)
+    tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(meta_data(single_i+pol_i).flag)
     
-    obsra=sxpar(hdr0,'RA')
-    obsdec=sxpar(hdr0,'Dec')
-    phasera=sxpar(hdr0,'RAPHASE')
-    phasedec=sxpar(hdr0,'DECPHASE')
+    obsra=sxpar(meta_hdr,'RA')
+    obsdec=sxpar(meta_hdr,'Dec')
+    phasera=sxpar(meta_hdr,'RAPHASE')
+    phasedec=sxpar(meta_hdr,'DECPHASE')
     
-    LST=sxpar(hdr0,'LST')
-;    HA=sxpar(hdr0,'HA')
+    LST=sxpar(meta_hdr,'LST')
+;    HA=sxpar(meta_hdr,'HA')
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
-    date_obs=sxpar(hdr0,'DATE-OBS')
+    date_obs=sxpar(meta_hdr,'DATE-OBS')
     JD0=date_string_to_julian(date_obs)
     
     zenra=LST
@@ -57,7 +58,7 @@ IF file_test(metafits_path) THEN BEGIN
     epoch=date_conv(date_obs)/1000.
     Precess,zenra,zendec,epoch,2000.    
     
-    beamformer_delays=sxpar(hdr0,'DELAYS')
+    beamformer_delays=sxpar(meta_hdr,'DELAYS')
     beamformer_delays=Ptr_new(Float(Strsplit(beamformer_delays,',',/extract)))
 ENDIF ELSE BEGIN
     ;use hdr and params to guess metadata

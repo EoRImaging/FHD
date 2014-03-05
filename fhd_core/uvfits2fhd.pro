@@ -264,7 +264,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
         
-        IF Keyword_Set(return_cal_visibilities) THEN model_uv_arr=Ptrarr(n_pol,/allocate)
+        IF Keyword_Set(return_cal_visibilities) THEN model_uv_holo=Ptrarr(n_pol,/allocate)
         IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
         FOR pol_i=0,n_pol-1 DO BEGIN
     ;        IF Keyword_Set(GPU_enable) THEN $
@@ -287,7 +287,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             IF Keyword_Set(return_cal_visibilities) THEN BEGIN
                 model_uv=model_return
                 SAVE,model_uv,weights_grid,filename=file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav',/compress
-                *model_uv_arr[pol_i]=Temporary(model_return)
+                *model_uv_holo[pol_i]=Temporary(model_return)
                 model_return=1
             ENDIF
             IF N_Elements(weights_grid) GT 0 THEN BEGIN
@@ -327,7 +327,7 @@ IF Keyword_Set(export_images) THEN BEGIN
             IF N_Elements(cal) GT 0 THEN source_array=cal.source_list
         ENDIF
         fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
-            model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+            model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDELSE
 ENDIF
 
