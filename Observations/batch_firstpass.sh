@@ -88,7 +88,7 @@ fi
 #export IDL_PATH=$IDL_PATH:+$idl_function_path
 #idl_e="idl -e $idl_function -args"
 #version="'nb_firstpass_script_test'"
-FHDpath=$(idl -e 'print,rootdir("fhd"))' ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
+FHDpath=$(idl -e 'print,rootdir("fhd")') ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 
 #Run idl for all specified obs_id using the above commands
 for obs_id in "${obs_id_array[@]}"
