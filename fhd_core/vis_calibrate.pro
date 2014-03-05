@@ -141,6 +141,7 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 cal_res=vis_cal_subtract(cal_base,cal,/abs)
+cal.gain_residual=cal_res.gain
 
 IF Keyword_Set(vis_baseline_hist) THEN $
     vis_baseline_hist,obs,params,vis_ptr=vis_cal,vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd

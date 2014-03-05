@@ -36,15 +36,22 @@ IF N_Elements(gain_arr_ptr) EQ 0 THEN BEGIN
     gain_arr_ptr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *gain_arr_ptr[pol_i]=gain_arr
 ENDIF
-IF N_Elements(calibration_polyfit) EQ 0 THEN calibration_polyfit=1
+gain_residual=Ptrarr(n_pol,/allocate)
+FOR pol_i=0,n_pol-1 DO *gain_residual[pol_i]=gain_arr
+IF N_Elements(calibration_polyfit) EQ 0 THEN calibration_polyfit=0
+amp_params=Ptrarr(n_pol,n_tile)
+phase_params=Ptrarr(n_pol,n_tile)
+
 IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
-IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0. ELSE cal_mode_fit=Float(cal_mode_fit)
+IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0.
+mode_params=Ptrarr(n_pol,n_tile)
 
 cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,$
-    tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,n_cal_src:n_cal_src,$
+    tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,gain_residual:gain_residual,$
     galaxy_cal:galaxy_cal,min_cal_baseline:min_cal_baseline,max_cal_baseline:max_cal_baseline,n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,ref_antenna_name:ref_antenna_name,$
-    conv_thresh:cal_convergence_threshold,polyfit:calibration_polyfit,bandpass:bandpass_calibrate,mode_fit:cal_mode_fit,$
-    cal_origin:calibration_origin,catalog_name:catalog_path_use}
+    conv_thresh:cal_convergence_threshold,polyfit:calibration_polyfit,amp_params:amp_params,phase_params:phase_params,$
+    bandpass:bandpass_calibrate,mode_fit:cal_mode_fit,mode_params:mode_params,cal_origin:calibration_origin,$
+    n_cal_src:n_cal_src,catalog_name:catalog_path_use}
 RETURN,cal_struct
 END

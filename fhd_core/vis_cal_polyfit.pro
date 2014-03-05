@@ -1,9 +1,12 @@
 FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
-    cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,cal_mode_fit=cal_mode_fit,_Extra=extra
+    cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
+    cal_cable_reflection_fit=cal_cable_reflection_fit,_Extra=extra
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
 IF N_Elements(phase_degree) EQ 0 THEN phase_degree=degree-1.
-IF tag_exist(cal,'mode_fit') THEN cal_mode_fit=cal.mode_fit
+IF Keyword_Set(cal_cable_reflection_fit) THEN cal.mode_fit=1.
+cal_mode_fit=cal.mode_fit
+IF Keyword_Set(cal_mode_fit) THEN IF N_Elements(cal_neighbor_freq_flag) EQ 0 THEN cal_neighbor_freq_flag=1
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq
@@ -51,6 +54,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR tile_i=0L,n_tile-1 DO BEGIN
         gain=reform(gain_amp[freq_use,tile_i])
         fit_params=poly_fit(freq_use,gain,degree)
+        cal.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
         gain_fit=fltarr(n_freq)
         FOR di=0L,degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
         
@@ -60,6 +64,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF phase_degree GT 0 THEN BEGIN
             phase_use=PhUnwrap(reform(gain_phase[freq_use,tile_i]))
             phase_params=poly_fit(freq_use,phase_use,phase_degree,yfit=phase_fit)
+            cal.phase_params[pol_i,tile_i]=Ptr_new(phase_params)
             phase_fit=fltarr(n_freq)
             FOR di=0L,phase_degree DO phase_fit+=phase_params[di]*findgen(n_freq)^di
             gain_arr[*,tile_i]=gain_fit*Exp(i_comp*phase_fit)
@@ -69,31 +74,47 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 IF Keyword_Set(cal_mode_fit) THEN BEGIN
-    IF cal_mode_fit EQ 1 THEN BEGIN
-        spec_mask=fltarr(n_freq)
-        spec_mask[freq_use]=1
-        freq_cut=where(spec_mask EQ 0,n_mask)
-        spec_psf=(Abs(FFT(spec_mask)))
-        spec_inds=lindgen(n_freq/2)
-        spec_psf=spec_psf[spec_inds]
-        spectrum=fltarr(n_freq/2)
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            FOR ti=0L,nt_use-1 DO BEGIN
-                tile_i=tile_use[ti]
-                spec0=Abs(FFT(*gain_residual[pol_i,tile_i]))
-                spectrum+=spec0[spec_inds]
+    IF Keyword_Set(cal_cable_reflection_fit) THEN BEGIN
+        cable_filepath=filepath(obs.instrument+'_cable_length.txt',root=rootdir('FHD'),subdir='instrument_config')
+        textfast,data_array,/read,file_path=cable_filepath,first_line=1
+        tile_i_file=Reform(data_array[0,*])
+        tile_name_file=Reform(data_array[1,*])
+        cable_len=Reform(data_array[2,*])
+        cable_vf=Reform(data_array[3,*])
+        tile_ref_flag=Reform(data_array[4,*])
+        
+        c_light=299792458.
+        reflect_time=2.*cable_len/(c_light*cable_vf)
+    ENDIF ELSE BEGIN
+        IF cal_mode_fit EQ -1 THEN BEGIN
+            spec_mask=fltarr(n_freq)
+            spec_mask[freq_use]=1
+            freq_cut=where(spec_mask EQ 0,n_mask)
+            spec_psf=(Abs(FFT(spec_mask)))
+            spec_inds=lindgen(n_freq/2)
+            spec_psf=spec_psf[spec_inds]
+            spectrum=fltarr(n_freq/2)
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                FOR ti=0L,nt_use-1 DO BEGIN
+                    tile_i=tile_use[ti]
+                    spec0=Abs(FFT(*gain_residual[pol_i,tile_i]))
+                    spectrum+=spec0[spec_inds]
+                ENDFOR
             ENDFOR
-        ENDFOR
-        mode_test=spectrum
-        psf_mask=fltarr(n_freq/2)
-        IF n_mask GT 0 THEN BEGIN
-            psf_mask[where(spec_psf GT Max(spec_psf)/1E3)]=1
-            psf_mask=smooth(psf_mask,5,/edge_truncate)
-            mask_i=where(psf_mask,n_mask2)
-            IF n_mask2 GT 0 THEN mode_test[mask_i]=0
-        ENDIF
-        mode_max=Max(mode_test,mode_i)
-    ENDIF ELSE mode_i=cal_mode_fit
+            mode_test=spectrum
+            psf_mask=fltarr(n_freq/2)
+            IF n_mask GT 0 THEN BEGIN
+                psf_mask[where(spec_psf GT Max(spec_psf)/1E3)]=1
+                psf_mask=smooth(psf_mask,5,/edge_truncate)
+                mask_i=where(psf_mask,n_mask2)
+                IF n_mask2 GT 0 THEN mode_test[mask_i]=0
+            ENDIF
+            mode_max=Max(mode_test,mode_i)
+            mode_i_arr=Fltarr(n_pol,n_tile)+mode_i
+        ENDIF ELSE BEGIN
+            mode_i_arr=Fltarr(n_pol,n_tile)+cal_mode_fit
+        ENDELSE
+    ENDELSE
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         gain_arr=*cal_return.gain[pol_i]
@@ -101,17 +122,19 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
         gain_phase=Atan(gain_arr,/phase)
         FOR ti=0L,nt_use-1 DO BEGIN
             tile_i=tile_use[ti]
-            spec0=FFT(*gain_residual[pol_i,tile_i])
-            phase_use=Atan(spec0[mode_i],/phase)
-            amp_use=2.*Abs(spec0[mode_i]) ;why factor of 2? Check FFT normalization
-            sin_fit=amp_use*Sin(2.*!Pi*Float(mode_i)*findgen(n_freq)/n_freq-phase_use)
-            gain_fit=Reform(gain_amp[*,tile_i])+sin_fit
+            mode_i=mode_i_arr[pol_i,tile_i]
+            IF mode_i EQ 0 THEN CONTINUE
+            mode_fit=Total(exp(complex(0,1)*2.*!Pi/n_freq*(mode_i)*freq_use)*((*gain_residual[pol_i,tile_i])[freq_use]))
+            amp_use=2.*abs(mode_fit)/nf_use ;why factor of 2? Check FFT normalization
+            phase_use=atan(mode_fit,/phase)
+            cos_fit=amp_use*Cos(2.*!Pi*Float(mode_i)*findgen(n_freq)/n_freq-phase_use) ;Cosine is necessary to get phase right
+            gain_fit=Reform(gain_amp[*,tile_i])+cos_fit
             phase_fit=Reform(gain_phase[*,tile_i])
             gain_arr[*,tile_i]=gain_fit*Exp(i_comp*phase_fit)
+            cal_return.mode_params[pol_i,tile_i]=Ptr_new([mode_i,amp_use,phase_use])
             debug=1
         ENDFOR
     ENDFOR
-    IF tag_exist(cal_return,'mode_fit') THEN cal_return.mode_fit=mode_i
 ENDIF
 undefine_fhd,gain_residual
 RETURN,cal_return
