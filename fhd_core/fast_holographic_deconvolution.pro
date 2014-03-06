@@ -397,7 +397,7 @@ comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,$
     reject_sigma_threshold=sigma_threshold,gain_array=gain_array/gain_normalization,clean_bias_threshold=0.667)
 t3_0=Systime(1)
-model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,/conserve_memory)
+model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 t4_0=Systime(1)
 t3+=t4_0-t3_0

@@ -1,6 +1,7 @@
 FUNCTION source_dft_model,obs,source_list,t_model=t_model,sigma_threshold=sigma_threshold,$
     no_extend=no_extend,unpolarized=unpolarized,uv_mask=uv_mask,conserve_memory=conserve_memory
 t_model0=Systime(1)
+IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
 n_pol=obs.n_pol
 dimension=obs.dimension
 elements=obs.elements
