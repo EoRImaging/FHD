@@ -3,7 +3,10 @@ FUNCTION vis_struct_init_cal,obs,params,gain_arr_ptr=gain_arr_ptr,n_pol=n_pol,n_
     galaxy_cal=galaxy_cal,min_cal_baseline=min_cal_baseline,max_cal_baseline=max_cal_baseline,n_vis_cal=n_vis_cal,$
     cal_time_average=cal_time_average,ref_antenna=ref_antenna,cal_convergence_threshold=cal_convergence_threshold,max_cal_iter=max_cal_iter,$
     calibration_origin=calibration_origin,catalog_path=catalog_path,calibration_polyfit=calibration_polyfit,bandpass_calibrate=bandpass_calibrate,$
-    cal_mode_fit=cal_mode_fit,_Extra=extra
+    cal_mode_fit=cal_mode_fit,file_path_fhd=file_path_fhd,_Extra=extra
+
+IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
+IF N_Elements(params) EQ 0 THEN params=getvar_savefile(file_path_fhd+'_params.sav','params')
 IF N_Elements(tile_A) EQ 0 THEN tile_A=(*obs.baseline_info).tile_A
 IF N_Elements(tile_B) EQ 0 THEN tile_B=(*obs.baseline_info).tile_B
 IF N_Elements(freq) EQ 0 THEN freq=(*obs.baseline_info).freq
