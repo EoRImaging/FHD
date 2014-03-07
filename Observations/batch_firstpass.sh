@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#Clear input parameters
+unset obs_file_name
+unset starting_obs
+unset ending_obs
+unset outdir
+unset version
 #Parse flags for inputs
 while getopts ":f:s:e:o:v:" option
 do
@@ -42,7 +48,7 @@ fi
 
 ### Should make these options
 nslots=10
-mem=3G ### NOTE this is PER CORE!
+mem=2G ### NOTE this is PER CORE!
 
 #Read the obs file and put into an array
 i=0
