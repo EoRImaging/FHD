@@ -69,7 +69,7 @@ ENDIF ELSE fit_inds_flag=1
 
 FOR obs_i=0L,n_obs-1 DO BEGIN
     file_path_fhd=file_list_use[obs_i]
-    IF ~Keyword_Set(silent) THEN print,StrCompress('Converting '+file_basename(file_path_fhd)+'('+Strn(obs_i+1)+' of '+Strn(n_obs)+') to common HEALPix coordinates')
+    IF ~Keyword_Set(silent) THEN print,StrCompress('Converting '+file_basename(file_path_fhd)+'('+Strn(obs_i+1)+' of '+Strn(n_obs)+')')
     obs=obs_arr[obs_i]
     dimension=obs.dimension
     elements=obs.elements
@@ -80,20 +80,6 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
 ;    yvals=meshgrid(dimension,elements,2)-elements/2
     IF file_test(file_path_fhd+'_cal.sav') THEN cal=getvar_savefile(file_path_fhd+'_cal.sav','cal') ELSE cal=vis_struct_init_cal(obs,file_path_fhd=file_path_fhd)
     
-    IF file_test(file_path_fhd+'_beams.sav') THEN psf=getvar_savefile(file_path_fhd+'_beams.sav','psf') $
-        ELSE psf=beam_setup(obs,file_path_fhd,restore_last=0,silent=1,no_save=1,_Extra=extra)
-    beam_base2=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO beam_base2[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,/square))
-    beam_base=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO beam_base[pol_i]=Ptr_new(Sqrt(*beam_base2[pol_i]>0.))
-    beam_mask=fltarr(dimension,elements)+1.
-    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
-        mask0=fltarr(dimension,elements)
-        mask_i=region_grow(*beam_base[pol_i],Floor(obs.obsx)+dimension*Floor(obs.obsy),thresh=[beam_threshold,max(*beam_base[pol_i])])
-        mask0[mask_i]=1
-        beam_mask*=mask0
-    ENDFOR
-        
     image_uv_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv',/pointer)
     weights_arr=Ptrarr(n_pol)
@@ -103,6 +89,9 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
         source_array=getvar_savefile(file_path_fhd+'_fhd.sav','source_array')
         model_uv_holo=getvar_savefile(file_path_fhd+'_fhd.sav','model_uv_holo')
+        beam_base=getvar_savefile(file_path_fhd+'_fhd.sav','beam_base')
+        beam_base2=Ptrarr(n_pol)
+        FOR pol_i=0,n_pol-1 DO beam_base2[pol_i]=Ptr_new((*beam_base[pol_i])^2.)
         model_flag=1
         source_flag=1
     ENDIF ELSE BEGIN
@@ -113,7 +102,21 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             source_flag=1
             source_array=cal.source_list
         ENDIF ELSE source_flag=0
+        
+        IF file_test(file_path_fhd+'_beams.sav') THEN psf=getvar_savefile(file_path_fhd+'_beams.sav','psf') $
+            ELSE psf=beam_setup(obs,file_path_fhd,restore_last=0,silent=1,no_save=1,_Extra=extra)
+        beam_base=Ptrarr(n_pol)
+        FOR pol_i=0,n_pol-1 DO beam_base[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,square=0))
+        beam_base2=Ptrarr(n_pol)
+        FOR pol_i=0,n_pol-1 DO beam_base2[pol_i]=Ptr_new((*beam_base[pol_i])^2.)
     ENDELSE
+    beam_mask=fltarr(dimension,elements)+1.
+    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
+        mask0=fltarr(dimension,elements)
+        mask_i=region_grow(*beam_base[pol_i],Floor(obs.obsx)+dimension*Floor(obs.obsy),thresh=[beam_threshold,max(*beam_base[pol_i])])
+        mask0[mask_i]=1
+        beam_mask*=mask0
+    ENDFOR
     
     instr_model_arr=Ptrarr(n_pol)
     instr_dirty_arr=Ptrarr(n_pol)
@@ -146,7 +149,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     IF fit_inds_flag THEN BEGIN
         IF N_Elements(hpx_inds) EQ 0 THEN BEGIN
-            hpx_inds=hpx_inds1
+            hpx_inds=Temporary(hpx_inds1)
             IF Keyword_Set(restrict_hpx_inds) THEN BEGIN
                 restrict_hpx_inds=hpx_inds
                 fit_inds_flag=0
@@ -157,22 +160,24 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         ENDIF ELSE BEGIN
             hist_min=Min(hpx_inds)<Min(hpx_inds1)
             hist_max=Max(hpx_inds)>Max(hpx_inds1)
-            hist0=histogram((hpx_inds),min=hist_min,max=hist_max,/binsize,reverse_ind=ri0)
-            hist1=histogram((hpx_inds1),min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
+            hist0=histogram(Temporary(hpx_inds),min=hist_min,max=hist_max,/binsize,reverse_ind=ri0)
+            hist1=histogram(Temporary(hpx_inds1),min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
             hist=hist0+hist1
-            hpx_inds_i=where(hist,n_hpx)
+            hpx_inds_i=where(Temporary(hist),n_hpx)
             hist0=hist0[hpx_inds_i]
             hist1=hist1[hpx_inds_i]
-            ind_use0=where((hist0),n_hpx0)
-            ind_use1=where((hist1),n_hpx1)
+            ind_use0=where(Temporary(hist0),n_hpx0)
+            ind_use1=where(Temporary(hist1),n_hpx1)
             
             IF n_hpx0 EQ n_hpx THEN reform_flag=0 ELSE BEGIN
                 reform_flag=1
                 ind_order0=Sort(ri0[ri0[hpx_inds_i[ind_use0]]])
-                ind_map0=ind_use0[ind_order0]                
+                ind_map0=ind_use0[ind_order0] 
+                ri0=0               
             ENDELSE
             ind_order1=Sort(ri1[ri1[hpx_inds_i[ind_use1]]])
-            ind_map1=ind_use1[ind_order1]
+            ri1=0
+            ind_map1=ind_use1[Temporary(ind_order1)]
             hpx_inds=(hpx_inds_i)+hist_min
         ENDELSE
     ENDIF ELSE BEGIN
@@ -201,19 +206,19 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         IF ~Ptr_valid(weights_hpx[pol_i]) THEN weights_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
         IF reform_flag THEN BEGIN
             instr_dirty_hpx0=Fltarr(n_hpx)
-            instr_dirty_hpx0[ind_map0]=(*instr_dirty_hpx[pol_i])
+            instr_dirty_hpx0[ind_map0]=Temporary(*instr_dirty_hpx[pol_i])
             *instr_dirty_hpx[pol_i]=Temporary(instr_dirty_hpx0)
             
             IF model_flag THEN BEGIN
                 instr_model_hpx0=Fltarr(n_hpx)
-                instr_model_hpx0[ind_map0]=(*instr_model_hpx[pol_i])
+                instr_model_hpx0[ind_map0]=Temporary(*instr_model_hpx[pol_i])
                 *instr_model_hpx[pol_i]=Temporary(instr_model_hpx0)
             ENDIF
             
             IF source_flag THEN BEGIN
                 IF Keyword_Set(ring_radius) THEN BEGIN 
                     instr_rings_hpx0=Fltarr(n_hpx)
-                    instr_rings_hpx0[ind_map0]=(*instr_rings_hpx[pol_i])
+                    instr_rings_hpx0[ind_map0]=Temporary(*instr_rings_hpx[pol_i])
                     *instr_rings_hpx[pol_i]=Temporary(instr_rings_hpx0)
                 ENDIF
                 instr_sources_hpx0=Fltarr(n_hpx)
@@ -221,7 +226,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
                 *instr_sources_hpx[pol_i]=Temporary(instr_sources_hpx0)
             ENDIF
             weights_hpx0=Fltarr(n_hpx)
-            weights_hpx0[ind_map0]=(*weights_hpx[pol_i])
+            weights_hpx0[ind_map0]=Temporary(*weights_hpx[pol_i])
             *weights_hpx[pol_i]=Temporary(weights_hpx0)
         ENDIF 
         (*instr_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_dirty_arr[pol_i],hpx_cnv)
