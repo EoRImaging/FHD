@@ -62,8 +62,8 @@ ENDELSE
 
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
-image_inds=Long64(Floor(xv_hpx)+dimension*Floor(yv_hpx))
-corner_inds=Long64([0,1,dimension,dimension+1])
+;image_inds=Long64(Floor(xv_hpx)+dimension*Floor(yv_hpx))
+;corner_inds=Long64([0,1,dimension,dimension+1])
 
 min_bin=Min(Floor(xv_hpx)+dimension*Floor(yv_hpx))>0L
 max_bin=Max(Ceil(xv_hpx)+dimension*Ceil(yv_hpx))<(dimension*elements-1L)
@@ -75,7 +75,6 @@ htot=h00+h01+h10+h11
 inds=where(htot,n_img_use)
 
 n_arr=htot[inds]
-;hpx_inds=
 
 i_use=inds+min_bin
 sa=Ptrarr(n_img_use,/allocate)
@@ -84,8 +83,8 @@ ija=Ptrarr(n_img_use,/allocate)
 FOR i=0L,n_img_use-1L DO BEGIN
     ind0=inds[i]
     sa0=fltarr(n_arr[i])
-    ija0=Lon64arr(n_arr[i])
-    bin_i=Total([0,h00[ind0],h01[ind0],h10[ind0],h11[ind0]],/cumulative)
+    ija0=Lonarr(n_arr[i])
+    bin_i=Total([0L,h00[ind0],h01[ind0],h10[ind0],h11[ind0]],/cumulative)
     IF h00[ind0] GT 0 THEN BEGIN
         bi=0
         inds1=ri00[ri00[ind0]:ri00[ind0+1]-1]
