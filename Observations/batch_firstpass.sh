@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#Clear input parameters
+unset obs_file_name
+unset starting_obs
+unset ending_obs
+unset outdir
+unset version
 #Parse flags for inputs
 while getopts ":f:s:e:o:v:" option
 do
@@ -15,6 +21,9 @@ do
 	   exit 1;;
    esac
 done
+
+echo starting obs $starting_obs
+echo ending obs $ending_obs
 
 #Manual shift to the next flag
 shift $(($OPTIND - 1))
@@ -39,7 +48,7 @@ fi
 
 ### Should make these options
 nslots=10
-mem=30G
+mem=2G ### NOTE this is PER CORE!
 
 #Read the obs file and put into an array
 i=0
@@ -99,7 +108,7 @@ do
 	errfile=${outdir}/fhd_${version}/${obs_id}_err.log
 	outfile=${outdir}/fhd_${version}/${obs_id}_out.log
 	echo "Starting observation id $obs_id"
-	qsub -l h_vmem=$mem,h_stack=512k -V -v obs_id=$obs_id,nslots=$nslots,outdir=$outdir,version=$version -e $errfile -o $outfile -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh
+	qsub -P FHD -l h_vmem=$mem,h_stack=512k -V -v obs_id=$obs_id,nslots=$nslots,outdir=$outdir,version=$version -e $errfile -o $outfile -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh
         #$idl_e $obs_id $version
     fi
 done
