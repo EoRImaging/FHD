@@ -60,7 +60,7 @@ instr_dirty_hpx=Ptrarr(n_pol)
 instr_sources_hpx=Ptrarr(n_pol)
 instr_rings_hpx=Ptrarr(n_pol)
 instr_catalog_hpx=Ptrarr(n_pol)
-beam2_hpx=Ptrarr(n_pol)
+weights_hpx=Ptrarr(n_pol)
 IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
     hpx_inds=restrict_hpx_inds
     n_hpx=N_Elements(restrict_hpx_inds)
@@ -152,36 +152,75 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             ENDIF
             N_hpx=N_Elements(hpx_inds)
             ind_map1=L64indgen(N_hpx) ;index map of hpx_inds that correspond to hpx_inds1 
+            reform_flag=0
         ENDIF ELSE BEGIN
             hist_min=Min(hpx_inds)<Min(hpx_inds1)
             hist_max=Max(hpx_inds)>Max(hpx_inds1)
-            hist0=histogram(Temporary(hpx_inds),min=hist_min,max=hist_max,/binsize)
-            hist1=histogram(Temporary(hpx_inds1),min=hist_min,max=hist_max,/binsize)
+            hist0=histogram((hpx_inds),min=hist_min,max=hist_max,/binsize)
+            hist1=histogram((hpx_inds1),min=hist_min,max=hist_max,/binsize)
             hist=hist0+hist1
             hpx_inds_i=where(hist,n_hpx,/L64)
             hist0=hist0[hpx_inds_i]
             hist1=hist1[hpx_inds_i]
-            ind_map0=where(Temporary(hist0),n_hpx0,/L64)
-            ind_map1=where(Temporary(hist1),n_hpx1,/L64)
-            hpx_inds=Temporary(hpx_inds_i)+hist_min
-            
+            ind_map0=where((hist0),n_hpx0,/L64)
+            ind_map1=where((hist1),n_hpx1,/L64)
+            hpx_inds=(hpx_inds_i)+hist_min
+            IF n_hpx0 EQ n_hpx THEN reform_flag=0 ELSE reform_flag=1
         ENDELSE
     ENDIF ELSE BEGIN
-    
+    ;This option is not debugged!
+        hist_min=Min(hpx_inds)<Min(hpx_inds1)
+        hist_max=Max(hpx_inds)>Max(hpx_inds1)
+        hist0=histogram(Temporary(hpx_inds),min=hist_min,max=hist_max,/binsize)
+        hist1=histogram(Temporary(hpx_inds1),min=hist_min,max=hist_max,/binsize)
+;        hist=hist0+hist1 ; in this case, ONLY want indices found in the input hpx_inds
+        hpx_inds_i=where(hist0 AND hist1,n_hpx,/L64)
+;        hist0=hist0[hpx_inds_i]
+        hist1=hist1[hpx_inds_i]
+;        ind_map0=where(Temporary(hist0),n_hpx0,/L64)
+        ind_map1=where(Temporary(hist1),n_hpx1,/L64)
+        reform_flag=0
     ENDELSE
     
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        
-    ENDFOR
-;    instr_model_hpx=Ptrarr(n_pol)
-;    instr_dirty_hpx=Ptrarr(n_pol)
-;    instr_sources_hpx=Ptrarr(n_pol)
-;    instr_rings_hpx=Ptrarr(n_pol)
-;    instr_catalog_hpx=Ptrarr(n_pol)
-;    beam2_hpx=Ptrarr(n_pol)
     
-    undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        IF reform_flag THEN BEGIN
+            instr_dirty_hpx0=Lon64arr(n_hpx)
+            instr_dirty_hpx0[ind_map0]=(*instr_dirty_hpx[pol_i])
+            *instr_dirty_hpx[pol_i]=Temporary(instr_dirty_hpx0)
+            
+            IF model_flag THEN BEGIN
+                instr_model_hpx0=Lon64arr(n_hpx)
+                instr_model_hpx0[ind_map0]=(*instr_model_hpx[pol_i])
+                *instr_model_hpx[pol_i]=Temporary(instr_model_hpx0)
+            ENDIF
+            
+            IF source_flag THEN BEGIN
+                IF Keyword_Set(ring_radius) THEN BEGIN 
+                    instr_rings_hpx0=Lon64arr(n_hpx)
+                    instr_rings_hpx0[ind_map0]=(*instr_rings_hpx[pol_i])
+                    *instr_rings_hpx[pol_i]=Temporary(instr_rings_hpx0)
+                ENDIF
+                instr_sources_hpx0=Lon64arr(n_hpx)
+                instr_sources_hpx0[ind_map0]=(*instr_sources_hpx[pol_i])
+                *instr_sources_hpx[pol_i]=Temporary(instr_sources_hpx0)
+            ENDIF
+            weights_hpx0=Lon64arr(n_hpx)
+            weights_hpx0[ind_map0]=(*weights_hpx[pol_i])
+            *weights_hpx[pol_i]=Temporary(weights_hpx0)
+        ENDIF 
+        (*instr_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_dirty_arr[pol_i],hpx_cnv)
+        IF model_flag THEN (*instr_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_model_arr[pol_i],hpx_cnv)
+        IF source_flag THEN BEGIN
+            IF Keyword_Set(ring_radius) THEN (*instr_rings_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_rings[pol_i],hpx_cnv)
+            (*instr_sources_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_sources[pol_i],hpx_cnv)
+        ENDIF
+        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*beam_base2[pol_i],hpx_cnv)
+    ENDFOR
+    
+    undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv,beam_base2,beam_base
 ENDFOR
+;SAVE,hpx_inds,nside,obs_arr,residual_hpx,weights_hpx,sources_hpx,restored_hpx,dirty_hpx,mrc_hpx,filename=save_path,/compress
 
 END
 
