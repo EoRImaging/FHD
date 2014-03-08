@@ -9,7 +9,9 @@ heap_gc
 IF N_Elements(restrict_hpx_inds) EQ 0 THEN restrict_hpx_inds=0
 IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform'
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
-save_path=output_path+'_maps.sav'
+
+n_obs=N_Elements(file_list)
+save_path=output_path+file_list[0]+'-'+file_list[n_obs-1]+'_maps.sav'
 
 IF Keyword_Set(restore_last) THEN BEGIN
     RESTORE,save_path
@@ -22,7 +24,6 @@ cal_ref_i=2
 fix_flux=1
 ;combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
 
-n_obs=N_Elements(file_list)
 
 ftest=file_test(file_list+'_obs.sav') 
 ;ftest=intarr(n_obs)
@@ -35,7 +36,6 @@ IF max(fhd_test) GT 0 THEN BEGIN
     IF min(fhd_test) EQ 0 THEN file_list_use=file_list_use[where(fhd_test)]
 ENDIF ELSE fhd_flag=0
 
-IF ~Keyword_Set(silent) THEN print,'Creating HEALPix maps'
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path=file_list_use[obs_i]
     RESTORE,file_path+'_obs.sav'
@@ -43,7 +43,8 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     obs_arr[obs_i]=obs
     
     beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
-    beam_area=2.*!Pi*(beam_width*obs.degpix)^2. 
+;    beam_area=2.*!Pi*(beam_width*obs.degpix)^2. 
+    beam_area=(beam_width*obs.degpix)^2.
     pix_sky=4.*!Pi*!RaDeg^2./beam_area
     Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
     Nside_chk*=2.
@@ -54,6 +55,7 @@ ENDFOR
 
 n_pol=Min(obs_arr.n_pol)
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
+IF ~Keyword_Set(silent) THEN print,'Creating HEALPix maps using nside='+Strn(nside)
 
 instr_model_hpx=Ptrarr(n_pol)
 instr_dirty_hpx=Ptrarr(n_pol)
