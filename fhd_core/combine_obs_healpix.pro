@@ -153,7 +153,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     IF fit_inds_flag THEN BEGIN
         IF N_Elements(hpx_inds) EQ 0 THEN BEGIN
-            hpx_inds=Temporary(hpx_inds1)
+            hpx_inds=(hpx_inds1)
             IF Keyword_Set(restrict_hpx_inds) THEN BEGIN
                 restrict_hpx_inds=hpx_inds
                 fit_inds_flag=0
@@ -164,14 +164,14 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         ENDIF ELSE BEGIN
             hist_min=Min(hpx_inds)<Min(hpx_inds1)
             hist_max=Max(hpx_inds)>Max(hpx_inds1)
-            hist0=histogram(Temporary(hpx_inds),min=hist_min,max=hist_max,/binsize,reverse_ind=ri0)
-            hist1=histogram(Temporary(hpx_inds1),min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
+            hist0=histogram((hpx_inds),min=hist_min,max=hist_max,/binsize,reverse_ind=ri0)
+            hist1=histogram((hpx_inds1),min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
             hist=hist0+hist1
-            hpx_inds_i=where(Temporary(hist),n_hpx)
+            hpx_inds_i=where((hist),n_hpx)
             hist0=hist0[hpx_inds_i]
             hist1=hist1[hpx_inds_i]
-            ind_use0=where(Temporary(hist0),n_hpx0)
-            ind_use1=where(Temporary(hist1),n_hpx1)
+            ind_use0=where((hist0),n_hpx0)
+            ind_use1=where((hist1),n_hpx1)
             
             IF n_hpx0 EQ n_hpx THEN reform_flag=0 ELSE BEGIN
                 reform_flag=1
@@ -181,15 +181,15 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             ENDELSE
             ind_order1=Sort(ri1[ri1[hpx_inds_i[ind_use1]]])
             ri1=0
-            ind_map1=ind_use1[Temporary(ind_order1)]
+            ind_map1=ind_use1[(ind_order1)]
             hpx_inds=(hpx_inds_i)+hist_min
         ENDELSE
     ENDIF ELSE BEGIN
     ;This option is not debugged!
         hist_min=Min(hpx_inds)<Min(hpx_inds1)
         hist_max=Max(hpx_inds)>Max(hpx_inds1)
-        hist0=histogram(Temporary(hpx_inds),min=hist_min,max=hist_max,/binsize)
-        hist1=histogram(Temporary(hpx_inds1),min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
+        hist0=histogram((hpx_inds),min=hist_min,max=hist_max,/binsize)
+        hist1=histogram((hpx_inds1),min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
 ;        hist=hist0+hist1 ; in this case, ONLY want indices found in the input hpx_inds
         hpx_inds_i=where(hist0 AND hist1,n_hpx)
         hist1=hist1[hpx_inds_i]
@@ -210,28 +210,28 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         IF ~Ptr_valid(weights_hpx[pol_i]) THEN weights_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
         IF reform_flag THEN BEGIN
             instr_dirty_hpx0=Fltarr(n_hpx)
-            instr_dirty_hpx0[ind_map0]=Temporary(*instr_dirty_hpx[pol_i])
-            *instr_dirty_hpx[pol_i]=Temporary(instr_dirty_hpx0)
+            instr_dirty_hpx0[ind_map0]=(*instr_dirty_hpx[pol_i])
+            *instr_dirty_hpx[pol_i]=(instr_dirty_hpx0)
             
             IF model_flag THEN BEGIN
                 instr_model_hpx0=Fltarr(n_hpx)
-                instr_model_hpx0[ind_map0]=Temporary(*instr_model_hpx[pol_i])
-                *instr_model_hpx[pol_i]=Temporary(instr_model_hpx0)
+                instr_model_hpx0[ind_map0]=(*instr_model_hpx[pol_i])
+                *instr_model_hpx[pol_i]=(instr_model_hpx0)
             ENDIF
             
             IF source_flag THEN BEGIN
                 IF Keyword_Set(ring_radius) THEN BEGIN 
                     instr_rings_hpx0=Fltarr(n_hpx)
-                    instr_rings_hpx0[ind_map0]=Temporary(*instr_rings_hpx[pol_i])
-                    *instr_rings_hpx[pol_i]=Temporary(instr_rings_hpx0)
+                    instr_rings_hpx0[ind_map0]=(*instr_rings_hpx[pol_i])
+                    *instr_rings_hpx[pol_i]=(instr_rings_hpx0)
                 ENDIF
                 instr_sources_hpx0=Fltarr(n_hpx)
                 instr_sources_hpx0[ind_map0]=(*instr_sources_hpx[pol_i])
-                *instr_sources_hpx[pol_i]=Temporary(instr_sources_hpx0)
+                *instr_sources_hpx[pol_i]=(instr_sources_hpx0)
             ENDIF
             weights_hpx0=Fltarr(n_hpx)
-            weights_hpx0[ind_map0]=Temporary(*weights_hpx[pol_i])
-            *weights_hpx[pol_i]=Temporary(weights_hpx0)
+            weights_hpx0[ind_map0]=(*weights_hpx[pol_i])
+            *weights_hpx[pol_i]=(weights_hpx0)
         ENDIF 
         (*instr_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_dirty_arr[pol_i],hpx_cnv)
         IF model_flag THEN (*instr_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_model_arr[pol_i],hpx_cnv)
