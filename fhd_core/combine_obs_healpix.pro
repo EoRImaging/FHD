@@ -11,7 +11,7 @@ IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform'
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 
 n_obs=N_Elements(file_list)
-save_path=output_path+file_list[0]+'-'+file_list[n_obs-1]+'_maps.sav'
+save_path=output_path+'_'+file_basename(file_list[0])+'-'+file_basename(file_list[n_obs-1])+'_maps.sav'
 
 IF Keyword_Set(restore_last) THEN BEGIN
     RESTORE,save_path
