@@ -1,6 +1,8 @@
-PRO combine_obs_healpix,file_list,hpx_inds,residual_hpx,weights_hpx,dirty_hpx,sources_hpx,restored_hpx,mrc_hpx=mrc_hpx,$
-    nside=nside,restore_last=restore_last,output_path=output_path,beam_threshold=beam_threshold,$
-    obs_arr=obs_arr,image_filter_fn=image_filter_fn,ston_cut=ston_cut,silent=silent,$
+PRO combine_obs_healpix,file_list,hpx_inds,obs_arr,instr_dirty_hpx=instr_dirty_hpx,$
+    instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
+    instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,$
+    nside=nside,restore_last=restore_last,output_path=output_path,$
+    beam_threshold=beam_threshold,image_filter_fn=image_filter_fn,silent=silent,$
     catalog_file_path=catalog_file_path,restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
 
 except=!except
