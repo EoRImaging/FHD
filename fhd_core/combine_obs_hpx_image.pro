@@ -118,7 +118,7 @@ FOR stk_i=0,n_pol-1 DO BEGIN
             IF rings_flag THEN write_healpix_fits,file_path_rings,Stokes_rings,hpx_inds,nside=nside,weights=stokes_weights
     ENDIF
     IF ~Keyword_Set(no_hpx_png) THEN BEGIN
-    
+        
     ENDIF
 ENDFOR
 ;FOR stk_i=0,n_pol-1 DO BEGIN
