@@ -113,7 +113,7 @@ FOR stk_i=0,n_pol-1 DO BEGIN
 ;    IF restored_flag THEN stokes_restored=stokes_residual+stokes_sources
     
     IF ~Keyword_Set(no_hpx_fits) THEN BEGIN
-        write_fits_cut4,file_path_weights,hpx_inds_nest,stokes_weights,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        write_fits_cut4,file_path_weights+'.fits',hpx_inds_nest,stokes_weights,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         IF (residual_flag OR model_flag) THEN write_fits_cut4,file_path_residual+'.fits',hpx_inds_nest,stokes_residual,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         IF restored_flag THEN write_fits_cut4,file_path_restored+'.fits',hpx_inds_nest,stokes_residual+stokes_sources,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         IF source_flag THEN write_fits_cut4,file_path_sources+'.fits',hpx_inds_nest,Stokes_sources,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
