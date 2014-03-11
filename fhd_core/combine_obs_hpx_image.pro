@@ -1,7 +1,7 @@
 PRO combine_obs_hpx_image,file_list,hpx_inds,obs_arr,instr_dirty_hpx=instr_dirty_hpx,$
     instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
     instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$
-    output_path=healpix_path,image_filter_fn=image_filter_fn,color_table=color_table,$
+    output_path=output_path,image_filter_fn=image_filter_fn,color_table=color_table,$
     high_dirty=high_dirty,high_source=high_source,high_residual=high_residual,$
     low_dirty=low_dirty,low_source=low_source,low_residual=low_residual,$
     no_hpx_fits=no_hpx_fits,no_hpx_png=no_hpx_png,no_hpx_ps=no_hpx_ps,_Extra=extra
@@ -20,7 +20,7 @@ heap_gc
 ;IF n_match_proj EQ 0 THEN proj_routine='orthview' ELSE proj_routine=proj_name_list[proj_i]
 
 IF N_Elements(output_path) EQ 0 THEN output_path='Combined_obs'
-IF N_Elements(file_list) GT 1 THEN  save_path_base=output_path+'_'+file_basename(file_list[0])+'-'+file_basename(file_list[n_obs-1]) $
+IF N_Elements(file_list) GT 1 THEN  save_path_base=output_path+'_'+file_basename(file_list[0])+'-'+file_basename(file_list[N_Elements(file_list)-1]) $
     ELSE IF N_Elements(file_list) EQ 1 THEN  save_path_base=output_path+'_'+file_basename(file_list[0]) $
         ELSE save_path_base=output_path
 
@@ -67,7 +67,7 @@ restored_flag=(residual_flag OR model_flag) AND source_flag
 dirty_flag=~residual_flag
 
 weight_corr=Ptrarr(n_pol)
-FOR pol_i=0,n_pol-1 DO weight_corr=Ptr_new(weight_invert(*weights_hpx[pol_i]))
+FOR pol_i=0,n_pol-1 DO weight_corr[pol_i]=Ptr_new(weight_invert(*weights_hpx[pol_i]))
 FOR stk_i=0,n_pol-1 DO BEGIN
     file_path_residual=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_residual'
     file_path_weights=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_weights'
