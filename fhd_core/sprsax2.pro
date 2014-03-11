@@ -57,13 +57,23 @@ ENDIF ELSE a2_flag=0
 IF Keyword_Set(mask) THEN mask_flag=1 ELSE mask_flag=0
 
 IF Keyword_Set(transpose) THEN BEGIN
-    FOR i0=0L,n-1 DO BEGIN
-        IF Keyword_Set(indexed) THEN i=i0 ELSE i=i_use[i0]
-        IF mask_flag THEN IF mask[i] EQ 0 THEN CONTINUE 
-        IF Keyword_Set(indexed) THEN B[i_use[*ija[i0]]]+=*sa[i0]*X_use[i] ELSE B[*ija[i0]]+=*sa[i0]*X_use[i]
-        IF x2_flag THEN B2[*ija[i0]]+=*sa[i0]*X2_use[i]
-        IF a2_flag THEN B2[*ija[i0]]+=*sa2[i0]*X_use[i]
-    ENDFOR
+    IF Keyword_Set(indexed) THEN BEGIN
+        FOR i0=0L,n-1 DO BEGIN
+            i=i0
+            IF mask_flag THEN IF mask[i] EQ 0 THEN CONTINUE 
+            B[i_use[*ija[i0]]]+=*sa[i0]*X_use[i]
+            IF x2_flag THEN B2[*ija[i0]]+=*sa[i0]*X2_use[i]
+            IF a2_flag THEN B2[*ija[i0]]+=*sa2[i0]*X_use[i]
+        ENDFOR
+    ENDIF ELSE BEGIN
+        FOR i0=0L,n-1 DO BEGIN
+            i=i_use[i0]
+            IF mask_flag THEN IF mask[i] EQ 0 THEN CONTINUE 
+            B[*ija[i0]]+=*sa[i0]*X_use[i]
+            IF x2_flag THEN B2[*ija[i0]]+=*sa[i0]*X2_use[i]
+            IF a2_flag THEN B2[*ija[i0]]+=*sa2[i0]*X_use[i]
+        ENDFOR
+    ENDELSE
 ENDIF ELSE BEGIN
     FOR i0=0L,n-1 DO BEGIN
         i=i_use[i0]
