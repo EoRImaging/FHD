@@ -1,4 +1,4 @@
-PRO combine_obs_healpix,file_list,hpx_inds,obs_arr,instr_dirty_hpx=instr_dirty_hpx,$
+PRO combine_obs_healpix,file_list,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
     instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
     instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,$
     nside=nside,restore_last=restore_last,output_path=output_path,$
@@ -246,9 +246,16 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         ENDIF
         (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*beam_base2[pol_i],hpx_cnv)
     ENDFOR
+    IF N_Elements(n_obs_hpx) EQ 0 THEN n_obs_hpx=intarr(n_hpx)
+    IF reform_flag THEN BEGIN
+        n_obs_hpx0=intarr(n_hpx)
+        n_obs_hpx0[ind_map0]=n_obs_hpx
+        n_obs_hpx=(n_obs_hpx0)
+    ENDIF
+    n_obs_hpx[ind_map1]+=1
     
     undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv,beam_base2,beam_base
 ENDFOR
 
-SAVE,hpx_inds,nside,obs_arr,instr_dirty_hpx,instr_model_hpx,weights_hpx,instr_sources_hpx,instr_rings_hpx,instr_catalog_hpx,filename=save_path,/compress
+SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,instr_dirty_hpx,instr_model_hpx,weights_hpx,instr_sources_hpx,instr_rings_hpx,instr_catalog_hpx,filename=save_path,/compress
 END

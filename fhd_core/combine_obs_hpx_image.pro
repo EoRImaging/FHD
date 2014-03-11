@@ -1,4 +1,4 @@
-PRO combine_obs_hpx_image,file_list,hpx_inds,obs_arr,instr_dirty_hpx=instr_dirty_hpx,$
+PRO combine_obs_hpx_image,file_list,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
     instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
     instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$
     output_path=output_path,image_filter_fn=image_filter_fn,color_table=color_table,$
@@ -37,25 +37,26 @@ pol_names=['I','Q','U','V']
 n_hpx=nside2npix(nside)
 n_pix_use=N_Elements(hpx_inds)
 n_obs=N_Elements(obs_arr)
-
-IF n_obs EQ 1 THEN BEGIN
-    lon_avg=obs_arr.obsra
-    lat_avg=obs_arr.obsdec
-ENDIF ELSE BEGIN
-    lon_arr=obs_arr.obsra
-    lat_arr=obs_arr.obsdec
-    lon_hist=histogram(Floor(lon_arr),min=0,/bin,max=359)
-    lon_test=morph_distance(lon_hist,/background)
-    test_max=max(lon_test,lon_branch)
-    lon_use=lon_arr
-    lon_mod_i=where(lon_arr LE lon_branch,n_branch)
-    IF n_branch GT 0 THEN lon_use[lon_mod_i]+=360.
-    lon_avg=Median(lon_use) & IF lon_avg GE 360. THEN lon_avg-=360.
-    lat_avg=Mean(lat_arr)
-ENDELSE
-
 n_pol=Min(obs_arr.n_pol)<2
+IF N_Elements(n_obs_hpx) NE n_pix_use THEN n_obs_hpx=1
+
 IF n_pol EQ 1 THEN pol2=pol1 ;hack to get the factor of two in all the right places
+
+;IF n_obs EQ 1 THEN BEGIN
+;    lon_avg=obs_arr.obsra
+;    lat_avg=obs_arr.obsdec
+;ENDIF ELSE BEGIN
+;    lon_arr=obs_arr.obsra
+;    lat_arr=obs_arr.obsdec
+;    lon_hist=histogram(Floor(lon_arr),min=0,/bin,max=359)
+;    lon_test=morph_distance(lon_hist,/background)
+;    test_max=max(lon_test,lon_branch)
+;    lon_use=lon_arr
+;    lon_mod_i=where(lon_arr LE lon_branch,n_branch)
+;    IF n_branch GT 0 THEN lon_use[lon_mod_i]+=360.
+;    lon_avg=Median(lon_use) & IF lon_avg GE 360. THEN lon_avg-=360.
+;    lat_avg=Mean(lat_arr)
+;ENDELSE
 
 residual_flag=Min(obs_arr.residual)
 source_flag=Min(Ptr_valid(instr_sources_hpx))
@@ -68,6 +69,7 @@ dirty_flag=~residual_flag
 
 weight_corr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO weight_corr[pol_i]=Ptr_new(weight_invert(*weights_hpx[pol_i]))
+ring2nest, nside, hpx_inds, hpx_inds_nest ;external programs are much happier reading in Healpix fits files with the nested pixel ordering
 FOR stk_i=0,n_pol-1 DO BEGIN
     file_path_residual=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_residual'
     file_path_weights=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_weights'
@@ -106,16 +108,17 @@ FOR stk_i=0,n_pol-1 DO BEGIN
             sign[stk_i]*(*instr_rings_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
     ENDIF
     stokes_weights=*weights_hpx[pol1[stk_i]]+*weights_hpx[pol2[stk_i]]
+    err_map=weight_invert(stokes_weights)
     
 ;    IF restored_flag THEN stokes_restored=stokes_residual+stokes_sources
     
     IF ~Keyword_Set(no_hpx_fits) THEN BEGIN
-            write_healpix_fits,file_path_weights,stokes_weights,hpx_inds,nside=nside
-            IF (residual_flag OR model_flag) THEN write_healpix_fits,file_path_residual,stokes_residual,hpx_inds,nside=nside,weights=stokes_weights
-            IF restored_flag THEN write_healpix_fits,file_path_restored,stokes_residual+stokes_sources,hpx_inds,nside=nside,weights=stokes_weights
-            IF source_flag THEN write_healpix_fits,file_path_sources,Stokes_sources,hpx_inds,nside=nside,weights=stokes_weights
-            IF dirty_flag THEN write_healpix_fits,file_path_dirty,Stokes_dirty,hpx_inds,nside=nside,weights=stokes_weights
-            IF rings_flag THEN write_healpix_fits,file_path_rings,Stokes_rings,hpx_inds,nside=nside,weights=stokes_weights
+        write_fits_cut4,file_path_weights,hpx_inds_nest,stokes_weights,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        IF (residual_flag OR model_flag) THEN write_fits_cut4,file_path_residual+'.fits',hpx_inds_nest,stokes_residual,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        IF restored_flag THEN write_fits_cut4,file_path_restored+'.fits',hpx_inds_nest,stokes_residual+stokes_sources,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        IF source_flag THEN write_fits_cut4,file_path_sources+'.fits',hpx_inds_nest,Stokes_sources,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        IF dirty_flag THEN write_fits_cut4,file_path_dirty+'.fits',hpx_inds_nest,Stokes_dirty,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        IF rings_flag THEN write_fits_cut4,file_path_rings+'.fits',hpx_inds_nest,Stokes_rings,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
     ENDIF
     IF ~Keyword_Set(no_hpx_png) THEN BEGIN
         
