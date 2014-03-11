@@ -1,4 +1,4 @@
-PRO combine_obs_hpx_image,fhd_file_list,hpx_inds,obs_arr,instr_dirty_hpx=instr_dirty_hpx,$
+PRO combine_obs_hpx_image,file_list,hpx_inds,obs_arr,instr_dirty_hpx=instr_dirty_hpx,$
     instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
     instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$
     output_path=healpix_path,image_filter_fn=image_filter_fn,color_table=color_table,$
@@ -19,7 +19,10 @@ heap_gc
 ;proj_i=where(strpos(proj_list,map_projection) GE 0,n_match_proj)
 ;IF n_match_proj EQ 0 THEN proj_routine='orthview' ELSE proj_routine=proj_name_list[proj_i]
 
-save_path_base=output_path+'_'+file_basename(file_list[0])+'-'+file_basename(file_list[n_obs-1])
+IF N_Elements(output_path) EQ 0 THEN output_path='Combined_obs'
+IF N_Elements(file_list) GT 1 THEN  save_path_base=output_path+'_'+file_basename(file_list[0])+'-'+file_basename(file_list[n_obs-1]) $
+    ELSE IF N_Elements(file_list) EQ 1 THEN  save_path_base=output_path+'_'+file_basename(file_list[0]) $
+        ELSE save_path_base=output_path
 
 IF N_Elements(weight_threshold) EQ 0 THEN weight_threshold_use=0.2 $
     ELSE weight_threshold_use=weight_threshold
@@ -27,7 +30,9 @@ IF N_Elements(weight_threshold) EQ 0 THEN weight_threshold_use=0.2 $
 Stokes_images=Ptrarr(2,/allocate)
 Stokes_weights=Ptrarr(2,/allocate)
 Stokes_inds=Ptrarr(2,/allocate)
-sign=[[1.,1.],[1.,-1.]]
+sign=[1.,-1.,1.,-1.]
+pol1=[0,0,2,2]
+pol2=[1,1,3,3]
 pol_names=['XX','YY','XY','YX','I','Q','U','V']
 n_hpx=nside2npix(nside)
 n_pix_use=N_Elements(hpx_inds)
@@ -50,22 +55,72 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 n_pol=Min(obs_arr.n_pol)<2
-IF n_pol EQ 1 THEN sign*=2. ;hack to get the factor of two in all the right places
+IF n_pol EQ 1 THEN pol2=pol1 ;hack to get the factor of two in all the right places
 
-FOR pol_i=0,n_pol-1 DO BEGIN
-    file_path_img=save_path_base+'_Stokes_'+pol_names[pol_i+4]+'_hpx_residual'
-    file_path_wts=save_path_base+'_Stokes_'+pol_names[pol_i+4]+'_hpx_weights'
-    file_path_rst=save_path_base+'_Stokes_'+pol_names[pol_i+4]+'_hpx_restored'
-    file_path_src=save_path_base+'_Stokes_'+pol_names[pol_i+4]+'_hpx_sources'
-    file_path_dty=save_path_base+'_Stokes_'+pol_names[pol_i+4]+'_hpx_dirty'
+residual_flag=Min(obs_arr.residual)
+source_flag=Min(Ptr_valid(instr_sources_hpx))
+model_flag=Min(Ptr_valid(instr_model_hpx))
+rings_flag=Min(Ptr_valid(instr_rings_hpx))
+catalog_flag=Min(Ptr_valid(instr_catalog_hpx))
+IF Keyword_Set(residual_flag) THEN model_flag=0
+restored_flag=(residual_flag OR model_flag) AND source_flag
+dirty_flag=~residual_flag
+
+weight_corr=Ptrarr(n_pol)
+FOR pol_i=0,n_pol-1 DO weight_corr=Ptr_new(weight_invert(*weights_hpx[pol_i]))
+FOR stk_i=0,n_pol-1 DO BEGIN
+    file_path_residual=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_residual'
+    file_path_weights=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_weights'
+    file_path_restored=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_restored'
+    file_path_sources=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_sources'
+    file_path_dirty=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_dirty'
+    file_path_rings=save_path_base+'_Stokes_'+pol_names[stk_i]+'_hpx_source_rings'
         
-    title_img='Composite Stokes '+pol_names[pol_i+4]+' residual'
-    title_wts='Composite Stokes '+pol_names[pol_i+4]+' weights'
+    title_img='Composite Stokes '+pol_names[stk_i]+' residual'
+    title_wts='Composite Stokes '+pol_names[stk_i]+' weights'
         
-    title_rst='Composite Stokes '+pol_names[pol_i+4]+' restored'
-    title_src='Composite Stokes '+pol_names[pol_i+4]+' sources'
-    title_dty='Composite Stokes '+pol_names[pol_i+4]+' dirty'
-    title_mrc='Composite Stokes '+pol_names[pol_i+4]+' MRC rings'
+    title_rst='Composite Stokes '+pol_names[stk_i]+' restored'
+    title_src='Composite Stokes '+pol_names[stk_i]+' sources'
+    title_dty='Composite Stokes '+pol_names[stk_i]+' dirty'
+    
+    
+    IF model_flag AND not residual_flag THEN BEGIN
+        stokes_residual=(*instr_dirty_hpx[pol1[stk_i]]-*instr_model_hpx[pol1[stk_i]])*(*weight_corr[pol1[stk_i]])+$
+            sign[stk_i]*(*instr_dirty_hpx[pol2[stk_i]]-*instr_model_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
+    ENDIF ELSE BEGIN
+        stokes_residual=(*instr_dirty_hpx[pol1[stk_i]])*(*weight_corr[pol1[stk_i]])+$
+            sign[stk_i]*(*instr_dirty_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
+    ENDELSE
+    
+    IF dirty_flag THEN BEGIN
+        stokes_dirty=(*instr_dirty_hpx[pol1[stk_i]])*(*weight_corr[pol1[stk_i]])+$
+            sign[stk_i]*(*instr_dirty_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
+    ENDIF
+    
+    IF source_flag THEN BEGIN
+        stokes_sources=stokes_residual+(*instr_sources_hpx[pol1[stk_i]])*(*weight_corr[pol1[stk_i]])+(*instr_sources_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
+    ENDIF
+    
+    IF rings_flag THEN BEGIN
+        stokes_rings=(*instr_rings_hpx[pol1[stk_i]])*(*weight_corr[pol1[stk_i]])+$
+            sign[stk_i]*(*instr_rings_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
+    ENDIF
+    stokes_weights=*weights_hpx[pol1[stk_i]]+*weights_hpx[pol2[stk_i]]
+    
+;    IF restored_flag THEN stokes_restored=stokes_residual+stokes_sources
+    
+    IF ~Keyword_Set(no_hpx_fits) THEN BEGIN
+            write_healpix_fits,file_path_weights,stokes_weights,hpx_inds,nside=nside
+            IF (residual_flag OR model_flag) THEN write_healpix_fits,file_path_residual,stokes_residual,hpx_inds,nside=nside,weights=stokes_weights
+            IF restored_flag THEN write_healpix_fits,file_path_restored,stokes_residual+stokes_sources,hpx_inds,nside=nside,weights=stokes_weights
+            IF source_flag THEN write_healpix_fits,file_path_sources,Stokes_sources,hpx_inds,nside=nside,weights=stokes_weights
+            IF dirty_flag THEN write_healpix_fits,file_path_dirty,Stokes_dirty,hpx_inds,nside=nside,weights=stokes_weights
+            IF rings_flag THEN write_healpix_fits,file_path_rings,Stokes_rings,hpx_inds,nside=nside,weights=stokes_weights
+    ENDIF
+    IF ~Keyword_Set(no_hpx_png) THEN BEGIN
+    
+    ENDIF
+ENDFOR
 ;FOR stk_i=0,n_pol-1 DO BEGIN
 ;    Stokes_single=fltarr(npix)
 ;    Stokes_weights_single=fltarr(npix)

@@ -21,12 +21,6 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF
 pol_names=['xx','yy','xy','yx']
 
-;color_table=0.1
-cal_ref_i=2
-fix_flux=1
-;combine_obs_sources,file_list,calibration,source_list,/restore_last,output_path=output_path
-
-
 ftest=file_test(file_list+'_obs.sav') 
 ;ftest=intarr(n_obs)
 ;FOR file_i=0,n_obs-1 DO ftest[file_i]=file_test(file_list[file_i]+'_obs.sav')   
@@ -35,7 +29,7 @@ file_list_use=file_list[file_i_use]
 fhd_test=file_test(file_list_use+'_fhd.sav')
 IF max(fhd_test) GT 0 THEN BEGIN
     fhd_flag=1
-    IF min(fhd_test) EQ 0 THEN file_list_use=file_list_use[where(fhd_test)]
+    IF min(fhd_test) EQ 0 THEN file_list_use=file_list_use[where(fhd_test,n_obs)]
 ENDIF ELSE fhd_flag=0
 
 FOR obs_i=0,n_obs-1 DO BEGIN
@@ -132,24 +126,31 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     instr_rings=Ptrarr(n_pol)
     filter_arr=Ptrarr(n_pol,/allocate) 
     FOR pol_i=0,n_pol-1 DO BEGIN
+        ;we want ALL images in the beam^2 holographic frame
         instr_dirty_arr[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
             image_filter_fn=image_filter_fn,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra))
         IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
             image_filter_fn=image_filter_fn,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra))
         IF source_flag THEN BEGIN
             IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_array,obs,pol_i=pol_i,resolution=16.,$
-                dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))
+                dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))*(*beam_base[pol_i])
             instr_sources[pol_i]=Ptr_new(source_image_generate(source_array,obs,pol_i=pol_i,resolution=16.,$
-                dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra))
+                dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra))*(*beam_base[pol_i])
         ENDIF
     ENDFOR
     
     ; renormalize based on weights
     renorm_factor = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_base,filter_arr=filter_arr,$
-      image_filter_fn=image_filter_fn,degpix=degpix,/antialias)
+        image_filter_fn=image_filter_fn,degpix=degpix,/antialias)
     FOR pol_i=0,n_pol-1 DO BEGIN
-      *instr_dirty_arr[pol_i]*=renorm_factor
-      IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor 
+        *instr_dirty_arr[pol_i]*=renorm_factor*n_vis_rel
+        IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor*n_vis_rel 
+        IF source_flag THEN BEGIN
+             IF Keyword_Set(ring_radius) THEN *instr_rings[pol_i]*=n_vis_rel
+             *instr_sources[pol_i]*=n_vis_rel
+        ENDIF
+        *beam_base[pol_i]*=n_vis_rel
+        *beam_base2[pol_i]*=n_vis_rel
     ENDFOR
     
     hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,restore_last=0,restrict_hpx_inds=restrict_hpx_inds,/no_save,_Extra=extra)
