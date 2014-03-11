@@ -7,6 +7,7 @@
 # obs_id, outdir, version and nslots expected to be passed from qsub call
 
 echo JOBID ${JOB_ID}
+echo obsid ${obs_id}
 
 /usr/local/bin/idl -IDL_DEVICE ps -IDL_CPU_TPOOL_NTHREADS $nslots -e eor_firstpass_spawn -args $obs_id $outdir $version 
 

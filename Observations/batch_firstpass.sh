@@ -100,6 +100,13 @@ fi
 FHDpath=$(idl -e 'print,rootdir("fhd")') ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 
 #Run idl for all specified obs_id using the above commands
+unset good_obs_list
+for obs_id in "${obs_id_array[@]}"; do
+    if [ $obs_id -ge $starting_obs ] && [ $obs_id -le $ending_obs ]; then
+	good_obs_list+=($obs_id)
+    fi
+done
+
 for obs_id in "${obs_id_array[@]}"
 do
     if [ $obs_id -ge $starting_obs ] && [ $obs_id -le $ending_obs ]

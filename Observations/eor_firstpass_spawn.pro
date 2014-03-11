@@ -79,7 +79,8 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 ;cal_cable_reflection_fit=1
-cal_cable_reflection_fit=150
+;cal_cable_reflection_fit=150
+allow_sidelobe_cal_sources=1
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
@@ -94,6 +95,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_obs=combine_obs,no_fits=no_fits,snapshot_healpix_export=snapshot_healpix_export,$
     min_cal_baseline=min_cal_baseline,save_visibilities=save_visibilities,split_ps_export=split_ps_export,return_cal_visibilities=return_cal_visibilities,$
     bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,$
-    n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,cal_cable_reflection_fit=cal_cable_reflection_fit,_Extra=extra
+    n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,cal_cable_reflection_fit=cal_cable_reflection_fit,allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,_Extra=extra
 !except=except
 END
