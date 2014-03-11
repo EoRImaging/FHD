@@ -98,7 +98,7 @@ FOR stk_i=0,n_pol-1 DO BEGIN
     ENDIF
     
     IF source_flag THEN BEGIN
-        stokes_sources=stokes_residual+(*instr_sources_hpx[pol1[stk_i]])*(*weight_corr[pol1[stk_i]])+(*instr_sources_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
+        stokes_sources=(*instr_sources_hpx[pol1[stk_i]])*(*weight_corr[pol1[stk_i]])+(*instr_sources_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
     ENDIF
     
     IF rings_flag THEN BEGIN
