@@ -1,6 +1,18 @@
 pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_path, $
     discard_unmatched_pix = discard_unmatched_pix, discard_unmatched_freq = discard_unmatched_freq
     
+  compile_opt strictarr
+  args = Command_Line_Args(count=nargs)
+  if nargs gt 0 then begin
+    filename_path=args[0]
+    starting_index=UINT(args[1])
+    ending_index=UINT(args[2])
+ 
+    print,filename_path 
+    filenames= FILE_SEARCH(filename_path)
+    filenames = filenames[starting_index:ending_index]    
+  endif
+  
   nfiles = n_elements(filenames)
   
   if n_elements(discard_unmatched_pix) eq 0 then discard_unmatched_pix = 1
