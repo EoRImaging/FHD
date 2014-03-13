@@ -108,8 +108,10 @@ ENDFOR
 astr=obs.astr
 
 t1_a=Systime(1)
-xy2ad,xvals2,yvals2,astr,ra_arr_use1,dec_arr_use1  
-valid_i=where(Finite(ra_arr_use1),n_valid)
+xy2ad,xvals2,yvals2,astr,ra_arr2,dec_arr2
+valid_i=where(Finite(ra_arr2),n_valid)
+ra_use=ra_arr2[valid_i]
+dec_use=dec_arr2[valid_i]
 
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsalt=Float(obsalt)
@@ -120,20 +122,26 @@ obsza=90.-obsalt
 norm=[sqrt(1.-(sin(obsza*!DtoR)*sin((obsaz)*!DtoR))^2.),sqrt(1.-(sin(obsza*!DtoR)*cos((obsaz)*!DtoR))^2.)]
 ;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
 ;;NOTE: The NEW Eq2Hor REQUIRES Jdate to be a scalar! They created a new bug when they fixed the old one
-Eq2Hor,ra_arr_use1[valid_i],dec_arr_use1[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
+Eq2Hor,ra_use,dec_use,Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
 za_arr=fltarr(psf_dim2,psf_dim2)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
 
 xvals3=za_arr*Sin(az_arr*!DtoR)
 yvals3=za_arr*Cos(az_arr*!DtoR)
 
-;el_arr=90.-za_arr
-;polarization_map=polarization_map_create(az_arr, el_arr,stokes_zenith=[1.,0.,0.,0.])
-;proj=[polarization_map[0,0],polarization_map[0,1],polarization_map[2,2],polarization_map[2,3]]
-;
-;IF Keyword_Set(swap_pol) THEN proj=proj[[1,0,3,2]]
-;*proj[3]*=Complex(0,1)
-;IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *proj[i]=1.
+hour_angle=obs.obsra - ra_use
+h_neg = where(hour_angle LT 0, N_neg)
+IF N_neg GT 0 THEN hour_angle[h_neg] = hour_angle[h_neg] + 360.
+hour_angle = hour_angle mod 360.
+hadec2altaz, hour_angle, dec_use, obs.obsdec, elevation_use, azimuth_use
+elevation_arr=fltarr(psf_dim2,psf_dim2) & elevation_arr[valid_i]=elevation_use
+azimuth_arr=fltarr(psf_dim2,psf_dim2) & azimuth_arr[valid_i]=azimuth_use
+p_map=polarization_map_create(azimuth_arr=azimuth_arr, elevation_arr=elevation_arr,/trace_return,/use_pointing_center)
+FOR pol_i=0,3 DO *p_map[pol_i]*=2.
+
+IF Keyword_Set(swap_pol) THEN p_map=p_map[[1,0,3,2]]
+*p_map[3]*=Complex(0,1)
+IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *p_map[i]=1.
 
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
@@ -173,17 +181,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
             frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=psf_dim2)
+            ra_arr=ra_arr2,dec_arr=dec_arr2,delay_settings=delay_settings,dimension=psf_dim2)
         IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
         beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$
             frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-            ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=psf_dim2)
+            ra_arr=ra_arr2,dec_arr=dec_arr2,delay_settings=delay_settings,dimension=psf_dim2)
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
-        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real) ;projection now inside tile beam function
-;        psf_base1=dirty_image_generate(beam1_0*(beam2_0),/no_real)
+        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*p_map[pol_i])^2.,/no_real) ;projection now inside tile beam function
+;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
         beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
@@ -209,11 +217,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;            *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
 ;                frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
 ;                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-;                ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
+;                ra_arr=ra_arr2,dec_arr=dec_arr2,delay_settings=delay_settings,dimension=dimension)
 ;            *beam2_arr[tile_i]=Call_function(tile_beam_fn,gain2[*,tile_i],antenna_beam_arr2,$
 ;                frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
 ;                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals3,yvals=yvals3,$
-;                ra_arr=ra_arr_use1,dec_arr=dec_arr_use1,delay_settings=delay_settings,dimension=dimension)
+;                ra_arr=ra_arr2,dec_arr=dec_arr2,delay_settings=delay_settings,dimension=dimension)
 ;        ENDFOR
 ;        
 ;        FOR bi=0,nbaselines-1 DO BEGIN
@@ -239,9 +247,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         breakpoint0=0
         t4+=Systime(1)-t4_a
     ENDFOR
-    freq_norm_check/=mean(freq_norm_check)
-    FOR freq_i=0L,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-        *psf_base[pol_i,freq_i,i,j]/=freq_norm_check[freq_i]
+;    freq_norm_check/=mean(freq_norm_check)
+;    FOR freq_i=0L,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
+;        *psf_base[pol_i,freq_i,i,j]/=freq_norm_check[freq_i]
 ENDFOR
 
 complex_flag=Max(complex_flag_arr)

@@ -121,6 +121,10 @@ ENDIF
 t2a=Systime(1)
 t1+=t2a-t1a
 
+;p_map=polarization_map_create(obs,/trace_return,/use_pointing,polarization_correction=p_corr)
+;p_map_out=Ptrarr(n_pol,/allocate)
+;p_corr_out=Ptrarr(n_pol,/allocate)
+
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
@@ -134,6 +138,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
     beam_avg+=*beam_base_out[pol_i]
     beam_mask*=beam_mask0
+    IF Min(Ptr_valid(p_map)) THEN *p_map_out[pol_i]=Rebin(*p_map[pol_i],dimension,elements)
+    IF Min(Ptr_valid(p_corr)) THEN *p_corr_out[pol_i]=Rebin(*p_corr[pol_i],dimension,elements)
 ENDFOR
 psf=0
 heap_gc
@@ -194,8 +200,8 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     ENDFOR
 ENDIF ELSE  gal_name=''
 
-stokes_images=stokes_cnv(instr_images,beam=beam_base_out) ;NOTE one factor of the beam already corrected for
-stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out)
+stokes_images=stokes_cnv(instr_images,beam=beam_base_out,p_corr=p_corr_out) ;NOTE one factor of the beam already corrected for
+stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out,p_corr=p_corr_out)
 
 t4a=Systime(1)
 t3+=t4a-t3a
