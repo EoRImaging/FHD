@@ -98,7 +98,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         source_flag=1
     ENDIF ELSE BEGIN
         model_uv_holo=Ptrarr(n_pol)
-        IF min(file_test(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav')) GT 0 THEN model_flag=1 ELSE model_flag=0 
+        IF min(file_test(file_path_fhd+'_uv_model_'+pol_names[0:n_pol-1]+'.sav')) GT 0 THEN model_flag=1 ELSE model_flag=0 
         IF model_flag THEN FOR pol_i=0,n_pol-1 DO model_uv_holo[pol_i]=getvar_savefile(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
         IF cal.n_cal_src GT 0 THEN BEGIN
             source_flag=1
