@@ -18,7 +18,6 @@ IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
-IF N_Elements(no_fits) EQ 0 THEN no_fits=1
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
