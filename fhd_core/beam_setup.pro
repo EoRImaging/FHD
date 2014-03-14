@@ -1,7 +1,7 @@
 FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,$
-    swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,_Extra=extra
+    swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -190,8 +190,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
-        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*p_map[pol_i])^2.,/no_real) ;projection now inside tile beam function
-;        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
+        IF Keyword_Set(beam_pol_test) THEN psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*p_map[pol_i])^2.,/no_real) $;projection now inside tile beam function
+            ELSE psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
         beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
