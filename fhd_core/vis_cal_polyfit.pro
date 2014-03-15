@@ -85,6 +85,9 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
         IF cal_cable_reflection_fit GT 1 THEN BEGIN
             cable_cut_i=where(cable_len NE cal_cable_reflection_fit,n_cable_cut)
             IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
+        ENDIF ELSE IF cal_cable_reflection_fit LT -1 THEN BEGIN
+            cable_cut_i=where(cable_len EQ Abs(cal_cable_reflection_fit),n_cable_cut)
+            IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
         ENDIF
         
         c_light=299792458.

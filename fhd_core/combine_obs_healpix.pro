@@ -74,20 +74,13 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
     astr=obs.astr            
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-;    xvals=meshgrid(dimension,elements,1)-dimension/2
-;    yvals=meshgrid(dimension,elements,2)-elements/2
     IF file_test(file_path_fhd+'_cal.sav') THEN cal=getvar_savefile(file_path_fhd+'_cal.sav','cal') ELSE cal=vis_struct_init_cal(obs,file_path_fhd=file_path_fhd)
     
-    
-        image_uv_arr=Ptrarr(n_pol)
-        FOR pol_i=0,n_pol-1 DO image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv',/pointer)
-        weights_arr=Ptrarr(n_pol)
-        FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid',/pointer)
+    image_uv_arr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv',/pointer)
+    weights_arr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid',/pointer)
     IF fhd_flag THEN BEGIN
-        fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
-;        ;'*_fhd.sav' contains: residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,weights_arr,beam_base,beam_correction,ra_arr,dec_arr,astr
-;        RESTORE,file_path_fhd+'_fhd.sav' 
-        
         fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
         source_array=getvar_savefile(file_path_fhd+'_fhd.sav','source_array')
         model_uv_holo=getvar_savefile(file_path_fhd+'_fhd.sav','model_uv_holo')
