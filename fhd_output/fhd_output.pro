@@ -273,8 +273,9 @@ IF Keyword_Set(t6a) THEN t6=t7a-t6a
 x_inc=beam_i mod dimension
 y_inc=Floor(beam_i/dimension)
 IF N_Elements(zoom_radius) GT 0 THEN BEGIN
-    zoom_low=dimension/2-zoom_radius/2
-    zoom_high=dimension/2+zoom_radius/2
+    zoom_radius_use=zoom_radius<dimension
+    zoom_low=dimension/2-zoom_radius_use/2
+    zoom_high=dimension/2+zoom_radius_use/2
 ENDIF
 IF N_Elements(zoom_low) EQ 0 THEN zoom_low=min(x_inc)<min(y_inc)
 IF N_Elements(zoom_high) EQ 0 THEN zoom_high=max(x_inc)>max(y_inc)
