@@ -19,7 +19,10 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
   
   if data_range[1] lt data_range[0] then message, 'data_range[0] must be less than data_range[1]'
   
-  if color_profile eq 'sym_log' and data_range[0] gt 0 then color_profile = 'log_cut'
+  if color_profile eq 'sym_log' and data_range[0] gt 0 then begin
+    print, 'sym_log profile cannot be selected with an entirely positive data range. Switching to log_cut'
+    color_profile = 'log_cut'
+  endif
   
   color_range = [0, 255]
   if n_elements(missing_value) ne 0 then begin
