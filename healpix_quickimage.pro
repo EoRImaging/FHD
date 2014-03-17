@@ -192,13 +192,13 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     endif
   endif else begin
   
-    ;  Call_procedure,proj_routine,file_path+'.fits',_Extra=extra,max=max,min=min,png=png_filename,ps=ps_filename,$
+    ;  Call_procedure,proj_routine,savefile+'.fits',_Extra=extra,max=max,min=min,png=png_filename,ps=ps_filename,$
     ;    retain=1,silent=silent,transparent=1,title=title,asinh=logplot,hist_equal=hist_equal,preview=0,$
     ;    rot=rot,graticule=20.,charsize=charsize,pxsize=pxsize,glsize=1.,window=-1,units='Jy',colt=color_table;,Coord=['C'];,hxsize=hsize_cm
   
     if not keyword_set(noplot) then begin
-      IF Keyword_Set(png) THEN png_filename=file_path+'.png' ELSE png_filename=0
-      IF Keyword_Set(eps) THEN ps_filename=file_path+'.ps' ELSE ps_filename=0
+      IF Keyword_Set(png) THEN png_filename=savefile+'.png' ELSE png_filename=0
+      IF Keyword_Set(eps) THEN ps_filename=savefile+'.ps' ELSE ps_filename=0
       
       proj2out, $
         planmap, Tmax, Tmin, color_bar, 0., title, $

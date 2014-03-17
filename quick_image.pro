@@ -46,7 +46,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   endif
   
   if keyword_set(missing_value) then begin
-    good_locs = where(image ne missing_value)
+    good_locs = where(image ne missing_value, count_good, complement = wh_missing, ncomplement = count_missing)
     erase = 1
   endif else good_locs = indgen(n_elements(image))
   
@@ -59,12 +59,28 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       color_profile = color_profile, log_cut_val = log_cut_val, grey_scale = grey_scale, oob_low = oob_low, $
       missing_value = missing_value, missing_color = missing_color
       
-    img_range = color_range
-    
+      
   endif else begin
-    plot_image = image
-    if n_elements(data_range) eq 0 then data_range = minmax(plot_image[good_locs])
-    img_range = data_range
+    if n_elements(data_range) eq 0 then data_range = minmax(image[good_locs])
+    
+    color_range = [0, 255]
+    if n_elements(missing_value) ne 0 then begin
+      if count_missing gt 0 then begin
+        missing_color = 255
+        data_color_range = [0, 254]
+      endif else data_color_range = color_range
+    endif else data_color_range = color_range
+    n_colors = color_range[1] - color_range[0] + 1
+    data_n_colors = data_color_range[1] - data_color_range[0] + 1
+    
+    plot_image = (image-data_range[0])*data_n_colors/(data_range[1]-data_range[0]) + data_color_range[0]
+    
+    wh_low = where(image lt data_range[0], count_low)
+    if count_low gt 0 then plot_image[wh_low] = data_color_range[0]
+    wh_high = where(image gt data_range[1], count_high)
+    if count_high gt 0 then plot_image[wh_high] = data_color_range[1]
+
+    if count_missing gt 0 then plot_image[wh_missing] = missing_color
     
     tickinterval = float(number_formatter((data_range[1]-data_range[0])/6., format = '(e13.0)'))
   endelse
@@ -86,8 +102,8 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     cgps_open, savefile, /font, encapsulated=eps
   endif
   
-  cgimage, plot_image, maxvalue = img_range[1], minvalue = img_range[0], position = [.15,.1,.8,.95], /axes, xrange = xrange, $
-    yrange = yrange, xtitle = xtitle, ytitle = ytitle, title = title, axkeywords = axkeywords, missing_value = missing_value, noerase = noerase, $
+  cgimage, plot_image, position = [.15,.1,.8,.95], /axes, xrange = xrange, $
+    yrange = yrange, xtitle = xtitle, ytitle = ytitle, title = title, axkeywords = axkeywords, missing_value = missing_color, noerase = noerase, $
     alphabackgroundimage = alphabackgroundimage, charsize = charsize
     
   if keyword_set(log) then begin
