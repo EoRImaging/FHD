@@ -55,7 +55,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       log_data_range = [log_cut_val, alog10(data_range[1])]
       
       ;; if log_cut_val is less than min_pos then indicate it in the color bar
-      if min(data) le 0 then begin
+      if min(data) lt 0 then begin
       
       
         wh_zero = where(data eq 0, count_zero)
