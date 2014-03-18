@@ -85,6 +85,9 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
         IF cal_cable_reflection_fit GT 1 THEN BEGIN
             cable_cut_i=where(cable_len NE cal_cable_reflection_fit,n_cable_cut)
             IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
+        ENDIF ELSE IF cal_cable_reflection_fit LT -1 THEN BEGIN
+            cable_cut_i=where(cable_len EQ Abs(cal_cable_reflection_fit),n_cable_cut)
+            IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
         ENDIF
         
         c_light=299792458.
@@ -124,23 +127,23 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
     ENDELSE
     
     FOR pol_i=0,n_pol-1 DO BEGIN
-        gain_arr=*cal_return.gain[pol_i]
-        gain_amp=Abs(gain_arr)
-        gain_phase=Atan(gain_arr,/phase)
+        gain_arr=*cal.gain[pol_i]
+;        gain_amp=Abs(gain_arr)
+;        gain_phase=Atan(gain_arr,/phase)
+        gain_arr_fit=*cal_return.gain[pol_i]
         FOR ti=0L,nt_use-1 DO BEGIN
             tile_i=tile_use[ti]
             mode_i=mode_i_arr[pol_i,tile_i]
             IF mode_i EQ 0 THEN CONTINUE
-            mode_fit=Total(exp(complex(0,1)*2.*!Pi/n_freq*(mode_i)*freq_use)*((*gain_residual[pol_i,tile_i])[freq_use]))
-            amp_use=2.*abs(mode_fit)/nf_use ;why factor of 2? Check FFT normalization
+            mode_fit=Total(exp(i_comp*2.*!Pi/n_freq*(mode_i)*freq_use)*Reform(gain_arr[freq_use,tile_i]))
+            amp_use=abs(mode_fit)/nf_use ;why factor of 2? Check FFT normalization
             phase_use=atan(mode_fit,/phase)
-            cos_fit=amp_use*Cos(2.*!Pi*Float(mode_i)*findgen(n_freq)/n_freq-phase_use) ;Cosine is necessary to get phase right
-            gain_fit=Reform(gain_amp[*,tile_i])+cos_fit
-            phase_fit=Reform(gain_phase[*,tile_i])
-            gain_arr[*,tile_i]=gain_fit*Exp(i_comp*phase_fit)
+            gain_mode_fit=amp_use*exp(-i_comp*2.*!Pi*(mode_i*findgen(n_freq)/n_freq)+i_comp*phase_use)
+            gain_arr_fit[*,tile_i]+=gain_mode_fit
             cal_return.mode_params[pol_i,tile_i]=Ptr_new([mode_i,amp_use,phase_use])
             debug=1
         ENDFOR
+        *cal_return.gain[pol_i]=gain_arr_fit
     ENDFOR
 ENDIF
 undefine_fhd,gain_residual
