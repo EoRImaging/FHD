@@ -80,7 +80,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     wh_high = where(image gt data_range[1], count_high)
     if count_high gt 0 then plot_image[wh_high] = data_color_range[1]
 
-    if count_missing gt 0 then plot_image[wh_missing] = missing_color
+    if n_elements(missing_value) ne 0 then if count_missing gt 0 then plot_image[wh_missing] = missing_color
     
     tickinterval = float(number_formatter((data_range[1]-data_range[0])/6., format = '(e13.0)'))
   endelse
