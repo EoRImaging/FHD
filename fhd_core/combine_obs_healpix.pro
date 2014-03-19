@@ -45,7 +45,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
     Nside_chk*=2.
     
-    IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
+    IF ~Keyword_Set(nside) THEN nside_use=Nside_chk ELSE nside_use=nside
     nside_use=nside_use>Nside_chk
 ENDFOR
 
