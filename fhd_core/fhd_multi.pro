@@ -19,7 +19,8 @@ ENDIF
 
 n_obs=N_Elements(obs_arr)
 ;Note that defaults supplied here will be overwritten by any keywords passed through Extra
-fhd0=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_sources=Sqrt(n_obs)*10000.,joint_deconvolution_list=fhd_file_list,_Extra=extra) ;use the same deconvolution parameters for all observations. obs is used for very little in here!
+;use the same deconvolution parameters for all observations. obs is used for very little in here!
+fhd0=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_sources=Sqrt(n_obs)*10000.,joint_deconvolution_list=fhd_file_list,_Extra=extra) 
 
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
@@ -360,7 +361,7 @@ FOR obs_i=0L,n_obs-1 DO *comp_arr[obs_i]=(*comp_arr[obs_i])[0:si-1] ;truncate co
 FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
-            degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias)*(*beam_corr[pol_i,obs_i])
+            degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias)*(*beam_corr[pol_i,obs_i])*norm_arr[obs_i]
     ENDFOR
     
     image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]
@@ -370,6 +371,13 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     comp_arr1=*comp_arr[obs_i]
     source_array1=Components2Sources(comp_arr1,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
     source_array[obs_i]=Ptr_new(source_array1)
+;    t3_0=Systime(1)
+;    model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
+;    IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
+;    t4_0=Systime(1)
+;    t3+=t4_0-t3_0
+;    FOR pol_i=0,n_pol-1 DO *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+    
 ENDFOR
 
 t00=Systime(1)-t00
