@@ -13,16 +13,17 @@ IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_
 
 tile_names = cal.tile_names
 n_tiles=obs.n_tile
+n_pol=cal.n_pol
 obs2=*obs.baseline_info
 tile_use=obs2.tile_use
 freq_use=obs2.freq_use
 freq_i_use=where(freq_use,nf_use) & IF nf_use EQ 0 THEN freq_i_use=lindgen(obs.n_freq)
 
 gains0 = *cal.gain[0] ; save on typing
-gains1 = *cal.gain[1]
+IF n_pol GT 1 THEN gains1 = *cal.gain[1]
 
 gains0=gains0[freq_i_use,*]
-gains1=gains1[freq_i_use,*]
+IF n_pol GT 1 THEN gains1=gains1[freq_i_use,*]
 freq=cal.freq[freq_i_use]
 freq=freq/10^6. ; in MHz
 
@@ -93,7 +94,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
             yticklen=0.04,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
         ENDELSE
       ENDELSE
-      cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red',psym=3
+      IF n_pol GT 1 THEN cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red',psym=3
     ENDELSE
 ENDFOR
 cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
@@ -101,7 +102,8 @@ cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
     
 cgPS_Open,amp_filename,scale_factor=2,/quiet,/nomatch
 
-max_amp = mean(abs([gains0,gains1])) + 2*stddev(abs([gains0,gains1]))
+IF n_pol GT 1 THEN max_amp = mean(abs([gains0,gains1])) + 2*stddev(abs([gains0,gains1])) $
+    ELSE max_amp = Mean(abs(gains0)) + 2*stddev(abs(gains0))
 yrange=[0,max_amp]
 ytickv=[0,max_amp/2,max_amp]
 
@@ -142,7 +144,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
             yticklen=0.04,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
         ENDELSE
       ENDELSE
-      cgoplot,freq,abs(gains1[*,tile_i]),color='red',psym=3
+      IF n_pol GT 1 THEN cgoplot,freq,abs(gains1[*,tile_i]),color='red',psym=3
     ENDELSE
 ENDFOR
 
@@ -153,14 +155,17 @@ IF Keyword_Set(cal_res) THEN BEGIN
 
     
     gains0r=*cal_res.gain[0]
-    gains1r=*cal_res.gain[1]
     gains0r=gains0r[freq_i_use,*]
-    gains1r=gains1r[freq_i_use,*]
     sign0r=Real_part(gains0r)*weight_invert(Abs(real_part(gains0r)))
     gains0r=Abs(gains0r)*sign0r
-    sign1r=Real_part(gains1r)*weight_invert(Abs(real_part(gains1r)))
-    gains1r=Abs(gains1r)*sign1r
-    max_amp = mean(abs([gains0r,gains1r])) + 2*stddev(abs([gains0r,gains1r]))
+    IF n_pol GT 1 THEN BEGIN    
+        gains1r=*cal_res.gain[1]
+        gains1r=gains1r[freq_i_use,*]
+        sign1r=Real_part(gains1r)*weight_invert(Abs(real_part(gains1r)))
+        gains1r=Abs(gains1r)*sign1r
+        max_amp = mean(abs([gains0r,gains1r])) + 2*stddev(abs([gains0r,gains1r]))
+    ENDIF ELSE max_amp = mean(abs(gains0r)) + 2*stddev(abs(gains0r))
+    
     IF max_amp GT 0 THEN BEGIN
         cgPS_Open,res_filename,scale_factor=2,/quiet,/nomatch
         yrange=[-max_amp,max_amp]
@@ -203,7 +208,7 @@ IF Keyword_Set(cal_res) THEN BEGIN
                     yticklen=0.04,charsize=.5,/noerase,axiscolor=axiscolor,psym=3
                 ENDELSE
               ENDELSE
-              cgoplot,freq,gains1r[*,tile_i],color='red',psym=3
+              IF n_pol GT 1 THEN cgoplot,freq,gains1r[*,tile_i],color='red',psym=3
             ENDELSE
         ENDFOR
         
