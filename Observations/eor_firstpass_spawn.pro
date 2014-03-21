@@ -79,7 +79,7 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 ;cal_cable_reflection_fit=1
-;cal_cable_reflection_fit=150
+cal_cable_reflection_fit=150
 ;allow_sidelobe_cal_sources=1
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$

@@ -48,7 +48,7 @@ fi
 
 ### Should make these options
 nslots=10
-mem=2G ### NOTE this is PER CORE!
+mem=3G ### NOTE this is PER CORE!
 
 #Read the obs file and put into an array
 i=0
