@@ -56,15 +56,16 @@ xtickname=strtrim(round(xtickv),2)
 xrange=[min(freq)-(max(freq)-min(freq))/8,max(freq)+(max(freq)-min(freq))/8]
 
 FOR tile_i=0L,n_tiles-1 DO BEGIN
+    tile_name=tile_names[tile_i]
+    rec=Floor(tile_name/10)
+    tile=tile_name mod 10
+
     IF tile_exist[tile_i] EQ 0 THEN BEGIN
       ; no tile found... must have been flagged in pre-processing
       axiscolor='grey'
-      cgplot,1,title='no tile',XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
         /noerase,charsize=.5,axiscolor=axiscolor
     ENDIF ELSE BEGIN
-      tile_name=tile_names[tile_i]
-      rec=Floor(tile_name/10)
-      tile=tile_name mod 10
       IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
       IF tile_i EQ cal.ref_antenna THEN axiscolor='blue'
       IF ~(tile_i mod 16) THEN BEGIN
@@ -169,7 +170,7 @@ IF Keyword_Set(cal_res) THEN BEGIN
             tile_name=tile_names[tile_i]
             rec=Floor(tile_name/10)
             tile=tile_name mod 10
-            
+    
             IF tile_exist[tile_i] EQ 0  THEN BEGIN
               ; no tile found... must have been flagged in pre-processing
               axiscolor='grey'
