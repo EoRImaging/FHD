@@ -19,19 +19,21 @@ beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
 local_max_radius=beam_width*2.
 box_radius=Ceil(local_max_radius)
 
-source_mask=Fltarr(dimension,elements)+1.
 IF N_Elements(beam_mask) EQ 0 THEN beam_mask=Fltarr(dimension,elements)+1.
-source_mask*=beam_mask
 IF N_Elements(image_I_flux) EQ 0 THEN image_I_flux=source_find_image
 IF N_Elements(gain_array) EQ 1 THEN gain_array=replicate(gain_array[0],dimension,elements)
 converge_check=Stddev(image_I_flux[where(beam_mask)],/nan)
 
+source_mask=Fltarr(dimension,elements)+1.
+source_mask*=beam_mask
+source_find_image-=Mean(source_find_image[where(source_mask)])
+
 IF N_Elements(model_I_image) EQ N_Elements(source_find_image) THEN BEGIN
-    mask_test_i=where((source_find_image LT 0) AND (model_I_image GT 3.*converge_check) AND (source_mask GT 0),n_mask)
+    mask_test_i=where((source_find_image LT -5.*converge_check) AND (model_I_image GT 5.*converge_check) AND (source_mask GT 0),n_mask)
     IF n_mask GT 0 THEN BEGIN
         mask_test=fltarr(dimension,elements)
         mask_test[mask_test_i]=1
-        mask_test=smooth(mask_test,3,/edge_truncate)
+        mask_test=smooth(mask_test,local_max_radius+1,/edge_truncate)
         mask_i=where(mask_test,n_mask)
         source_mask[mask_i]=0
     ENDIF
@@ -42,7 +44,7 @@ ENDIF
 ;       should put some cap on the absolute number of them ; This is max_add_sources
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 
-source_flux=Max(source_find_image,source_i)
+source_flux=Max(source_find_image*source_mask,source_i)
 flux_ref=source_find_image[source_i]*add_threshold
 additional_i1=where(source_find_image GE flux_ref,n_sources1)
 additional_i2=where((source_find_image GE 5.*converge_check) AND (source_find_image GE source_find_image[source_i]/2.),n_sources2)

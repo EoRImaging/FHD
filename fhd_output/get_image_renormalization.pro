@@ -1,4 +1,4 @@
-function get_image_renormalization,obs,weights_arr=weights_arr,beam_base=beam_base,degpix=degpix,$
+function get_image_renormalization,obs,weights_arr=weights_arr,beam_base=beam_base,degpix=degpix,psf=psf,params=params,$
       image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,filter_arr=filter_arr,antialias=antialias,_Extra=extra
   ; Use the weights to renormalize the image to units of Jy/beam
   
