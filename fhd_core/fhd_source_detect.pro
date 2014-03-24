@@ -22,20 +22,20 @@ box_radius=Ceil(local_max_radius)
 IF N_Elements(beam_mask) EQ 0 THEN beam_mask=Fltarr(dimension,elements)+1.
 IF N_Elements(image_I_flux) EQ 0 THEN image_I_flux=source_find_image
 IF N_Elements(gain_array) EQ 1 THEN gain_array=replicate(gain_array[0],dimension,elements)
-converge_check=Stddev(image_I_flux[where(beam_mask)],/nan)
+converge_check=Stddev(source_find_image[where(beam_mask)],/nan)
 
-source_mask=Fltarr(dimension,elements)+1.
-source_mask*=beam_mask
-source_find_image-=Mean(source_find_image[where(source_mask)])
+IF N_Elements(source_mask) EQ 0 THEN source_mask0=beam_mask ELSE source_mask0=source_mask
+source_mask1=beam_mask
+source_find_image-=Mean(source_find_image[where(source_mask0)])
 
 IF N_Elements(model_I_image) EQ N_Elements(source_find_image) THEN BEGIN
-    mask_test_i=where((source_find_image LT -5.*converge_check) AND (model_I_image GT 5.*converge_check) AND (source_mask GT 0),n_mask)
+    mask_test_i=where((source_find_image LT -3.*converge_check) AND (model_I_image GT 3.*converge_check),n_mask)
     IF n_mask GT 0 THEN BEGIN
         mask_test=fltarr(dimension,elements)
         mask_test[mask_test_i]=1
-        mask_test=smooth(mask_test,local_max_radius+1,/edge_truncate)
+        mask_test=smooth(mask_test,2.*local_max_radius+1,/edge_truncate)
         mask_i=where(mask_test,n_mask)
-        source_mask[mask_i]=0
+        source_mask1[mask_i]=0
     ENDIF
 ENDIF
     
@@ -44,7 +44,7 @@ ENDIF
 ;       should put some cap on the absolute number of them ; This is max_add_sources
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 
-source_flux=Max(source_find_image*source_mask,source_i)
+source_flux=Max(source_find_image*source_mask0*source_mask1,source_i)
 flux_ref=source_find_image[source_i]*add_threshold
 additional_i1=where(source_find_image GE flux_ref,n_sources1)
 additional_i2=where((source_find_image GE 5.*converge_check) AND (source_find_image GE source_find_image[source_i]/2.),n_sources2)
@@ -116,8 +116,8 @@ FOR src_i=0L,n_sources-1 DO BEGIN
         gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width*(2.*Sqrt(2.*Alog(2.))),/keepcenter,/silent $
         ELSE xcen=(ycen=-1)
     IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
-;            n_mask+=Total(source_mask[sx-1:sx+1,sy-1:sy+1])
-;            source_mask[sx-1:sx+1,sy-1:sy+1]=0
+;            n_mask+=Total(source_mask1[sx-1:sx+1,sy-1:sy+1])
+;            source_mask1[sx-1:sx+1,sy-1:sy+1]=0
 ;            CONTINUE
         xcen=sx
         ycen=sy
@@ -125,7 +125,7 @@ FOR src_i=0L,n_sources-1 DO BEGIN
     ENDIF ELSE gain_mod=1.
     sx0=Floor(xcen)
     sy0=Floor(ycen)
-    IF source_mask[sx0,sy0] EQ 0 THEN CONTINUE
+    IF source_mask1[sx0,sy0] EQ 0 THEN CONTINUE
     source_box=image_I_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius]
     xcen0=xcen-sx0+box_radius
     ycen0=ycen-sy0+box_radius
@@ -147,15 +147,15 @@ FOR src_i=0L,n_sources-1 DO BEGIN
             ENDIF
             IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbQ,xcen0,ycen0,cubic=-0.5)
             IF pol_i GE 2 THEN flux_use=Interpolate(sbU,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbV,xcen0,ycen0,cubic=-0.5)
-        ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5) $
+        ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>source_box[xcen0,ycen0] $
             ELSE flux_use=Interpolate(image_U_flux[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius],xcen0,ycen0,cubic=-0.5)
         
         flux_arr[pol_i]=flux_use*beam_corr_avg_src/2. ;"True sky" instrumental pol
     ENDFOR
     
     IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
-        n_mask+=Total(source_mask[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
-        source_mask[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]=0
+        n_mask+=Total(source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
+        source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]=0
         CONTINUE
     ENDIF
     
@@ -186,5 +186,6 @@ IF n_sources EQ 0 THEN BEGIN
     source_list=source_comp_init(n_sources=0)
 ENDIF ELSE source_list=comp_arr[si_use_i]
 
+source_mask=source_mask1
 RETURN,source_list
 END
