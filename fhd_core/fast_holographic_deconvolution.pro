@@ -140,22 +140,22 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 filter_arr=Ptrarr(n_pol,/allocate)
-gain_normalization = get_image_renormalization(obs,psf=psf,params=params,weights_arr=weights_arr,$
-    beam_base=beam_base,filter_arr=filter_arr,image_filter_fn=decon_filter,degpix=degpix,/antialias)
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
-;    filter_single=filter_arr[pol_i]
+    filter_single=filter_arr[pol_i]
     *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)*(*beam_correction[pol_i])
-;    filter_arr[pol_i]=filter_single
+        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_single,/antialias)*(*beam_correction[pol_i])
+    filter_arr[pol_i]=filter_single
 ENDFOR
 
-;gain_use*=gain_normalization
+gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_base,filter_arr=filter_arr,$
+    image_filter_fn=decon_filter,degpix=degpix,/antialias)
+gain_use*=gain_normalization
 gain_array=source_taper*gain_use
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
     dirty_image_single=*dirty_array[pol_i]*(*beam_correction[pol_i])
-;    *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
+    *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
     
     ;xx, yy and xy, yx polarizations are treated seperately
     IF pol_i LE 1 THEN dirty_image_composite+=dirty_image_single
@@ -239,7 +239,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     
     model_image_composite=fltarr(dimension,elements)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN 
-        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias)
         model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
         model_image_composite+=model_image
     ENDFOR
@@ -267,7 +267,7 @@ FOR i=i0,max_iter-1 DO BEGIN
         model_image_composite_U=fltarr(dimension,elements)
         model_image_composite_V=fltarr(dimension,elements)
         FOR pol_i=0,n_pol-1 DO BEGIN 
-            model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+            model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias)
             model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
             
             *model_arr[pol_i]=model_image
@@ -401,11 +401,11 @@ ENDIF
 
 ;condense clean components
 noise_map=Stddev(image_use[where(beam_mask*source_mask)],/nan)*beam_corr_avg
-;noise_map*=gain_normalization
+noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,$
-    reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=0.667)
+    reject_sigma_threshold=sigma_threshold,gain_array=gain_array/gain_normalization,clean_bias_threshold=0.667)
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
@@ -415,8 +415,7 @@ FOR pol_i=0,n_pol-1 DO *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol
 
 t1_0=Systime(1)
 t4+=t1_0-t4_0    
-FOR pol_i=0,n_pol-1 DO *residual_array[pol_i]=$
-    dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)*(*beam_correction[pol_i])
+FOR pol_i=0,n_pol-1 DO *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias)*(*beam_correction[pol_i])
 t1+=Systime(1)-t1_0
 
 t00=Systime(1)-t00
