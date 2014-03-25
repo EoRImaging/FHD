@@ -42,7 +42,7 @@ IF N_Elements(filter_background) EQ 0 THEN filter_background=1
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF N_Elements(joint_deconvolution_list) LE 1 THEN decon_mode='Single snapshot' ELSE decon_mode='HEALPix integrated'
 IF N_Elements(joint_deconvolution_list) EQ 0 THEN joint_obs=file_basename(file_path_fhd) ELSE joint_obs=file_basename(joint_deconvolution_list)
-IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_uniform'
+IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_natural'
 
 fhd={npol:npol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
     gain_factor:gain_factor,add_threshold:add_threshold,max_add_sources:max_add_sources,independent_fit:independent_fit,$

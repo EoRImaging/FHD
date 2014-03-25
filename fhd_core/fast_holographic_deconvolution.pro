@@ -26,7 +26,7 @@ compile_opt idl2,strictarrsubs
 t00=Systime(1)    
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ;image_uv_arr is a pointer array with dimensions (n_pol) 
-
+;most parameters are set in fhd_init()
 n_pol=fhd.npol
 gain_factor=fhd.gain_factor
 max_iter=fhd.max_iter
@@ -42,7 +42,7 @@ reject_pol_sources=fhd.reject_pol_sources
 sigma_threshold=2.
 calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
-IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform'
+decon_filter=fhd.decon_filter
 galaxy_model_fit=fhd.galaxy_subtract
 
 icomp=Complex(0,1)
