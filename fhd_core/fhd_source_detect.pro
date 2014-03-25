@@ -26,10 +26,11 @@ converge_check=Stddev(source_find_image[where(beam_mask)],/nan)
 
 IF N_Elements(source_mask) EQ 0 THEN source_mask0=beam_mask ELSE source_mask0=source_mask
 source_mask1=beam_mask
-source_find_image-=Mean(source_find_image[where(source_mask0)])
+flux_offset=Mean(source_find_image[where(source_mask0)])
+source_find_image-=flux_offset
 
 IF N_Elements(model_I_image) EQ N_Elements(source_find_image) THEN BEGIN
-    mask_test_i=where((source_find_image LT -3.*converge_check) AND (model_I_image GT 3.*converge_check),n_mask)
+    mask_test_i=where((source_find_image LT -3.*converge_check) AND (model_I_image GT 5.*converge_check),n_mask)
     IF n_mask GT 0 THEN BEGIN
         mask_test=fltarr(dimension,elements)
         mask_test[mask_test_i]=1
@@ -43,8 +44,8 @@ ENDIF
 ;       require that they be isolated ; This is local_max_radius
 ;       should put some cap on the absolute number of them ; This is max_add_sources
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
-
-source_flux=Max(source_find_image*source_mask0*source_mask1,source_i)
+source_find_image*=source_mask1
+source_flux=Max(source_find_image*source_mask0,source_i)
 flux_ref=source_find_image[source_i]*add_threshold
 additional_i1=where(source_find_image GE flux_ref,n_sources1)
 additional_i2=where((source_find_image GE 5.*converge_check) AND (source_find_image GE source_find_image[source_i]/2.),n_sources2)
