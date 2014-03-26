@@ -114,7 +114,6 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       pixels_use = temporary(hpx_inds)
       frequencies = (*obs.baseline_info).freq
       obs_arr = temporary(obs)
-      psf_arr = temporary(psf)
       
       nfile_contrib_pix = intarr(n_elements(pixels_use)) + 1
       nfile_contrib_freq =  intarr(n_elements(frequencies)) + 1
@@ -207,7 +206,6 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       endelse
       
       obs_arr = [obs_arr, temporary(obs)]
-      psf_arr = [psf_arr, temporary(psf)]
       
       for j=0, n_tags(int_struct)-1 do begin
         this_int_cube = *(int_struct.(j))
@@ -338,6 +336,6 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   
   save, file = save_file, dirty_xx_cube,  dirty_yy_cube,  model_xx_cube,  model_yy_cube,  res_xx_cube,  res_yy_cube, $
     variance_xx_cube,  variance_yy_cube, weights_xx_cube,  weights_yy_cube, beam_xx_cube, beam_yy_cube, $
-    nside,  n_avg,  obs_arr,  psf_arr, hpx_inds, frequencies, nfile_contrib_pix, nfile_contrib_freq
+    nside,  n_avg,  obs_arr,  hpx_inds, frequencies, nfile_contrib_pix, nfile_contrib_freq
     
 end
