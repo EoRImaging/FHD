@@ -1,6 +1,7 @@
 FUNCTION fhd_source_detect,obs,fhd,source_find_image,image_I_flux=image_I_flux,image_Q_flux=image_Q_flux,$
     image_U_flux=image_U_flux,image_V_flux=image_V_flux,beam_arr=beam_arr,beam_corr_avg=beam_corr_avg,$
-    beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,model_I_image=model_I_image
+    beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,$
+    model_I_image=model_I_image,polarization_map=polarization_map
 ;NOTE: if supplied, model_I_image should be in the same units and weighting scheme as source_find_image
 
 add_threshold=fhd.add_threshold
@@ -109,6 +110,9 @@ source_fit_fn_ref=Total(source_fit_fn)/2.
 si_use=Lonarr(n_sources)-1
 sx_arr=additional_i mod dimension
 sy_arr=Float(Floor(additional_i/dimension))
+IF Ptr_valid(polarization_map[0]) THEN BEGIN
+    
+ENDIF 
 si=0L
 FOR src_i=0L,n_sources-1 DO BEGIN
     sx=sx_arr[src_i]

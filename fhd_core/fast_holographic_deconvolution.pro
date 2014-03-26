@@ -146,26 +146,35 @@ gain_normalization = get_image_renormalization(obs,psf=psf,params=params,weights
 FOR pol_i=0,n_pol-1 DO BEGIN 
 ;    filter_single=filter_arr[pol_i]
     *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)*(*beam_correction[pol_i])
+        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],/antialias,norm=gain_normalization);*(*beam_correction[pol_i])
 ;    filter_arr[pol_i]=filter_single
 ENDFOR
 
 ;gain_use*=gain_normalization
 gain_array=source_taper*gain_use
 
+p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr)
+dirty_stokes_arr=stokes_cnv(dirty_arr,beam_arr=beam_base,p_corr=p_corr,/square)
+dirty_image_composite=*dirty_stokes_arr[0]
+IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]
+IF n_pol GT 2 THEN BEGIN
+    dirty_image_composite_V=*dirty_stokes_arr[3]
+    dirty_image_composite_U=*dirty_stokes_arr[2]
+ENDIF
+
 FOR pol_i=0,n_pol-1 DO BEGIN 
-    dirty_image_single=*dirty_array[pol_i]*(*beam_correction[pol_i])
-;    *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
-    
-    ;xx, yy and xy, yx polarizations are treated seperately
-    IF pol_i LE 1 THEN dirty_image_composite+=dirty_image_single
-    IF pol_i GE 2 THEN dirty_image_composite_U+=dirty_image_single
-    CASE pol_i OF 
-        0:dirty_image_composite_Q+=dirty_image_single
-        1:dirty_image_composite_Q-=dirty_image_single 
-        2:dirty_image_composite_V+=dirty_image_single
-        3:dirty_image_composite_V-=dirty_image_single
-    ENDCASE
+;    dirty_image_single=*dirty_array[pol_i]*(*beam_correction[pol_i])
+;;    *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
+;    
+;    ;xx, yy and xy, yx polarizations are treated seperately
+;    IF pol_i LE 1 THEN dirty_image_composite+=dirty_image_single
+;    IF pol_i GE 2 THEN dirty_image_composite_U+=dirty_image_single
+;    CASE pol_i OF 
+;        0:dirty_image_composite_Q+=dirty_image_single
+;        1:dirty_image_composite_Q-=dirty_image_single 
+;        2:dirty_image_composite_V+=dirty_image_single
+;        3:dirty_image_composite_V-=dirty_image_single
+;    ENDCASE
     *model_uv_full[pol_i]=complexarr(dimension,elements)
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
@@ -216,6 +225,7 @@ converge_check2[0]=Stddev(source_find_image[where(beam_mask)],/nan)
 print,"Gain factor used:",Strn(fhd.gain_factor)
 print,"Initial convergence:",Strn(converge_check[0])
 
+model_holo_arr=Ptrarr(n_pol,/allocate)
 si=0L
 i0=0L
 IF Keyword_Set(calibration_model_subtract) THEN BEGIN
@@ -237,12 +247,14 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
     
-    model_image_composite=fltarr(dimension,elements)
+;    model_image_composite=fltarr(dimension,elements)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN 
-        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
-        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
-        model_image_composite+=model_image
+        *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+;        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
+;        model_image_composite+=model_image
     ENDFOR
+    model_stokes_arr=stokes_cnv(model_holo_arr,beam_arr=beam_base,p_corr=p_corr,/square)
+    model_image_composite=*model_stokes_arr[0]
     
     image_filtered=dirty_image_composite-model_image_composite
     IF Keyword_Set(filter_background) THEN BEGIN
@@ -321,7 +333,7 @@ FOR i=i0,max_iter-1 DO BEGIN
    
     comp_arr1=fhd_source_detect(obs,fhd,source_find_image,image_I=image_use,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
         model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,$
-        beam_arr=beam_base,beam_corr_avg=beam_corr_avg)
+        beam_arr=beam_base,beam_corr_avg=beam_corr_avg,polarization_map=p_map)
     
     image_use*=source_mask
     source_find_image*=source_mask
