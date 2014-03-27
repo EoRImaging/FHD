@@ -26,6 +26,13 @@ IF ~Keyword_Set(nside) THEN BEGIN
 ENDIF
 npix=nside2npix(nside)
 
+IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN ;check if a string, if it is assume it is a filepath to a save file with the desired indices (will be over-written with the indices)
+    IF file_test(restrict_hpx_inds) THEN restrict_hpx_inds=getvar_savefile(restrict_hpx_inds,'hpx_inds') ELSE BEGIN
+        file_path_use=filepath(restrict_hpx_inds,root=Rootdir('fhd'),subdir='Observations')
+        restrict_hpx_inds=getvar_savefile(file_path_use,'hpx_inds')
+    ENDIF
+ENDIF
+
 IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
     hpx_inds=restrict_hpx_inds
     pix2vec_ring,nside,hpx_inds,pix_coords
