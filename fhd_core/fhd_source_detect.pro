@@ -31,7 +31,7 @@ flux_offset=Mean(source_find_image[where(source_mask0)])
 source_find_image-=flux_offset
 
 IF N_Elements(model_I_image) EQ N_Elements(source_find_image) THEN BEGIN
-    mask_test_i=where((source_find_image LT -3.*converge_check) AND (model_I_image GT 5.*converge_check),n_mask)
+    mask_test_i=where((source_find_image LT -5.*converge_check) AND (model_I_image GT 5.*converge_check),n_mask)
     IF n_mask GT 0 THEN BEGIN
         mask_test=fltarr(dimension,elements)
         mask_test[mask_test_i]=1
@@ -185,11 +185,11 @@ FOR src_i=0L,n_sources-1 DO BEGIN
     si_use[src_i]=si
     si+=1
 ENDFOR
+n_sources=si
 
-si_use_i=where(si_use GE 0,n_sources)
 IF n_sources EQ 0 THEN BEGIN
     source_list=source_comp_init(n_sources=0)
-ENDIF ELSE source_list=comp_arr[si_use_i]
+ENDIF ELSE source_list=comp_arr[0:n_sources-1]
 
 source_mask=source_mask1
 RETURN,source_list
