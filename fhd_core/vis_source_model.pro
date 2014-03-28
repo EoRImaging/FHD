@@ -1,5 +1,5 @@
 FUNCTION vis_source_model,source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
-    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,$
+    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,beam_arr=beam_arr,$
     fill_model_vis=fill_model_vis,_Extra=extra
 
 t0=Systime(1)
@@ -36,7 +36,6 @@ icomp=Complex(0,1)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 
-
 ;only the LOWER half of the u-v plane is used for gridding/degridding. 
 ; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half 
 IF ~Keyword_Set(uv_mask) THEN BEGIN
@@ -70,6 +69,12 @@ ENDIF
 ;ycen=frequency_array#ky_arr
 
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
+    IF N_Elements(beam_arr) EQ 0 THEN BEGIN
+        beam_arr=Ptrarr(n_pol)
+        FOR pol_i=0,(n_pol)-1 DO beam_arr[pol_i]=Ptr_new(Sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.))
+    ENDIF
+    p_map=polarization_map_create(obs,/trace_return)
+    source_list=stokes_cnv(source_list,beam_arr=beam_arr,p_map=p_map,/inverse) ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam)
     model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF

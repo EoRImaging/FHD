@@ -104,8 +104,8 @@ flux_arr=fltarr(4)
 fit_threshold=-2.*converge_check
 source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
 source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
-source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
-source_fit_fn_ref=Total(source_fit_fn)/2.
+;source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
+;source_fit_fn_ref=Total(source_fit_fn)/2.
 
 si_use=Lonarr(n_sources)-1
 sx_arr=additional_i mod dimension
@@ -135,62 +135,40 @@ FOR src_i=0L,n_sources-1 DO BEGIN
     xcen0=xcen-sx0+box_radius
     ycen0=ycen-sy0+box_radius
     xy2ad,xcen,ycen,astr,ra,dec
-    
-    beam_corr_src=fltarr(n_pol)
-    beam_src=fltarr(n_pol)
-    beam_corr_avg_src=beam_corr_avg[additional_i[src_i]]
-    FOR pol_i=0,n_pol-1 DO BEGIN   
-;            beam_corr_src[pol_i]=(*beam_correction[pol_i])[additional_i[src_i]]
-        beam_src[pol_i]=(*beam_arr[pol_i])[additional_i[src_i]]
-        
-        IF Keyword_Set(independent_fit) THEN BEGIN
-            sign=(pol_i mod 2) ? -1:1
-            IF pol_i EQ 0 THEN sbQ=image_Q_flux[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
-            IF pol_i EQ 2 THEN BEGIN
-                sbU=image_U_flux[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
-                sbV=image_V_flux[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]*source_fit_fn
-            ENDIF
-            IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbQ,xcen0,ycen0,cubic=-0.5)
-            IF pol_i GE 2 THEN flux_use=Interpolate(sbU,xcen0,ycen0,cubic=-0.5)+sign*Interpolate(sbV,xcen0,ycen0,cubic=-0.5)
-        ENDIF ELSE IF pol_i LE 1 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>source_box[xcen0,ycen0] $
-            ELSE flux_use=Interpolate(image_U_flux[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius],xcen0,ycen0,cubic=-0.5)
-        
-        flux_arr[pol_i]=flux_use*beam_corr_avg_src/2. ;"True sky" instrumental pol
-    ENDFOR
-    
-    IF (flux_arr[0]+flux_arr[1]) LE 0 THEN BEGIN
+     
+    flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>source_box[xcen0,ycen0]
+    IF flux_use LE 0 THEN BEGIN
         n_mask+=Total(source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
         source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]=0
         CONTINUE
     ENDIF
     
-    gain_factor_use=gain_array[sx,sy]
+    gain_factor_use=gain_array[sx,sy]*gain_mod
     IF Keyword_Set(scale_gain) THEN BEGIN
-        ston_single=(flux_arr[0]+flux_arr[1])/(converge_check*gain_normalization)
+        ston_single=flux_use/(converge_check*gain_normalization)
         gain_factor_use=(((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))*gain_normalization)>gain_factor_use
     ENDIF
-    flux_arr*=gain_factor_use
-    flux_arr*=gain_mod
     
-    ;Apparent brightness, instrumental polarization X gain (a scalar)
-    FOR pol_i=0,n_pol-1 DO comp_arr[si].flux.(pol_i)=flux_arr[pol_i]*beam_src[pol_i]
     comp_arr[si].x=xcen
     comp_arr[si].y=ycen
     comp_arr[si].ra=ra
     comp_arr[si].dec=dec
-    comp_arr[si].flux.I=flux_arr[0]+flux_arr[1]
-    comp_arr[si].flux.Q=flux_arr[0]-flux_arr[1]
-    comp_arr[si].flux.U=flux_arr[2]+flux_arr[3]
-    comp_arr[si].flux.V=flux_arr[2]-flux_arr[3]
+    comp_arr[si].flux.I=flux_use*gain_factor_use
+    IF Keyword_Set(independent_fit) AND (N_Elements(image_Q_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.Q=$
+        Interpolate(image_Q_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
+    IF (N_Elements(image_U_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.U=$
+        Interpolate(image_U_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
+    IF Keyword_Set(independent_fit) AND (N_Elements(image_V_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.V=$
+        Interpolate(image_V_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
     si_use[src_i]=si
     si+=1
 ENDFOR
 n_sources=si
 
-IF n_sources EQ 0 THEN BEGIN
-    source_list=source_comp_init(n_sources=0)
-ENDIF ELSE source_list=comp_arr[0:n_sources-1]
-
 source_mask=source_mask1
+IF n_sources EQ 0 THEN RETURN,source_comp_init(n_sources=0)
+
+source_list=stokes_cnv(comp_arr[0:n_sources-1],p_map=polarization_map,beam_arr=beam_arr,/inverse)
+
 RETURN,source_list
 END

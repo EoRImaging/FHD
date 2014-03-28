@@ -125,6 +125,7 @@ t1+=t2a-t1a
 ;p_map_out=Ptrarr(n_pol,/allocate)
 ;p_corr_out=Ptrarr(n_pol,/allocate)
 
+p_map_out=polarization_map_create(obs_out,/trace_return,polarization_corr=p_corr_out)
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
@@ -168,11 +169,11 @@ gal_holo_img=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     filter_single=filter_arr[pol_i]
     *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i])
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra);*(*beam_correction_out[pol_i])
     instr_img_uv=*image_uv_arr[pol_i]-*model_uv_holo[pol_i];-*gal_holo_uv[pol_i]
     *res_uv_arr[pol_i]=instr_img_uv
     *instr_images[pol_i]=dirty_image_generate(instr_img_uv,degpix=degpix,weights=*weights_arr[pol_i],$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i])
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra);*(*beam_correction_out[pol_i])
     *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
         dimension=dimension,restored_beam_width=restored_beam_width)
     filter_arr[pol_i]=filter_single
@@ -200,8 +201,12 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     ENDFOR
 ENDIF ELSE  gal_name=''
 
-stokes_images=stokes_cnv(instr_images,beam=beam_base_out,p_corr=p_corr_out) ;NOTE one factor of the beam already corrected for
-stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out,p_corr=p_corr_out)
+stokes_images=stokes_cnv(instr_images,beam=beam_base_out,p_corr=p_corr_out,/square) 
+stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out,p_corr=p_corr_out) ;NOTE one factor of the beam already corrected for
+FOR pol_i=0,n_pol-1 DO BEGIN
+    *instr_images[pol_i]*=*beam_correction_out[pol_i]
+    *dirty_images[pol_i]*=*beam_correction_out[pol_i]
+ENDFOR
 
 t4a=Systime(1)
 t3+=t4a-t3a

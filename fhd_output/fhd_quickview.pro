@@ -88,6 +88,7 @@ elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
+p_map_out=polarization_map_create(obs_out,/trace_return,polarization_corr=p_corr_out)
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
@@ -153,9 +154,9 @@ instr_rings=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,/allocate) 
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_dirty_arr[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
     IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_arr[pol_i],degpix=degpix,weights=vis_count,/antialias,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))
@@ -172,19 +173,26 @@ for pol_i=0,n_pol-1 do begin
   IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor 
 endfor
 
-stokes_dirty_arr=stokes_cnv(instr_dirty_arr,beam=beam_base_out)
+stokes_dirty_arr=stokes_cnv(instr_dirty_arr,beam=beam_base_out,p_corr=p_corr_out,/square)
 IF model_flag THEN BEGIN
     instr_residual_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *instr_residual_arr[pol_i]=*instr_dirty_arr[pol_i]-*instr_model_arr[pol_i]
-    stokes_residual_arr=stokes_cnv(instr_residual_arr,beam=beam_base_out)
+    stokes_residual_arr=stokes_cnv(instr_residual_arr,beam=beam_base_out,p_corr=p_corr_out,/square)
 ENDIF ELSE BEGIN
     instr_residual_arr=instr_dirty_arr
     stokes_residual_arr=stokes_dirty_arr
 ENDELSE
+FOR pol_i=0,n_pol-1 DO BEGIN
+    *instr_dirty_arr[pol_i]*=*beam_correction_out[pol_i]
+    IF model_flag THEN BEGIN
+        *instr_residual_arr[pol_i]*=*beam_correction_out[pol_i]
+        *instr_model_arr[pol_i]*=*beam_correction_out[pol_i]
+    ENDIF
+ENDFOR
 
 IF source_flag THEN BEGIN
-    stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out) ;returns null pointer if instr_sources is a null pointer 
-    IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,beam=beam_base_out) 
+    stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out,p_corr=p_corr_out) ;returns null pointer if instr_sources is a null pointer 
+    IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,beam=beam_base_out,p_corr=p_corr_out) 
 ENDIF    
 
 IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=export_path+'_source_list'
