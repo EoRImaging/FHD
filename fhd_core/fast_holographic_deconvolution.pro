@@ -365,7 +365,7 @@ FOR i=i0,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,_Extra=extra
+    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,polarization_map=p_map,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -419,7 +419,7 @@ comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,obs,radius=beam_width>0.5,noise_map=noise_map,$
     reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
 t3_0=Systime(1)
-model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
+model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,polarization_map=p_map,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 t4_0=Systime(1)
 t3+=t4_0-t3_0

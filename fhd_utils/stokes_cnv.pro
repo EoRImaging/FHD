@@ -1,10 +1,17 @@
-FUNCTION stokes_cnv,image_arr,beam_arr=beam_arr,p_map=p_map,p_corr=p_corr,inverse=inverse,square=square
+FUNCTION stokes_cnv,image_arr,beam_arr=beam_arr,p_map=p_map,p_corr=p_corr,inverse=inverse,square=square,no_extend=no_extend
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
+;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
 
-n_pol=N_Elements(beam_arr)
-beam_use=Ptrarr(n_pol,/allocate)
-FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_arr[ii]
-IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
+IF N_Elements(beam_arr) EQ 0 THEN BEGIN
+    n_pol=4
+    beam_use=Ptrarr(n_pol,/allocate)
+    FOR ii=0L,n_pol-1 DO *beam_use[ii]=1.
+ENDIF ELSE BEGIN
+    n_pol=N_Elements(beam_arr)
+    beam_use=Ptrarr(n_pol,/allocate)
+    FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_arr[ii]
+    IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
+ENDELSE
 
 IF N_Elements(p_map) EQ 0 THEN BEGIN
     p_map=Ptrarr(n_pol,/allocate) 
@@ -36,6 +43,12 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     IF size(*p_use[0],/n_dimension) GT 1 THEN FOR pol_i=0,n_pol-1 DO *pol_arr[pol_i]=(*p_use[pol_i])[sx,sy] ELSE FOR pol_i=0,n_pol-1 DO *pol_arr[pol_i]=*p_use[pol_i]
     IF size(*beam_use[0],/n_dimension) GT 1 THEN FOR pol_i=0,n_pol-1 DO *beam_use[pol_i]=(*beam_use[pol_i])[sx,sy]
     
+    ;also convert extended source components. Set square=0 since the beam is already squared if that option is set
+    extend_i=where(Ptr_valid(source_list.extend),n_ext)
+    IF Keyword_Set(no_extend) THEN n_ext=0
+    FOR ext_i=0L,n_ext-1 DO *(source_list[extend_i[ext_i]].extend)=$
+        stokes_cnv(*(source_list[extend_i[ext_i]].extend),beam_arr=beam_use,p_map=p_map,p_corr=p_corr,inverse=inverse,square=0,/no_extend)
+    
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
         stokes_i_offset=0
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list.flux.(pol_i+4)
@@ -56,7 +69,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     result=source_list
 ;    RETURN,source_list
 ENDIF ELSE BEGIN
-    n_pol=N_Elements(image_arr) ;redefine it here, just to make sure it matches the images
+    n_pol=N_Elements(image_arr) ;redefine n_pol here, just to make sure it matches the images
     image_arr_out=Ptrarr(n_pol)
     IF ~Ptr_valid(image_arr[0]) THEN RETURN,image_arr_out
     

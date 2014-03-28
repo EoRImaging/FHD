@@ -68,19 +68,19 @@ ENDIF
 ;xcen=frequency_array#kx_arr
 ;ycen=frequency_array#ky_arr
 
+p_map=polarization_map_create(obs,/trace_return)
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
-    IF N_Elements(beam_arr) EQ 0 THEN BEGIN
-        beam_arr=Ptrarr(n_pol)
-        FOR pol_i=0,(n_pol)-1 DO beam_arr[pol_i]=Ptr_new(Sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.))
-    ENDIF
-    p_map=polarization_map_create(obs,/trace_return)
-    source_list=stokes_cnv(source_list,beam_arr=beam_arr,p_map=p_map,/inverse) ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam)
-    model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
+;    IF N_Elements(beam_arr) EQ 0 THEN BEGIN
+;        beam_arr=Ptrarr(n_pol)
+;        FOR pol_i=0,(n_pol)-1 DO beam_arr[pol_i]=Ptr_new(Sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.))
+;    ENDIF
+;    source_list=stokes_cnv(source_list,beam_arr=beam_arr,p_map=p_map,/inverse) ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam)
+    model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask,polarization_map=p_map)
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF
 
 IF Keyword_Set(galaxy_calibrate) THEN BEGIN
-    gal_model_uv=fhd_galaxy_model(obs,antialias=1,/uv_return,_Extra=extra)
+    gal_model_uv=fhd_galaxy_model(obs,antialias=1,/uv_return,p_map=p_map,_Extra=extra)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]
 ENDIF
 
