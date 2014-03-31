@@ -151,10 +151,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 ;gain_use*=gain_normalization
-gain_array=source_taper*gain_use
+;gain_array=source_taper*gain_use
+gain_array=replicate(gain_use,dimension,elements)
 
-p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr)
-dirty_stokes_arr=stokes_cnv(dirty_arr,beam_arr=beam_base,p_corr=p_corr,/square)
+p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,/use_pointing_center)
+dirty_stokes_arr=stokes_cnv(dirty_array,beam_arr=beam_base,p_corr=p_corr,/square)
 dirty_image_composite=*dirty_stokes_arr[0]
 IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]
 IF n_pol GT 2 THEN BEGIN
@@ -274,26 +275,32 @@ t_init=Systime(1)-t00
 FOR i=i0,max_iter-1 DO BEGIN 
     IF Keyword_Set(recalc_flag) THEN BEGIN
         t1_0=Systime(1)
-        model_image_composite=fltarr(dimension,elements)
-        model_image_composite_Q=fltarr(dimension,elements)
-        model_image_composite_U=fltarr(dimension,elements)
-        model_image_composite_V=fltarr(dimension,elements)
-        FOR pol_i=0,n_pol-1 DO BEGIN 
-            model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
-            model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
-            
-            *model_arr[pol_i]=model_image
-            IF pol_i LE 1 THEN model_image_composite+=model_image $
-                ELSE model_image_composite_U+=model_image
-            IF Keyword_Set(independent_fit) OR Keyword_Set(reject_pol_sources) THEN BEGIN   
-                CASE pol_i OF
-                    0:model_image_composite_Q+=model_image
-                    1:model_image_composite_Q-=model_image
-                    2:model_image_composite_V+=model_image
-                    3:model_image_composite_V-=model_image
-                ENDCASE
-            ENDIF
-        ENDFOR
+;        model_image_composite=fltarr(dimension,elements)
+;        model_image_composite_Q=fltarr(dimension,elements)
+;        model_image_composite_U=fltarr(dimension,elements)
+;        model_image_composite_V=fltarr(dimension,elements)
+;        FOR pol_i=0,n_pol-1 DO BEGIN 
+;            model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+;            model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
+;            
+;            *model_arr[pol_i]=model_image
+;            IF pol_i LE 1 THEN model_image_composite+=model_image $
+;                ELSE model_image_composite_U+=model_image
+;            IF Keyword_Set(independent_fit) OR Keyword_Set(reject_pol_sources) THEN BEGIN   
+;                CASE pol_i OF
+;                    0:model_image_composite_Q+=model_image
+;                    1:model_image_composite_Q-=model_image
+;                    2:model_image_composite_V+=model_image
+;                    3:model_image_composite_V-=model_image
+;                ENDCASE
+;            ENDIF
+;        ENDFOR
+        FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+        model_stokes_arr=stokes_cnv(model_holo_arr,beam_arr=beam_base,p_corr=p_corr,/square)
+        model_image_composite=*model_stokes_arr[0]
+        IF n_pol GT 1 THEN model_image_composite_Q=*model_stokes_arr[1]
+        IF n_pol GT 2 THEN model_image_composite_U=*model_stokes_arr[2]
+        IF n_pol GT 3 THEN model_image_composite_V=*model_stokes_arr[3]
         
         t2_0=Systime(1)
         t1+=t2_0-t1_0 

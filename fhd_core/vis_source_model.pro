@@ -68,7 +68,7 @@ ENDIF
 ;xcen=frequency_array#kx_arr
 ;ycen=frequency_array#ky_arr
 
-p_map=polarization_map_create(obs,/trace_return)
+p_map=polarization_map_create(obs,/trace_return,/use_pointing_center)
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
 ;    IF N_Elements(beam_arr) EQ 0 THEN BEGIN
 ;        beam_arr=Ptrarr(n_pol)

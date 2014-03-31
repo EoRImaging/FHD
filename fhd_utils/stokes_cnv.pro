@@ -20,7 +20,7 @@ IF N_Elements(p_map) EQ 0 THEN BEGIN
 ENDIF
 IF N_Elements(p_corr) EQ 0 THEN BEGIN
     p_corr=Ptrarr(n_pol,/allocate) 
-    p_corr_free
+    p_corr_free=1
     FOR ii=0L,n_pol-1 DO *p_corr[ii]=1. 
 ENDIF
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
@@ -53,17 +53,18 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
         stokes_i_offset=0
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list.flux.(pol_i+4)
         
-        FOR pol_i=0,n_pol-1 DO *flux_out[pol_i]=((*flux_arr[stokes_list1[pol_i]])+sign[pol_i]*(*flux_arr[stokes_list2[pol_i]]))*(*beam_use[pol_i])*(*p_use[pol_i])
+        FOR pol_i=0,n_pol-1 DO *flux_out[pol_i]=((*flux_arr[stokes_list1[pol_i]])+sign[pol_i]*(*flux_arr[stokes_list2[pol_i]]))*(*beam_use[pol_i])*(*pol_arr[pol_i])
     ENDIF ELSE BEGIN ;instrumental -> Stokes
         stokes_i_offset=4  
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list.flux.(pol_i)
         *flux_out[0]=(*flux_arr[stokes_list1[0]]+*flux_arr[stokes_list2[0]])*weight_invert((*beam_use[stokes_list2[0]]+*beam_use[stokes_list1[0]])/2.)
         FOR pol_i=1,n_pol-1 DO BEGIN
-            *flux_out[pol_i]=(*flux_arr[stokes_list1[pol_i]])*(*beam_use[stokes_list1[pol_i]])*(*p_use[stokes_list1[pol_i]])+$
-                sign[pol_i]*(*flux_arr[stokes_list2[pol_i]])*(*beam_use[stokes_list2[pol_i]])*(*p_use[stokes_list2[pol_i]])
+            *flux_out[pol_i]=(*flux_arr[stokes_list1[pol_i]])*(*beam_use[stokes_list1[pol_i]])*(*pol_arr[stokes_list1[pol_i]])+$
+                sign[pol_i]*(*flux_arr[stokes_list2[pol_i]])*(*beam_use[stokes_list2[pol_i]])*(*pol_arr[stokes_list2[pol_i]])
         ENDFOR
     ENDELSE
-    FOR pol_i=0,n_pol-1 DO source_list.flux.(pol_i+stokes_i_offset)=*flux_out[pol_i] ;indices of source_list.flux are [xx,yy,xy,yx,I,Q,U,V]
+     ;indices of source_list.flux are [xx,yy,xy,yx,I,Q,U,V]
+    FOR pol_i=0,n_pol-1 DO source_list.flux.(pol_i+stokes_i_offset)=Reform(*flux_out[pol_i]) ;;Reform() is to handle ns=1 case
     
     Ptr_free,flux_out,flux_arr,pol_arr
     result=source_list
@@ -84,16 +85,16 @@ ENDIF ELSE BEGIN
 ;            (*image_arr[stokes_list2[0]]*(*p_use[stokes_list2[0]])))*weight_invert((*beam_use[stokes_list2[0]])+(*beam_use[stokes_list1[0]]))/2.)
         image_arr_out[0]=Ptr_new((*image_arr[stokes_list1[0]]+*image_arr[stokes_list2[0]])*weight_invert((*beam_use[stokes_list2[0]]+*beam_use[stokes_list1[0]])/2.))
         FOR pol_i=1,n_pol-1 DO BEGIN
-            image_arr_out[pol_i]=Ptr_new((*image_arr[stokes_list1[pol_i]])*(*beam_use[stokes_list1[pol_i]])*(*p_use[stokes_list1[pol_i]])+$
-                sign[pol_i]*(*image_arr[stokes_list2[pol_i]])*(*beam_use[stokes_list2[pol_i]])*(*p_use[stokes_list2[pol_i]]))
+            image_arr_out[pol_i]=Ptr_new((*image_arr[stokes_list1[pol_i]])*weight_invert(*beam_use[stokes_list1[pol_i]])*(*p_use[stokes_list1[pol_i]])+$
+                sign[pol_i]*(*image_arr[stokes_list2[pol_i]])*weight_invert(*beam_use[stokes_list2[pol_i]])*(*p_use[stokes_list2[pol_i]]))
         ENDFOR
     ENDELSE
     result=image_arr_out
 ;    RETURN,image_arr_out
 ENDELSE
 
-IF p_map_free THEN Ptr_Free,p_map
-IF p_corr_free THEN Ptr_Free,p_corr
+IF Keyword_Set(p_map_free) THEN Ptr_Free,p_map
+IF Keyword_Set(p_corr_free) THEN Ptr_Free,p_corr
 Ptr_Free,beam_use
 RETURN,result
 END
