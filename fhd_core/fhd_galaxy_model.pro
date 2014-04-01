@@ -56,8 +56,6 @@ alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
 horizon_proj=Sin(alt_arr*!DtoR)
 antialias_filter=Sqrt(Hanning(dimension,elements))
 model_use=model
-model_use/=2. ;convert Stokes I to "True sky" instrumental pol
-model_use/=2. ;fudge_factor!!!
 model_use*=horizon_proj
 IF Keyword_Set(antialias) THEN model_use*=antialias_filter
 model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion

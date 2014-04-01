@@ -8,6 +8,8 @@ file_path_base=filepath('',root=rootdir('FHD'),sub='catalog_data')
 IF Keyword_Set(haslam_filtered) THEN BEGIN
     print,"Using 408 MHz filtered Haslam map"
     Fitsfast,Temperature,header,/read,file_path=file_path_base+'lambda_haslam408_dsds'  ;temperature in K    
+    model_freq=408. ;MHz 
+    spectral_index=-0.8
     
     npix=N_Elements(Temperature) ;should equal 12.*512^2.
     nside=npix2nside(npix)
@@ -21,7 +23,7 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
 ;    ang2vec,dec_use,ra_use,vec_use,/astro
     vec2pix_nest,nside,vec_use,ipring
     
-    Temperature=Temperature[ipring]
+    Temperature=Temperature[ipring]*(model_freq/mean(frequency))^spectral_index
     model=Ptrarr(1)
     model0=fltarr(size(ra_arr,/dimension))
     model0[radec_i]=Temperature
