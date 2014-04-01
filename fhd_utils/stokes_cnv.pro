@@ -13,16 +13,16 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
 ENDELSE
 
-;IF N_Elements(p_map) EQ 0 THEN BEGIN
+IF N_Elements(p_map) EQ 0 THEN BEGIN
     p_map=Ptrarr(n_pol,/allocate) 
     p_map_free=1
     FOR ii=0L,n_pol-1 DO *p_map[ii]=0.5
-;ENDIF
-;IF N_Elements(p_corr) EQ 0 THEN BEGIN
+ENDIF
+IF N_Elements(p_corr) EQ 0 THEN BEGIN
     p_corr=Ptrarr(n_pol,/allocate) 
     p_corr_free=1
     FOR ii=0L,n_pol-1 DO *p_corr[ii]=1. 
-;ENDIF
+ENDIF
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 
 stokes_list1=[0,0,2,2]
