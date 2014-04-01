@@ -231,13 +231,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
         RETURN
     ENDIF
     
-;    IF Keyword_Set(healpix_recalculate) THEN $
-;        hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,$
-;            mask=beam_mask,radius=radius,restore_last=0,_Extra=extra)
-;    hpx_cnv=0
-    IF Keyword_Set(healpix_snapshot_cube) THEN healpix_snapshot_cube_generate,obs,vis_arr,$
-        vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,_Extra=extra
-    
     autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
     auto_corr=Ptrarr(n_pol)
     IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
@@ -267,11 +260,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
         IF Keyword_Set(return_cal_visibilities) THEN model_uv_holo=Ptrarr(n_pol,/allocate)
         IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
         FOR pol_i=0,n_pol-1 DO BEGIN
-    ;        IF Keyword_Set(GPU_enable) THEN $
-    ;            dirty_UV=visibility_grid_GPU(*vis_arr[pol_i],*flag_arr[pol_i],obs,psf,params,timing=t_grid0,$
-    ;                polarization=pol_i,weights=weights_grid,silent=silent,mapfn_recalculate=mapfn_recalculate) $
-    ;        ELSE $
-            
             IF Keyword_Set(return_cal_visibilities) THEN model_return=return_cal_visibilities
             IF Keyword_Set(snapshot_healpix_export) THEN preserve_visibilities=1 ELSE preserve_visibilities=0
             dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
@@ -294,7 +282,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 *weights_arr[pol_i]=Temporary(weights_grid)
                 weights_grid=1
             ENDIF
-            
         ENDFOR
         print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
