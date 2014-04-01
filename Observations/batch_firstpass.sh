@@ -1,12 +1,17 @@
 #!/bin/bash
 
+###NOTE: print statements must be turned off in idl_startup file (e.g. healpix check)
+
 #Clear input parameters
 unset obs_file_name
 unset starting_obs
 unset ending_obs
 unset outdir
 unset version
+
 #Parse flags for inputs
+#What is needed: a file with observation id's separated by newlines, and an output directory
+#What is optional: specified starting and ending observation id's, and the version of which to save FHD under (highly recommended to have)
 while getopts ":f:s:e:o:v:" option
 do
    case $option in
@@ -15,7 +20,7 @@ do
 	e) ending_obs=$OPTARG;;
         o) outdir=$OPTARG;;
         v) version=$OPTARG;;
-	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs) and -e (ending obs)" 
+	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), and -v (version input for FHD)" 
 	    exit 1;;
 	:) echo "Missing option argument for input flag"
 	   exit 1;;
@@ -29,8 +34,7 @@ echo ending obs $ending_obs
 shift $(($OPTIND - 1))
 
 #Throw error if no obs_id file
-if [ -z ${obs_file_name} ]
-then
+if [ -z ${obs_file_name} ]; then
    echo "Need to specify a file with a list of viable observation ids."
    exit 1
 fi
@@ -45,6 +49,10 @@ if [ -z ${version} ]; then
     version=test_batch_firstpass
     echo Using default FHD version: $version
 fi
+
+#Make directory if it doesn't already exist
+mkdir -p ${outdir}/fhd_${version}
+echo Output located at ${outdir}/fhd_${version}
 
 ### Should make these options
 nslots=10
@@ -96,7 +104,6 @@ fi
 #idl_function="eor_firstpass_spawn"
 #export IDL_PATH=$IDL_PATH:+$idl_function_path
 #idl_e="idl -e $idl_function -args"
-#version="'nb_firstpass_script_test'"
 FHDpath=$(idl -e 'print,rootdir("fhd")') ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 
 #Run idl for all specified obs_id using the above commands
@@ -111,7 +118,6 @@ for obs_id in "${obs_id_array[@]}"
 do
     if [ $obs_id -ge $starting_obs ] && [ $obs_id -le $ending_obs ]
     then
-	### Might need to mkdir before using these files ###
 	errfile=${outdir}/fhd_${version}/${obs_id}_err.log
 	outfile=${outdir}/fhd_${version}/${obs_id}_out.log
 	echo "Starting observation id $obs_id"
