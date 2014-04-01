@@ -13,16 +13,16 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
 ENDELSE
 
-IF N_Elements(p_map) EQ 0 THEN BEGIN
+;IF N_Elements(p_map) EQ 0 THEN BEGIN
     p_map=Ptrarr(n_pol,/allocate) 
     p_map_free=1
-    FOR ii=0L,n_pol-1 DO *p_map[ii]=1. 
-ENDIF
-IF N_Elements(p_corr) EQ 0 THEN BEGIN
+    FOR ii=0L,n_pol-1 DO *p_map[ii]=0.5
+;ENDIF
+;IF N_Elements(p_corr) EQ 0 THEN BEGIN
     p_corr=Ptrarr(n_pol,/allocate) 
     p_corr_free=1
     FOR ii=0L,n_pol-1 DO *p_corr[ii]=1. 
-ENDIF
+;ENDIF
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 
 stokes_list1=[0,0,2,2]
@@ -83,7 +83,7 @@ ENDIF ELSE BEGIN
     ENDIF ELSE BEGIN ;instrumental -> Stokes
 ;        image_arr_out[0]=Ptr_new(((*image_arr[stokes_list1[0]])*(*p_use[stokes_list1[0]])+$
 ;            (*image_arr[stokes_list2[0]]*(*p_use[stokes_list2[0]])))*weight_invert((*beam_use[stokes_list2[0]])+(*beam_use[stokes_list1[0]]))/2.)
-        image_arr_out[0]=Ptr_new((*image_arr[stokes_list1[0]]+*image_arr[stokes_list2[0]])*weight_invert((*beam_use[stokes_list2[0]]+*beam_use[stokes_list1[0]])/2.))
+        image_arr_out[0]=Ptr_new(2.*(*image_arr[stokes_list1[0]]+*image_arr[stokes_list2[0]])*weight_invert((*beam_use[stokes_list2[0]]+*beam_use[stokes_list1[0]])))
         FOR pol_i=1,n_pol-1 DO BEGIN
             image_arr_out[pol_i]=Ptr_new((*image_arr[stokes_list1[pol_i]])*weight_invert(*beam_use[stokes_list1[pol_i]])*(*p_use[stokes_list1[pol_i]])+$
                 sign[pol_i]*(*image_arr[stokes_list2[pol_i]])*weight_invert(*beam_use[stokes_list2[pol_i]])*(*p_use[stokes_list2[pol_i]]))

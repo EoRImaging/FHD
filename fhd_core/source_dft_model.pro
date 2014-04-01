@@ -14,9 +14,9 @@ uv_i_use=where(uv_mask)
 xvals=Float(uv_i_use mod dimension)-dimension/2
 yvals=Float(Floor(uv_i_use/dimension))-elements/2
 
-model_uv_arr=Ptrarr(n_pol,/allocate)
-FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(dimension,elements)
-model_uv_stks=Ptrarr(4,/allocate)
+;model_uv_arr=Ptrarr(n_pol,/allocate)
+;FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(dimension,elements)
+;model_uv_stks=Ptrarr(4,/allocate)
 
 src_arr=source_list
 IF Keyword_Set(sigma_threshold) THEN BEGIN
@@ -41,7 +41,7 @@ ENDIF
 source_dft_multi,obs,src_arr_use,model_uv_arr,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
     conserve_memory=conserve_memory,polarization_map=polarization_map
 
+undefine_fhd,src_arr_use
 t_model=Systime(1)-t_model0
-
 RETURN,model_uv_arr
 END
