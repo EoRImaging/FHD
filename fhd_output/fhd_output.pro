@@ -272,6 +272,9 @@ IF n_mrc GT 2 THEN BEGIN
     mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
         restored_beam_width=pad_uv_image,ring=6.*pad_uv_image)
 ENDIF
+;write sources to a text file
+source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list2'
+source_array_export,comp_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_component_list2'
 
 t6a=Systime(1)
 t5+=t6a-t5a
@@ -474,9 +477,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 t10b=Systime(1)
-;write sources to a text file
-source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list2'
-source_array_export,comp_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_component_list2'
 
 residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
     file_path_base=image_path_fg,_Extra=extra

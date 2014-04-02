@@ -13,20 +13,24 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 n_pol=obs.n_pol
+IF N_Elements(fhd) EQ 0 THEN fhd=fhd_init(obs)
+beam_threshold=fhd.beam_threshold
+smooth_width=fhd.smooth_width
+
 IF N_Elements(radius_inc) EQ 0 THEN radius_inc=10. ;degrees
 IF N_Elements(ston) EQ 0 THEN ston=0. ;signal to noise source threshold that has been removed from residual_image
 
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)+1
 FOR pol_i=0,((n_pol-1)<1) DO BEGIN
-    beam_i=region_grow(*beam_base[pol_i],dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold,Max(*beam_base[pol_i])])
+    beam_i=region_grow(*beam_base[pol_i],dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(*beam_base[pol_i])])
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1    
     beam_mask*=beam_mask0
     beam_avg*=*beam_base[pol_i]
 ENDFOR
 IF n_pol GT 1 THEN beam_avg=Sqrt(beam_avg>0)
 
-res_Is=(residual_image*beam_avg-median(residual_image*beam_avg,fhd.smooth_width))
+res_Is=(residual_image*beam_avg-median(residual_image*beam_avg,smooth_width))
 
 fail_i=where(res_Is EQ 0,n_fail)
 IF n_fail GT 0 THEN beam_mask[fail_i]=0
