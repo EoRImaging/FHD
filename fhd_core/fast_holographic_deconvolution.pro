@@ -19,7 +19,7 @@ PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,image_uv_arr,source_ar
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
-    scale_gain=scale_gain,model_uv_arr=model_uv_arr,_Extra=extra
+    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
 ;calibration_model_subtract is passed through the fhd structure
 compile_opt idl2,strictarrsubs  
 
@@ -154,7 +154,7 @@ ENDFOR
 ;gain_array=source_taper*gain_use
 gain_array=replicate(gain_use,dimension,elements)
 
-p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,/use_pointing_center)
+p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,use_pointing_center=use_pointing_center)
 dirty_stokes_arr=stokes_cnv(dirty_array,beam_arr=beam_base,p_corr=p_corr,/square)
 dirty_image_composite=*dirty_stokes_arr[0]
 IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]

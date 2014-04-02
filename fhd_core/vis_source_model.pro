@@ -1,6 +1,6 @@
 FUNCTION vis_source_model,source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
     timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,beam_arr=beam_arr,$
-    fill_model_vis=fill_model_vis,_Extra=extra
+    fill_model_vis=fill_model_vis,use_pointing_center=use_pointing_center,_Extra=extra
 
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
@@ -65,16 +65,11 @@ IF N_Elements(cal) NE 0 THEN BEGIN
     cal.galaxy_cal=Keyword_Set(galaxy_calibrate)
 ENDIF
 
-;xcen=frequency_array#kx_arr
-;ycen=frequency_array#ky_arr
-
-;p_map=polarization_map_create(obs,/trace_return,/use_pointing_center)
+p_map=polarization_map_create(obs,/trace_return,use_pointing_center=use_pointing_center)
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
-;    IF N_Elements(beam_arr) EQ 0 THEN BEGIN
-;        beam_arr=Ptrarr(n_pol)
-;        FOR pol_i=0,(n_pol)-1 DO beam_arr[pol_i]=Ptr_new(Sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.))
-;    ENDIF
-;    source_list=stokes_cnv(source_list,beam_arr=beam_arr,p_map=p_map,/inverse) ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam)
+    ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
+    ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
+    source_list=stokes_cnv(source_list,beam_arr=beam_arr,p_map=p_map,/inverse) 
     model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask,polarization_map=p_map)
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF

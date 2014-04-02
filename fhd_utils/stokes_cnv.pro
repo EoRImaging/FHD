@@ -57,7 +57,10 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     ENDIF ELSE BEGIN ;instrumental -> Stokes
         stokes_i_offset=4  
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list.flux.(pol_i)
-        *flux_out[0]=(*flux_arr[stokes_list1[0]]+*flux_arr[stokes_list2[0]])*weight_invert((*beam_use[stokes_list2[0]]+*beam_use[stokes_list1[0]])/2.)
+        pol_arr2=Ptrarr(4,/allocate)
+        IF Keyword_Set(p_map_free) THEN FOR pol_i=0,3 DO *pol_arr2[pol_i]=0.5 ELSE FOR pol_i=0,3 DO *pol_arr2[pol_i]=(*p_map[pol_i])[sx,sy]
+        *flux_out[0]=(*flux_arr[stokes_list1[0]]+*flux_arr[stokes_list2[0]])*$
+            weight_invert(*beam_use[stokes_list1[0]]*(*pol_arr2[stokes_list1[0]])+*beam_use[stokes_list2[0]]*(*pol_arr2[stokes_list2[0]]))
         FOR pol_i=1,n_pol-1 DO BEGIN
             *flux_out[pol_i]=(*flux_arr[stokes_list1[pol_i]])*(*beam_use[stokes_list1[pol_i]])*(*pol_arr[stokes_list1[pol_i]])+$
                 sign[pol_i]*(*flux_arr[stokes_list2[pol_i]])*(*beam_use[stokes_list2[pol_i]])*(*pol_arr[stokes_list2[pol_i]])
@@ -83,7 +86,8 @@ ENDIF ELSE BEGIN
     ENDIF ELSE BEGIN ;instrumental -> Stokes
 ;        image_arr_out[0]=Ptr_new(((*image_arr[stokes_list1[0]])*(*p_use[stokes_list1[0]])+$
 ;            (*image_arr[stokes_list2[0]]*(*p_use[stokes_list2[0]])))*weight_invert((*beam_use[stokes_list2[0]])+(*beam_use[stokes_list1[0]]))/2.)
-        image_arr_out[0]=Ptr_new(2.*(*image_arr[stokes_list1[0]]+*image_arr[stokes_list2[0]])*weight_invert((*beam_use[stokes_list2[0]]+*beam_use[stokes_list1[0]])))
+        image_arr_out[0]=Ptr_new((*image_arr[stokes_list1[0]]+*image_arr[stokes_list2[0]])*$
+            weight_invert(*beam_use[stokes_list1[0]]*(*p_map[stokes_list1[0]])+*beam_use[stokes_list2[0]]*(*p_map[stokes_list2[0]])))
         FOR pol_i=1,n_pol-1 DO BEGIN
             image_arr_out[pol_i]=Ptr_new((*image_arr[stokes_list1[pol_i]])*weight_invert(*beam_use[stokes_list1[pol_i]])*(*p_use[stokes_list1[pol_i]])+$
                 sign[pol_i]*(*image_arr[stokes_list2[pol_i]])*weight_invert(*beam_use[stokes_list2[pol_i]])*(*p_use[stokes_list2[pol_i]]))

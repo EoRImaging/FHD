@@ -3,7 +3,8 @@ PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
-    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,galaxy_model_fit=galaxy_model_fit,_Extra=extra
+    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
+    use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -88,7 +89,13 @@ elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
-p_map_out=polarization_map_create(obs_out,/trace_return,polarization_corr=p_corr_out)
+p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,use_pointing_center=use_pointing_center)
+p_map_out=Ptrarr(4,/allocate)
+p_corr_out=Ptrarr(4,/allocate)
+FOR pol_i=0,3 DO BEGIN
+    *p_map_out[pol_i]=Rebin(*p_map[pol_i],dimension,elements)
+    *p_corr_out[pol_i]=Rebin(*p_corr[pol_i],dimension,elements)
+ENDFOR
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)

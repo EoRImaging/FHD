@@ -3,7 +3,8 @@ PRO fhd_output,obs,fhd,cal, file_path_fhd=file_path_fhd,version=version,map_fn_a
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
     gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
-    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,no_fits=no_fits,no_png=no_png,_Extra=extra
+    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
+    use_pointing_center=use_pointing_center,no_fits=no_fits,no_png=no_png,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
@@ -124,8 +125,15 @@ t1+=t2a-t1a
 ;p_map=polarization_map_create(obs,/trace_return,/use_pointing,polarization_correction=p_corr)
 ;p_map_out=Ptrarr(n_pol,/allocate)
 ;p_corr_out=Ptrarr(n_pol,/allocate)
+;p_map_out=polarization_map_create(obs_out,/trace_return,polarization_corr=p_corr_out,use_pointing_center=use_pointing_center)
+p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,use_pointing_center=use_pointing_center)
+p_map_out=Ptrarr(4,/allocate)
+p_corr_out=Ptrarr(4,/allocate)
+FOR pol_i=0,3 DO BEGIN
+    *p_map_out[pol_i]=Rebin(*p_map[pol_i],dimension,elements)
+    *p_corr_out[pol_i]=Rebin(*p_corr[pol_i],dimension,elements)
+ENDFOR
 
-p_map_out=polarization_map_create(obs_out,/trace_return,polarization_corr=p_corr_out)
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
