@@ -348,7 +348,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=1,/sphere,_Extra=extra
     ENDIF
 ENDFOR
-residual_statistics,(*stokes_images[0])*beam_mask,obs_out,beam_base=beam_base_out,/center,$
+residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,/center,$
     file_path_base=image_path+filter_name,_Extra=extra
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Image output timing (quickview): ',timing
