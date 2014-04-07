@@ -1,7 +1,8 @@
 PRO healpix_snapshot_cube_generate,obs_in,psf_in,params,vis_arr,vis_model_ptr=vis_model_ptr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
-    rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,_Extra=extra
+    rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
+    restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
 
 t0=Systime(1)
 
@@ -55,7 +56,7 @@ ENDFOR
 
 fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out
 hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
-    mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/sqrt(2.))
+    mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds)
 hpx_inds=hpx_cnv.inds
 n_hpx=N_Elements(hpx_inds)
 

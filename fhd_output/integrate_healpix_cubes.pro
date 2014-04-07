@@ -224,7 +224,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
               this_int_cube += this_cube[subhpx, *]
             endif else begin
               if npix_ch then begin
-                temp = fltarr(n_elements(pixels_use), n_elements(frequencies))
+                temp = fltarr(n_elements(pixels_use), n_elements(frequencies)/n_avg)
                 temp[subcmbpix, *] = this_int_cube
                 this_int_cube = temporary(temp)
               endif
