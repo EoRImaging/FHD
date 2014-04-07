@@ -2,7 +2,7 @@ PRO eor_simulation,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalcula
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,$
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
-    silent=silent,combine_healpix=combine_healpix,split_ps_export=split_ps_export,$
+    silent=silent,combine_healpix=combine_healpix,split_ps_export=split_ps_export,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
     snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
   except=!except
   !except=0
