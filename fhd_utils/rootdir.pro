@@ -7,6 +7,7 @@ os_type=!version.os_family
 CASE os_type OF
    'Windows':BEGIN
       pos=Strpos(StrLOWcase(!Path),project_name+';')
+      if pos eq -1 then pos=Strpos(StrLOWcase(!Path),project_name+'\;')
       IF pos EQ -1 THEN BEGIN
         pos=Strpos(StrLOWcase(!Path),project_name)
         IF pos EQ -1 THEN BEGIN
@@ -21,6 +22,7 @@ CASE os_type OF
    END
      'unix': BEGIN
       pos=Strpos(StrLOWcase(!Path),project_name+':')
+      if pos eq -1 then pos=Strpos(StrLOWcase(!Path),project_name+'/:')
       IF pos EQ -1 THEN BEGIN
         pos=Strpos(StrLOWcase(!Path),project_name)
         IF pos EQ -1 THEN BEGIN
