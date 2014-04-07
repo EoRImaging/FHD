@@ -110,8 +110,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     endif
     
     if keyword_set(eor_sim) then begin
-      delta_uv=!RaDeg/FoV
-      uv_arr = (findgen(dimension)-dimension/2)*delta_uv
+      delta_uv=obs.kpix
+      uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
       eor_uvf_cube = eor_sim(uv_arr, uv_arr, (*obs.baseline_info).freq)
       if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + eor_uvf_cube $
       else model_uvf_cube = eor_uvf_cube
@@ -216,7 +216,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     ENDELSE
   ENDIF
   
-  ;optionally export frequency-splt Healpix cubes
+  ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,params,vis_arr,$
     vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,_Extra=extra
     
