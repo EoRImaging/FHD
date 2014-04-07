@@ -100,7 +100,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(eor_sim) then begin
     model_uvf_arr=Ptrarr(n_pol,/allocate)
-    for pol_i=0,n_pol-1 do *model_uv_arr[pol_i]=Complexarr(obs.dimension,obs.elements, n_freq)
+    for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(obs.dimension,obs.elements, n_freq)
     
     if n_elements(model_uvf_cube) eq 0  and n_elements(model_image_cube) gt 0 then begin
       ;; convert from Jy/str to Jy/pixel
