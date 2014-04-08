@@ -28,6 +28,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   basename=file_basename(file_path_fhd)
   header_filepath=file_path_fhd+'_header.sav'
   flags_filepath=file_path_fhd+'_flags.sav'
+  input_model_filepath = file_path_fhd + '_input_model.sav'
   ;vis_filepath=file_path_fhd+'_vis.sav'
   obs_filepath=file_path_fhd+'_obs.sav'
   params_filepath=file_path_fhd+'_params.sav'
@@ -111,9 +112,10 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     endif
     
     if keyword_set(eor_sim) then begin
+      freq_arr = (*obs.baseline_info).freq
       delta_uv=obs.kpix
       uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
-      eor_uvf_cube = eor_sim(uv_arr, uv_arr, (*obs.baseline_info).freq)
+      eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
       if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
       else model_uvf_cube = temporary(eor_uvf_cube)
     endif
@@ -139,6 +141,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     error=1
     RETURN
   endif
+  
+  save,filename=input_model_filepath,model_uvf_arr, uv_arr, freq_arr, /compress
   
   bin_offset=(*obs.baseline_info).bin_offset
   nbaselines=bin_offset[1]
