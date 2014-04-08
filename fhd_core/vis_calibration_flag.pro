@@ -6,7 +6,7 @@ amp_sigma_threshold=5.
 phase_sigma_threshold=5.
 n_tile=obs.n_tile
 n_freq=obs.n_freq
-n_pol=obs.n_pol
+n_pol=cal.n_pol
 
 gain_arr=cal.gain ;pointer array
 obs_info=*obs.baseline_info
