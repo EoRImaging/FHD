@@ -1,4 +1,6 @@
-FUNCTION stokes_cnv,image_arr,beam_arr=beam_arr,p_map=p_map,p_corr=p_corr,inverse=inverse,square=square,no_extend=no_extend
+FUNCTION stokes_cnv,image_arr,beam_arr=beam_arr,p_map=p_map,p_corr=p_corr,inverse=inverse,$
+    square=square,no_extend=no_extend,swap_pol=swap_pol
+    ;/swap_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
 
@@ -28,6 +30,11 @@ IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 stokes_list1=[0,0,2,2]
 stokes_list2=[1,1,3,3]
 IF n_pol EQ 1 THEN stokes_list1=(stokes_list2=[0,0,0,0])
+IF Keyword_Set(swap_pol) THEN BEGIN
+    ref=stokes_list1
+    stokes_list1=stokes_list2
+    stokes_list2=ref
+ENDIF
 sign=[1,-1,1,-1]
 
 type=size(image_arr,/type)

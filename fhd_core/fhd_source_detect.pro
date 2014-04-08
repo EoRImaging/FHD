@@ -30,16 +30,16 @@ source_mask1=beam_mask
 flux_offset=Mean(source_find_image[where(source_mask0)])
 source_find_image-=flux_offset
 
-IF N_Elements(model_I_image) EQ N_Elements(source_find_image) THEN BEGIN
-    mask_test_i=where((source_find_image LT -5.*converge_check) AND (model_I_image GT 5.*converge_check),n_mask)
-    IF n_mask GT 0 THEN BEGIN
-        mask_test=fltarr(dimension,elements)
-        mask_test[mask_test_i]=1
-        mask_test=smooth(mask_test,2.*local_max_radius+1,/edge_truncate)
-        mask_i=where(mask_test,n_mask)
-        source_mask1[mask_i]=0
-    ENDIF
-ENDIF
+;IF N_Elements(model_I_image) EQ N_Elements(source_find_image) THEN BEGIN
+;    mask_test_i=where((source_find_image LT -5.*converge_check) AND (model_I_image GT 5.*converge_check),n_mask)
+;    IF n_mask GT 0 THEN BEGIN
+;        mask_test=fltarr(dimension,elements)
+;        mask_test[mask_test_i]=1
+;        mask_test=smooth(mask_test,2.*local_max_radius+1,/edge_truncate)
+;        mask_i=where(mask_test,n_mask)
+;        source_mask1[mask_i]=0
+;    ENDIF
+;ENDIF
     
 ;    Find additional sources:
 ;       require that they be isolated ; This is local_max_radius

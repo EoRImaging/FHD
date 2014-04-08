@@ -154,7 +154,8 @@ ENDFOR
 ;gain_array=source_taper*gain_use
 gain_array=replicate(gain_use,dimension,elements)
 
-p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,use_pointing_center=use_pointing_center)
+;p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,use_pointing_center=use_pointing_center)
+p_map=polarization_map_create(obs,polarization_corr=p_corr)
 dirty_stokes_arr=stokes_cnv(dirty_array,beam_arr=beam_base,p_corr=p_corr,/square)
 dirty_image_composite=*dirty_stokes_arr[0]
 IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]
