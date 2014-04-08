@@ -102,19 +102,20 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     model_uvf_arr=Ptrarr(n_pol,/allocate)
     for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(obs.dimension,obs.elements, n_freq)
     
-    if n_elements(model_uvf_cube) eq 0  and n_elements(model_image_cube) gt 0 then begin
+    if n_elements(model_uvf_cube) eq 0 and n_elements(model_image_cube) gt 0 then begin
       ;; convert from Jy/str to Jy/pixel
       model_image_use = model_image_cube/(degpix*!DtoR)^2. ;; Jy/pixel
       model_uvf_cube = Complexarr(obs.dimension,obs.elements, n_freq)
       for i=0, n_freq-1 do model_uvf_cube[*,*,i] = fft_shift(FFT(fft_shift(model_image_use[*,*,1]),/inverse)) * (degpix*!DtoR)^2.
+      undefine, model_image_use
     endif
     
     if keyword_set(eor_sim) then begin
       delta_uv=obs.kpix
       uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
       eor_uvf_cube = eor_sim(uv_arr, uv_arr, (*obs.baseline_info).freq)
-      if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + eor_uvf_cube $
-      else model_uvf_cube = eor_uvf_cube
+      if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
+      else model_uvf_cube = temporary(eor_uvf_cube)
     endif
     
     ;; model cube assumed to be Stokes I
@@ -130,6 +131,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     if n_elements(model_uvf_arr) gt 0 then begin
       FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*source_model_uv_arr[pol_i]
     endif else model_uvf_arr = source_model_uv_arr
+    undefine_fhd, source_model_uv_arr
   endif
   
   if n_elements(model_uvf_arr) eq 0 then begin
@@ -141,6 +143,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   bin_offset=(*obs.baseline_info).bin_offset
   nbaselines=bin_offset[1]
   n_samples=N_Elements(bin_offset)
+  undefine_fhd, bin_offset
   vis_dimension=Float(nbaselines*n_samples)
   
   vis_model_ptr = Ptrarr(n_pol,/allocate)
