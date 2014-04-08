@@ -6,8 +6,8 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   
   delta_u = u_arr[1] - u_arr[0]
   delta_v = v_arr[1] - v_arr[0]
-  f_delta = freq_diff[0]
-  n_kz = n_freq
+  f_delta = freq_arr[1]-freq_arr[0]
+  n_kz = n_elements(freq_arr)
   
   z0_freq = 1420.40 ;; MHz
   redshifts = z0_freq/freq_arr - 1
@@ -26,17 +26,12 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   ky_mpc = v_arr * (2d*!pi) / z_mpc_mean
   ky_mpc_delta = delta_v * (2d*!pi) / z_mpc_mean
   n_ky = n_elements(ky_mpc)
-  
-  ;  kperp_lambda_conv = z_mpc_mean / (2.*!pi)
-  ;  delay_delta = 1e9/(n_freq*f_delta*1e6) ;; equivilent delay bin size for kparallel
-  ;  delay_max = delay_delta * n_freq/2.    ;; factor of 2 b/c of neg/positive
-  ;  delay_params = [delay_delta, delay_max]
-  
+    
   z_mpc_length = max(comov_dist_los) - min(comov_dist_los) + z_mpc_delta
   kz_mpc_range =  (2.*!pi) / (z_mpc_delta)
   kz_mpc_delta = (2.*!pi) / z_mpc_length
-  kz_mpc_orig = findgen(round(kz_mpc_range / kz_mpc_delta)) * kz_mpc_delta - kz_mpc_range/2.
-  if n_elements(kz_mpc_orig) ne n_kz then stop
+  kz_mpc = findgen(round(kz_mpc_range / kz_mpc_delta)) * kz_mpc_delta - kz_mpc_range/2.
+  if n_elements(kz_mpc) ne n_kz then stop
   
   ;; savefile contains: k_centers, power
   ;restore, base_path('data') + 'eor_data/eor_power_1d.idlsave' ;;k_centers, power
