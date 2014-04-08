@@ -1,4 +1,4 @@
-PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+PRO fhd_quickview,obs,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
@@ -31,6 +31,7 @@ IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
 IF N_Elements(psf) EQ 0 THEN IF file_test(file_path_fhd+'_beams.sav') THEN RESTORE,file_path_fhd+'_beams.sav' ELSE $
     psf=beam_setup(obs,file_path_fhd,silent=silent,timing=t_beam,_Extra=extra)
 IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav'
+IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 vis_count=visibility_count(obs,psf,cal)
 
 n_pol=obs.n_pol
@@ -89,13 +90,7 @@ elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
-p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,use_pointing_center=use_pointing_center)
-p_map_out=Ptrarr(4,/allocate)
-p_corr_out=Ptrarr(4,/allocate)
-FOR pol_i=0,3 DO BEGIN
-    *p_map_out[pol_i]=Rebin(*p_map[pol_i],dimension,elements)
-    *p_corr_out[pol_i]=Rebin(*p_corr[pol_i],dimension,elements)
-ENDFOR
+jones_out=fhd_struct_init_jones(obs_out,jones,file_path_fhd=file_path_fhd,/update)
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
@@ -180,11 +175,11 @@ for pol_i=0,n_pol-1 do begin
   IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor 
 endfor
 
-stokes_dirty_arr=stokes_cnv(instr_dirty_arr,beam=beam_base_out,p_corr=p_corr_out,/square)
+stokes_dirty_arr=stokes_cnv(instr_dirty_arr,jones_out,beam=beam_base_out,/square)
 IF model_flag THEN BEGIN
     instr_residual_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *instr_residual_arr[pol_i]=*instr_dirty_arr[pol_i]-*instr_model_arr[pol_i]
-    stokes_residual_arr=stokes_cnv(instr_residual_arr,beam=beam_base_out,p_corr=p_corr_out,/square)
+    stokes_residual_arr=stokes_cnv(instr_residual_arr,jones_out,beam=beam_base_out,/square)
 ENDIF ELSE BEGIN
     instr_residual_arr=instr_dirty_arr
     stokes_residual_arr=stokes_dirty_arr
@@ -198,8 +193,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 IF source_flag THEN BEGIN
-    stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out,p_corr=p_corr_out) ;returns null pointer if instr_sources is a null pointer 
-    IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,beam=beam_base_out,p_corr=p_corr_out) 
+    stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out) ;returns null pointer if instr_sources is a null pointer 
+    IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,jones_out,beam=beam_base_out) 
 ENDIF    
 
 IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=export_path+'_source_list'

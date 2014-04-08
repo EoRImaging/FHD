@@ -1,4 +1,4 @@
-FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,flag_ptr=flag_ptr,model_uv_arr=model_uv_arr,$
+FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,jones,flag_ptr=flag_ptr,model_uv_arr=model_uv_arr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
     debug=debug,gain_arr_ptr=gain_arr_ptr,$
@@ -88,7 +88,7 @@ CASE size(initial_calibration,/type) OF
     ELSE:IF Keyword_Set(initial_calibration) THEN initial_calibration=file_path_fhd+'_cal' ;if set to a numeric type, assume this calibration solution will be wanted for future iterations
 ENDCASE
 
-vis_model_ptr=vis_source_model(cal.source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,$
+vis_model_ptr=vis_source_model(cal.source_list,obs,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,$
     timing=model_timing,silent=silent,error=error,_Extra=extra)    
 t1=Systime(1)-t0_0
 

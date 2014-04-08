@@ -1,5 +1,5 @@
-FUNCTION fhd_galaxy_model,obs,file_path_fhd=file_path_fhd,restore=restore,antialias=antialias,$
-    gal_model_img=gal_model_img,gal_model_uv=gal_model_uv,uv_return=uv_return,p_map=p_map,_Extra=extra
+FUNCTION fhd_galaxy_model,obs,jones,file_path_fhd=file_path_fhd,restore=restore,antialias=antialias,$
+    gal_model_img=gal_model_img,gal_model_uv=gal_model_uv,uv_return=uv_return,_Extra=extra
 
 IF Keyword_Set(file_path_fhd) THEN file_path_galmodel=file_path_fhd+'_GalaxyModel.sav' ELSE file_path_galmodel=''
 IF Keyword_Set(restore) AND file_test(file_path_galmodel) THEN BEGIN
@@ -13,7 +13,7 @@ astr=obs.astr
 degpix=obs.degpix
 n_pol=obs.n_pol
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
-IF N_Elements(p_map) EQ 0 THEN p_map=polarization_map_create(obs,/trace_return)
+IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 
 ;i_use=where(Finite(ra_arr))
 ;glactc,ra_arr[i_use],dec_Arr[i_use],2000.,gl_vals,gb_vals,1,/degree
@@ -64,7 +64,7 @@ gal_model_img=model_use
 gal_model_stks=Ptrarr(4,/allocate)
 *gal_model_stks[0]=gal_model_img
 FOR pol_i=1,3 DO *gal_model_stks[pol_i]=Fltarr(dimension,elements)
-gal_model_instr=Stokes_cnv(gal_model_stks,p_map=p_map,/inverse)
+gal_model_instr=Stokes_cnv(gal_model_stks,jones,/inverse)
 
 gal_model_uv=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN

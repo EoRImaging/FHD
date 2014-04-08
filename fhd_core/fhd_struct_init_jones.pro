@@ -1,8 +1,35 @@
-FUNCTION fhd_struct_init_jones,obs,file_path_fhd=file_path_fhd,mask=mask
+FUNCTION fhd_struct_init_jones,obs,jones_in,file_path_fhd=file_path_fhd,mask=mask,restore_last=restore_last,update_last=update_last
 
-IF Keyword_Set(file_path_fhd) THEN proj_filename=file_path_fhd+'_jones.sav'
+IF Keyword_Set(file_path_fhd) THEN proj_filename=file_path_fhd+'_jones.sav' ELSE proj_filename='' 
+IF Keyword_Set(restore_last) AND file_test(proj_filename) THEN RETURN,getvar_savefile(proj_filename,'jones')
 dimension=obs.dimension
 elements=obs.elements
+
+IF Keyword_Set(update_last) THEN BEGIN
+    IF N_Elements(jones_in) EQ 0 THEN $
+        jones_in=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,mask=mask,/restore_last)
+    dimension_in=jones_in.dimension
+    elements_in=jones_in.elements
+    mask_use=intarr(dimension_in,elements_in)
+    mask_use[jones_in.inds]=1
+    mask_use=Rebin(mask_use,dimension,elements)
+    inds_use=where(mask_use,n_pix)
+    p_map=Ptrarr(4,4,/allocate)
+    p_corr=Ptrarr(4,4,/allocate)
+    FOR pol_i2=0,3 DO FOR pol_i1=0,3 DO BEGIN
+        temp=fltarr(dimension_in,elements_in)
+        temp[jones_in.inds]=*jones_in.Jmat[pol_i1,pol_i2]
+        temp=Rebin(temp,dimension,elements)
+        *p_map[pol_i1,pol_i2]=temp[inds_use]
+        
+        temp=fltarr(dimension_in,elements_in)
+        temp[jones_in.inds]=*jones_in.Jinv[pol_i1,pol_i2]
+        temp=Rebin(temp,dimension,elements)
+        *p_corr[pol_i1,pol_i2]=temp[inds_use]
+    ENDFOR
+    jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
+    RETURN,jones
+ENDIF
 IF N_Elements(mask) EQ 0 THEN mask=Replicate(1.,dimension,elements)
 
 xvals=meshgrid(dimension,elements,1)
@@ -33,7 +60,7 @@ p_corr=Ptrarr(4,4,/allocate)
 FOR i=0,3 DO FOR j=0,3 DO *p_map[i,j]=fltarr(n_pix)
 FOR i=0,3 DO FOR j=0,3 DO *p_corr[i,j]=fltarr(n_pix)
 Smat=(-0.5)*[[1,1,0,0],[1,-1,0,0],[0,0,1,1],[0,0,1,-1]]
-Smat=Reverse(Smat,2)
+
 FOR pix=0L,n_pix-1 DO BEGIN
     ;calculate tensor product J(X)J* 
     ;Jmat converts [pp,qq,pq,qp] -> [xx,yy,xy,yx]

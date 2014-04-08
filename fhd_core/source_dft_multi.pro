@@ -1,5 +1,5 @@
-PRO source_dft_multi,obs,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
-    conserve_memory=conserve_memory,polarization_map=polarization_map
+PRO source_dft_multi,obs,jones,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
+    conserve_memory=conserve_memory
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
 dimension=obs.dimension
 elements=obs.elements
@@ -21,7 +21,7 @@ ENDIF
 
 ;set /no_extend since extended sources will not be read. 
 ; If you want extended sources, inflate the source list before calling this program
-source_array_use=Stokes_cnv(source_array,p_map=polarization_map,/inverse,/no_extend) 
+source_array_use=Stokes_cnv(source_array,jones,/inverse,/no_extend) 
 flux_arr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
 

@@ -136,12 +136,6 @@ hour_angle = hour_angle mod 360.
 hadec2altaz, hour_angle, dec_use, obs.obsdec, elevation_use, azimuth_use
 elevation_arr=fltarr(psf_dim2,psf_dim2) & elevation_arr[valid_i]=elevation_use
 azimuth_arr=fltarr(psf_dim2,psf_dim2) & azimuth_arr[valid_i]=azimuth_use
-p_map=polarization_map_create(azimuth_arr=azimuth_arr, elevation_arr=elevation_arr,/trace_return,/use_pointing_center)
-FOR pol_i=0,3 DO *p_map[pol_i]*=2.
-
-IF Keyword_Set(swap_pol) THEN p_map=p_map[[1,0,3,2]]
-*p_map[3]*=Complex(0,1)
-IF Strlowcase(instrument) EQ 'paper' THEN FOR i=0,3 DO *p_map[i]=1.
 
 gain_tile_i=reform(gain_array_X[0,*])
 gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
@@ -190,8 +184,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
-        IF Keyword_Set(beam_pol_test) THEN psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0)*(*p_map[pol_i])^2.,/no_real) $;projection now inside tile beam function
-            ELSE psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
+        psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
         beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])

@@ -1,4 +1,4 @@
-FUNCTION source_dft_model,obs,source_list,t_model=t_model,sigma_threshold=sigma_threshold,$
+FUNCTION source_dft_model,obs,jones,source_list,t_model=t_model,sigma_threshold=sigma_threshold,$
     no_extend=no_extend,unpolarized=unpolarized,uv_mask=uv_mask,conserve_memory=conserve_memory,polarization_map=polarization_map
 t_model0=Systime(1)
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
@@ -7,16 +7,10 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 
-;pix_area_cnv=pixel_area(obs.astr,dimension=dimension);/degpix^2.
-
 IF N_Elements(uv_mask) EQ 0 THEN uv_mask=fltarr(dimension,elements)+1
 uv_i_use=where(uv_mask)
 xvals=Float(uv_i_use mod dimension)-dimension/2
 yvals=Float(Floor(uv_i_use/dimension))-elements/2
-
-;model_uv_arr=Ptrarr(n_pol,/allocate)
-;FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(dimension,elements)
-;model_uv_stks=Ptrarr(4,/allocate)
 
 src_arr=source_list
 IF Keyword_Set(sigma_threshold) THEN BEGIN
@@ -38,8 +32,8 @@ IF Keyword_Set(unpolarized) THEN BEGIN
     src_arr_use.flux.Q=0.
     src_arr_use.flux.V=0.
 ENDIF
-source_dft_multi,obs,src_arr_use,model_uv_arr,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
-    conserve_memory=conserve_memory,polarization_map=polarization_map
+source_dft_multi,obs,jones,src_arr_use,model_uv_arr,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
+    conserve_memory=conserve_memory
 
 undefine_fhd,src_arr_use
 t_model=Systime(1)-t_model0

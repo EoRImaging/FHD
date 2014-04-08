@@ -15,7 +15,7 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
+PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
@@ -154,9 +154,7 @@ ENDFOR
 ;gain_array=source_taper*gain_use
 gain_array=replicate(gain_use,dimension,elements)
 
-;p_map=polarization_map_create(obs,/trace_return,polarization_corr=p_corr,use_pointing_center=use_pointing_center)
-p_map=polarization_map_create(obs,polarization_corr=p_corr)
-dirty_stokes_arr=stokes_cnv(dirty_array,beam_arr=beam_base,p_corr=p_corr,/square)
+dirty_stokes_arr=stokes_cnv(dirty_array,jones,beam_arr=beam_base,/square)
 dirty_image_composite=*dirty_stokes_arr[0]
 IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]
 IF n_pol GT 2 THEN BEGIN
@@ -243,7 +241,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
 ;        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
 ;        model_image_composite+=model_image
     ENDFOR
-    model_stokes_arr=stokes_cnv(model_holo_arr,beam_arr=beam_base,p_corr=p_corr,/square)
+    model_stokes_arr=stokes_cnv(model_holo_arr,jones,beam_arr=beam_base,/square)
     model_image_composite=*model_stokes_arr[0]
     
     image_filtered=dirty_image_composite-model_image_composite
@@ -285,7 +283,7 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;            ENDIF
 ;        ENDFOR
         FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
-        model_stokes_arr=stokes_cnv(model_holo_arr,beam_arr=beam_base,p_corr=p_corr,/square)
+        model_stokes_arr=stokes_cnv(model_holo_arr,jones,beam_arr=beam_base,/square)
         model_image_composite=*model_stokes_arr[0]
         IF n_pol GT 1 THEN model_image_composite_Q=*model_stokes_arr[1]
         IF n_pol GT 2 THEN model_image_composite_U=*model_stokes_arr[2]
@@ -327,9 +325,9 @@ FOR i=i0,max_iter-1 DO BEGIN
     model_I_use=model_I_use*beam_avg*source_taper*beam_mask
     image_use=image_filtered*beam_avg*beam_mask
    
-    comp_arr1=fhd_source_detect(obs,fhd,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+    comp_arr1=fhd_source_detect(obs,fhd,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
         model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,$
-        beam_arr=beam_base,beam_corr_avg=beam_corr_avg,polarization_map=p_map)
+        beam_arr=beam_base,beam_corr_avg=beam_corr_avg)
     
     image_use*=source_mask
     source_find_image*=source_mask
@@ -361,7 +359,7 @@ FOR i=i0,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,polarization_map=p_map,_Extra=extra
+    source_dft_multi,obs,jones,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -415,7 +413,7 @@ comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,obs,radius=beam_width>0.5,noise_map=noise_map,$
     reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
 t3_0=Systime(1)
-model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,polarization_map=p_map,_Extra=extra)
+model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 t4_0=Systime(1)
 t3+=t4_0-t3_0
