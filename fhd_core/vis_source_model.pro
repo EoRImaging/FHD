@@ -66,7 +66,7 @@ IF N_Elements(cal) NE 0 THEN BEGIN
     cal.galaxy_cal=Keyword_Set(galaxy_calibrate)
 ENDIF
 
-IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
+IF not Keyword_Set(model_uv_arr) THEN BEGIN
     ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
     ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
     source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse) 
