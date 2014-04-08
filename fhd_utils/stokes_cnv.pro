@@ -1,8 +1,9 @@
-FUNCTION stokes_cnv,image_arr,beam_arr=beam_arr,p_map=p_map,p_corr=p_corr,inverse=inverse,$
+FUNCTION stokes_cnv,image_arr,jones,beam_arr=beam_arr,inverse=inverse,$
     square=square,no_extend=no_extend,swap_pol=swap_pol
     ;/swap_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
+;requires the jones structure from fhd_struct_init_jones.pro
 
 IF N_Elements(beam_arr) EQ 0 THEN BEGIN
     n_pol=4
@@ -15,22 +16,15 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
 ENDELSE
 
-IF N_Elements(p_map) EQ 0 THEN BEGIN
-    p_map=Ptrarr(n_pol,/allocate) 
-    p_map_free=1
-    FOR ii=0L,n_pol-1 DO *p_map[ii]=0.5
-ENDIF
-IF N_Elements(p_corr) EQ 0 THEN BEGIN
-    p_corr=Ptrarr(n_pol,/allocate) 
-    p_corr_free=1
-    FOR ii=0L,n_pol-1 DO *p_corr[ii]=1. 
-ENDIF
+p_map=jones.Jmat
+p_corr=jones.Jinv
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 
 stokes_list1=[0,0,2,2]
 stokes_list2=[1,1,3,3]
 IF n_pol EQ 1 THEN stokes_list1=(stokes_list2=[0,0,0,0])
 IF Keyword_Set(swap_pol) THEN BEGIN
+    ;this is meant as a debugging tool!
     ref=stokes_list1
     stokes_list1=stokes_list2
     stokes_list2=ref
