@@ -150,6 +150,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   for pol_i=0,n_pol-1 do *vis_model_ptr[pol_i]=Complexarr(n_freq,vis_dimension)
   
   for fi=0, n_freq-1 do begin
+    if max([(*flag_ptr[0])[fi,*], (*flag_ptr[1])[fi,*]]) lt 1 then continue
+    
     this_flag_ptr = Ptrarr(n_pol,/allocate)
     for pol_i=0,n_pol-1 do begin
       *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
