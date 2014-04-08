@@ -19,6 +19,8 @@ ENDELSE
 inds=jones.inds
 p_map=jones.Jmat
 p_corr=jones.Jinv
+dimension=jones.dimension
+elements=jones.elements
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 
 stokes_list1=[0,0,2,2]
