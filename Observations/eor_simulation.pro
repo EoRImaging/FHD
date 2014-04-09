@@ -1,8 +1,8 @@
-PRO eor_simulation,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
+PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,$
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
-    silent=silent,combine_healpix=combine_healpix,split_ps_export=split_ps_export,$
+    silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
     snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
   except=!except
   !except=0
@@ -11,8 +11,6 @@ PRO eor_simulation,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalcula
   IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
   IF N_Elements(export_images) EQ 0 THEN export_images=1
   IF N_Elements(cleanup) EQ 0 THEN cleanup=0
-  IF N_Elements(ps_export) EQ 0 THEN ps_export=0
-  IF N_Elements(split_ps_export) EQ 0 THEN split_ps_export=1
   IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
   IF N_Elements(version) EQ 0 THEN version=1
   IF N_Elements(julian_day) EQ 0 THEN julian_day=2456528
@@ -98,7 +96,7 @@ PRO eor_simulation,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalcula
       export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
       complex=complex_beam,double=double_precison_beam,precess=precess,error=error,weights_grid=weights_grid,$
       save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,$
-      snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export,_Extra=extra
+      snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
       
     IF Keyword_Set(error) THEN BEGIN
       print,'###########################################################################'
@@ -118,12 +116,6 @@ PRO eor_simulation,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalcula
   vis_file_list=vis_file_list[fi_use]
   fhd_file_list=fhd_file_list[fi_use]
   
-  IF Keyword_Set(ps_export) THEN BEGIN
-    IF Keyword_Set(split_ps_export) THEN BEGIN
-      vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/even,_Extra=extra
-      vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/odd,_Extra=extra
-    ENDIF ELSE vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,_Extra=extra
-  ENDIF
   IF Keyword_Set(cleanup) THEN FOR fi=0L,n_files_use-1 DO fhd_cleanup,fhd_file_list[fi],_Extra=extra
   
   heap_gc

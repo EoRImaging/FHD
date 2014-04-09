@@ -30,7 +30,7 @@ IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN ;check if a string, if it is as
     IF file_test(restrict_hpx_inds) THEN restrict_hpx_inds=getvar_savefile(restrict_hpx_inds,'hpx_inds') ELSE BEGIN
         file_path_use=filepath(restrict_hpx_inds,root=Rootdir('fhd'),subdir='Observations')
         restrict_hpx_inds=getvar_savefile(file_path_use,'hpx_inds')
-    ENDIF
+    ENDELSE
 ENDIF
 
 IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
