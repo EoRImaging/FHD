@@ -26,7 +26,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   ky_mpc = v_arr * (2.*!pi) / z_mpc_mean
   ky_mpc_delta = delta_v * (2.*!pi) / z_mpc_mean
   n_ky = n_elements(ky_mpc)
-    
+  
   z_mpc_length = float(max(comov_dist_los) - min(comov_dist_los) + z_mpc_delta)
   kz_mpc_range =  (2.*!pi) / (z_mpc_delta)
   kz_mpc_delta = (2.*!pi) / z_mpc_length
@@ -63,10 +63,14 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
     undefine, mu
   endelse
   
-  signal_amp = sqrt(temporary(power_3d))
-  signal_phase = randomu(seed, n_kx, n_ky, n_kz) * 2. * !pi
+  signal_real = randomn(seed, n_kx, n_ky, n_kz) * power_3d
+  signal_imaginary = randomn(seed, n_kx, n_ky, n_kz) * power_3d
+  signal = temporary(signal_real) + complex(0,1) * temporary(signal_imaginary)
   
-  signal = temporary(signal_amp) * exp(complex(0,1) * temporary(signal_phase))
+  ;signal_amp = sqrt(temporary(power_3d))
+  ;signal_phase = randomu(seed, n_kx, n_ky, n_kz) * 2. * !pi
+  
+  ;signal = temporary(signal_amp) * exp(complex(0,1) * temporary(signal_phase))
   
   ;; shift it so that it's as expected when we take the fft
   signal = shift(temporary(signal), [0,0,n_kz/2+1])
