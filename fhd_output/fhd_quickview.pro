@@ -4,7 +4,7 @@ PRO fhd_quickview,obs,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weight
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
-    use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,_Extra=extra
+    use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -95,9 +95,12 @@ beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
 beam_correction_out=Ptrarr(n_pol,/allocate)
+IF N_Elements(beam_arr) EQ 0 THEN BEGIN
+    beam_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=beam_image(psf,obs,pol_i=pol_i,square=0)
+ENDIF
 FOR pol_i=0,n_pol-1 DO BEGIN
-    beam_base=beam_image(psf,obs,pol_i=pol_i)
-    *beam_base_out[pol_i]=Rebin(beam_base,dimension,elements) ;should be fine even if pad_uv_image is not set
+    *beam_base_out[pol_i]=Rebin(*beam_arr[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
     *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-3)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]

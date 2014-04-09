@@ -145,7 +145,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
     beam_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
+    FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
     jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
@@ -315,7 +315,7 @@ IF Keyword_Set(export_images) THEN BEGIN
             IF N_Elements(cal) GT 0 THEN source_array=cal.source_list
         ENDIF
         fhd_quickview,obs,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
-            model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+            model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDELSE
 ENDIF
 

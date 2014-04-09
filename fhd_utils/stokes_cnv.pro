@@ -28,9 +28,11 @@ stokes_list2=[1,1,3,3]
 IF n_pol EQ 1 THEN stokes_list1=(stokes_list2=[0,0,0,0])
 IF Keyword_Set(swap_pol) THEN BEGIN
     ;this is meant as a debugging tool!
-    ref=stokes_list1
-    stokes_list1=stokes_list2
-    stokes_list2=ref
+    FOR i=0,1 DO BEGIN
+        p_map[*,i]=jones.Jmat[*,1-i]
+        p_corr[i,*]=jones.Jinv[1-i,*]
+        p_corr[i+2,*]=jones.Jinv[3-i,*]
+    ENDFOR
 ENDIF
 sign=[1,-1,1,-1]
 
@@ -142,8 +144,8 @@ ENDIF ELSE BEGIN
     result=image_arr_out
 ENDELSE
 
-IF Keyword_Set(p_map_free) THEN Ptr_Free,p_map
-IF Keyword_Set(p_corr_free) THEN Ptr_Free,p_corr
+;IF Keyword_Set(p_map_free) THEN Ptr_Free,p_map
+;IF Keyword_Set(p_corr_free) THEN Ptr_Free,p_corr
 Ptr_Free,beam_use
 RETURN,result
 END

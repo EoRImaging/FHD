@@ -199,7 +199,7 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ENDIF ELSE  gal_name=''
 
 stokes_images=stokes_cnv(instr_images,jones_out,beam=beam_base_out,/square)
-stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out,/square) ;NOTE one factor of the beam already corrected for
+stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out,/square) 
 FOR pol_i=0,n_pol-1 DO BEGIN
     *instr_images[pol_i]*=*beam_correction_out[pol_i]
     *dirty_images[pol_i]*=*beam_correction_out[pol_i]
