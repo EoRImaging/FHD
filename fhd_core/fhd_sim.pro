@@ -131,6 +131,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       2:(*model_uvf_arr[1])[*]=model_uvf_cube/2.
       1:(*model_uvf_arr[0])[*]=model_uvf_cube/2.
     endswitch
+    
+    undefine, model_uvf_cube
   endif
   
   if n_elements(source_model_uv_arr) gt 0 then begin
@@ -146,7 +148,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     RETURN
   endif
   
-  save,filename=input_model_filepath,model_uvf_arr, uv_arr, freq_arr, /compress
+  save,filename=input_model_filepath, model_uvf_arr, uv_arr, freq_arr, /compress
   
   bin_offset=(*obs.baseline_info).bin_offset
   nbaselines=bin_offset[1]
@@ -174,6 +176,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     
     undefine_fhd, this_flag_ptr, this_model_ptr
   endfor
+  undefine_fhd, model_uvf_arr
   
   SAVE,flag_arr,filename=flags_filepath,/compress
   

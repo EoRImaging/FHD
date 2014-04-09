@@ -15,19 +15,19 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   
   comov_los_diff = comov_dist_los - shift(comov_dist_los, -1)
   comov_los_diff = comov_los_diff[0:n_elements(comov_dist_los)-2]
-  z_mpc_delta = mean(comov_los_diff)
-  z_mpc_mean = mean(comov_dist_los)
+  z_mpc_delta = float(mean(comov_los_diff))
+  z_mpc_mean = float(mean(comov_dist_los))
   
   ;; convert from uv (in wavelengths) to kx/ky in inverse comoving Mpc
-  kx_mpc = u_arr * (2d*!pi) / z_mpc_mean
-  kx_mpc_delta = delta_u * (2d*!pi) / z_mpc_mean
+  kx_mpc = u_arr * (2.*!pi) / z_mpc_mean
+  kx_mpc_delta = delta_u * (2.*!pi) / z_mpc_mean
   n_kx = n_elements(kx_mpc)
   
-  ky_mpc = v_arr * (2d*!pi) / z_mpc_mean
-  ky_mpc_delta = delta_v * (2d*!pi) / z_mpc_mean
+  ky_mpc = v_arr * (2.*!pi) / z_mpc_mean
+  ky_mpc_delta = delta_v * (2.*!pi) / z_mpc_mean
   n_ky = n_elements(ky_mpc)
     
-  z_mpc_length = max(comov_dist_los) - min(comov_dist_los) + z_mpc_delta
+  z_mpc_length = float(max(comov_dist_los) - min(comov_dist_los) + z_mpc_delta)
   kz_mpc_range =  (2.*!pi) / (z_mpc_delta)
   kz_mpc_delta = (2.*!pi) / z_mpc_length
   kz_mpc = findgen(round(kz_mpc_range / kz_mpc_delta)) * kz_mpc_delta - kz_mpc_range/2.
@@ -48,25 +48,25 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
     
   endif else begin
   
-    k_arr = sqrt(rebin(kx_mpc, n_kx, n_ky, n_kz, /sample)^2d + rebin(reform(ky_mpc, 1, n_ky), n_kx, n_ky, n_kz, /sample)^2d + $
-      rebin(reform(kz_mpc, 1, 1, n_kz, /sample), n_kx, n_ky, n_kz)^2d)
+    k_arr = sqrt(rebin(kx_mpc, n_kx, n_ky, n_kz, /sample)^2. + rebin(reform(ky_mpc, 1, n_ky), n_kx, n_ky, n_kz, /sample)^2. + $
+      rebin(reform(kz_mpc, 1, 1, n_kz), n_kx, n_ky, n_kz, /sample)^2.)
     wh0 = where(k_arr eq 0, count)
     if count ne 0 then k_arr[wh0] = min(k_centers)
     
-    result = 10^(interpol(alog10(power), alog10(k_centers), alog10(k_arr)))
+    result = 10^(interpol(float(alog10(power)), float(alog10(k_centers)), alog10(k_arr)))
     
     power_3d = reform(temporary(result), n_kx, n_ky, n_kz)
     
     mu = rebin(reform(abs(kz_mpc), 1, 1, n_kz), n_kx, n_ky, n_kz, /sample) / temporary(k_arr)
-    power_3d = power_3d * (1 + 2 * mu^2d + mu^4d)
+    power_3d = power_3d * (1 + 2 * mu^2. + mu^4.)
     
     undefine, mu
   endelse
   
   signal_amp = sqrt(temporary(power_3d))
-  signal_phase = randomu(seed, n_kx, n_ky, n_kz) * 2d * !pi
+  signal_phase = randomu(seed, n_kx, n_ky, n_kz) * 2. * !pi
   
-  signal = temporary(signal_amp) * exp(dcomplex(0,1) * temporary(signal_phase))
+  signal = temporary(signal_amp) * exp(complex(0,1) * temporary(signal_phase))
   
   ;; shift it so that it's as expected when we take the fft
   signal = shift(temporary(signal), [0,0,n_kz/2+1])
@@ -82,6 +82,5 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   
   print, 'sum(uvf signal^2)*z_delta:', total(abs(temp)^2d)*z_mpc_delta
   
-  signal = temp
-  return, signal
+  return, temp
 end
