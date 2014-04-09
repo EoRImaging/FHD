@@ -112,10 +112,14 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     endif
     
     if keyword_set(eor_sim) then begin
+      print, 'Generating model EoR cube'
       freq_arr = (*obs.baseline_info).freq
       delta_uv=obs.kpix
       uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
+      time0 = systime(1)
       eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
+      time1 = systime(1)
+      print, 'time for eor modelling: ' + number_formatter(time1-time0)
       if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
       else model_uvf_cube = temporary(eor_uvf_cube)
     endif
@@ -164,7 +168,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     
     this_model_ptr=vis_source_model(0,obs,psf,params,this_flag_ptr,model_uv_arr=(*model_uvf_arr[pol_i])[*,*,fi],$
       timing=model_timing,silent=silent,error=error,_Extra=extra)
-    print, 'model loop num, timing(s):', number_formatter(fi), number_formatter(model_timing)
+    print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
     
     for pol_i=0,n_pol-1 do (*vis_model_ptr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
     

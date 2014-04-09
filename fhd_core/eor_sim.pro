@@ -60,10 +60,10 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
     mu = rebin(reform(abs(kz_mpc), 1, 1, n_kz), n_kx, n_ky, n_kz) / temporary(k_arr)
     power_3d = power_3d * (1 + 2 * mu^2d + mu^4d)
     
-    mu=0
+    undefine, mu
   endelse
   
-  signal_amp = sqrt(power_3d)
+  signal_amp = sqrt(temporary(power_3d))
   signal_phase = randomu(seed, n_kx, n_ky, n_kz) * 2d * !pi
   
   signal = temporary(signal_amp) * exp(dcomplex(0,1) * temporary(signal_phase))
