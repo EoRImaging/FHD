@@ -206,7 +206,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             RETURN
         ENDIF
     ENDIF ELSE BEGIN
-        IF Keyword_Set(flag) THEN BEGIN
+        IF Keyword_Set(flag_visibilities) THEN BEGIN
             print,'Flagging anomalous data'
             vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
             SAVE,flag_arr,filename=flags_filepath,/compress

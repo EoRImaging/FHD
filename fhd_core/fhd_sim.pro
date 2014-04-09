@@ -163,18 +163,21 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
     
     this_flag_ptr = Ptrarr(n_pol,/allocate)
+    this_model_uv = Ptrarr(n_pol,/allocate)
     for pol_i=0,n_pol-1 do begin
       *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
       (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
+      
+      *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
     endfor
     
-    this_model_ptr=vis_source_model(0,obs,psf,params,this_flag_ptr,model_uv_arr=(*model_uvf_arr[pol_i])[*,*,fi],$
+    this_model_ptr=vis_source_model(0,obs,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
       timing=model_timing,silent=silent,error=error,_Extra=extra)
     print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
     
     for pol_i=0,n_pol-1 do (*vis_model_ptr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
     
-    undefine_fhd, this_flag_ptr, this_model_ptr
+    undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
   endfor
   undefine_fhd, model_uvf_arr
   
