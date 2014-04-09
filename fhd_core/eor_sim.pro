@@ -48,8 +48,8 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
     
   endif else begin
   
-    k_arr = sqrt(rebin(kx_mpc, n_kx, n_ky, n_kz)^2d + rebin(reform(ky_mpc, 1, n_ky), n_kx, n_ky, n_kz)^2d + $
-      rebin(reform(kz_mpc, 1, 1, n_kz), n_kx, n_ky, n_kz)^2d)
+    k_arr = sqrt(rebin(kx_mpc, n_kx, n_ky, n_kz, /sample)^2d + rebin(reform(ky_mpc, 1, n_ky), n_kx, n_ky, n_kz, /sample)^2d + $
+      rebin(reform(kz_mpc, 1, 1, n_kz, /sample), n_kx, n_ky, n_kz)^2d)
     wh0 = where(k_arr eq 0, count)
     if count ne 0 then k_arr[wh0] = min(k_centers)
     
@@ -57,7 +57,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
     
     power_3d = reform(temporary(result), n_kx, n_ky, n_kz)
     
-    mu = rebin(reform(abs(kz_mpc), 1, 1, n_kz), n_kx, n_ky, n_kz) / temporary(k_arr)
+    mu = rebin(reform(abs(kz_mpc), 1, 1, n_kz), n_kx, n_ky, n_kz, /sample) / temporary(k_arr)
     power_3d = power_3d * (1 + 2 * mu^2d + mu^4d)
     
     undefine, mu
