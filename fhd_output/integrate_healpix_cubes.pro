@@ -23,6 +23,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       OPENR, lun, filename_path, /GET_LUN 
       readf, lun, filenames
       close, lun
+    endelse
   endif
   
   nfiles = n_elements(filenames)
