@@ -99,7 +99,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   temp = fft(temporary(signal), dimension = 3, /inverse) * kz_mpc_delta  
   
   ;; convert to Jy
-  for i=0, n_freq-1 do temp[*,*,i] = temp[*,*,i]*conv_factor[i]
+  for i=0, n_kz-1 do temp[*,*,i] = temp[*,*,i]*conv_factor[i]
   
   print, 'sum(uvf signal^2)*z_delta:', total(abs(temp)^2d)*z_mpc_delta
   
