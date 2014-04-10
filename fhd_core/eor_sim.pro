@@ -18,6 +18,13 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   z_mpc_delta = float(mean(comov_los_diff))
   z_mpc_mean = float(mean(comov_dist_los))
   
+  ;; converting from Jy (in u,v,f) to mK*str (10^-26 * c^2 * 10^3/ (2*f^2*kb))
+  conv_factor = float((3e8)^2 / (2. * (freq_arr*1e6)^2. * 1.38065))
+  
+  ;; convert from Jy -> mk*str -> mK*Mpc^2
+  conv_factor = conv_factor * z_mpc_mean^2.
+  
+  
   ;; convert from uv (in wavelengths) to kx/ky in inverse comoving Mpc
   kx_mpc = u_arr * (2.*!pi) / z_mpc_mean
   kx_mpc_delta = delta_u * (2.*!pi) / z_mpc_mean
@@ -63,8 +70,15 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
     undefine, mu
   endelse
   
-  signal_real = randomn(seed, n_kx, n_ky, n_kz) * power_3d
-  signal_imaginary = randomn(seed, n_kx, n_ky, n_kz) * power_3d
+  ;; multiply by window function to go from mK^2*Mpc^3 to mK^2*Mpc^6
+  ;; for theory, window function = observation volume = (2pi)^3/(delta k)^3
+  signal2 = temporary(power_3d) * (2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta)
+  
+  ;; take square root & divide by sqrt(2) to get signal amp expectation value in mK*Mpc^3
+  signal_amp_exp = sqrt(temporary(signal2)/2.)
+  
+  signal_real = randomn(seed, n_kx, n_ky, n_kz) * signal_amp_exp
+  signal_imaginary = randomn(seed, n_kx, n_ky, n_kz) * temporary(signal_amp_exp)
   signal = temporary(signal_real) + complex(0,1) * temporary(signal_imaginary)
   
   ;signal_amp = sqrt(temporary(power_3d))
@@ -81,8 +95,11 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   ;;temp = conj(reverse(signal[*,*,1:n_kz-2],3))
   ;;signal = [[[signal]], [[temp]]]
   
-  ;; fourier transform along z direction to get to uvf space
-  temp = fft(temporary(signal), dimension = 3, /inverse) * kz_mpc_delta
+  ;; fourier transform along z direction to get to uvf space (in mK*Mpc^2)
+  temp = fft(temporary(signal), dimension = 3, /inverse) * kz_mpc_delta  
+  
+  ;; convert to Jy
+  for i=0, n_kz-1 do temp[*,*,i] = temp[*,*,i]*conv_factor[i]
   
   print, 'sum(uvf signal^2)*z_delta:', total(abs(temp)^2d)*z_mpc_delta
   
