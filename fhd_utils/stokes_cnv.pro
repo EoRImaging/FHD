@@ -1,5 +1,5 @@
 FUNCTION stokes_cnv,image_arr,jones,beam_arr=beam_arr,inverse=inverse,$
-    square=square,no_extend=no_extend,swap_pol=swap_pol
+    square=square,no_extend=no_extend,swap_pol=swap_pol,no_dipole_projection_rotation=no_dipole_projection_rotation
     ;/swap_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
@@ -21,11 +21,20 @@ p_map=jones.Jmat
 p_corr=jones.Jinv
 dimension=jones.dimension
 elements=jones.elements
+n_pix=N_Elements(inds)
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 
 stokes_list1=[0,0,2,2]
 stokes_list2=[1,1,3,3]
 IF n_pol EQ 1 THEN stokes_list1=(stokes_list2=[0,0,0,0])
+
+IF Keyword_Set(no_dipole_projection_rotation) THEN BEGIN
+    ;this is meant as a debugging tool!
+    p_map=Ptrarr(4,4,/allocate)
+    FOR j=0,3 DO FOR i=0,3 DO *p_map[i,j]=Replicate(((i EQ j) ? 1.:0.),n_pix)
+    p_corr=p_map
+    p_free=1
+ENDIF
 IF Keyword_Set(swap_pol) THEN BEGIN
     ;this is meant as a debugging tool!
     FOR i=0,1 DO BEGIN
@@ -82,17 +91,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
                 *flux_pq[pol_i2]+=*flux_arr[pol_i1]*weight_invert(*beam_use[pol_i1])*(*p_corr[pol_i1,pol_i2])[p_ind]
             ENDFOR
         ENDFOR
-        FOR pol_i=0,n_pol-1 DO *flux_out[pol_i]=$
-            (*flux_pq[stokes_list1[pol_i]])+sign[pol_i]*(*flux_pq[stokes_list2[pol_i]])
-        
-;;        pol_arr2=Ptrarr(4,/allocate)
-;;        IF Keyword_Set(p_map_free) THEN FOR pol_i=0,3 DO *pol_arr2[pol_i]=0.5 ELSE FOR pol_i=0,3 DO *pol_arr2[pol_i]=(*p_map[pol_i])[sx,sy]
-;        *flux_out[0]=(*flux_arr[stokes_list1[0]]+*flux_arr[stokes_list2[0]])*$
-;            weight_invert(*beam_use[stokes_list1[0]]*(*pol_arr2[stokes_list1[0]])+*beam_use[stokes_list2[0]]*(*pol_arr2[stokes_list2[0]]))
-;        FOR pol_i=1,n_pol-1 DO BEGIN
-;            *flux_out[pol_i]=(*flux_arr[stokes_list1[pol_i]])*(*beam_use[stokes_list1[pol_i]])*(*pol_arr[stokes_list1[pol_i]])+$
-;                sign[pol_i]*(*flux_arr[stokes_list2[pol_i]])*(*beam_use[stokes_list2[pol_i]])*(*pol_arr[stokes_list2[pol_i]])
-;        ENDFOR
+        FOR pol_i=0,n_pol-1 DO *flux_out[pol_i]=(*flux_pq[stokes_list1[pol_i]])+sign[pol_i]*(*flux_pq[stokes_list2[pol_i]])
     ENDELSE
      ;indices of source_list.flux are [xx,yy,xy,yx,I,Q,U,V]
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -124,12 +123,6 @@ ENDIF ELSE BEGIN
         ENDFOR
         
     ENDIF ELSE BEGIN ;instrumental -> Stokes
-;        image_arr_out[0]=Ptr_new((*image_arr[stokes_list1[0]]+*image_arr[stokes_list2[0]])*$
-;            weight_invert(*beam_use[stokes_list1[0]]*(*p_map[stokes_list1[0]])+*beam_use[stokes_list2[0]]*(*p_map[stokes_list2[0]])))
-;;        FOR pol_i=1,n_pol-1 DO BEGIN
-;;            image_arr_out[pol_i]=Ptr_new((*image_arr[stokes_list1[pol_i]])*weight_invert(*beam_use[stokes_list1[pol_i]])*(*p_use[stokes_list1[pol_i]])+$
-;;                sign[pol_i]*(*image_arr[stokes_list2[pol_i]])*weight_invert(*beam_use[stokes_list2[pol_i]])*(*p_use[stokes_list2[pol_i]]))
-;;        ENDFOR
         image_arr_pq=Ptrarr(n_pol)
         FOR pol_i2=0,n_pol-1 DO BEGIN
             image_arr_pq[pol_i2]=Ptr_new(fltarr(dimension,elements))
@@ -144,8 +137,7 @@ ENDIF ELSE BEGIN
     result=image_arr_out
 ENDELSE
 
-;IF Keyword_Set(p_map_free) THEN Ptr_Free,p_map
-;IF Keyword_Set(p_corr_free) THEN Ptr_Free,p_corr
 Ptr_Free,beam_use
+IF Keyword_Set(p_free) THEN Ptr_Free,p_map,p_corr
 RETURN,result
 END

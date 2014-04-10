@@ -69,7 +69,7 @@ ENDIF
 IF not Keyword_Set(model_uv_arr) THEN BEGIN
     ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
     ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
-    source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse) 
+    source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 
     model_uv_arr=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF

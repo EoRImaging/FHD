@@ -1,7 +1,7 @@
 FUNCTION fhd_source_detect,obs,fhd,jones,source_find_image,image_I_flux=image_I_flux,image_Q_flux=image_Q_flux,$
     image_U_flux=image_U_flux,image_V_flux=image_V_flux,beam_arr=beam_arr,beam_corr_avg=beam_corr_avg,$
     beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,$
-    model_I_image=model_I_image
+    model_I_image=model_I_image,_Extra=extra
 ;NOTE: if supplied, model_I_image should be in the same units and weighting scheme as source_find_image
 
 add_threshold=fhd.add_threshold
@@ -166,7 +166,7 @@ n_sources=si
 source_mask=source_mask1
 IF n_sources EQ 0 THEN RETURN,source_comp_init(n_sources=0)
 
-source_list=stokes_cnv(comp_arr[0:n_sources-1],jones,beam_arr=beam_arr,/inverse)
+source_list=stokes_cnv(comp_arr[0:n_sources-1],jones,beam_arr=beam_arr,/inverse,_Extra=extra)
 
 RETURN,source_list
 END

@@ -178,11 +178,11 @@ for pol_i=0,n_pol-1 do begin
   IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor 
 endfor
 
-stokes_dirty_arr=stokes_cnv(instr_dirty_arr,jones_out,beam=beam_base_out,/square)
+stokes_dirty_arr=stokes_cnv(instr_dirty_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
 IF model_flag THEN BEGIN
     instr_residual_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *instr_residual_arr[pol_i]=*instr_dirty_arr[pol_i]-*instr_model_arr[pol_i]
-    stokes_residual_arr=stokes_cnv(instr_residual_arr,jones_out,beam=beam_base_out,/square)
+    stokes_residual_arr=stokes_cnv(instr_residual_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
 ENDIF ELSE BEGIN
     instr_residual_arr=instr_dirty_arr
     stokes_residual_arr=stokes_dirty_arr
@@ -196,8 +196,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 IF source_flag THEN BEGIN
-    stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out) ;returns null pointer if instr_sources is a null pointer 
-    IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,jones_out,beam=beam_base_out) 
+    stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out,_Extra=extra) ;returns null pointer if instr_sources is a null pointer 
+    IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,jones_out,beam=beam_base_out,_Extra=extra) 
 ENDIF    
 
 IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=export_path+'_source_list'

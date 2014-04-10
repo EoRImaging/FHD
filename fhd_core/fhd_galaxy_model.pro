@@ -35,7 +35,7 @@ freq_arr=freq_arr[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
-model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra)
+model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra) ;returns temperature in Kelvin
 
 IF N_Elements(model_arr) GT 1 THEN BEGIN
     model=fltarr(dimension,elements)
@@ -64,7 +64,7 @@ gal_model_img=model_use
 gal_model_stks=Ptrarr(4,/allocate)
 *gal_model_stks[0]=gal_model_img
 FOR pol_i=1,3 DO *gal_model_stks[pol_i]=Fltarr(dimension,elements)
-gal_model_instr=Stokes_cnv(gal_model_stks,jones,/inverse)
+gal_model_instr=Stokes_cnv(gal_model_stks,jones,/inverse,_Extra=extra)
 
 gal_model_uv=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
