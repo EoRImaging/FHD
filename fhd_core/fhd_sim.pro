@@ -225,7 +225,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
 ;    IF Keyword_Set(grid_recalculate) THEN BEGIN
         print,'Gridding visibilities'
         image_uv_arr=Ptrarr(n_pol,/allocate)
-        image_uv_arr=Ptrarr(n_pol,/allocate)
+        weights_arr=Ptrarr(n_pol,/allocate)
         
         weights_grid=1
         mapfn_recalculate=0
