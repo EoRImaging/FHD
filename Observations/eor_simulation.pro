@@ -19,6 +19,7 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
   IF N_Elements(silent) EQ 0 THEN silent=0
   IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
   IF N_Elements(snapshot_healpix_export) EQ 0 THEN snapshot_healpix_export=1
+  IF N_Elements(split_ps_export) EQ 0 THEN split_ps_export=1  
   IF N_Elements(n_avg) EQ 0 THEN n_avg=2
   IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=3.
   IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
@@ -96,7 +97,8 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
       export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
       complex=complex_beam,double=double_precison_beam,precess=precess,error=error,weights_grid=weights_grid,$
       save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,FoV=FoV,no_ps=no_ps,nfreq_avg=nfreq_avg,$
-      snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
+      snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export, $
+      n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
            
       
     IF Keyword_Set(error) THEN BEGIN

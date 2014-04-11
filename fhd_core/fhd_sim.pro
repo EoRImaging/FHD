@@ -15,9 +15,9 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   error=0
   heap_gc
   t0=Systime(1)
-  IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
+  IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
   IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
-  IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
+  IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
   IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
   
   print,'Simulating: ',file_path_vis
@@ -159,6 +159,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   vis_model_ptr = Ptrarr(n_pol,/allocate)
   for pol_i=0,n_pol-1 do *vis_model_ptr[pol_i]=Complexarr(n_freq,vis_dimension)
   
+  time0=systime(1)
   for fi=0, n_freq-1 do begin
     if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
     
@@ -180,6 +181,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
   endfor
   undefine_fhd, model_uvf_arr
+  time1=systime(0)
+  print, 'model visibility timing(s):'+ number_formatter(time1-time0)
   
   SAVE,flag_arr,filename=flags_filepath,/compress
   
@@ -221,38 +224,38 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   IF N_Elements(obs) EQ 0 THEN IF file_test(obs_filepath) THEN obs=getvar_savefile(obs_filepath,'obs')
   
-   ;Grid the visibilities
-;    IF Keyword_Set(grid_recalculate) THEN BEGIN
-        print,'Gridding visibilities'
-        image_uv_arr=Ptrarr(n_pol,/allocate)
-        weights_arr=Ptrarr(n_pol,/allocate)
-        
-        weights_grid=1
-        mapfn_recalculate=0
-        preserve_visibilities=1
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
-                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
-                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
-                model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
-            t_grid[pol_i]=t_grid0
-;            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
-            *image_uv_arr[pol_i]=Temporary(dirty_UV)
-           
-            IF N_Elements(weights_grid) GT 0 THEN BEGIN
-                *weights_arr[pol_i]=Temporary(weights_grid)
-                weights_grid=1
-            ENDIF
-        ENDFOR
-        print,'Gridding time:',t_grid
-;ENDIF
+  ;Grid the visibilities
+  ;    IF Keyword_Set(grid_recalculate) THEN BEGIN
+  print,'Gridding visibilities'
+  image_uv_arr=Ptrarr(n_pol,/allocate)
+  weights_arr=Ptrarr(n_pol,/allocate)
+  
+  weights_grid=1
+  mapfn_recalculate=0
+  preserve_visibilities=1
+  FOR pol_i=0,n_pol-1 DO BEGIN
+    dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
+      timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
+      mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
+      model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
+    t_grid[pol_i]=t_grid0
+    ;            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
+    *image_uv_arr[pol_i]=Temporary(dirty_UV)
+    
+    IF N_Elements(weights_grid) GT 0 THEN BEGIN
+      *weights_arr[pol_i]=Temporary(weights_grid)
+      weights_grid=1
+    ENDIF
+  ENDFOR
+  print,'Gridding time:',t_grid
+  ;ENDIF
   
   
   ;Generate fits data files and images
   IF Keyword_Set(export_images) THEN BEGIN
-
-      fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
-        model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+  
+    fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+      model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
   ENDIF
   
   ;optionally export frequency-split Healpix cubes
