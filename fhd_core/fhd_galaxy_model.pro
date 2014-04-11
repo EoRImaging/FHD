@@ -35,7 +35,7 @@ freq_arr=freq_arr[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
-model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra) ;returns temperature in Kelvin
+model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra) ;maps should be in K*steradian
 
 IF N_Elements(model_arr) GT 1 THEN BEGIN
     model=fltarr(dimension,elements)
@@ -43,6 +43,10 @@ IF N_Elements(model_arr) GT 1 THEN BEGIN
     model/=Total(nf_arr)
 ENDIF ELSE model=*model_arr[0]
 Ptr_free,model_arr
+c_light=299792458.
+kb=1.38065E3 ;actually 1.38065*10^-23 / 10^-26 (10^-26 from definition of Jy) 
+conv_to_Jy=2.*kb*(obs.freq_center/c_light)^2.
+model*=conv_to_Jy
 
 edge_match,model
 valid_i=where(Finite(ra_arr),n_valid)
