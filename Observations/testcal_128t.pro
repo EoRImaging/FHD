@@ -5,7 +5,7 @@ except=!except
 heap_gc
 
 calibrate_visibilities=1
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
@@ -44,6 +44,11 @@ ps_kspan=600.
 split_ps=1
 bandpass_calibrate=1
 calibration_polyfit=2.
+save_vis=0
+cal_mode_fit=1
+cal_cable_reflection_fit=150.
+recalculate_all=0
+image_filter='filter_uv_uniform'
 no_restrict_cal_sources=1
 no_rephase=Keyword_Set(data_version)
 calibrate_visibilities=1
@@ -57,6 +62,7 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     gain_factor=gain_factor,smooth_width=smooth_width,min_cal_baseline=min_cal_baseline,silent=silent,$
     combine_obs=combine_obs,calibrate_visibilities=calibrate_visibilities,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,split_ps=split_ps,$
-    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,_Extra=extra
+    bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,$
+    save_vis=save_vis,cal_mode_fit=cal_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,_Extra=extra
 !except=except
 END

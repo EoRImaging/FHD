@@ -1,6 +1,6 @@
 FUNCTION stokes_cnv,image_arr,jones,beam_arr=beam_arr,inverse=inverse,$
-    square=square,no_extend=no_extend,swap_pol=swap_pol,no_dipole_projection_rotation=no_dipole_projection_rotation
-    ;/swap_pol is a temporary debugging tool
+    square=square,no_extend=no_extend,rotate_pol=rotate_pol,no_dipole_projection_rotation=no_dipole_projection_rotation
+    ;/rotate_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
 ;requires the jones structure from fhd_struct_init_jones.pro
@@ -35,7 +35,7 @@ IF Keyword_Set(no_dipole_projection_rotation) THEN BEGIN
     p_corr=p_map
     p_free=1
 ENDIF
-IF Keyword_Set(swap_pol) THEN BEGIN
+IF Keyword_Set(rotate_pol) THEN BEGIN
     ;this is meant as a debugging tool!
     FOR i=0,1 DO BEGIN
         p_map[*,i]=jones.Jmat[*,1-i]
