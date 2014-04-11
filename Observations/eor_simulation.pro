@@ -95,8 +95,9 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
       model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,$
       export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
       complex=complex_beam,double=double_precison_beam,precess=precess,error=error,weights_grid=weights_grid,$
-      save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,$
-      snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
+      save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,FoV=FoV,no_ps=no_ps,nfreq_avg=nfreq_avg,$
+      snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
+           
       
     IF Keyword_Set(error) THEN BEGIN
       print,'###########################################################################'
