@@ -14,7 +14,7 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     
     npix=N_Elements(Temperature) ;should equal 12.*512^2.
     nside=npix2nside(npix)
-    pix_area=4*!Pi/npix
+    pix_area=4.*!Pi/npix
     
     radec_i=where(Finite(ra_arr))
     ra_use=ra_arr[radec_i]
@@ -28,7 +28,7 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     Temperature=Temperature[ipring]*pix_area*(model_freq/mean(frequency))^spectral_index
     model0=fltarr(size(ra_arr,/dimension))
     model0[radec_i]=Temperature
-    model[0]=Ptr_new(model0)
+    model=Ptr_new(model0)
     RETURN,model 
 ENDIF ELSE BEGIN
     print,"Using unfiltered Global Sky Model"
@@ -45,7 +45,7 @@ ENDELSE
 
 npix=(size(maps_408,/dimension))[1] ;should equal 12.*512^2.
 nside=npix2nside(npix)
-pix_area=4*!Pi/npix
+pix_area=4.*!Pi/npix
 
 radec_i=where(Finite(ra_arr))
 ra_use=ra_arr[radec_i]

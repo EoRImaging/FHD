@@ -143,9 +143,10 @@ IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
 gal_model_img=Ptrarr(n_pol)
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_base=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,_Extra=extra)
-    IF Keyword_Set(pad_uv_image) THEN gal_model_base=Rebin(gal_model_base,dimension,elements)
-    FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(gal_model_base*(*beam_base_out[pol_i]))
+    gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
+    
+    FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*gal_model_uv[pol_i],degpix=degpix,/antialias,$
+        image_filter_fn='',pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_base_out[pol_i]))
     
     gal_name='_galfit'
 ENDIF ELSE BEGIN

@@ -60,9 +60,9 @@ alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
 horizon_proj=Sin(alt_arr*!DtoR)
 antialias_filter=Sqrt(Hanning(dimension,elements))
 model_use=model
-model_use*=horizon_proj
+;model_use*=horizon_proj
 IF Keyword_Set(antialias) THEN model_use*=antialias_filter
-model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion
+;model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion
 gal_model_img=model_use
 
 gal_model_stks=Ptrarr(4,/allocate)
@@ -73,7 +73,7 @@ gal_model_instr=Stokes_cnv(gal_model_stks,jones,/inverse,_Extra=extra)
 gal_model_uv=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     model_uv=fft_shift(FFT(fft_shift(*gal_model_instr[pol_i]),/inverse))
-    model_uv/=dimension ;FFT normalization   
+;    model_uv/=dimension ;FFT normalization   
     *gal_model_uv[pol_i]=model_uv
 ENDFOR
   
