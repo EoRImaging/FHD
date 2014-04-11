@@ -1,6 +1,6 @@
 pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, yrange = yrange, $
     log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
-    charsize = charsize, grey_scale = grey_scale, xlog = xlog, ylog = ylog, $
+    note = note, charsize = charsize, grey_scale = grey_scale, xlog = xlog, ylog = ylog, $
     missing_value = missing_value, noerase = noerase, savefile = savefile, png = png, eps = eps
     
   if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) then pub = 1 else pub = 0
@@ -79,7 +79,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     if count_low gt 0 then plot_image[wh_low] = data_color_range[0]
     wh_high = where(image gt data_range[1], count_high)
     if count_high gt 0 then plot_image[wh_high] = data_color_range[1]
-
+    
     if n_elements(missing_value) ne 0 then if count_missing gt 0 then plot_image[wh_missing] = missing_color
     
     tickinterval = float(number_formatter((data_range[1]-data_range[0])/6., format = '(e13.0)'))
@@ -94,7 +94,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   else axkeywords = create_struct('ylog', 1, 'ytickformat', 'exponent')
   
   if n_elements(missing_value) gt 0 and not keyword_set(noerase) then cgerase
-  
+    
   if keyword_set(pub) then begin
     if n_elements(missing_value) gt 0 then begin
       alphabackgroundimage = cgsnapshot()
@@ -102,7 +102,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     cgps_open, savefile, /font, encapsulated=eps
   endif
   
-  cgimage, plot_image, position = [.15,.1,.8,.95], /axes, xrange = xrange, $
+  cgimage, plot_image, position = [.15,.15,.8,.92], /axes, xrange = xrange, $
     yrange = yrange, xtitle = xtitle, ytitle = ytitle, title = title, axkeywords = axkeywords, missing_value = missing_color, noerase = noerase, $
     alphabackgroundimage = alphabackgroundimage, charsize = charsize
     
@@ -112,8 +112,14 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       charsize = charsize, font = font, oob_low = oob_low
       
   endif else begin
-    cgcolorbar, range=data_range, position = [.92, .1,.95,.95], /vertical, format='exponent', charsize = charsize, font = font
+    cgcolorbar, range=data_range, position = [.92, .15,.95,.92], /vertical, format='exponent', charsize = charsize, font = font
   endelse
+  
+  if n_elements(note) ne 0 then begin
+    if keyword_set(pub) then char_factor = 0.75 else char_factor = 1
+    cgtext, .99, 0.02, note, /normal, alignment=1, charsize = char_factor*charsize, color = annotate_color, font = font
+  endif
+  
   
   if keyword_set(pub) then cgps_close, png = png, delete_ps = delete_ps
   
