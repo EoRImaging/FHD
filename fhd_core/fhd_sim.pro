@@ -252,15 +252,16 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       ENDIF
     ENDFOR
     print,'Gridding time:',t_grid
+    
+    ;Generate fits data files and images
+    IF Keyword_Set(export_images) THEN BEGIN
+    
+      fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+        model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+    ENDIF
+    
   ENDIF
   
-  
-  ;Generate fits data files and images
-  IF Keyword_Set(export_images) THEN BEGIN
-  
-    fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
-      model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
-  ENDIF
   
   ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,params,vis_arr,$
