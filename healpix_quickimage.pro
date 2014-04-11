@@ -20,10 +20,9 @@
 pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, map_out = map_out, noplot = noplot, $
     dec_range = dec_range, ra_range = ra_range, noerase = noerase, savefile = savefile, png = png, eps = eps, $
     map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
-    data_range = data_range, silent=silent, title=title, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
+    data_range = data_range, silent=silent, title=title, note = note, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
     projection=projection, coord_in=coord_in, coord_out = coord_out, $
     color_profile = color_profile, log = log
-    
     
   IF N_Elements(silent) EQ 0 THEN silent=1
   IF N_Elements(nside) NE 1 THEN begin
@@ -187,7 +186,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     
     if not keyword_set(noplot) then begin
       quick_image, map_out, missing_val = bad_val, data_range = data_range, xtitle = 'ra (degrees)', ytitle = 'dec (degrees)', $
-        title = title, charsize = charsize, noerase = noerase, xrange = ra_range, yrange = dec_range, savefile = savefile, png = png, eps = eps, $
+        title = title, note = note, charsize = charsize, noerase = noerase, xrange = ra_range, yrange = dec_range, savefile = savefile, png = png, eps = eps, $
         log = log, color_profile = color_profile
     endif
   endif else begin
