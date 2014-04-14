@@ -12,15 +12,17 @@ FUNCTION fhd_init,obs,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_use=freq_
 IF N_Elements(obs) EQ 0 THEN BEGIN
     dimension=1024. 
     n_pol=4
+    beam_width=1.
 ENDIF ELSE BEGIN
     dimension=obs.dimension
     n_pol=obs.n_pol
+    beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)
 ENDELSE
 
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF N_Elements(pol_use) EQ 0 THEN pol_use=indgen(n_pol)
 IF N_Elements(beam_max_threshold) EQ 0 THEN beam_max_threshold=1e-4 
-IF N_Elements(smooth_width) EQ 0 THEN smooth_width=7.
+IF N_Elements(smooth_width) EQ 0 THEN smooth_width=Float(Ceil(beam_width*10.)) & smooth_width=smooth_width>5.
 IF N_Elements(local_max_radius) EQ 0 THEN local_max_radius=3.
 IF N_Elements(sigma_cut) EQ 0 THEN sigma_cut=2.
 ;IF N_Elements(baseline_threshold) EQ 0 THEN baseline_threshold=0.;50.
