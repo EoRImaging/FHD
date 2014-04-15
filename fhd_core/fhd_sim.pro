@@ -1,6 +1,6 @@
 
 PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
-    beam_recalculate=beam_recalculate,$
+    beam_recalculate=beam_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,silent=silent,$
     healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,error=error, $
@@ -15,9 +15,10 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   error=0
   heap_gc
   t0=Systime(1)
-  IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
+  IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
   IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
-  IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
+  IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=recalculate_all
+  IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
   IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
   
   print,'Simulating: ',file_path_vis
@@ -88,100 +89,106 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   ;print informational messages
   obs_status,obs
   
-  if keyword_set(include_catalog_sources) then begin
-    catalog_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_file_path,_Extra=extra)
-    if n_elements(source_list) gt 0 then source_list = [source_list, catalog_source_list] else source_list = catalog_source_list
-  endif
   
-  if n_elements(source_list) gt 0 then begin
-    source_model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
-    IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
-  endif
-  
-  
-  if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(eor_sim) then begin
-    model_uvf_arr=Ptrarr(n_pol,/allocate)
-    for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(obs.dimension,obs.elements, n_freq)
-    
-    if n_elements(model_uvf_cube) eq 0 and n_elements(model_image_cube) gt 0 then begin
-      ;; convert from Jy/str to Jy/pixel
-      model_image_use = model_image_cube/(degpix*!DtoR)^2. ;; Jy/pixel
-      model_uvf_cube = Complexarr(obs.dimension,obs.elements, n_freq)
-      for i=0, n_freq-1 do model_uvf_cube[*,*,i] = fft_shift(FFT(fft_shift(model_image_use[*,*,1]),/inverse)) * (degpix*!DtoR)^2.
-      undefine, model_image_use
+  if keyword_set(recalculate_all) then begin
+    if keyword_set(include_catalog_sources) then begin
+      catalog_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_file_path,_Extra=extra)
+      if n_elements(source_list) gt 0 then source_list = [source_list, catalog_source_list] else source_list = catalog_source_list
     endif
     
-    if keyword_set(eor_sim) then begin
-      print, 'Generating model EoR cube'
-      freq_arr = (*obs.baseline_info).freq
-      delta_uv=obs.kpix
-      uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
-      time0 = systime(1)
-      eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
-      time1 = systime(1)
-      print, 'time for eor modelling: ' + number_formatter(time1-time0)
-      if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
-      else model_uvf_cube = temporary(eor_uvf_cube)
+    if n_elements(source_list) gt 0 then begin
+      source_model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
+      IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
     endif
     
-    ;; model cube assumed to be Stokes I
-    switch n_pol of
-      4:(*model_uvf_arr[3])[*]=0.
-      3:(*model_uvf_arr[2])[*]=0.
-      2:(*model_uvf_arr[1])[*]=model_uvf_cube/2.
-      1:(*model_uvf_arr[0])[*]=model_uvf_cube/2.
-    endswitch
     
-    undefine, model_uvf_cube
-  endif
-  
-  if n_elements(source_model_uv_arr) gt 0 then begin
-    if n_elements(model_uvf_arr) gt 0 then begin
-      FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*source_model_uv_arr[pol_i]
-    endif else model_uvf_arr = source_model_uv_arr
-    undefine_fhd, source_model_uv_arr
-  endif
-  
-  if n_elements(model_uvf_arr) eq 0 then begin
-    print, 'No input model (image cube, model_uvf or sources)'
-    error=1
-    RETURN
-  endif
-  
-  save,filename=input_model_filepath, model_uvf_arr, uv_arr, freq_arr, /compress
-  
-  bin_offset=(*obs.baseline_info).bin_offset
-  nbaselines=bin_offset[1]
-  n_samples=N_Elements(bin_offset)
-  undefine_fhd, bin_offset
-  vis_dimension=Float(nbaselines*n_samples)
-  
-  vis_model_ptr = Ptrarr(n_pol,/allocate)
-  for pol_i=0,n_pol-1 do *vis_model_ptr[pol_i]=Complexarr(n_freq,vis_dimension)
-  
-  for fi=0, n_freq-1 do begin
-    if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
-    
-    this_flag_ptr = Ptrarr(n_pol,/allocate)
-    this_model_uv = Ptrarr(n_pol,/allocate)
-    for pol_i=0,n_pol-1 do begin
-      *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
-      (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
+    if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(eor_sim) then begin
+      model_uvf_arr=Ptrarr(n_pol,/allocate)
+      for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(obs.dimension,obs.elements, n_freq)
       
-      *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
+      if n_elements(model_uvf_cube) eq 0 and n_elements(model_image_cube) gt 0 then begin
+        ;; convert from Jy/str to Jy/pixel
+        model_image_use = model_image_cube/(degpix*!DtoR)^2. ;; Jy/pixel
+        model_uvf_cube = Complexarr(obs.dimension,obs.elements, n_freq)
+        for i=0, n_freq-1 do model_uvf_cube[*,*,i] = fft_shift(FFT(fft_shift(model_image_use[*,*,1]),/inverse)) * (degpix*!DtoR)^2.
+        undefine, model_image_use
+      endif
+      
+      if keyword_set(eor_sim) then begin
+        print, 'Generating model EoR cube'
+        freq_arr = (*obs.baseline_info).freq
+        delta_uv=obs.kpix
+        uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
+        time0 = systime(1)
+        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
+        time1 = systime(1)
+        print, 'time for eor modelling: ' + number_formatter(time1-time0)
+        if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
+        else model_uvf_cube = temporary(eor_uvf_cube)
+      endif
+      
+      ;; model cube assumed to be Stokes I
+      switch n_pol of
+        4:(*model_uvf_arr[3])[*]=0.
+        3:(*model_uvf_arr[2])[*]=0.
+        2:(*model_uvf_arr[1])[*]=model_uvf_cube/2.
+        1:(*model_uvf_arr[0])[*]=model_uvf_cube/2.
+      endswitch
+      
+      undefine, model_uvf_cube
+    endif
+    
+    if n_elements(source_model_uv_arr) gt 0 then begin
+      if n_elements(model_uvf_arr) gt 0 then begin
+        FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*source_model_uv_arr[pol_i]
+      endif else model_uvf_arr = source_model_uv_arr
+      undefine_fhd, source_model_uv_arr
+    endif
+    
+    if n_elements(model_uvf_arr) eq 0 then begin
+      print, 'No input model (image cube, model_uvf or sources)'
+      error=1
+      RETURN
+    endif
+    
+    save,filename=input_model_filepath, model_uvf_arr, uv_arr, freq_arr, /compress
+    
+    bin_offset=(*obs.baseline_info).bin_offset
+    nbaselines=bin_offset[1]
+    n_samples=N_Elements(bin_offset)
+    undefine_fhd, bin_offset
+    vis_dimension=Float(nbaselines*n_samples)
+    
+    vis_model_ptr = Ptrarr(n_pol,/allocate)
+    for pol_i=0,n_pol-1 do *vis_model_ptr[pol_i]=Complexarr(n_freq,vis_dimension)
+    
+    time0=systime(1)
+    for fi=0, n_freq-1 do begin
+      if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
+      
+      this_flag_ptr = Ptrarr(n_pol,/allocate)
+      this_model_uv = Ptrarr(n_pol,/allocate)
+      for pol_i=0,n_pol-1 do begin
+        *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
+        (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
+        
+        *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
+      endfor
+      
+      this_model_ptr=vis_source_model(0,obs,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+        timing=model_timing,silent=silent,error=error,_Extra=extra)
+      print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
+      
+      for pol_i=0,n_pol-1 do (*vis_model_ptr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
+      
+      undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
     endfor
+    undefine_fhd, model_uvf_arr
+    time1=systime(0)
+    print, 'model visibility timing(s):'+ number_formatter(time1-time0)
     
-    this_model_ptr=vis_source_model(0,obs,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
-      timing=model_timing,silent=silent,error=error,_Extra=extra)
-    print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
-    
-    for pol_i=0,n_pol-1 do (*vis_model_ptr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
-    
-    undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
-  endfor
-  undefine_fhd, model_uvf_arr
-  
-  SAVE,flag_arr,filename=flags_filepath,/compress
+    SAVE,flag_arr,filename=flags_filepath,/compress
+  endif
   
   vis_noise_calc,obs,vis_arr,flag_arr
   tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
@@ -221,39 +228,40 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   IF N_Elements(obs) EQ 0 THEN IF file_test(obs_filepath) THEN obs=getvar_savefile(obs_filepath,'obs')
   
-   ;Grid the visibilities
-;    IF Keyword_Set(grid_recalculate) THEN BEGIN
-        print,'Gridding visibilities'
-        image_uv_arr=Ptrarr(n_pol,/allocate)
-        weights_arr=Ptrarr(n_pol,/allocate)
-        
+  ;Grid the visibilities
+  IF Keyword_Set(grid_recalculate) THEN BEGIN
+    print,'Gridding visibilities'
+    image_uv_arr=Ptrarr(n_pol,/allocate)
+    weights_arr=Ptrarr(n_pol,/allocate)
+    
+    weights_grid=1
+    mapfn_recalculate=0
+    preserve_visibilities=1
+    FOR pol_i=0,n_pol-1 DO BEGIN
+      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
+        timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
+        mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
+        model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
+      t_grid[pol_i]=t_grid0
+      ;            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
+      *image_uv_arr[pol_i]=Temporary(dirty_UV)
+      
+      IF N_Elements(weights_grid) GT 0 THEN BEGIN
+        *weights_arr[pol_i]=Temporary(weights_grid)
         weights_grid=1
-        mapfn_recalculate=0
-        preserve_visibilities=1
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
-                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
-                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
-                model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
-            t_grid[pol_i]=t_grid0
-;            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
-            *image_uv_arr[pol_i]=Temporary(dirty_UV)
-           
-            IF N_Elements(weights_grid) GT 0 THEN BEGIN
-                *weights_arr[pol_i]=Temporary(weights_grid)
-                weights_grid=1
-            ENDIF
-        ENDFOR
-        print,'Gridding time:',t_grid
-;ENDIF
-  
-  
-  ;Generate fits data files and images
-  IF Keyword_Set(export_images) THEN BEGIN
-
+      ENDIF
+    ENDFOR
+    print,'Gridding time:',t_grid
+    
+    ;Generate fits data files and images
+    IF Keyword_Set(export_images) THEN BEGIN
+    
       fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
         model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+    ENDIF
+    
   ENDIF
+  
   
   ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,params,vis_arr,$
