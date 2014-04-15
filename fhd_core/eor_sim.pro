@@ -10,7 +10,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   n_kz = n_elements(freq_arr)
   
   z0_freq = 1420.40 ;; MHz
-  redshifts = z0_freq/freq_arr - 1
+  if min(freq_arr) gt 1e8 then redshifts = (z0_freq*1e6)/freq_arr - 1 else redshifts = z0_freq/freq_arr - 1
   cosmology_measures, redshifts, comoving_dist_los = comov_dist_los
   
   comov_los_diff = comov_dist_los - shift(comov_dist_los, -1)
@@ -87,7 +87,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   ;signal = temporary(signal_amp) * exp(complex(0,1) * temporary(signal_phase))
   
   ;; shift it so that it's as expected when we take the fft
-  signal = shift(temporary(signal), [0,0,n_kz/2+1])
+  signal = shift(temporary(signal), [0,0,n_kz/2])
   
   print, 'signal^2d integral:', total(abs(signal)^2d)
   print, 'signal^2d integral * 2pi*delta_k^2d:', total(abs(signal)^2d) * kz_mpc_delta * 2d * !dpi
