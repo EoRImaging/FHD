@@ -6,7 +6,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag_visibilities=flag_visibilities,$
     transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
     calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
-    snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,_Extra=extra
+    snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,cmd_args=cmd_args,_Extra=extra
 
 except=!except
 !except=0 
@@ -104,7 +104,7 @@ WHILE fi LT n_files DO BEGIN
         gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,save_visibilities=save_visibilities,$
         calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
         healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,$
-        snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export,_Extra=extra
+        snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
     IF Keyword_Set(error) THEN BEGIN
         print,'###########################################################################'
         print,'###########################################################################'

@@ -12,6 +12,7 @@ args = Command_Line_Args(count=nargs)
 obs_id = args[0]
 output_directory = args[1]
 version = args[2]
+cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
