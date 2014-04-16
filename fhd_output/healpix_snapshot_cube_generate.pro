@@ -39,7 +39,7 @@ IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
 nside_use=nside_use>Nside_chk
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 
-obs_out=vis_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
+obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
 ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
 psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resolution,/silent)
 

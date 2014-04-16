@@ -22,22 +22,22 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
                 cal=getvar_savefile(transfer_calibration,'cal')
                 gain_arr_ptr=cal.gain
                 IF ~Keyword_Set(cal.cal_origin) THEN cal.cal_origin=transfer_calibration
-                cal=vis_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
+                cal=fhd_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
             END
             '.txt':BEGIN
                 textfast,gain_arr,/read,file_path=transfer_calibration
                 gain_arr_ptr=Ptr_new(gain_arr)
-                cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+                cal=fhd_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
             END
             '.npz':BEGIN
                 gain_arr=read_numpy(transfer_calibration)
                 gain_arr_ptr=Ptr_new(gain_arr)
-                cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+                cal=fhd_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
             END
             '.npy':BEGIN
                 gain_arr=read_numpy(transfer_calibration)
                 gain_arr_ptr=Ptr_new(gain_arr)
-                cal=vis_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+                cal=fhd_struct_init_cal(obs,params,calibration_origin=transfer_calibration,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
             END
             ELSE: BEGIN
                 print,'Unknown file format: ',transfer_calibration
@@ -69,7 +69,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     RETURN,vis_cal
 ENDIF
 
-;IF N_Elements(cal) EQ 0 THEN cal=vis_struct_init_cal(obs,params,_Extra=extra)
+;IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
 CASE size(initial_calibration,/type) OF
     0:;do nothing if undefined
     

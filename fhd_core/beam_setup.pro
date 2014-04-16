@@ -253,7 +253,7 @@ IF complex_flag EQ 0 THEN BEGIN
 ENDIF
 
 t5_a=Systime(1)
-psf=vis_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
+psf=fhd_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center)

@@ -121,7 +121,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     data_array=Temporary(data_struct.array[*,0:n_pol-1,*])
     data_struct=0. ;free memory
     
-    obs=vis_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
+    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     pol_dim=hdr.pol_dim
     freq_dim=hdr.freq_dim
     real_index=hdr.real_index
@@ -163,7 +163,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         print,"Calibrating visibilities"
         IF ~Keyword_Set(transfer_calibration) AND ~Keyword_Set(calibration_source_list) THEN $
             calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path,_Extra=extra)
-        cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list,catalog_path=calibration_catalog_file_path,_Extra=extra)
+        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,catalog_path=calibration_catalog_file_path,_Extra=extra)
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$

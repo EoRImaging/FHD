@@ -1,4 +1,4 @@
-FUNCTION vis_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
+FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
@@ -106,7 +106,7 @@ IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) EL
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 noise_arr=Ptr_new()
 
-meta=vis_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
+meta=fhd_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
 IF N_Elements(meta_data) EQ 0 THEN meta_data=Ptr_new() ELSE meta_data=Ptr_new(meta_data)
 IF N_Elements(meta_hdr) EQ 0 THEN meta_hdr=Ptr_new() ELSE meta_hdr=Ptr_new(meta_hdr)
 

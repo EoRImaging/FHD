@@ -29,7 +29,7 @@ compile_opt idl2,strictarrsubs
 IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
 IF N_Elements(params) EQ 0 THEN RESTORE,filename=file_path_fhd+'_params.sav'
 IF size(cal,/type) NE 8 THEN IF file_test(file_path_fhd+'_cal.sav') EQ 1 THEN RESTORE,filename=file_path_fhd+'_cal.sav' ELSE BEGIN
-    cal=vis_struct_init_cal(obs,params)
+    cal=fhd_struct_init_cal(obs,params)
 ENDELSE
 IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 

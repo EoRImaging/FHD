@@ -1,4 +1,4 @@
-FUNCTION vis_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,$
+FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,$
     zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
