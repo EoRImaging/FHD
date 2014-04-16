@@ -151,7 +151,9 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       RETURN
     endif
     
-    save,filename=input_model_filepath, model_uvf_arr, uv_arr, freq_arr, /compress
+    model_uvf = *model_uvf_arr[0]
+    save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
+    undefine, model_uvf
     
     bin_offset=(*obs.baseline_info).bin_offset
     nbaselines=bin_offset[1]
