@@ -9,7 +9,7 @@ heap_gc
 ; parse command line args
 compile_opt strictarr
 args = Command_Line_Args(count=nargs)
-ods_id = args[0]
+obs_id = args[0]
 output_directory = args[1]
 version = args[2]
 
@@ -76,6 +76,10 @@ case version of
       print,'using parameters for version '+version
       galaxy_calibrate=1
    end
+   'apb_test_pattis_catalog_1': begin
+      print,'using parameters for version '+version
+      calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
    else: print,'Default parameters'
 endcase
 
