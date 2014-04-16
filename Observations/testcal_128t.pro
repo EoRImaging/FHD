@@ -53,6 +53,7 @@ no_restrict_cal_sources=1
 no_rephase=Keyword_Set(data_version)
 calibrate_visibilities=1
 
+cmd_args=extra
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     image_filter_fn=image_filter_fn,data_directory=data_directory,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
@@ -63,6 +64,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     combine_obs=combine_obs,calibrate_visibilities=calibrate_visibilities,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,split_ps=split_ps,$
     bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,no_restrict_cal_sources=no_restrict_cal_sources,$
-    save_vis=save_vis,cal_mode_fit=cal_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,_Extra=extra
+    save_vis=save_vis,cal_mode_fit=cal_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,cmd_args=cmd_args,_Extra=extra
 !except=except
 END

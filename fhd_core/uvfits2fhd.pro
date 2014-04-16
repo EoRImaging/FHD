@@ -38,7 +38,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,recalcu
     calibration_catalog_file_path=calibration_catalog_file_path,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
-    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
+    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -224,7 +224,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     SAVE,obs,filename=obs_filepath,/compress
     SAVE,params,filename=params_filepath,/compress
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,cmd_args=cmd_args
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
