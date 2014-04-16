@@ -80,6 +80,11 @@ case version of
       print,'using parameters for version '+version
       calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
+   'apb_test_pattis_catalog_2': begin
+    print,'using parameters for version '+version
+    calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+    flag_visibilities=0
+   end
    else: print,'Default parameters'
 endcase
 
