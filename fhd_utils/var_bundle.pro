@@ -9,7 +9,7 @@ n_var=N_Elements(var_names)
 
 IF Max(strmatch(var_names,'EXTRA',/fold_case)) EQ 1 THEN BEGIN
     vi0=where(strmatch(var_names,'EXTRA',/fold_case),complement=vi_use,ncomplement=n_var)
-    struct=scope_varfetch(var_names[vi0],level=2+level)
+    IF N_Elements(scope_varfetch(var_names[vi0],level=2+level)) GT 0 THEN struct=scope_varfetch(var_names[vi0],level=2+level)   
     IF n_var GT 0 THEN var_names=var_names[vi_use]
 ENDIF
     
