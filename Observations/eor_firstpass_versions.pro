@@ -9,9 +9,10 @@ heap_gc
 ; parse command line args
 compile_opt strictarr
 args = Command_Line_Args(count=nargs)
-ods_id = args[0]
+obs_id = args[0]
 output_directory = args[1]
 version = args[2]
+cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
@@ -66,15 +67,25 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 cal_cable_reflection_fit=150
+restrict_hpx_inds=1
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
       print,'using parameters for version '+version
-      restrict_hpx_inds=1
+      restrict_hpx_inds=1 ; now graduated to a default
    end
    'apb_test_galaxy_cal_1': begin
       print,'using parameters for version '+version
       galaxy_calibrate=1
+   end
+   'apb_test_pattis_catalog_1': begin
+      print,'using parameters for version '+version
+      calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+   'apb_test_pattis_catalog_2': begin
+    print,'using parameters for version '+version
+    calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+    flag_visibilities=0
    end
    else: print,'Default parameters'
 endcase
