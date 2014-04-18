@@ -59,23 +59,19 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 cal_cable_reflection_fit=150
-restrict_hpx_inds=1
+restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
-      print,'using parameters for version '+version
-      restrict_hpx_inds=1       ; now graduated to a default
+      restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'       ; now graduated to a default
    end
    'apb_test_galaxy_cal_1': begin
-      print,'using parameters for version '+version
       galaxy_calibrate=1
    end
    'apb_test_pattis_catalog_1': begin
-      print,'using parameters for version '+version
       calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
    'apb_test_pattis_catalog_2': begin
-      print,'using parameters for version '+version
       calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
       flag_visibilities=0
    end
