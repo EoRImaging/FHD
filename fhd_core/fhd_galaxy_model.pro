@@ -35,7 +35,7 @@ freq_arr=freq_arr[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
-model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra) ;maps should be in K*steradian
+model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra) ;maps should be in Kelvin
 
 IF N_Elements(model_arr) GT 1 THEN BEGIN
     model=fltarr(dimension,elements)
@@ -51,16 +51,20 @@ model*=conv_to_Jy
 edge_match,model
 valid_i=where(Finite(ra_arr),n_valid)
 Jdate=obs.Jd0
-
-beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
-beam_area=2.*!Pi*beam_width^2. ;area under a 2D gaussian with sigma_x=sigma_y=beam_width
-print,'beam area used in galaxy model: ',beam_area
+;
+;beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
+;beam_area=2.*!Pi*beam_width^2. ;area under a 2D gaussian with sigma_x=sigma_y=beam_width
+;print,'beam area used in galaxy model: ',beam_area
 Eq2Hor,ra_arr[valid_i],dec_arr[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
 alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
-horizon_proj=Sin(alt_arr*!DtoR)
+;pix_area=(obs.degpix*!DtoR)^2.*weight_invert(Sin(alt_arr*!DtoR))
+horizon_proj=Sin(alt_arr*!DtoR) ;pixel area relative to center
+pix_area_inv=horizon_proj/(obs.degpix*!DtoR)^2.
 antialias_filter=Sqrt(Hanning(dimension,elements))
+antialias_filter/=Mean(antialias_filter[valid_i])
 model_use=model
-;model_use*=horizon_proj
+;model_use*=Sin(alt_arr*!DtoR)/(obs.degpix*!DtoR)^2.
+model_use*=horizon_proj
 IF Keyword_Set(antialias) THEN model_use*=antialias_filter
 ;model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion
 gal_model_img=model_use
@@ -73,7 +77,7 @@ gal_model_instr=Stokes_cnv(gal_model_stks,jones,/inverse,_Extra=extra)
 gal_model_uv=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     model_uv=fft_shift(FFT(fft_shift(*gal_model_instr[pol_i]),/inverse))
-;    model_uv/=dimension ;FFT normalization   
+;    model_uv/=dimension^2. ;FFT normalization   
     *gal_model_uv[pol_i]=model_uv
 ENDFOR
   
