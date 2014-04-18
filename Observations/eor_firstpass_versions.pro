@@ -39,15 +39,7 @@ image_filter_fn='filter_uv_uniform'
 
 uvfits_version=2
 uvfits_subversion=0
-SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
-  STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
-vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-undefine,uvfits_version ; don't need these passed further
-undefine,uvfits_subversion
-undefine,obs_id
 
-fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
-healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
@@ -67,28 +59,38 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 cal_cable_reflection_fit=150
-restrict_hpx_inds=1
+restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
-      print,'using parameters for version '+version
-      restrict_hpx_inds=1 ; now graduated to a default
+      restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'       ; now graduated to a default
    end
    'apb_test_galaxy_cal_1': begin
-      print,'using parameters for version '+version
       galaxy_calibrate=1
    end
    'apb_test_pattis_catalog_1': begin
-      print,'using parameters for version '+version
       calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
    'apb_test_pattis_catalog_2': begin
-    print,'using parameters for version '+version
-    calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
-    flag_visibilities=0
+      calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+      flag_visibilities=0
+   end
+   'apb_test_2s_2': begin
+      print,'using parameters for version '+version
+      uvfits_subversion=3
    end
    else: print,'Default parameters'
 endcase
+   
+SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+  STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
+vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
+undefine,uvfits_version ; don't need these passed further
+undefine,uvfits_subversion
+undefine,obs_id
+
+fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
+healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 
 extra=var_bundle() ; bundle all the variables into a structure
 
