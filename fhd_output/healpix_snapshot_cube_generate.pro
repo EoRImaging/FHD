@@ -85,7 +85,7 @@ IF Keyword_Set(split_ps_export) THEN BEGIN
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         flag_use0=(*flag_arr_use[pol_i])[*,*bi_use[0]]<(*flag_arr_use[pol_i])[*,*bi_use[1]]
-        *flag_arr_use[pol_i]=0
+        *flag_arr_use[pol_i]*=0
         (*flag_arr_use[pol_i])[*,*bi_use[0]]=flag_use0
         (*flag_arr_use[pol_i])[*,*bi_use[1]]=flag_use0
         flag_use0=0 ;free memory
