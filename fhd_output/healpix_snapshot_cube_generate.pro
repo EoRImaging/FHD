@@ -39,7 +39,7 @@ IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
 nside_use=nside_use>Nside_chk
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 
-obs_out=vis_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
+obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
 ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
 psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resolution,/silent)
 
@@ -61,12 +61,12 @@ hpx_inds=hpx_cnv.inds
 n_hpx=N_Elements(hpx_inds)
 
 
-IF N_Elements(flag_arr) LT n_pol THEN flag_arr=getvar_savefile(flags_filepath,'flag_arr')
+IF N_Elements(flag_arr) LT n_pol THEN flag_arr_use=getvar_savefile(flags_filepath,'flag_arr') ELSE flag_arr_use=Pointer_copy(flag_arr)
 flags_use=Ptrarr(n_pol,/allocate)
 
 bin_start=(*obs_out.baseline_info).bin_offset
 nt=N_Elements(bin_start)
-nb=(size(*flag_arr[0],/dimension))[1]
+nb=(size(*flag_arr_use[0],/dimension))[1]
 bin_end=fltarr(nt)
 bin_end[0:nt-2]=bin_start[1:nt-1]-1
 bin_end[nt-1]=nb-1
@@ -78,8 +78,18 @@ bi_n=findgen(nb)
 IF Keyword_Set(split_ps_export) THEN BEGIN
     n_iter=2
     bi_use=Ptrarr(n_iter,/allocate)
-    *bi_use[0]=where(bin_i mod 2 EQ 0)
-    *bi_use[1]=where(bin_i mod 2 EQ 1)
+    *bi_use[0]=where(bin_i mod 2 EQ 0,n_even)
+    *bi_use[1]=where(bin_i mod 2 EQ 1,n_odd)
+    IF n_even LT n_odd THEN *bi_use[1]=(*bi_use[1])[0:n_even-1]
+    IF n_odd LT n_even THEN *bi_use[0]=(*bi_use[0])[0:n_odd-1]
+    
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        flag_use0=(*flag_arr_use[pol_i])[*,*bi_use[0]]<(*flag_arr_use[pol_i])[*,*bi_use[1]]
+        *flag_arr_use[pol_i]*=0
+        (*flag_arr_use[pol_i])[*,*bi_use[0]]=flag_use0
+        (*flag_arr_use[pol_i])[*,*bi_use[1]]=flag_use0
+        flag_use0=0 ;free memory
+    ENDFOR
     filepath_cube=file_path_fhd+['_even_cube.sav','_odd_cube.sav']
 ENDIF ELSE BEGIN
     n_iter=1
@@ -94,7 +104,7 @@ IF N_Elements(*vis_arr[0]) EQ 0 THEN FOR pol_i=0,n_pol-1 DO vis_arr[pol_i]=$
 
 residual_flag=obs_out.residual
 model_flag=0
-vis_noise_calc,obs_out,vis_arr,flag_arr
+vis_noise_calc,obs_out,vis_arr,flag_arr_use
 
 IF Min(Ptr_valid(vis_model_ptr)) THEN IF N_Elements(*vis_model_ptr[0]) GT 0 THEN model_flag=1
 IF residual_flag EQ 0 THEN IF model_flag EQ 0 THEN BEGIN
@@ -110,8 +120,8 @@ t_hpx=0.
 t_split=0.
 FOR iter=0,n_iter-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
-        flag_arr1=fltarr(size(*flag_arr[pol_i],/dimension))
-        flag_arr1[*,*bi_use[iter]]=(*flag_arr[pol_i])[*,*bi_use[iter]]
+        flag_arr1=fltarr(size(*flag_arr_use[pol_i],/dimension))
+        flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
         *flags_use[pol_i]=flag_arr1
     ENDFOR
     obs=obs_out ;will have some values over-written!
@@ -201,6 +211,7 @@ FOR iter=0,n_iter-1 DO BEGIN
         dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,beam_xx_cube,beam_yy_cube,$
         obs,nside,hpx_inds,n_avg,psf
 ENDFOR
+Ptr_free,flag_arr_use
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
 END
