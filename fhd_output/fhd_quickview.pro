@@ -187,13 +187,6 @@ ENDIF ELSE BEGIN
     instr_residual_arr=instr_dirty_arr
     stokes_residual_arr=stokes_dirty_arr
 ENDELSE
-FOR pol_i=0,n_pol-1 DO BEGIN
-    *instr_dirty_arr[pol_i]*=*beam_correction_out[pol_i]
-    IF model_flag THEN BEGIN
-        *instr_residual_arr[pol_i]*=*beam_correction_out[pol_i]
-        *instr_model_arr[pol_i]*=*beam_correction_out[pol_i]
-    ENDIF
-ENDFOR
 
 IF source_flag THEN BEGIN
     stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out,_Extra=extra) ;returns null pointer if instr_sources is a null pointer 
@@ -234,8 +227,8 @@ astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 IF (residual_flag EQ 0) AND (model_flag EQ 0) THEN res_name='_Dirty_' ELSE res_name='_Residual_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_residual=*instr_residual_arr[pol_i]
-    instr_dirty=*instr_dirty_arr[pol_i]
+    instr_residual=*instr_residual_arr[pol_i]*(*beam_correction_out[pol_i])
+    instr_dirty=*instr_dirty_arr[pol_i]*(*beam_correction_out[pol_i])
     stokes_residual=(*stokes_residual_arr[pol_i])*beam_mask
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]

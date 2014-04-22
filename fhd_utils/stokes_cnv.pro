@@ -11,8 +11,7 @@ IF N_Elements(beam_arr) EQ 0 THEN BEGIN
     FOR ii=0L,n_pol-1 DO *beam_use[ii]=1.
 ENDIF ELSE BEGIN
     n_pol=N_Elements(beam_arr)
-    beam_use=Ptrarr(n_pol,/allocate)
-    FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_arr[ii]
+    beam_use=pointer_copy(beam_arr)
     IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
 ENDELSE
 
@@ -110,7 +109,8 @@ ENDIF ELSE BEGIN
     elements=(size(*image_arr[0],/dimension))[1]
     
     image_arr_pq=Ptrarr(n_pol)
-    ;stokes I can have proper inverse-variance weighting. All other polarizations need to be converted to 'true sky' frame before they can be added
+    ;stokes I can have proper inverse-variance weighting. (not used!)
+    ; All other polarizations need to be converted to 'true sky' frame before they can be added
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
         FOR pol_i=0,n_pol-1 DO image_arr_pq[pol_i]=$
             Ptr_new(((*image_arr[stokes_list1[pol_i]])+sign[pol_i]*(*image_arr[stokes_list2[pol_i]]))/2.)

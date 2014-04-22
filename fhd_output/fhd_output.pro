@@ -292,9 +292,9 @@ image_path_fg=image_path+filter_name;+gal_name
 export_path_fg=export_path+filter_name;+gal_name
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_residual=*instr_images[pol_i]
+    instr_residual=*instr_images[pol_i]*(*beam_correction_out[pol_i])
     instr_res_phase=Atan(*res_uv_arr[pol_i],/phase)
-    instr_dirty=*dirty_images[pol_i]
+    instr_dirty=*dirty_images[pol_i]*(*beam_correction_out[pol_i])
     instr_source=*instr_sources[pol_i]
     instr_restored=instr_residual+instr_source
     beam_use=*beam_base_out[pol_i]

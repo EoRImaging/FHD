@@ -1,5 +1,4 @@
-PRO testcal_128T,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    channel=channel,data_version=data_version,_Extra=extra
+PRO testcal_128T,_Extra=extra
 except=!except
 !except=0 
 heap_gc
