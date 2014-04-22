@@ -10,7 +10,10 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   n_kz = n_elements(freq_arr)
   
   z0_freq = 1420.40 ;; MHz
-  if min(freq_arr) gt 1e8 then redshifts = (z0_freq*1e6)/freq_arr - 1 else redshifts = z0_freq/freq_arr - 1
+  ;; make sure frequencies are in MHz
+  if min(freq_arr) gt 1e8 then frequencies = freq_arr / 1e6 else frequencies = freq_arr
+  
+  redshifts = z0_freq/frequencies - 1
   cosmology_measures, redshifts, comoving_dist_los = comov_dist_los
   
   comov_los_diff = comov_dist_los - shift(comov_dist_los, -1)
@@ -19,7 +22,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   z_mpc_mean = float(mean(comov_dist_los))
   
   ;; converting from Jy (in u,v,f) to mK*str (10^-26 * c^2 * 10^3/ (2*f^2*kb))
-  conv_factor = float((3e8)^2 / (2. * (freq_arr*1e6)^2. * 1.38065))
+  conv_factor = float((3e8)^2 / (2. * (frequencies*1e6)^2. * 1.38065))
   
   ;; convert from Jy -> mk*str -> mK*Mpc^2
   conv_factor = conv_factor * z_mpc_mean^2.
@@ -39,7 +42,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   kz_mpc_delta = (2.*!pi) / z_mpc_length
   kz_mpc = findgen(round(kz_mpc_range / kz_mpc_delta)) * kz_mpc_delta - kz_mpc_range/2.
   if n_elements(kz_mpc) ne n_kz then stop
-  
+  stop
   ;; savefile contains: k_centers, power
   ;restore, base_path('data') + 'eor_data/eor_power_1d.idlsave' ;;k_centers, power
   restore, filepath('eor_power_1d.idlsave',root=rootdir('FHD'),subdir='catalog_data')
@@ -96,7 +99,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   ;;signal = [[[signal]], [[temp]]]
   
   ;; fourier transform along z direction to get to uvf space (in mK*Mpc^2)
-  temp = fft(temporary(signal), dimension = 3, /inverse) * kz_mpc_delta  
+  temp = fft(temporary(signal), dimension = 3, /inverse) * kz_mpc_delta
   
   ;; convert to Jy
   for i=0, n_kz-1 do temp[*,*,i] = temp[*,*,i]/conv_factor[i]
