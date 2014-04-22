@@ -42,7 +42,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   kz_mpc_delta = (2.*!pi) / z_mpc_length
   kz_mpc = findgen(round(kz_mpc_range / kz_mpc_delta)) * kz_mpc_delta - kz_mpc_range/2.
   if n_elements(kz_mpc) ne n_kz then stop
-  stop
+  
   ;; savefile contains: k_centers, power
   ;restore, base_path('data') + 'eor_data/eor_power_1d.idlsave' ;;k_centers, power
   restore, filepath('eor_power_1d.idlsave',root=rootdir('FHD'),subdir='catalog_data')
