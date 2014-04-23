@@ -76,7 +76,7 @@ ENDIF
 
 IF Keyword_Set(galaxy_calibrate) THEN BEGIN
     gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
-    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]
+    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask
 ENDIF
 
 vis_arr=Ptrarr(n_pol)

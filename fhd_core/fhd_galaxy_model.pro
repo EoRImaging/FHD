@@ -20,22 +20,23 @@ IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=fil
 ;gal_lat_weights=fltarr(dimension,elements) & gal_lat_weights[i_use]=(1./(Abs(gb_vals)>5))
 
 freq_use=where((*obs.baseline_info).freq_use,nf_use)
-IF Tag_exist(obs,'fbin_i') THEN f_bin=obs.fbin_i ELSE f_bin=(*obs.baseline_info).fbin_i
+f_bin=(*obs.baseline_info).fbin_i
 fb_use=Uniq(f_bin[freq_use])
 nbin=N_Elements(fb_use)
-IF Tag_exist(obs,'freq') THEN freq_arr=obs.freq ELSE freq_arr=(*obs.baseline_info).freq
-IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
+freq_arr=(*obs.baseline_info).freq
+alpha=obs.alpha
 freq_norm=freq_arr^(-alpha)
 ;freq_norm/=Sqrt(Mean(freq_norm^2.))
 freq_norm/=Mean(freq_norm) 
+d_freq=Median(Float(deriv(freq_arr)))
 
 freq_norm=freq_norm[freq_use[fb_use]]
 
-freq_arr=freq_arr[freq_use[fb_use]]/1E6
+freq_arr_use=freq_arr[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
-model_arr=globalskymodel_read(freq_arr,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra) ;maps should be in Kelvin
+model_arr=globalskymodel_read(freq_arr_use,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra) ;maps should be in Kelvin
 
 IF N_Elements(model_arr) GT 1 THEN BEGIN
     model=fltarr(dimension,elements)
@@ -44,8 +45,8 @@ IF N_Elements(model_arr) GT 1 THEN BEGIN
 ENDIF ELSE model=*model_arr[0]
 Ptr_free,model_arr
 c_light=299792458.
-kb=1.38065E3 ;actually 1.38065*10^-23 / 10^-26 (10^-26 from definition of Jy) 
-conv_to_Jy=2.*kb*(obs.freq_center/c_light)^2.
+kb=1.38065E-3 ;actually 1.38065*10^-23 / 10^-26 (10^-26 from definition of Jy) 
+conv_to_Jy=2.*kb*d_freq*(obs.freq_center/c_light)^2.
 model*=conv_to_Jy
 
 edge_match,model
@@ -55,18 +56,16 @@ Jdate=obs.Jd0
 ;beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
 ;beam_area=2.*!Pi*beam_width^2. ;area under a 2D gaussian with sigma_x=sigma_y=beam_width
 ;print,'beam area used in galaxy model: ',beam_area
+
 Eq2Hor,ra_arr[valid_i],dec_arr[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
 alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
-;pix_area=(obs.degpix*!DtoR)^2.*weight_invert(Sin(alt_arr*!DtoR))
 horizon_proj=Sin(alt_arr*!DtoR) ;pixel area relative to center
 pix_area_inv=horizon_proj/(obs.degpix*!DtoR)^2.
 antialias_filter=Sqrt(Hanning(dimension,elements))
 antialias_filter/=Mean(antialias_filter[valid_i])
 model_use=model
-;model_use*=Sin(alt_arr*!DtoR)/(obs.degpix*!DtoR)^2.
 model_use*=pix_area_inv
 IF Keyword_Set(antialias) THEN model_use*=antialias_filter
-;model_use*=(dimension*degpix*!DtoR)^2.*beam_area ;flux unit conversion
 gal_model_img=model_use
 
 gal_model_stks=Ptrarr(4,/allocate)
@@ -77,7 +76,6 @@ gal_model_instr=Stokes_cnv(gal_model_stks,jones,/inverse,_Extra=extra)
 gal_model_uv=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     model_uv=fft_shift(FFT(fft_shift(*gal_model_instr[pol_i]),/inverse))
-;    model_uv/=dimension^2. ;FFT normalization   
     *gal_model_uv[pol_i]=model_uv
 ENDFOR
   
