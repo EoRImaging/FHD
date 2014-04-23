@@ -80,6 +80,7 @@ case version of
    end
    'apb_make_EoR1_hpx_list': begin
       undefine,restrict_hpx_inds
+   end
    'nb_firstpass_cablefit_no90': begin
       force_no_data=1
       allow_sidelobe_cal_sources=0  ;made before subtracting sidelobes
