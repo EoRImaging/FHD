@@ -77,6 +77,7 @@ case version of
    end
    'apb_test_2s_2': begin
       uvfits_subversion=3
+      restrict_hpx_inds='EoR1_high_healpix_inds.idlsave'
    end
    'apb_make_EoR1_hpx_list': begin
       undefine,restrict_hpx_inds
