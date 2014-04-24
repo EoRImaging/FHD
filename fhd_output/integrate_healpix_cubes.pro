@@ -128,8 +128,8 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       pixels_use = temporary(hpx_inds)
       if this_nobs eq 1 then begin
         obs_arr_use = obs
-        undefine_fhd, obs
         frequencies_use = (*obs.baseline_info).freq
+        undefine_fhd, obs
       endif else begin
         obs_arr_use = obs_arr
         undefine_fhd, obs_arr
