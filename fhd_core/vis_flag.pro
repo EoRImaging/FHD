@@ -35,6 +35,7 @@ tile_B=b_info.tile_B
 freq=b_info.freq
 n_tiles_use=Max(tile_A)>Max(tile_B)
 tile_names=b_info.tile_names
+n_baselines=N_Elements(tile_A)
 
 uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(freq)
 cut_baselines_i=where((uv_dist LT min_baseline) OR (uv_dist GT max_baseline),n_baselines_cut)
@@ -116,7 +117,7 @@ ENDIF
 IF Tag_exist(b_info,'time_use') THEN time_use=b_info.time_use ELSE time_use=Fltarr(N_Elements(tile_A))+1
 nt=N_Elements(time_use)
 bin_offset=b_info.bin_offset
-bin_offset=[bin_offset,nt]
+bin_offset=[bin_offset,n_baselines]
 time_bin=Lonarr(n_baselines)
 FOR ti=0L,nt-1 DO time_bin[bin_offset[ti]:bin_offset[ti+1]-1]=ti
 
