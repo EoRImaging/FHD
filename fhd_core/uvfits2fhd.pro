@@ -65,7 +65,7 @@ IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the
 ;    IF !GPU.mode NE 1 THEN GPU_enable=0
 ;ENDIF
 
-print,'Deconvolving: ',file_path_vis
+print,'Processing: ',file_path_vis
 print,systime()
 print,'Output file_path:',file_path_fhd
 ext='.uvfits'

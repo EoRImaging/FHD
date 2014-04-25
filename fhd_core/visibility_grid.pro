@@ -164,7 +164,7 @@ bin_i=where(bin_n,n_bin_use)
 ind_ref=indgen(max(bin_n))
 n_vis=Float(Total(bin_n))
 FOR fi=0L,n_f_use-1 DO n_vis_arr[fi_use[fi]]=Total(Long(xmin[fi,*] GT 0))
-IF Tag_exist(obs,'nf_vis') THEN obs.nf_vis=n_vis_arr
+obs.nf_vis=n_vis_arr
 
 ;IF Keyword_Set(grid_uniform_weight) THEN n_vis=n_bin_use
 

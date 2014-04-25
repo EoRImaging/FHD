@@ -29,6 +29,7 @@ psf_resolution=(Size(psf_base,/dimension))[2]
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 n_frequencies=N_Elements(frequency_array)
+n_baselines=N_Elements(kx_arr)
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
@@ -60,11 +61,24 @@ IF n_dist_flag GT 0 THEN BEGIN
 ENDIF
 
 freq_cut_i=where(b_info.freq_use EQ 0,n_freq_cut)
-IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut_i,*]=-1
+IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut_i,*]=0
 tile_cut_i=where(b_info.tile_use EQ 0,n_tile_cut)
 IF n_tile_cut GT 0 THEN BEGIN
     bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
-    IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,bi_cut]=-1
+    IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,bi_cut]=0
+ENDIF
+
+IF Tag_exist(b_info,'time_use') THEN BEGIN
+    time_use=b_info.time_use
+    nt=N_Elements(time_use)
+    time_cut_i=where(time_use EQ 0,n_time_cut)
+    bin_offset=b_info.bin_offset
+    time_bin=Lonarr(n_baselines)+(nt-1)
+    FOR ti=0L,nt-2 DO time_bin[bin_offset[ti]:bin_offset[ti+1]-1]=ti
+    FOR ti=0L,n_time_cut-1 DO BEGIN
+        ti_cut=where(time_bin EQ time_cut_i[ti],n_ti_cut)
+        IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,ti_cut]=0
+    ENDFOR
 ENDIF
 
 n_flag_dim=size(*flag_ptr[0],/n_dimension)

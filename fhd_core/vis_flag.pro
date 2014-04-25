@@ -31,7 +31,7 @@ IF n_pol GT 1 THEN data_abs=SQRT(data_abs^2.+Abs(*vis_arr[1])^2.)
 
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
-IF Tag_exist(obs,'freq') THEN freq=obs.freq ELSE freq=(*obs.baseline_info).freq
+freq=(*obs.baseline_info).freq
 n_tiles_use=Max(tile_A)>Max(tile_B)
 tile_names=(*obs.baseline_info).tile_names
 

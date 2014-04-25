@@ -41,27 +41,8 @@ IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
     ENDIF
 ENDIF ELSE model_flag=1
 
-IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN BEGIN
-    bin_start=(*obs.baseline_info).bin_offset
-    nt=N_Elements(bin_start)
-    nb=(size(*flag_arr[0],/dimension))[1]
-    bin_end=fltarr(nt)
-    bin_end[0:nt-2]=bin_start[1:nt-1]-1
-    bin_end[nt-1]=nb-1
-    bin_i=lonarr(nb)-1
-    nt2=Floor(nt/2)
-    FOR t_i=0,2*nt2-1 DO bin_i[bin_start[t_i]:bin_end[t_i]]=t_i
-    bi_n=findgen(nb)
-    even_bi_use=where(bin_i mod 2 EQ 0)
-    odd_bi_use=where(bin_i mod 2 EQ 1)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        flag_arr1=fltarr(size(*flag_arr[pol_i],/dimension))
-        IF Keyword_Set(even_only) THEN flag_arr1[*,even_bi_use]=(*flag_arr[pol_i])[*,even_bi_use]
-        IF Keyword_Set(odd_only) THEN flag_arr1[*,odd_bi_use]=(*flag_arr[pol_i])[*,odd_bi_use]
-        *flag_arr[pol_i]*=flag_arr1
-    ENDFOR
-ENDIF 
-IF n_pol GT 1 THEN flag_test=Total(*flag_arr[1]>*flag_arr[0]>0,1) ELSE flag_test=Total(*flag_arr[0]>0,1)
+IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN flag_arr_use=split_vis_flags(obs,flag_arr,even_only=even_only,odd_only=odd_only,/preserve_flags)
+IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
 bi_use=where(flag_test)
 
 IF N_Elements(n_avg) EQ 0 THEN BEGIN
@@ -76,7 +57,7 @@ IF Keyword_Set(source_list) OR Keyword_Set(model_uv_arr) THEN model_flag=1; ELSE
 IF Keyword_Set(residual_flag) THEN model_flag=0
 IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
     IF model_flag THEN BEGIN
-       vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,$
+       vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr_use,model_uv_arr=model_uv_arr,$
             file_path_fhd=file_path_fhd,timing=t_model,silent=silent,_Extra=extra)
        IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
     ENDIF ELSE vis_model_arr=Ptrarr(n_pol)
@@ -111,16 +92,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         variance_holo=1 ;initialize
         weights_holo=1 ;initialize
         IF nf_use EQ 0 THEN n_vis=0 ELSE $
-            dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
+            dirty_UV=visibility_grid(vis_ptr,flag_arr_use[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
                 polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
                 model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
 ;        IF nf_use EQ 0 THEN n_vis=0 ELSE IF Keyword_Set(inds_patch) THEN $
-;            dirty_UV=visibility_patch_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
+;            dirty_UV=visibility_patch_grid(vis_ptr,flag_arr_use[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
 ;                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
 ;                model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return,inds_patch=inds_patch,$
 ;                obs_patch=obs_patch,psf_patch=psf_patch,rephase_vis_flag=rephase_vis_flag,_Extra=extra) $
 ;        ELSE $
-;            dirty_UV=visibility_grid(vis_ptr,flag_arr[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
+;            dirty_UV=visibility_grid(vis_ptr,flag_arr_use[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
 ;                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
 ;                model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
         IF n_vis EQ 0 THEN BEGIN
@@ -158,8 +139,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR  
     IF ~Keyword_Set(preserve_visibilities) THEN ptr_free,vis_ptr,model_ptr
 ENDFOR
-obs.n_vis=n_vis_use
 obs_out.n_vis=n_vis_use
+IF ~Arg_present(obs_out) THEN  obs.n_vis=n_vis_use
     
 IF ~Keyword_Set(silent) THEN print,"Gridding timing: ",strn(t_grid)
 timing=Systime(1)-t0
