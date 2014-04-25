@@ -42,7 +42,7 @@ IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32?
-IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize)+1 $
+IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize) $
     ELSE IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) 
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
