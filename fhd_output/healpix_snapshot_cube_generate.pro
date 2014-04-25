@@ -64,47 +64,25 @@ n_hpx=N_Elements(hpx_inds)
 IF N_Elements(flag_arr) LT n_pol THEN flag_arr_use=getvar_savefile(flags_filepath,'flag_arr') ELSE flag_arr_use=Pointer_copy(flag_arr)
 flags_use=Ptrarr(n_pol,/allocate)
 
-bin_start=(*obs_out.baseline_info).bin_offset
-nt=N_Elements(bin_start)
-nb=(size(*flag_arr_use[0],/dimension))[1]
-bin_end=fltarr(nt)
-bin_end[0:nt-2]=bin_start[1:nt-1]-1
-bin_end[nt-1]=nb-1
-bin_i=lonarr(nb)-1
-nt2=Floor(nt/2)
-FOR t_i=0,2*nt2-1 DO bin_i[bin_start[t_i]:bin_end[t_i]]=t_i
-bi_n=findgen(nb)
+IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
+IF N_Elements(*vis_arr[0]) EQ 0 THEN FOR pol_i=0,n_pol-1 DO vis_arr[pol_i]=$
+    getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
 
 IF Keyword_Set(split_ps_export) THEN BEGIN
     n_iter=2
-    bi_use=Ptrarr(n_iter,/allocate)
-    *bi_use[0]=where(bin_i mod 2 EQ 0,n_even)
-    *bi_use[1]=where(bin_i mod 2 EQ 1,n_odd)
-    IF n_even LT n_odd THEN *bi_use[1]=(*bi_use[1])[0:n_even-1]
-    IF n_odd LT n_even THEN *bi_use[0]=(*bi_use[0])[0:n_odd-1]
-    
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        flag_use0=(*flag_arr_use[pol_i])[*,*bi_use[0]]<(*flag_arr_use[pol_i])[*,*bi_use[1]]
-        *flag_arr_use[pol_i]*=0
-        (*flag_arr_use[pol_i])[*,*bi_use[0]]=flag_use0
-        (*flag_arr_use[pol_i])[*,*bi_use[1]]=flag_use0
-        flag_use0=0 ;free memory
-    ENDFOR
+    flag_arr_use=split_vis_flags(obs_out,flag_arr_use,bi_use=bi_use)
+    vis_noise_calc,obs_out,vis_arr,flag_arr_use,bi_use=bi_use
     filepath_cube=file_path_fhd+['_even_cube.sav','_odd_cube.sav']
 ENDIF ELSE BEGIN
     n_iter=1
     bi_use=Ptrarr(n_iter,/allocate)
     *bi_use[0]=lindgen(nb)
+    vis_noise_calc,obs_out,vis_arr,flag_arr_use
     filepath_cube=file_path_fhd+'_cube.sav'
 ENDELSE
 
-IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
-IF N_Elements(*vis_arr[0]) EQ 0 THEN FOR pol_i=0,n_pol-1 DO vis_arr[pol_i]=$
-    getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
-
 residual_flag=obs_out.residual
 model_flag=0
-vis_noise_calc,obs_out,vis_arr,flag_arr_use
 
 IF Min(Ptr_valid(vis_model_ptr)) THEN IF N_Elements(*vis_model_ptr[0]) GT 0 THEN model_flag=1
 IF residual_flag EQ 0 THEN IF model_flag EQ 0 THEN BEGIN
@@ -118,6 +96,8 @@ IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
 
 t_hpx=0.
 t_split=0.
+obs_out_ref=obs_out
+obs_in_ref=obs_in
 FOR iter=0,n_iter-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         flag_arr1=fltarr(size(*flag_arr_use[pol_i],/dimension))

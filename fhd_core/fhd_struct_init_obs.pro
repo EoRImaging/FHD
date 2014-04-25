@@ -2,7 +2,7 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
-    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_offset=time_offset,spectral_index=spectral_index,$
+    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
     psf_dim=psf_dim,antenna_size=antenna_size,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
@@ -26,8 +26,20 @@ time_bin=fltarr(2,nb) & time_bin[0,*]=bin_start & time_bin[1,*]=bin_end
 bin_width=fltarr(nb)
 bin_width[0]=b0i[0]+1
 FOR i=1,nb-1 DO bin_width[i]=b0i[i]-b0i[i-1]
-bin_width_c=total(bin_width,/cumulative)
 bin_offset=fltarr(nb) & bin_offset[1:*]=total(bin_width[0:nb-2],/cumulative)    
+time_use=Fltarr(nb)+1
+FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
+    ;time cut is specified in seconds to cut (rounded up to next time integration point). 
+    ;Specify negative time_cut to cut time off the end. Specify a vector to cut at both the start and end
+    IF time_cut[ti] LT 0 THEN BEGIN
+        ti_start=(nb-Ceil(Abs(time_cut[ti])/time_step)-1)>0
+        ti_end=nb-1
+    ENDIF ELSE BEGIN
+        ti_start=0
+        ti_end=(Ceil(Abs(time_cut[ti])/time_step))<(nb-1)
+    ENDELSE
+    time_use[ti_start:ti_end]=0
+ENDFOR
 
 frequency_array=(findgen(hdr.n_freq)-hdr.freq_ref_i)*hdr.freq_width+hdr.freq_ref
 IF N_Elements(nfreq_avg) EQ 0 THEN BEGIN
@@ -51,7 +63,7 @@ IF Keyword_Set(rotate_uv) THEN BEGIN
     vv1=(vv=params.vv)
     rotation_arr=fltarr(nb)
     FOR i=0,nb-1 DO BEGIN
-        zenpos2,Jdate[i]-time_offset,zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
+        zenpos2,Jdate[i],zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
         rotation_arr[i]=angle_difference(zendec,zenra,zendec2,zenra2,/degree);/2.
         uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
         vv1[bin_start[i]:bin_end[i]]=vv[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)+uu[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
@@ -119,7 +131,7 @@ tile_flag_i=where(tile_use1 EQ 0,n_flag)
 IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
-    freq_use:freq_use,tile_use:tile_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
+    freq_use:freq_use,tile_use:tile_use,time_use:time_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
 struct={code_version:String(code_version),instrument:String(instrument),antenna_size:Float(antenna_size),obsname:String(obsname),$
     dimension:Float(dimension),elements:Float(elements),$
     kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,obsra:meta.obsra,obsdec:meta.obsdec,$
