@@ -73,8 +73,9 @@ IF Tag_exist(b_info,'time_use') THEN BEGIN
     nt=N_Elements(time_use)
     time_cut_i=where(time_use EQ 0,n_time_cut)
     bin_offset=b_info.bin_offset
-    time_bin=Lonarr(n_baselines)+(nt-1)
-    FOR ti=0L,nt-2 DO time_bin[bin_offset[ti]:bin_offset[ti+1]-1]=ti
+    bin_offset=[bin_offset,nt]
+    time_bin=Lonarr(n_baselines)
+    FOR ti=0L,nt-1 DO time_bin[bin_offset[ti]:bin_offset[ti+1]-1]=ti
     FOR ti=0L,n_time_cut-1 DO BEGIN
         ti_cut=where(time_bin EQ time_cut_i[ti],n_ti_cut)
         IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,ti_cut]=0
