@@ -18,7 +18,7 @@ vis_filepath=file_path_fhd+'_vis_'
 IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
 IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
 IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
-IF N_Elements(flag_ptr) EQ 0 THEN flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
+IF N_Elements(flag_arr) EQ 0 THEN flag_arr=getvar_savefile(flags_filepath,'flag_arr')
 
 n_freq=obs.n_freq
 n_pol=obs.n_pol
@@ -41,7 +41,8 @@ IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
     ENDIF
 ENDIF ELSE model_flag=1
 
-IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN flag_arr_use=split_vis_flags(obs,flag_arr,even_only=even_only,odd_only=odd_only,/preserve_flags)
+IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN flag_arr_use=split_vis_flags(obs,flag_arr,even_only=even_only,odd_only=odd_only,/preserve_flags) $
+    ELSE flag_arr_use=pointer_copy(flag_arr)
 IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
 bi_use=where(flag_test)
 

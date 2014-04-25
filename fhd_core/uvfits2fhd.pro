@@ -169,7 +169,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_ptr=vis_model_ptr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
-        print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
+        IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
         vis_flag_update,flag_arr,obs,psf,params
     ENDIF
@@ -214,12 +214,19 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ENDELSE
     
     vis_noise_calc,obs,vis_arr,flag_arr
-    tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
-    freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
-    print,String(format='(A," frequency channels used and ",A," channels flagged")',$
-        Strn(n_freq_use),Strn(n_freq_cut))
-    print,String(format='(A," tiles used and ",A," tiles flagged")',$
-        Strn(n_tile_use),Strn(n_tile_cut))
+    IF ~Keyword_Set(silent) THEN BEGIN
+        tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
+        freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
+        print,String(format='(A," frequency channels used and ",A," channels flagged")',$
+            Strn(n_freq_use),Strn(n_freq_cut))
+        print,String(format='(A," tiles used and ",A," tiles flagged")',$
+            Strn(n_tile_use),Strn(n_tile_cut))
+        IF Tag_exist(*obs.baseline_info,'time_use') THEN BEGIN
+            time_use_i=where((*obs.baseline_info).time_use,n_time_use,ncomplement=n_time_cut)
+            print,String(format='(A," time steps used and ",A," time steps flagged")',$
+                Strn(n_time_use),Strn(n_time_cut))
+        ENDIF
+    ENDIF
     
     SAVE,obs,filename=obs_filepath,/compress
     SAVE,params,filename=params_filepath,/compress
@@ -283,7 +290,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 weights_grid=1
             ENDIF
         ENDFOR
-        print,'Gridding time:',t_grid
+        IF ~Keyword_Set(silent) THEN print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
@@ -328,7 +335,7 @@ undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_ar
 ;print,'Calculating individual tile uv coverage'
 ;mwa_tile_locate,obs=obs,params=params,psf=psf
 timing=Systime(1)-t0
-print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
+IF ~Keyword_Set(silent) THEN print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
 print,''
 !except=except
 END
