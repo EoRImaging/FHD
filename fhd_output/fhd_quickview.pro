@@ -138,6 +138,7 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
             *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
         ENDFOR
     ENDIF
+    source_arr_out=stokes_cnv(source_arr_out,jones_out,beam=beam_base_out,/inverse,_Extra=extra)
 ENDIF ELSE source_flag=0
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
