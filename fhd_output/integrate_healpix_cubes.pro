@@ -98,6 +98,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     endelse
     
     restore, filenames[i]
+    if n_elements(obs) gt 0 then this_nobs=1 else this_nobs = n_elements(obs_arr)
     
     if n_elements(dirty_xx_cube) ne 0 then cube_struct = create_struct('dirty_xx_cube', ptr_new(temporary(dirty_xx_cube)))
     if n_elements(dirty_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
@@ -139,11 +140,18 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       nside_use = nside
       n_avg_use = n_avg
       pixels_use = temporary(hpx_inds)
-      frequencies = (*obs.baseline_info).freq
-      obs_arr = temporary(obs)
+      if this_nobs eq 1 then begin
+        obs_arr_use = obs
+        frequencies_use = (*obs.baseline_info).freq
+        undefine_fhd, obs
+      endif else begin
+        obs_arr_use = obs_arr
+        undefine_fhd, obs_arr
+        frequencies_use = frequencies
+      endelse
       
-      nfile_contrib_pix = intarr(n_elements(pixels_use)) + 1
-      nfile_contrib_freq =  intarr(n_elements(frequencies)) + 1
+      nfile_contrib_pix_use = intarr(n_elements(pixels_use)) + 1
+      nfile_contrib_freq_use =  intarr(n_elements(frequencies_use)) + 1
       int_struct = temporary(cube_struct)
     endif else begin
       if nside ne nside_use then begin
@@ -168,9 +176,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
           if count_pix_match ne n_elements(pixels_use) then begin
             npix_ch = 1
             pixels_use = pixels_use[subpix]
-            nfile_contrib_pix = nfile_contrib_pix[subpix]
+            nfile_contrib_pix_use = nfile_contrib_pix_use[subpix]  
           endif else npix_ch = 0
-          nfile_contrib_pix += 1
+          if this_nobs eq 1 then nfile_contrib_pix_use += 1 else nfile_contrib_pix_use += nfile_contrib_pix[subhpx]
           undefine, hpx_inds
         endif else begin
           combined_pix = [pixels_use, hpx_inds]
@@ -184,55 +192,61 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
             npix_ch = 1
             pixels_use = temporary(combined_pix)
             temp = intarr(n_elements(pixels_use))
-            temp[subcmbpix] = nfile_contrib_pix
-            nfile_contrib_pix = temporary(temp)
+            temp[subcmbpix] = nfile_contrib_pix_use
+            nfile_contrib_pix_use = temporary(temp)
           endif else npix_ch = 0
-          nfile_contrib_pix[subcmbhpx] += 1
+          if this_nobs eq 1 then nfile_contrib_pix_use[subcmbhpx] += 1 else nfile_contrib_pix_use[subcmbhpx] += nfile_contrib_pix
           undefine, hpx_inds
         endelse
         pix_match = 0
       endelse
       
-      this_freq = (*obs.baseline_info).freq
-      match, frequencies, this_freq, subfreq, subthisf, count = count_freq_match
-      if n_elements(frequencies) eq n_elements(this_freq) and count_freq_match eq n_elements(frequencies) then begin
+      if this_nobs eq 1 then this_freq = (*obs.baseline_info).freq else this_freq = frequencies
+      match, frequencies_use, this_freq, subfreq, subthisf, count = count_freq_match
+      if n_elements(frequencies_use) eq n_elements(this_freq) and count_freq_match eq n_elements(frequencies_use) then begin
         undefine, this_freq
         freq_match = 1
       endif else begin
         if keyword_set(discard_unmatched_freq) then begin
-          if count_freq_match lt n_elements(frequencies)*0.1 then begin
+          if count_freq_match lt n_elements(frequencies_use)*0.1 then begin
             print, 'file ' + filenames[i] + 'has less than 10% of the same frequencies as the other files and discard_unmatched_freq is set. This file will not be included in the integration.'
             continue
           endif
-          if count_freq_match ne n_elements(frequencies) then begin
+          if count_freq_match ne n_elements(frequencies_use) then begin
             nfreq_ch = 1
-            frequencies = frequencies[subfreq]
-            nfile_contrib_freq = nfile_contrib_freq[subfreq]
+            frequencies_use = frequencies_use[subfreq]
+            nfile_contrib_freq_use = nfile_contrib_freq_use[subfreq]
           endif else nfreq_ch = 0
-          nfile_contrib_freq += 1
+          if this_nobs eq 1 then nfile_contrib_freq_use += 1 else nfile_contrib_freq_use += nfile_contrib_freq[subthisf]
           undefine, this_freq
         endif else begin
-          combined_freq = [frequencies, this_freq]
+          combined_freq = [frequencies_use, this_freq]
           combined_freq = combined_freq[sort(combined_freq)]
           combined_freq = combined_freq[uniq(combined_freq)]
           
-          match, frequencies, combined_freq, subfreq, subcmbfreq
+          match, frequencies_use, combined_freq, subfreq, subcmbfreq
           match, this_freq, combined_freq, subthisf, subcmbtf
           
-          if n_elements(combined_freq) ne n_elements(frequencies) then begin
+          if n_elements(combined_freq) ne n_elements(frequencies_use) then begin
             nfreq_ch = 1
-            frequencies = temporary(combined_freq)
+            frequencies_use = temporary(combined_freq)
             temp = intarr(n_elements(pixels_use))
-            temp[subcmbfreq] = nfile_contrib_freq
-            nfile_contrib_freq = temporary(temp)
+            temp[subcmbfreq] = nfile_contrib_freq_use
+            nfile_contrib_freq_use = temporary(temp)
           endif else nfreq_ch = 0
-          nfile_contrib_freq[subcmbfreq] += 1
+          if this_nobs eq 1 then nfile_contrib_freq_use[subcmbfreq] += 1 else nfile_contrib_freq_use[subcmbfreq] += nfile_contrib_pix
           undefine, this_freq
         endelse
         freq_match = 0
       endelse
       
-      obs_arr = [obs_arr, temporary(obs)]
+      if this_nobs eq 1 then begin
+        obs_arr_use = [obs_arr_use, obs]
+        undefine_fhd, obs
+      endif else begin
+        obs_arr_use = [obs_arr_use, obs_arr]
+        undefine_fhd, obs_arr      
+      endelse
       
       for j=0, n_tags(int_struct)-1 do begin
         this_int_cube = *(int_struct.(j))
@@ -251,7 +265,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
               this_int_cube += this_cube[subhpx, *]
             endif else begin
               if npix_ch then begin
-                temp = fltarr(n_elements(pixels_use), n_elements(frequencies)/n_avg)
+                temp = fltarr(n_elements(pixels_use), n_elements(frequencies_use)/n_avg)
                 temp[subcmbpix, *] = this_int_cube
                 this_int_cube = temporary(temp)
               endif
@@ -265,7 +279,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
                 this_int_cube += this_cube[*, sub_thisf]
               endif else begin
                 if nfreq_ch then begin
-                  temp = fltarr(n_elements(pixels_use), n_elements(frequencies))
+                  temp = fltarr(n_elements(pixels_use), n_elements(frequencies_use))
                   temp[*, subcmbfreq] = this_int_cube
                   this_int_cube = temporary(temp)
                 endif
@@ -274,7 +288,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
             endif else begin
               ;; neither match
               if nfreq_ch eq 1 or npix_ch eq 1 then begin
-                temp = fltarr(n_elements(pixels_use), n_elements(frequencies))
+                temp = fltarr(n_elements(pixels_use), n_elements(frequencies_use))
                 inds = rebin(subcmbpix, n_elements(subcmbpix), n_elements(subcmbfreq)) + $
                   n_elements(pixels_use) * rebin(reform(subcmbfreq, 1, n_elements(subcmbpix)), n_elements(subcmbpix), n_elements(subcmbfreq))
                 temp[inds] = this_int_cube
@@ -311,6 +325,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   nside = nside_use
   n_avg = n_avg_use
   hpx_inds = temporary(pixels_use)
+  obs_arr = obs_arr_use
+  undefine_fhd, obs_arr_use
+  frequencies = frequencies_use
   
   if tag_exist(int_struct, 'dirty_xx_cube') then begin
     dirty_xx_cube = *int_struct.dirty_xx_cube
