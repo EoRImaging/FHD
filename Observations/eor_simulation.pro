@@ -1,5 +1,5 @@
 PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,$
+    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, flat_sigma = flat_sigma, no_distrib = no_distrib, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
     silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
@@ -92,7 +92,8 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
     ;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
     fhd_sim,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
       beam_recalculate=beam_recalculate, /silent,max_sources=max_sources, $
-      eor_sim=eor_sim, include_catalog_sources = include_catalog_sources, catalog_file_path=catalog_file_path,source_list=source_list, $
+      eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+      include_catalog_sources = include_catalog_sources, catalog_file_path=catalog_file_path,source_list=source_list, $
       model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,$
       export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
       complex=complex_beam,double=double_precison_beam,precess=precess,error=error,weights_grid=weights_grid,$
