@@ -31,9 +31,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       filelist = filenames
       
       ; Read in filenames
-      nfiles=file_lines(filename_path)
+      nfiles=file_lines(filelist)
       filenames=strarr(nfiles)
-      OPENR, lun, filename_path, /GET_LUN
+      OPENR, lun, filelist, /GET_LUN
       readf, lun, filenames
       close, lun
       
@@ -141,13 +141,11 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       n_avg_use = n_avg
       pixels_use = temporary(hpx_inds)
       if this_nobs eq 1 then begin
-        obs_arr_use = obs
         frequencies_use = (*obs.baseline_info).freq
-        undefine_fhd, obs
+        obs_arr_use = temporary(obs)
       endif else begin
-        obs_arr_use = obs_arr
-        undefine_fhd, obs_arr
         frequencies_use = frequencies
+        obs_arr_use = temporary(obs_arr)
       endelse
       
       nfile_contrib_pix_use = intarr(n_elements(pixels_use)) + 1
@@ -241,11 +239,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       endelse
       
       if this_nobs eq 1 then begin
-        obs_arr_use = [obs_arr_use, obs]
-        undefine_fhd, obs
+        obs_arr_use = [temporary(obs_arr_use), temporary(obs)]
       endif else begin
-        obs_arr_use = [obs_arr_use, obs_arr]
-        undefine_fhd, obs_arr      
+        obs_arr_use = [temporary(obs_arr_use), temporary(obs_arr)]
       endelse
       
       for j=0, n_tags(int_struct)-1 do begin
