@@ -10,20 +10,34 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       ; Normal mode with range of obsids
       starting_index=UINT(args[1])
       ending_index=UINT(args[2])
- 
-      print,filename_path 
+      
+      print,filename_path
       filenames= FILE_SEARCH(filename_path)
-      filenames = filenames[starting_index:ending_index]  
+      filenames = filenames[starting_index:ending_index]
     endif else begin
       ; Otherwise the filename_path is a file with list of files to integrate
       save_file=args[1] ; this needs to be set in PS_list_job.sh
       ; Read in filenames
       nfiles=file_lines(filename_path)
       filenames=strarr(nfiles)
-      OPENR, lun, filename_path, /GET_LUN 
+      OPENR, lun, filename_path, /GET_LUN
       readf, lun, filenames
       close, lun
     endelse
+  endif else if n_elements(filenames) eq 1 then begin
+    name=cgrootname(filenames,Extension=ext)
+    if ext ne 'sav' and ext ne 'idlsave' then begin
+      ; this is a file with a list of files to run
+      filelist = filenames
+      
+      ; Read in filenames
+      nfiles=file_lines(filename_path)
+      filenames=strarr(nfiles)
+      OPENR, lun, filename_path, /GET_LUN
+      readf, lun, filenames
+      close, lun
+      
+    endif
   endif
   
   nfiles = n_elements(filenames)
