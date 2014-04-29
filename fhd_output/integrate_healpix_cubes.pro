@@ -321,8 +321,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   nside = nside_use
   n_avg = n_avg_use
   hpx_inds = temporary(pixels_use)
-  obs_arr = obs_arr_use
-  undefine_fhd, obs_arr_use
+  obs_arr = temporary(obs_arr_use)
   frequencies = frequencies_use
   
   if tag_exist(int_struct, 'dirty_xx_cube') then begin
