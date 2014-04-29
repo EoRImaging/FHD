@@ -106,6 +106,9 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, 
   ;; convert to Jy
   for i=0, n_kz-1 do temp[*,*,i] = temp[*,*,i]/conv_factor[i]
   
+  ;; 1st frequency is typically flagged. if flag_sigma and no_distrib is set, cube is only non-zero in 1st freq so shift to put power in next frequency
+  if keyword_set(flat_sigma) and keyword_set(no_distrib) then temp = shift(temporary(temp), [0,0,1])
+  
   print, 'sum(uvf signal^2)*z_delta:', total(abs(temp)^2d)*z_mpc_delta
   
   return, temp
