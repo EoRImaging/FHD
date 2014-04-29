@@ -24,6 +24,20 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       readf, lun, filenames
       close, lun
     endelse
+  endif else if n_elements(filenames) eq 1 then begin
+    name=cgrootname(filenames,Extension=ext)
+    if ext ne 'sav' and ext ne 'idlsave' then begin
+      ; this is a file with a list of files to run
+      filelist = filenames
+      
+      ; Read in filenames
+      nfiles=file_lines(filelist)
+      filenames=strarr(nfiles)
+      OPENR, lun, filelist, /GET_LUN
+      readf, lun, filenames
+      close, lun
+      
+    endif
   endif
   
   nfiles = n_elements(filenames)
@@ -127,13 +141,11 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       n_avg_use = n_avg
       pixels_use = temporary(hpx_inds)
       if this_nobs eq 1 then begin
-        obs_arr_use = obs
         frequencies_use = (*obs.baseline_info).freq
-        undefine_fhd, obs
+        obs_arr_use = temporary(obs)
       endif else begin
-        obs_arr_use = obs_arr
-        undefine_fhd, obs_arr
         frequencies_use = frequencies
+        obs_arr_use = temporary(obs_arr)
       endelse
       
       nfile_contrib_pix_use = intarr(n_elements(pixels_use)) + 1
@@ -227,11 +239,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       endelse
       
       if this_nobs eq 1 then begin
-        obs_arr_use = [obs_arr_use, obs]
-        undefine_fhd, obs
+        obs_arr_use = [temporary(obs_arr_use), temporary(obs)]
       endif else begin
-        obs_arr_use = [obs_arr_use, obs_arr]
-        undefine_fhd, obs_arr      
+        obs_arr_use = [temporary(obs_arr_use), temporary(obs_arr)]
       endelse
       
       for j=0, n_tags(int_struct)-1 do begin
@@ -311,8 +321,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   nside = nside_use
   n_avg = n_avg_use
   hpx_inds = temporary(pixels_use)
-  obs_arr = obs_arr_use
-  undefine_fhd, obs_arr_use
+  obs_arr = temporary(obs_arr_use)
   frequencies = frequencies_use
   
   if tag_exist(int_struct, 'dirty_xx_cube') then begin

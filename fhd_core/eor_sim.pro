@@ -1,6 +1,6 @@
 
 
-function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
+function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, no_distrib = no_distrib
 
   if n_elements(seed) eq 0 then seed = systime(1)
   
@@ -54,7 +54,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   log_binsize = log_diff[0]
   
   if n_elements(flat_sigma) ne 0 then begin
-    power_3d = dblarr(n_kx, n_ky, n_kz) + flat_sigma
+    power_3d = dblarr(n_kx, n_ky, n_kz) + max(power)
     
   endif else begin
   
@@ -67,8 +67,8 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
     
     power_3d = reform(temporary(result), n_kx, n_ky, n_kz)
     
-    mu = rebin(reform(abs(kz_mpc), 1, 1, n_kz), n_kx, n_ky, n_kz, /sample) / temporary(k_arr)
-    power_3d = power_3d * (1 + 2 * mu^2. + mu^4.)
+    ;mu = rebin(reform(abs(kz_mpc), 1, 1, n_kz), n_kx, n_ky, n_kz, /sample) / temporary(k_arr)
+    ;power_3d = power_3d * (1 + 2 * mu^2. + mu^4.)
     
     undefine, mu
   endelse
@@ -80,9 +80,11 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   ;; take square root & divide by sqrt(2) to get signal amp expectation value in mK*Mpc^3
   signal_amp_exp = sqrt(temporary(signal2)/2.)
   
-  signal_real = randomn(seed, n_kx, n_ky, n_kz) * signal_amp_exp
-  signal_imaginary = randomn(seed, n_kx, n_ky, n_kz) * temporary(signal_amp_exp)
-  signal = temporary(signal_real) + complex(0,1) * temporary(signal_imaginary)
+  if keyword_set(no_distrib) then signal = temporary(signal_amp_exp) else begin
+    signal_real = randomn(seed, n_kx, n_ky, n_kz) * signal_amp_exp
+    signal_imaginary = randomn(seed, n_kx, n_ky, n_kz) * temporary(signal_amp_exp)
+    signal = temporary(signal_real) + complex(0,1) * temporary(signal_imaginary)
+  endelse
   
   ;signal_amp = sqrt(temporary(power_3d))
   ;signal_phase = randomu(seed, n_kx, n_ky, n_kz) * 2. * !pi
@@ -103,6 +105,9 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   
   ;; convert to Jy
   for i=0, n_kz-1 do temp[*,*,i] = temp[*,*,i]/conv_factor[i]
+  
+  ;; 1st frequency is typically flagged. if flag_sigma and no_distrib is set, cube is only non-zero in 1st freq so shift to put power in next frequency
+  if keyword_set(flat_sigma) and keyword_set(no_distrib) then temp = shift(temporary(temp), [0,0,1])
   
   print, 'sum(uvf signal^2)*z_delta:', total(abs(temp)^2d)*z_mpc_delta
   

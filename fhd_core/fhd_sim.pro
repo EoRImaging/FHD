@@ -4,7 +4,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     n_pol=n_pol,silent=silent,$
     healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,error=error, $
-    eor_sim=eor_sim, include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
+    eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+    include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube, $
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
     snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
@@ -120,7 +121,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         delta_uv=obs.kpix
         uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
         time0 = systime(1)
-        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
+        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib)
         time1 = systime(1)
         print, 'time for eor modelling: ' + number_formatter(time1-time0)
         if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
@@ -176,6 +177,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         
         *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
       endfor
+      if max(*this_model_uv[0]) lt 1 and max(*this_model_uv[1]) lt 1 then continue
       
       this_model_ptr=vis_source_model(0,obs,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
         timing=model_timing,silent=silent,error=error,_Extra=extra)
