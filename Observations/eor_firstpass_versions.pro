@@ -87,6 +87,12 @@ case version of
       allow_sidelobe_cal_sources=0  ;made before subtracting sidelobes
       ;vis_cal_polyfit.pro: line 86 changed to cable_cut_i=where(cable_len EQ 90,n_cable_cut)
    end
+   'apb_test_small_kpix_1': begin
+      ps_kbinsize=1.5
+   end
+   'apb_test_small_kpix_2': begin
+      ps_kbinsize=0.75
+   end
    else: print,'Default parameters'
 endcase
    
