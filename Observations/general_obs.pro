@@ -17,6 +17,12 @@ IF N_Elements(error_method) EQ 0 THEN error_method=0
 ON_ERROR,error_method
 
 ;Set which procedures are to be run
+IF Keyword_Set(firstpass) THEN BEGIN
+    return_cal_visibilities=1
+    mapfn_recalculate=0
+    deconvolve=0
+    IF N_Elements(export_images) EQ 0 THEN export_images=1
+ENDIF
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=0
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
@@ -45,12 +51,6 @@ IF N_Elements(calibration_catalog_file_path) EQ 0 THEN calibration_catalog_file_
 n_files=N_Elements(vis_file_list)
 
 ;Set which files to restore or recalculate (if the file is not found and needed, it will be recalculated
-IF Keyword_Set(firstpass) THEN BEGIN
-    return_cal_visibilities=1
-    mapfn_recalculate=0
-    deconvolve=0
-    export_images=1
-ENDIF
 IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
