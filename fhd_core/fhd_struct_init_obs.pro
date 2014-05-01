@@ -118,7 +118,8 @@ IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) EL
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 noise_arr=Ptr_new()
 
-meta=fhd_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
+meta=fhd_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,$
+    instrument=instrument,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
 IF N_Elements(meta_data) EQ 0 THEN meta_data=Ptr_new() ELSE meta_data=Ptr_new(meta_data)
 IF N_Elements(meta_hdr) EQ 0 THEN meta_hdr=Ptr_new() ELSE meta_hdr=Ptr_new(meta_hdr)
 

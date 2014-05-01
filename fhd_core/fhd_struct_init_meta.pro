@@ -1,9 +1,10 @@
 FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,$
     zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
-    obsx=obsx,obsy=obsy,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
+    obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
     meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra
 
+IF N_Elements(instrument) EQ 0 THEN instrument=''
 IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees
 IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees
 IF N_Elements(alt) EQ 0 THEN alt=377.83 & alt=Float(alt);altitude (meters)
@@ -47,11 +48,19 @@ IF file_test(metafits_path) THEN BEGIN
     phasera=sxpar(meta_hdr,'RAPHASE')
     phasedec=sxpar(meta_hdr,'DECPHASE')
     
-    LST=sxpar(meta_hdr,'LST')
+;    LST=sxpar(meta_hdr,'LST')
 ;    HA=sxpar(meta_hdr,'HA')
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
     date_obs=sxpar(meta_hdr,'DATE-OBS')
     JD0=date_string_to_julian(date_obs)
+    
+    IF instrument EQ 'mwa' THEN BEGIN
+        ;if the MWA, check if the uvfits files were created during a period when there was a one-day offset in the time
+        cotter_date=date_conv(sxpar(meta_hdr,'DATE'))
+        IF (cotter_date LT 2014115.) AND (cotter_date GT 2013115.) THEN JD0+=1.
+    ENDIF
+    ct2lst,LST_hr,lon,0,JD0
+    LST=LST_hr*360./24.
     
     zenra=LST
     zendec=lat
