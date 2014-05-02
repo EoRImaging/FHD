@@ -93,6 +93,17 @@ case version of
    'apb_test_small_kpix_2': begin
       ps_kbinsize=0.75
    end
+   'apb_test_small_kpix_3': begin
+      ps_kbinsize=0.5
+   end
+   'apb_test_dig_gain_fix_1': begin
+      uvfits_version=3
+      uvfits_subversion=1
+      snapshot_healpix_export=0
+   end
+   'apb_test_no_flagging_1': begin
+      flag_visibilities=0
+   end
    else: print,'Default parameters'
 endcase
    
