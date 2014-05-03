@@ -149,7 +149,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,_Extra=extra)
-    vis_flag_update,flag_arr,obs,psf,params
+    vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ;print informational messages
     obs_status,obs
     
@@ -171,7 +171,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
-        vis_flag_update,flag_arr,obs,psf,params
+        vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
     IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     
