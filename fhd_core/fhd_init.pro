@@ -6,7 +6,7 @@ FUNCTION fhd_init,obs,cal,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_use=f
     beam_base=beam_base,beam_correction=beam_correction,independent_fit=independent_fit,deconvolution_filter=deconvolution_filter,$
     beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,$
     reject_pol_sources=reject_pol_sources,filter_background=filter_background,$
-    galaxy_model_fit=galaxy_model_fit,transfer_mapfn=transfer_mapfn,subtract_sidelobe_sources=subtract_sidelobe_sources,$
+    galaxy_model_fit=galaxy_model_fit,transfer_mapfn=transfer_mapfn,subtract_sidelobe_catalog=subtract_sidelobe_catalog,$
     joint_deconvolution_list=joint_deconvolution_list
 
 
@@ -45,9 +45,9 @@ IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF N_Elements(joint_deconvolution_list) LE 1 THEN decon_mode='Single snapshot' ELSE decon_mode='HEALPix integrated'
 IF N_Elements(joint_deconvolution_list) EQ 0 THEN joint_obs=file_basename(file_path_fhd) ELSE joint_obs=file_basename(joint_deconvolution_list)
 IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_natural'
-IF N_Elements(subtract_sidelobe_sources) EQ 0 THEN sidelobe_subtract='' ELSE BEGIN
-    IF size(restrict_hpx_inds,/type) EQ 7 THEN sidelobe_subtract=subtract_sidelobe_sources ELSE BEGIN
-        IF Keyword_Set(subtract_sidelobe_sources) THEN IF N_Elements(cal) GT 0 THEN sidelobe_subtract=cal.catalog_name ELSE BEGIN
+IF N_Elements(subtract_sidelobe_catalog) EQ 0 THEN sidelobe_subtract='' ELSE BEGIN
+    IF size(restrict_hpx_inds,/type) EQ 7 THEN sidelobe_subtract=subtract_sidelobe_catalog ELSE BEGIN
+        IF Keyword_Set(subtract_sidelobe_catalog) THEN IF N_Elements(cal) GT 0 THEN sidelobe_subtract=cal.catalog_name ELSE BEGIN
             IF N_Elements(obs) GT 0 THEN sidelobe_subtract=obs.instrument+'_calibration_source_list' ELSE sidelobe_subtract='' 
         ENDELSE
     ENDELSE
