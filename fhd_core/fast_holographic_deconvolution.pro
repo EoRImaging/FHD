@@ -19,7 +19,8 @@ PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,sou
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
-    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
+    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,$
+    subtract_sidelobe_sources=subtract_sidelobe_sources,_Extra=extra
 ;calibration_model_subtract is passed through the fhd structure
 compile_opt idl2,strictarrsubs  
 
@@ -192,6 +193,7 @@ t4=0 ;Holographic mapping function
 i2=0. 
 t0=Systime(1)
 
+
 converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter>1))>2+1)
 converge_check2=Fltarr(max_iter>2+1)
 
@@ -216,6 +218,23 @@ print,"Initial convergence:",Strn(converge_check[0])
 model_holo_arr=Ptrarr(n_pol,/allocate)
 si=0L
 i0=0L
+IF Keyword_Set(subtract_sidelobe_sources) THEN BEGIN
+    print,'Subtracting source model from the sidelobes'
+    source_arr_sidelobe=generate_source_cal_list(obs,psf,catalog_path=catalog_path,$
+        mask=1-beam_mask,/allow_sidelobe_cal_sources,_Extra=extra)
+    n_sidelobe_src=N_Elements(source_arr_sidelobe)
+    empty_test=(n_sidelobe_src EQ 1) AND (source_arr_sidelobe[0].flux.I EQ 0)
+    IF ~empty_test THEN BEGIN 
+        model_uv_sidelobe=source_dft_model(obs,jones,source_arr_sidelobe,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
+        t3+=t_model
+        
+        FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+        ENDFOR
+    ENDIF
+ENDIF
+
 IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     print,String(format='("Calibration source model subtracted (",A3,"%)")',Strn(calibration_model_subtract*100.,length=3))
     n_cal_src=cal.n_cal_src
