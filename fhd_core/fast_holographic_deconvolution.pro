@@ -19,8 +19,7 @@ PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,sou
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
-    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,$
-    subtract_sidelobe_sources=subtract_sidelobe_sources,_Extra=extra
+    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
 ;calibration_model_subtract is passed through the fhd structure
 compile_opt idl2,strictarrsubs  
 
@@ -45,6 +44,7 @@ calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
 decon_filter=fhd.decon_filter
 galaxy_model_fit=fhd.galaxy_subtract
+subtract_sidelobe_sources=fhd.sidelobe_subtract
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -414,6 +414,7 @@ source_array=Components2Sources(comp_arr,obs,radius=beam_width>0.5,noise_map=noi
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
+IF Keyword_Set(subtract_sidelobe_sources) THEN  FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
 t4_0=Systime(1)
 t3+=t4_0-t3_0
 FOR pol_i=0,n_pol-1 DO *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)

@@ -6,7 +6,8 @@ FUNCTION fhd_init,obs,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_use=freq_
     beam_base=beam_base,beam_correction=beam_correction,independent_fit=independent_fit,deconvolution_filter=deconvolution_filter,$
     beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,$
     reject_pol_sources=reject_pol_sources,filter_background=filter_background,$
-    galaxy_model_fit=galaxy_model_fit,transfer_mapfn=transfer_mapfn,joint_deconvolution_list=joint_deconvolution_list
+    galaxy_model_fit=galaxy_model_fit,transfer_mapfn=transfer_mapfn,subtract_sidelobe_sources=subtract_sidelobe_sources,$
+    joint_deconvolution_list=joint_deconvolution_list
 
 
 IF N_Elements(obs) EQ 0 THEN BEGIN
@@ -44,13 +45,15 @@ IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF N_Elements(joint_deconvolution_list) LE 1 THEN decon_mode='Single snapshot' ELSE decon_mode='HEALPix integrated'
 IF N_Elements(joint_deconvolution_list) EQ 0 THEN joint_obs=file_basename(file_path_fhd) ELSE joint_obs=file_basename(joint_deconvolution_list)
 IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_natural'
+IF N_Elements(subtract_sidelobe_sources) EQ 0 THEN subtract_sidelobe_sources=0
 
 fhd={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
     gain_factor:gain_factor,add_threshold:add_threshold,max_add_sources:max_add_sources,independent_fit:independent_fit,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,smooth_width:smooth_width,$
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
-    cal_subtract:calibration_image_subtract,galaxy_subtract:galaxy_model_fit,$
-    filter_background:filter_background,decon_filter:deconvolution_filter,decon_mode:decon_mode,joint_obs:joint_obs}
+    cal_subtract:calibration_image_subtract,galaxy_subtract:galaxy_model_fit,sidelobe_subtract:subtract_sidelobe_sources,$
+    filter_background:filter_background,decon_filter:deconvolution_filter,decon_mode:decon_mode,$
+    joint_obs:joint_obs}
 
 RETURN,fhd
 END
