@@ -4,7 +4,7 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,we
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    phase_threshold=phase_threshold,grid_uniform_weight=grid_uniform_weight,error=error,_Extra=extra
+    phase_threshold=phase_threshold,error=error,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -166,8 +166,6 @@ n_vis=Float(Total(bin_n))
 FOR fi=0L,n_f_use-1 DO n_vis_arr[fi_use[fi]]=Total(Long(xmin[fi,*] GT 0))
 obs.nf_vis=n_vis_arr
 
-;IF Keyword_Set(grid_uniform_weight) THEN n_vis=n_bin_use
-
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
 CASE 1 OF
@@ -282,7 +280,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         IF model_flag THEN model_box=model_use[inds];*freq_norm[freq_i]
         vis_box=vis_arr_use[inds];*freq_norm[freq_i]
         psf_weight=Replicate(1.,vis_n)
-;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
     ENDELSE
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
@@ -317,12 +314,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     IF weights_flag THEN BEGIN
         wts_box=matrix_multiply(psf_weight/n_vis,box_matrix_dag,/atranspose,/btranspose)
-;        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
     ENDIF
     IF variance_flag THEN BEGIN
         var_box=matrix_multiply(psf_weight/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
-;        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
     
@@ -332,7 +327,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     ENDIF
     IF map_flag THEN BEGIN
         box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/btranspose,TPOOL_MIN_ELTS=20000.)
-;        IF Keyword_Set(grid_uniform_weight) THEN box_arr_map/=vis_n
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
             (*map_fn[xmin_use+i,ymin_use+j])[*map_fn_inds[i,j]]+=box_arr_map[*,ij]
