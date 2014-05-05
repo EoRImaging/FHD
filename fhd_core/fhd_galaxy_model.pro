@@ -64,7 +64,7 @@ pix_area_inv=horizon_proj/(obs.degpix*!DtoR)^2.
 antialias_filter=Sqrt(Hanning(dimension,elements))
 antialias_filter/=Mean(antialias_filter[valid_i])
 model_use=model
-model_use*=pix_area_inv
+;model_use*=pix_area_inv
 IF Keyword_Set(antialias) THEN model_use*=antialias_filter
 gal_model_img=model_use
 

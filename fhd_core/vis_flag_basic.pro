@@ -107,8 +107,8 @@ IF Keyword_Set(no_frequency_flagging) THEN BEGIN
         freq_flag=0>Max(*flag_ptr[pol_i],dimension=2)<1
         freq_unflag_i=where(freq_flag EQ 0,n_unflag)
         IF n_unflag GT 0 THEN BEGIN
-        baseline_flag=Max(*flag_ptr[pol_i],dimension=1)>0
-        bi_use=where(baseline_flag GT 0)
+            baseline_flag=Max(*flag_ptr[pol_i],dimension=1)>0
+            bi_use=where(baseline_flag GT 0)
             FOR fi=0L,n_unflag-1 DO BEGIN
                 data_test=Abs((*vis_ptr[pol_i])[freq_unflag_i[fi],bi_use])
                 unflag_i=where(data_test GT 0,n_unflag1)

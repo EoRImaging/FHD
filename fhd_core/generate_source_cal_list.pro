@@ -1,6 +1,7 @@
 FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
-    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,_Extra=extra
+    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,$
+    allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,_Extra=extra
 ;catalog=getvar_savefile(catalog_path,'catalog')
 RESTORE,catalog_path,/relaxed ;catalog
 IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
@@ -52,6 +53,7 @@ IF n_use GT 0 THEN BEGIN
     IF Keyword_Set(allow_sidelobe_cal_sources) THEN beam_i=where(beam GT cal_beam_threshold) $
         ELSE beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<cal_beam_threshold,Max(beam)>1.])
     beam_mask=fltarr(dimension,elements) & beam_mask[beam_i]=1.
+    IF N_Elements(mask) EQ N_Elements(beam_mask) THEN beam_mask*=mask
 
     src_use=where((x_arr GE fft_alias_range) AND (x_arr LE dimension-1-fft_alias_range) AND (y_arr GE fft_alias_range) $
         AND (y_arr LE elements-1-fft_alias_range) AND (source_list.flux.I GT calibration_flux_threshold),n_src_use)

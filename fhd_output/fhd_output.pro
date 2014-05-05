@@ -149,7 +149,7 @@ t2+=t3a-t2a
 
 dirty_images=Ptrarr(n_pol,/allocate)
 instr_images=Ptrarr(n_pol,/allocate)
-instr_sources=Ptrarr(n_pol,/allocate)
+stokes_sources=Ptrarr(n_pol,/allocate)
 
 model_uv_arr=Ptrarr(n_pol,/allocate)
 model_holo_arr=Ptrarr(n_pol,/allocate)
@@ -171,7 +171,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *res_uv_arr[pol_i]=instr_img_uv
     *instr_images[pol_i]=dirty_image_generate(instr_img_uv,degpix=degpix,weights=*weights_arr[pol_i],$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra);*(*beam_correction_out[pol_i])
-    *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
+    *stokes_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i+4,resolution=16,$
         dimension=dimension,restored_beam_width=restored_beam_width)
     filter_arr[pol_i]=filter_single
 ENDFOR
@@ -199,11 +199,7 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ENDIF ELSE  gal_name=''
 
 stokes_images=stokes_cnv(instr_images,jones_out,beam=beam_base_out,/square,_Extra=extra)
-stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out,/square,_Extra=extra) 
-FOR pol_i=0,n_pol-1 DO BEGIN
-    *instr_images[pol_i]*=*beam_correction_out[pol_i]
-    *dirty_images[pol_i]*=*beam_correction_out[pol_i]
-ENDFOR
+instr_sources=stokes_cnv(stokes_sources,jones_out,/inverse,beam=beam_base_out,/square,_Extra=extra) 
 
 t4a=Systime(1)
 t3+=t4a-t3a
