@@ -33,7 +33,7 @@ IF size(cal,/type) NE 8 THEN IF file_test(file_path_fhd+'_cal.sav') EQ 1 THEN RE
 ENDELSE
 IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 
-fhd=fhd_init(obs,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,file_path_fhd=file_path_fhd,_Extra=extra)
+fhd=fhd_init(obs,cal,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,file_path_fhd=file_path_fhd,_Extra=extra)
 
 n_pol=fhd.npol
 dimension=obs.dimension

@@ -2,8 +2,18 @@ FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
     no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,$
     allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,_Extra=extra
-;catalog=getvar_savefile(catalog_path,'catalog')
-RESTORE,catalog_path,/relaxed ;catalog
+
+catalog_path_use=catalog_path
+UPNAME=StrUpCase(catalog_path_use)
+psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
+IF psav EQ -1 THEN catalog_path_use+='.sav'
+IF file_test(catalog_path_use) EQ 0 THEN BEGIN
+    catalog_path_use=filepath(catalog_path_use,root=Rootdir('fhd'),subdir='catalog_data')
+    IF file_test(catalog_path_use) EQ 0 THEN catalog_path_use=$
+        filepath(obs.instrument+'_calibration_source_list.sav',root=Rootdir('fhd'),subdir='catalog_data')
+ENDIF
+    
+RESTORE,catalog_path_use,/relaxed ;catalog
 IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
 IF Keyword_Set(allow_sidelobe_cal_sources) THEN IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_cal_sources=1
 IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_cal_sources=1

@@ -44,7 +44,7 @@ calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
 decon_filter=fhd.decon_filter
 galaxy_model_fit=fhd.galaxy_subtract
-subtract_sidelobe_sources=fhd.sidelobe_subtract
+subtract_sidelobe_catalog=fhd.sidelobe_subtract
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -218,9 +218,9 @@ print,"Initial convergence:",Strn(converge_check[0])
 model_holo_arr=Ptrarr(n_pol,/allocate)
 si=0L
 i0=0L
-IF Keyword_Set(subtract_sidelobe_sources) THEN BEGIN
+IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
     print,'Subtracting source model from the sidelobes'
-    source_arr_sidelobe=generate_source_cal_list(obs,psf,catalog_path=catalog_path,$
+    source_arr_sidelobe=generate_source_cal_list(obs,psf,catalog_path=subtract_sidelobe_catalog,$
         mask=1-beam_mask,/allow_sidelobe_cal_sources,_Extra=extra)
     n_sidelobe_src=N_Elements(source_arr_sidelobe)
     empty_test=(n_sidelobe_src EQ 1) AND (source_arr_sidelobe[0].flux.I EQ 0)
@@ -414,7 +414,7 @@ source_array=Components2Sources(comp_arr,obs,radius=beam_width>0.5,noise_map=noi
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
-IF Keyword_Set(subtract_sidelobe_sources) THEN  FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
+IF Keyword_Set(subtract_sidelobe_catalog) THEN  FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
 t4_0=Systime(1)
 t3+=t4_0-t3_0
 FOR pol_i=0,n_pol-1 DO *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)

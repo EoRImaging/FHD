@@ -1,4 +1,4 @@
-FUNCTION fhd_init,obs,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_use=freq_use,time_i_use=time_i_use,$
+FUNCTION fhd_init,obs,cal,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_use=freq_use,time_i_use=time_i_use,$
     gain_factor=gain_factor,calibration_image_subtract=calibration_image_subtract,$
     max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,smooth_width=smooth_width,$
     baseline_threshold=baseline_threshold,beam_threshold=beam_threshold,add_threshold=add_threshold,$
@@ -45,13 +45,19 @@ IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF N_Elements(joint_deconvolution_list) LE 1 THEN decon_mode='Single snapshot' ELSE decon_mode='HEALPix integrated'
 IF N_Elements(joint_deconvolution_list) EQ 0 THEN joint_obs=file_basename(file_path_fhd) ELSE joint_obs=file_basename(joint_deconvolution_list)
 IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_natural'
-IF N_Elements(subtract_sidelobe_sources) EQ 0 THEN subtract_sidelobe_sources=0
+IF N_Elements(subtract_sidelobe_sources) EQ 0 THEN sidelobe_subtract='' ELSE BEGIN
+    IF size(restrict_hpx_inds,/type) EQ 7 THEN sidelobe_subtract=subtract_sidelobe_sources ELSE BEGIN
+        IF Keyword_Set(subtract_sidelobe_sources) THEN IF N_Elements(cal) GT 0 THEN sidelobe_subtract=cal.catalog_name ELSE BEGIN
+            IF N_Elements(obs) GT 0 THEN sidelobe_subtract=obs.instrument+'_calibration_source_list' ELSE sidelobe_subtract='' 
+        ENDELSE
+    ENDELSE
+ENDELSE
 
 fhd={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
     gain_factor:gain_factor,add_threshold:add_threshold,max_add_sources:max_add_sources,independent_fit:independent_fit,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,smooth_width:smooth_width,$
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
-    cal_subtract:calibration_image_subtract,galaxy_subtract:galaxy_model_fit,sidelobe_subtract:subtract_sidelobe_sources,$
+    cal_subtract:calibration_image_subtract,galaxy_subtract:galaxy_model_fit,sidelobe_subtract:sidelobe_subtract,$
     filter_background:filter_background,decon_filter:deconvolution_filter,decon_mode:decon_mode,$
     joint_obs:joint_obs}
 
