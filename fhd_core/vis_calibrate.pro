@@ -46,7 +46,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
             ENDELSE
         ENDCASE
     ENDIF
-    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
+    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,_Extra=extra
     nc_pol=cal.n_pol
     cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
     IF tag_exist(cal,'bandpass') THEN bandpass_calibrate=cal.bandpass

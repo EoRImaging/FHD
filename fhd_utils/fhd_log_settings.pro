@@ -1,4 +1,4 @@
-PRO fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,fhd=fhd,cmd_args=cmd_args
+PRO fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,fhd=fhd,cmd_args=cmd_args,overwrite=overwrite
 
 descr_file_path=file_path_fhd+'_settings.txt'
 
@@ -11,7 +11,7 @@ cal_delimiter='##CAL'
 fhd_delimiter='##FHD'
 end_delimiter='##END'
 filler='##'
-max_len=128
+max_len=132
 
 main_insert=Strarr(2,4) +filler
 main_insert[1,0]+=delimiter
@@ -29,7 +29,9 @@ info_out=main_insert
 ;info_out=[[main_delimiter,filler],[main_insert,filler],[obs_delimiter,filler],[psf_delimiter,filler],$
 ;    [cal_delimiter,filler],[fhd_delimiter,filler],[end_delimiter,filler]]
 
-IF file_test(descr_file_path) THEN BEGIN
+overwrite_test=file_test(descr_file_path)
+IF Keyword_Set(overwrite) THEN overwrite_test=0
+IF overwrite_test THEN BEGIN
     textfast,info_arr,/read,file_path=descr_file_path,/string,delimiter=delimiter
     info_labels=Reform(info_arr[0,*])
     cmd_i=where(info_labels EQ cmd_delimiter)
