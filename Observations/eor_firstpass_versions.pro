@@ -104,6 +104,11 @@ case version of
    'apb_test_no_flagging_1': begin
       flag_visibilities=0
    end
+   'nb_firstpass_memo': begin
+      uvfits_version=3
+      uvfits_subversion=0
+   end
+
    else: print,'Default parameters'
 endcase
    
