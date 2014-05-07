@@ -96,6 +96,10 @@ case version of
    'apb_test_small_kpix_3': begin
       ps_kbinsize=0.5
    end
+   'apb_test_small_kpix_4': begin
+      kbinsize=0.5
+      ps_kbinsize=0.5
+   end
    'apb_test_dig_gain_fix_1': begin
       uvfits_version=3
       uvfits_subversion=1
@@ -103,6 +107,10 @@ case version of
    end
    'apb_test_no_flagging_1': begin
       flag_visibilities=0
+   end
+   'apb_test_no_flagging_2': begin
+      flag_visibilities=0
+      no_frequency_flagging=1
    end
    else: print,'Default parameters'
 endcase
