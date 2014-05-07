@@ -112,6 +112,11 @@ case version of
       flag_visibilities=0
       no_frequency_flagging=1
    end
+   'nb_firstpass_memo': begin
+      uvfits_version=3
+      uvfits_subversion=0
+   end
+
    else: print,'Default parameters'
 endcase
    
