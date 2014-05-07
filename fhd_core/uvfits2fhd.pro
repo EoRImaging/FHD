@@ -230,7 +230,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     SAVE,obs,filename=obs_filepath,/compress
     SAVE,params,filename=params_filepath,/compress
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,cmd_args=cmd_args
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,cmd_args=cmd_args,/overwrite
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
@@ -326,8 +326,8 @@ IF Keyword_Set(export_images) THEN BEGIN
 ENDIF
 
 ;optionally export frequency-splt Healpix cubes
-IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,params,vis_arr,$
-    vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,_Extra=extra
+IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,$
+    vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
 
 undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr
 
