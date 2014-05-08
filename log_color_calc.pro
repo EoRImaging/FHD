@@ -1,5 +1,5 @@
 pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
-    color_profile = color_profile, log_cut_val = log_cut_val, grey_scale = grey_scale, oob_low = oob_low, $
+    color_profile = color_profile, log_cut_val = log_cut_val, oob_low = oob_low, $
     missing_value = missing_value, missing_color = missing_color
     
     
