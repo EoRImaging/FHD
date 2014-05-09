@@ -4,10 +4,10 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     n_pol=n_pol,silent=silent,$
     healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,error=error, $
-    eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+    eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube, $
-    weights_grid=weights_grid,save_visibilities=save_visibilities,$
+    weights_grid=weights_grid,save_visibilities=save_visibilities,save_uvf=save_uvf,save_imagecube=save_imagecube,$
     snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
     
   compile_opt idl2,strictarrsubs
@@ -121,7 +121,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         delta_uv=obs.kpix
         uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
         time0 = systime(1)
-        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib)
+        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
         time1 = systime(1)
         print, 'time for eor modelling: ' + number_formatter(time1-time0)
         if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
@@ -265,11 +265,10 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     ENDIF
     
   ENDIF
-  
-  
+    
   ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,params,vis_arr,$
-    vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,_Extra=extra
+    vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
     
   undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr
   
