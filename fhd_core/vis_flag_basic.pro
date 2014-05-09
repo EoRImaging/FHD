@@ -1,5 +1,5 @@
 FUNCTION vis_flag_basic,flag_ptr,obs,params,instrument=instrument,mask_mirror_indices=mask_mirror_indices,$
-    freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,_Extra=extra
+    freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,no_frequency_flagging=no_frequency_flagging,vis_ptr=vis_ptr,_Extra=extra
 
 IF tag_exist(obs,'instrument') THEN instrument=obs.instrument
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
@@ -60,10 +60,10 @@ CASE instrument OF
             (*flag_ptr[pol_i])[channel_edge_flag,*]=0
             (*flag_ptr[pol_i])[channel_center_flag,*]=0
         ENDFOR
-        freq_use=(*obs.baseline_info).freq_use
-        freq_use[channel_edge_flag]=0
-        freq_use[channel_center_flag]=0
-        (*obs.baseline_info).freq_use=freq_use
+;        freq_use=(*obs.baseline_info).freq_use 
+;        freq_use[channel_edge_flag]=0
+;        freq_use[channel_center_flag]=0
+;        (*obs.baseline_info).freq_use=freq_use
     END
     'mwa':BEGIN
         freq_avg=Round(768./n_freq)
@@ -72,9 +72,9 @@ CASE instrument OF
         fine_channel_i=lindgen(n_freq) mod coarse_channel_width
         channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
         FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[channel_edge_flag,*]=0
-        freq_use=(*obs.baseline_info).freq_use
-        freq_use[channel_edge_flag]=0
-        (*obs.baseline_info).freq_use=freq_use
+;        freq_use=(*obs.baseline_info).freq_use
+;        freq_use[channel_edge_flag]=0
+;        (*obs.baseline_info).freq_use=freq_use
     END
     ELSE:
 END
@@ -100,7 +100,24 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     tile_use*=tile_use1
     
 ENDFOR
-freq_use=0>freq_use<1
+IF Keyword_Set(no_frequency_flagging) THEN BEGIN
+    ;if pre-processing has flagged frequencies, need to unflag them if the data are nonzero (but DON'T unflag tiles that should be flagged)
+    freq_cut_i=where(freq_use EQ 0,nf_cut)
+    IF nf_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
+        freq_flag=0>Max(*flag_ptr[pol_i],dimension=2)<1
+        freq_unflag_i=where(freq_flag EQ 0,n_unflag)
+        IF n_unflag GT 0 THEN BEGIN
+        baseline_flag=Max(*flag_ptr[pol_i],dimension=1)>0
+        bi_use=where(baseline_flag GT 0)
+            FOR fi=0L,n_unflag-1 DO BEGIN
+                data_test=Abs((*vis_ptr[pol_i])[freq_unflag_i[fi],bi_use])
+                unflag_i=where(data_test GT 0,n_unflag1)
+                IF n_unflag1 GT 0 THEN (*flag_ptr[pol_i])[freq_unflag_i[fi],bi_use[unflag_i]]=1
+            ENDFOR  
+        ENDIF      
+    ENDFOR
+    freq_use=Replicate(1,n_freq) 
+ENDIF ELSE freq_use=0>freq_use<1
 tile_use=0>tile_use<1
 
 tile_use_new=tile_use AND (*obs.baseline_info).tile_use

@@ -1,8 +1,8 @@
-PRO healpix_snapshot_cube_generate,obs_in,psf_in,params,vis_arr,vis_model_ptr=vis_model_ptr,$
+PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_ptr=vis_model_ptr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
     rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
-    restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
+    restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,_Extra=extra
 
 t0=Systime(1)
 
@@ -13,9 +13,11 @@ params_filepath=file_path_fhd+'_params.sav'
 psf_filepath=file_path_fhd+'_beams.sav'
 obs_filepath=file_path_fhd+'_obs.sav'
 vis_filepath=file_path_fhd+'_vis_'
+cal_filepath=file_path_fhd+'_cal.sav'
 IF N_Elements(obs_in) EQ 0 THEN obs_in=getvar_savefile(obs_filepath,'obs')
 IF N_Elements(psf_in) EQ 0 THEN psf_in=beam_setup(obs_in,file_path_fhd,/no_save,/silent)
 IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
+IF N_Elements(cal) EQ 0 THEN IF file_test(cal_filepath) THEN cal=getvar_savefile(cal_filepath,'cal')
 
 n_pol=obs_in.n_pol
 n_freq=obs_in.n_freq
@@ -54,7 +56,7 @@ FOR pol_i=0,n_pol-1 DO FOR fi=0L,n_freq_use-1 DO BEGIN
     beam_mask*=beam_mask1
 ENDFOR
 
-fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out
+fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,cal=cal,cmd_args=cmd_args,/overwrite
 hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
     mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds)
 hpx_inds=hpx_cnv.inds

@@ -148,8 +148,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
-        freq_end=freq_end,tile_flag_list=tile_flag_list,_Extra=extra)
-    vis_flag_update,flag_arr,obs,psf,params
+        freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
+    vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ;print informational messages
     obs_status,obs
     
@@ -171,7 +171,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         save,cal,filename=cal_filepath,/compress
-        vis_flag_update,flag_arr,obs,psf,params
+        vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
     IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     
@@ -230,7 +230,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     SAVE,obs,filename=obs_filepath,/compress
     SAVE,params,filename=params_filepath,/compress
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,cmd_args=cmd_args
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,cmd_args=cmd_args,/overwrite
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
@@ -326,8 +326,8 @@ IF Keyword_Set(export_images) THEN BEGIN
 ENDIF
 
 ;optionally export frequency-splt Healpix cubes
-IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,params,vis_arr,$
-    vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,_Extra=extra
+IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,$
+    vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
 
 undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr
 

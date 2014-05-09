@@ -87,6 +87,39 @@ case version of
       allow_sidelobe_cal_sources=0  ;made before subtracting sidelobes
       ;vis_cal_polyfit.pro: line 86 changed to cable_cut_i=where(cable_len EQ 90,n_cable_cut)
    end
+   'apb_test_small_kpix_1': begin
+      ps_kbinsize=1.5
+   end
+   'apb_test_small_kpix_2': begin
+      ps_kbinsize=0.75
+   end
+   'apb_test_small_kpix_3': begin
+      ps_kbinsize=0.5
+   end
+   'apb_test_small_kpix_4': begin
+      kbinsize=0.5
+      ps_kbinsize=0.5
+   end
+   'apb_test_dig_gain_fix_1': begin
+      uvfits_version=3
+      uvfits_subversion=1
+      snapshot_healpix_export=0
+   end
+   'apb_test_no_flagging_1': begin
+      flag_visibilities=0
+   end
+   'apb_test_no_flagging_2': begin
+      flag_visibilities=0
+      no_frequency_flagging=1
+   end
+   'apb_test_psf_resolution_1': begin
+     psf_resolution=100.
+   end
+   'nb_firstpass_memo': begin
+      uvfits_version=3
+      uvfits_subversion=0
+   end
+
    else: print,'Default parameters'
 endcase
    

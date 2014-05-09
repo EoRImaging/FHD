@@ -1,4 +1,4 @@
-PRO vis_flag_update,flag_ptr,obs,psf,params,xmin=xmin,xcen=xcen,ymin=ymin
+PRO vis_flag_update,flag_ptr,obs,psf,params,xmin=xmin,xcen=xcen,ymin=ymin,no_frequency_flagging=no_frequency_flagging
 t0_0=Systime(1)
 heap_gc
 
@@ -60,13 +60,15 @@ IF n_dist_flag GT 0 THEN BEGIN
     flag_dist_i=0
 ENDIF
 
-freq_cut_i=where(b_info.freq_use EQ 0,n_freq_cut)
-IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut_i,*]=0
-tile_cut_i=where(b_info.tile_use EQ 0,n_tile_cut)
-IF n_tile_cut GT 0 THEN BEGIN
-    bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
-    IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,bi_cut]=0
-ENDIF
+IF Keyword_Set(no_frequency_flagging) THEN (*obs.baseline_info).freq_use=Replicate(1,n_freq) ELSE BEGIN
+    freq_cut_i=where(b_info.freq_use EQ 0,n_freq_cut)
+    IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut_i,*]=0
+    tile_cut_i=where(b_info.tile_use EQ 0,n_tile_cut)
+    IF n_tile_cut GT 0 THEN BEGIN
+        bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
+        IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,bi_cut]=0
+    ENDIF
+ENDELSE
 
 IF Tag_exist(b_info,'time_use') THEN BEGIN
     time_use=b_info.time_use
