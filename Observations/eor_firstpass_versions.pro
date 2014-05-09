@@ -112,6 +112,9 @@ case version of
       flag_visibilities=0
       no_frequency_flagging=1
    end
+   'apb_test_psf_resolution_1': begin
+     psf_resolution=100.
+   end
    'nb_firstpass_memo': begin
       uvfits_version=3
       uvfits_subversion=0
