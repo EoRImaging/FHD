@@ -98,7 +98,13 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     endelse
     
     restore, filenames[i]
-    if n_elements(obs) gt 0 then this_nobs=1 else this_nobs = n_elements(obs_arr)
+    if n_elements(obs) gt 0 then begin
+      this_nobs=1
+      integrated=0
+    endif else begin
+      this_nobs = n_elements(obs_arr)
+      integrated=1
+    endelse
     
     if n_elements(dirty_xx_cube) ne 0 then cube_struct = create_struct('dirty_xx_cube', ptr_new(temporary(dirty_xx_cube)))
     if n_elements(dirty_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
@@ -140,7 +146,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       nside_use = nside
       n_avg_use = n_avg
       pixels_use = temporary(hpx_inds)
-      if this_nobs eq 1 then begin
+      if integrated eq 0 then begin
         frequencies_use = (*obs.baseline_info).freq
         obs_arr_use = temporary(obs)
       endif else begin
@@ -174,9 +180,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
           if count_pix_match ne n_elements(pixels_use) then begin
             npix_ch = 1
             pixels_use = pixels_use[subpix]
-            nfile_contrib_pix_use = nfile_contrib_pix_use[subpix]  
+            nfile_contrib_pix_use = nfile_contrib_pix_use[subpix]
           endif else npix_ch = 0
-          if this_nobs eq 1 then nfile_contrib_pix_use += 1 else nfile_contrib_pix_use += nfile_contrib_pix[subhpx]
+          if integrated eq 0 then nfile_contrib_pix_use += 1 else nfile_contrib_pix_use += nfile_contrib_pix[subhpx]
           undefine, hpx_inds
         endif else begin
           combined_pix = [pixels_use, hpx_inds]
@@ -193,13 +199,13 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
             temp[subcmbpix] = nfile_contrib_pix_use
             nfile_contrib_pix_use = temporary(temp)
           endif else npix_ch = 0
-          if this_nobs eq 1 then nfile_contrib_pix_use[subcmbhpx] += 1 else nfile_contrib_pix_use[subcmbhpx] += nfile_contrib_pix
+          if integrated eq 0 then nfile_contrib_pix_use[subcmbhpx] += 1 else nfile_contrib_pix_use[subcmbhpx] += nfile_contrib_pix
           undefine, hpx_inds
         endelse
         pix_match = 0
       endelse
       
-      if this_nobs eq 1 then this_freq = (*obs.baseline_info).freq else this_freq = frequencies
+      if integrated eq 0 then this_freq = (*obs.baseline_info).freq else this_freq = frequencies
       match, frequencies_use, this_freq, subfreq, subthisf, count = count_freq_match
       if n_elements(frequencies_use) eq n_elements(this_freq) and count_freq_match eq n_elements(frequencies_use) then begin
         undefine, this_freq
@@ -215,7 +221,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
             frequencies_use = frequencies_use[subfreq]
             nfile_contrib_freq_use = nfile_contrib_freq_use[subfreq]
           endif else nfreq_ch = 0
-          if this_nobs eq 1 then nfile_contrib_freq_use += 1 else nfile_contrib_freq_use += nfile_contrib_freq[subthisf]
+          if integrated eq 0 then nfile_contrib_freq_use += 1 else nfile_contrib_freq_use += nfile_contrib_freq[subthisf]
           undefine, this_freq
         endif else begin
           combined_freq = [frequencies_use, this_freq]
@@ -232,13 +238,13 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
             temp[subcmbfreq] = nfile_contrib_freq_use
             nfile_contrib_freq_use = temporary(temp)
           endif else nfreq_ch = 0
-          if this_nobs eq 1 then nfile_contrib_freq_use[subcmbfreq] += 1 else nfile_contrib_freq_use[subcmbfreq] += nfile_contrib_pix
+          if integrated eq 0 then nfile_contrib_freq_use[subcmbfreq] += 1 else nfile_contrib_freq_use[subcmbfreq] += nfile_contrib_pix
           undefine, this_freq
         endelse
         freq_match = 0
       endelse
       
-      if this_nobs eq 1 then begin
+      if integrated eq 0 then begin
         obs_arr_use = [temporary(obs_arr_use), temporary(obs)]
       endif else begin
         obs_arr_use = [temporary(obs_arr_use), temporary(obs_arr)]
