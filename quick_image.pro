@@ -1,6 +1,6 @@
 pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, yrange = yrange, $
     log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
-    note = note, charsize = charsize, grey_scale = grey_scale, xlog = xlog, ylog = ylog, $
+    note = note, charsize = charsize, xlog = xlog, ylog = ylog, $
     missing_value = missing_value, noerase = noerase, savefile = savefile, png = png, eps = eps
     
   if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) then pub = 1 else pub = 0
@@ -51,12 +51,11 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   endif else good_locs = indgen(n_elements(image))
   
   tvlct, r, g, b, /get
-  if keyword_set(grey_scale) then cgloadct, 0, /reverse else cgloadct, 25, /brewer, /reverse
   
   if keyword_set(log) then begin
   
     log_color_calc, image, plot_image, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
-      color_profile = color_profile, log_cut_val = log_cut_val, grey_scale = grey_scale, oob_low = oob_low, $
+      color_profile = color_profile, log_cut_val = log_cut_val, oob_low = oob_low, $
       missing_value = missing_value, missing_color = missing_color
       
       
