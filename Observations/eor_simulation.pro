@@ -1,5 +1,6 @@
 PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, $
+    flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
     silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
@@ -21,7 +22,7 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
   IF N_Elements(snapshot_healpix_export) EQ 0 THEN snapshot_healpix_export=1
   IF N_Elements(split_ps_export) EQ 0 THEN split_ps_export=1  
   IF N_Elements(n_avg) EQ 0 THEN n_avg=2
-  IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=3.
+  IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=0.5
   IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
   
   if n_elements(output_directory) eq 0 then output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
@@ -64,6 +65,8 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
   ;; for simulation
   eor_sim = 1
   include_catalog_sources = 0
+  save_uvf=1
+  save_imagecube=1
   
   ;; stuff from general_obs not in eor_firstpass
   ;Set up paths
@@ -92,14 +95,14 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
     ;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
     fhd_sim,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
       beam_recalculate=beam_recalculate, /silent,max_sources=max_sources, $
-      eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+      eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
       include_catalog_sources = include_catalog_sources, catalog_file_path=catalog_file_path,source_list=source_list, $
       model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,$
       export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
       complex=complex_beam,double=double_precison_beam,precess=precess,error=error,weights_grid=weights_grid,$
       save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,FoV=FoV,no_ps=no_ps,nfreq_avg=nfreq_avg,$
       snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export, $
-      n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
+      n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
            
       
     IF Keyword_Set(error) THEN BEGIN

@@ -1,6 +1,6 @@
 
 
-function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, no_distrib = no_distrib
+function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc
 
   if n_elements(seed) eq 0 then seed = systime(1)
   
@@ -56,6 +56,21 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, 
   if n_elements(flat_sigma) ne 0 then begin
     power_3d = dblarr(n_kx, n_ky, n_kz) + max(power)
     
+  endif else if keyword_set(delta_power) then begin
+    no_distrib=1
+    
+    if n_elements(delta_uv_loc) eq 0 then delta_uv_loc = randomu(seed, 2)*[max(u_arr)-min(u_arr), max(v_arr)-min(v_arr)] + [min(u_arr), min(v_arr)]
+    
+    temp = u_arr - delta_uv_loc[0]
+    u_loc = where(temp eq min(abs(temp)))
+    
+    temp = v_arr - delta_uv_loc[1]
+    v_loc = where(temp eq min(abs(temp)))
+    
+    kz_loc = where(kz_mpc eq min(abs(kz_mpc)))
+    
+    power_3d = dblarr(n_kx, n_ky, n_kz)
+    power_3d[u_loc, v_loc, kz_loc] = max(power)
   endif else begin
   
     k_arr = sqrt(rebin(kx_mpc, n_kx, n_ky, n_kz, /sample)^2. + rebin(reform(ky_mpc, 1, n_ky), n_kx, n_ky, n_kz, /sample)^2. + $
