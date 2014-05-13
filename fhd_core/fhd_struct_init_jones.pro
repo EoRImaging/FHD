@@ -55,10 +55,16 @@ ha=hour_angle*!DtoR
 ;J12=-Sin(lat)*Sin(ha)
 ;J21=Sin(dec)*Sin(ha)
 ;J22=Cos(ha)
+
 J22=Cos(lat)*Cos(dec)+Sin(lat)*Sin(dec)*Cos(ha)
 J21=-Sin(lat)*Sin(ha)
 J12=Sin(dec)*Sin(ha)
 J11=Cos(ha)
+
+;J22=Cos(lat)*Cos(dec)+Sin(lat)*Sin(dec)*Cos(ha)
+;J12=-Sin(lat)*Sin(ha)
+;J21=Sin(dec)*Sin(ha)
+;J11=Cos(ha)
 
 p_map=Ptrarr(4,4,/allocate)
 p_corr=Ptrarr(4,4,/allocate)

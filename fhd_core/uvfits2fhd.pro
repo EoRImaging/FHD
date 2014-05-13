@@ -21,7 +21,7 @@
 ;    
 ;    kbinsize - pixel size in wavelengths of the uv image. 
 ;    
-;    n_pol - 1: use xx only, 2: use xx and xy, 4: use xx, yy, xy, and yx (Default: as many as are available)
+;    n_pol - 1: use xx only, 2: use xx and yy, 4: use xx, yy, xy, and yx (Default: as many as are available)
 ;    
 ;    flag_visibilities - set to look for anomalous visibility data and update flags 
 ;    

@@ -192,6 +192,7 @@ FOR iter=0,n_iter-1 DO BEGIN
     save,filename=filepath_cube[iter],/compress,dirty_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,res_xx_cube,$
         dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,beam_xx_cube,beam_yy_cube,$
         obs,nside,hpx_inds,n_avg,psf
+    debug_point=1
 ENDFOR
 Ptr_free,flag_arr_use
 timing=Systime(1)-t0
