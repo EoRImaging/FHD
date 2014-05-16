@@ -75,16 +75,15 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     flag_arr_use=split_vis_flags(obs_out,flag_arr_use,bi_use=bi_use)
     vis_noise_calc,obs_out,vis_arr,flag_arr_use,bi_use=bi_use
     filepath_cube=file_path_fhd+['_even_cube.sav','_odd_cube.sav']
-    if keyword_set(save_imagecube) then begin
-      imagecube_filepath = file_path_fhd+['_even','_odd'] + '_gridded_imagecube.sav'
-      uvf_name = ['even','odd']
-    endif
+    uvf_name = ['even','odd']
+    if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+['_even','_odd'] + '_gridded_imagecube.sav'
   ENDIF ELSE BEGIN
     n_iter=1
     bi_use=Ptrarr(n_iter,/allocate)
     *bi_use[0]=lindgen(nb)
     vis_noise_calc,obs_out,vis_arr,flag_arr_use
     filepath_cube=file_path_fhd+'_cube.sav'
+    uvf_name = ''
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+'_gridded_imagecube.sav'
   ENDELSE
   
