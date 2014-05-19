@@ -67,6 +67,7 @@ case version of
    end
    'apb_test_galaxy_cal_1': begin
       galaxy_calibrate=1
+      image_filter_fn='filter_uv_natural'
    end
    'apb_test_pattis_catalog_1': begin
       calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
