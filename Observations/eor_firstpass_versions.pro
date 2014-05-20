@@ -59,7 +59,7 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 cal_cable_reflection_fit=150
-restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'
+restrict_hpx_inds=1
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
