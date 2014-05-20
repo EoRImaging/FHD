@@ -1,6 +1,7 @@
 FUNCTION vis_struct_update_obs,obs, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,FoV=FoV,$
-    obsx=obsx,obsy=obsy,nfreq_avg=nfreq_avg,spectral_index=spectral_index,_Extra=extra
+    obsx=obsx,obsy=obsy,nfreq_avg=nfreq_avg,spectral_index=spectral_index,nside=nside,$
+    restrict_hpx_inds=restrict_hpx_inds,n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,_Extra=extra
 
 ;updates the structure containing frequently needed parameters relating to the observation
 IF N_Elements(spectral_index) EQ 0 THEN spectral_index=obs.alpha
@@ -9,6 +10,13 @@ IF N_Elements(max_baseline) EQ 0 THEN max_baseline=obs.max_baseline
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=obs.min_baseline
 git,'describe',result=code_version,project='fhd',args='--long'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
+
+IF Tag_exist(obs,'healpix') THEN BEGIN
+    IF Keyword_Set(nside) THEN obs.healpix.nside=Long(nside)
+    IF Keyword_Set(restrict_hpx_inds) THEN obs.healpix.ind_list=String(restrict_hpx_inds)
+    IF Keyword_Set(n_hpx) THEN obs.healpix.n_pix=Long(n_hpx)
+    IF Keyword_Set(n_zero_hpx) THEN obs.healpix.n_zero=Long(n_zero_hpx)
+ENDIF
 
 b_info=*(obs.baseline_info)
 n_freq=obs.n_freq
