@@ -1,5 +1,5 @@
-FUNCTION stokes_cnv,image_arr,jones,beam_arr=beam_arr,inverse=inverse,$
-    square=square,no_extend=no_extend,rotate_pol=rotate_pol,no_dipole_projection_rotation=no_dipole_projection_rotation
+FUNCTION stokes_cnv,image_arr,jones,beam_arr=beam_arr,inverse=inverse,square=square,no_extend=no_extend,$
+    rotate_pol=rotate_pol,no_dipole_projection_rotation=no_dipole_projection_rotation,debug_direction=debug_direction
     ;/rotate_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
@@ -33,6 +33,11 @@ IF Keyword_Set(no_dipole_projection_rotation) THEN BEGIN
     FOR j=0,3 DO FOR i=0,3 DO *p_map[i,j]=Replicate(((i EQ j) ? 1.:0.),n_pix)
     p_corr=p_map
     p_free=1
+ENDIF
+IF Keyword_Set(debug_direction) THEN BEGIN
+    p_store=p_map
+    p_map=p_corr
+    p_corr=p_store
 ENDIF
 IF Keyword_Set(rotate_pol) THEN BEGIN
     ;this is meant as a debugging tool!
