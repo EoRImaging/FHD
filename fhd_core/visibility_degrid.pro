@@ -171,6 +171,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5+=t5_1-t5_0
     t1+=t5_1-t1_0 
 ENDFOR
+
+x_offset=(y_offset=0)
+xmin=(ymin=0)
+bin_n=0
 IF n_conj GT 0 THEN BEGIN
     visibility_array[*,conj_i]=Conj(visibility_array[*,conj_i])
 ENDIF

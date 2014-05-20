@@ -51,9 +51,9 @@ nfreq_bin=Max(freq_bin_i)+1
 bin_offset=(*obs.baseline_info).bin_offset
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
 
-kx_arr=params.uu/kbinsize
-ky_arr=params.vv/kbinsize
-baseline_i=params.baseline_arr
+;kx_arr=params.uu/kbinsize
+;ky_arr=params.vv/kbinsize
+;baseline_i=params.baseline_arr
 nbaselines=bin_offset[1]
 n_samples=N_Elements(bin_offset)
 n_freq=N_Elements(frequency_array)
