@@ -59,7 +59,7 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 cal_cable_reflection_fit=150
-restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'
+restrict_hpx_inds=1
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
@@ -67,6 +67,7 @@ case version of
    end
    'apb_test_galaxy_cal_1': begin
       galaxy_calibrate=1
+      image_filter_fn='filter_uv_natural'
    end
    'apb_test_pattis_catalog_1': begin
       calibration_catalog_file_path=filepath('pattis_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')

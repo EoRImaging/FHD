@@ -56,12 +56,12 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     beam_mask*=beam_mask1
   ENDFOR
   
-  fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,cal=cal,cmd_args=cmd_args,/overwrite
   hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
     mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds)
   hpx_inds=hpx_cnv.inds
   n_hpx=N_Elements(hpx_inds)
   
+  fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,cal=cal,cmd_args=cmd_args,/overwrite
   
   IF N_Elements(flag_arr) LT n_pol THEN flag_arr_use=getvar_savefile(flags_filepath,'flag_arr') ELSE flag_arr_use=Pointer_copy(flag_arr)
   flags_use=Ptrarr(n_pol,/allocate)
@@ -199,7 +199,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     
     save,filename=filepath_cube[iter],/compress,dirty_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,res_xx_cube,$
         dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,beam_xx_cube,beam_yy_cube,$
-        obs,nside,hpx_inds,n_avg,psf
+        obs,nside,hpx_inds,n_avg
     debug_point=1
 ENDFOR
 Ptr_free,flag_arr_use
