@@ -130,7 +130,10 @@ IF tag_exist(obs,'healpix') THEN BEGIN
         mask_test=healpix_cnv_apply(mask,hpx_cnv)
         mask_test_i0=where(mask_test EQ 0,n_zero_hpx)
     ENDIF ELSE n_zero_hpx=-1
-    healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
+    obs.healpix.nside=Long(nside)
+    obs.healpix.ind_list=String(ind_list)
+    obs.healpix.n_pix=Long(n_hpx)
+    obs.healpix.n_zero=Long(n_zero_hpx)
 ENDIF
 
 IF ~Keyword_Set(no_save) THEN save,hpx_cnv,filename=file_path_fhd+'_hpxcnv'+'.sav',/compress
