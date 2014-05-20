@@ -117,19 +117,16 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
     hdr=vis_header_extract(data_header0, params = data_struct.params)    
+    IF N_Elements(n_pol) EQ 0 THEN n_pol2=hdr.n_pol ELSE n_pol2=n_pol
     params=vis_param_extract(data_struct.params,hdr)
-    data_array=Temporary(data_struct.array[*,0:n_pol-1,*])
+    IF n_pol2 LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol2-1,*]) ELSE data_array=Temporary(data_struct.array) 
     data_struct=0. ;free memory
     
-    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     pol_dim=hdr.pol_dim
     freq_dim=hdr.freq_dim
     real_index=hdr.real_index
     imaginary_index=hdr.imaginary_index
     flag_index=hdr.flag_index
-    n_pol=obs.n_pol
-    n_freq=obs.n_freq
-    
     vis_arr=Ptrarr(n_pol,/allocate)
     flag_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -139,6 +136,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;free memory
     data_array=0 
     flag_arr0=0
+    
+    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
+    n_pol=obs.n_pol
+    n_freq=obs.n_freq
     
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
