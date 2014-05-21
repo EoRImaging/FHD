@@ -81,7 +81,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
         FOR pol_i2=0,n_pol-1 DO BEGIN
             *flux_out[pol_i2]=Fltarr(ns)
             FOR pol_i1=0,n_pol-1 DO BEGIN
-                *flux_out[pol_i2]+=*flux_pq[pol_i1]*(*p_map[pol_i1,pol_i2])[p_ind]
+                *flux_out[pol_i2]+=*flux_pq[pol_i1]*(*p_map[pol_i2,pol_i1])[p_ind]
             ENDFOR
             *flux_out[pol_i2]*=*beam_use[pol_i2]
         ENDFOR
