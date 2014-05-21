@@ -132,7 +132,7 @@ tile_flag_i=where(tile_use1 EQ 0,n_flag)
 IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
 IF N_Elements(nside) EQ 0 THEN nside=0
-IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=ind_list
+IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=restrict_hpx_inds
 IF N_Elements(n_hpx) EQ 0 THEN n_hpx=0
 IF N_Elements(n_zero_hpx) EQ 0 THEN n_zero_hpx=-1
 healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
