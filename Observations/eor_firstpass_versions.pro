@@ -98,6 +98,7 @@ case version of
       ps_kbinsize=0.5
    end
    'apb_test_small_kpix_4': begin
+      FoV=0
       kbinsize=0.5
       ps_kbinsize=0.5
    end
@@ -119,6 +120,15 @@ case version of
    'nb_firstpass_memo': begin
       uvfits_version=3
       uvfits_subversion=0
+   end
+   'apb_test_no_flagging_3': begin
+      unflag_all=1
+      flag_visibilities=0
+      flag_calibration=0
+   end
+   'apb_test_new_cotter_1': begin
+      uvfits_version=3
+      uvfits_subversion=1
    end
 
    else: print,'Default parameters'

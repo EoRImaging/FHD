@@ -56,7 +56,7 @@ echo Output located at ${outdir}/fhd_${version}
 
 ### Should make these options
 nslots=10
-mem=3G ### NOTE this is PER CORE!
+mem=4G ### NOTE this is PER CORE!
 
 #Read the obs file and put into an array
 i=0
