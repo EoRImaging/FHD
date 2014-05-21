@@ -3,7 +3,8 @@ FUNCTION vis_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
-    psf_dim=psf_dim,antenna_size=antenna_size,_Extra=extra
+    psf_dim=psf_dim,antenna_size=antenna_size,nside=nside,restrict_hpx_inds=restrict_hpx_inds,$
+    n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
@@ -130,6 +131,12 @@ ENDFOR
 tile_flag_i=where(tile_use1 EQ 0,n_flag)
 IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
+IF N_Elements(nside) EQ 0 THEN nside=0
+IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED"
+IF N_Elements(n_hpx) EQ 0 THEN n_hpx=0
+IF N_Elements(n_zero_hpx) EQ 0 THEN n_zero_hpx=-1
+healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
+
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     freq_use:freq_use,tile_use:tile_use,time_use:time_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
 struct={code_version:String(code_version),instrument:String(instrument),antenna_size:Float(antenna_size),obsname:String(obsname),$
@@ -141,6 +148,6 @@ struct={code_version:String(code_version),instrument:String(instrument),antenna_
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
-    residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr}    
+    residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,healpix:healpix}    
 RETURN,struct
 END

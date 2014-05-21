@@ -1,5 +1,5 @@
 FUNCTION vis_flag_basic,flag_ptr,obs,params,instrument=instrument,mask_mirror_indices=mask_mirror_indices,$
-    freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,no_frequency_flagging=no_frequency_flagging,vis_ptr=vis_ptr,_Extra=extra
+    freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,no_frequency_flagging=no_frequency_flagging,unflag_all=unflag_all,vis_ptr=vis_ptr,_Extra=extra
 
 IF tag_exist(obs,'instrument') THEN instrument=obs.instrument
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
@@ -119,6 +119,12 @@ IF Keyword_Set(no_frequency_flagging) THEN BEGIN
     freq_use=Replicate(1,n_freq) 
 ENDIF ELSE freq_use=0>freq_use<1
 tile_use=0>tile_use<1
+
+IF Keyword_Set(unflag_all) THEN BEGIN
+    tile_use[*]=1
+    freq_use[*]=1
+    FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*]=1>(*flag_ptr[pol_i])
+ENDIF
 
 tile_use_new=tile_use AND (*obs.baseline_info).tile_use
 freq_use_new=freq_use AND (*obs.baseline_info).freq_use

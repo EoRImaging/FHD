@@ -26,15 +26,18 @@ IF ~Keyword_Set(nside) THEN BEGIN
 ENDIF
 npix=nside2npix(nside)
 
-IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN ;check if a string, if it is assume it is a filepath to a save file with the desired indices (will be over-written with the indices)
+;check if a string, if it is assume it is a filepath to a save file with the desired indices 
+; (will NOT be over-written with the indices)
+IF Keyword_Set(restrict_hpx_inds) AND (size(restrict_hpx_inds,/type) NE 7) THEN restrict_hpx_inds=observation_healpix_inds_select(obs)
+IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN 
     IF file_test(restrict_hpx_inds) THEN restrict_hpx_inds=getvar_savefile(restrict_hpx_inds,'hpx_inds') ELSE BEGIN
         file_path_use=filepath(restrict_hpx_inds,root=Rootdir('fhd'),subdir='Observations')
-        restrict_hpx_inds=getvar_savefile(file_path_use,'hpx_inds')
+        IF file_test(file_path_use) THEN hpx_inds=getvar_savefile(file_path_use,'hpx_inds') $
+            ELSE restrict_hpx_inds+="-- FILE NOT FOUND"
     ENDELSE
 ENDIF
 
-IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
-    hpx_inds=restrict_hpx_inds
+IF N_Elements(hpx_inds) GT 1 THEN BEGIN
     pix2vec_ring,nside,hpx_inds,pix_coords
     vec2ang,pix_coords,pix_dec,pix_ra,/astro
     ad2xy,pix_ra,pix_dec,astr,xv_hpx,yv_hpx
@@ -64,7 +67,6 @@ ENDIF ELSE BEGIN
         pix_i_use=pix_i_use[pix_i_use2]
     ENDIF 
     hpx_inds=hpx_inds0[pix_i_use]
-    IF Keyword_Set(restrict_hpx_inds) THEN restrict_hpx_inds=hpx_inds
 ENDELSE
 
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
@@ -122,6 +124,18 @@ FOR i=0L,n_img_use-1L DO BEGIN
 ENDFOR
 
 hpx_cnv={nside:nside,ija:ija,sa:sa,i_use:i_use,inds:hpx_inds}
+IF tag_exist(obs,'healpix') THEN BEGIN
+    IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=restrict_hpx_inds
+    n_hpx=N_Elements(hpx_inds)
+    IF Keyword_Set(mask) THEN BEGIN
+        mask_test=healpix_cnv_apply(mask,hpx_cnv)
+        mask_test_i0=where(mask_test EQ 0,n_zero_hpx)
+    ENDIF ELSE n_zero_hpx=-1
+    obs.healpix.nside=Long(nside)
+    obs.healpix.ind_list=String(ind_list)
+    obs.healpix.n_pix=Long(n_hpx)
+    obs.healpix.n_zero=Long(n_zero_hpx)
+ENDIF
 
 IF ~Keyword_Set(no_save) THEN save,hpx_cnv,filename=file_path_fhd+'_hpxcnv'+'.sav',/compress
 IF Keyword_Set(pointer_return) THEN RETURN,Ptr_new(hpx_cnv) ELSE RETURN,hpx_cnv
