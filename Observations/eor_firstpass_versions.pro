@@ -135,6 +135,9 @@ case version of
       uvfits_version=3
       uvfits_subversion=1
    end
+   'nb_test_old_cotter_1': begin
+      n_avg=1
+   end
 
    else: print,'Default parameters'
 endcase
