@@ -126,6 +126,11 @@ case version of
       flag_visibilities=0
       flag_calibration=0
    end
+   'apb_test_no_flagging_4': begin
+      flag_visibilities=0
+      no_frequency_flagging=1
+      nfreq_avg=1
+   end
    'apb_test_new_cotter_1': begin
       uvfits_version=3
       uvfits_subversion=1
