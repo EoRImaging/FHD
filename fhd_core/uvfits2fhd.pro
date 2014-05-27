@@ -38,7 +38,8 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,recalcu
     calibration_catalog_file_path=calibration_catalog_file_path,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
-    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,_Extra=extra
+    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,$
+    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -136,6 +137,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;free memory
     data_array=0 
     flag_arr0=0
+    
+    ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
+    IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN $
+        vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average
     
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     n_pol=obs.n_pol
