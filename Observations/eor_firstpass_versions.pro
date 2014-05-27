@@ -134,14 +134,22 @@ case version of
       no_frequency_flagging=1
       nfreq_avg=1
    end
-   'apb_test_new_cotter_1': begin
-      uvfits_version=3
-      uvfits_subversion=1
-   end
    'nb_test_old_cotter_1': begin
       n_avg=1
    end
+
    ;;; Versions below this are with new defaults as of 23 May, 2014 !!!
+   
+   'apb_test_new_cotter_1': begin
+      ;; accidentally deleted this run and have to re-do, so undoing
+      ;; updated defaults.
+      uvfits_version=3
+      uvfits_subversion=1
+      time_cut=2
+      kbinsize=0.716197
+      psf_resolution=16
+      ps_kbinsize=3.
+   end
 
    else: print,'Default parameters'
 endcase
