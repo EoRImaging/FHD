@@ -1,7 +1,7 @@
-PRO vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average
+PRO vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=timing
 ;need to modify params if averaging in time (no freq dependence) 
 ;need to modify hdr if averaging in frequency (no time dependence)
-
+t0=Systime(1)
 n_pol=hdr.n_pol
 
 time=params.time
@@ -67,18 +67,19 @@ IF Keyword_Set(vis_time_average) THEN BEGIN
     params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time}
     
     FOR pol_i=0,n_pol-1 DO BEGIN
-        vis_old=Reform(Temporary(*vis_arr[pol_i]),n_freq,n_time0)
-        vis_new=Make_array(n_freq,n_baselines,n_time)
+        vis_old=Reform(Temporary(*vis_arr[pol_i]),n_freq,n_baselines,n_time0)
+        vis_new=Make_array(n_freq,n_baselines,n_time,type=Size(vis_old,/type))
         FOR ti=0L,n_time-1 DO vis_new[*,*,ti]=Total(vis_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
         vis_old=0
         *vis_arr[pol_i]=Temporary(vis_new)
         
-        flags_old=Reform(Temporary(*flag_arr[pol_i]),n_freq,n_time0)
-        flags_new=Make_array(n_freq,n_baselines,n_time)
+        flags_old=Reform(Temporary(*flag_arr[pol_i]),n_freq,n_baselines,n_time0)
+        flags_new=Make_array(n_freq,n_baselines,n_time,type=Size(flags_old,/type))
         FOR ti=0L,n_time-1 DO flags_new[*,*,ti]=Total(flags_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
         flags_old=0
         *flags_arr[pol_i]=Temporary(flags_new)
     ENDFOR
 ENDIF
 
+timing=Systime(1)
 END

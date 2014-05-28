@@ -11,7 +11,7 @@ IF N_Elements(ps_export) EQ 0 THEN ps_export=0
 IF N_Elements(version) EQ 0 THEN version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-IF N_Elements(data_version) EQ 0 THEN data_version='2'
+IF N_Elements(data_version) EQ 0 THEN data_version='3'
 data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+data_version])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)

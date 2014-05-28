@@ -139,8 +139,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
     flag_arr0=0
     
     ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
-    IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN $
-        vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average
+    IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
+        IF Keyword_Set(vis_time_average) THEN print,"Averaging visibilities in time by a factor of: "+Strtrim(Strn(vis_time_average),2)
+        IF Keyword_Set(vis_freq_average) THEN print,"Averaging visibilities in frequency by a factor of: "+Strtrim(Strn(vis_freq_average),2)
+        vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
+        IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
+    ENDIF
     
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     n_pol=obs.n_pol
@@ -149,7 +153,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
-    IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
+    IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     beam_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
     jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)

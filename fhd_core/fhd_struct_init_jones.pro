@@ -78,6 +78,7 @@ FOR pix=0L,n_pix-1 DO BEGIN
 ENDFOR
 
 jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
+;jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_corr,Jinv:p_map}
 IF Keyword_Set(file_path_fhd) THEN SAVE,jones,filename=proj_filename,/compress
 RETURN,jones
 END
