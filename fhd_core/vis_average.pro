@@ -64,7 +64,7 @@ IF Keyword_Set(vis_time_average) THEN BEGIN
         baseline_arr[bin_offset[ti]]=Total(baseline_arr0[*,ti*vis_time_average:(ti+1)*vis_time_average-1],2)/vis_time_average
         time_arr[bin_offset[ti]]=Total(time_arr0[*,ti*vis_time_average:(ti+1)*vis_time_average-1],2)/vis_time_average
     ENDFOR
-    params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time}
+    params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time_arr}
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         vis_old=Reform(Temporary(*vis_arr[pol_i]),n_freq,n_baselines,n_time0)
@@ -77,7 +77,7 @@ IF Keyword_Set(vis_time_average) THEN BEGIN
         flags_new=Make_array(n_freq,n_baselines,n_time,type=Size(flags_old,/type))
         FOR ti=0L,n_time-1 DO flags_new[*,*,ti]=Total(flags_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
         flags_old=0
-        *flags_arr[pol_i]=Temporary(flags_new)
+        *flag_arr[pol_i]=Temporary(flags_new)
     ENDFOR
 ENDIF
 
