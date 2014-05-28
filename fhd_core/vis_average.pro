@@ -68,18 +68,18 @@ IF Keyword_Set(vis_time_average) THEN BEGIN
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         vis_old=Reform(Temporary(*vis_arr[pol_i]),n_freq,n_baselines,n_time0)
-        vis_new=Make_array(n_freq,n_baselines,n_time,type=Size(vis_old,/type))
-        FOR ti=0L,n_time-1 DO vis_new[*,*,ti]=Total(vis_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
+        vis_new=Make_array(n_freq,n_baselines*n_time,type=Size(vis_old,/type))
+        FOR ti=0L,n_time-1 DO vis_new[*,ti*n_baselines:(ti+1)*n_baselines-1]=Total(vis_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
         vis_old=0
         *vis_arr[pol_i]=Temporary(vis_new)
         
         flags_old=Reform(Temporary(*flag_arr[pol_i]),n_freq,n_baselines,n_time0)
-        flags_new=Make_array(n_freq,n_baselines,n_time,type=Size(flags_old,/type))
-        FOR ti=0L,n_time-1 DO flags_new[*,*,ti]=Total(flags_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
+        flags_new=Make_array(n_freq,n_baselines*n_time,type=Size(flags_old,/type))
+        FOR ti=0L,n_time-1 DO flags_new[*,ti*n_baselines:(ti+1)*n_baselines-1]=Total(flags_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
         flags_old=0
         *flag_arr[pol_i]=Temporary(flags_new)
     ENDFOR
 ENDIF
 
-timing=Systime(1)
+timing=Systime(1)-t0
 END
