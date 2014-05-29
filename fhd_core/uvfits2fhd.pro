@@ -155,7 +155,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
         ENDIF
         
         IF Keyword_Set(generate_vis_savefile) THEN BEGIN
-            SAVE,vis_arr,flag_arr,hdr,params,/compress
+            SAVE,vis_arr,flag_arr,hdr,params,/compress,filename=file_path_vis_sav
+            timing=Systime(1)-t0
+            IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
             RETURN
         ENDIF
     ENDELSE
