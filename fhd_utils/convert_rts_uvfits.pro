@@ -1,4 +1,5 @@
-PRO convert_rts_uvfits,data_directory,obsname=obsname,start_fi=start_fi,end_fi=end_fi,n_pol=n_pol,rts_output_directory=rts_output_directory
+PRO convert_rts_uvfits,data_directory,obsname=obsname,start_fi=start_fi,end_fi=end_fi,n_pol=n_pol,$
+    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,rts_output_directory=rts_output_directory
 ;wrapper to convert RTS uvfits output to FHD visibility save file input
 
 IF N_Elements(n_pol) EQ 0 THEN n_pol=4
@@ -77,7 +78,12 @@ FOR obs_i=0,n_obs-1 DO BEGIN
             (*flag_arr[pol_i])[freq_start[fi]:freq_end[fi],*]=Temporary(*flag_arr2[fi,pol_i])
         ENDFOR
     ENDFOR
-    
+    IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
+        IF Keyword_Set(vis_time_average) THEN print,"Averaging visibilities in time by a factor of: "+Strtrim(Strn(vis_time_average),2)
+        IF Keyword_Set(vis_freq_average) THEN print,"Averaging visibilities in frequency by a factor of: "+Strtrim(Strn(vis_freq_average),2)
+        vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
+        IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
+    ENDIF
     file_path_vis_sav=filepath(obsname_list[obs_i]+".uvfits.sav",root=rts_output_directory)
     SAVE,vis_arr,flag_arr,hdr,params,/compress,filename=file_path_vis_sav
     print,"RTS conversion timing: ",Strn(Systime(1)-t0)
