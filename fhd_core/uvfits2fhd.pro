@@ -66,7 +66,7 @@ IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the
 ;    IF !GPU.mode NE 1 THEN GPU_enable=0
 ;ENDIF
 
-print,'Processing: ',file_path_vis
+print,"Processing "+file_basename(file_path_vis)+" in "+file_dirname(file_path_vis)
 print,systime()
 print,'Output file_path:',file_path_fhd
 ext='.uvfits'
@@ -82,7 +82,7 @@ fhd_filepath=file_path_fhd+'_fhd.sav'
 autocorr_filepath=file_path_fhd+'_autos.sav'
 cal_filepath=file_path_fhd+'_cal.sav'
 ;model_filepath=file_path_fhd+'_vis_cal.sav'
-file_path_vis_sav=file_path_vis+".sav"
+IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
 IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
@@ -126,9 +126,9 @@ IF Keyword_Set(data_flag) THEN BEGIN
         
         data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
         hdr=vis_header_extract(data_header0, params = data_struct.params)    
-        IF N_Elements(n_pol) EQ 0 THEN n_pol2=hdr.n_pol ELSE n_pol2=n_pol
+        IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
         params=vis_param_extract(data_struct.params,hdr)
-        IF n_pol2 LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol2-1,*]) ELSE data_array=Temporary(data_struct.array) 
+        IF n_pol LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol-1,*]) ELSE data_array=Temporary(data_struct.array) 
         data_struct=0. ;free memory
         
         pol_dim=hdr.pol_dim

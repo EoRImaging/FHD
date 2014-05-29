@@ -3,6 +3,7 @@ FUNCTION fhd_path_setup,file_path_vis,data_directory=data_directory,filename=fil
 ;NOTE that any keywords passed through _Extra (i.e. from the command line) will supersede any passed explicitly
 
 IF Keyword_Set(file_path_vis) THEN BEGIN
+    filename=file_basename(file_path_vis,'.sav',/fold_case) ;visibilities may be stored in an IDL save file, instead of uvfits
     filename=file_basename(file_path_vis,'.uvfits',/fold_case)
     filename=file_basename(filename,'_cal',/fold_case) ;sometimes "_cal" is present, sometimes not.
     data_directory=file_dirname(file_path_vis)
