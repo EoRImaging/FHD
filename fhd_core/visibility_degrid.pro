@@ -31,13 +31,14 @@ ky_arr=params.vv/kbinsize
 baseline_i=params.baseline_arr
 nbaselines=bin_offset[1]
 n_samples=N_Elements(bin_offset)
-n_frequencies=N_Elements(frequency_array)
+n_freq_use=N_Elements(frequency_array)
+n_freq=Long(obs.n_freq)
 n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
 
 vis_dimension=Float(nbaselines*n_samples)
-IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_frequencies,vis_dimension) $
-    ELSE visibility_array=Complexarr(n_frequencies,vis_dimension) 
+IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
+    ELSE visibility_array=Complexarr(n_freq,vis_dimension) 
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
@@ -125,14 +126,14 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
 
-    freq_i=(inds mod n_frequencies)
+    freq_i=(inds mod n_freq_use)
     fbin=freq_bin_i[freq_i]
      
     vis_n=bin_n[bin_i[bi]]
     
     psf_conj_flag=intarr(vis_n)
     IF n_conj GT 0 THEN BEGIN
-        bi_vals=Floor(inds/n_freq1)
+        bi_vals=Floor(inds/n_freq_use)
         psf_conj_flag=conj_flag[bi_vals]
     ENDIF 
 ;    x1=x_off-Min(x_off)
