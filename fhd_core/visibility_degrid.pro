@@ -31,19 +31,22 @@ ky_arr=params.vv/kbinsize
 baseline_i=params.baseline_arr
 nbaselines=bin_offset[1]
 n_samples=N_Elements(bin_offset)
-n_frequencies=N_Elements(frequency_array)
+n_freq_use=N_Elements(frequency_array)
+n_freq=Long(obs.n_freq)
 n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
 
 vis_dimension=Float(nbaselines*n_samples)
-IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_frequencies,vis_dimension) $
-    ELSE visibility_array=Complexarr(n_frequencies,vis_dimension) 
+IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
+    ELSE visibility_array=Complexarr(n_freq,vis_dimension) 
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 
 conj_i=where(ky_arr GT 0,n_conj)
+conj_flag=intarr(N_Elements(ky_arr)) 
 IF n_conj GT 0 THEN BEGIN
+    conj_flag[conj_i]=1
     xcen[*,conj_i]=-xcen[*,conj_i]
     ycen[*,conj_i]=-ycen[*,conj_i]
 ENDIF
@@ -107,6 +110,11 @@ t4=0
 t5=0
 image_uv_use=image_uv
 psf_dim3=psf_dim*psf_dim
+
+pdim=size(psf_base,/dimension)
+psf_base_dag=Ptrarr(pdim,/allocate)
+FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
+
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
@@ -118,10 +126,16 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
 
-    freq_i=(inds mod n_frequencies)
+    freq_i=(inds mod n_freq_use)
     fbin=freq_bin_i[freq_i]
      
     vis_n=bin_n[bin_i[bi]]
+    
+    psf_conj_flag=intarr(vis_n)
+    IF n_conj GT 0 THEN BEGIN
+        bi_vals=Floor(inds/n_freq_use)
+        psf_conj_flag=conj_flag[bi_vals]
+    ENDIF 
 ;    x1=x_off-Min(x_off)
 ;    y1=y_off-Min(y_off)
 ;    f1=fbin-Min(fbin)
@@ -142,6 +156,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
+        psf_conj_flag=psf_conj_flag[inds_use]
         
         IF n_xyf_bin EQ 1 THEN ind_remap=intarr(vis_n) ELSE BEGIN
             hist_inds_u=histogram(xyf_ui,/binsize,min=0,reverse_ind=ri_xyf)
@@ -158,7 +173,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
-
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
+        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+    
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr

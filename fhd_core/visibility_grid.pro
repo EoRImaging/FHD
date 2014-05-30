@@ -77,7 +77,7 @@ variance_flag=Keyword_Set(variance)
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize
 
-n_freq1=N_Elements(frequency_array)
+n_freq_use=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
 psf_dim3=psf_dim*psf_dim
 
@@ -233,14 +233,14 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
 
-    freq_i=(inds mod n_freq1)
+    freq_i=(inds mod n_freq_use)
     fbin=freq_bin_i[freq_i]
     
     vis_n=bin_n[bin_i[bi]]
     
     psf_conj_flag=intarr(vis_n)
     IF n_conj GT 0 THEN BEGIN
-        bi_vals=Floor(inds/n_freq1)
+        bi_vals=Floor(inds/n_freq_use)
         psf_conj_flag=conj_flag[bi_vals]
     ENDIF  
     
