@@ -4,7 +4,7 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,we
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    phase_threshold=phase_threshold,grid_uniform_weight=grid_uniform_weight,error=error,_Extra=extra
+    phase_threshold=phase_threshold,error=error,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -77,7 +77,7 @@ variance_flag=Keyword_Set(variance)
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize
 
-n_freq1=N_Elements(frequency_array)
+n_freq_use=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
 psf_dim3=psf_dim*psf_dim
 
@@ -94,8 +94,10 @@ xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 
 conj_i=where(ky_arr GT 0,n_conj)
+conj_flag=intarr(N_Elements(ky_arr)) 
 ky_arr=(kx_arr=0)
 IF n_conj GT 0 THEN BEGIN
+    conj_flag[conj_i]=1
     xcen[*,conj_i]=-xcen[*,conj_i]
     ycen[*,conj_i]=-ycen[*,conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
@@ -166,8 +168,6 @@ n_vis=Float(Total(bin_n))
 FOR fi=0L,n_f_use-1 DO n_vis_arr[fi_use[fi]]=Total(Long(xmin[fi,*] GT 0))
 obs.nf_vis=n_vis_arr
 
-;IF Keyword_Set(grid_uniform_weight) THEN n_vis=n_bin_use
-
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
 CASE 1 OF
@@ -218,9 +218,9 @@ IF map_flag THEN BEGIN
         *map_fn_inds[i,j]=psf2_inds[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]
 ENDIF
 
-;pdim=size(psf_base,/dimension)
-;psf_base_dag=Ptrarr(pdim,/allocate)
-;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
+pdim=size(psf_base,/dimension)
+psf_base_dag=Ptrarr(pdim,/allocate)
+FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
     IF verbose THEN t1_0=Systime(1)
@@ -233,12 +233,18 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
 
-    freq_i=(inds mod n_freq1)
+    freq_i=(inds mod n_freq_use)
     fbin=freq_bin_i[freq_i]
     
     vis_n=bin_n[bin_i[bi]]
     
-    xyf_i=x_off+y_off*psf_resolution+fbin*psf_resolution^2.
+    psf_conj_flag=intarr(vis_n)
+    IF n_conj GT 0 THEN BEGIN
+        bi_vals=Floor(inds/n_freq_use)
+        psf_conj_flag=conj_flag[bi_vals]
+    ENDIF  
+    
+    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.)*2.+psf_conj_flag
     
     xyf_si=Sort(xyf_i)
     xyf_i=xyf_i[xyf_si]
@@ -254,6 +260,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
+        psf_conj_flag=psf_conj_flag[inds_use]
         IF n_xyf_bin GT 1 THEN xyf_ui0=[0,xyf_ui[0:n_xyf_bin-2]+1] ELSE xyf_ui0=0
         psf_weight=xyf_ui-xyf_ui0+1
          
@@ -267,14 +274,12 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         repeat_i=where(psf_weight GT 1,n_rep,complement=single_i,ncom=n_single)
         
         xyf_ui=xyf_ui[repeat_i]
-;        xyf_ui0=xyf_ui0[repeat_i]+1 ;add 1, since first value already inserted
         xyf_ui0=xyf_ui0[repeat_i]
-        FOR rep_ii=0,n_rep-1 DO BEGIN
-;            vis_box[repeat_i[rep_ii]]+=Total(vis_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]]) ; use += since first value already inserted
+        FOR rep_ii=0,n_rep-1 DO $
             vis_box[repeat_i[rep_ii]]=Total(vis_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
-        ENDFOR
         
-        IF model_flag THEN FOR rep_ii=0,n_rep-1 DO model_box[repeat_i[rep_ii]]=Total(model_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
+        IF model_flag THEN FOR rep_ii=0,n_rep-1 DO $
+            model_box[repeat_i[rep_ii]]=Total(model_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
         
         vis_n=n_xyf_bin
     ENDIF ELSE BEGIN
@@ -282,7 +287,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         IF model_flag THEN model_box=model_use[inds];*freq_norm[freq_i]
         vis_box=vis_arr_use[inds];*freq_norm[freq_i]
         psf_weight=Replicate(1.,vis_n)
-;        IF Keyword_Set(grid_uniform_weight) THEN vis_box/=vis_n
     ENDELSE
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
@@ -291,7 +295,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t2+=t3_0-t1_0
     ENDIF
     
-    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
+        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
     IF map_flag THEN BEGIN
         IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=real_part(box_matrix) 
@@ -317,12 +322,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     IF weights_flag THEN BEGIN
         wts_box=matrix_multiply(psf_weight/n_vis,box_matrix_dag,/atranspose,/btranspose)
-;        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
     ENDIF
     IF variance_flag THEN BEGIN
         var_box=matrix_multiply(psf_weight/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
-;        IF Keyword_Set(grid_uniform_weight) THEN wts_box/=vis_n
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
     
@@ -332,7 +335,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     ENDIF
     IF map_flag THEN BEGIN
         box_arr_map=matrix_multiply(Temporary(box_matrix),Temporary(box_matrix_dag),/btranspose,TPOOL_MIN_ELTS=20000.)
-;        IF Keyword_Set(grid_uniform_weight) THEN box_arr_map/=vis_n
         FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO BEGIN
             ij=i+j*psf_dim
             (*map_fn[xmin_use+i,ymin_use+j])[*map_fn_inds[i,j]]+=box_arr_map[*,ij]
@@ -382,8 +384,6 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
         model_return=(model_return+model_conj)/2.
     ENDIF
 ENDIF
-;normalization=dimension*elements
-;image_uv*=normalization ;account for FFT convention
 
 IF verbose THEN print,t0,t1,t2,t3,t4,t5,t6,t7
 timing=Systime(1)-t0_0
