@@ -10,7 +10,8 @@ IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees
 IF N_Elements(alt) EQ 0 THEN alt=377.83 & alt=Float(alt);altitude (meters)
 metafits_ext='.metafits'
 metafits_dir=file_dirname(file_path_vis)
-metafits_name=file_basename(file_path_vis,'.uvfits',/fold_case)
+metafits_name=file_basename(file_path_vis,'.sav',/fold_case)
+metafits_name=file_basename(metafits_name,'.uvfits',/fold_case)
 metafits_name=file_basename(metafits_name,'_cal',/fold_case) ;sometimes "_cal" is present, sometimes not.
 metafits_path=metafits_dir+path_sep()+metafits_name+metafits_ext
 
