@@ -31,7 +31,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   header_filepath=file_path_fhd+'_header.sav'
   flags_filepath=file_path_fhd+'_flags.sav'
   input_model_filepath = file_path_fhd + '_input_model.sav'
-  ;vis_filepath=file_path_fhd+'_vis.sav'
+  vis_filepath=file_path_fhd+'_vis.sav'
   obs_filepath=file_path_fhd+'_obs.sav'
   params_filepath=file_path_fhd+'_params.sav'
   hdr_filepath=file_path_fhd+'_hdr.sav'
@@ -177,7 +177,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         
         *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
       endfor
-      if max(*this_model_uv[0]) lt 1 and max(*this_model_uv[1]) lt 1 then continue
+      
+      if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
       
       this_model_ptr=vis_source_model(0,obs,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
         timing=model_timing,silent=silent,error=error,_Extra=extra)
@@ -223,6 +224,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   IF Keyword_Set(save_visibilities) THEN BEGIN
     t_save0=Systime(1)
     vis_export,obs,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+    vis_export,obs,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
     t_save=Systime(1)-t_save0
     IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
   ENDIF
@@ -267,7 +269,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   ENDIF
     
   ;optionally export frequency-split Healpix cubes
-  IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,params,vis_arr,$
+  IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,$
     vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
     
   undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr
