@@ -1,5 +1,6 @@
-FUNCTION stokes_cnv,image_arr,jones,beam_arr=beam_arr,inverse=inverse,square=square,no_extend=no_extend,$
-    rotate_pol=rotate_pol,no_dipole_projection_rotation=no_dipole_projection_rotation,debug_direction=debug_direction
+FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square=square,no_extend=no_extend,$
+    rotate_pol=rotate_pol,no_dipole_projection_rotation=no_dipole_projection_rotation,$
+    center_rotate=center_rotate,debug_direction=debug_direction
     ;/rotate_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
@@ -45,6 +46,28 @@ IF Keyword_Set(rotate_pol) THEN BEGIN
         p_map[*,i]=jones.Jmat[*,1-i]
         p_corr[i,*]=jones.Jinv[1-i,*]
         p_corr[i+2,*]=jones.Jinv[3-i,*]
+    ENDFOR
+ENDIF
+IF Keyword_Set(center_rotate) THEN BEGIN
+    p_map=pointer_copy(p_map)
+    p_corr=pointer_copy(p_corr)
+    p_free=1
+    IF N_Elements(obs) EQ 0 THEN BEGIN
+        obsx=dimension/2.
+        obsy=elements/2.
+    ENDIF ELSE BEGIN
+        obsx=obs.obsx
+        obsy=obs.obsy
+    ENDELSE
+    inds_x=inds mod dimension
+    inds_y=Floor(inds/dimension)
+    ind_dist=sqrt((inds_x-obsx)^2.+(inds_y-obsy)^2.)
+    min_dist=min(ind_dist,obs_ind_i)
+    FOR i=0,3 DO BEGIN
+        FOR j=0,3 DO BEGIN
+            (*p_map[i,j])[*]=(*p_map[i,j])[obs_ind_i]
+            (*p_corr[i,j])[*]=(*p_corr[i,j])[obs_ind_i]
+        ENDFOR
     ENDFOR
 ENDIF
 sign=[1,-1,1,-1]
