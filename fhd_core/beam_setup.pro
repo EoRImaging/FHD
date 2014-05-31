@@ -65,7 +65,7 @@ yvals2=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
 IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
 ;residual_threshold is minimum residual above which to include
 IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
-beam_mask_threshold=1E3
+beam_mask_threshold=1E2
 
 freq_center=fltarr(nfreq_bin)
 FOR fi=0L,nfreq_bin-1 DO BEGIN
@@ -248,7 +248,7 @@ ENDFOR
 edge_test=fltarr(psf_dim,psf_dim)
 FOR i=0,N_Elements(psf_base)-1 DO edge_test+=Abs(*psf_base[i]) ;add together ALL beams, because we just want to find out if EVERY border pixel is zero
 edge_test_cut=Total(edge_test,1)+Total(edge_test,2) 
-edge_test_cut+=Reverse(edge_test_x)
+edge_test_cut+=Reverse(edge_test_cut)
 edge_zeroes=(where(edge_test_cut))[0]
 IF edge_zeroes GT 0 THEN BEGIN
     psf_dim-=2.*edge_zeroes
