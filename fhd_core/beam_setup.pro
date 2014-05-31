@@ -39,27 +39,28 @@ nfreq_bin=Max(freq_bin_i)+1
 
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
+bin_offset=(*obs.baseline_info).bin_offset
+nbaselines=bin_offset[1]
+
 dimension=obs.dimension
 elements=obs.elements
 kbinsize=obs.kpix
 kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
 degpix=obs.degpix
+astr=obs.astr
 IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32?
-zen_ang=angle_difference(obsdec,obsra,zendec,zenra,/degree,/nearest)
-IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(zen_ang*!DtoR)) $
+Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+obsalt=Float(obsalt)
+obsaz=Float(obsaz)
+obsza=90.-obsalt
+IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR)) $
     ELSE IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) 
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
-
-psf_dim2=psf_dim*psf_resolution
-
-psf_scale=dimension/psf_dim
-xvals2=meshgrid(psf_dim2,psf_dim2,1)*psf_scale-psf_dim2*psf_scale/2.+dimension/2.
-yvals2=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
 
 ;residual_tolerance is residual as fraction of psf_base above which to include 
 IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
@@ -79,8 +80,11 @@ ENDFOR
 ;freq_norm/=Mean(freq_norm) 
 freq_norm=Replicate(1.,nfreq_bin)
 
-bin_offset=(*obs.baseline_info).bin_offset
-nbaselines=bin_offset[1]
+psf_dim2=psf_dim*psf_resolution
+
+psf_scale=dimension/psf_dim
+xvals2=meshgrid(psf_dim2,psf_dim2,1)*psf_scale-psf_dim2*psf_scale/2.+dimension/2.
+yvals2=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
 
 beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain,no_save=no_save
 
@@ -88,8 +92,8 @@ beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bi
 psf_residuals_i=Ptrarr(n_pol,nfreq_bin,nbaselines) ;contains arrays of pixel indices of pixels with modified psf for a given baseline id
 psf_residuals_val=Ptrarr(n_pol,nfreq_bin,nbaselines) ;contains arrays of values corresponding to the pixel indices above
 psf_residuals_n=fltarr(n_pol,nfreq_bin,nbaselines) ;contains the total number of modified pixels for each baseline id
-
 psf_base=Ptrarr(n_pol,nfreq_bin,psf_resolution,psf_resolution)
+
 psf_xvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 psf_yvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 xvals_i=meshgrid(psf_dim,psf_dim,1)*psf_resolution
@@ -101,18 +105,12 @@ FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN
     *psf_yvals[i,j]=meshgrid(psf_dim,psf_dim,2)-psf_dim/2.+Float(j)/psf_resolution
 ENDFOR
 
-astr=obs.astr
-
 t1_a=Systime(1)
 xy2ad,xvals2,yvals2,astr,ra_arr2,dec_arr2
 valid_i=where(Finite(ra_arr2),n_valid)
 ra_use=ra_arr2[valid_i]
 dec_use=dec_arr2[valid_i]
 
-Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
-obsalt=Float(obsalt)
-obsaz=Float(obsaz)
-obsza=90.-obsalt
 ;intensity0=stokes_off_zenith(obsaz, obsalt, [1.,0.,0.,0.], Ex0, Ey0,/intensity)
 ;norm=Float(Sqrt(2.)*[ex0,ey0])
 norm=[sqrt(1.-(sin(obsza*!DtoR)*sin((obsaz)*!DtoR))^2.),sqrt(1.-(sin(obsza*!DtoR)*cos((obsaz)*!DtoR))^2.)]
