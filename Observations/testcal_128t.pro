@@ -4,11 +4,11 @@ except=!except
 heap_gc
 
 calibrate_visibilities=1
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
-IF N_Elements(export_images) EQ 0 THEN export_images=1
-IF N_Elements(cleanup) EQ 0 THEN cleanup=0
-IF N_Elements(ps_export) EQ 0 THEN ps_export=0
-IF N_Elements(version) EQ 0 THEN version=''
+recalculate_all=0
+export_images=1
+cleanup=0
+ps_export=0
+version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 IF N_Elements(data_version) EQ 0 THEN data_version='3'
