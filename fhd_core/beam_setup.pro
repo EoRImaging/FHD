@@ -56,14 +56,7 @@ IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(freq
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
 psf_dim2=psf_dim*psf_resolution
-;degpix_use=degpix*dimension/psf_dim
-;scale=psf_dim2/dimension
-;obsx2=obs.obsx*scale
-;obsy2=obs.obsy*scale
-;zenx2=obs.zenx*scale
-;zeny2=obs.zeny*scale
 
-;psf_scale=degpix_use/degpix
 psf_scale=dimension/psf_dim
 xvals2=meshgrid(psf_dim2,psf_dim2,1)*psf_scale-psf_dim2*psf_scale/2.+dimension/2.
 yvals2=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
@@ -72,6 +65,7 @@ yvals2=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
 IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
 ;residual_threshold is minimum residual above which to include
 IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
+beam_mask_threshold=1E3
 
 freq_center=fltarr(nfreq_bin)
 FOR fi=0L,nfreq_bin-1 DO BEGIN
@@ -189,7 +183,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         psf_base1=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
         uv_mask=fltarr(psf_dim2,psf_dim2)
-        beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
+        beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/beam_mask_threshold,Max(abs(psf_base1))])
         uv_mask[beam_i]=1.
         
         psf_base2=psf_base1*psf_resolution^2.
@@ -240,7 +234,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2,beam1_arr,beam2_arr
         FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
             psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=$
-                Ptr_new(Reform(psf_base2[xvals_i+i,yvals_i+j],psf_dim*psf_dim)) 
+                Ptr_new(psf_base2[xvals_i+i,yvals_i+j]) 
         breakpoint0=0
         t4+=Systime(1)-t4_a
     ENDFOR
@@ -248,6 +242,21 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    FOR freq_i=0L,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
 ;        *psf_base[pol_i,freq_i,i,j]/=freq_norm_check[freq_i]
 ENDFOR
+
+;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
+;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
+edge_test=fltarr(psf_dim,psf_dim)
+FOR i=0,N_Elements(psf_base)-1 DO edge_test+=Abs(*psf_base[i]) ;add together ALL beams, because we just want to find out if EVERY border pixel is zero
+edge_test_cut=Total(edge_test,1)+Total(edge_test,2) 
+edge_test_cut+=Reverse(edge_test_x)
+edge_zeroes=(where(edge_test_cut))[0]
+IF edge_zeroes GT 0 THEN BEGIN
+    psf_dim-=2.*edge_zeroes
+    FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
+        *psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=$
+            Reform((*psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j])[edge_zeroes:edge_zeroes+psf_dim-1,edge_zeroes:edge_zeroes+psf_dim-1],psf_dim*psf_dim)
+ENDIF ELSE FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
+    *psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=Reform(*psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j],psf_dim*psf_dim)
 
 complex_flag=Max(complex_flag_arr)
 IF Keyword_Set(no_complex_beam) THEN complex_flag=0
