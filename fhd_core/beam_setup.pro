@@ -25,6 +25,14 @@ IF N_Elements(obs) EQ 0 THEN restore,file_path+'_obs.sav'
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
 n_pol=obs.n_pol
+
+obsra=obs.obsra
+obsdec=obs.obsdec
+zenra=obs.zenra
+zendec=obs.zendec
+phasera=obs.phasera
+phasedec=obs.phasedec
+Jdate=obs.Jd0
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
 IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
@@ -42,19 +50,21 @@ IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32?
-IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize) $
+zen_ang=angle_difference(obsdec,obsra,zendec,zenra,/degree,/nearest)
+IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(zen_ang*!DtoR)) $
     ELSE IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) 
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
 psf_dim2=psf_dim*psf_resolution
-degpix_use=degpix*dimension/psf_dim2
-scale=psf_dim2/dimension
-obsx2=obs.obsx*scale
-obsy2=obs.obsy*scale
-zenx2=obs.zenx*scale
-zeny2=obs.zeny*scale
+;degpix_use=degpix*dimension/psf_dim
+;scale=psf_dim2/dimension
+;obsx2=obs.obsx*scale
+;obsy2=obs.obsy*scale
+;zenx2=obs.zenx*scale
+;zeny2=obs.zeny*scale
 
-psf_scale=degpix_use/degpix
+;psf_scale=degpix_use/degpix
+psf_scale=dimension/psf_dim
 xvals2=meshgrid(psf_dim2,psf_dim2,1)*psf_scale-psf_dim2*psf_scale/2.+dimension/2.
 yvals2=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
 
@@ -77,14 +87,6 @@ freq_norm=Replicate(1.,nfreq_bin)
 
 bin_offset=(*obs.baseline_info).bin_offset
 nbaselines=bin_offset[1]
-
-obsra=obs.obsra
-obsdec=obs.obsdec
-zenra=obs.zenra
-zendec=obs.zendec
-phasera=obs.phasera
-phasedec=obs.phasedec
-Jdate=obs.Jd0
 
 beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain,no_save=no_save
 
@@ -190,8 +192,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam_i=region_grow(abs(psf_base1),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base1))/1e3,Max(abs(psf_base1))])
         uv_mask[beam_i]=1.
         
-        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
-        uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1)
+        psf_base2=psf_base1*psf_resolution^2.
+        uv_mask2=uv_mask
+;        psf_base2=Interpolate(psf_base1,psf_xvals1,psf_yvals1,cubic=-0.5)
+;        uv_mask2=Interpolate(uv_mask,psf_xvals1,psf_yvals1)
         phase_test=Atan(psf_base2,/phase)*!Radeg
         phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
         IF n_phase_cut GT 0 THEN uv_mask2[phase_cut]=0
