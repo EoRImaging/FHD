@@ -106,13 +106,14 @@ t1_a=Systime(1)
 ;So, the cropped uv span (psf_dim) means we do not need to calculate at full image resolution, 
 ;   while the increased uv resolution can correspond to super-horizon scales. We construct the beam model in image space, 
 ;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
-psf_image_dim=psf_dim*psf_image_resolution ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
 psf_superres_dim=psf_dim*psf_resolution
 psf_scale=dimension/psf_image_dim
 xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale
 yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale
-xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_image_dim/2)
-yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_image_dim/2)
+xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
 xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
 valid_i=where(Finite(ra_arr),n_valid)
@@ -186,11 +187,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
         uv_mask[beam_i]=1.
         
-;        psf_base_superres=psf_base_single*psf_resolution^2.
-;        uv_mask_superres=uv_mask
-        psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
+        psf_base_superres=psf_base_single
+        uv_mask_superres=uv_mask
+;        psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
+;        uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
         psf_base_superres*=(psf_resolution/psf_image_resolution)^2. ;FFT normalization correction in case this changes the total number of pixels
-        uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
         phase_test=Atan(psf_base_superres,/phase)*!Radeg
         phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
         IF n_phase_cut GT 0 THEN uv_mask_superres[phase_cut]=0
