@@ -56,6 +56,7 @@ IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0
 beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain,no_save=no_save
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32?
+IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=psf_resolution
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsalt=Float(obsalt)
 obsaz=Float(obsaz)
@@ -100,12 +101,18 @@ FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN
 ENDFOR
 
 t1_a=Systime(1)
-psf_dim2=psf_dim*psf_resolution
-psf_scale=dimension/psf_dim
-xvals_celestial=meshgrid(psf_dim2,psf_dim2,1)*psf_scale-psf_dim2*psf_scale/2.+dimension/2.
-yvals_celestial=meshgrid(psf_dim2,psf_dim2,2)*psf_scale-psf_dim2*psf_scale/2.+elements/2.
-psf_xvals_celestial=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,1)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_dim2/2)
-psf_yvals_celestial=meshgrid(psf_dim*psf_resolution,psf_dim*psf_resolution,2)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_dim2/2)
+;set up coordinates to generate the high uv resolution model. 
+;Remember that field of view = uv resolution, image pixel scale = uv span. 
+;So, the cropped uv span (psf_dim) means we do not need to calculate at full image resolution, 
+;   while the increased uv resolution can correspond to super-horizon scales. We construct the beam model in image space, 
+;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
+psf_image_dim=psf_dim*psf_image_resolution ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+psf_superres_dim=psf_dim*psf_resolution
+psf_scale=dimension/psf_image_dim
+xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale
+yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale
+xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_image_dim/2)
+yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/Float(psf_resolution)-Floor(psf_dim/2)+Floor(psf_image_dim/2)
 
 xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
 valid_i=where(Finite(ra_arr),n_valid)
@@ -115,8 +122,8 @@ dec_use=dec_arr[valid_i]
 ;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
 ;;NOTE: The NEW Eq2Hor REQUIRES Jdate to be a scalar! They created a new bug when they fixed the old one
 Eq2Hor,ra_use,dec_use,Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
-za_arr=fltarr(psf_dim2,psf_dim2)+90. & za_arr[valid_i]=90.-alt_arr1
-az_arr=fltarr(psf_dim2,psf_dim2) & az_arr[valid_i]=az_arr1
+za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
+az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 
 xvals_instrument=za_arr*Sin(az_arr*!DtoR)
 yvals_instrument=za_arr*Cos(az_arr*!DtoR)
@@ -126,8 +133,8 @@ yvals_instrument=za_arr*Cos(az_arr*!DtoR)
 ;IF N_neg GT 0 THEN hour_angle[h_neg] = hour_angle[h_neg] + 360.
 ;hour_angle = hour_angle mod 360.
 ;hadec2altaz, hour_angle, dec_use, obs.obsdec, elevation_use, azimuth_use
-;elevation_arr=fltarr(psf_dim2,psf_dim2) & elevation_arr[valid_i]=elevation_use
-;azimuth_arr=fltarr(psf_dim2,psf_dim2) & azimuth_arr[valid_i]=azimuth_use
+;elevation_arr=fltarr(psf_image_dim,psf_image_dim) & elevation_arr[valid_i]=elevation_use
+;azimuth_arr=fltarr(psf_image_dim,psf_image_dim) & azimuth_arr[valid_i]=azimuth_use
 
 norm=[sqrt(1.-(sin(obsza*!DtoR)*sin((obsaz)*!DtoR))^2.),sqrt(1.-(sin(obsza*!DtoR)*cos((obsaz)*!DtoR))^2.)]
 pol_norm=fltarr(n_pol)+1.
@@ -164,25 +171,26 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
             frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals_instrument,yvals=yvals_instrument,$
-            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_dim2)
+            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_image_dim)
         IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
         beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$
             frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals_instrument,yvals=yvals_instrument,$
-            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_dim2)
+            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_image_dim)
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
         psf_base_single=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
-        uv_mask=fltarr(psf_dim2,psf_dim2)
-        beam_i=region_grow(abs(psf_base_single),psf_dim2*(1.+psf_dim2)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
+        uv_mask=fltarr(psf_image_dim,psf_image_dim)
+        beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
         uv_mask[beam_i]=1.
         
-        psf_base_superres=psf_base_single*psf_resolution^2.
-        uv_mask_superres=uv_mask
-;        psf_base_superres=Interpolate(psf_base_single,psf_xvals_celestial,psf_yvals_celestial,cubic=-0.5)
-;        uv_mask_superres=Interpolate(uv_mask,psf_xvals_celestial,psf_yvals_celestial)
+;        psf_base_superres=psf_base_single*psf_resolution^2.
+;        uv_mask_superres=uv_mask
+        psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
+        psf_base_superres*=(psf_resolution/psf_image_resolution)^2. ;FFT normalization correction in case this changes the total number of pixels
+        uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
         phase_test=Atan(psf_base_superres,/phase)*!Radeg
         phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
         IF n_phase_cut GT 0 THEN uv_mask_superres[phase_cut]=0
