@@ -109,9 +109,9 @@ t1_a=Systime(1)
 psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
 psf_superres_dim=psf_dim*psf_resolution
-psf_scale=dimension/psf_image_dim
-xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale
-yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale
+psf_scale=dimension*psf_intermediate_res/psf_image_dim
+xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
 xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
@@ -189,8 +189,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
         psf_base_superres=psf_base_single
         uv_mask_superres=uv_mask
-;        psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-;        uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
+        psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
+        uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
         psf_base_superres*=(psf_resolution/psf_image_resolution)^2. ;FFT normalization correction in case this changes the total number of pixels
         phase_test=Atan(psf_base_superres,/phase)*!Radeg
         phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
