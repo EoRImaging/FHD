@@ -159,6 +159,9 @@ case version of
    'apb_test_pattis_catalog_2_0': begin
       calibration_catalog_file_path=filepath('pattis_catalog_2_0.sav',root=rootdir('FHD'),subdir='catalog_data')
    end
+   'apb_test_devel_merge_1': begin
+      psf_resolution=32
+   end
    else: print,'Default parameters'
 endcase
    
