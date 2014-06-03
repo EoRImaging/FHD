@@ -187,8 +187,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
         uv_mask[beam_i]=1.
         
-        psf_base_superres=psf_base_single
-        uv_mask_superres=uv_mask
+;        psf_base_superres=psf_base_single
+;        uv_mask_superres=uv_mask
         psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
         uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
         psf_base_superres*=(psf_image_resolution*psf_intermediate_res/psf_resolution)^2. ;FFT normalization correction in case this changes the total number of pixels
