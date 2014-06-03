@@ -37,7 +37,7 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
         ti_end=nb-1
     ENDIF ELSE BEGIN
         ti_start=0
-        ti_end=(Ceil(Abs(time_cut[ti])/time_step))<(nb-1)
+        ti_end=(Ceil(Abs(time_cut[ti])/time_step)-1)<(nb-1)
     ENDELSE
     time_use[ti_start:ti_end]=0
 ENDFOR
