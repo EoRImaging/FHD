@@ -111,9 +111,9 @@ t5=0
 image_uv_use=image_uv
 psf_dim3=psf_dim*psf_dim
 
-pdim=size(psf_base,/dimension)
-psf_base_dag=Ptrarr(pdim,/allocate)
-FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
+;pdim=size(psf_base,/dimension)
+;psf_base_dag=Ptrarr(pdim,/allocate)
+;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
@@ -131,17 +131,13 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
      
     vis_n=bin_n[bin_i[bi]]
     
-    psf_conj_flag=intarr(vis_n)
-    IF n_conj GT 0 THEN BEGIN
-        bi_vals=Floor(inds/n_freq_use)
-        psf_conj_flag=conj_flag[bi_vals]
-    ENDIF 
-;    x1=x_off-Min(x_off)
-;    y1=y_off-Min(y_off)
-;    f1=fbin-Min(fbin)
+;    psf_conj_flag=intarr(vis_n)
+;    IF n_conj GT 0 THEN BEGIN
+;        bi_vals=Floor(inds/n_freq_use)
+;        psf_conj_flag=conj_flag[bi_vals]
+;    ENDIF 
     
-    xyf_i=x_off+y_off*psf_resolution+fbin*psf_resolution^2.
-;    xyf_i=x1+y1*(Max(x1)+1)+f1*((Max(x1)+1)*(Max(y1)+1))
+    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.);*2.+psf_conj_flag
     xyf_si=Sort(xyf_i)
     xyf_i=xyf_i[xyf_si]
     xyf_ui=Uniq(xyf_i)
@@ -173,8 +169,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
-    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
-        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
+;        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0

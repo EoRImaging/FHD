@@ -140,15 +140,11 @@ case version of
 
    ;;; Versions below this are with new defaults as of 23 May, 2014 !!!
    
-   'apb_test_new_cotter_1': begin
-      ;; accidentally deleted this run and have to re-do, so undoing
-      ;; updated defaults.
+   'nb_test_new_cotter_1': begin
+      vis_freq_average=2
       uvfits_version=3
       uvfits_subversion=1
-      time_cut=2
-      kbinsize=0.716197
-      psf_resolution=16
-      ps_kbinsize=3.
+      time_cut=[2,-2]
    end
    'apb_test_pattis_catalog_1_0': begin
       calibration_catalog_file_path=filepath('pattis_catalog_1_0.sav',root=rootdir('FHD'),subdir='catalog_data')
