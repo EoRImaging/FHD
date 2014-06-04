@@ -218,9 +218,9 @@ IF map_flag THEN BEGIN
         *map_fn_inds[i,j]=psf2_inds[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]
 ENDIF
 
-pdim=size(psf_base,/dimension)
-psf_base_dag=Ptrarr(pdim,/allocate)
-FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
+;pdim=size(psf_base,/dimension)
+;psf_base_dag=Ptrarr(pdim,/allocate)
+;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
     IF verbose THEN t1_0=Systime(1)
@@ -238,13 +238,13 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     vis_n=bin_n[bin_i[bi]]
     
-    psf_conj_flag=intarr(vis_n)
-    IF n_conj GT 0 THEN BEGIN
-        bi_vals=Floor(inds/n_freq_use)
-        psf_conj_flag=conj_flag[bi_vals]
-    ENDIF  
+;    psf_conj_flag=intarr(vis_n)
+;    IF n_conj GT 0 THEN BEGIN
+;        bi_vals=Floor(inds/n_freq_use)
+;        psf_conj_flag=conj_flag[bi_vals]
+;    ENDIF  
     
-    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.)*2.+psf_conj_flag
+    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.);*2.+psf_conj_flag
     
     xyf_si=Sort(xyf_i)
     xyf_i=xyf_i[xyf_si]
@@ -295,8 +295,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t2+=t3_0-t1_0
     ENDIF
     
-    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
-        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
+;        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
     IF map_flag THEN BEGIN
         IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=real_part(box_matrix) 
