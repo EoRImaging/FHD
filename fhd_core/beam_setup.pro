@@ -189,9 +189,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         
 ;        psf_base_superres=psf_base_single
 ;        uv_mask_superres=uv_mask
-        psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
+        psf_base_superres=Interpolate(psf_base_single*uv_mask,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
         uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
-        psf_base_superres*=(psf_image_resolution*psf_intermediate_res/psf_resolution)^2. ;FFT normalization correction in case this changes the total number of pixels
+;        psf_base_superres*=(psf_image_resolution*psf_intermediate_res/psf_resolution)^2. ;FFT normalization correction in case this changes the total number of pixels
+        psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
         phase_test=Atan(psf_base_superres,/phase)*!Radeg
         phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
         IF n_phase_cut GT 0 THEN uv_mask_superres[phase_cut]=0
