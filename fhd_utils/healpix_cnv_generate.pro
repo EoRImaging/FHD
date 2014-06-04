@@ -19,23 +19,29 @@ elements=obs.elements
 IF N_Elements(hpx_radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4. ELSE radius=hpx_radius
 ;all angles in DEGREES
 ;uses RING index scheme
+
+;check if a string, if it is assume it is a filepath to a save file with the desired indices 
+; (will NOT be over-written with the indices)
+IF Keyword_Set(restrict_hpx_inds) AND (size(restrict_hpx_inds,/type) NE 7) THEN restrict_hpx_inds=observation_healpix_inds_select(obs)
+IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN 
+    IF file_test(restrict_hpx_inds) THEN hpx_inds=getvar_savefile(restrict_hpx_inds,'hpx_inds') ELSE BEGIN
+        file_path_use=filepath(restrict_hpx_inds,root=Rootdir('fhd'),subdir='Observations')
+        IF file_test(file_path_use) THEN BEGIN
+            nside_test=getvar_savefile(file_path_use,names=sav_contents)
+            hpx_inds=getvar_savefile(file_path_use,'hpx_inds')
+            IF Max(strmatch(StrLowCase(sav_contents),'nside')) EQ 1 THEN nside=getvar_savefile(file_path_use,'nside') ELSE BEGIN
+                max_ind=Max(restrict_hpx_inds)
+                IF Keyword_Set(nside) THEN nside=(2.^(Ceil(ALOG(Sqrt(max_ind/12.))/ALOG(2))))>nside ELSE nside=2.^(Ceil(ALOG(Sqrt(max_ind/12.))/ALOG(2))) 
+            ENDELSE
+        ENDIF ELSE restrict_hpx_inds+="-- FILE NOT FOUND"
+    ENDELSE
+ENDIF
 IF ~Keyword_Set(nside) THEN BEGIN
     pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(astr.cdelt))
     Nside=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
 ;    nside*=2.
 ENDIF
 npix=nside2npix(nside)
-
-;check if a string, if it is assume it is a filepath to a save file with the desired indices 
-; (will NOT be over-written with the indices)
-IF Keyword_Set(restrict_hpx_inds) AND (size(restrict_hpx_inds,/type) NE 7) THEN restrict_hpx_inds=observation_healpix_inds_select(obs)
-IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN 
-    IF file_test(restrict_hpx_inds) THEN restrict_hpx_inds=getvar_savefile(restrict_hpx_inds,'hpx_inds') ELSE BEGIN
-        file_path_use=filepath(restrict_hpx_inds,root=Rootdir('fhd'),subdir='Observations')
-        IF file_test(file_path_use) THEN hpx_inds=getvar_savefile(file_path_use,'hpx_inds') $
-            ELSE restrict_hpx_inds+="-- FILE NOT FOUND"
-    ENDELSE
-ENDIF
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
     pix2vec_ring,nside,hpx_inds,pix_coords
