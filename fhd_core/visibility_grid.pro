@@ -260,7 +260,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
-        psf_conj_flag=psf_conj_flag[inds_use]
+;        psf_conj_flag=psf_conj_flag[inds_use]
         IF n_xyf_bin GT 1 THEN xyf_ui0=[0,xyf_ui[0:n_xyf_bin-2]+1] ELSE xyf_ui0=0
         psf_weight=xyf_ui-xyf_ui0+1
          
