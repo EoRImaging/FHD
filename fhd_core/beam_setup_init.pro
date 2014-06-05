@@ -77,9 +77,9 @@ IF Keyword_Set(dipole_mutual_coupling_factor) THEN BEGIN
                 gain_old_X=gain_new_X
                 gain_old_Y=gain_new_Y
 ;            ENDFOR
-            ;SWAP X AND Y coupling for testing
-            gain_new_X=gain_old_Y
-            gain_new_Y=gain_old_X
+;            ;SWAP X AND Y coupling for testing
+;            gain_new_X=gain_old_Y
+;            gain_new_Y=gain_old_X
             
             gain_array_X[1:*,freq_i+tile_i*nfreq_bin]=Reform(gain_new_X,16)
             gain_array_Y[1:*,freq_i+tile_i*nfreq_bin]=Reform(gain_new_Y,16)

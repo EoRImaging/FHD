@@ -10,7 +10,7 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
 IF N_Elements(pflag) EQ 0 THEN pflag=0
 IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
-IF N_Elements(antenna_size) EQ 0 THEN antenna_size=4. ;meters (MWA groundscreen size)
+IF N_Elements(antenna_size) EQ 0 THEN antenna_size=5. ;meters (MWA groundscreen size)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
 git,'describe',result=code_version,project='fhd',args='--long'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
