@@ -120,7 +120,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   endif
   
   
-  if keyword_set(pub) then cgps_close, png = png, delete_ps = delete_ps
+  if keyword_set(pub) then cgps_close, png = png, delete_ps = delete_ps, density=600
   
   tvlct, r, g, b
   
