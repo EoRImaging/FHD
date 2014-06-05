@@ -54,10 +54,10 @@ IF Keyword_Set(dipole_mutual_coupling_factor) THEN BEGIN
             gain_old_X=reform(gain_array_X[1:*,freq_i+tile_i*nfreq_bin],4,4)
             gain_old_Y=reform(gain_array_Y[1:*,freq_i+tile_i*nfreq_bin],4,4)
             mask_X=fltarr(4,4)+1
-            mask_X_i=where(gain_old_X EQ 0, n_zero_X)
+            mask_X_i=where(gain_old_X EQ 0, n_zero_X,complement=mask_X_use,ncomplement=n_x_use)
             IF n_zero_X GT 0 THEN mask_X[mask_X_i]=0
             mask_Y=fltarr(4,4)+1
-            mask_Y_i=where(gain_old_Y EQ 0, n_zero_Y)
+            mask_Y_i=where(gain_old_Y EQ 0, n_zero_Y,complement=mask_y_use,ncomplement=n_y_use)
             IF n_zero_Y GT 0 THEN mask_Y[mask_Y_i]=0
 ;            FOR iter=0,max_iter-1 DO BEGIN
                 gain_new_X=gain_old_X
@@ -71,10 +71,16 @@ IF Keyword_Set(dipole_mutual_coupling_factor) THEN BEGIN
                 gain_new_Y[2,*]+=dipole_mutual_coupling_factor*(gain_old_Y[1,*]+gain_old_Y[3,*])
                 gain_new_Y[3,*]+=dipole_mutual_coupling_factor*gain_old_Y[2,*]
                 gain_new_X*=mask_X
+                IF n_x_use GT 0 THEN gain_new_X/=Mean(gain_new_X[mask_X_use])
                 gain_new_Y*=mask_Y
-;                gain_old_X=gain_new_X
-;                gain_old_Y=gain_new_Y
+                IF n_y_use GT 0 THEN gain_new_Y/=Mean(gain_new_Y[mask_Y_use])
+                gain_old_X=gain_new_X
+                gain_old_Y=gain_new_Y
 ;            ENDFOR
+            ;SWAP X AND Y coupling for testing
+            gain_new_X=gain_old_Y
+            gain_new_Y=gain_old_X
+            
             gain_array_X[1:*,freq_i+tile_i*nfreq_bin]=Reform(gain_new_X,16)
             gain_array_Y[1:*,freq_i+tile_i*nfreq_bin]=Reform(gain_new_Y,16)
         ENDFOR        
