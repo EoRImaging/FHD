@@ -25,17 +25,16 @@ IF N_Elements(hpx_radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4. EL
 IF Keyword_Set(restrict_hpx_inds) AND (size(restrict_hpx_inds,/type) NE 7) THEN restrict_hpx_inds=observation_healpix_inds_select(obs)
 IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN 
     file_path_use=restrict_hpx_inds
-    IF file_test(file_path_use) THEN hpx_inds=getvar_savefile(file_path_use,'hpx_inds') ELSE BEGIN
-        file_path_use=filepath(file_path_use,root=Rootdir('fhd'),subdir='Observations')
-        IF file_test(file_path_use) THEN BEGIN
-            nside_test=getvar_savefile(file_path_use,names=sav_contents)
-            hpx_inds=getvar_savefile(file_path_use,'hpx_inds')
-        ENDIF ELSE restrict_hpx_inds=file_path_use+"-- FILE NOT FOUND"
-    ENDELSE
+    IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=Rootdir('fhd'),subdir='Observations')
+    
+    IF  file_test(file_path_use) THEN BEGIN
+        hpx_inds=getvar_savefile(file_path_use,'hpx_inds')
+        nside_test=getvar_savefile(file_path_use,names=sav_contents)
         IF Max(strmatch(StrLowCase(sav_contents),'nside')) EQ 1 THEN nside=getvar_savefile(file_path_use,'nside') ELSE BEGIN
             max_ind=Max(hpx_inds)
             IF Keyword_Set(nside) THEN nside=(2.^(Ceil(ALOG(Sqrt(max_ind/12.))/ALOG(2))))>nside ELSE nside=2.^(Ceil(ALOG(Sqrt(max_ind/12.))/ALOG(2))) 
         ENDELSE
+    ENDIF ELSE restrict_hpx_inds=file_path_use+"-- FILE NOT FOUND"
 ENDIF
 IF ~Keyword_Set(nside) THEN BEGIN
     pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(astr.cdelt))
