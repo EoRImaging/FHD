@@ -18,6 +18,7 @@ ENDIF
 
 IF Tag_exist(obs,'instrument') THEN instrument=obs.instrument ELSE instrument='mwa'
 tile_beam_fn=instrument+'_tile_beam_generate' ;mwa_tile_beam_generate
+tile_gain_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
 IF instrument EQ 'paper' THEN base_gain=fltarr(1)+1.
 ;Fixed parameters 
 IF N_Elements(obs) EQ 0 THEN restore,file_path+'_obs.sav'
@@ -53,7 +54,7 @@ IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
-beam_setup_init,gain_array_X,gain_array_Y,file_path_fhd,n_tiles=n_tiles,nfreq_bin=nfreq_bin,base_gain=base_gain,no_save=1,_Extra=extra
+gain_arr=Call_function(tile_gain_fn,obs,file_path_fhd,_Extra=extra)
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32?
 IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
