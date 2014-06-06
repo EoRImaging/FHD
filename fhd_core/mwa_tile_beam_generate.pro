@@ -28,7 +28,7 @@ az=Float(obsaz)
 
 antenna_spacing=1.1 ;meters (Same as M&C SetDelays script) ; Was 1.071 before? Verified in Tingay et al 2013
 antenna_length=29.125*2.54/100. ;meters (measured) (NOT USED)
-antenna_height=0.29 ;meters (e-mail from Brian Crosse) ; Was 0.35 before
+antenna_height=0.29 ;meters (June 2014 e-mail from Brian Crosse) ; Was 0.35 before
 c_light_vacuum=299792458.
 velocity_factor=0.673
 c_light_cable=c_light_vacuum*velocity_factor ;not used
@@ -49,10 +49,6 @@ yc_arr0=Reform(Reverse(meshgrid(4,4,2),2)*antenna_spacing,16)
 yc_arr=yc_arr0-Mean(yc_arr0) ;dipole north position (meters)
 zc_arr=Fltarr(16)
 
-;term_A=Tan(az*!DtoR)
-;term_B=za*!DtoR
-;xc=Sqrt((term_B^2.)/(1+term_A^2.))
-;yc=term_A*xc
 za_arr_use=Reform(za_arr,(psf_dim2)^2.)
 az_arr_use=Reform(az_arr,(psf_dim2)^2.)
 
@@ -71,23 +67,17 @@ proj_north=Sin(za_arr*!DtoR)*Cos(az_arr*!DtoR) & proj_north_use=Reform(proj_nort
 proj_z=Cos(za_arr*!DtoR) & proj_z_use=Reform(proj_z,(psf_dim2)^2.)
 
 ;phase of each dipole for the source (relative to the beamformer settings)
-;D_d=(proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d*kbinsize_use);/Kconv
-D_d=(proj_east_use#xc_arr+proj_north_use#yc_arr+proj_z_use#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d);/Kconv
+D_d=(proj_east_use#xc_arr+proj_north_use#yc_arr+proj_z_use#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d)
 D_d=Reform(D_d,psf_dim2,psf_dim2,16)
 
 ;groundplane=2.*Sin(Cos(za_arr_use*!DtoR)#(Kconv*(antenna_height+zc_arr))) ;looks correct
 ;groundplane=Reform(groundplane,psf_dim2,psf_dim2,16)
 
 groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength)) ;should technically have zc_arr, but until that is nonzero this is the same and faster
-;groundplane=2.*Sin((Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength))>0.1)
 groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength) ;normalization factor
 
 
 IF polarization EQ 0 THEN projection=Sqrt(1.-proj_east^2.) ELSE projection=Sqrt(1.-proj_north^2.) 
-;IF polarization EQ 0 THEN projection=(1.-proj_east^2.) ELSE projection=(1.-proj_north^2.)
-;IF polarization EQ 0 THEN projection0=Sqrt(1.-(Sin(za*!DtoR)*Sin(az*!DtoR))^2.) $
-;    ELSE projection0=Sqrt(1.-(Sin(za*!DtoR)*Cos(az*!DtoR))^2.) 
-;projection/=projection0
 
 ii=Complex(0,1)
 
