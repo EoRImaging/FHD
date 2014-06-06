@@ -66,8 +66,8 @@ IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(freq
     ELSE IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) 
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
-gain_tile_i=reform(gain_array_X[0,*])
-gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
+;gain_tile_i=reform(gain_array_X[0,*])
+;gain_freq_bin_i=findgen(N_Elements(gain_tile_i)) mod nfreq_bin
 
 ;residual_tolerance is residual as fraction of psf_base above which to include 
 IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
@@ -152,8 +152,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 
     pol1=pol_arr[0,pol_i]
     pol2=pol_arr[1,pol_i]
-    gain1_full=(pol1 EQ 0) ? gain_array_X:gain_array_Y
-    gain2_full=(pol2 EQ 0) ? gain_array_X:gain_array_Y
+;    gain1_full=(pol1 EQ 0) ? gain_array_X:gain_array_Y
+;    gain2_full=(pol2 EQ 0) ? gain_array_X:gain_array_Y
     
     freq_norm_check=fltarr(nfreq_bin)+1.
     
@@ -164,10 +164,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam1_arr=Ptrarr(n_tiles,/allocate)
         beam2_arr=Ptrarr(n_tiles,/allocate)
         
-        gain1=gain1_full[1:*,where(gain_freq_bin_i EQ freq_i)]
-        gain2=gain2_full[1:*,where(gain_freq_bin_i EQ freq_i)]
-        gain1_avg=Median(gain1,dimension=2)
-        gain2_avg=Median(gain2,dimension=2)
+        gain1=Reform((*gain_arr[pol1])[freq_i,*,*])
+        gain2=Reform((*gain_arr[pol2])[freq_i,*,*])
+        
+;        gain1=gain1_full[1:*,where(gain_freq_bin_i EQ freq_i)]
+;        gain2=gain2_full[1:*,where(gain_freq_bin_i EQ freq_i)]
+        gain1_avg=Median(gain1,dimension=1)
+        gain2_avg=Median(gain2,dimension=1)
         
         ;mwa_tile_beam_generate.pro paper_tile_beam_generate.pro
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
@@ -273,7 +276,7 @@ t5_a=Systime(1)
 psf=fhd_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
-    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center)
+    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center,gain_arr=gain_arr)
 IF ~Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
