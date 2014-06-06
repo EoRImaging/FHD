@@ -28,7 +28,7 @@ az=Float(obsaz)
 
 antenna_spacing=1.1 ;meters (Same as M&C SetDelays script) ; Was 1.071 before? Verified in Tingay et al 2013
 antenna_length=29.125*2.54/100. ;meters (measured) (NOT USED)
-antenna_height=0.30 ;meters (Sutinjo 2014 paper on MWA beams) ; Was 0.35 before
+antenna_height=0.29 ;meters (e-mail from Brian Crosse) ; Was 0.35 before
 c_light_vacuum=299792458.
 velocity_factor=0.673
 c_light_cable=c_light_vacuum*velocity_factor ;not used
