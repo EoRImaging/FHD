@@ -1,7 +1,7 @@
 FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
-    swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,_Extra=extra
+    swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,beam_mask_electric_field=beam_mask_electric_field,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -19,6 +19,7 @@ ENDIF
 IF Tag_exist(obs,'instrument') THEN instrument=obs.instrument ELSE instrument='mwa'
 tile_beam_fn=instrument+'_tile_beam_generate' ;mwa_tile_beam_generate
 tile_gain_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
+tile_mask_fn=instrument+'_tile_beam_mask' ;mwa_tile_beam_mask
 IF instrument EQ 'paper' THEN base_gain=fltarr(1)+1.
 ;Fixed parameters 
 IF N_Elements(obs) EQ 0 THEN restore,file_path+'_obs.sav'
@@ -177,9 +178,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
+        IF Keyword_Set(beam_mask_electric_field) THEN BEGIN
+        ;FFT individual tile beams to uv space, crop there, and FFT back
+            beam1_0=Call_function(tile_mask_fn,obs,beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i])
+            beam2_0=Call_function(tile_mask_fn,obs,beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i])
+            uv_mask=fltarr(psf_image_dim,psf_image_dim)+1.
+        ENDIF ELSE uv_mask=fltarr(psf_image_dim,psf_image_dim)
+        
         psf_base_single=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
-        uv_mask=fltarr(psf_image_dim,psf_image_dim)
         beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
         uv_mask[beam_i]=1.
         
