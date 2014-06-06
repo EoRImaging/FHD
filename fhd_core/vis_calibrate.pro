@@ -69,6 +69,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
 ;    IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
 ;    
 ;    ENDIF
+    vis_cal=vis_calibration_apply(vis_ptr,cal)
     timing=Systime(1)-t0_0
     RETURN,vis_cal
 ENDIF
