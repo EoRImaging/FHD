@@ -186,11 +186,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ;FFT individual tile beams to uv space, crop there, and FFT back
             beam1_0=Call_function(tile_mask_fn,obs,beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) ;mwa_tile_beam_mask
             beam2_0=Call_function(tile_mask_fn,obs,beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) ;mwa_tile_beam_mask
-            uv_mask=fltarr(psf_image_dim,psf_image_dim)+1.
-        ENDIF ELSE uv_mask=fltarr(psf_image_dim,psf_image_dim)
+;            uv_mask=fltarr(psf_image_dim,psf_image_dim)+1.
+        ENDIF ;ELSE uv_mask=fltarr(psf_image_dim,psf_image_dim)
         
         psf_base_single=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
+        uv_mask=fltarr(psf_image_dim,psf_image_dim)
         beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
         uv_mask[beam_i]=1.
         
