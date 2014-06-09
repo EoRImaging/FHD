@@ -42,8 +42,8 @@ FOR fi=0L,n_freq-1 DO BEGIN
     Zinv_x=LA_Invert(Zmat_x)
     Zinv_y=LA_Invert(Zmat_y)
     
-    Zinv_x*=Zlna
-    Zinv_y*=Zlna
+    Zinv_x*=Zlna_arr[fi]
+    Zinv_y*=Zlna_arr[fi]
 ;    ;for now, also normalize:
 ;    Zinv_x=Zinv_x/Total(Abs(Zinv_x)/n_dipole)
 ;    Zinv_y=Zinv_y/Total(Abs(Zinv_y)/n_dipole)
