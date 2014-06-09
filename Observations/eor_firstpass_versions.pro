@@ -155,6 +155,12 @@ case version of
    'apb_test_pattis_catalog_2_0': begin
       calibration_catalog_file_path=filepath('pattis_catalog_2_0.sav',root=rootdir('FHD'),subdir='catalog_data')
    end
+   'apb_test_new_cotter_1': begin
+      vis_freq_average=2
+      uvfits_version=3
+      uvfits_subversion=1
+      time_cut=[2,-2]
+   end
    else: print,'Default parameters'
 endcase
    
