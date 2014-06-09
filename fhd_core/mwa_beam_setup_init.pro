@@ -1,4 +1,4 @@
-FUNCTION mwa_beam_setup_init,obs,file_path_fhd,dipole_mutual_coupling_factor=dipole_mutual_coupling_factor
+FUNCTION mwa_beam_setup_init,obs,file_path_fhd,mutual_coupling=mutual_coupling
 
 ;indices of gain_arr correspond to these antenna locations
 ;         N
@@ -32,47 +32,47 @@ gain_arr=Ptrarr(2)
 FOR pol_i=0,1 DO gain_arr[pol_i]=Ptr_new(Rebin(reform(base_gain,1,1,n_dipoles),nfreq_bin,n_tiles,n_dipoles,/sample))
 
 IF file_test(file_path_fhd+'_dipole_gains.sav') THEN restore,file_path_fhd+'_dipole_gains.sav'
-
-;Account for mutual coupling
-IF Keyword_Set(dipole_mutual_coupling_factor) THEN BEGIN
-    ;X polarization couples between dipoles adjacent to the North or South
-    ;Y polarization couples between dipoles adjacent to the East or West
-    FOR freq_i=0L,nfreq_bin-1 DO BEGIN
-        FOR tile_i=0L,n_tiles-1 DO BEGIN
-            gain_old_X=reform((*gain_arr[0])[freq_i,tile_i,*],4,4)
-            gain_old_Y=reform((*gain_arr[1])[freq_i,tile_i,*],4,4)
-            mask_X=fltarr(4,4)+1
-            mask_X_i=where(gain_old_X EQ 0, n_zero_X,complement=mask_X_use,ncomplement=n_x_use)
-            IF n_zero_X GT 0 THEN mask_X[mask_X_i]=0
-            mask_Y=fltarr(4,4)+1
-            mask_Y_i=where(gain_old_Y EQ 0, n_zero_Y,complement=mask_y_use,ncomplement=n_y_use)
-            IF n_zero_Y GT 0 THEN mask_Y[mask_Y_i]=0
-            
-            gain_new_X=gain_old_X
-            gain_new_Y=gain_old_Y
-            gain_new_X[*,0]+=dipole_mutual_coupling_factor*gain_old_X[*,1]
-            gain_new_X[*,1]+=dipole_mutual_coupling_factor*(gain_old_X[*,0]+gain_old_X[*,2])
-            gain_new_X[*,2]+=dipole_mutual_coupling_factor*(gain_old_X[*,1]+gain_old_X[*,3])
-            gain_new_X[*,3]+=dipole_mutual_coupling_factor*gain_old_X[*,2]
-            gain_new_Y[0,*]+=dipole_mutual_coupling_factor*gain_old_Y[1,*]
-            gain_new_Y[1,*]+=dipole_mutual_coupling_factor*(gain_old_Y[0,*]+gain_old_Y[2,*])
-            gain_new_Y[2,*]+=dipole_mutual_coupling_factor*(gain_old_Y[1,*]+gain_old_Y[3,*])
-            gain_new_Y[3,*]+=dipole_mutual_coupling_factor*gain_old_Y[2,*]
-            gain_new_X*=mask_X
-            IF n_x_use GT 0 THEN gain_new_X/=Mean(gain_new_X[mask_X_use])
-            gain_new_Y*=mask_Y
-            IF n_y_use GT 0 THEN gain_new_Y/=Mean(gain_new_Y[mask_Y_use])
-            gain_old_X=gain_new_X
-            gain_old_Y=gain_new_Y
-            
-;            ;SWAP X AND Y coupling for testing
-;            gain_new_X=gain_old_Y
-;            gain_new_Y=gain_old_X
-            
-            (*gain_arr[0])[freq_i,tile_i,*]=Reform(gain_new_X,16)
-            (*gain_arr[1])[freq_i,tile_i,*]=Reform(gain_new_Y,16)
-        ENDFOR        
-    ENDFOR
-ENDIF
+mutual_coupling=mwa_dipole_mutual_coupling(freq_center)
+;;Account for mutual coupling
+;IF Keyword_Set(dipole_mutual_coupling_factor) THEN BEGIN
+;    ;X polarization couples between dipoles adjacent to the North or South
+;    ;Y polarization couples between dipoles adjacent to the East or West
+;    FOR freq_i=0L,nfreq_bin-1 DO BEGIN
+;        FOR tile_i=0L,n_tiles-1 DO BEGIN
+;            gain_old_X=reform((*gain_arr[0])[freq_i,tile_i,*],4,4)
+;            gain_old_Y=reform((*gain_arr[1])[freq_i,tile_i,*],4,4)
+;            mask_X=fltarr(4,4)+1
+;            mask_X_i=where(gain_old_X EQ 0, n_zero_X,complement=mask_X_use,ncomplement=n_x_use)
+;            IF n_zero_X GT 0 THEN mask_X[mask_X_i]=0
+;            mask_Y=fltarr(4,4)+1
+;            mask_Y_i=where(gain_old_Y EQ 0, n_zero_Y,complement=mask_y_use,ncomplement=n_y_use)
+;            IF n_zero_Y GT 0 THEN mask_Y[mask_Y_i]=0
+;            
+;            gain_new_X=gain_old_X
+;            gain_new_Y=gain_old_Y
+;            gain_new_X[*,0]+=dipole_mutual_coupling_factor*gain_old_X[*,1]
+;            gain_new_X[*,1]+=dipole_mutual_coupling_factor*(gain_old_X[*,0]+gain_old_X[*,2])
+;            gain_new_X[*,2]+=dipole_mutual_coupling_factor*(gain_old_X[*,1]+gain_old_X[*,3])
+;            gain_new_X[*,3]+=dipole_mutual_coupling_factor*gain_old_X[*,2]
+;            gain_new_Y[0,*]+=dipole_mutual_coupling_factor*gain_old_Y[1,*]
+;            gain_new_Y[1,*]+=dipole_mutual_coupling_factor*(gain_old_Y[0,*]+gain_old_Y[2,*])
+;            gain_new_Y[2,*]+=dipole_mutual_coupling_factor*(gain_old_Y[1,*]+gain_old_Y[3,*])
+;            gain_new_Y[3,*]+=dipole_mutual_coupling_factor*gain_old_Y[2,*]
+;            gain_new_X*=mask_X
+;            IF n_x_use GT 0 THEN gain_new_X/=Mean(gain_new_X[mask_X_use])
+;            gain_new_Y*=mask_Y
+;            IF n_y_use GT 0 THEN gain_new_Y/=Mean(gain_new_Y[mask_Y_use])
+;            gain_old_X=gain_new_X
+;            gain_old_Y=gain_new_Y
+;            
+;;            ;SWAP X AND Y coupling for testing
+;;            gain_new_X=gain_old_Y
+;;            gain_new_Y=gain_old_X
+;            
+;            (*gain_arr[0])[freq_i,tile_i,*]=Reform(gain_new_X,16)
+;            (*gain_arr[1])[freq_i,tile_i,*]=Reform(gain_new_Y,16)
+;        ENDFOR        
+;    ENDFOR
+;ENDIF
 RETURN,gain_arr
 END
