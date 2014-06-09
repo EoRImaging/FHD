@@ -15,9 +15,10 @@ Zmat_arr=Complexarr(n_ext,n_ant_pol,n_dipole,n_dipole)
 freq_arr_Zmat=Fltarr(n_ext)
 FOR ext_i=0,n_ext-1 DO BEGIN
     Zmat1=mrdfits(file_path_Z_matrix,ext_i,header,status=status,/silent)
+    Zmat=Zmat1[*,*,0]*(Cos(Zmat1[*,*,1])+icomp*Sin(Zmat1[*,*,1]))
     freq_arr_Zmat[ext_i]=Float(sxpar(header,'FREQ'))
-    Zmat_arr[ext_i,0,*,*]=Zmat1[n_dipole:*,n_dipole:*] ;ordering in Z matrix is 0-15:Y, 16-31:X
-    Zmat_arr[ext_i,1,*,*]=Zmat1[0:n_dipole-1,0:n_dipole-1] ;ordering in Z matrix is 0-15:Y, 16-31:X
+    Zmat_arr[ext_i,0,*,*]=Zmat[n_dipole:*,n_dipole:*] ;ordering in Z matrix is 0-15:Y, 16-31:X
+    Zmat_arr[ext_i,1,*,*]=Zmat[0:n_dipole-1,0:n_dipole-1] ;ordering in Z matrix is 0-15:Y, 16-31:X
 ENDFOR
 
 lna_impedance=getvar_savefile(file_path_Z_LNA,'lna_impedance')
@@ -37,13 +38,23 @@ FOR fi=0L,n_freq-1 DO BEGIN
     Zmat_Y=Reform(Zmat_interp[fi,1,*,*])
     Zlna=Zlna_arr[fi]*Identity(n_dipole)
     
-    Zmat_x+=Zlna
-    Zmat_y+=Zlna
-    Zinv_x=LA_Invert(Zmat_x)
-    Zinv_y=LA_Invert(Zmat_y)
+;    Zmat_x+=Zlna
+;    Zmat_y+=Zlna
+    Zinv_x=LA_Invert(Zlna+Zmat_x)
+    Zinv_y=LA_Invert(Zlna+Zmat_y)
     
-    Zinv_x*=Zlna_arr[fi]
-    Zinv_y*=Zlna_arr[fi]
+    norm_test_x=Sqrt(Abs(Zinv_x#replicate(1.,n_dipole)))
+    norm_test_y=Sqrt(Abs(Zinv_y#replicate(1.,n_dipole)))
+    FOR i=0,n_dipole-1 DO BEGIN
+        FOR j=0,n_dipole-1 DO BEGIN
+            Zinv_x[i,j]/=norm_test_x[i]*norm_test_x[j]
+            Zinv_y[i,j]/=norm_test_y[i]*norm_test_y[j]
+        ENDFOR
+    ENDFOR
+    
+;    Zinv_x*=Zlna_arr[fi]
+;    Zinv_y*=Zlna_arr[fi]
+
 ;    ;for now, also normalize:
 ;    Zinv_x=Zinv_x/Total(Abs(Zinv_x)/n_dipole)
 ;    Zinv_y=Zinv_y/Total(Abs(Zinv_y)/n_dipole)

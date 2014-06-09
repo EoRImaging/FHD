@@ -9,7 +9,7 @@
 ;-
 FUNCTION fhd_struct_init_psf,base=base,res_i=res_i,res_val=res_val,res_N=res_N,complex_flag=complex_flag,$
     xvals=xvals,yvals=yvals,fbin_i=fbin_i,psf_resolution=psf_resolution,psf_dim=psf_dim,$
-    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen,pol_norm=pol_norm,freq_norm=freq_norm,gain_arr=gain_arr
+    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen,pol_norm=pol_norm,freq_norm=freq_norm,gain_arr=gain_arr,mutual_coupling=mutual_coupling
 
 IF N_Elements(n_pol) EQ 0 THEN n_pol=1 ELSE n_pol=Fix(n_pol)
 IF N_Elements(n_freq) EQ 0 THEN n_freq=1 ELSE n_freq=Fix(n_freq)
@@ -26,8 +26,10 @@ IF N_Elements(freq_norm) EQ 0 THEN freq_norm=replicate(1.,n_freq) ELSE freq_norm
 IF N_Elements(fbin_i) EQ 0 THEN fbin_i=Lonarr(1) ELSE fbin_i=Long(fbin_i)
 IF N_Elements(complex_flag) EQ 0 THEN complex_flag=1
 IF N_Elements(gain_arr) EQ 0 THEN gain_arr=Ptrarr(2)
+IF N_Elements(mutual_coupling) EQ 0 THEN mutual_coupling=Ptrarr(2,n_freq)
 
 struct={base:base,res_i:res_i,res_val:res_val,res_n:res_n,xvals:xvals,yvals:yvals,pnorm:pol_norm,fnorm:freq_norm,$
-    fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim,complex_flag:complex_flag,n_pol:n_pol,n_freq:n_freq,freq:freq_cen,gain_arr:gain_arr}
+    fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim,complex_flag:complex_flag,n_pol:n_pol,n_freq:n_freq,freq:freq_cen,$
+    gain_arr:gain_arr,mutual_coupling:mutual_coupling}
 RETURN,struct
 END

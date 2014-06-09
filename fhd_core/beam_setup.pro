@@ -1,7 +1,8 @@
 FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
-    swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,beam_mask_electric_field=beam_mask_electric_field,_Extra=extra
+    swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
+    psf_max_dim=psf_max_dim,beam_mask_electric_field=beam_mask_electric_field,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -71,7 +72,7 @@ psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
 ;residual_threshold is minimum residual above which to include
 IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
-IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E2
+IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E3
 
 freq_center=fltarr(nfreq_bin)
 FOR fi=0L,nfreq_bin-1 DO BEGIN
@@ -186,12 +187,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ;FFT individual tile beams to uv space, crop there, and FFT back
             beam1_0=Call_function(tile_mask_fn,obs,beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) ;mwa_tile_beam_mask
             beam2_0=Call_function(tile_mask_fn,obs,beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) ;mwa_tile_beam_mask
-;            uv_mask=fltarr(psf_image_dim,psf_image_dim)+1.
-        ENDIF ;ELSE uv_mask=fltarr(psf_image_dim,psf_image_dim)
+            uv_mask=fltarr(psf_image_dim,psf_image_dim)+1.
+        ENDIF ELSE uv_mask=fltarr(psf_image_dim,psf_image_dim)
         
         psf_base_single=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         
-        uv_mask=fltarr(psf_image_dim,psf_image_dim)
+;        uv_mask=fltarr(psf_image_dim,psf_image_dim)
         beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
         uv_mask[beam_i]=1.
         
@@ -201,9 +202,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
 ;        psf_base_superres*=(psf_image_resolution*psf_intermediate_res/psf_resolution)^2. ;FFT normalization correction in case this changes the total number of pixels
         psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
-        phase_test=Atan(psf_base_superres,/phase)*!Radeg
-        phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
-        IF n_phase_cut GT 0 THEN uv_mask_superres[phase_cut]=0
+;        phase_test=Atan(psf_base_superres,/phase)*!Radeg
+;        phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
+;        IF n_phase_cut GT 0 THEN uv_mask_superres[phase_cut]=0
         psf_base_superres*=uv_mask_superres
         freq_norm_check[freq_i]=Total(Abs(psf_base_superres))/psf_resolution^2.
         gain_normalization=1./(Total(Abs(psf_base_superres))/psf_resolution^2.)
@@ -261,6 +262,7 @@ FOR i=0,N_Elements(psf_base)-1 DO edge_test+=Abs(*psf_base[i]) ;add together ALL
 edge_test_cut=Total(edge_test,1)+Total(edge_test,2) 
 edge_test_cut+=Reverse(edge_test_cut)
 edge_zeroes=(where(edge_test_cut))[0]
+IF Keyword_set(psf_max_dim) THEN edge_zeroes=edge_zeroes>Round((psf_dim-psf_max_dim)/2)
 IF edge_zeroes GT 0 THEN BEGIN
     psf_dim-=2.*edge_zeroes
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
@@ -280,7 +282,7 @@ t5_a=Systime(1)
 psf=fhd_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
-    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center,gain_arr=gain_arr)
+    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center,gain_arr=gain_arr,mutual_coupling=mutual_coupling)
 IF ~Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00

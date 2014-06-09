@@ -1,4 +1,4 @@
-FUNCTION mwa_beam_setup_init,obs,file_path_fhd,mutual_coupling=mutual_coupling
+FUNCTION mwa_beam_setup_init,obs,file_path_fhd,mutual_coupling=mutual_coupling,dipole_mutual_coupling_factor=dipole_mutual_coupling_factor
 
 ;indices of gain_arr correspond to these antenna locations
 ;         N
@@ -32,7 +32,7 @@ gain_arr=Ptrarr(2)
 FOR pol_i=0,1 DO gain_arr[pol_i]=Ptr_new(Rebin(reform(base_gain,1,1,n_dipoles),nfreq_bin,n_tiles,n_dipoles,/sample))
 
 IF file_test(file_path_fhd+'_dipole_gains.sav') THEN restore,file_path_fhd+'_dipole_gains.sav'
-mutual_coupling=mwa_dipole_mutual_coupling(freq_center)
+IF Keyword_Set(dipole_mutual_coupling_factor) THEN mutual_coupling=mwa_dipole_mutual_coupling(freq_center)
 ;;Account for mutual coupling
 ;IF Keyword_Set(dipole_mutual_coupling_factor) THEN BEGIN
 ;    ;X polarization couples between dipoles adjacent to the North or South
