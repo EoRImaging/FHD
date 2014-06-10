@@ -158,12 +158,12 @@ IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
 ENDIF
 IF ~Keyword_Set(return_cal_visibilities) THEN undefine_fhd,vis_model_ptr
 
-IF ~Keyword_Set(silent) THEN BEGIN
+;IF ~Keyword_Set(silent) THEN BEGIN
     basename=file_basename(file_path_fhd)
     dirpath=file_dirname(file_path_fhd)
     image_path=filepath(basename,root=dirpath,sub='images')
     plot_cals,cal,obs,cal_res=cal_res,file_path_base=image_path,_Extra=extra
-ENDIF
+;ENDIF
 
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0

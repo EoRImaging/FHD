@@ -171,10 +171,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
     print,'Calculating beam model'
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
-    IF ~Keyword_Set(silent) THEN BEGIN
-        beam_arr=Ptrarr(n_pol,/allocate)
-        FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
-    ENDIF
+;    IF ~Keyword_Set(silent) THEN BEGIN
+;        beam_arr=Ptrarr(n_pol,/allocate)
+;        FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
+;    ENDIF
     jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
