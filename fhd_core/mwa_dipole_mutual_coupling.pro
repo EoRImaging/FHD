@@ -15,7 +15,7 @@ Zmat_arr=Complexarr(n_ext,n_ant_pol,n_dipole,n_dipole)
 freq_arr_Zmat=Fltarr(n_ext)
 FOR ext_i=0,n_ext-1 DO BEGIN
     Zmat1=mrdfits(file_path_Z_matrix,ext_i,header,status=status,/silent)
-    Zmat=Zmat1[*,*,0]*(Cos(Zmat1[*,*,1])+icomp*Sin(Zmat1[*,*,1]))
+    Zmat=Zmat1[*,*,0]*(Cos(Zmat1[*,*,1])-icomp*Sin(Zmat1[*,*,1]))
     freq_arr_Zmat[ext_i]=Float(sxpar(header,'FREQ'))
     Zmat_arr[ext_i,0,*,*]=Zmat[n_dipole:*,n_dipole:*] ;ordering in Z matrix is 0-15:Y, 16-31:X
     Zmat_arr[ext_i,1,*,*]=Zmat[0:n_dipole-1,0:n_dipole-1] ;ordering in Z matrix is 0-15:Y, 16-31:X
@@ -44,10 +44,15 @@ FOR fi=0L,n_freq-1 DO BEGIN
     Zinv_y=LA_Invert(Zlna+Zmat_y)
     
     ;normalize to a zenith pointing, where voltage=Exp(icomp*2.*!Pi*Delay*frequency) and delay=0 so voltage=1.
-    norm_test_x=Sqrt((Zinv_x#replicate(1.,n_dipole)))
-    norm_test_y=Sqrt((Zinv_y#replicate(1.,n_dipole)))
-    Zinv_x*=weight_invert(norm_test_x#norm_test_x)
-    Zinv_y*=weight_invert(norm_test_y#norm_test_y)
+;    norm_test_x=Sqrt((Zinv_x#replicate(1.,n_dipole)))
+;    norm_test_y=Sqrt((Zinv_y#replicate(1.,n_dipole)))
+;    Zinv_x*=weight_invert(norm_test_x#norm_test_x)
+;    Zinv_y*=weight_invert(norm_test_y#norm_test_y)
+    
+    norm_test_x=1./Mean(Zinv_x#replicate(1.,n_dipole))
+    norm_test_y=1./Mean(Zinv_y#replicate(1.,n_dipole))
+    Zinv_x*=norm_test_x
+    Zinv_y*=norm_test_y
     
 ;    Zinv_x*=Zlna_arr[fi]
 ;    Zinv_y*=Zlna_arr[fi]
