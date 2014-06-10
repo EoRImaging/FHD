@@ -87,7 +87,7 @@ horizon_test=where(abs(za_arr) GE 90.,n_horizon_test)
 horizon_mask=fltarr(psf_dim2,psf_dim2)+1
 IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
 
-voltage_delay=Exp(ii*2.*!Pi*D0_d*frequency)
+voltage_delay=Exp(ii*2.*!Pi*D0_d*frequency)*antenna_gain_arr ;I think this should account for missing dipoles correctly
 IF Keyword_Set(mutual_coupling) THEN BEGIN
     port_current=mutual_coupling#voltage_delay
 ENDIF ELSE BEGIN
@@ -98,7 +98,7 @@ IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(16,/allocate)
 FOR i=0,15 DO *antenna_beam_arr[i]=dipole_gain_arr[*,*,i]*groundplane*projection/(16.*groundplane0);*pol
 
 tile_beam=Complexarr(psf_dim2,psf_dim2)
-FOR i=0,15 DO tile_beam+=*antenna_beam_arr[i]*antenna_gain_arr[i]*port_current[i]
+FOR i=0,15 DO tile_beam+=*antenna_beam_arr[i]*port_current[i]
 
 tile_beam*=normalization*horizon_mask
 
