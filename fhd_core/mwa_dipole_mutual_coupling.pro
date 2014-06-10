@@ -43,18 +43,15 @@ FOR fi=0L,n_freq-1 DO BEGIN
     Zinv_x=LA_Invert(Zlna+Zmat_x)
     Zinv_y=LA_Invert(Zlna+Zmat_y)
     
-    norm_test_x=Sqrt(Abs(Zinv_x#replicate(1.,n_dipole)))
-    norm_test_y=Sqrt(Abs(Zinv_y#replicate(1.,n_dipole)))
-    FOR i=0,n_dipole-1 DO BEGIN
-        FOR j=0,n_dipole-1 DO BEGIN
-            Zinv_x[i,j]/=norm_test_x[i]*norm_test_x[j]
-            Zinv_y[i,j]/=norm_test_y[i]*norm_test_y[j]
-        ENDFOR
-    ENDFOR
+    ;normalize to a zenith pointing, where voltage=Exp(icomp*2.*!Pi*Delay*frequency) and delay=0 so voltage=1.
+    norm_test_x=Sqrt((Zinv_x#replicate(1.,n_dipole)))
+    norm_test_y=Sqrt((Zinv_y#replicate(1.,n_dipole)))
+    Zinv_x*=weight_invert(norm_test_x#norm_test_x)
+    Zinv_y*=weight_invert(norm_test_y#norm_test_y)
     
 ;    Zinv_x*=Zlna_arr[fi]
 ;    Zinv_y*=Zlna_arr[fi]
-
+;
 ;    ;for now, also normalize:
 ;    Zinv_x=Zinv_x/Total(Abs(Zinv_x)/n_dipole)
 ;    Zinv_y=Zinv_y/Total(Abs(Zinv_y)/n_dipole)
