@@ -2,7 +2,7 @@ PRO vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vi
 ;need to modify params if averaging in time (no freq dependence) 
 ;need to modify hdr if averaging in frequency (no time dependence)
 t0=Systime(1)
-n_pol=hdr.n_pol
+n_pol=hdr.n_pol<N_Elements(vis_arr)
 
 time=params.time
 b0i=Uniq(time)
