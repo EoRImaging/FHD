@@ -27,7 +27,6 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, 
   ;; convert from Jy -> mk*str -> mK*Mpc^2
   conv_factor = conv_factor * z_mpc_mean^2.
   
-  
   ;; convert from uv (in wavelengths) to kx/ky in inverse comoving Mpc
   kx_mpc = u_arr * (2.*!pi) / z_mpc_mean
   kx_mpc_delta = delta_u * (2.*!pi) / z_mpc_mean
@@ -115,11 +114,17 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, 
   ;;temp = conj(reverse(signal[*,*,1:n_kz-2],3))
   ;;signal = [[[signal]], [[temp]]]
   
-  ;; fourier transform along z direction to get to uvf space (in mK*Mpc^2)
-  temp = fft(temporary(signal), dimension = 3, /inverse) * kz_mpc_delta
+  ;; Old convention
+  ;; get into uv vs kx,ky -- factor of (2pi)^2 in amplitude
+  ;; signal = signal * (2.*!pi)^2.
   
-  ;; convert to Jy (kx,ky -> uv gives factor of (2pi)^2) 
-  for i=0, n_kz-1 do temp[*,*,i] = temp[*,*,i]*(2.*!pi)^2./conv_factor[i]
+  ;; fourier transform along z direction to get to uvf space (in mK*Mpc^2)
+  ;; old convention
+  ;; temp = fft(temporary(signal), dimension = 3, /inverse) * kz_mpc_delta
+  temp = fft(temporary(signal), dimension = 3, /inverse) * kz_mpc_delta / (2.*!pi)
+  
+  ;; convert to Jy
+  for i=0, n_kz-1 do temp[*,*,i] = temp[*,*,i]/conv_factor[i]
   
   ;; 1st frequency is typically flagged. if flag_sigma and no_distrib is set, cube is only non-zero in 1st freq so shift to put power in next frequency
   if keyword_set(flat_sigma) and keyword_set(no_distrib) then temp = shift(temporary(temp), [0,0,1])
