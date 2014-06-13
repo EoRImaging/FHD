@@ -1,8 +1,10 @@
 pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, yrange = yrange, $
     log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
-    note = note, charsize = charsize, xlog = xlog, ylog = ylog, $
+    note = note, charsize = charsize, xlog = xlog, ylog = ylog, window_num = window_num, $
     missing_value = missing_value, noerase = noerase, savefile = savefile, png = png, eps = eps
     
+  if n_elements(window_num) eq 0 then window_num = 1
+  
   if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) then pub = 1 else pub = 0
   if pub eq 1 then begin
     if not (keyword_set(png) or keyword_set(eps)) then begin
@@ -62,6 +64,8 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   endif else begin
     if n_elements(data_range) eq 0 then data_range = minmax(image[good_locs])
     
+    cgloadct, 25, /brewer, /reverse, BOTTOM = 0, NCOLORS = 256, clip = [0, 235]
+    
     color_range = [0, 255]
     if n_elements(missing_value) ne 0 then begin
       if count_missing gt 0 then begin
@@ -92,16 +96,73 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     if n_elements(axkeywords) ne 0 then axkeywords = create_struct(axkeywords, 'ylog', 1, 'ytickformat', 'exponent') $
   else axkeywords = create_struct('ylog', 1, 'ytickformat', 'exponent')
   
-  if n_elements(missing_value) gt 0 and not keyword_set(noerase) then cgerase
-    
+  plot_pos = [.15,.15,.8,.92]
+  cb_pos = [.92, .15,.95,.92]
+  
+  plot_len = [plot_pos[2]-plot_pos[0], plot_pos[3] - plot_pos[1]]
+  if min(plot_len) le 0 then stop
+  
+  plot_aspect = (plot_pos[3] - plot_pos[1]) / (plot_pos[2] - plot_pos[0])
+  
+  xlength = xrange[1] - xrange[0]
+  ylength = yrange[1]-yrange[0]
+  data_aspect = float(ylength / xlength)
+  
+  aspect_ratio =  data_aspect /plot_aspect
+  if aspect_ratio gt 1 then begin
+    y_factor = aspect_ratio
+    x_factor = 1.
+  endif else begin
+    y_factor = 1.
+    x_factor = 1./aspect_ratio
+  endelse
+  
+  max_ysize = 1000
+  max_xsize = 1200
+  base_size = 600
+  
   if keyword_set(pub) then begin
+    ps_aspect = y_factor / x_factor
+    
+    if ps_aspect lt 1 then landscape = 1 else landscape = 0
+    IF Keyword_Set(eps) THEN landscape = 0
+    sizes = cgpswindow(LANDSCAPE=landscape, aspectRatio = ps_aspect, /sane_offsets)
+    
     if n_elements(missing_value) gt 0 then begin
+      if not keyword_set(noerase) then begin
+        if windowavailable(window_num) then begin
+          wset, window_num
+          if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
+        endif else make_win = 1
+        if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
+        
+        cgerase
+      endif
+      
       alphabackgroundimage = cgsnapshot()
     endif
-    cgps_open, savefile, /font, encapsulated=eps
-  endif
+    
+    cgps_open, savefile, /font, encapsulated=eps, /nomatch, inches=sizes.inches, xsize=sizes.xsize, ysize=sizes.ysize, $
+      xoffset=sizes.xoffset, yoffset=sizes.yoffset, landscape = landscape
+      
+  endif else begin
+    while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
+      base_size = base_size - 100
+      xsize = round(base_size * x_factor)
+      ysize = round(base_size * y_factor)
+    endwhile
+    
+    if windowavailable(window_num) then begin
+      wset, window_num
+      if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
+    endif else make_win = 1
+    if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
+    
+    if n_elements(missing_value) gt 0 and not keyword_set(noerase) then cgerase
+    
+  endelse
   
-  cgimage, plot_image, position = [.15,.15,.8,.92], /axes, xrange = xrange, $
+  cgimage, plot_image, position = plot_pos, /axes, xrange = xrange, $
     yrange = yrange, xtitle = xtitle, ytitle = ytitle, title = title, axkeywords = axkeywords, missing_value = missing_color, noerase = noerase, $
     alphabackgroundimage = alphabackgroundimage, charsize = charsize
     
@@ -111,7 +172,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       charsize = charsize, font = font, oob_low = oob_low
       
   endif else begin
-    cgcolorbar, range=data_range, position = [.92, .15,.95,.92], /vertical, format='exponent', charsize = charsize, font = font
+    cgcolorbar, range=data_range, position = cb_pos, /vertical, format='exponent', charsize = charsize, font = font
   endelse
   
   if n_elements(note) ne 0 then begin
@@ -120,7 +181,10 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   endif
   
   
-  if keyword_set(pub) then cgps_close, png = png, delete_ps = delete_ps, density=600
+  if keyword_set(pub) then begin
+    cgps_close, png = png, delete_ps = delete_ps, density=600
+    if make_win eq 1 then wdelete, window_num
+  endif
   
   tvlct, r, g, b
   
