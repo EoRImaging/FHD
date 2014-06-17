@@ -172,6 +172,11 @@ case version of
       time_cut=[2,-2]
       vis_freq_average=2
    end
+   'jp_EoR0_sem1_2': begin
+      export_images=0
+      grid_visibilities=0 
+      calibration_catalog_file_path=filepath('pattis_catalog_1_1.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
    else: print,'Default parameters'
 endcase
    
