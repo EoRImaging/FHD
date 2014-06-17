@@ -15,7 +15,7 @@ Zmat_arr=Complexarr(n_ext,n_ant_pol,n_dipole,n_dipole)
 freq_arr_Zmat=Fltarr(n_ext)
 FOR ext_i=0,n_ext-1 DO BEGIN
     Zmat1=mrdfits(file_path_Z_matrix,ext_i,header,status=status,/silent)
-    Zmat=Zmat1[*,*,0]*(Cos(Zmat1[*,*,1])-icomp*Sin(Zmat1[*,*,1]))
+    Zmat=Zmat1[*,*,0]*(Cos(Zmat1[*,*,1])+icomp*Sin(Zmat1[*,*,1]))
     freq_arr_Zmat[ext_i]=Float(sxpar(header,'FREQ'))
     Zmat_arr[ext_i,0,*,*]=Zmat[n_dipole:*,n_dipole:*] ;ordering in Z matrix is 0-15:Y, 16-31:X
     Zmat_arr[ext_i,1,*,*]=Zmat[0:n_dipole-1,0:n_dipole-1] ;ordering in Z matrix is 0-15:Y, 16-31:X
