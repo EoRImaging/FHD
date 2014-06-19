@@ -180,6 +180,9 @@ case version of
    'apb_test_beam_mask': begin
       beam_mask_electric_field=1
    end
+   'nb_no_freq_avg': begin
+      n_avg=1
+   end
    else: print,'Default parameters'
 endcase
    
