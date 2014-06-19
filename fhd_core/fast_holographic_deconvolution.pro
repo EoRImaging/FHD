@@ -15,18 +15,18 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
+PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
-    scale_gain=scale_gain,model_uv_arr=model_uv_arr,_Extra=extra
+    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
 ;calibration_model_subtract is passed through the fhd structure
 compile_opt idl2,strictarrsubs  
 
 t00=Systime(1)    
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ;image_uv_arr is a pointer array with dimensions (n_pol) 
-
+;most parameters are set in fhd_init()
 n_pol=fhd.npol
 gain_factor=fhd.gain_factor
 max_iter=fhd.max_iter
@@ -42,8 +42,9 @@ reject_pol_sources=fhd.reject_pol_sources
 sigma_threshold=2.
 calibration_model_subtract=fhd.cal_subtract
 filter_background=fhd.filter_background
-IF Tag_exist(fhd,'decon_filter') THEN decon_filter=fhd.decon_filter ELSE decon_filter='filter_uv_uniform'
+decon_filter=fhd.decon_filter
 galaxy_model_fit=fhd.galaxy_subtract
+subtract_sidelobe_catalog=fhd.sidelobe_subtract
 
 icomp=Complex(0,1)
 beam_max_threshold=fhd.beam_max_threshold
@@ -140,32 +141,29 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 filter_arr=Ptrarr(n_pol,/allocate)
+gain_normalization = get_image_renormalization(obs,psf=psf,params=params,weights_arr=weights_arr,$
+    beam_base=beam_base,filter_arr=filter_arr,image_filter_fn=decon_filter,degpix=degpix,/antialias)
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
-    filter_single=filter_arr[pol_i]
+;    filter_single=filter_arr[pol_i]
     *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_single,/antialias)*(*beam_correction[pol_i])
-    filter_arr[pol_i]=filter_single
+        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],/antialias,norm=gain_normalization);*(*beam_correction[pol_i])
+;    filter_arr[pol_i]=filter_single
 ENDFOR
 
-gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_base,filter_arr=filter_arr,$
-    image_filter_fn=decon_filter,degpix=degpix,/antialias)
-gain_use*=gain_normalization
-gain_array=source_taper*gain_use
+;gain_use*=gain_normalization
+;gain_array=source_taper*gain_use
+gain_array=replicate(gain_use,dimension,elements)
+
+dirty_stokes_arr=stokes_cnv(dirty_array,jones,beam_arr=beam_base,/square,_Extra=extra)
+dirty_image_composite=*dirty_stokes_arr[0]
+IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]
+IF n_pol GT 2 THEN BEGIN
+    dirty_image_composite_V=*dirty_stokes_arr[3]
+    dirty_image_composite_U=*dirty_stokes_arr[2]
+ENDIF
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
-    dirty_image_single=*dirty_array[pol_i]*(*beam_correction[pol_i])
-    *dirty_array[pol_i]=dirty_image_single*(*beam_base[pol_i])
-    
-    ;xx, yy and xy, yx polarizations are treated seperately
-    IF pol_i LE 1 THEN dirty_image_composite+=dirty_image_single
-    IF pol_i GE 2 THEN dirty_image_composite_U+=dirty_image_single
-    CASE pol_i OF 
-        0:dirty_image_composite_Q+=dirty_image_single
-        1:dirty_image_composite_Q-=dirty_image_single 
-        2:dirty_image_composite_V+=dirty_image_single
-        3:dirty_image_composite_V-=dirty_image_single
-    ENDCASE
     *model_uv_full[pol_i]=complexarr(dimension,elements)
     *model_uv_holo[pol_i]=complexarr(dimension,elements)
 ENDFOR
@@ -173,7 +171,7 @@ ENDFOR
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ;    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,file_path_fhd=file_path_fhd,$
 ;        galaxy_model_uv=galaxy_model_uv,restore=0,image_filter=decon_filter,filter_arr=filter_arr,_Extra=extra)
-    gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
+    gal_model_uv=fhd_galaxy_model(obs,jones,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
@@ -194,6 +192,7 @@ t3=0 ;DFT
 t4=0 ;Holographic mapping function
 i2=0. 
 t0=Systime(1)
+
 
 converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter>1))>2+1)
 converge_check2=Fltarr(max_iter>2+1)
@@ -216,8 +215,26 @@ converge_check2[0]=Stddev(source_find_image[where(beam_mask)],/nan)
 print,"Gain factor used:",Strn(fhd.gain_factor)
 print,"Initial convergence:",Strn(converge_check[0])
 
+model_holo_arr=Ptrarr(n_pol,/allocate)
 si=0L
 i0=0L
+IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
+    print,'Subtracting source model from the sidelobes'
+    source_arr_sidelobe=generate_source_cal_list(obs,psf,catalog_path=subtract_sidelobe_catalog,$
+        mask=1-beam_mask,/allow_sidelobe_cal_sources,_Extra=extra)
+    n_sidelobe_src=N_Elements(source_arr_sidelobe)
+    empty_test=(n_sidelobe_src EQ 1) AND (source_arr_sidelobe[0].flux.I EQ 0)
+    IF ~empty_test THEN BEGIN 
+        model_uv_sidelobe=source_dft_model(obs,jones,source_arr_sidelobe,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
+        t3+=t_model
+        
+        FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+        ENDFOR
+    ENDIF
+ENDIF
+
 IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     print,String(format='("Calibration source model subtracted (",A3,"%)")',Strn(calibration_model_subtract*100.,length=3))
     n_cal_src=cal.n_cal_src
@@ -237,12 +254,14 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
     
-    model_image_composite=fltarr(dimension,elements)
+;    model_image_composite=fltarr(dimension,elements)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN 
-        model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias)
-        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
-        model_image_composite+=model_image
+        *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+;        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
+;        model_image_composite+=model_image
     ENDFOR
+    model_stokes_arr=stokes_cnv(model_holo_arr,jones,beam_arr=beam_base,/square,_Extra=extra)
+    model_image_composite=*model_stokes_arr[0]
     
     image_filtered=dirty_image_composite-model_image_composite
     IF Keyword_Set(filter_background) THEN BEGIN
@@ -262,37 +281,28 @@ t_init=Systime(1)-t00
 FOR i=i0,max_iter-1 DO BEGIN 
     IF Keyword_Set(recalc_flag) THEN BEGIN
         t1_0=Systime(1)
-        model_image_composite=fltarr(dimension,elements)
-        model_image_composite_Q=fltarr(dimension,elements)
-        model_image_composite_U=fltarr(dimension,elements)
-        model_image_composite_V=fltarr(dimension,elements)
-        FOR pol_i=0,n_pol-1 DO BEGIN 
-            model_image_holo=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias)
-            model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
-            
-            *model_arr[pol_i]=model_image
-            IF pol_i LE 1 THEN model_image_composite+=model_image $
-                ELSE model_image_composite_U+=model_image
-            IF Keyword_Set(independent_fit) OR Keyword_Set(reject_pol_sources) THEN BEGIN   
-                CASE pol_i OF
-                    0:model_image_composite_Q+=model_image
-                    1:model_image_composite_Q-=model_image
-                    2:model_image_composite_V+=model_image
-                    3:model_image_composite_V-=model_image
-                ENDCASE
-            ENDIF
-        ENDFOR
+        FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+        model_stokes_arr=stokes_cnv(model_holo_arr,jones,beam_arr=beam_base,/square,_Extra=extra)
+        model_image_composite=*model_stokes_arr[0]
+        IF n_pol GT 1 THEN model_image_composite_Q=*model_stokes_arr[1]
+        IF n_pol GT 2 THEN model_image_composite_U=*model_stokes_arr[2]
+        IF n_pol GT 3 THEN model_image_composite_V=*model_stokes_arr[3]
         
         t2_0=Systime(1)
         t1+=t2_0-t1_0 
         
         image_unfiltered=dirty_image_composite-model_image_composite
-        image_filtered=image_unfiltered
         IF Keyword_Set(filter_background) THEN BEGIN
             image_smooth=Median(image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
             image_filtered=fltarr(dimension,elements)
             image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-image_smooth
-        ENDIF
+            model_smooth=Median(model_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+            model_I_use=fltarr(dimension,elements)
+            model_I_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=model_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-model_smooth
+        ENDIF ELSE BEGIN
+            image_filtered=image_unfiltered
+            model_I_use=model_image_composite
+        ENDELSE
         
         IF Keyword_Set(independent_fit) THEN BEGIN
             image_use_Q=dirty_image_composite_Q-model_image_composite_Q
@@ -310,15 +320,20 @@ FOR i=i0,max_iter-1 DO BEGIN
 ;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
         ENDIF  
     ENDIF ELSE t2_0=Systime(1)
-    source_find_image=image_filtered*beam_avg*beam_mask*source_taper*source_mask
+    source_find_image=image_filtered*beam_avg*source_taper*beam_mask
+    model_I_use=model_I_use*beam_avg*source_taper*beam_mask
     image_use=image_filtered*beam_avg*beam_mask
    
-    IF i EQ 0 THEN converge_check[i]=Stddev(image_use[where(beam_mask)],/nan)
-    converge_check2[i]=Stddev(image_use[where(beam_mask)],/nan)
-    ;use the composite image to locate sources, but then fit for flux independently
+    comp_arr1=fhd_source_detect(obs,fhd,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+        model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,$
+        beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     
-    comp_arr1=fhd_source_detect(obs,fhd,source_find_image,image_I=image_use,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
-        gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,beam_arr=beam_base,beam_corr_avg=beam_corr_avg)
+    image_use*=source_mask
+    source_find_image*=source_mask
+    model_I_use*=source_mask
+    IF i EQ 0 THEN converge_check[i]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
+    converge_check2[i]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
+    ;use the composite image to locate sources, but then fit for flux independently
     
     IF si+n_sources GE max_sources THEN BEGIN
         n_sources=max_sources-si-1
@@ -329,9 +344,9 @@ FOR i=i0,max_iter-1 DO BEGIN
         
         i2+=1
         t10=Systime(1)-t0
-        converge_check[i2]=Stddev(image_use[where(beam_mask)],/nan)
+        converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         print,StrCompress(String(format='("Break after iteration ",I," from failure to fit any sources after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            i,t10,si,Stddev(image_use[where(beam_mask)],/nan)))
+            i,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
         converge_check2=converge_check2[0:i]
         converge_check=converge_check[0:i2]
         BREAK
@@ -343,7 +358,7 @@ FOR i=i0,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    source_dft_multi,obs,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,_Extra=extra
+    source_dft_multi,obs,jones,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -356,8 +371,8 @@ FOR i=i0,max_iter-1 DO BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
         print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            i,t10,si+1,Stddev(image_use[where(beam_mask)],/nan)))
-        converge_check[i2]=Stddev(image_use[where(beam_mask)],/nan)
+            i,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+        converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         BREAK
     ENDIF
     
@@ -365,18 +380,18 @@ FOR i=i0,max_iter-1 DO BEGIN
         i2+=1
         t10=Systime(1)-t0
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
-            i,si,t10,Stddev(image_use[where(beam_mask)],/nan)))
-        converge_check[i2]=Stddev(image_use[where(beam_mask)],/nan)
+            i,si,t10,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+        converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         IF sigma_threshold*converge_check[i2] GT Max(source_find_image) THEN BEGIN
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                i,t10,si,Stddev(image_use[where(beam_mask)],/nan)))
+                i,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
         IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                i,t10,si,Stddev(image_use[where(beam_mask)],/nan)))
+                i,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
@@ -386,26 +401,28 @@ ENDFOR
 IF i EQ max_iter THEN BEGIN
     t10=Systime(1)-t0
     print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds with ",I," sources (convergence:",F,")")',$
-        i,t10,si,Stddev(image_use[where(beam_mask)],/nan)))
+        i,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
 ENDIF
 
 ;condense clean components
 noise_map=Stddev(image_use[where(beam_mask*source_mask)],/nan)*beam_corr_avg
-noise_map*=gain_normalization
+;noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si-1]
-source_array=Components2Sources(comp_arr,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map,$
-    reject_sigma_threshold=sigma_threshold,gain_array=gain_array/gain_normalization,clean_bias_threshold=0.667)
+source_array=Components2Sources(comp_arr,obs,radius=beam_width>0.5,noise_map=noise_map,$
+    reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
 t3_0=Systime(1)
-model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
+model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
+IF Keyword_Set(subtract_sidelobe_catalog) THEN  FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
 t4_0=Systime(1)
 t3+=t4_0-t3_0
 FOR pol_i=0,n_pol-1 DO *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
 
 t1_0=Systime(1)
 t4+=t1_0-t4_0    
-FOR pol_i=0,n_pol-1 DO *residual_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias)*(*beam_correction[pol_i])
+FOR pol_i=0,n_pol-1 DO *residual_array[pol_i]=$
+    dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)*(*beam_correction[pol_i])
 t1+=Systime(1)-t1_0
 
 t00=Systime(1)-t00

@@ -2,15 +2,19 @@ FUNCTION globalskymodel_read,frequency,ra_arr=ra_arr,dec_arr=dec_arr,components=
 ;gl supplied galactic longitude (or RA if celestial_coord is set)
 ;gb supplied galactic latitude (or Dec if celestial_coord is set)
 ;returns the model temperatures from the Global Sky Model at the specified galactic longitude and latitude
+;output maps should be in units of Kelvin
 IF N_Elements(frequency) EQ 0 THEN frequency=300. ;MHz
 
 file_path_base=filepath('',root=rootdir('FHD'),sub='catalog_data')
 IF Keyword_Set(haslam_filtered) THEN BEGIN
     print,"Using 408 MHz filtered Haslam map"
     Fitsfast,Temperature,header,/read,file_path=file_path_base+'lambda_haslam408_dsds'  ;temperature in K    
+    model_freq=408. ;MHz 
+    spectral_index=-0.8
     
     npix=N_Elements(Temperature) ;should equal 12.*512^2.
     nside=npix2nside(npix)
+    pix_area=4.*!Pi/npix
     
     radec_i=where(Finite(ra_arr))
     ra_use=ra_arr[radec_i]
@@ -21,11 +25,11 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
 ;    ang2vec,dec_use,ra_use,vec_use,/astro
     vec2pix_nest,nside,vec_use,ipring
     
-    Temperature=Temperature[ipring]
-    model=Ptrarr(1)
+    Temperature=Temperature[ipring]*pix_area*(model_freq/mean(frequency))^spectral_index
+;    Temperature=Temperature[ipring]*(model_freq/mean(frequency))^spectral_index
     model0=fltarr(size(ra_arr,/dimension))
     model0[radec_i]=Temperature
-    model[0]=Ptr_new(model0)
+    model=Ptr_new(model0)
     RETURN,model 
 ENDIF ELSE BEGIN
     print,"Using unfiltered Global Sky Model"
@@ -42,6 +46,7 @@ ENDELSE
 
 npix=(size(maps_408,/dimension))[1] ;should equal 12.*512^2.
 nside=npix2nside(npix)
+pix_area=4.*!Pi/npix
 
 radec_i=where(Finite(ra_arr))
 ra_use=ra_arr[radec_i]
@@ -58,7 +63,8 @@ vec2pix_ring,nside,vec_use,ipring
 ;phi=gl_use*!DtoR
 ;ang2pix_ring, nside, theta, phi, ipring
 
-maps_408=maps_408[*,ipring]
+maps_408=maps_408[*,ipring]*pix_area
+;maps_408=maps_408[*,ipring]
 n_comp=(size(maps_408,/dimension))[0]
 IF Keyword_Set(components) THEN BEGIN
     comp_arr=Ptrarr(n_comp)

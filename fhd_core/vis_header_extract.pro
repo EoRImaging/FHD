@@ -45,9 +45,7 @@ ENDIF ELSE BEGIN
   hour = strmid(date_obs, 11, 2)
   minute = strmid(date_obs, 14, 2)
   second = strmid(date_obs, 17, 2)
-;  Jdate0 = Floor(julday(month, day, year, hour, minute, second))
   Jdate0 = Floor(julday(month, day, year, hour, minute, second))
-;  jdate_obs=sxpar(header,
  
   param_names = strlowcase(strtrim(sxpar(header, 'CTYPE*'), 2))
   wh_ra = where(param_names eq 'ra', count_ra)
@@ -56,11 +54,7 @@ ENDIF ELSE BEGIN
   if count_dec eq 1 then dec_cnum = wh_dec+1 else message, 'DEC CTYPE not found'
  
   obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
-  obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))
-
-  
-  
-  
+  obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
 ENDELSE
 
 baseline_i=(where(Strmatch(param_list,'BASELINE'),found_baseline))[0]
@@ -71,13 +65,6 @@ baseline_i=(where(Strmatch(param_list,'BASELINE'),found_baseline))[0]
 date_i=Max(where(Strmatch(param_list,'DATE'),found_date))
 Jdate_extract=sxpar(header,String(format='("PZERO",I1)',date_i+1),count=found_jd0)
 IF Keyword_Set(found_jd0) THEN IF Jdate_extract GT 2.4E6 THEN Jdate0=Jdate_extract
-
-;uu_label=ptype_list[uu_i]
-;vv_label=ptype_list[vv_i]
-;ww_label=ptype_list[ww_i]
-;baseline_label=ptype_list[baseline_i]
-;date_label=ptype_list[date_i]
-
 
 ;; get number of tiles from number of baselines.
 ;256 tile upper limit is hard-coded in CASA format

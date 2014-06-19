@@ -6,7 +6,8 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag_visibilities=flag_visibilities,$
     transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
     calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
-    snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,cmd_args=cmd_args,_Extra=extra
+    snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,$
+    firstpass=firstpass,return_cal_visibilities=return_cal_visibilities,cmd_args=cmd_args,_Extra=extra
 
 except=!except
 !except=0 
@@ -16,6 +17,12 @@ IF N_Elements(error_method) EQ 0 THEN error_method=0
 ON_ERROR,error_method
 
 ;Set which procedures are to be run
+IF Keyword_Set(firstpass) THEN BEGIN
+    return_cal_visibilities=1
+    mapfn_recalculate=0
+    deconvolve=0
+    IF N_Elements(export_images) EQ 0 THEN export_images=1
+ENDIF
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=0
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
@@ -103,7 +110,7 @@ WHILE fi LT n_files DO BEGIN
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,save_visibilities=save_visibilities,$
         calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
-        healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,$
+        healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,return_cal_visibilities=return_cal_visibilities,$
         snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
     IF Keyword_Set(error) THEN BEGIN
         print,'###########################################################################'

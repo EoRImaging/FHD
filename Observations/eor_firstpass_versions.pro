@@ -155,6 +155,28 @@ case version of
    'apb_test_pattis_catalog_2_0': begin
       calibration_catalog_file_path=filepath('pattis_catalog_2_0.sav',root=rootdir('FHD'),subdir='catalog_data')
    end
+   'apb_test_new_cotter_1': begin
+      vis_freq_average=2
+      uvfits_version=3
+      uvfits_subversion=1
+      time_cut=[2,-2]
+   end
+   'apb_gen_sourcelist_11': begin
+      deconvolve=1
+      return_decon_visibilities=1
+      max_sources=30000.
+      pad_uv_image=1.
+      gain_factor=.2
+      uvfits_version=3
+      uvfits_subversion=1
+      time_cut=[2,-2]
+      vis_freq_average=2
+   end
+   'jp_EoR0_sem1_2': begin
+      export_images=0
+      grid_visibilities=0 
+      calibration_catalog_file_path=filepath('pattis_catalog_1_1.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
    else: print,'Default parameters'
 endcase
    

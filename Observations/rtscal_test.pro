@@ -1,28 +1,24 @@
-PRO testcal_128T,_Extra=extra
+PRO RTScal_test,_Extra=extra
 except=!except
 !except=0 
 heap_gc
 
-calibrate_visibilities=1
-recalculate_all=0
-export_images=1
-cleanup=0
-ps_export=0
-version=''
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
+IF N_Elements(export_images) EQ 0 THEN export_images=1
+IF N_Elements(cleanup) EQ 0 THEN cleanup=0
+IF N_Elements(ps_export) EQ 0 THEN ps_export=0
+IF N_Elements(version) EQ 0 THEN version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-IF N_Elements(data_version) EQ 0 THEN data_version='3'
-data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+data_version])
-vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
+data_directory='D:\MWA\DATA3\128T\RTScal\processed\'
+vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
+restore_vis_savefile=1
+
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-;calibration_catalog_file_path=filepath('mwa_EOR0_source_list_v0.sav',root=rootdir('FHD'),subdir='catalog_data')
-;calibration_catalog_file_path=filepath('eor01_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
-;noise_calibrate=0
-;align=0
 combine_obs=0
 dimension=2048.
 max_sources=30000.
@@ -48,8 +44,8 @@ cal_mode_fit=1
 cal_cable_reflection_fit=150.
 recalculate_all=0
 no_restrict_cal_sources=1
-no_rephase=Keyword_Set(data_version)
-calibrate_visibilities=1
+no_rephase=0
+calibrate_visibilities=0
 mark_zenith=1
 
 cmd_args=extra

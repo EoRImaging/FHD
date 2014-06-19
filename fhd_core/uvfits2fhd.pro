@@ -21,7 +21,7 @@
 ;    
 ;    kbinsize - pixel size in wavelengths of the uv image. 
 ;    
-;    n_pol - 1: use xx only, 2: use xx and xy, 4: use xx, yy, xy, and yx (Default: as many as are available)
+;    n_pol - 1: use xx only, 2: use xx and yy, 4: use xx, yy, xy, and yx (Default: as many as are available)
 ;    
 ;    flag_visibilities - set to look for anomalous visibility data and update flags 
 ;    
@@ -38,7 +38,8 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,recalcu
     calibration_catalog_file_path=calibration_catalog_file_path,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
-    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,_Extra=extra
+    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,$
+    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -65,7 +66,7 @@ IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the
 ;    IF !GPU.mode NE 1 THEN GPU_enable=0
 ;ENDIF
 
-print,'Processing: ',file_path_vis
+print,"Processing "+file_basename(file_path_vis)+" in "+file_dirname(file_path_vis)
 print,systime()
 print,'Output file_path:',file_path_fhd
 ext='.uvfits'
@@ -80,7 +81,8 @@ hdr_filepath=file_path_fhd+'_hdr.sav'
 fhd_filepath=file_path_fhd+'_fhd.sav'
 autocorr_filepath=file_path_fhd+'_autos.sav'
 cal_filepath=file_path_fhd+'_cal.sav'
-model_filepath=file_path_fhd+'_vis_cal.sav'
+;model_filepath=file_path_fhd+'_vis_cal.sav'
+IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
 IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
@@ -109,43 +111,71 @@ IF Keyword_Set(force_data) THEN data_flag=1
 IF Keyword_Set(force_no_data) THEN data_flag=0
 
 IF Keyword_Set(data_flag) THEN BEGIN
-    IF file_test(file_path_vis) EQ 0 THEN BEGIN
-        print,"File: "+file_path_vis+" not found! Returning"
-        error=1
-        RETURN
-    ENDIF
+    IF Keyword_Set(restore_vis_savefile) THEN BEGIN
+        IF file_test(file_path_vis_sav) EQ 0 THEN BEGIN
+            error=1
+            RETURN
+        ENDIF
+        RESTORE,file_path_vis_sav
+    ENDIF ELSE BEGIN
+        IF file_test(file_path_vis) EQ 0 THEN BEGIN
+            print,"File: "+file_path_vis+" not found! Returning"
+            error=1
+            RETURN
+        ENDIF
+        
+        data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
+        hdr=vis_header_extract(data_header0, params = data_struct.params)    
+        IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
+        params=vis_param_extract(data_struct.params,hdr)
+        IF n_pol LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol-1,*]) ELSE data_array=Temporary(data_struct.array) 
+        data_struct=0. ;free memory
+        
+        pol_dim=hdr.pol_dim
+        freq_dim=hdr.freq_dim
+        real_index=hdr.real_index
+        imaginary_index=hdr.imaginary_index
+        flag_index=hdr.flag_index
+        vis_arr=Ptrarr(n_pol,/allocate)
+        flag_arr=Ptrarr(n_pol,/allocate)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))
+            *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
+        ENDFOR
+        ;free memory
+        data_array=0 
+        flag_arr0=0
+        
+        ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
+        IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
+            IF Keyword_Set(vis_time_average) THEN print,"Averaging visibilities in time by a factor of: "+Strtrim(Strn(vis_time_average),2)
+            IF Keyword_Set(vis_freq_average) THEN print,"Averaging visibilities in frequency by a factor of: "+Strtrim(Strn(vis_freq_average),2)
+            vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
+            IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
+        ENDIF
+        
+        IF Keyword_Set(generate_vis_savefile) THEN BEGIN
+            SAVE,vis_arr,flag_arr,hdr,params,/compress,filename=file_path_vis_sav
+            timing=Systime(1)-t0
+            IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
+            RETURN
+        ENDIF
+    ENDELSE
     
-    data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
-    hdr=vis_header_extract(data_header0, params = data_struct.params)    
-    params=vis_param_extract(data_struct.params,hdr)
-    data_array=Temporary(data_struct.array[*,0:n_pol-1,*])
-    data_struct=0. ;free memory
     
-    obs=vis_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
-    pol_dim=hdr.pol_dim
-    freq_dim=hdr.freq_dim
-    real_index=hdr.real_index
-    imaginary_index=hdr.imaginary_index
-    flag_index=hdr.flag_index
+    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     n_pol=obs.n_pol
     n_freq=obs.n_freq
-    
-    vis_arr=Ptrarr(n_pol,/allocate)
-    flag_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))
-        *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
-    ENDFOR
-    ;free memory
-    data_array=0 
-    flag_arr0=0
     
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
-    IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
-    beam=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
+    IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
+;    IF ~Keyword_Set(silent) THEN BEGIN
+;        beam_arr=Ptrarr(n_pol,/allocate)
+;        FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
+;    ENDIF
+    jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
@@ -162,10 +192,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
         print,"Calibrating visibilities"
         IF ~Keyword_Set(transfer_calibration) AND ~Keyword_Set(calibration_source_list) THEN $
             calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path,_Extra=extra)
-        cal=vis_struct_init_cal(obs,params,source_list=calibration_source_list,catalog_path=calibration_catalog_file_path,_Extra=extra)
+        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,catalog_path=calibration_catalog_file_path,_Extra=extra)
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
-        vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
+        vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_ptr=vis_model_ptr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
@@ -302,7 +332,7 @@ IF N_Elements(obs) EQ 0 THEN IF file_test(obs_filepath) THEN obs=getvar_savefile
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,psf,params,fhd,cal,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
+    fhd_wrap,obs,psf,params,fhd,cal,jones,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
         vis_model_ptr=vis_model_ptr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,flag_arr=flag_arr,_Extra=extra
     IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
@@ -313,15 +343,15 @@ ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     IF file_test(file_path_fhd+'_fhd.sav') THEN BEGIN
-        fhd_output,obs,fhd,cal,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
-            image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,_Extra=extra 
+        fhd_output,obs,fhd,cal,jones,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
+            image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam_arr,_Extra=extra 
     ENDIF ELSE BEGIN
         IF obs.residual GT 0 THEN BEGIN
             IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav' 
             IF N_Elements(cal) GT 0 THEN source_array=cal.source_list
         ENDIF
-        fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
-            model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+        fhd_quickview,obs,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+            model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDELSE
 ENDIF
 

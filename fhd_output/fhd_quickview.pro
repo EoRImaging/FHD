@@ -1,9 +1,10 @@
-PRO fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+PRO fhd_quickview,obs,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
-    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,galaxy_model_fit=galaxy_model_fit,_Extra=extra
+    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
+    use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -30,6 +31,7 @@ IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
 IF N_Elements(psf) EQ 0 THEN IF file_test(file_path_fhd+'_beams.sav') THEN RESTORE,file_path_fhd+'_beams.sav' ELSE $
     psf=beam_setup(obs,file_path_fhd,silent=silent,timing=t_beam,_Extra=extra)
 IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav'
+IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
@@ -77,7 +79,7 @@ IF Keyword_Set(image_filter_fn) THEN BEGIN
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
 ENDIF ELSE filter_name=''
 
-IF Keyword_Set(pad_uv_image) THEN obs_out=vis_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
+IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
 restored_beam_width=(!RaDeg/(obs_out.MAX_BASELINE/obs_out.KPIX)/obs_out.degpix)/(2.*Sqrt(2.*Alog(2.)))
@@ -87,13 +89,17 @@ elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
+jones_out=fhd_struct_init_jones(obs_out,jones,file_path_fhd=file_path_fhd,/update)
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
 beam_correction_out=Ptrarr(n_pol,/allocate)
+IF N_Elements(beam_arr) EQ 0 THEN BEGIN
+    beam_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=beam_image(psf,obs,pol_i=pol_i,square=0)
+ENDIF
 FOR pol_i=0,n_pol-1 DO BEGIN
-    beam_base=beam_image(psf,obs,pol_i=pol_i)
-    *beam_base_out[pol_i]=Rebin(beam_base,dimension,elements) ;should be fine even if pad_uv_image is not set
+    *beam_base_out[pol_i]=Rebin(*beam_arr[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
     *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-3)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
@@ -132,14 +138,16 @@ IF N_Elements(source_array) GT 0 THEN BEGIN
             *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
         ENDFOR
     ENDIF
+    source_arr_out=stokes_cnv(source_arr_out,jones_out,beam=beam_base_out,/inverse,_Extra=extra)
 ENDIF ELSE source_flag=0
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
 gal_model_img=Ptrarr(n_pol)
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-    gal_model_base=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,_Extra=extra)
-    IF Keyword_Set(pad_uv_image) THEN gal_model_base=Rebin(gal_model_base,dimension,elements)
-    FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(gal_model_base*(*beam_base_out[pol_i]))
+    gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
+    
+    FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*gal_model_uv[pol_i],degpix=degpix,/antialias,$
+        image_filter_fn='',pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_base_out[pol_i]))
     
     gal_name='_galfit'
 ENDIF ELSE BEGIN
@@ -152,9 +160,9 @@ instr_rings=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,/allocate) 
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_dirty_arr[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
     IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra)*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))
@@ -171,19 +179,19 @@ for pol_i=0,n_pol-1 do begin
   IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor 
 endfor
 
-stokes_dirty_arr=stokes_cnv(instr_dirty_arr,beam=beam_base_out)
+stokes_dirty_arr=stokes_cnv(instr_dirty_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
 IF model_flag THEN BEGIN
     instr_residual_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *instr_residual_arr[pol_i]=*instr_dirty_arr[pol_i]-*instr_model_arr[pol_i]
-    stokes_residual_arr=stokes_cnv(instr_residual_arr,beam=beam_base_out)
+    stokes_residual_arr=stokes_cnv(instr_residual_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
 ENDIF ELSE BEGIN
     instr_residual_arr=instr_dirty_arr
     stokes_residual_arr=stokes_dirty_arr
 ENDELSE
 
 IF source_flag THEN BEGIN
-    stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out) ;returns null pointer if instr_sources is a null pointer 
-    IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,beam=beam_base_out) 
+    stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out,_Extra=extra) ;returns null pointer if instr_sources is a null pointer 
+    IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,jones_out,beam=beam_base_out,_Extra=extra) 
 ENDIF    
 
 IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=export_path+'_source_list'
@@ -220,8 +228,8 @@ astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 IF (residual_flag EQ 0) AND (model_flag EQ 0) THEN res_name='_Dirty_' ELSE res_name='_Residual_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_residual=*instr_residual_arr[pol_i]
-    instr_dirty=*instr_dirty_arr[pol_i]
+    instr_residual=*instr_residual_arr[pol_i]*(*beam_correction_out[pol_i])
+    instr_dirty=*instr_dirty_arr[pol_i]*(*beam_correction_out[pol_i])
     stokes_residual=(*stokes_residual_arr[pol_i])*beam_mask
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]
@@ -332,6 +340,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=1,/sphere,_Extra=extra
     ENDIF
 ENDFOR
+residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,/center,$
+    file_path_base=image_path+filter_name,_Extra=extra
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Image output timing (quickview): ',timing
 END

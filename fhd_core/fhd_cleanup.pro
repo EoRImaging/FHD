@@ -13,6 +13,7 @@ IF Keyword_Set(cleanup_all) THEN BEGIN
     params_filepath=file_path_fhd+'_params.sav' & file_path_list=[file_path_list,params_filepath]
     beams_filepath=file_path_fhd+'_beams.sav' & file_path_list=[file_path_list,beams_filepath]
     cal_filepath=file_path_fhd+'_cal.sav' & file_path_list=[file_path_list,cal_filepath]
+    jones_filepath=file_path_fhd+'_jones.sav' & file_path_list=[file_path_list,jones_filepath]
     FOR pol_i=0,3 DO BEGIN vis_filepath=file_path_fhd+'_vis_'+pol_names[pol_i]+'.sav' & file_path_list=[file_path_list,vis_filepath] & ENDFOR
     settings_filepath=file_path_fhd+'_settings.txt' & file_path_list=[file_path_list,settings_filepath]
     flags_filepath=file_path_fhd+'_flags.sav' & file_path_list=[file_path_list,flags_filepath]

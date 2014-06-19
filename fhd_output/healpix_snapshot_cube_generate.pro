@@ -33,7 +33,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
   IF Keyword_Set(ps_kspan) THEN dimension_use=ps_kspan/kbinsize ELSE $
     IF Keyword_Set(ps_dimension) THEN dimension_use=ps_dimension ELSE $
     IF Keyword_Set(ps_degpix) THEN dimension_use=FoV_use/ps_degpix ELSE dimension_use=FoV_use/obs_in.degpix
-    
+  
   degpix_use=FoV_use/dimension_use
   pix_sky=4.*!Pi*!RaDeg^2./degpix_use^2.
   Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
@@ -41,7 +41,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
   nside_use=nside_use>Nside_chk
   IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
   
-  obs_out=vis_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
+  obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
   psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resolution,/silent)
   
@@ -198,10 +198,11 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     Ptr_free,beam_hpx_arr
     
     save,filename=filepath_cube[iter],/compress,dirty_xx_cube,model_xx_cube,weights_xx_cube,variance_xx_cube,res_xx_cube,$
-      dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,beam_xx_cube,beam_yy_cube,$
-      obs,nside,hpx_inds,n_avg
-  ENDFOR
-  Ptr_free,flag_arr_use
-  timing=Systime(1)-t0
-  IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
+        dirty_yy_cube,model_yy_cube,weights_yy_cube,variance_yy_cube,res_yy_cube,beam_xx_cube,beam_yy_cube,$
+        obs,nside,hpx_inds,n_avg
+    debug_point=1
+ENDFOR
+Ptr_free,flag_arr_use
+timing=Systime(1)-t0
+IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
 END

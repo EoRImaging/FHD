@@ -1,9 +1,10 @@
-PRO fhd_output,obs,fhd,cal, file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
+PRO fhd_output,obs,fhd,cal,jones,file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
     silent=silent,show_grid=show_grid,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
     gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
-    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,no_fits=no_fits,no_png=no_png,_Extra=extra
+    instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
+    use_pointing_center=use_pointing_center,no_fits=no_fits,no_png=no_png,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
@@ -22,6 +23,8 @@ IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
 
 IF not Keyword_Set(obs) THEN obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
 IF not Keyword_Set(fhd) THEN fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
+IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
+
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF tag_exist(fhd,'galaxy_subtract') THEN galaxy_model_fit=fhd.galaxy_subtract 
 IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
@@ -50,7 +53,7 @@ restore,file_path_fhd+'_fhd.sav'
 
 n_pol=fhd.npol
 dimension_uv=obs.dimension
-IF Keyword_Set(pad_uv_image) THEN obs_out=vis_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
+IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
 dimension=obs_out.dimension
@@ -121,10 +124,7 @@ ENDIF
 t2a=Systime(1)
 t1+=t2a-t1a
 
-;p_map=polarization_map_create(obs,/trace_return,/use_pointing,polarization_correction=p_corr)
-;p_map_out=Ptrarr(n_pol,/allocate)
-;p_corr_out=Ptrarr(n_pol,/allocate)
-
+jones_out=fhd_struct_init_jones(obs_out,jones,file_path_fhd=file_path_fhd,/update)
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
@@ -138,8 +138,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
     beam_avg+=*beam_base_out[pol_i]
     beam_mask*=beam_mask0
-    IF Min(Ptr_valid(p_map)) THEN *p_map_out[pol_i]=Rebin(*p_map[pol_i],dimension,elements)
-    IF Min(Ptr_valid(p_corr)) THEN *p_corr_out[pol_i]=Rebin(*p_corr[pol_i],dimension,elements)
 ENDFOR
 psf=0
 heap_gc
@@ -151,7 +149,7 @@ t2+=t3a-t2a
 
 dirty_images=Ptrarr(n_pol,/allocate)
 instr_images=Ptrarr(n_pol,/allocate)
-instr_sources=Ptrarr(n_pol,/allocate)
+stokes_sources=Ptrarr(n_pol,/allocate)
 
 model_uv_arr=Ptrarr(n_pol,/allocate)
 model_holo_arr=Ptrarr(n_pol,/allocate)
@@ -168,12 +166,12 @@ gal_holo_img=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     filter_single=filter_arr[pol_i]
     *dirty_images[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i])
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra);*(*beam_correction_out[pol_i])
     instr_img_uv=*image_uv_arr[pol_i]-*model_uv_holo[pol_i];-*gal_holo_uv[pol_i]
     *res_uv_arr[pol_i]=instr_img_uv
     *instr_images[pol_i]=dirty_image_generate(instr_img_uv,degpix=degpix,weights=*weights_arr[pol_i],$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)*(*beam_correction_out[pol_i])
-    *instr_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i,resolution=16,$
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra);*(*beam_correction_out[pol_i])
+    *stokes_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i+4,resolution=16,$
         dimension=dimension,restored_beam_width=restored_beam_width)
     filter_arr[pol_i]=filter_single
 ENDFOR
@@ -200,8 +198,8 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     ENDFOR
 ENDIF ELSE  gal_name=''
 
-stokes_images=stokes_cnv(instr_images,beam=beam_base_out,p_corr=p_corr_out) ;NOTE one factor of the beam already corrected for
-stokes_sources=stokes_cnv(instr_sources,beam=beam_base_out,p_corr=p_corr_out)
+stokes_images=stokes_cnv(instr_images,jones_out,beam=beam_base_out,/square,_Extra=extra)
+instr_sources=stokes_cnv(stokes_sources,jones_out,/inverse,beam=beam_base_out,/square,_Extra=extra) 
 
 t4a=Systime(1)
 t3+=t4a-t3a
@@ -259,6 +257,9 @@ IF n_mrc GT 2 THEN BEGIN
     mrc_image=source_image_generate(mrc_cat,obs_out,pol_i=4,resolution=16,dimension=dimension,$
         restored_beam_width=pad_uv_image,ring=6.*pad_uv_image)
 ENDIF
+;write sources to a text file
+source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list2'
+source_array_export,comp_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_component_list2'
 
 t6a=Systime(1)
 t5+=t6a-t5a
@@ -287,9 +288,9 @@ image_path_fg=image_path+filter_name;+gal_name
 export_path_fg=export_path+filter_name;+gal_name
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    instr_residual=*instr_images[pol_i]
+    instr_residual=*instr_images[pol_i]*(*beam_correction_out[pol_i])
     instr_res_phase=Atan(*res_uv_arr[pol_i],/phase)
-    instr_dirty=*dirty_images[pol_i]
+    instr_dirty=*dirty_images[pol_i]*(*beam_correction_out[pol_i])
     instr_source=*instr_sources[pol_i]
     instr_restored=instr_residual+instr_source
     beam_use=*beam_base_out[pol_i]
@@ -461,9 +462,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 t10b=Systime(1)
-;write sources to a text file
-source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list2'
-source_array_export,comp_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_component_list2'
 
 residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
     file_path_base=image_path_fg,_Extra=extra

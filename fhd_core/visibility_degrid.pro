@@ -152,7 +152,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
-        psf_conj_flag=psf_conj_flag[inds_use]
+;        psf_conj_flag=psf_conj_flag[inds_use]
         
         IF n_xyf_bin EQ 1 THEN ind_remap=intarr(vis_n) ELSE BEGIN
             hist_inds_u=histogram(xyf_ui,/binsize,min=0,reverse_ind=ri_xyf)

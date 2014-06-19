@@ -1,8 +1,19 @@
 FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
-    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,_Extra=extra
-;catalog=getvar_savefile(catalog_path,'catalog')
-RESTORE,catalog_path,/relaxed ;catalog
+    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,$
+    allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,_Extra=extra
+
+catalog_path_use=catalog_path
+UPNAME=StrUpCase(catalog_path_use)
+psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
+IF psav EQ -1 THEN catalog_path_use+='.sav'
+IF file_test(catalog_path_use) EQ 0 THEN BEGIN
+    catalog_path_use=filepath(catalog_path_use,root=Rootdir('fhd'),subdir='catalog_data')
+    IF file_test(catalog_path_use) EQ 0 THEN catalog_path_use=$
+        filepath(obs.instrument+'_calibration_source_list.sav',root=Rootdir('fhd'),subdir='catalog_data')
+ENDIF
+    
+RESTORE,catalog_path_use,/relaxed ;catalog
 IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
 IF Keyword_Set(allow_sidelobe_cal_sources) THEN IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_cal_sources=1
 IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_cal_sources=1
@@ -52,6 +63,7 @@ IF n_use GT 0 THEN BEGIN
     IF Keyword_Set(allow_sidelobe_cal_sources) THEN beam_i=where(beam GT cal_beam_threshold) $
         ELSE beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<cal_beam_threshold,Max(beam)>1.])
     beam_mask=fltarr(dimension,elements) & beam_mask[beam_i]=1.
+    IF N_Elements(mask) EQ N_Elements(beam_mask) THEN beam_mask*=mask
 
     src_use=where((x_arr GE fft_alias_range) AND (x_arr LE dimension-1-fft_alias_range) AND (y_arr GE fft_alias_range) $
         AND (y_arr LE elements-1-fft_alias_range) AND (source_list.flux.I GT calibration_flux_threshold),n_src_use)
@@ -61,10 +73,10 @@ IF n_use GT 0 THEN BEGIN
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
     source_list=source_list[src_use]
     beam_list=Ptrarr(n_pol<2)
-    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
-        beam_list[pol_i]=Ptr_new((*beam_arr[pol_i])[source_list.x,source_list.y])
-        source_list.flux.(pol_i)=source_list.flux.I*(*beam_list[pol_i])
-    ENDFOR
+;    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
+;        beam_list[pol_i]=Ptr_new((*beam_arr[pol_i])[source_list.x,source_list.y])
+;        source_list.flux.(pol_i)=source_list.flux.I*(*beam_list[pol_i])
+;    ENDFOR
     
     influence=source_list.flux.I*beam[source_list.x,source_list.y]
     
@@ -78,7 +90,7 @@ IF n_use GT 0 THEN BEGIN
             ad2xy,extend_list.ra,extend_list.dec,astr,x_arr,y_arr
             extend_list.x=x_arr
             extend_list.y=y_arr
-            FOR pol_i=0,(n_pol<2)-1 DO extend_list.flux.(pol_i)=extend_list.flux.I*(*beam_list[pol_i])[extend_i[ext_i]]
+;            FOR pol_i=0,(n_pol<2)-1 DO extend_list.flux.(pol_i)=extend_list.flux.I*(*beam_list[pol_i])[extend_i[ext_i]]
             *source_list[extend_i[ext_i]].extend=extend_list
         ENDFOR
     ENDELSE

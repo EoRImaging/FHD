@@ -15,5 +15,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF n_use GT 1 THEN noise_arr[pol_i,fi]=Stddev(data_diff[fi,ind_use])/Sqrt(2.)
     ENDFOR
 ENDFOR
+
 obs.vis_noise=Ptr_new(noise_arr)
 END

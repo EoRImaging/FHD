@@ -1,11 +1,16 @@
 FUNCTION array_match,array1,array2,value_match=value_match,n_match=n_match
 ;IF array2 is supplied, it should have the SAME number of elements as array1
 
-min_use=Min(array1)<Min(array2)
-max_use=Max(array1)>Max(array2)
-
+IF N_Elements(array2) GT 0 THEN BEGIN
+    min_use=Min(array1)<Min(array2)
+    max_use=Max(array1)>Max(array2)
+    hist2=histogram(array2,binsize=1,min=min_use,max=max_use,reverse_ind=ri2)
+ENDIF ELSE BEGIN
+    min_use=Min(array1)
+    max_use=Max(array1)
+    hist2=intarr(max_use-min_use+1)
+ENDELSE
 hist1=histogram(array1,binsize=1,min=min_use,max=max_use,reverse_ind=ri1)
-hist2=histogram(array2,binsize=1,min=min_use,max=max_use,reverse_ind=ri2)
 
 hist12=hist1+hist2
 bins=where(hist12 GT 0, nb)

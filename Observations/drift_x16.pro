@@ -1,6 +1,5 @@
 PRO Drift_x16,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,_Extra=extra
+    channel=channel,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -44,6 +43,7 @@ calibration_polyfit=0.
 no_restrict_cal_sources=1
 no_rephase=Keyword_Set(data_version)
 calibrate_visibilities=1
+save_visibilities=0
 
 cmd_args=extra
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
@@ -55,6 +55,6 @@ general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,
     gain_factor=gain_factor,smooth_width=smooth_width,min_cal_baseline=min_cal_baseline,silent=silent,$
     combine_obs=combine_obs,calibrate_visibilities=calibrate_visibilities,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,split_ps=split_ps,bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,$
-    no_restrict_cal_sources=no_restrict_cal_sources,cmd_args=cmd_args,_Extra=extra
+    no_restrict_cal_sources=no_restrict_cal_sources,save_visibilities=save_visibilities,cmd_args=cmd_args,_Extra=extra
 !except=except
 END

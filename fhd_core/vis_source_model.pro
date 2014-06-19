@@ -1,6 +1,6 @@
-FUNCTION vis_source_model,source_list,obs,psf,params,flag_ptr,cal,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
-    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,$
-    fill_model_vis=fill_model_vis,_Extra=extra
+FUNCTION vis_source_model,source_list,obs,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
+    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,beam_arr=beam_arr,$
+    fill_model_vis=fill_model_vis,use_pointing_center=use_pointing_center,_Extra=extra
 
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
@@ -16,6 +16,7 @@ IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
 IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
 IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
 IF N_Elements(flag_ptr) EQ 0 THEN flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
+IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 
 heap_gc
 
@@ -36,7 +37,6 @@ icomp=Complex(0,1)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 
-
 ;only the LOWER half of the u-v plane is used for gridding/degridding. 
 ; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half 
 IF ~Keyword_Set(uv_mask) THEN BEGIN
@@ -51,9 +51,9 @@ nfreq_bin=Max(freq_bin_i)+1
 bin_offset=(*obs.baseline_info).bin_offset
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
 
-kx_arr=params.uu/kbinsize
-ky_arr=params.vv/kbinsize
-baseline_i=params.baseline_arr
+;kx_arr=params.uu/kbinsize
+;ky_arr=params.vv/kbinsize
+;baseline_i=params.baseline_arr
 nbaselines=bin_offset[1]
 n_samples=N_Elements(bin_offset)
 n_freq=N_Elements(frequency_array)
@@ -66,17 +66,17 @@ IF N_Elements(cal) NE 0 THEN BEGIN
     cal.galaxy_cal=Keyword_Set(galaxy_calibrate)
 ENDIF
 
-;xcen=frequency_array#kx_arr
-;ycen=frequency_array#ky_arr
-
-IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
-    model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
+IF not Keyword_Set(model_uv_arr) THEN BEGIN
+    ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
+    ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
+    source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 
+    model_uv_arr=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask,_Extra=extra)
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF
 
 IF Keyword_Set(galaxy_calibrate) THEN BEGIN
-    gal_model_uv=fhd_galaxy_model(obs,antialias=1,/uv_return,_Extra=extra)
-    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]
+    gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
+    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask
 ENDIF
 
 vis_arr=Ptrarr(n_pol)

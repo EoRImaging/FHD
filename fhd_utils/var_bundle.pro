@@ -15,7 +15,15 @@ ENDIF
     
 FOR vi=0,n_var-1 DO BEGIN
     IF N_Elements(scope_varfetch(var_names[vi],level=2+level)) EQ 0 THEN CONTINUE
-    IF N_Elements(struct) GT 0 THEN IF Max(strmatch(tag_names(struct),var_names[vi],/fold_case)) EQ 1 THEN CONTINUE
+    IF N_Elements(struct) GT 0 THEN BEGIN
+        n_match=0
+        name_subarr=tag_names(struct)
+        FOR ti=0L,n_tags(struct)-1 DO n_match+=strmatch(var_names[vi],name_subarr[ti]+'*',/fold_case)>strmatch(name_subarr[ti],var_names[vi]+'*',/fold_case)
+        IF n_match GE 1 THEN BEGIN
+            print,"Duplicate keyword "+var_names[vi]+" REMOVED"
+            CONTINUE
+        ENDIF
+    ENDIF
     IF N_Elements(struct) EQ 0 THEN struct=create_struct(var_names[vi],scope_varfetch(var_names[vi],level=2+level)) $
         ELSE struct=create_struct(var_names[vi],scope_varfetch(var_names[vi],level=2+level),struct)
 ENDFOR

@@ -28,7 +28,8 @@ IF Max(filter_use) EQ 0 THEN RETURN,image_uv
 
 wts_i=where(weights,n_wts)
 
-max_r = max(radial_map[wts_i])
+;max_r = max(radial_map[wts_i])
+max_r = 80
 taper_width = 0.1*max_r
 taper = -erf((radial_map-0.9*max_r)/taper_width)+1
 filter_use *= taper

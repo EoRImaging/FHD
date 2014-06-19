@@ -12,7 +12,7 @@ unset version
 #Parse flags for inputs
 #What is needed: a file with observation id's separated by newlines, and an output directory
 #What is optional: specified starting and ending observation id's, and the version of which to save FHD under (highly recommended to have)
-while getopts ":f:s:e:o:v:" option
+while getopts ":f:s:e:o:v:p:" option
 do
    case $option in
 	f) obs_file_name="$OPTARG";;
@@ -20,6 +20,7 @@ do
 	e) ending_obs=$OPTARG;;
         o) outdir=$OPTARG;;
         v) version=$OPTARG;;
+        p) priority=$OPTARG;;
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), and -v (version input for FHD)" 
 	    exit 1;;
 	:) echo "Missing option argument for input flag"
@@ -49,6 +50,11 @@ if [ -z ${version} ]; then
     version=test_batch_firstpass
     echo Using default FHD version: $version
 fi
+#default priority if not set
+if [ -z ${priority} ]; then
+    priority=0
+fi
+echo Setting priority = $priority
 
 #Make directory if it doesn't already exist
 mkdir -p ${outdir}/fhd_${version}
@@ -121,7 +127,7 @@ do
 	errfile=${outdir}/fhd_${version}/${obs_id}_err.log
 	outfile=${outdir}/fhd_${version}/${obs_id}_out.log
 	echo "Starting observation id $obs_id"
-	qsub -P FHD -l h_vmem=$mem,h_stack=512k -V -v obs_id=$obs_id,nslots=$nslots,outdir=$outdir,version=$version -e $errfile -o $outfile -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh
+	qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k -V -v obs_id=$obs_id,nslots=$nslots,outdir=$outdir,version=$version -e $errfile -o $outfile -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh
         #$idl_e $obs_id $version
     fi
 done

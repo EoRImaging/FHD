@@ -55,6 +55,7 @@ FOR gi=0L,ng-1 DO BEGIN
 ;    source_arr[gi].extend=0 ;need to add some way to handle extended sources!
 ENDFOR
 
+comp_arr_use=comp_arr
 IF Keyword_Set(reject_sigma_threshold) THEN BEGIN
     IF N_Elements(noise_map) EQ 0 THEN si_use=where(source_arr.flux.I GE reject_sigma_threshold,n_use) $
         ELSE si_use=where(source_arr.ston GE reject_sigma_threshold,n_use)
@@ -64,7 +65,7 @@ ENDIF
 IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     IF clean_bias_threshold GE 1 THEN clean_bias_threshold=0.5
     ns=N_Elements(source_arr)
-    comp_gi=comp_arr.id
+    comp_gi=comp_arr_use.id
     hcomp_gi=histogram(comp_gi,min=0,/bin)
     gain_factor=gain_array[source_arr.x,source_arr.y]
     flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi[source_arr.id]
@@ -86,11 +87,11 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             sx=source_arr[si].x & sy=source_arr[si].y
             sra=source_arr[si].ra & sdec=source_arr[si].dec
             salpha=source_arr[si].alpha & sfreq=source_arr[si].freq
-            comp_arr=source_comp_init(comp_arr,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi)
-            ci=N_Elements(comp_arr)-1
+            comp_arr_use=source_comp_init(comp_arr_use,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi)
+            ci=N_Elements(comp_arr_use)-1
             FOR pol_i=0,7 DO BEGIN
-                comp_arr[ci].flux.(pol_i)=source_arr[si].flux.(pol_i)*(1.-flux_frac_arr[si])
-                source_arr[si].flux.(pol_i)+=comp_arr[ci].flux.(pol_i)
+                comp_arr_use[ci].flux.(pol_i)=source_arr[si].flux.(pol_i)*(1.-flux_frac_arr[si])
+                source_arr[si].flux.(pol_i)+=comp_arr_use[ci].flux.(pol_i)
             ENDFOR
         ENDELSE
         

@@ -1,4 +1,4 @@
-FUNCTION vis_struct_update_obs,obs, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
+FUNCTION fhd_struct_update_obs,obs, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,FoV=FoV,$
     obsx=obsx,obsy=obsy,nfreq_avg=nfreq_avg,spectral_index=spectral_index,nside=nside,$
     restrict_hpx_inds=restrict_hpx_inds,n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,_Extra=extra
