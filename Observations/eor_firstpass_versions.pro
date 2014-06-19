@@ -183,6 +183,16 @@ case version of
    'nb_no_freq_avg': begin
       n_avg=1
    end
+
+   ;;; Adam's versions!!! Only Adam may edit this section!!!
+
+
+
+
+   ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
+
+
+
    else: print,'Default parameters'
 endcase
    
