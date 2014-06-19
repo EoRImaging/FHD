@@ -31,6 +31,8 @@ done
 echo starting obs $starting_obs
 echo ending obs $ending_obs
 
+wallclock_time=04:00:00 # should put into parameters
+
 #Manual shift to the next flag
 shift $(($OPTIND - 1))
 
@@ -127,7 +129,7 @@ do
 	errfile=${outdir}/fhd_${version}/${obs_id}_err.log
 	outfile=${outdir}/fhd_${version}/${obs_id}_out.log
 	echo "Starting observation id $obs_id"
-	qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k -V -v obs_id=$obs_id,nslots=$nslots,outdir=$outdir,version=$version -e $errfile -o $outfile -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh
+	qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v obs_id=$obs_id,nslots=$nslots,outdir=$outdir,version=$version -e $errfile -o $outfile -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh
         #$idl_e $obs_id $version
     fi
 done
