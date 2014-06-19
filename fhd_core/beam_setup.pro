@@ -2,7 +2,7 @@ FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
-    psf_max_dim=psf_max_dim,beam_mask_electric_field=beam_mask_electric_field,_Extra=extra
+    psf_max_dim=psf_max_dim,beam_mask_electric_field=beam_mask_electric_field,beam_model_version=beam_model_version,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -174,12 +174,14 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
             frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals_instrument,yvals=yvals_instrument,$
-            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_image_dim,mutual_coupling=mutual_coupling1)
+            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_image_dim,$
+            beam_model_version=beam_model_version,mutual_coupling=mutual_coupling1)
 ;        IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
         beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$ ;mwa_tile_beam_generate
             frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
             psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals_instrument,yvals=yvals_instrument,$
-            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_image_dim,mutual_coupling=mutual_coupling2)
+            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_image_dim,$
+            beam_model_version=beam_model_version,mutual_coupling=mutual_coupling2)
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
