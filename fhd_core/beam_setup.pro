@@ -56,7 +56,6 @@ IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
-gain_arr=Call_function(tile_gain_fn,obs,file_path_fhd,mutual_coupling=mutual_coupling,_Extra=extra) ;mwa_beam_setup_init
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32?
 IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
@@ -128,6 +127,7 @@ az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 
 xvals_instrument=za_arr*Sin(az_arr*!DtoR)
 yvals_instrument=za_arr*Cos(az_arr*!DtoR)
+antenna=Call_function(tile_gain_fn,obs,file_path_fhd,beam_model_version=beam_model_version,za_arr=za_arr,az_arr=az_arr,_Extra=extra) ;mwa_beam_setup_init
 
 ;hour_angle=obs.obsra - ra_use
 ;h_neg = where(hour_angle LT 0, N_neg)
