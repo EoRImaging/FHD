@@ -177,6 +177,9 @@ case version of
       grid_visibilities=0 
       calibration_catalog_file_path=filepath('pattis_catalog_1_1.sav',root=rootdir('FHD'),subdir='catalog_data')
    end
+   'nb_no_freq_avg': begin
+      n_avg=1
+   end
    else: print,'Default parameters'
 endcase
    
