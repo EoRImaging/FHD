@@ -185,8 +185,13 @@ case version of
    end
 
    ;;; Adam's versions!!! Only Adam may edit this section!!!
-
-
+   'apb_aarons_crazy_obs': begin
+      FoV=120.
+      dimension=4096.
+      snapshot_healpix_export=0
+      uvfits_version=0 ; just testing
+      uvfits_subversion=0
+   end
 
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
