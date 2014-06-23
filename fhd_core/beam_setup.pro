@@ -1,4 +1,4 @@
-FUNCTION beam_setup,obs,file_path_fhd,restore_last=restore_last,timing=timing,$
+FUNCTION beam_setup,obs,antenna,file_path_fhd=file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
@@ -36,8 +36,8 @@ zendec=obs.zendec
 phasera=obs.phasera
 phasedec=obs.phasedec
 Jdate=obs.Jd0
-IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
-IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
+frequency_array=(*obs.baseline_info).freq
+freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 
 tile_A=(*obs.baseline_info).tile_A
@@ -63,8 +63,7 @@ Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsalt=Float(obsalt)
 obsaz=Float(obsaz)
 obsza=90.-obsalt
-IF tag_exist(obs,'antenna_size') THEN psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR)) $
-    ELSE IF N_Elements(psf_dim) EQ 0 THEN psf_dim=Ceil(2.*!Pi/kbinsize) 
+psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR))  
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
 ;residual_tolerance is residual as fraction of psf_base above which to include 
@@ -73,15 +72,16 @@ IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.
 IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
 IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E3
 
-freq_center=fltarr(nfreq_bin)
-FOR fi=0L,nfreq_bin-1 DO BEGIN
-    fi_i=where(freq_bin_i EQ fi,n_fi)
-    IF n_fi EQ 0 THEN freq_center[fi]=Interpol(frequency_array,freq_bin_i,fi) $
-        ELSE freq_center[fi]=Median(frequency_array[fi_i])
-ENDFOR
-;freq_norm=freq_center^(-alpha)
-;;freq_norm/=Sqrt(Mean(freq_norm^2.))
-;freq_norm/=Mean(freq_norm) 
+;freq_center=fltarr(nfreq_bin)
+;FOR fi=0L,nfreq_bin-1 DO BEGIN
+;    fi_i=where(freq_bin_i EQ fi,n_fi)
+;    IF n_fi EQ 0 THEN freq_center[fi]=Interpol(frequency_array,freq_bin_i,fi) $
+;        ELSE freq_center[fi]=Median(frequency_array[fi_i])
+;ENDFOR
+
+;;freq_norm=freq_center^(-alpha)
+;;;freq_norm/=Sqrt(Mean(freq_norm^2.))
+;;freq_norm/=Mean(freq_norm) 
 freq_norm=Replicate(1.,nfreq_bin)
 
 ;begin forming psf
@@ -100,33 +100,33 @@ FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN
 ENDFOR
 
 t1_a=Systime(1)
-;set up coordinates to generate the high uv resolution model. 
-;Remember that field of view = uv resolution, image pixel scale = uv span. 
-;So, the cropped uv span (psf_dim) means we do not need to calculate at full image resolution, 
-;   while the increased uv resolution can correspond to super-horizon scales. We construct the beam model in image space, 
-;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
-psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
-psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
-psf_superres_dim=psf_dim*psf_resolution
-psf_scale=dimension*psf_intermediate_res/psf_image_dim
-xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
-yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
-xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
-yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+;;set up coordinates to generate the high uv resolution model. 
+;;Remember that field of view = uv resolution, image pixel scale = uv span. 
+;;So, the cropped uv span (psf_dim) means we do not need to calculate at full image resolution, 
+;;   while the increased uv resolution can correspond to super-horizon scales. We construct the beam model in image space, 
+;;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
+;psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+;psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+;psf_superres_dim=psf_dim*psf_resolution
+;psf_scale=dimension*psf_intermediate_res/psf_image_dim
+;xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+;yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+;xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+;yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+;
+;xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
+;valid_i=where(Finite(ra_arr),n_valid)
+;ra_use=ra_arr[valid_i]
+;dec_use=dec_arr[valid_i]
 
-xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
-valid_i=where(Finite(ra_arr),n_valid)
-ra_use=ra_arr[valid_i]
-dec_use=dec_arr[valid_i]
-
-;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
-;;NOTE: The NEW Eq2Hor REQUIRES Jdate to be a scalar! They created a new bug when they fixed the old one
-Eq2Hor,ra_use,dec_use,Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
-za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
-az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
-
-xvals_instrument=za_arr*Sin(az_arr*!DtoR)
-yvals_instrument=za_arr*Cos(az_arr*!DtoR)
+;;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
+;;;NOTE: The NEW Eq2Hor REQUIRES Jdate to be a scalar! They created a new bug when they fixed the old one
+;Eq2Hor,ra_use,dec_use,Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
+;za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
+;az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
+;
+;xvals_instrument=za_arr*Sin(az_arr*!DtoR)
+;yvals_instrument=za_arr*Cos(az_arr*!DtoR)
 antenna=Call_function(tile_gain_fn,obs,file_path_fhd,beam_model_version=beam_model_version,za_arr=za_arr,az_arr=az_arr,_Extra=extra) ;mwa_beam_setup_init
 
 ;hour_angle=obs.obsra - ra_use
