@@ -260,7 +260,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     SAVE,obs,filename=obs_filepath,/compress
     SAVE,params,filename=params_filepath,/compress
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=*antenna[0],cmd_args=cmd_args,/overwrite
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."

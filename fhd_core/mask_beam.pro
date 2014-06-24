@@ -1,10 +1,10 @@
-FUNCTION mask_beam,obs,tile_beam,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,frequency=frequency
+FUNCTION mask_beam,obs,antenna,tile_beam,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,frequency=frequency
 
 kbinsize=obs.kpix
 obs_ha=obs.zenra-obs.obsra
 coord_rotation=Acos(Cos(obs.lat*!DtoR)*Cos(obs.obsdec*!DtoR)+Sin(obs.lat*!DtoR)*Sin(obs.obsdec*!DtoR)*Cos(obs_ha*!DtoR))*!Radeg
 
-antenna_size=obs.antenna_size
+antenna_size=antenna.size_meters
 speed_light=299792458. ;speed of light, in meters/second
 antenna_size_pix=psf_intermediate_res*Ceil((antenna_size*frequency/speed_light)/kbinsize)+1
 antenna_size_pix=Ceil(antenna_size_pix/2)*2.

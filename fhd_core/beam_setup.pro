@@ -2,7 +2,7 @@ FUNCTION beam_setup,obs,antenna,file_path_fhd=file_path_fhd,restore_last=restore
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
-    psf_max_dim=psf_max_dim,beam_mask_electric_field=beam_mask_electric_field,beam_model_version=beam_model_version,_Extra=extra
+    psf_max_dim=psf_max_dim,beam_model_version=beam_model_version,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -13,7 +13,7 @@ IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_beams'+'.sav') EQ 0)
 ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
     IF not Keyword_Set(silent) THEN print,'Saved beam model restored'
-    restore,file_path_fhd+'_beams'+'.sav'
+    RESTORE,file_path_fhd+'_beams'+'.sav' ;psf,antenna
     RETURN,psf
 ENDIF
 
@@ -23,7 +23,7 @@ tile_gain_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
 tile_mask_fn=instrument+'_tile_beam_mask' ;mwa_tile_beam_mask
 IF instrument EQ 'paper' THEN base_gain=fltarr(1)+1.
 ;Fixed parameters 
-IF N_Elements(obs) EQ 0 THEN restore,file_path+'_obs.sav'
+IF N_Elements(obs) EQ 0 THEN RESTORE,file_path+'_obs.sav'
 ;extract information from the structures
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
@@ -52,6 +52,9 @@ kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
 degpix=obs.degpix
 astr=obs.astr
+
+antenna=fhd_struct_init_antenna(obs,file_path_fhd=file_path_fhd,timing=t_ant,_Extra=extra)
+
 IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
@@ -63,7 +66,7 @@ Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsalt=Float(obsalt)
 obsaz=Float(obsaz)
 obsza=90.-obsalt
-psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR))  
+psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR))  
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
 ;residual_tolerance is residual as fraction of psf_base above which to include 
@@ -128,7 +131,6 @@ t1_a=Systime(1)
 ;xvals_instrument=za_arr*Sin(az_arr*!DtoR)
 ;yvals_instrument=za_arr*Cos(az_arr*!DtoR)
 
-antenna=fhd_struct_init_antenna(obs,file_path_fhd=file_path_fhd,timing=t_ant,_Extra=extra)
 ;hour_angle=obs.obsra - ra_use
 ;h_neg = where(hour_angle LT 0, N_neg)
 ;IF N_neg GT 0 THEN hour_angle[h_neg] = hour_angle[h_neg] + 360.
@@ -185,29 +187,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Ptr_free,antenna_beam_arr1,antenna_beam_arr2
         t3_a=Systime(1)
         t2+=t3_a-t2_a
-        IF Keyword_Set(beam_mask_electric_field) THEN BEGIN
         ;FFT individual tile beams to uv space, crop there, and FFT back
-            beam1_0=mask_beam(obs,beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
-            beam2_0=mask_beam(obs,beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
-            uv_mask=fltarr(psf_image_dim,psf_image_dim)+1.
-        ENDIF ELSE uv_mask=fltarr(psf_image_dim,psf_image_dim)
+        beam1_0=mask_beam(obs,beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
+        beam2_0=mask_beam(obs,beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
         
         psf_base_single=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
-        
-;        uv_mask=fltarr(psf_image_dim,psf_image_dim)
-        beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
-        uv_mask[beam_i]=1.
-        
-;        psf_base_superres=psf_base_single
-;        uv_mask_superres=uv_mask
-        psf_base_superres=Interpolate(psf_base_single*uv_mask,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-        uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
-;        psf_base_superres*=(psf_image_resolution*psf_intermediate_res/psf_resolution)^2. ;FFT normalization correction in case this changes the total number of pixels
+        psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
         psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
 ;        phase_test=Atan(psf_base_superres,/phase)*!Radeg
 ;        phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
 ;        IF n_phase_cut GT 0 THEN uv_mask_superres[phase_cut]=0
-        psf_base_superres*=uv_mask_superres
         freq_norm_check[freq_i]=Total(Abs(psf_base_superres))/psf_resolution^2.
         gain_normalization=1./(Total(Abs(psf_base_superres))/psf_resolution^2.)
 ;        psf_base_superres*=gain_normalization
@@ -285,7 +274,7 @@ psf=fhd_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residual
     res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center,gain_arr=gain_arr,mutual_coupling=mutual_coupling)
-IF ~Keyword_Set(no_save) THEN save,psf,filename=file_path_fhd+'_beams'+'.sav',/compress
+IF ~Keyword_Set(no_save) THEN SAVE,psf,antenna,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
 IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]
