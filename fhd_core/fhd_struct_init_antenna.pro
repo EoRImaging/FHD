@@ -31,7 +31,6 @@ kbinsize=obs.kpix
 ;ky_span=kx_span
 degpix=obs.degpix
 astr=obs.astr
-IF tag_exist(obs,'delays') THEN delay_settings=obs.delays ;delays need to be generalized!
 
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32? ;super-resolution factor
@@ -48,9 +47,9 @@ FOR fi=0L,nfreq_bin-1 DO BEGIN
 ENDFOR
 
 ;initialize antenna structure
-antenna_str={antenna_type:instrument,model_version:beam_model_version,freq:freq_center,height:0.,group_id:0,$
-    n_ant_elements:0,Jones:Ptr_new(),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain_complex:Ptrarr(2),coords:Ptrarr(3),$
-    size_meters:antenna_size}
+antenna_str={antenna_type:instrument,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,height:0.,group_id:Lonarr(n_ant_pol),$
+    n_ant_elements:0,Jones:Ptr_new(),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
+    delays:Ptr_new(),size_meters:antenna_size}
     
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data

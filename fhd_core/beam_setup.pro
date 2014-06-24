@@ -188,8 +188,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         t3_a=Systime(1)
         t2+=t3_a-t2_a
         ;FFT individual tile beams to uv space, crop there, and FFT back
-        beam1_0=mask_beam(obs,beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
-        beam2_0=mask_beam(obs,beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
+        beam1_0=mask_beam(obs,antenna[ant_1],beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
+        beam2_0=mask_beam(obs,antenna[ant_2],beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
         
         psf_base_single=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
         psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)

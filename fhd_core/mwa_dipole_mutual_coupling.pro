@@ -38,39 +38,15 @@ FOR fi=0L,n_freq-1 DO BEGIN
     Zmat_Y=Reform(Zmat_interp[fi,1,*,*])
     Zlna=Zlna_arr[fi]*Identity(n_dipole)
     
-;    Zmat_x+=Zlna
-;    Zmat_y+=Zlna
     Zinv_x=LA_Invert(Zlna+Zmat_x)
     Zinv_y=LA_Invert(Zlna+Zmat_y)
     
-    ;normalize to a zenith pointing, where voltage=Exp(icomp*2.*!Pi*Delay*frequency) and delay=0 so voltage=1.
-;    norm_test_x=Sqrt((Zinv_x#replicate(1.,n_dipole)))
-;    norm_test_y=Sqrt((Zinv_y#replicate(1.,n_dipole)))
-;    Zinv_x*=weight_invert(norm_test_x#norm_test_x)
-;    Zinv_y*=weight_invert(norm_test_y#norm_test_y)
-    
+    ;normalize to a zenith pointing, where voltage=Exp(icomp*2.*!Pi*Delay*frequency) and delay=0 so voltage=1.    
     norm_test_x=1./Mean(Zinv_x#replicate(1.,n_dipole))
     norm_test_y=1./Mean(Zinv_y#replicate(1.,n_dipole))
     Zinv_x*=norm_test_x
     Zinv_y*=norm_test_y
-    
-;    Zinv_x*=Zlna_arr[fi]
-;    Zinv_y*=Zlna_arr[fi]
-;
-;    ;for now, also normalize:
-;    Zinv_x=Zinv_x/Total(Abs(Zinv_x)/n_dipole)
-;    Zinv_y=Zinv_y/Total(Abs(Zinv_y)/n_dipole)
-;    
-;    Zinv_x_phase=diag_matrix(Atan(Zinv_x,/phase))/2.
-;    Zinv_y_phase=diag_matrix(Atan(Zinv_y,/phase))/2.
-;;    
-;    FOR i=0,n_dipole-1 DO BEGIN
-;        FOR j=0,n_dipole-1 DO BEGIN
-;            Zinv_x[i,j]*=Exp(-icomp*(Zinv_x_phase[i]+Zinv_x_phase[j]))
-;            Zinv_y[i,j]*=Exp(-icomp*(Zinv_y_phase[i]+Zinv_y_phase[j]))
-;        ENDFOR
-;    ENDFOR
-    
+        
     Zmat_return[0,fi]=Ptr_new(Zinv_x)
     Zmat_return[1,fi]=Ptr_new(Zinv_y)
 ENDFOR

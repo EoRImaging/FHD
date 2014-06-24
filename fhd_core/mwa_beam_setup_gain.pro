@@ -4,13 +4,10 @@ FUNCTION mwa_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,dipole_mutu
 
 
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
-base_gain=fltarr(16)+1.
 
-gain_arr=Ptrarr(n_ant_pol)
-FOR pol_i=0,1 DO gain_arr[pol_i]=Ptr_new(Rebin(reform(base_gain,1,1,n_dipoles),nfreq_bin,n_tiles,n_dipoles,/sample))
 
 IF Keyword_Set(dead_dipole_list) THEN BEGIN
-    ;Format is 3xN array, column 0: Tile number, 1: polarization, 2: dipole number
+    ;Format is 3xN array, column 0: Tile number (names, not index), 1: polarization (0:x, 1:y), 2: dipole number
     tile_id=Reform(dead_dipole_list[0,*])
     pol_id=Reform(dead_dipole_list[0,*])
     dipole_id=Reform(dead_dipole_list[0,*])
@@ -18,24 +15,14 @@ IF Keyword_Set(dead_dipole_list) THEN BEGIN
     names_ref=Fix((*obs.baseline_info).tile_names,type=Size(tile_id,/type))
     FOR d_i=0L,n_dead_dipole-1 DO BEGIN
         tile_i=where(names_ref EQ tile_id,n_match)
-        IF n_match GT 0 THEN (*gain_arr[pol_id[d_i]])[*,tile_i,dipole_id[d_i]]=0.
+        IF n_match GT 0 THEN (*((antenna[tile_i].gain)[pol_id[d_i]]))[*,dipole_id[d_i]]=0.
     ENDFOR
 ENDIF ELSE IF file_test(file_path_fhd+'_dipole_gains.sav') THEN restore,file_path_fhd+'_dipole_gains.sav'
 
-IF Keyword_Set(dipole_mutual_coupling_factor) THEN mutual_coupling=mwa_dipole_mutual_coupling(freq_center) $
-    ELSE BEGIN
-        mutual_coupling=Ptrarr(n_ant_pol,nfreq_bin)
-        FOR i=0L,N_Elements(mutual_coupling) DO mutual_coupling[i]=Ptr_new(Complex(Identity(n_dipoles)))
-    ENDELSE
-    
-gain_arr_complex=Ptrarr(n_ant_pol)
-FOR pol_i=0,n_ant_pol-1 DO BEGIN
-    gain_arr_complex[pol_i]=Complexarr(nfreq_bin,n_tiles,n_dipoles)
-    FOR freq_i=0L,nfreq_bin-1 DO BEGIN
-        
-    ENDFOR
-ENDFOR
+;calculate group identifications
 
+
+;build the instrumental pol Jones matrix
 CASE beam_model_version OF
     2: BEGIN
         file_path_J_matrix=filepath('mwa_Jmatrix.fits',root=rootdir('FHD'),sub='instrument_config')
@@ -79,8 +66,8 @@ CASE beam_model_version OF
         Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol)
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO Jones_matrix[p_i,p_j]=Ptr_new(Complexarr(psf_dim2,psf_dim2))
         FOR i=0L,n_pix-1 DO BEGIN
-            xv_instrument1=xvals[pix_use[i]]
-            yv_instrument1=yvals[pix_use[i]]
+            xv_instrument1=xvals_instrument[pix_use[i]]
+            yv_instrument1=yvals_instrument[pix_use[i]]
             
             dist_test=Sqrt((xv_instrument1-xv_model)^2.+(yv_instrument1-yv_model)^2.)
             IF Min(dist_test,min_i) EQ 0 THEN BEGIN ;test if there is an exact match. Then just take that value and do no interpolation
@@ -105,13 +92,6 @@ CASE beam_model_version OF
         groundplane/=groundplane0
     ENDELSE
 ENDCASE
-
-antenna_arr=Replicate(antenna,n_tiles)
-FOR t_i=0L,n_tiles-1 DO BEGIN
-    antenna.Jones=Ptr_new(Jones_matrix)
-    antenna.coupling=mutual_coupling
-    antenna.gain=gain_arr
-ENDFOR
 
 RETURN,antenna
 END

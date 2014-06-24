@@ -1,4 +1,5 @@
-FUNCTION mwa_beam_setup_init,obs,antenna_str,antenna_size=antenna_size
+FUNCTION mwa_beam_setup_init,obs,antenna_str,antenna_size=antenna_size,dead_dipole_list=dead_dipole_list,$
+    dipole_mutual_coupling_factor=dipole_mutual_coupling_factor
 ;indices of gain_arr correspond to these antenna locations
 ;         N
 ;    0  1  2  3
@@ -13,8 +14,11 @@ FUNCTION mwa_beam_setup_init,obs,antenna_str,antenna_size=antenna_size
 
 n_ant_pol=2
 n_tiles=obs.n_tile
-n_freq=obs.n_freq
 n_dipoles=16
+nfreq_bin=antenna_str.nfreq_bin
+
+IF tag_exist(obs,'delays') THEN delay_settings=obs.delays ;delays need to be generalized!
+IF N_Elements(dipole_mutual_coupling_factor) EQ 0 THEN dipole_mutual_coupling_factor=1
 IF N_Elements(antenna_size) EQ 0 THEN antenna_size=5. ;meters (MWA groundscreen size)
 antenna_spacing=1.1 ;meters (Same as M&C SetDelays script) ; Was 1.071 before? Verified in Tingay et al 2013
 antenna_length=29.125*2.54/100. ;meters (measured) (NOT USED)
@@ -33,11 +37,21 @@ antenna_coords[0]=Ptr_new(xc_arr)
 antenna_coords[1]=Ptr_new(yc_arr)
 antenna_coords[2]=Ptr_new(zc_arr)
 
+freq_center=antenna_str.freq
+IF Keyword_Set(dipole_mutual_coupling_factor) THEN antenna_str.coupling=mwa_dipole_mutual_coupling(freq_center) $
+    ELSE FOR i=0L,N_Elements(antenna_str.coupling) DO antenna_str.coupling[i]=Ptr_new(Complex(Identity(n_dipoles)))
+
+base_gain=fltarr(16)+1.
+gain_arr=Ptrarr(n_ant_pol)
+FOR pol_i=0,n_ant_pol-1 DO gain_arr[pol_i]=Ptr_new(Rebin(reform(base_gain,1,n_dipoles),nfreq_bin,n_dipoles,/sample))
+
 antenna_str.n_ant_elements=n_dipoles
 antenna_str.size_meters=antenna_size
 antenna_str.coords=antenna_coords
 antenna_str.height=antenna_height
+antenna_str.delays=delay_settings
 antenna=replicate(antenna_str,n_tiles)
+FOR t_i=0L,n_tiles-1 DO antenna[t_i].gain=Pointer_copy(gain_arr)
 
 RETURN,antenna
 END
