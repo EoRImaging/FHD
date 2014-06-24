@@ -43,9 +43,7 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
 ENDFOR
 
 frequency_array=(findgen(hdr.n_freq)-hdr.freq_ref_i)*hdr.freq_width+hdr.freq_ref
-IF N_Elements(nfreq_avg) EQ 0 THEN BEGIN
-    nfreq_avg=Round(hdr.freq_ref/hdr.freq_width/1000.)
-ENDIF
+IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=1.
 
 IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*hdr.freq_width  ;Hz
 freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)

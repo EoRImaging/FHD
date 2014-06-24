@@ -127,8 +127,8 @@ t1_a=Systime(1)
 ;
 ;xvals_instrument=za_arr*Sin(az_arr*!DtoR)
 ;yvals_instrument=za_arr*Cos(az_arr*!DtoR)
-antenna=Call_function(tile_gain_fn,obs,file_path_fhd,beam_model_version=beam_model_version,za_arr=za_arr,az_arr=az_arr,_Extra=extra) ;mwa_beam_setup_init
 
+antenna=fhd_struct_init_antenna(obs,file_path_fhd=file_path_fhd,timing=t_ant,_Extra=extra)
 ;hour_angle=obs.obsra - ra_use
 ;h_neg = where(hour_angle LT 0, N_neg)
 ;IF N_neg GT 0 THEN hour_angle[h_neg] = hour_angle[h_neg] + 360.

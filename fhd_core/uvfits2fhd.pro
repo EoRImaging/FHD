@@ -169,7 +169,6 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
-    antenna=fhd_struct_init_antenna(obs,file_path_fhd=file_path_fhd,timing=t_ant,_Extra=extra)
     psf=beam_setup(obs,antenna,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
 ;    IF ~Keyword_Set(silent) THEN BEGIN
@@ -261,7 +260,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     SAVE,obs,filename=obs_filepath,/compress
     SAVE,params,filename=params_filepath,/compress
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=*antenna[0],cmd_args=cmd_args,/overwrite
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."

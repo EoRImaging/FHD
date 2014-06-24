@@ -1,10 +1,87 @@
-FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,antenna_spacing=antenna_spacing,$
-    antenna_length=antenna_length,antenna_height=antenna_height,velocity_factor=velocity_factor,freq_arr=freq_arr,$
-    Jones_matrix=Jones_matrix,mutual_coupling=mutual_coupling,gain_arr=gain_arr,phased_array_flag=phased_array_flag,antenna_coords=antenna_coords
+FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
+    Jones_matrix_arr=Jones_matrix_arr,_Extra=extra
 
+IF Tag_exist(obs,'instrument') THEN instrument=obs.instrument ELSE instrument='mwa'
+tile_gain_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
+n_tiles=obs.n_tile
+n_freq=obs.n_freq
+n_pol=obs.n_pol
 
-antenna={model_version:beam_model_version,spacing:antenna_spacing,length:antenna_length,height:antenna_height,velocity_factor:velocity_factor,freq:freq_arr,$
-    Jones:Jones_matrix,coupling:mutual_coupling,gain:gain_arr,phased_array_flag:phased_array_flag,coords:antenna_coords}
+obsra=obs.obsra
+obsdec=obs.obsdec
+zenra=obs.zenra
+zendec=obs.zendec
+;phasera=obs.phasera
+;phasedec=obs.phasedec
+Jdate=obs.Jd0
+frequency_array=(*obs.baseline_info).freq
+freq_bin_i=(*obs.baseline_info).fbin_i
+nfreq_bin=Max(freq_bin_i)+1
+
+;tile_A=(*obs.baseline_info).tile_A
+;tile_B=(*obs.baseline_info).tile_B
+;bin_offset=(*obs.baseline_info).bin_offset
+;nbaselines=bin_offset[1]
+
+dimension=obs.dimension
+elements=obs.elements
+kbinsize=obs.kpix
+;kx_span=kbinsize*dimension ;Units are # of wavelengths
+;ky_span=kx_span
+degpix=obs.degpix
+astr=obs.astr
+IF tag_exist(obs,'delays') THEN delay_settings=obs.delays ;delays need to be generalized!
+
+speed_light=299792458. ;speed of light, in meters/second
+IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32? ;super-resolution factor
+;IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
+Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+obsalt=Float(obsalt)
+obsaz=Float(obsaz)
+obsza=90.-obsalt
+psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR))  
+psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
+
+psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+psf_superres_dim=psf_dim*psf_resolution
+psf_scale=dimension*psf_intermediate_res/psf_image_dim
+
+freq_center=fltarr(nfreq_bin)
+FOR fi=0L,nfreq_bin-1 DO BEGIN
+    fi_i=where(freq_bin_i EQ fi,n_fi)
+    IF n_fi EQ 0 THEN freq_center[fi]=Interpol(frequency_array,freq_bin_i,fi) $
+        ELSE freq_center[fi]=Median(frequency_array[fi_i])
+ENDFOR
+
+;xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+;yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+
+xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
+valid_i=where(Finite(ra_arr),n_valid)
+ra_use=ra_arr[valid_i]
+dec_use=dec_arr[valid_i]
+
+;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
+;;NOTE: The NEW Eq2Hor REQUIRES Jdate to be a scalar! They created a new bug when they fixed the old one
+Eq2Hor,ra_use,dec_use,Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
+za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
+az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
+
+xvals_instrument=za_arr*Sin(az_arr*!DtoR)
+yvals_instrument=za_arr*Cos(az_arr*!DtoR)
+
+;initialize antenna structure
+antenna_str={model_version:beam_model_version,freq:freq_center,xvals:xvals_instrument,yvals:yvals_instrument,$
+    n_array:0,Jones:Ptrarr(2,2),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain_complex:Ptrarr(2),coords:Ptrarr(3)}
+    
+;update structure with instrument-specific values, and return as a POINTER array, with a pointer to the structure for each tile/antenna
+; the idea is that each 'antenna' can be completely different, but we use pointers to save memory for homogeneous arrays
+antenna=Call_function(tile_gain_fn,obs,antenna_str,file_path_fhd=file_path_fhd,$
+    beam_model_version=beam_model_version,za_arr=za_arr,az_arr=az_arr,$
+    Jones_matrix_arr=Jones_matrix_arr,_Extra=extra) ;mwa_beam_setup_init
 
 RETURN,antenna
 END
