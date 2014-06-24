@@ -1,4 +1,4 @@
-FUNCTION mwa_tile_beam_mask,obs,tile_beam,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,frequency=frequency
+FUNCTION mask_beam,obs,tile_beam,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,frequency=frequency
 
 kbinsize=obs.kpix
 obs_ha=obs.zenra-obs.obsra

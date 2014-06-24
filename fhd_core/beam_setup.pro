@@ -57,8 +57,8 @@ IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 speed_light=299792458. ;speed of light, in meters/second
-IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32?
-IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
+IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32? ;super-resolution factor
+;IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsalt=Float(obsalt)
 obsaz=Float(obsaz)
@@ -187,8 +187,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         t2+=t3_a-t2_a
         IF Keyword_Set(beam_mask_electric_field) THEN BEGIN
         ;FFT individual tile beams to uv space, crop there, and FFT back
-            beam1_0=Call_function(tile_mask_fn,obs,beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) ;mwa_tile_beam_mask
-            beam2_0=Call_function(tile_mask_fn,obs,beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) ;mwa_tile_beam_mask
+            beam1_0=mask_beam(obs,beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
+            beam2_0=mask_beam(obs,beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
             uv_mask=fltarr(psf_image_dim,psf_image_dim)+1.
         ENDIF ELSE uv_mask=fltarr(psf_image_dim,psf_image_dim)
         
