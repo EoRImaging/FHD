@@ -93,5 +93,7 @@ CASE beam_model_version OF
     ENDELSE
 ENDCASE
 
+antenna.jones=Jones_matrix
+
 RETURN,antenna
 END
