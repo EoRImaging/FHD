@@ -50,7 +50,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   if keyword_set(missing_value) then begin
     good_locs = where(image ne missing_value, count_good, complement = wh_missing, ncomplement = count_missing)
     erase = 1
-  endif else good_locs = indgen(n_elements(image))
+  endif
   
   tvlct, r, g, b, /get
   
@@ -62,8 +62,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       
       
   endif else begin
-    if n_elements(data_range) eq 0 then data_range = minmax(image[good_locs])
-    
+    if n_elements(data_range) eq 0 then $
+      if keyword_set(missing_value) then data_range = minmax(image[good_locs]) else data_range = minmax(image)
+      
     cgloadct, 25, /brewer, /reverse, BOTTOM = 0, NCOLORS = 256, clip = [0, 235]
     
     color_range = [0, 255]
