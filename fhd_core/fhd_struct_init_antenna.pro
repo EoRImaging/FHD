@@ -1,12 +1,16 @@
 FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
-    Jones_matrix_arr=Jones_matrix_arr,_Extra=extra
+    Jones_matrix_arr=Jones_matrix_arr,psf_resolution=psf_resolution,$
+    psf_image_resolution=psf_image_resolution,_Extra=extra
+t0=Systime(1)
 
+IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
 IF Tag_exist(obs,'instrument') THEN instrument=obs.instrument ELSE instrument='mwa'
-tile_gain_fn=instrument+'_beam_setup_gains' ;mwa_beam_setup_gain
+tile_gain_fn=instrument+'_beam_setup_gain' ;mwa_beam_setup_gain
 tile_init_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
 n_pol=obs.n_pol
+n_ant_pol=2 ;use as default, since almost all instruments have two instrumental polarizations (either linear or circular)
 
 obsra=obs.obsra
 obsdec=obs.obsdec
@@ -34,7 +38,7 @@ astr=obs.astr
 
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32? ;super-resolution factor
-;IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
+IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
 Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsalt=Float(obsalt)
 obsaz=Float(obsaz)
@@ -47,9 +51,9 @@ FOR fi=0L,nfreq_bin-1 DO BEGIN
 ENDFOR
 
 ;initialize antenna structure
-antenna_str={antenna_type:instrument,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,height:0.,group_id:Lonarr(n_ant_pol),$
-    n_ant_elements:0,Jones:Ptr_new(),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
-    delays:Ptr_new(),size_meters:antenna_size}
+antenna_str={n_pol:n_ant_pol,antenna_type:instrument,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
+    n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
+    delays:Ptr_new(),size_meters:0.,height:0.,group_id:Lonarr(n_ant_pol)-1}
     
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data
@@ -79,11 +83,9 @@ Eq2Hor,ra_use,dec_use,Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt
 za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 
-xvals_instrument=za_arr*Sin(az_arr*!DtoR)
-yvals_instrument=za_arr*Cos(az_arr*!DtoR)
-
 ;now, update antenna structure to include gains
-antenna=Call_function(tile_gain_fn,obs,antenna_str,_Extra=extra) ;mwa_beam_setup_gain
+antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,_Extra=extra) ;mwa_beam_setup_gain
 
+timing=Systime(1)-t0
 RETURN,antenna
 END

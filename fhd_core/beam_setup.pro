@@ -53,7 +53,8 @@ ky_span=kx_span
 degpix=obs.degpix
 astr=obs.astr
 
-antenna=fhd_struct_init_antenna(obs,file_path_fhd=file_path_fhd,timing=t_ant,_Extra=extra)
+antenna=fhd_struct_init_antenna(obs,file_path_fhd=file_path_fhd,beam_model_version=beam_model_version,$
+    psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
 
 IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.

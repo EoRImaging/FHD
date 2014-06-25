@@ -1,10 +1,15 @@
-FUNCTION mwa_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,dipole_mutual_coupling_factor=dipole_mutual_coupling_factor,$
-    beam_model_version=beam_model_version,xvals_instrument=xvals_instrument,yvals_instrument=yvals_instrument,$
-    za_arr=za_arr,az_arr=az_arr,dead_dipole_list=dead_dipole_list,antenna_size=antenna_size
+FUNCTION mwa_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
+    za_arr=za_arr,az_arr=az_arr,dead_dipole_list=dead_dipole_list,psf_image_dim=psf_image_dim
 
-
+n_ant_pol=Max(antenna.n_pol)
+nfreq_bin=Max(antenna.nfreq_bin)
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
-
+n_tile=obs.n_tile
+beam_model_version=Max(antenna.model_version)
+xvals_instrument=za_arr*Sin(az_arr*!DtoR)
+yvals_instrument=za_arr*Cos(az_arr*!DtoR)
+freq_center=antenna[0].freq ;all need to be identical, so just use the first
+speed_light=299792458. ;speed of light, in meters/second
 
 IF Keyword_Set(dead_dipole_list) THEN BEGIN
     ;Format is 3xN array, column 0: Tile number (names, not index), 1: polarization (0:x, 1:y), 2: dipole number
@@ -19,8 +24,19 @@ IF Keyword_Set(dead_dipole_list) THEN BEGIN
     ENDFOR
 ENDIF ELSE IF file_test(file_path_fhd+'_dipole_gains.sav') THEN restore,file_path_fhd+'_dipole_gains.sav'
 
-;calculate group identifications
-
+;calculate group identifications (used to set pointers to identical models)
+FOR pol_i=0,n_ant_pol-1 DO BEGIN
+    gi=0
+    n_ungrouped=n_tile
+    ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
+    WHILE n_ungrouped GT 0 DO BEGIN
+        ref_i=ungrouped_i[0]
+        antenna[ref_i].group_id[pol_i]=gi
+        FOR ug_i=1L,n_ungrouped-1 DO IF Total(*antenna[ungrouped_i[ug_i]].gain[pol_i] - *antenna[ref_i].gain[pol_i]) EQ 0 THEN antenna[ungrouped_i[ug_i]].group_id[pol_i]=gi 
+        ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
+        gi+=1
+    ENDWHILE
+ENDFOR
 
 ;build the instrumental pol Jones matrix
 CASE beam_model_version OF
@@ -61,10 +77,10 @@ CASE beam_model_version OF
         yv_model=theta_arr*Cos(phi_arr*!DtoR)
         
         horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
-        horizon_mask=fltarr(psf_dim2,psf_dim2)+1
+        horizon_mask=fltarr(psf_image_dim,psf_image_dim)+1
         IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
         Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol)
-        FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO Jones_matrix[p_i,p_j]=Ptr_new(Complexarr(psf_dim2,psf_dim2))
+        FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO Jones_matrix[p_i,p_j]=Ptr_new(Complexarr(psf_image_dim,psf_image_dim))
         FOR i=0L,n_pix-1 DO BEGIN
             xv_instrument1=xvals_instrument[pix_use[i]]
             yv_instrument1=yvals_instrument[pix_use[i]]
@@ -86,10 +102,18 @@ CASE beam_model_version OF
     END
     ELSE: BEGIN      
         print,"Using default beam model"
-        IF polarization EQ 0 THEN projection=Sqrt(1.-proj_east^2.) ELSE projection=Sqrt(1.-proj_north^2.) 
-        groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength)) ;should technically have zc_arr, but until that is nonzero this is the same and faster
-        groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength) ;normalization factor
-        groundplane/=groundplane0
+        antenna_height=antenna[0].height
+        wavelength=speed_light/freq_center
+        Jones_matrix=antenna.jones
+        FOR freq_i=0,nfreq_bin-1 DO BEGIN
+            groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength[freq_i])) ;should technically have zc_arr, but until that is nonzero this is the same and faster
+            groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength[freq_i]) ;normalization factor
+            groundplane/=groundplane0
+            Jones_matrix[0,0,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Sin(az_arr*!DtoR)*groundplane)
+            Jones_matrix[1,0,freq_i]=Ptr_new(Cos(az_arr*!DtoR)*groundplane)
+            Jones_matrix[0,1,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)
+            Jones_matrix[1,1,freq_i]=Ptr_new(-Sin(az_arr*!DtoR)*groundplane)
+        ENDFOR
     ENDELSE
 ENDCASE
 

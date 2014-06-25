@@ -12,7 +12,7 @@ FUNCTION mwa_beam_setup_init,obs,antenna_str,antenna_size=antenna_size,dead_dipo
 ;         S
 ;polarization 0: x, 1: y
 
-n_ant_pol=2
+n_ant_pol=antenna_str.n_pol
 n_tiles=obs.n_tile
 n_dipoles=16
 nfreq_bin=antenna_str.nfreq_bin
