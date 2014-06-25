@@ -1,6 +1,6 @@
 FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     Jones_matrix_arr=Jones_matrix_arr,psf_resolution=psf_resolution,$
-    psf_image_resolution=psf_image_resolution,_Extra=extra
+    psf_image_resolution=psf_image_resolution,timing=timing,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1

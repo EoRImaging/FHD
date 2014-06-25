@@ -35,7 +35,6 @@ FOR grp_i=0L,n_group-1 DO BEGIN
     
     D_d=(proj_east_use#xc_arr+proj_north_use#yc_arr+proj_z_use#zc_arr)
     D_d=Reform(D_d,psf_image_dim,psf_image_dim,n_ant_elements)
-    antenna_gain_arr=Exp(-icomp*Kconv*D_d)
     
     response_grp=Ptrarr(n_ant_pol)
     FOR pol_i=0,n_ant_pol-1 DO BEGIN
@@ -44,11 +43,12 @@ FOR grp_i=0L,n_group-1 DO BEGIN
         
         FOR freq_i=0L,nfreq_bin-1 DO BEGIN
             Kconv=(2.*!Pi)*(freq_center[freq_i]/c_light_vacuum) 
+            antenna_gain_arr=Exp(-icomp*Kconv*D_d)
             voltage_delay=Exp(icomp*2.*!Pi*delays*(freq_center[freq_i])*Reform((*gain[pol_i])[freq_i,*])) 
-            meas_current=coupling#voltage_delay
+            meas_current=(*coupling[pol_i,freq_i])#voltage_delay
             
             FOR ii=0L,n_ant_elements-1 DO BEGIN
-                response+=antenna_gain_arr[*,*,ii]*port_current[ii]
+                response+=antenna_gain_arr[*,*,ii]*meas_current[ii]
             ENDFOR
         ENDFOR
         response_grp[pol_i]=Ptr_new(response)
