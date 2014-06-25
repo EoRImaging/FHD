@@ -1,10 +1,16 @@
 #! /bin/bash
-#run firstpass on single observation
+#############################################################################
+#Runs one observation at a time in grid engine.  Second level program for 
+#running firstpass on the MIT machines. First level program is 
+#batch_firstpass.sh
+#############################################################################
+
 #$ -V
 #$ -N firstpass
 #$ -S /bin/bash
 
 # obs_id, outdir, version and nslots expected to be passed from qsub call
+# in batch_firstpass.sh
 
 echo JOBID ${JOB_ID}
 echo obsid ${obs_id}

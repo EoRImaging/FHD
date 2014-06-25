@@ -17,16 +17,16 @@ IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_ver
 speed_light=299792458.
 time=params.time
 b0i=Uniq(time)
-time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600.
-time_total=(Max(time)-Min(time))*24.*3600.
 nb=N_Elements(b0i)
+IF nb GT 1 THEN time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600. ELSE time_step=1. ;have to put something in if there is only one time interval
+time_total=(Max(time)-Min(time))*24.*3600.
 bin_start=fltarr(nb) & bin_start[1:*]=b0i[0:nb-2]+1
 bin_end=b0i
 time_bin=fltarr(2,nb) & time_bin[0,*]=bin_start & time_bin[1,*]=bin_end
 bin_width=fltarr(nb)
-bin_width[0]=b0i[0]+1
+IF nb GT 1 THEN bin_width[0]=b0i[0]+1 ELSE bin_width[0]=N_Elements(time)
 FOR i=1,nb-1 DO bin_width[i]=b0i[i]-b0i[i-1]
-bin_offset=fltarr(nb) & bin_offset[1:*]=total(bin_width[0:nb-2],/cumulative)    
+bin_offset=fltarr(nb) & IF nb GT 1 THEN bin_offset[1:*]=total(bin_width[0:nb-2],/cumulative)    
 time_use=Fltarr(nb)+1
 FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
     ;time cut is specified in seconds to cut (rounded up to next time integration point). 

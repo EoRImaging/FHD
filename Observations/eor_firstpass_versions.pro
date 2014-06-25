@@ -177,12 +177,64 @@ case version of
       grid_visibilities=0 
       calibration_catalog_file_path=filepath('pattis_catalog_1_1.sav',root=rootdir('FHD'),subdir='catalog_data')
    end
+   'apb_test_beam_mask': begin
+      beam_mask_electric_field=1
+   end
+   'nb_no_freq_avg': begin
+      n_avg=1
+   end
+
+   ;;; Adam's versions!!! Only Adam may edit this section!!!
+   'apb_aarons_crazy_obs': begin
+      FoV=120.
+      dimension=4096.
+      snapshot_healpix_export=0
+      uvfits_version=0 ; just testing
+      uvfits_subversion=0
+      tile_flag_list=[111,128,121,131,132,133,141,142,151,152,163,164,165,107,108,118]
+      save_visibilities=0
+      calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+
+   end
+   'apb_aarons_crazy_obs_2': begin
+      FoV=120.
+      dimension=3072.
+      snapshot_healpix_export=0
+      uvfits_version=0 ; just testing
+      uvfits_subversion=0
+      tile_flag_list=[18,81,96,89,97,98,99,105,106,113,114,123,124,125,79,80,88,77]
+      save_visibilities=0
+      calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+      min_cal_baseline=30
+      max_cal_baseline=150
+
+   end
+   'apb_aarons_crazy_obs_3': begin
+      FoV=120.
+      dimension=3072.
+      snapshot_healpix_export=0
+      uvfits_version=0 ; just testing
+      uvfits_subversion=0
+      tile_flag_list=[18,81,96,89,97,98,99,105,106,113,114,123,124,125,79,80,88,77]
+      save_visibilities=0
+      calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+      min_cal_baseline=30
+      max_cal_baseline=150
+      cal_cable_reflection_fit=150
+
+   end
+
+   ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
+
+
+
    else: print,'Default parameters'
 endcase
    
 SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
   STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
-vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
+;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
+vis_file_list=str_replace(vis_file_list,'/mwa-','/eor-') ; temporary because cluster
 undefine,uvfits_version ; don't need these passed further
 undefine,uvfits_subversion
 undefine,obs_id
