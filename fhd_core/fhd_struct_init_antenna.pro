@@ -53,7 +53,7 @@ ENDFOR
 ;initialize antenna structure
 antenna_str={n_pol:n_ant_pol,antenna_type:instrument,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
     n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
-    delays:Ptr_new(),size_meters:0.,height:0.,group_id:Lonarr(n_ant_pol)-1}
+    delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol),group_id:Lonarr(n_ant_pol)-1}
     
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data
@@ -86,12 +86,8 @@ az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 ;now, update antenna structure to include gains
 antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,_Extra=extra) ;mwa_beam_setup_gain
 
-proj_east=Sin(za_arr*!DtoR)*Sin(az_arr*!DtoR) & proj_east_use=Reform(proj_east,(psf_image_dim)^2.)
-proj_north=Sin(za_arr*!DtoR)*Cos(az_arr*!DtoR) & proj_north_use=Reform(proj_north,(psf_image_dim)^2.)
-proj_z=Cos(za_arr*!DtoR) & proj_z_use=Reform(proj_z,(psf_image_dim)^2.)
-
 ;Finally, update antenna structure to include the response of each antenna
-antenna=general_antenna_response(obs,antenna
+antenna=general_antenna_response(obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim)
 
 timing=Systime(1)-t0
 RETURN,antenna
