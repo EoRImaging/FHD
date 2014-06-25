@@ -198,15 +198,29 @@ case version of
    end
    'apb_aarons_crazy_obs_2': begin
       FoV=120.
-      dimension=4096.
+      dimension=3072.
       snapshot_healpix_export=0
       uvfits_version=0 ; just testing
       uvfits_subversion=0
-      tile_flag_list=[111,128,121,131,132,133,141,142,151,152,163,164,165,107,108,118]
+      tile_flag_list=[18,81,96,89,97,98,99,105,106,113,114,123,124,125,79,80,88,77]
       save_visibilities=0
       calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
       min_cal_baseline=30
       max_cal_baseline=150
+
+   end
+   'apb_aarons_crazy_obs_3': begin
+      FoV=120.
+      dimension=3072.
+      snapshot_healpix_export=0
+      uvfits_version=0 ; just testing
+      uvfits_subversion=0
+      tile_flag_list=[18,81,96,89,97,98,99,105,106,113,114,123,124,125,79,80,88,77]
+      save_visibilities=0
+      calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+      min_cal_baseline=30
+      max_cal_baseline=150
+      cal_cable_reflection_fit=150
 
    end
 
