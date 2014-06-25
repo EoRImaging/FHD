@@ -26,7 +26,6 @@ antenna_height=0.29 ;meters (June 2014 e-mail from Brian Crosse) ; Was 0.35 befo
 velocity_factor=0.673
 speed_light=299792458. ;speed of light, in meters/second
 base_delay_unit=4.35E-10 ;435 picoseconds is base delay length unit [units in seconds]
-*delay_settings*=base_delay_unit
 
 xc_arr0=Reform((meshgrid(4,4,1))*antenna_spacing,16)
 xc_arr=xc_arr0-Mean(xc_arr0) ;dipole east position (meters)
@@ -38,6 +37,13 @@ antenna_coords=Ptrarr(3)
 antenna_coords[0]=Ptr_new(xc_arr)
 antenna_coords[1]=Ptr_new(yc_arr)
 antenna_coords[2]=Ptr_new(zc_arr)
+
+IF not Ptr_valid(delay_settings) THEN BEGIN
+    D0_d=xc_arr0*sin((90.-obs.obsalt)*!DtoR)*Sin(obs.obsaz*!DtoR)+yc_arr0*Sin((90.-obs.obsalt)*!DtoR)*Cos(obs.obsaz*!DtoR) 
+    D0_d/=speed_light*base_delay_unit
+    delay_settings=Ptr_new(Round(D0_d)) ;round to nearest real delay setting
+ENDIF
+*delay_settings*=base_delay_unit
 
 freq_center=antenna_str.freq
 IF Keyword_Set(dipole_mutual_coupling_factor) THEN antenna_str.coupling=mwa_dipole_mutual_coupling(freq_center) $
