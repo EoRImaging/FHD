@@ -86,6 +86,13 @@ az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 ;now, update antenna structure to include gains
 antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,_Extra=extra) ;mwa_beam_setup_gain
 
+proj_east=Sin(za_arr*!DtoR)*Sin(az_arr*!DtoR) & proj_east_use=Reform(proj_east,(psf_image_dim)^2.)
+proj_north=Sin(za_arr*!DtoR)*Cos(az_arr*!DtoR) & proj_north_use=Reform(proj_north,(psf_image_dim)^2.)
+proj_z=Cos(za_arr*!DtoR) & proj_z_use=Reform(proj_z,(psf_image_dim)^2.)
+
+;Finally, update antenna structure to include the response of each antenna
+antenna=general_antenna_response(obs,antenna
+
 timing=Systime(1)-t0
 RETURN,antenna
 END
