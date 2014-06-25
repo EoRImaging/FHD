@@ -7,6 +7,7 @@ FUNCTION beam_setup,obs,antenna,file_path_fhd=file_path_fhd,restore_last=restore
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
 
+IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_beams'+'.sav') EQ 0) THEN BEGIN 
     IF not Keyword_Set(silent) THEN print,file_path_fhd+'_beams'+'.sav' +' Not found. Recalculating.' 
     restore_last=0

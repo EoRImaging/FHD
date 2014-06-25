@@ -10,6 +10,7 @@ xvals_instrument=za_arr*Sin(az_arr*!DtoR)
 yvals_instrument=za_arr*Cos(az_arr*!DtoR)
 freq_center=antenna[0].freq ;all need to be identical, so just use the first
 speed_light=299792458. ;speed of light, in meters/second
+icomp=Complex(0,1)
 
 IF Keyword_Set(dead_dipole_list) THEN BEGIN
     ;Format is 3xN array, column 0: Tile number (names, not index), 1: polarization (0:x, 1:y), 2: dipole number
@@ -68,10 +69,13 @@ CASE beam_model_version OF
         phi_arr=270.-phi_arr ;change azimuth convention
         
     ;    Jmat_return=Ptrarr(n_ant_pol,n_ant_pol)
-        Jmat_interp=Ptrarr(n_ant_pol,n_ant_pol)
-        FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO Jmat_interp[p_i,p_j]=Ptr_new(Complexarr(n_ang))
-        FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR a_i=0L,n_ang-1 DO $
-            (*Jmat_interp[p_i,p_j])[a_i]=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,frequency)
+        Jmat_interp=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
+        FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO Jmat_interp[p_i,p_j,freq_i]=Ptr_new(Complexarr(n_ang))
+        FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR a_i=0L,n_ang-1 DO BEGIN
+            Jmat_single_ang=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,freq_center)
+            FOR freq_i=0L,nfreq_bin-1 DO (*Jmat_interp[p_i,p_j,freq_i])[a_i]=Jmat_single_ang[freq_i]
+;            (*Jmat_interp[p_i,p_j])[a_i]=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,freq_center)
+        ENDFOR
         
         xv_model=theta_arr*Sin(phi_arr*!DtoR)
         yv_model=theta_arr*Cos(phi_arr*!DtoR)
@@ -79,22 +83,23 @@ CASE beam_model_version OF
         horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
         horizon_mask=fltarr(psf_image_dim,psf_image_dim)+1
         IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0    
-        Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol)
-        FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO Jones_matrix[p_i,p_j]=Ptr_new(Complexarr(psf_image_dim,psf_image_dim))
+        Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
+        FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
+            Jones_matrix[p_i,p_j,freq_i]=Ptr_new(Complexarr(psf_image_dim,psf_image_dim))
         FOR i=0L,n_pix-1 DO BEGIN
             xv_instrument1=xvals_instrument[pix_use[i]]
             yv_instrument1=yvals_instrument[pix_use[i]]
             
             dist_test=Sqrt((xv_instrument1-xv_model)^2.+(yv_instrument1-yv_model)^2.)
             IF Min(dist_test,min_i) EQ 0 THEN BEGIN ;test if there is an exact match. Then just take that value and do no interpolation
-                FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO $
-                    (*Jones_matrix[p_i,p_j])[pix_use[i]]=(*Jmat_interp[p_i,p_j])[min_i]
+                FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
+                    (*Jones_matrix[p_i,p_j,freq_i])[pix_use[i]]=(*Jmat_interp[p_i,p_j,freq_i])[min_i]
                 CONTINUE ;move on to next iteration of pixel FOR loop
             ENDIF 
             i_use=(Sort(dist_test))[0:3] ;there had better be at least four points in the model!
             weight=1./dist_test[i_use]
-            FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO $
-                (*Jones_matrix[p_i,p_j])[pix_use[i]]=Total((*Jmat_interp[p_i,p_j])[i_use]*weight)/Total(weight)
+            FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
+                (*Jones_matrix[p_i,p_j,freq_i])[pix_use[i]]=Total((*Jmat_interp[p_i,p_j,freq_i])[i_use]*weight)/Total(weight)
         ENDFOR
 ;        IF polarization EQ 0 THEN projection=Sqrt(*Jmat[0,0]*Conj(*Jmat[0,0])+*Jmat[1,0]*Conj(*Jmat[1,0])) $
 ;            ELSE projection=Sqrt(*Jmat[1,1]*Conj(*Jmat[1,1])+*Jmat[0,1]*Conj(*Jmat[0,1]))
