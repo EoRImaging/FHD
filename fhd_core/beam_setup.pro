@@ -155,6 +155,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 
     pol1=pol_arr[0,pol_i]
     pol2=pol_arr[1,pol_i]
+    
+    group1=antenna.group_id[pol1,*]
+    group2=antenna.group_id[pol2,*]
+    
+    hgroup1=histogram(group1,min=0,/binsize,reverse=gri1)
+    hgroup2=histogram(group2,min=0,/binsize,reverse=gri2)
+    ng1=N_Elements(hgroup1)
+    ng2=N_Elements(hgroup2)
+    
+    
     freq_norm_check=fltarr(nfreq_bin)+1.
     
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
