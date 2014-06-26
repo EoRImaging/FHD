@@ -151,107 +151,70 @@ t3=0
 t4=0
 
 complex_flag_arr=intarr(n_pol,nfreq_bin)
+beam_arr=Ptrarr(n_pol,nfreq_bin)
 FOR pol_i=0,n_pol-1 DO BEGIN
 
-    pol1=pol_arr[0,pol_i]
-    pol2=pol_arr[1,pol_i]
+    ant_pol1=pol_arr[0,pol_i]
+    ant_pol1x=Abs(1-ant_pol1)
+    ant_pol2=pol_arr[1,pol_i]
+    ant_pol2x=Abs(1-ant_pol2)
     
-    group1=antenna.group_id[pol1,*]
-    group2=antenna.group_id[pol2,*]
+    group1=antenna.group_id[ant_pol1,*]
+    group2=antenna.group_id[ant_pol2,*]
     
     hgroup1=histogram(group1,min=0,/binsize,reverse=gri1)
     hgroup2=histogram(group2,min=0,/binsize,reverse=gri2)
     ng1=N_Elements(hgroup1)
     ng2=N_Elements(hgroup2)
-    
+    group_matrix=hgroup1#hgroup2
+    n_group=ng1*ng2
     
     freq_norm_check=fltarr(nfreq_bin)+1.
     
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
         t2_a=Systime(1)
-        antenna_beam_arr1=Ptrarr(16,/allocate)
-        antenna_beam_arr2=Ptrarr(16,/allocate)
-        beam1_arr=Ptrarr(n_tiles,/allocate)
-        beam2_arr=Ptrarr(n_tiles,/allocate)
         
-        gain1=Reform((*gain_arr[pol1])[freq_i,*,*])
-        gain2=Reform((*gain_arr[pol2])[freq_i,*,*])
+        beam_arr[pol_i,freq_i]=Ptr_new(Ptrarr(n_tile,n_tile))
         
-        gain1_avg=Median(gain1,dimension=1)
-        gain2_avg=Median(gain2,dimension=1)
-        
-        ;mwa_tile_beam_generate.pro paper_tile_beam_generate.pro
-        IF Keyword_Set(mutual_coupling) THEN BEGIN
-            mutual_coupling1=*mutual_coupling[pol1,freq_i]
-            mutual_coupling2=*mutual_coupling[pol2,freq_i]
-        ENDIF
-        beam1_0=Call_function(tile_beam_fn,gain1_avg,antenna_beam_arr1,$ ;mwa_tile_beam_generate
-            frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
-            psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals_instrument,yvals=yvals_instrument,$
-            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_image_dim,$
-            beam_model_version=beam_model_version,mutual_coupling=mutual_coupling1)
-;        IF pol2 EQ pol1 THEN antenna_beam_arr2=antenna_beam_arr1
-        beam2_0=Call_function(tile_beam_fn,gain2_avg,antenna_beam_arr2,$ ;mwa_tile_beam_generate
-            frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
-            psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals_instrument,yvals=yvals_instrument,$
-            ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=psf_image_dim,$
-            beam_model_version=beam_model_version,mutual_coupling=mutual_coupling2)
-        Ptr_free,antenna_beam_arr1,antenna_beam_arr2
-        t3_a=Systime(1)
-        t2+=t3_a-t2_a
-        ;FFT individual tile beams to uv space, crop there, and FFT back
-        beam1_0=mask_beam(obs,antenna[ant_1],beam1_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
-        beam2_0=mask_beam(obs,antenna[ant_2],beam2_0,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
-        
-        psf_base_single=dirty_image_generate(beam1_0*Conj(beam2_0),/no_real)
-        psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-        psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
-;        phase_test=Atan(psf_base_superres,/phase)*!Radeg
-;        phase_cut=where(Abs(phase_test) GE 90.,n_phase_cut)
-;        IF n_phase_cut GT 0 THEN uv_mask_superres[phase_cut]=0
-        freq_norm_check[freq_i]=Total(Abs(psf_base_superres))/psf_resolution^2.
-        gain_normalization=1./(Total(Abs(psf_base_superres))/psf_resolution^2.)
-;        psf_base_superres*=gain_normalization
-;        psf_base_superres*=freq_norm[freq_i]
-;        psf_base_superres*=pol_norm[pol_i]
-        t4_a=Systime(1)
-        t3+=t4_a-t3_a
-        phase_mag=(Abs(Atan(psf_base_superres,/phase))<Abs(!Pi-Abs(Atan(psf_base_superres,/phase))))*Floor(uv_mask_superres>0)
-        IF Max(phase_mag) GT !Pi*residual_tolerance THEN complex_flag_arr[pol_i,freq_i]=1
-        
-;        FOR tile_i=0,n_tiles-1 DO BEGIN
-;            *beam1_arr[tile_i]=Call_function(tile_beam_fn,gain1[*,tile_i],antenna_beam_arr1,$
-;                frequency=freq_center[freq_i],polarization=pol1,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
-;                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals_instrument,yvals=yvals_instrument,$
-;                ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=dimension)
-;            *beam2_arr[tile_i]=Call_function(tile_beam_fn,gain2[*,tile_i],antenna_beam_arr2,$
-;                frequency=freq_center[freq_i],polarization=pol2,za_arr=za_arr,az_arr=az_arr,obsaz=obsaz,obsza=obsza,$
-;                psf_dim=psf_dim,psf_resolution=psf_resolution,kbinsize=kbinsize,xvals=xvals_instrument,yvals=yvals_instrument,$
-;                ra_arr=ra_arr,dec_arr=dec_arr,delay_settings=delay_settings,dimension=dimension)
-;        ENDFOR
-;        
-;        FOR bi=0,nbaselines-1 DO BEGIN
-;            IF Min((gain1[*,tile_A[bi]-1]-gain1_avg EQ fltarr(N_Elements(base_gain))) $
-;                AND (gain2[*,tile_B[bi]-1]-gain2_avg EQ fltarr(N_Elements(base_gain)))) THEN BEGIN
-    ;                psf_residuals_n[pol_i,freq_i,bi]=0
-    ;                CONTINUE
-;            ENDIF
-;            
-;            psf_single=dirty_image_generate(*beam1_arr[tile_A[bi]-1],*beam2_arr[tile_B[bi]-1])*uv_mask*gain_normalization
-;            residual_single=psf_single-psf_base_superres
-;            i_res=where(residual_single GE ((psf_base_superres*residual_tolerance)>residual_threshold),nres)
-;            psf_residuals_n[pol_i,freq_i,bi]=nres
-;            IF nres GT 0 THEN BEGIN
-;                psf_residuals_i[pol_i,freq_i,bi]=Ptr_new(i_res)
-;                psf_residuals_val[pol_i,freq_i,bi]=Ptr_new(residual_single[i_res])
-;            ENDIF
-;        ENDFOR
-        Ptr_free,antenna_beam_arr1,antenna_beam_arr2,beam1_arr,beam2_arr
-        FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-            psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=$
-                Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
-        breakpoint0=0
-        t4+=Systime(1)-t4_a
+        FOR g_i=0L,n_group-1 DO BEGIN
+            g_i1=g_i mod ng1
+            g_i2=Floor(g_i/ng1)
+            
+            IF group_matrix[g_i1,g_i2] LE 0 THEN CONTINUE
+            ant_1_arr=gri1[gri1[g_i1]:gri1[g_i1+1]-1]
+            ant_2_arr=gri2[gri2[g_i2]:gri2[g_i2+1]-1]
+            ant_1=ant_1_arr[0]
+            ant_2=ant_2_arr[0]
+            
+;            t3_a=Systime(1)
+;            t2+=t3_a-t2_a
+            
+            beam_ant1=*(antenna[ant_1].response[ant_pol1,freq_i])
+            beam_ant2=*(antenna[ant_2].response[ant_pol2,freq_i])
+            Jones1=antenna[ant_1].Jones[*,*,freq_i]
+            Jones2=antenna[ant_2].Jones[*,*,freq_i]
+            ;FFT individual tile beams to uv space, crop there, and FFT back
+            beam_ant1=mask_beam(obs,antenna[ant_1],beam_ant1,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
+            beam_ant2=mask_beam(obs,antenna[ant_2],beam_ant2,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
+            
+            power_beam=beam_ant1*Conj(beam_ant2)*(*Jones1[ant_pol1,ant_pol1]*Conj(*Jones2[ant_pol2,ant_pol2])+*Jones1[ant_pol1x,ant_pol1]*Conj(*Jones2[ant_pol2x,ant_pol2]))
+            psf_base_single=dirty_image_generate(power_beam,/no_real)
+            psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
+            psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
+            
+            freq_norm_check[freq_i]=Total(Abs(psf_base_superres))/psf_resolution^2.
+            gain_normalization=1./(Total(Abs(psf_base_superres))/psf_resolution^2.)
+;            t4_a=Systime(1)
+;            t3+=t4_a-t3_a
+            phase_mag=(Abs(Atan(psf_base_superres,/phase))<Abs(!Pi-Abs(Atan(psf_base_superres,/phase))))*Floor(uv_mask_superres>0)
+            IF Max(phase_mag) GT !Pi*residual_tolerance THEN complex_flag_arr[pol_i,freq_i]=1
+            
+            psf_single=Ptrarr(psf_resolution,psf_resolution)
+            FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
+            beam_arr[ant_1_arr,ant_2_arr]=psf_single
+            breakpoint0=0
+;            t4+=Systime(1)-t4_a
+        ENDFOR
     ENDFOR
     freq_norm_check/=mean(freq_norm_check)
 ;    FOR freq_i=0L,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
@@ -289,6 +252,6 @@ psf=fhd_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residual
 IF ~Keyword_Set(no_save) THEN SAVE,psf,antenna,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
-IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]
+;IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]
 RETURN,psf
 END

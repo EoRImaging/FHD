@@ -38,10 +38,10 @@ FOR grp_i=0L,n_group-1 DO BEGIN
     
     response_grp=Ptrarr(n_ant_pol)
     FOR pol_i=0,n_ant_pol-1 DO BEGIN
-        response=Complexarr(psf_image_dim,psf_image_dim)
         ;phase of each dipole for the source (relative to the beamformer settings)
         
         FOR freq_i=0L,nfreq_bin-1 DO BEGIN
+            response=Complexarr(psf_image_dim,psf_image_dim)
             Kconv=(2.*!Pi)*(freq_center[freq_i]/c_light_vacuum) 
             antenna_gain_arr=Exp(-icomp*Kconv*D_d)
             voltage_delay=Exp(icomp*2.*!Pi*delays*(freq_center[freq_i])*Reform((*gain[pol_i])[freq_i,*])) 
@@ -50,8 +50,8 @@ FOR grp_i=0L,n_group-1 DO BEGIN
             FOR ii=0L,n_ant_elements-1 DO BEGIN
                 response+=antenna_gain_arr[*,*,ii]*meas_current[ii]
             ENDFOR
+            response_grp[pol_i,freq_i]=Ptr_new(response)
         ENDFOR
-        response_grp[pol_i]=Ptr_new(response)
     ENDFOR
     antenna[g_inds].response=response_grp
 ENDFOR
