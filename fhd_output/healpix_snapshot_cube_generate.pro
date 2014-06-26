@@ -2,7 +2,8 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
     rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
-    restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
+    restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
+    snapshot_recalculate=snapshot_recalculate,_Extra=extra
     
   t0=Systime(1)
   
@@ -14,6 +15,16 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
   obs_filepath=file_path_fhd+'_obs.sav'
   vis_filepath=file_path_fhd+'_vis_'
   cal_filepath=file_path_fhd+'_cal.sav'
+  
+  IF Keyword_Set(split_ps_export) THEN filepath_cube=file_path_fhd+['_even_cube.sav','_odd_cube.sav'] $
+    ELSE filepath_cube=file_path_fhd+'_cube.sav'
+  
+  IF not Keyword_Set(snapshot_recalculate) THEN BEGIN
+    cube_test=1
+    FOR i=0,N_Elements(filepath_cube)-1 DO cube_test*=file_test(filepath_cube[i])
+    IF cube_test THEN RETURN
+  ENDIF
+  
   IF N_Elements(obs_in) EQ 0 THEN obs_in=getvar_savefile(obs_filepath,'obs')
   IF N_Elements(psf_in) EQ 0 THEN psf_in=beam_setup(obs_in,file_path_fhd,/no_save,/silent)
   IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
@@ -74,7 +85,6 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     n_iter=2
     flag_arr_use=split_vis_flags(obs_out,flag_arr_use,bi_use=bi_use)
     vis_noise_calc,obs_out,vis_arr,flag_arr_use,bi_use=bi_use
-    filepath_cube=file_path_fhd+['_even_cube.sav','_odd_cube.sav']
     uvf_name = ['even','odd']
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+['_even','_odd'] + '_gridded_imagecube.sav'
   ENDIF ELSE BEGIN
@@ -82,7 +92,6 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     bi_use=Ptrarr(n_iter,/allocate)
     *bi_use[0]=lindgen(nb)
     vis_noise_calc,obs_out,vis_arr,flag_arr_use
-    filepath_cube=file_path_fhd+'_cube.sav'
     uvf_name = ''
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+'_gridded_imagecube.sav'
   ENDELSE
