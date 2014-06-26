@@ -3,7 +3,7 @@
 #####################################################################################
 #NOTE: print statements must be turned off in idl_startup file (e.g. healpix check)
 #What is needed: a file with observation id's separated by newlines, and an output 
-                 directory in which to put FHD output folder.
+#                  directory in which to put FHD output folder.
 #What is optional: specified starting and ending observation id's to choose a range
 #		   of observations within the obs text file, and the version 
 #                  of which to save FHD under and of which settings to choose from 
@@ -82,6 +82,7 @@ echo Setting priority = $priority
 
 #Make directory if it doesn't already exist
 mkdir -p ${outdir}/fhd_${version}
+mkdir -p ${outdir}/fhd_${version}/grid_out
 echo Output located at ${outdir}/fhd_${version}
 
 #Read the obs file and put into an array.
@@ -137,23 +138,10 @@ done
 FHDpath=$(idl -e 'print,rootdir("fhd")') ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 
 #Begin submitting job loop
-for obs_id in "${obs_id_array[@]}"
-do
-    if [ $obs_id -ge $starting_obs ] && [ $obs_id -le $ending_obs ]
-    then
 
-	errfile=${outdir}/fhd_${version}/${obs_id}_err.log		#Specify error log file
-	outfile=${outdir}/fhd_${version}/${obs_id}_out.log		#Specify output log file
+nobs=${#good_obs_list[@]}
 
-	echo "Starting observation id $obs_id"
-
-	#-P: Project name for qstat list.
-	#-V: export the variables listed after -v to the batch script.
-	#-pe chost: Set up the parallel environment to play nicely in grid engine
-	#${FHDpath}Observations/eor_firstpass_job.sh: Call bash script for the benifit of qsub.  It's a very simple program to start each run.
-	qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v obs_id=$obs_id,nslots=$nslots,outdir=$outdir,version=$version -e $errfile -o $outfile -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh
-    fi
-done
+qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v nslots=$nslots,outdir=$outdir,version=$version -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh ${good_obs_list[@]}
 
 echo "Done"
 
