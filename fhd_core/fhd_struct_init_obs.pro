@@ -20,7 +20,7 @@ b0i=Uniq(time)
 nb=N_Elements(b0i)
 IF nb GT 1 THEN time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600. ELSE time_step=1. ;have to put something in if there is only one time interval
 time_total=(Max(time)-Min(time))*24.*3600.
-bin_start=fltarr(nb) & bin_start[1:*]=b0i[0:nb-2]+1
+bin_start=fltarr(nb) & IF nb GT 1 THEN bin_start[1:*]=b0i[0:nb-2]+1
 bin_end=b0i
 time_bin=fltarr(2,nb) & time_bin[0,*]=bin_start & time_bin[1,*]=bin_end
 bin_width=fltarr(nb)
