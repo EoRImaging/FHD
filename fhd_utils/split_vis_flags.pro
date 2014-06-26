@@ -12,14 +12,26 @@ bin_end[nt-1]=nb-1
 bin_i=lonarr(nb)-1
 nt2=Floor(nt/2)
 FOR t_i=0,2*nt2-1 DO bin_i[bin_start[t_i]:bin_end[t_i]]=t_i
-IF Tag_exist(*obs.baseline_info,'time_use') THEN BEGIN
-    time_cut_i=where((*obs.baseline_info).time_use LE 0,nt_cut)
-    IF nt_cut GT 0 THEN bin_i[time_cut_i]=-1 ; will be skipped by using where(bin_i mod 2 EQ 0,1) below (-1 mod 2 is still -1)
+
+time_use=(*obs.baseline_info).time_use
+time_start_i=Min(where(time_use))
+nt3=Floor((nt-time_start_i)/2)*2
+time_use_0=time_use[time_start_i:time_start_i+nt3-1:2]
+time_use_1=time_use[time_start_i+1:time_start_i+nt3-1:2]
+time_use_01=time_use_0*time_use_1
+time_use*=0
+time_use[time_start_i:time_start_i+nt3-1:2]=time_use_01
+time_use[time_start_i+1:time_start_i+nt3-1:2]=time_use_01
+time_cut_i=where(time_use LE 0,nt_cut)
+IF nt_cut GT 0 THEN BEGIN
+    
+    bin_i[time_cut_i]=-1 ; will be skipped by using where(bin_i mod 2 EQ 0,1) below (-1 mod 2 is still -1)
 ENDIF
 
 bi_use=Ptrarr(2,/allocate)
 *bi_use[0]=where(bin_i mod 2 EQ 0,n_even)
 *bi_use[1]=where(bin_i mod 2 EQ 1,n_odd)
+
 IF n_even LT n_odd THEN *bi_use[1]=(*bi_use[1])[0:n_even-1]
 IF n_odd LT n_even THEN *bi_use[0]=(*bi_use[0])[0:n_odd-1]
 
