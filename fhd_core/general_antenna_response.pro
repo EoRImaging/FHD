@@ -36,7 +36,7 @@ FOR grp_i=0L,n_group-1 DO BEGIN
     D_d=(proj_east_use#xc_arr+proj_north_use#yc_arr+proj_z_use#zc_arr)
     D_d=Reform(D_d,psf_image_dim,psf_image_dim,n_ant_elements)
     
-    response_grp=Ptrarr(n_ant_pol)
+    response_grp=Ptrarr(n_ant_pol,nfreq_bin)
     FOR pol_i=0,n_ant_pol-1 DO BEGIN
         ;phase of each dipole for the source (relative to the beamformer settings)
         

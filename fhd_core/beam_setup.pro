@@ -55,7 +55,7 @@ degpix=obs.degpix
 astr=obs.astr
 
 antenna=fhd_struct_init_antenna(obs,file_path_fhd=file_path_fhd,beam_model_version=beam_model_version,$
-    psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
+    psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
 
 IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
@@ -70,6 +70,7 @@ obsaz=Float(obsaz)
 obsza=90.-obsalt
 psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR))  
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
+psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
 
 ;residual_tolerance is residual as fraction of psf_base above which to include 
 IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
@@ -110,14 +111,14 @@ t1_a=Systime(1)
 ;;So, the cropped uv span (psf_dim) means we do not need to calculate at full image resolution, 
 ;;   while the increased uv resolution can correspond to super-horizon scales. We construct the beam model in image space, 
 ;;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
-;psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
-;psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
-;psf_superres_dim=psf_dim*psf_resolution
-;psf_scale=dimension*psf_intermediate_res/psf_image_dim
-;xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
-;yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
-;xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
-;yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+psf_superres_dim=psf_dim*psf_resolution
+psf_scale=dimension*psf_intermediate_res/psf_image_dim
+xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 ;
 ;xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
 ;valid_i=where(Finite(ra_arr),n_valid)
@@ -170,11 +171,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     n_group=ng1*ng2
     
     freq_norm_check=fltarr(nfreq_bin)+1.
+    freq_center=antenna[0].freq
     
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
         t2_a=Systime(1)
         
-        beam_arr[pol_i,freq_i]=Ptr_new(Ptrarr(n_tile,n_tile))
+        beam_arr[pol_i,freq_i]=Ptr_new(Ptrarr(n_tiles,n_tiles))
         
         FOR g_i=0L,n_group-1 DO BEGIN
             g_i1=g_i mod ng1
