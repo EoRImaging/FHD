@@ -208,12 +208,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             gain_normalization=1./(Total(Abs(psf_base_superres))/psf_resolution^2.)
 ;            t4_a=Systime(1)
 ;            t3+=t4_a-t3_a
-            phase_mag=(Abs(Atan(psf_base_superres,/phase))<Abs(!Pi-Abs(Atan(psf_base_superres,/phase))))*Floor(uv_mask_superres>0)
-            IF Max(phase_mag) GT !Pi*residual_tolerance THEN complex_flag_arr[pol_i,freq_i]=1
+;            phase_mag=(Abs(Atan(psf_base_superres,/phase))<Abs(!Pi-Abs(Atan(psf_base_superres,/phase))))*Floor(uv_mask_superres>0)
+;            IF Max(phase_mag) GT !Pi*residual_tolerance THEN complex_flag_arr[pol_i,freq_i]=1
             
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
-            beam_arr[ant_1_arr,ant_2_arr]=psf_single
+            (*beam_arr[pol_i,freq_i])[ant_1_arr,ant_2_arr]=psf_single
             breakpoint0=0
 ;            t4+=Systime(1)-t4_a
         ENDFOR
