@@ -18,26 +18,27 @@ IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_ver
 speed_light=299792458.
 time=params.time
 b0i=Uniq(time)
-nb=N_Elements(b0i)
-IF nb GT 1 THEN time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600. ELSE time_step=1. ;have to put something in if there is only one time interval
+n_time=N_Elements(b0i)
+IF n_time GT 1 THEN time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600. ELSE time_step=1. ;have to put something in if there is only one time interval
 time_total=(Max(time)-Min(time))*24.*3600.
-bin_start=fltarr(nb) & IF nb GT 1 THEN bin_start[1:*]=b0i[0:nb-2]+1
+bin_start=fltarr(n_time) & IF n_time GT 1 THEN bin_start[1:*]=b0i[0:n_time-2]+1
 bin_end=b0i
-time_bin=fltarr(2,nb) & time_bin[0,*]=bin_start & time_bin[1,*]=bin_end
-bin_width=fltarr(nb)
-IF nb GT 1 THEN bin_width[0]=b0i[0]+1 ELSE bin_width[0]=N_Elements(time)
-FOR i=1,nb-1 DO bin_width[i]=b0i[i]-b0i[i-1]
-bin_offset=fltarr(nb) & IF nb GT 1 THEN bin_offset[1:*]=total(bin_width[0:nb-2],/cumulative)    
-time_use=Fltarr(nb)+1
+time_bin=fltarr(2,n_time) & time_bin[0,*]=bin_start & time_bin[1,*]=bin_end
+bin_width=fltarr(n_time)
+IF n_time GT 1 THEN bin_width[0]=b0i[0]+1 ELSE bin_width[0]=N_Elements(time)
+FOR i=1,n_time-1 DO bin_width[i]=b0i[i]-b0i[i-1]
+bin_offset=fltarr(n_time) & IF n_time GT 1 THEN bin_offset[1:*]=total(bin_width[0:n_time-2],/cumulative)    
+nbaselines=bin_width[0]
+time_use=Fltarr(n_time)+1
 FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
     ;time cut is specified in seconds to cut (rounded up to next time integration point). 
     ;Specify negative time_cut to cut time off the end. Specify a vector to cut at both the start and end
     IF time_cut[ti] LT 0 THEN BEGIN
-        ti_start=((nb-Ceil(Abs(time_cut[ti])/time_step))>0)<(nb-1)
-        ti_end=nb-1
+        ti_start=((n_time-Ceil(Abs(time_cut[ti])/time_step))>0)<(n_time-1)
+        ti_end=n_time-1
     ENDIF ELSE BEGIN
         ti_start=0
-        ti_end=(Ceil(Abs(time_cut[ti])/time_step)-1)<(nb-1)
+        ti_end=(Ceil(Abs(time_cut[ti])/time_step)-1)<(n_time-1)
     ENDELSE
     time_use[ti_start:ti_end]=0
 ENDFOR
@@ -62,8 +63,8 @@ ENDIF
 IF Keyword_Set(rotate_uv) THEN BEGIN
     uu1=(uu=params.uu)
     vv1=(vv=params.vv)
-    rotation_arr=fltarr(nb)
-    FOR i=0,nb-1 DO BEGIN
+    rotation_arr=fltarr(n_time)
+    FOR i=0,n_time-1 DO BEGIN
         zenpos2,Jdate[i],zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
         rotation_arr[i]=angle_difference(zendec,zenra,zendec2,zenra2,/degree);/2.
         uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
@@ -82,8 +83,9 @@ n_vis_arr=Lonarr(n_freq)
 
 ;256 tile upper limit is hard-coded in CASA format
 ;these tile numbers have been verified to be correct
-tile_A=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
-tile_B=Long(Fix(params.baseline_arr mod 256))
+name_mod=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
+tile_A=Long(Floor(params.baseline_arr/name_mod)) ;tile numbers start from 1
+tile_B=Long(Fix(params.baseline_arr mod name_mod))
 IF (max(tile_A)>max(tile_B)) NE n_tile THEN BEGIN
     print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
     n_tile=max(tile_A)>max(tile_B)
@@ -140,8 +142,9 @@ healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Lo
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
     freq_use:freq_use,tile_use:tile_use,time_use:time_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
+
 struct={code_version:String(code_version),instrument:String(instrument),antenna_size:Float(antenna_size),obsname:String(obsname),$
-    dimension:Float(dimension),elements:Float(elements),$
+    dimension:Float(dimension),elements:Float(elements),nbaselines:Long(nbaselines),$
     kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,obsra:meta.obsra,obsdec:meta.obsdec,$
     zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,zenx:meta.zenx,zeny:meta.zeny,$
     phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$
