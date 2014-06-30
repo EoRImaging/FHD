@@ -42,8 +42,7 @@ nfreq_bin=Max(freq_bin_i)+1
 
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
-bin_offset=(*obs.baseline_info).bin_offset
-nbaselines=bin_offset[1]
+nbaselines=obs.nbaselines
 
 dimension=obs.dimension
 elements=obs.elements
