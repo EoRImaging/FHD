@@ -117,7 +117,7 @@ ng=max(group_id)
 
 source_list_base={id:-1,ra:0.,dec:0.,ston_max:0.,flux_max:0.,n_detect:0.,extend:0,sources:Ptr_new()}
 
-source_sub_base={filename:'XXX',extend:0.,radius:0.,alpha:0.,ston:0.,flux:0.,beam:0.,fi:-1.,fii:-1.,x:-1.,y:-1.}
+source_sub_base={filename:'XXX',extend:0.,radius:0.,alpha:0.,ston:0.,flux:0.,beam:0.,fi:-1.,fii:-1.,x:-1.,y:-1.,ra:-1.,dec:-1.}
 
 source_list=Replicate(source_list_base,ng)
 FOR gi=0L,ng-1 DO BEGIN
@@ -151,6 +151,8 @@ FOR gi=0L,ng-1 DO BEGIN
     source_sub.fii=sa_id[si_g_use]
     source_sub.x=sa_x[si_g_use]
     source_sub.y=sa_y[si_g_use]
+    source_sub.ra=sa_ra[si_g_use]
+    source_sub.dec=sa_dec[si_g_use]
     source_sub.filename=file_basename(file_list[source_sub.fi])
     source_sub.extend=sa_extend[si_g_use]
     source_sub.radius=sa_radius[si_g_use]
