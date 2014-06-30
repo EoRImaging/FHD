@@ -117,9 +117,9 @@ tile_A_i=cal.tile_A-1
 tile_B_i=cal.tile_B-1
 freq_arr=cal.freq
 bin_offset=cal.bin_offset
-n_baselines=bin_offset[1]
-tile_A_i=tile_A_i[0:bin_offset[1]-1]
-tile_B_i=tile_B_i[0:bin_offset[1]-1]
+n_baselines=obs.nbaselines
+tile_A_i=tile_A_i[0:n_baselines-1]
+tile_B_i=tile_B_i[0:n_baselines-1]
 
 IF N_Elements(flag_ptr) EQ 0 THEN BEGIN
     flag_init=Replicate(1.,n_freq,n_baselines*Float(n_time))

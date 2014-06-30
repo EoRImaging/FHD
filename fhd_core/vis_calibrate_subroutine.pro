@@ -127,7 +127,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   tile_B_i=cal.tile_B-1
   freq_arr=cal.freq
   bin_offset=cal.bin_offset
-  n_baselines=bin_offset[1]
+  n_baselines=obs.nbaselines
   
   kbinsize=obs.kpix
   
