@@ -187,6 +187,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             ant_2_arr=gri2[gri2[g_i2]:gri2[g_i2+1]-1]
             ant_1=ant_1_arr[0]
             ant_2=ant_2_arr[0]
+            ant_1_n=hgroup1[g_i1]
+            ant_2_n=hgroup2[g_i2]
             
 ;            t3_a=Systime(1)
 ;            t2+=t3_a-t2_a
@@ -213,7 +215,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
-            (*beam_arr[pol_i,freq_i])[ant_1_arr,ant_2_arr]=psf_single
+            FOR ant1_i=0L,ant_1_n-1 DO FOR ant2_i=0L,ant_2_n-1 DO  (*beam_arr[pol_i,freq_i])[ant1_i,ant2_i]=psf_single
             breakpoint0=0
 ;            t4+=Systime(1)-t4_a
         ENDFOR
