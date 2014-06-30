@@ -98,8 +98,8 @@ psf_base=Ptrarr(n_pol,nfreq_bin,psf_resolution,psf_resolution)
 
 psf_xvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 psf_yvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
-xvals_i=meshgrid(psf_dim,psf_dim,1)*psf_resolution
-yvals_i=meshgrid(psf_dim,psf_dim,2)*psf_resolution
+xvals_i=Reform(meshgrid(psf_dim,psf_dim,1)*psf_resolution,psf_dim^2.)
+yvals_i=Reform(meshgrid(psf_dim,psf_dim,2)*psf_resolution,psf_dim^2.)
 FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO BEGIN 
     *psf_xvals[i,j]=meshgrid(psf_dim,psf_dim,1)-psf_dim/2.+Float(i)/psf_resolution
     *psf_yvals[i,j]=meshgrid(psf_dim,psf_dim,2)-psf_dim/2.+Float(j)/psf_resolution
@@ -215,7 +215,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
-            FOR ant1_i=0L,ant_1_n-1 DO FOR ant2_i=0L,ant_2_n-1 DO  (*beam_arr[pol_i,freq_i])[ant1_i,ant2_i]=psf_single
+            FOR ant1_i=0L,ant_1_n-1 DO FOR ant2_i=0L,ant_2_n-1 DO  (*beam_arr[pol_i,freq_i])[ant1_i,ant2_i]=Ptr_new(psf_single)
             breakpoint0=0
 ;            t4+=Systime(1)-t4_a
         ENDFOR

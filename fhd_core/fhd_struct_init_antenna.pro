@@ -23,10 +23,11 @@ frequency_array=(*obs.baseline_info).freq
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 
-;tile_A=(*obs.baseline_info).tile_A
-;tile_B=(*obs.baseline_info).tile_B
-;bin_offset=(*obs.baseline_info).bin_offset
-;nbaselines=bin_offset[1]
+tile_A=(*obs.baseline_info).tile_A
+tile_B=(*obs.baseline_info).tile_B
+nbaselines=obs.nbaselines
+ant_names=tile_A[uniq(tile_A[0:nbaselines-1],Sort(tile_A[0:nbaselines-1]))]
+
 
 dimension=obs.dimension
 elements=obs.elements
@@ -51,7 +52,7 @@ FOR fi=0L,nfreq_bin-1 DO BEGIN
 ENDFOR
 
 ;initialize antenna structure
-antenna_str={n_pol:n_ant_pol,antenna_type:instrument,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
+antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
     n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
     delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1}
     
