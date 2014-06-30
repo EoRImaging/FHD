@@ -58,11 +58,7 @@ FOR ti=0L,n_tags-1 DO BEGIN
             ENDIF
             result[1,ti_use]='Pointer' 
             result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent,max_len=max_len-1)
-            IF size(result_insert,/n_dim) LT 2 THEN BEGIN
-                ti_use+=1
-                CONTINUE
-            ENDIF
-            stretch=(size(result_insert,/dimension))[1]
+            stretch=(size(result_insert,/dimension))[size(result_insert,/n_dim)-1]
             result=[[result],[Strarr(2,stretch)]]
             result[0,ti_use+1]=result_insert
             ti_use+=stretch+1
