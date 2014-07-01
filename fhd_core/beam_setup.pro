@@ -151,7 +151,13 @@ t3=0
 t4=0
 
 complex_flag_arr=intarr(n_pol,nfreq_bin)
-beam_arr=Ptrarr(n_pol,nfreq_bin)
+beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
+ant_A_list=tile_A[0:nbaselines-1]
+ant_B_list=tile_B[0:nbaselines-1]
+baseline_mod=2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))
+bi_list=ant_B_list+ant_A_list*baseline_mod
+bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
+
 FOR pol_i=0,n_pol-1 DO BEGIN
 
     ant_pol1=pol_arr[0,pol_i]
@@ -170,25 +176,31 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     n_group=ng1*ng2
     
     freq_norm_check=fltarr(nfreq_bin)+1.
-    freq_center=antenna[0].freq
+    freq_center=antenna[0].freq ;all antennas need to have the same frequency coverage, so just take the first
     
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
         t2_a=Systime(1)
         
-        beam_arr[pol_i,freq_i]=Ptr_new(Ptrarr(n_tiles,n_tiles))
         
         FOR g_i=0L,n_group-1 DO BEGIN
             g_i1=g_i mod ng1
             g_i2=Floor(g_i/ng1)
             
-            IF group_matrix[g_i1,g_i2] LE 0 THEN CONTINUE
+            baseline_group_n=group_matrix[g_i1,g_i2]
+            IF baseline_group_n LE 0 THEN CONTINUE
+            
             ant_1_arr=gri1[gri1[g_i1]:gri1[g_i1+1]-1]
             ant_2_arr=gri2[gri2[g_i2]:gri2[g_i2+1]-1]
             ant_1=ant_1_arr[0]
             ant_2=ant_2_arr[0]
+            
             ant_1_n=hgroup1[g_i1]
             ant_2_n=hgroup2[g_i2]
             
+            bi_use=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)+Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n)*baseline_mod,baseline_group_n)
+            bi_inds=ri_bi[ri_bi[bi_use]] ;use these indices to index the reverse indices of the original baseline index histogram
+            bi_inds=bi_inds[uniq(bi_inds,radix_sort(bi_inds))] 
+            baseline_group_n=N_Elements(bi_inds)
 ;            t3_a=Systime(1)
 ;            t2+=t3_a-t2_a
             
@@ -214,7 +226,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
-            FOR ant1_i=0L,ant_1_n-1 DO FOR ant2_i=0L,ant_2_n-1 DO  (*beam_arr[pol_i,freq_i])[ant1_i,ant2_i]=Ptr_new(psf_single)
+            FOR bii=0L,baseline_group_n-1 DO  beam_arr[pol_i,freq_i,bi_inds[bii]]=Ptr_new(psf_single)
             breakpoint0=0
 ;            t4+=Systime(1)-t4_a
         ENDFOR
