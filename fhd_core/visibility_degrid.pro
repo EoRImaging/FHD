@@ -21,7 +21,6 @@ nfreq_bin=Max(freq_bin_i)+1
 bin_offset=(*obs.baseline_info).bin_offset
 IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
 
-psf_base=psf.base
 psf_dim=psf.dim
 psf_resolution=psf.resolution
 
@@ -29,12 +28,13 @@ flag_switch=Keyword_Set(flag_ptr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 baseline_i=params.baseline_arr
-nbaselines=bin_offset[1]
+nbaselines=obs.nbaselines
 n_samples=N_Elements(bin_offset)
 n_freq_use=N_Elements(frequency_array)
 n_freq=Long(obs.n_freq)
 n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
+group_id=psf.id[polarization,*,*]
 
 vis_dimension=Float(nbaselines*n_samples)
 IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
