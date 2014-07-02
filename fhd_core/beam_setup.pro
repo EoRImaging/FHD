@@ -158,6 +158,7 @@ baseline_mod=2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))
 bi_list=ant_B_list+ant_A_list*baseline_mod
 bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
+group_arr=Lonarr(n_pol,nfreq_bin,nbaselines)-1
 FOR pol_i=0,n_pol-1 DO BEGIN
 
     ant_pol1=pol_arr[0,pol_i]
@@ -173,7 +174,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ng1=N_Elements(hgroup1)
     ng2=N_Elements(hgroup2)
     group_matrix=hgroup1#hgroup2
-    n_group=ng1*ng2
+    gi_use=where(group_matrix,n_group)
     
     freq_norm_check=fltarr(nfreq_bin)+1.
     freq_center=antenna[0].freq ;all antennas need to have the same frequency coverage, so just take the first
@@ -181,10 +182,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
         t2_a=Systime(1)
         
-        
+        g_i1=-1L
         FOR g_i=0L,n_group-1 DO BEGIN
-            g_i1=g_i mod ng1
-            g_i2=Floor(g_i/ng1)
+            g_i1=gi_use[g_i] mod ng1
+            g_i2=Floor(gi_use[g_i]/ng1)
             
             baseline_group_n=group_matrix[g_i1,g_i2]
             IF baseline_group_n LE 0 THEN CONTINUE
@@ -201,6 +202,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             bi_inds=ri_bi[ri_bi[bi_use]] ;use these indices to index the reverse indices of the original baseline index histogram
             bi_inds=bi_inds[uniq(bi_inds,radix_sort(bi_inds))] 
             baseline_group_n=N_Elements(bi_inds)
+            group_arr[pol_i,freq_i,bi_inds]=g_i
 ;            t3_a=Systime(1)
 ;            t2+=t3_a-t2_a
             
@@ -263,8 +265,8 @@ complex_flag=1
 t5_a=Systime(1)
 psf=fhd_struct_init_psf(beam_arr=beam_arr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
-    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center)
-IF ~Keyword_Set(no_save) THEN SAVE,psf,antenna,filename=file_path_fhd+'_beams'+'.sav'
+    n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr)
+IF ~Keyword_Set(no_save) THEN SAVE,psf,antenna,filename=file_path_fhd+'_beams'+'.sav',/compress
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
 ;IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]

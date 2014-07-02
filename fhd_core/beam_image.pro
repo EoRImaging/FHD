@@ -19,6 +19,7 @@
 FUNCTION beam_image,psf,obs,pol_i=pol_i,freq_i=freq_i,dimension=dimension,elements=elements,abs=abs,square=square
 compile_opt idl2,strictarrsubs  
 
+IF N_Elements(pol_i) EQ 0 THEN pol_i=0
 psf_base_ptr=psf.base
 IF N_Elements(dimension) EQ 0 THEN dimension=obs.dimension
 IF N_Elements(elements) EQ 0 THEN elements=dimension
@@ -33,6 +34,11 @@ xl=dimension/2.-Floor(psf_dim/2.)+1
 xh=dimension/2.-Floor(psf_dim/2.)+psf_dim
 yl=elements/2.-Floor(psf_dim/2.)+1
 yh=elements/2.-Floor(psf_dim/2.)+psf_dim
+
+group_id=psf.id[pol_i,0,*]
+group_n=histogram(group_id,min=0,/binsize,reverse_ind=ri_id)
+gi_use=where(hist_id,n_groups)
+gi_ref=ri_id[ri_id[gi_use]]
 
 IF tag_exist(psf,'fbin_i') THEN freq_bin_i=psf.fbin_i
 
@@ -52,7 +58,12 @@ IF Keyword_Set(square) THEN BEGIN
         dims=Size(psf_base_ptr,/dimension)
         n_freq_bin=dims[1]
         FOR fi=0,n_freq_bin-1 DO BEGIN
-            beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fi,rbin,rbin]):*psf_base_ptr[pol_i,fi,rbin,rbin],psf_dim,psf_dim)
+            beam_single=Complexarr(psf_dim,psf_dim)
+            FOR gi=0,n_groups-1 DO BEGIN
+                beam_single+=*(*psf.beams[pol_i,freq_i,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+            ENDFOR
+            beam_single/=Total(group_n)
+            IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
@@ -61,7 +72,7 @@ IF Keyword_Set(square) THEN BEGIN
             n_bin_use+=1.*freq_norm[fi]
         ENDFOR
     ENDIF ELSE BEGIN
-        IF N_Elements(n_freq) EQ 0 THEN n_freq=N_Elements(freq_bin_i)
+        IF N_Elements(n_freq) EQ 0 THEN n_freq=psf.n_freq
         IF N_Elements(freq_i_use) EQ 0 THEN freq_i_use=findgen(n_freq)
         nf_use=N_Elements(freq_i_use)
         freq_bin_use=freq_bin_i[freq_i_use]
@@ -71,7 +82,12 @@ IF Keyword_Set(square) THEN BEGIN
         FOR bin0=0L,nbin-1 DO BEGIN
             fbin=fbin_use[bin0]
             nf_bin=Float(Total(freq_bin_use EQ fbin))
-            beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
+            beam_single=Complexarr(psf_dim,psf_dim)
+            FOR gi=0,n_groups-1 DO BEGIN
+                beam_single+=*(*psf.beams[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+            ENDFOR
+            beam_single/=Total(group_n)
+            IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)            
@@ -90,7 +106,11 @@ ENDIF ELSE BEGIN
         n_freq_bin=dims[1]
         beam_base_uv=complexarr(psf_dim,psf_dim)
         FOR fi=0,n_freq_bin-1 DO BEGIN
-            beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fi,rbin,rbin]):*psf_base_ptr[pol_i,fi,rbin,rbin],psf_dim,psf_dim)
+            beam_single=Complexarr(psf_dim,psf_dim)
+            FOR gi=0,n_groups-1 DO BEGIN
+                beam_single+=*(*psf.beams[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+            ENDFOR
+            beam_single/=Total(group_n)
             beam_base_uv+=beam_single
             n_bin_use+=1.*freq_norm[fi]
         ENDFOR
@@ -103,7 +123,11 @@ ENDIF ELSE BEGIN
             fi=freq_i_use[fi0]
             IF N_Elements(freq_i) GT 0 THEN IF Total(freq_i EQ fi) EQ 0 THEN CONTINUE
             fbin=freq_bin_i[fi]
-            beam_single=Reform(Keyword_Set(abs) ? Abs(*psf_base_ptr[pol_i,fbin,rbin,rbin]):*psf_base_ptr[pol_i,fbin,rbin,rbin],psf_dim,psf_dim)
+            beam_single=Complexarr(psf_dim,psf_dim)
+            FOR gi=0,n_groups-1 DO BEGIN
+                beam_single+=*(*psf.beams[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+            ENDFOR
+            beam_single/=Total(group_n)
             beam_base_uv+=beam_single
             n_bin_use+=1.*freq_norm[fbin]
         ENDFOR

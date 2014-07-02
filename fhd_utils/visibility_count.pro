@@ -35,9 +35,8 @@ bi_use=array_match(b_info.tile_A,b_info.tile_B,value_match=tile_use)
 n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
 
-psf_base=psf.base
-psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
-psf_resolution=(Size(psf_base,/dimension))[2]
+psf_dim=psf.dim
+psf_resolution=psf.resolution
 
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize

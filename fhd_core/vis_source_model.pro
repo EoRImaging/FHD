@@ -81,13 +81,6 @@ ENDIF
 
 vis_arr=Ptrarr(n_pol)
 
-psf_base=psf.base
-psf_residuals_n=psf.res_n
-psf_residuals_i=psf.res_i
-psf_residuals_val=psf.res_val
-psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
-psf_resolution=(Size(psf_base,/dimension))[2]
-
 valid_test=fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO valid_test[pol_i]=Total(Abs(*model_uv_arr[pol_i]))
 IF min(valid_test) EQ 0 THEN BEGIN

@@ -363,7 +363,6 @@ undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_ar
 
 ;;generate images showing the uv contributions of each tile. Very helpful for debugging!
 ;print,'Calculating individual tile uv coverage'
-;mwa_tile_locate,obs=obs,params=params,psf=psf
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
 print,''
