@@ -182,7 +182,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
         t2_a=Systime(1)
         
-        g_i1=-1L
         FOR g_i=0L,n_group-1 DO BEGIN
             g_i1=gi_use[g_i] mod ng1
             g_i2=Floor(gi_use[g_i]/ng1)
@@ -200,8 +199,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             
             bi_use=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)+Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n)*baseline_mod,baseline_group_n)
             bi_inds=ri_bi[ri_bi[bi_use]] ;use these indices to index the reverse indices of the original baseline index histogram
-            bi_inds=bi_inds[uniq(bi_inds,radix_sort(bi_inds))] 
-            baseline_group_n=N_Elements(bi_inds)
+;            bi_inds=bi_inds[uniq(bi_inds,radix_sort(bi_inds))] 
+;            baseline_group_n=N_Elements(bi_inds)
             group_arr[pol_i,freq_i,bi_inds]=g_i
 ;            t3_a=Systime(1)
 ;            t2+=t3_a-t2_a
