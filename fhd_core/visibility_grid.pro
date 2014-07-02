@@ -21,11 +21,11 @@ max_baseline=obs.max_baseline
 IF N_Elements(silent) EQ 0 THEN verbose=0 ELSE verbose=0>Round(1-silent)<1
 
 IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
-IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
+freq_bin_i=(*obs.baseline_info).fbin_i
 n_freq=Long(obs.n_freq)
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
-IF Tag_exist(obs,'nf_vis') THEN n_vis_arr=obs.nf_vis ELSE n_vis_arr=Lonarr(n_freq)
+n_vis_arr=obs.nf_vis
 
 IF Keyword_Set(flag_ptr) THEN BEGIN
     IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
@@ -66,10 +66,10 @@ freq_norm/=Mean(freq_norm)
 freq_norm=Float(freq_norm[fi_use])
 frequency_array=frequency_array[fi_use]
 
-IF tag_exist(psf,'complex_flag') THEN complex_flag=psf.complex_flag ELSE IF N_Elements(complex_flag) EQ 0 THEN complex_flag=1
-psf_base=psf.base
+complex_flag=psf.complex_flag
 psf_dim=psf.dim
 psf_resolution=psf.resolution
+group_arr=reform(psf.id[polarization,freq_bin_i[fi_use],bi_use])
 
 flag_switch=Keyword_Set(flag_ptr)
 weights_flag=Keyword_Set(weights)
@@ -77,6 +77,8 @@ variance_flag=Keyword_Set(variance)
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize
 
+nbaselines=obs.nbaselines
+n_samples=obs.n_time
 n_freq_use=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
 psf_dim3=psf_dim*psf_dim
@@ -237,6 +239,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
     
     vis_n=bin_n[bin_i[bi]]
+    baseline_inds=bi_use[(inds mod n_f_use) mod n_samples]
+    group_id=group_arr[inds]
+    group_max=Max(group_id)+1
     
 ;    psf_conj_flag=intarr(vis_n)
 ;    IF n_conj GT 0 THEN BEGIN
@@ -244,7 +249,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;        psf_conj_flag=conj_flag[bi_vals]
 ;    ENDIF  
     
-    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.);*2.+psf_conj_flag
+    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.)*group_max+group_id
     
     xyf_si=Sort(xyf_i)
     xyf_i=xyf_i[xyf_si]
@@ -260,6 +265,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
+        baseline_inds=baseline_inds[inds_use]
 ;        psf_conj_flag=psf_conj_flag[inds_use]
         IF n_xyf_bin GT 1 THEN xyf_ui0=[0,xyf_ui[0:n_xyf_bin-2]+1] ELSE xyf_ui0=0
         psf_weight=xyf_ui-xyf_ui0+1
@@ -295,7 +301,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t2+=t3_0-t1_0
     ENDIF
     
-    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*psf.beams[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
 ;        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     

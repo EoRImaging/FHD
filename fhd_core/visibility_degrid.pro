@@ -5,7 +5,7 @@ t0=Systime(1)
 heap_gc
 
 pol_names=['xx','yy','xy','yx']
-IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
+complex=psf.complex_flag
 
 ;extract information from the structures
 dimension=Float(obs.dimension)
@@ -16,10 +16,10 @@ ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
-IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
-nfreq_bin=Max(freq_bin_i)+1
+freq_bin_i=(*obs.baseline_info).fbin_i
+nfreq_bin=psf.n_freq
 bin_offset=(*obs.baseline_info).bin_offset
-IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+frequency_array=(*obs.baseline_info).freq
 
 psf_dim=psf.dim
 psf_resolution=psf.resolution
@@ -27,14 +27,14 @@ psf_resolution=psf.resolution
 flag_switch=Keyword_Set(flag_ptr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
-baseline_i=params.baseline_arr
+;baseline_i=params.baseline_arr
 nbaselines=obs.nbaselines
-n_samples=N_Elements(bin_offset)
+n_samples=obs.n_time
 n_freq_use=N_Elements(frequency_array)
 n_freq=Long(obs.n_freq)
 n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
-group_id=psf.id[polarization,*,*]
+group_arr=reform(psf.id[polarization,freq_bin_i,*])
 
 vis_dimension=Float(nbaselines*n_samples)
 IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
@@ -130,6 +130,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
      
     vis_n=bin_n[bin_i[bi]]
+    baseline_inds=(inds mod n_freq_use) mod n_samples
+    group_id=group_arr[inds]
+    group_max=Max(group_id)+1
     
 ;    psf_conj_flag=intarr(vis_n)
 ;    IF n_conj GT 0 THEN BEGIN
@@ -137,7 +140,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;        psf_conj_flag=conj_flag[bi_vals]
 ;    ENDIF 
     
-    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.);*2.+psf_conj_flag
+    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.)*group_max+group_id
     xyf_si=Sort(xyf_i)
     xyf_i=xyf_i[xyf_si]
     xyf_ui=Uniq(xyf_i)
@@ -152,6 +155,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
+        baseline_inds=baseline_inds[inds_use]
 ;        psf_conj_flag=psf_conj_flag[inds_use]
         
         IF n_xyf_bin EQ 1 THEN ind_remap=intarr(vis_n) ELSE BEGIN
@@ -168,7 +172,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
+;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*psf.beams[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
 ;        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
