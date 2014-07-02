@@ -22,9 +22,8 @@ freq_bin_i=freq_bin_i;[fi_use]
 frequency_array=b_info.freq
 frequency_array=frequency_array;[fi_use]
 
-psf_base=psf.base
-psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
-psf_resolution=(Size(psf_base,/dimension))[2]
+psf_dim=psf.dim
+psf_resolution=psf.resolution
 
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize

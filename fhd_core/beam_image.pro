@@ -16,7 +16,7 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-FUNCTION beam_image,psf,obs,pol_i=pol_i,freq_i=freq_i,dimension=dimension,elements=elements,abs=abs,fast=fast,square=square
+FUNCTION beam_image,psf,obs,pol_i=pol_i,freq_i=freq_i,dimension=dimension,elements=elements,abs=abs,square=square
 compile_opt idl2,strictarrsubs  
 
 psf_base_ptr=psf.base

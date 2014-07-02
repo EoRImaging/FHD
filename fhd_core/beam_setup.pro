@@ -226,7 +226,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
-            FOR bii=0L,baseline_group_n-1 DO  beam_arr[pol_i,freq_i,bi_inds[bii]]=Ptr_new(psf_single)
+            FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=Ptr_new(psf_single)
             breakpoint0=0
 ;            t4+=Systime(1)-t4_a
         ENDFOR
@@ -236,35 +236,35 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        *psf_base[pol_i,freq_i,i,j]/=freq_norm_check[freq_i]
 ENDFOR
 
-;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
-;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
-edge_test=fltarr(psf_dim,psf_dim)
-FOR i=0,N_Elements(psf_base)-1 DO edge_test+=Abs(*psf_base[i]) ;add together ALL beams, because we just want to find out if EVERY border pixel is zero
-edge_test_cut=Total(edge_test,1)+Total(edge_test,2) 
-edge_test_cut+=Reverse(edge_test_cut)
-edge_zeroes=(where(edge_test_cut))[0]
-IF Keyword_set(psf_max_dim) THEN edge_zeroes=edge_zeroes>Round((psf_dim-psf_max_dim)/2)
-IF edge_zeroes GT 0 THEN BEGIN
-    psf_dim-=2.*edge_zeroes
-    FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-        *psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=$
-            Reform((*psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j])[edge_zeroes:edge_zeroes+psf_dim-1,edge_zeroes:edge_zeroes+psf_dim-1],psf_dim*psf_dim)
-ENDIF ELSE FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-    *psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=Reform(*psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j],psf_dim*psf_dim)
+;;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
+;;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
+;edge_test=fltarr(psf_dim*psf_dim)
+;FOR i=0,N_Elements(psf_base)-1 DO edge_test+=Abs(*psf_base[i]) ;add together ALL beams, because we just want to find out if EVERY border pixel is zero
+;edge_test_cut=Total(edge_test,1)+Total(edge_test,2) 
+;edge_test_cut+=Reverse(edge_test_cut)
+;edge_zeroes=(where(edge_test_cut))[0]
+;IF Keyword_set(psf_max_dim) THEN edge_zeroes=edge_zeroes>Round((psf_dim-psf_max_dim)/2)
+;IF edge_zeroes GT 0 THEN BEGIN
+;    psf_dim-=2.*edge_zeroes
+;    FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
+;        *psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=$
+;            Reform((*psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j])[edge_zeroes:edge_zeroes+psf_dim-1,edge_zeroes:edge_zeroes+psf_dim-1],psf_dim*psf_dim)
+;ENDIF ELSE FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
+;    *psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j]=Reform(*psf_base[pol_i,freq_i,psf_resolution-1-i,psf_resolution-1-j],psf_dim*psf_dim)
+;
+;complex_flag=Max(complex_flag_arr)
+;IF Keyword_Set(no_complex_beam) THEN complex_flag=0
+;IF complex_flag EQ 0 THEN BEGIN
+;    FOR i=0L,N_Elements(psf_base)-1 DO *psf_base[i]=Real_part(*psf_base[i])
+;    print,'Saving only real part of beam model!'
+;ENDIF
 
-complex_flag=Max(complex_flag_arr)
-IF Keyword_Set(no_complex_beam) THEN complex_flag=0
-IF complex_flag EQ 0 THEN BEGIN
-    FOR i=0L,N_Elements(psf_base)-1 DO *psf_base[i]=Real_part(*psf_base[i])
-    print,'Saving only real part of beam model!'
-ENDIF
-
+complex_flag=1
 t5_a=Systime(1)
-psf=fhd_struct_init_psf(base=psf_base,res_i=psf_residuals_i,res_val=psf_residuals_val,$
-    res_n=psf_residuals_n,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
+psf=fhd_struct_init_psf(beam_arr=beam_arr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
-    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center,gain_arr=gain_arr,mutual_coupling=mutual_coupling)
-IF ~Keyword_Set(no_save) THEN SAVE,psf,antenna,filename=file_path_fhd+'_beams'+'.sav',/compress
+    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_center)
+IF ~Keyword_Set(no_save) THEN SAVE,psf,antenna,filename=file_path_fhd+'_beams'+'.sav'
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
 ;IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]
