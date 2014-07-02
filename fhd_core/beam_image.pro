@@ -20,7 +20,6 @@ FUNCTION beam_image,psf,obs,pol_i=pol_i,freq_i=freq_i,dimension=dimension,elemen
 compile_opt idl2,strictarrsubs  
 
 IF N_Elements(pol_i) EQ 0 THEN pol_i=0
-psf_base_ptr=psf.base
 IF N_Elements(dimension) EQ 0 THEN dimension=obs.dimension
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 psf_dim=psf.dim
@@ -37,7 +36,7 @@ yh=elements/2.-Floor(psf_dim/2.)+psf_dim
 
 group_id=psf.id[pol_i,0,*]
 group_n=histogram(group_id,min=0,/binsize,reverse_ind=ri_id)
-gi_use=where(hist_id,n_groups)
+gi_use=where(group_n,n_groups)
 gi_ref=ri_id[ri_id[gi_use]]
 
 IF tag_exist(psf,'fbin_i') THEN freq_bin_i=psf.fbin_i
@@ -55,8 +54,7 @@ n_bin_use=0.
 IF Keyword_Set(square) THEN BEGIN
     beam_base=Fltarr(dimension,elements)
     IF N_Elements(freq_bin_i) EQ 0 THEN BEGIN
-        dims=Size(psf_base_ptr,/dimension)
-        n_freq_bin=dims[1]
+        n_freq_bin=psf.n_freq
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
@@ -102,8 +100,7 @@ IF Keyword_Set(square) THEN BEGIN
     ENDELSE
 ENDIF ELSE BEGIN
     IF N_Elements(freq_bin_i) EQ 0 THEN BEGIN
-        dims=Size(psf_base_ptr,/dimension)
-        n_freq_bin=dims[1]
+        n_freq_bin=psf.n_freq
         beam_base_uv=complexarr(psf_dim,psf_dim)
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Complexarr(psf_dim,psf_dim)
