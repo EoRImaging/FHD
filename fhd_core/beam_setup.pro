@@ -263,7 +263,8 @@ ENDFOR
 
 complex_flag=1
 t5_a=Systime(1)
-psf=fhd_struct_init_psf(beam_arr=beam_arr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
+beam_ptr=Ptr_new(beam_arr)
+psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr)
 IF ~Keyword_Set(no_save) THEN SAVE,psf,antenna,filename=file_path_fhd+'_beams'+'.sav',/compress

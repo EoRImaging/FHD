@@ -39,6 +39,8 @@ group_n=histogram(group_id,min=0,/binsize,reverse_ind=ri_id)
 gi_use=where(group_n,n_groups)
 gi_ref=ri_id[ri_id[gi_use]]
 
+beam_arr=*psf.beam_ptr
+
 IF tag_exist(psf,'fbin_i') THEN freq_bin_i=psf.fbin_i
 
 IF Keyword_Set(obs) THEN BEGIN
@@ -58,7 +60,7 @@ IF Keyword_Set(square) THEN BEGIN
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*psf.beams[pol_i,freq_i,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=*(*beam_arr[pol_i,freq_i,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n)
             IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
@@ -76,13 +78,12 @@ IF Keyword_Set(square) THEN BEGIN
         freq_bin_use=freq_bin_i[freq_i_use]
         fbin_use=freq_bin_use[Uniq(freq_bin_use,Sort(freq_bin_use))]
         nbin=N_Elements(Uniq(freq_bin_use,Sort(freq_bin_use)))
-;        beam_arr=Ptrarr(nbin)
         FOR bin0=0L,nbin-1 DO BEGIN
             fbin=fbin_use[bin0]
             nf_bin=Float(Total(freq_bin_use EQ fbin))
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*psf.beams[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n)
             IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
@@ -95,7 +96,6 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base+=nf_bin*Real_part(beam_base_single*Conj(beam_base_single))>0
             n_bin_use+=nf_bin*freq_norm[fbin]
             
-;            beam_arr[bin0]=Ptr_new(beam_base_single)
         ENDFOR
     ENDELSE
 ENDIF ELSE BEGIN
@@ -105,7 +105,7 @@ ENDIF ELSE BEGIN
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*psf.beams[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=*(*beam_arr[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n)
             beam_base_uv+=beam_single
@@ -122,7 +122,7 @@ ENDIF ELSE BEGIN
             fbin=freq_bin_i[fi]
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*psf.beams[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n)
             beam_base_uv+=beam_single

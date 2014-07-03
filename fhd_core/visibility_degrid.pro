@@ -35,6 +35,7 @@ n_freq=Long(obs.n_freq)
 n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
 group_arr=reform(psf.id[polarization,freq_bin_i,*])
+beam_arr=*psf.beam_ptr
 
 vis_dimension=Float(nbaselines*n_samples)
 IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
@@ -173,7 +174,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t1_0
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
-    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*psf.beams[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
 ;        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
