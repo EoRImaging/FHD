@@ -227,7 +227,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
-            FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=Ptr_new(psf_single)
+            psf_single=Ptr_new(psf_single)
+            FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
             breakpoint0=0
 ;            t4+=Systime(1)-t4_a
         ENDFOR
