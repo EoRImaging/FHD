@@ -167,6 +167,8 @@ IF Keyword_Set(data_flag) THEN BEGIN
     n_pol=obs.n_pol
     n_freq=obs.n_freq
     
+    IF Keyword_Set(moff_test) THEN vis_arr=moff_test(vis_arr,obs)
+    
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,antenna,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
