@@ -39,7 +39,7 @@ n_pol=fhd.npol
 dimension=obs.dimension
 elements=obs.elements
 
-pol_names=['xx','yy','xy','yx']
+pol_names=obs.pol_names
 ext='.UVFITS'
 
 IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,file_path_fhd,/restore_last) 

@@ -135,6 +135,7 @@ IF N_Elements(nside) EQ 0 THEN nside=0
 IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=restrict_hpx_inds
 IF N_Elements(n_hpx) EQ 0 THEN n_hpx=0
 IF N_Elements(n_zero_hpx) EQ 0 THEN n_zero_hpx=-1
+pol_names=['XX','YY','XY','YX','I','Q','U','V']
 healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
 
 arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
@@ -145,7 +146,7 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,zenx:meta.zenx,zeny:meta.zeny,$
     phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_time:Long(n_time),$
-    n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),$
+    n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),pol_names:pol_names,$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
     residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,healpix:healpix}    

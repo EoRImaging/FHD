@@ -8,7 +8,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
   t0=Systime(1)
   
   IF N_Elements(silent) EQ 0 THEN silent=0
-  pol_names=['xx','yy','xy','yx']
+  pol_names=obs.pol_names
   flags_filepath=file_path_fhd+'_flags.sav'
   params_filepath=file_path_fhd+'_params.sav'
   psf_filepath=file_path_fhd+'_beams.sav'

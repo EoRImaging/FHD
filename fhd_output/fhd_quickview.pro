@@ -35,7 +35,7 @@ IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=fil
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
+pol_names=obs.pol_names
 residual_flag=obs.residual
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1

@@ -108,7 +108,7 @@ model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
 IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
-pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
+pol_names=obs.pol_names
 
 ;load holo map functions and initialize output arrays
 dirty_image_composite=fltarr(dimension,elements)

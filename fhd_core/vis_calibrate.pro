@@ -101,7 +101,7 @@ IF Keyword_Set(error) THEN BEGIN
     timing=Systime(1)-t0_0
     RETURN,vis_ptr
 ENDIF
-pol_names=['xx','yy','xy','yx']
+pol_names=obs.pol_names
 
 ;extract information from the structures
 n_pol=obs.n_pol

@@ -1,6 +1,6 @@
 PRO vis_export,obs,vis_ptr_arr,flag_ptr,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,model=model
 IF N_Elements(compress) EQ 0 THEN compress=1
-pol_names=['xx','yy','xy','yx']
+pol_names=obs.pol_names
 
 res_name='Residual'
 IF tag_exist(obs,'residual') THEN IF obs.residual EQ 0 THEN res_name='Dirty'

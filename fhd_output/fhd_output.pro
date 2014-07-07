@@ -30,7 +30,7 @@ IF tag_exist(fhd,'galaxy_subtract') THEN galaxy_model_fit=fhd.galaxy_subtract
 IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 stats_radius=10. ;degrees
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
+pol_names=obs.pol_names
 
 grid_spacing=10.
 offset_lat=5.;15. paper 10 memo

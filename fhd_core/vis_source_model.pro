@@ -22,7 +22,7 @@ heap_gc
 
 ;IF Keyword_Set(flag_ptr) THEN flag_switch=1 ELSE flag_switch=0
 
-pol_names=['xx','yy','xy','yx']
+pol_names=obs.pol_names
 
 ;extract information from the structures
 n_pol=obs.n_pol

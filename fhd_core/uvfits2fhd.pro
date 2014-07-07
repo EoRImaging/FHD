@@ -85,7 +85,7 @@ cal_filepath=file_path_fhd+'_cal.sav'
 IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
 IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
 
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
+pol_names=obs.pol_names
 
 IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE n_pol1=1
 test_mapfn=1 & FOR pol_i=0,n_pol1-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')

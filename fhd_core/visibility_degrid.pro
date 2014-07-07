@@ -4,7 +4,7 @@ FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
 t0=Systime(1)
 heap_gc
 
-pol_names=['xx','yy','xy','yx']
+pol_names=obs.pol_names
 complex=psf.complex_flag
 
 ;extract information from the structures

@@ -8,7 +8,7 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,we
 t0_0=Systime(1)
 heap_gc
 
-pol_names=['xx','yy','xy','yx']
+pol_names=obs.pol_names
 
 ;extract information from the structures
 dimension=Float(obs.dimension)
