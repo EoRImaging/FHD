@@ -207,7 +207,6 @@ case version of
       calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
       min_cal_baseline=30
       max_cal_baseline=150
-
    end
    'apb_aarons_crazy_obs_3': begin
       FoV=120.
@@ -221,7 +220,18 @@ case version of
       min_cal_baseline=30
       max_cal_baseline=150
       cal_cable_reflection_fit=150
-
+   end
+   'apb_test_compressed_1': begin
+      vis_freq_average=2
+      uvfits_version=3
+      uvfits_subversion=3
+      time_cut=[2,-2]
+   end
+   'apb_test_uncompressed_1': begin
+      vis_freq_average=2
+      uvfits_version=3
+      uvfits_subversion=4
+      time_cut=[2,-2]
    end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
