@@ -107,7 +107,7 @@ WHILE fi LT n_files DO BEGIN
     ENDIF
 ;    IF (recalculate_all EQ 0) AND Keyword_Set(cleanup) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
 ;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
-    uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
+    uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid_recalculate=grid_recalculate,$
         /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
@@ -118,6 +118,7 @@ WHILE fi LT n_files DO BEGIN
         healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,return_cal_visibilities=return_cal_visibilities,$
         snapshot_healpix_export=snapshot_healpix_export,snapshot_recalculate=snapshot_recalculate,$
         split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
+    IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     IF Keyword_Set(error) THEN BEGIN
         print,'###########################################################################'
         print,'###########################################################################'
@@ -148,11 +149,12 @@ IF Keyword_Set(simultaneous) THEN BEGIN
         gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
-        uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
+        uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
+        IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     ENDFOR
 ENDIF
 
