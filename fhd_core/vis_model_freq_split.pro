@@ -1,6 +1,6 @@
 FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
-    file_path_fhd=file_path_fhd,even_only=even_only,odd_only=odd_only,rephase_weights=rephase_weights,silent=silent,$
+    file_path_fhd=file_path_fhd,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
     obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, uvf_name=uvf_name,_Extra=extra
   ext='.UVFITS'
@@ -19,10 +19,10 @@ FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,
     else uvf_filepath = file_path_fhd+'_gridded_uvf.sav'
   endif
   
-  IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
-  IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
-  IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
-  IF N_Elements(flag_arr) EQ 0 THEN flag_arr=getvar_savefile(flags_filepath,'flag_arr')
+;  IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
+;  IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
+;  IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
+;  IF N_Elements(flag_arr) EQ 0 THEN flag_arr=getvar_savefile(flags_filepath,'flag_arr')
   
   n_freq=obs.n_freq
   n_pol=obs.n_pol
@@ -45,8 +45,7 @@ FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,
     ENDIF
   ENDIF ELSE model_flag=1
   
-  IF Keyword_Set(even_only) OR Keyword_Set(odd_only) THEN flag_arr_use=split_vis_flags(obs,flag_arr,even_only=even_only,odd_only=odd_only,/preserve_flags) $
-  ELSE flag_arr_use=pointer_copy(flag_arr)
+  IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(flag_arr) ELSE flag_arr_use=flag_arr
   IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
   bi_use=where(flag_test)
   
