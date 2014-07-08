@@ -107,7 +107,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
         wh_over = where(data_log gt log_data_range[1], count)
         if count ne 0 then data_log[wh_over] = log_data_range[1]
         
-        cgloadct, 25, /brewer, /reverse
+        cgloadct, 25, /brewer, /reverse, clip = [0, 235]
         
       endelse
       
@@ -161,7 +161,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       abs_data = 0
       
       data_log_norm = (data_log-log_data_range[0])*data_n_colors/(log_data_range[1]-log_data_range[0]) + data_color_range[0]
-      cgloadct, 25, /brewer, /reverse
+      cgloadct, 25, /brewer, /reverse, clip = [0, 235]
       
     end
   endcase
