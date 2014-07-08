@@ -81,11 +81,14 @@ hdr_filepath=file_path_fhd+'_hdr.sav'
 fhd_filepath=file_path_fhd+'_fhd.sav'
 autocorr_filepath=file_path_fhd+'_autos.sav'
 cal_filepath=file_path_fhd+'_cal.sav'
+log_filepath=file_path_fhd+'_log.txt'
+IF Keyword_Set(!Journal) THEN journal
 ;model_filepath=file_path_fhd+'_vis_cal.sav'
 IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
 IF N_Elements(deconvolve) EQ 0 THEN IF file_test(fhd_filepath) EQ 0 THEN deconvolve=1
 
-pol_names=obs.pol_names
+pol_names=['XX','YY','XY','YX','I','Q','U','V'] ;HACK for now
+
 
 IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE n_pol1=1
 test_mapfn=1 & FOR pol_i=0,n_pol1-1 DO test_mapfn*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
@@ -111,6 +114,7 @@ IF Keyword_Set(force_data) THEN data_flag=1
 IF Keyword_Set(force_no_data) THEN data_flag=0
 
 IF Keyword_Set(data_flag) THEN BEGIN
+    Journal,log_filepath
     IF Keyword_Set(restore_vis_savefile) THEN BEGIN
         IF file_test(file_path_vis_sav) EQ 0 THEN BEGIN
             error=1
@@ -325,6 +329,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
     IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,flag_arr
+    IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
 ENDIF
 
 IF N_Elements(cal) EQ 0 THEN IF file_test(cal_filepath) THEN cal=getvar_savefile(cal_filepath,'cal')

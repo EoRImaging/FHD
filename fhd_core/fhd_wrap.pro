@@ -25,10 +25,18 @@ PRO fhd_wrap,obs,psf,params,fhd,cal,jones,file_path_fhd=file_path_fhd,beam_thres
 ;
 heap_gc
 compile_opt idl2,strictarrsubs  
+obs_filepath=file_path_fhd+'_obs.sav'
+params_filepath=file_path_fhd+'_params.sav'
+fhd_params_filepath=file_path_fhd+'_fhd_params.sav'
+fhd_log_filepath=file_path_fhd+'_fhd_log.txt'
+cal_filepath=file_path_fhd+'_cal.sav'
+fhd_sav_filepath=file_path_fhd+'_fhd.sav'
 
-IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav'
-IF N_Elements(params) EQ 0 THEN RESTORE,filename=file_path_fhd+'_params.sav'
-IF size(cal,/type) NE 8 THEN IF file_test(file_path_fhd+'_cal.sav') EQ 1 THEN RESTORE,filename=file_path_fhd+'_cal.sav' ELSE BEGIN
+IF Keyword_Set(!Journal) THEN journal
+journal,fhd_log_filepath
+IF N_Elements(obs) EQ 0 THEN RESTORE,obs_filepath
+IF N_Elements(params) EQ 0 THEN RESTORE,filename=params_filepath
+IF size(cal,/type) NE 8 THEN IF file_test(cal_filepath) EQ 1 THEN RESTORE,filename=cal_filepath ELSE BEGIN
     cal=fhd_struct_init_cal(obs,params)
 ENDELSE
 IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
@@ -64,7 +72,7 @@ IF Keyword_Set(calibration_image_subtract) THEN BEGIN
     ENDIF
 ENDIF
 
-SAVE,fhd,filename=file_path_fhd+'_fhd_params.sav',/compress
+SAVE,fhd,filename=fhd_params_filepath,/compress
 fhd_log_settings,file_path_fhd,fhd=fhd,obs=obs,psf=psf ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
 
 fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
@@ -75,7 +83,7 @@ fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,source_
         
 ;compression reduces the file size by 50%, but takes 5-30 seconds longer
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,weights_arr,$
-    beam_base,beam_correction,astr,filename=file_path_fhd+'_fhd.sav',/compress
+    beam_base,beam_correction,astr,filename=fhd_sav_filepath,/compress
 
 IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_ptr) THEN BEGIN
@@ -86,8 +94,5 @@ IF Keyword_Set(return_decon_visibilities) THEN BEGIN
 ;            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)      
     ENDIF
 ENDIF
-;IF N_Elements(quickview) EQ 0 THEN quickview=1
-;IF Keyword_Set(quickview) THEN fhd_quickview,fhd,obs,image_uv_arr,model_uv_holo,source_array,comp_arr,$
-;    beam_base,file_path_fhd=file_path_fhd,_Extra=extra
-
+Journal ;write log file
 END

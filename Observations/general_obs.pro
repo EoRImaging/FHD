@@ -13,6 +13,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
 except=!except
 !except=0 
 heap_gc
+IF Keyword_Set(!Journal) THEN Journal ;if logs are somehow still being written from a different run, clean that up first
 
 IF N_Elements(error_method) EQ 0 THEN error_method=0
 ON_ERROR,error_method

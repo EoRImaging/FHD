@@ -26,9 +26,9 @@ time_bin=fltarr(2,n_time) & time_bin[0,*]=bin_start & time_bin[1,*]=bin_end
 bin_width=fltarr(n_time)
 IF n_time GT 1 THEN bin_width[0]=b0i[0]+1 ELSE bin_width[0]=N_Elements(time)
 FOR i=1,n_time-1 DO bin_width[i]=b0i[i]-b0i[i-1]
-bin_offset=fltarr(n_time) & IF n_time GT 1 THEN bin_offset[1:*]=total(bin_width[0:n_time-2],/cumulative)    
+bin_offset=Lonarr(n_time) & IF n_time GT 1 THEN bin_offset[1:*]=total(bin_width[0:n_time-2],/cumulative)    
 nbaselines=bin_width[0]
-time_use=Fltarr(n_time)+1
+time_use=intarr(n_time)+1
 FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
     ;time cut is specified in seconds to cut (rounded up to next time integration point). 
     ;Specify negative time_cut to cut time off the end. Specify a vector to cut at both the start and end
@@ -138,8 +138,8 @@ IF N_Elements(n_zero_hpx) EQ 0 THEN n_zero_hpx=-1
 pol_names=['XX','YY','XY','YX','I','Q','U','V']
 healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
 
-arr={tile_A:tile_A,tile_B:tile_B,bin_offset:bin_offset,Jdate:meta.Jdate,freq:frequency_array,fbin_i:freq_bin_i,$
-    freq_use:freq_use,tile_use:tile_use,time_use:time_use,tile_names:meta.tile_names,tile_height:meta.tile_height,tile_flag:meta.tile_flag}
+arr={tile_A:Long(tile_A),tile_B:Long(tile_B),bin_offset:Long(bin_offset),Jdate:meta.Jdate,freq:Float(frequency_array),fbin_i:Long(freq_bin_i),$
+    freq_use:Fix(freq_use),tile_use:Fix(tile_use),time_use:Fix(time_use),tile_names:String(meta.tile_names),tile_height:Float(meta.tile_height),tile_flag:meta.tile_flag}
 struct={code_version:String(code_version),instrument:String(instrument),obsname:String(obsname),$
     dimension:Float(dimension),elements:Float(elements),nbaselines:Long(nbaselines),$
     kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,obsra:meta.obsra,obsdec:meta.obsdec,$
