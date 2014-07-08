@@ -87,7 +87,7 @@ ENDIF
 n_flag_dim=size(*flag_ptr[0],/n_dimension)
 flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
 flag_i_new=where(xmin LT 0,n_flag_new)
-IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[flag_i_new]=-1
+IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[flag_i_new]=0
 IF n_flag GT 0 THEN BEGIN
     xmin[flag_i]=-1
     ymin[flag_i]=-1

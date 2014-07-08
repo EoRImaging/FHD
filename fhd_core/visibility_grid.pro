@@ -27,12 +27,13 @@ IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
 IF Tag_exist(obs,'nf_vis') THEN n_vis_arr=obs.nf_vis ELSE n_vis_arr=Lonarr(n_freq)
 
-IF Keyword_Set(flag_ptr) THEN BEGIN
+flag_switch=Keyword_Set(flag_arr)
+IF flag_switch THEN BEGIN
     IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
 ENDIF
 
 IF N_Elements(bi_use) EQ 0 THEN BEGIN
-    IF Keyword_Set(flag_ptr) THEN BEGIN
+    IF flag_switch THEN BEGIN
         flag_test=Total(flag_arr>0,1)
         bi_use=where((flag_test GT 0))
     ENDIF ELSE BEGIN
@@ -45,7 +46,7 @@ n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
 
 vis_inds_use=matrix_multiply(fi_use,replicate(1L,n_b_use))+matrix_multiply(replicate(1L,n_f_use),bi_use)*n_freq
-IF Keyword_Set(flag_ptr) THEN flag_arr=flag_arr[vis_inds_use]
+IF flag_switch THEN flag_arr=flag_arr[vis_inds_use]
 IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[vis_inds_use] ELSE vis_arr_use=(Temporary(*visibility_ptr))[vis_inds_use] 
 model_flag=0
 IF Ptr_valid(model_ptr) THEN BEGIN
@@ -71,7 +72,6 @@ psf_base=psf.base
 psf_dim=psf.dim
 psf_resolution=psf.resolution
 
-flag_switch=Keyword_Set(flag_ptr)
 weights_flag=Keyword_Set(weights)
 variance_flag=Keyword_Set(variance)
 kx_arr=params.uu[bi_use]/kbinsize
@@ -124,7 +124,7 @@ IF n_dist_flag GT 0 THEN BEGIN
     ymin[flag_dist_i]=-1
 ENDIF
 
-IF Keyword_Set(flag_ptr) THEN BEGIN
+IF flag_switch THEN BEGIN
     flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
     flag_arr=0
     IF n_flag GT 0 THEN BEGIN
