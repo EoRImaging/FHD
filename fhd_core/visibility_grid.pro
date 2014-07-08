@@ -1,4 +1,4 @@
-FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,psf,params,file_path_fhd,weights=weights,variance=variance,$
+FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
     GPU_enable=GPU_enable,complex_flag=complex_flag,double=double,fi_use=fi_use,bi_use=bi_use,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
@@ -372,7 +372,7 @@ IF map_flag THEN BEGIN
         error=1
         RETURN,image_uv
     ENDIF
-    IF ~Keyword_Set(no_save) THEN save,map_fn,filename=file_path_fhd+'_mapfn_'+pol_names[polarization]+'.sav'
+    fhd_save_io,status_str,mapfn,var='mapfn',file_path_fhd=file_path_fhd,pol_i=polarization,no_save=no_save,obs=obs
     IF Arg_present(return_mapfn) THEN return_mapfn=map_fn
 ENDIF
 t7=Systime(1)-t7_0

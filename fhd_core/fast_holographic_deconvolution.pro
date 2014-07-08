@@ -15,40 +15,40 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
+PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
     scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
-;calibration_model_subtract is passed through the fhd structure
+;calibration_model_subtract is passed through the fhd_params structure
 compile_opt idl2,strictarrsubs  
 
 t00=Systime(1)    
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ;image_uv_arr is a pointer array with dimensions (n_pol) 
 ;most parameters are set in fhd_init()
-n_pol=fhd.npol
-gain_factor=fhd.gain_factor
-max_iter=fhd.max_iter
-max_sources=fhd.max_sources
-check_iter=fhd.check_iter
-beam_threshold=fhd.beam_threshold
-add_threshold=fhd.add_threshold
-max_add_sources=fhd.max_add_sources
-;local_max_radius=fhd.local_max_radius
-pol_use=fhd.pol_use
-independent_fit=fhd.independent_fit
-reject_pol_sources=fhd.reject_pol_sources
+n_pol=fhd_params.npol
+gain_factor=fhd_params.gain_factor
+max_iter=fhd_params.max_iter
+max_sources=fhd_params.max_sources
+check_iter=fhd_params.check_iter
+beam_threshold=fhd_params.beam_threshold
+add_threshold=fhd_params.add_threshold
+max_add_sources=fhd_params.max_add_sources
+;local_max_radius=fhd_params.local_max_radius
+pol_use=fhd_params.pol_use
+independent_fit=fhd_params.independent_fit
+reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
-calibration_model_subtract=fhd.cal_subtract
-filter_background=fhd.filter_background
-decon_filter=fhd.decon_filter
-galaxy_model_fit=fhd.galaxy_subtract
-subtract_sidelobe_catalog=fhd.sidelobe_subtract
+calibration_model_subtract=fhd_params.cal_subtract
+filter_background=fhd_params.filter_background
+decon_filter=fhd_params.decon_filter
+galaxy_model_fit=fhd_params.galaxy_subtract
+subtract_sidelobe_catalog=fhd_params.sidelobe_subtract
 
 icomp=Complex(0,1)
-beam_max_threshold=fhd.beam_max_threshold
-smooth_width=fhd.smooth_width
+beam_max_threshold=fhd_params.beam_max_threshold
+smooth_width=fhd_params.smooth_width
 ;color_frequency_correction=fltarr(nfreq)+1. ;remove same component from all frequencies, but allow to be different in the future
 
 dimension=obs.dimension
@@ -212,7 +212,7 @@ ENDIF
 source_find_image=image_filtered*beam_avg*beam_mask*source_taper
 converge_check[0]=Stddev(source_find_image[where(beam_mask)],/nan)
 converge_check2[0]=Stddev(source_find_image[where(beam_mask)],/nan)
-print,"Gain factor used:",Strn(fhd.gain_factor)
+print,"Gain factor used:",Strn(fhd_params.gain_factor)
 print,"Initial convergence:",Strn(converge_check[0])
 
 model_holo_arr=Ptrarr(n_pol,/allocate)
@@ -324,7 +324,7 @@ FOR i=i0,max_iter-1 DO BEGIN
     model_I_use=model_I_use*beam_avg*source_taper*beam_mask
     image_use=image_filtered*beam_avg*beam_mask
    
-    comp_arr1=fhd_source_detect(obs,fhd,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+    comp_arr1=fhd_source_detect(obs,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
         model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,$
         beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     

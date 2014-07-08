@@ -202,15 +202,15 @@ IF Keyword_Set(data_flag) THEN BEGIN
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
-             return_cal_visibilities=return_cal_visibilities,vis_model_ptr=vis_model_ptr,$
+             return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
-    IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
+    IF N_Elements(vis_model_arr) EQ 0 THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     
-    IF min(Ptr_valid(vis_model_ptr)) EQ 0 THEN return_cal_visibilities=0 ;set if model visibilities not actually returned
+    IF min(Ptr_valid(vis_model_arr)) EQ 0 THEN return_cal_visibilities=0 ;set if model visibilities not actually returned
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr
         IF basename EQ transfer_mapfn THEN BEGIN 
@@ -284,7 +284,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
         vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
-        IF Keyword_Set(return_cal_visibilities) THEN vis_export,obs,status_str,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+        IF Keyword_Set(return_cal_visibilities) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
         t_save=Systime(1)-t_save0
         IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
     ENDIF
@@ -304,10 +304,10 @@ IF Keyword_Set(data_flag) THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             IF Keyword_Set(return_cal_visibilities) THEN model_return=return_cal_visibilities
             IF Keyword_Set(snapshot_healpix_export) THEN preserve_visibilities=1 ELSE preserve_visibilities=0
-            grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
+            grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
                 timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
-                model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
+                model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
             fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd
@@ -338,34 +338,34 @@ IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,psf,params,fhd,cal,jones,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
+    fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
-        vis_model_ptr=vis_model_ptr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,flag_arr=flag_arr,_Extra=extra
-    IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+        vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,flag_arr=flag_arr,_Extra=extra
+    IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
 ENDELSE
 
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
-    IF file_test(file_path_fhd+'_fhd.sav') THEN BEGIN
-        fhd_output,obs,fhd,cal,jones,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
+    IF status_str.fhd GT 0 THEN BEGIN
+        fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
             image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam_arr,_Extra=extra 
     ENDIF ELSE BEGIN
         IF obs.residual GT 0 THEN BEGIN
             IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav' 
             IF N_Elements(cal) GT 0 THEN source_array=cal.source_list
         ENDIF
-        fhd_quickview,obs,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+        fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
             model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDELSE
 ENDIF
 
 ;optionally export frequency-splt Healpix cubes
-IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,$
-    vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
+IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,$
+    vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
 
-undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr
+undefine_fhd,map_fn_arr,cal,obs,fhd_params,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_arr
 
 fhd_save_io,status_str,file_path_fhd=file_path_fhd,/text
 ;;generate images showing the uv contributions of each tile. Very helpful for debugging!

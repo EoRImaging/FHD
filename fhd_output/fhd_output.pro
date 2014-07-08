@@ -1,4 +1,4 @@
-PRO fhd_output,obs,fhd,cal,jones,file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
+PRO fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
     silent=silent,show_grid=show_grid,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
     gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,mark_zenith=mark_zenith,$
@@ -22,11 +22,11 @@ IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
 
 IF not Keyword_Set(obs) THEN obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
-IF not Keyword_Set(fhd) THEN fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
+IF not Keyword_Set(fhd_params) THEN fhd_params=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
 IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
-IF tag_exist(fhd,'galaxy_subtract') THEN galaxy_model_fit=fhd.galaxy_subtract 
+IF tag_exist(fhd_params,'galaxy_subtract') THEN galaxy_model_fit=fhd_params.galaxy_subtract 
 IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 stats_radius=10. ;degrees
@@ -51,7 +51,7 @@ ENDIF ELSE filter_name=''
 ;    beam_base,beam_correction,ra_arr,dec_arr,astr
 restore,file_path_fhd+'_fhd.sav'
 
-n_pol=fhd.npol
+n_pol=fhd_params.npol
 dimension_uv=obs.dimension
 IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
@@ -62,7 +62,7 @@ degpix=obs_out.degpix
 astr_out=obs_out.astr
 ;pix_area_cnv=pixel_area(astr_out,dimension=dimension)/degpix^2.
 
-si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
+si_use=where(source_array.ston GE fhd_params.sigma_cut,ns_use)
 source_arr=source_array[si_use]
 source_arr_out=source_arr
 comp_arr_out=comp_arr
@@ -116,7 +116,7 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
     uv_mask=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
-    model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd.sigma_cut)
+    model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
@@ -131,10 +131,10 @@ beam_base_out=Ptrarr(n_pol,/allocate)
 beam_correction_out=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     *beam_base_out[pol_i]=Rebin(*beam_base[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
-    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold/10.)
+    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd_params.beam_threshold/10.)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
-    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold,Max(beam_mask_test)])
+    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd_params.beam_threshold,Max(beam_mask_test)])
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
     beam_avg+=*beam_base_out[pol_i]
     beam_mask*=beam_mask0
@@ -463,7 +463,7 @@ ENDFOR
 
 t10b=Systime(1)
 
-residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
+residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd_params,radius=stats_radius,beam_base=beam_base_out,ston=fhd_params.sigma_cut,/center,$
     file_path_base=image_path_fg,_Extra=extra
 
 ; plot calibration solutions, export to png
