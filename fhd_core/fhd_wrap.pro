@@ -81,7 +81,7 @@ fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,
     file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,_Extra=extra
         
 ;compression reduces the file size by 50%, but takes 5-30 seconds longer
-fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save ;call first to obtain the correct path. Will NOT update status structure yet
+fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save ;call first to obtain the correct path. Will NOT update status structure yet
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,weights_arr,$
     beam_base,beam_correction,astr,filename=fhd_sav_filepath,/compress
 fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,/force ;call a second time to update the status structure now that the file has actually been written

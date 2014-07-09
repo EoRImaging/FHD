@@ -46,9 +46,10 @@ IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
         *image_uv_arr[pol_i]=grid_uv
     ENDFOR
 ENDIF
+
+weights_flag=1
 IF N_Elements(weights_arr) EQ 0 THEN BEGIN
     weights_arr=Ptrarr(n_pol,/allocate)
-    weights_flag=1
     FOR pol_i=0,n_pol-1 DO BEGIN
         fhd_save_io,status_str,weights_uv,var='weights_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
         *weights_arr[pol_i]=weights_uv
@@ -62,10 +63,11 @@ FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN BEGIN
     weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
     weights_flag=0
 ENDIF
+
+model_flag=1
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,/allocate)
-        model_flag=1
         FOR pol_i=0,n_pol-1 DO BEGIN
             fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
             *model_uv_arr[pol_i]=grid_uv_model

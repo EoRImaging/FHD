@@ -14,7 +14,8 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     IF size(transfer_calibration,/type) EQ 7 THEN BEGIN
         cal_file_use=transfer_calibration
         IF file_test(cal_file_use) EQ 0 THEN BEGIN
-            cal_file_use2=filepath(file_basename(cal_file_use,'_cal.sav',/fold_case)+'_cal.sav',root=file_dirname(file_path_fhd))
+            fhd_save_io,file_path_fhd=cal_file_use,var='cal',path_use=cal_file_use2
+;            cal_file_use2=filepath(file_basename(cal_file_use,'_cal.sav',/fold_case)+'_cal.sav',root=file_dirname(file_path_fhd))
             IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
                 print,'File:'+cal_file_use+' not found!'
                 error=1

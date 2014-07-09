@@ -1,12 +1,9 @@
 FUNCTION visibility_count,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
     no_conjugate=no_conjugate,fill_model_vis=fill_model_vis
 
-SWITCH N_Params() OF
-    0:fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
-    1:fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
-    2:fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
-    ELSE:
-ENDSWITCH
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
 
 ;extract information from the structures
 n_pol=obs.n_pol

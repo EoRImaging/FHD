@@ -8,6 +8,12 @@ IF Keyword_Set(obs) THEN pol_names=obs.pol_names ;ELSE pol_names=['XX','YY','XY'
 
 base_name=file_basename(file_path_fhd)
 base_path=file_dirname(file_path_fhd)
+IF N_Elements(status_str) EQ 0 THEN BEGIN
+    no_save=1
+    reset=1
+ENDIF
+IF Keyword_Set(restore) THEN no_save=1
+
 status_path=filepath(base_name+'_status',root=base_path,subdir='metadata')
 IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flags:0,autos:0,vis:intarr(4),vis_model:intarr(4),$
     grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),mapfn:intarr(4),fhd:0,fhd_params:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
@@ -60,11 +66,12 @@ IF ~Keyword_Set(name_error) THEN BEGIN
     
     IF Keyword_Set(force_set) THEN status_save=1
     IF Keyword_Set(status_save) THEN status_str=status_use
-ENDIF
+ENDIF ELSE status_save=0
 
 dir_use=file_dirname(status_path)
 IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
-SAVE,status_str,filename=status_path+'.sav'
-IF Keyword_Set(text) THEN TextFast,structure_to_text(status_str),/write,file_path=status_path
-
+IF Keyword_Set(status_save) THEN BEGIN
+    SAVE,status_str,filename=status_path+'.sav'
+    IF Keyword_Set(text) THEN TextFast,structure_to_text(status_str),/write,file_path=status_path
+ENDIF
 END
