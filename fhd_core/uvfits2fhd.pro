@@ -364,7 +364,6 @@ IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,
 
 undefine_fhd,map_fn_arr,cal,obs,fhd_params,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_arr
 
-fhd_save_io,status_str,file_path_fhd=file_path_fhd,/text
 ;;generate images showing the uv contributions of each tile. Very helpful for debugging!
 ;print,'Calculating individual tile uv coverage'
 timing=Systime(1)-t0

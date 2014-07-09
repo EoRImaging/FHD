@@ -118,6 +118,8 @@ WHILE fi LT n_files DO BEGIN
         healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,return_cal_visibilities=return_cal_visibilities,$
         snapshot_healpix_export=snapshot_healpix_export,snapshot_recalculate=snapshot_recalculate,$
         split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
+    
+    fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
     IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     IF Keyword_Set(error) THEN BEGIN
         print,'###########################################################################'
@@ -154,6 +156,7 @@ IF Keyword_Set(simultaneous) THEN BEGIN
             /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
+        fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
         IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     ENDFOR
 ENDIF

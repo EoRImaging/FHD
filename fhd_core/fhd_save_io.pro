@@ -62,6 +62,8 @@ IF ~Keyword_Set(name_error) THEN BEGIN
     IF Keyword_Set(status_save) THEN status_str=status_use
 ENDIF
 
+dir_use=file_dirname(status_path)
+IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
 SAVE,status_str,filename=status_path+'.sav'
 IF Keyword_Set(text) THEN TextFast,structure_to_text(status_str),/write,file_path=status_path
 
