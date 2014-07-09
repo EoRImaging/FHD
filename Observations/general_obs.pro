@@ -120,7 +120,7 @@ WHILE fi LT n_files DO BEGIN
         split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
     
     fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
-    IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
+    IF N_Elements(status_arr) EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     IF Keyword_Set(error) THEN BEGIN
         print,'###########################################################################'
         print,'###########################################################################'
