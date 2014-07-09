@@ -3,7 +3,7 @@ IF N_Elements(compress) EQ 0 THEN compress=1
 pol_names=obs.pol_names
 
 res_name='Residual'
-IF tag_exist(obs,'residual') THEN IF obs.residual EQ 0 THEN res_name='Dirty'
+IF obs.residual EQ 0 THEN res_name='Dirty'
 IF Keyword_Set(model) THEN BEGIN
     res_name='Model'
     var_name='vis_model_ptr'

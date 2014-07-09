@@ -279,7 +279,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
         auto_corr[pol_i]=Ptr_new(auto_vals)
     ENDFOR
-    fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd
+    fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd,obs=obs
     
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
@@ -310,13 +310,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
-            fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd
-            fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd
+            fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs
+            fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs
 
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_uv_arr[pol_i]=Temporary(grid_uv)
             IF Keyword_Set(return_cal_visibilities) THEN BEGIN
-                fhd_save_io,status_str,model_return,var='grid_uv_model',/compress,file_path_fhd=file_path_fhd
+                fhd_save_io,status_str,model_return,var='grid_uv_model',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs
                 *model_uv_holo[pol_i]=Temporary(model_return)
                 model_return=1
             ENDIF
