@@ -65,7 +65,7 @@ IF Keyword_Set(calibration_image_subtract) THEN BEGIN
             model_uv_arr=Ptrarr(n_pol,/allocate)
             FOR pol_i=0,n_pol-1 DO BEGIN
                 fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
-                *model_uv_arr[pol_i]=grid_uv
+                *model_uv_arr[pol_i]=grid_uv_model
             ENDFOR
         ENDIF
     ENDIF

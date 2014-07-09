@@ -352,10 +352,7 @@ IF Keyword_Set(export_images) THEN BEGIN
         fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
             image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam_arr,_Extra=extra 
     ENDIF ELSE BEGIN
-        IF obs.residual GT 0 THEN BEGIN
-            IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav' 
-            IF N_Elements(cal) GT 0 THEN source_array=cal.source_list
-        ENDIF
+        IF (obs.residual GT 0) AND (N_Elements(cal) GT 0) THEN source_array=cal.source_list
         fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
             model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDELSE
