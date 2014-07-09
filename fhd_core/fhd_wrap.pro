@@ -16,7 +16,7 @@ PRO fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,file_path_fhd=file_p
     data_directory=data_directory,filename=filename,version=version,silent=silent,transfer_mapfn=transfer_mapfn,$
     map_fn_arr=map_fn_arr,GPU_enable=GPU_enable,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     calibration_image_subtract=calibration_image_subtract,model_uv_arr=model_uv_arr,$
-    vis_model_ptr=vis_model_ptr,return_decon_visibilities=return_decon_visibilities,flag_arr=flag_arr,_Extra=extra
+    vis_model_ptr=vis_model_ptr,return_decon_visibilities=return_decon_visibilities,flag_arr=flag_arr,log_store=log_store,_Extra=extra
 
 ;snapshot data must have been gridded previously, and the Holo map fns generated
 ;reads and deconvolves simultaneously on multiple polarizations, time intervals, and frequencies
@@ -27,7 +27,7 @@ heap_gc
 compile_opt idl2,strictarrsubs  
 
 IF Keyword_Set(!Journal) THEN journal
-journal,file_path_fhd+'_fhd_log.txt'
+IF Keyword_Set(log_store) THEN journal,file_path_fhd+'_fhd_log.txt'
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
 IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
 IF size(cal,/type) NE 8 THEN $
@@ -89,11 +89,11 @@ fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,/force ;call a seco
 IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_ptr) THEN BEGIN
         ;could generate model visibilities from just the source list (allows sources to be pruned), or from the final uv model (don't have to redo the DFT) 
-        vis_model_ptr=vis_source_model(source_array,obs,psf,params,flag_arr,$
+        vis_model_ptr=vis_source_model(source_array,obs,status_str,psf,params,flag_arr,$
             timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)   
 ;        vis_model_ptr=vis_source_model(source_array,obs,psf,params,model_uv_arr=model_uv_arr,$
 ;            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)      
     ENDIF
 ENDIF
-Journal ;write log file
+IF Keyword_Set(!Journal) THEN journal ;write log file
 END

@@ -38,7 +38,7 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     calibration_catalog_file_path=calibration_catalog_file_path,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
-    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,$
+    return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
     vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
@@ -72,14 +72,10 @@ print,'Output file_path:',file_path_fhd
 ext='.uvfits'
 fhd_dir=file_dirname(file_path_fhd)
 basename=file_basename(file_path_fhd)
-header_filepath=file_path_fhd+'_header.sav'
 flags_filepath=file_path_fhd+'_flags.sav'
-;vis_filepath=file_path_fhd+'_vis.sav'
 obs_filepath=file_path_fhd+'_obs.sav'
 params_filepath=file_path_fhd+'_params.sav'
-hdr_filepath=file_path_fhd+'_hdr.sav'
 fhd_filepath=file_path_fhd+'_fhd.sav'
-autocorr_filepath=file_path_fhd+'_autos.sav'
 cal_filepath=file_path_fhd+'_cal.sav'
 log_filepath=file_path_fhd+'_log.txt'
 IF Keyword_Set(!Journal) THEN journal
@@ -114,7 +110,7 @@ IF Keyword_Set(force_data) THEN data_flag=1
 IF Keyword_Set(force_no_data) THEN data_flag=0
 
 IF Keyword_Set(data_flag) THEN BEGIN
-    Journal,log_filepath
+    IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
     IF Keyword_Set(restore_vis_savefile) THEN BEGIN
         IF file_test(file_path_vis_sav) EQ 0 THEN BEGIN
@@ -174,13 +170,13 @@ IF Keyword_Set(data_flag) THEN BEGIN
         
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
-    psf=beam_setup(obs,antenna,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
 ;    IF ~Keyword_Set(silent) THEN BEGIN
 ;        beam_arr=Ptrarr(n_pol,/allocate)
 ;        FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
 ;    ENDIF
-    jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
+    jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
@@ -200,7 +196,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
         cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,catalog_path=calibration_catalog_file_path,_Extra=extra)
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
-        vis_arr=vis_calibrate(vis_arr,cal,obs,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
+        vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)

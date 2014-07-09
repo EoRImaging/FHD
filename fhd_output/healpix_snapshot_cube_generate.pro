@@ -23,7 +23,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     IF cube_test GT 0 THEN RETURN
   ENDIF
   
-  IF N_Elements(psf_in) EQ 0 THEN psf_in=beam_setup(obs_in,file_path_fhd,/no_save,/silent,/restore)
+  IF N_Elements(psf_in) EQ 0 THEN psf_in=beam_setup(obs_in,status_str,file_path_fhd=file_path_fhd,/no_save,/silent,/restore)
   IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
   IF N_Elements(cal) EQ 0 THEN IF status_str.cal GT 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd
   
@@ -49,7 +49,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
-  psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resolution,/silent)
+  psf_out=beam_setup(obs_out,/no_save,psf_resolution=ps_psf_resolution,/silent)
   
   beam=Ptrarr(n_pol,n_freq_use,/allocate)
   beam_mask=fltarr(dimension_use,dimension_use)+1.
@@ -125,7 +125,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     obs=obs_out ;will have some values over-written!
     psf=psf_out
     
-    residual_arr1=vis_model_freq_split(obs_in,psf_in,params,flags_use,obs_out=obs,psf_out=psf,/rephase_weights,$
+    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,flags_use,obs_out=obs,psf_out=psf,/rephase_weights,$
       weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
       file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_arr,$
       save_uvf=save_uvf, uvf_name=uvf_name[iter])

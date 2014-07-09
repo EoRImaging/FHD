@@ -2,9 +2,9 @@ FUNCTION visibility_count,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_pa
     no_conjugate=no_conjugate,fill_model_vis=fill_model_vis
 
 SWITCH N_Params() OF
-    0:obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
-    1:psf=getvar_savefile(file_path_fhd+'_beams.sav','psf')
-    2:params=getvar_savefile(file_path_fhd+'_params.sav','params')
+    0:fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
+    1:fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
+    2:fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
     ELSE:
 ENDSWITCH
 

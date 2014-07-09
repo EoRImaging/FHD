@@ -1,4 +1,4 @@
-FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
+FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
     file_path_fhd=file_path_fhd,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
@@ -7,11 +7,7 @@ FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,
   t0=Systime(1)
   
   IF N_Elements(silent) EQ 0 THEN silent=0
-  pol_names=['xx','yy','xy','yx']
-  flags_filepath=file_path_fhd+'_flags.sav'
-  params_filepath=file_path_fhd+'_params.sav'
-  psf_filepath=file_path_fhd+'_beams.sav'
-  obs_filepath=file_path_fhd+'_obs.sav'
+  pol_names=obs.pol_names
   vis_filepath=file_path_fhd+'_vis_'
   
   if keyword_set(save_uvf) then begin
@@ -19,10 +15,10 @@ FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,
     else uvf_filepath = file_path_fhd+'_gridded_uvf.sav'
   endif
   
-;  IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
-;  IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
-;  IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
-;  IF N_Elements(flag_arr) EQ 0 THEN flag_arr=getvar_savefile(flags_filepath,'flag_arr')
+;  IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
+;  IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
+;  IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
+;  IF N_Elements(flag_arr) EQ 0 THEN fhd_save_io,status_str,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd
   
   n_freq=obs.n_freq
   n_pol=obs.n_pol
@@ -32,16 +28,18 @@ FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,
   
   IF Min(Ptr_valid(vis_data_arr)) EQ 0 THEN BEGIN
     vis_data_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO vis_data_arr[pol_i]=$
-      getvar_savefile(vis_filepath+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        vis_data_arr[pol_i]=vis_ptr
+    ENDFOR
   ENDIF
   IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
-    model_flag=1
-    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(vis_filepath+'model_'+pol_names[pol_i]+'.sav')
-    IF model_flag THEN BEGIN
+    IF Min(status_str.vis_model_ptr[0:n_pol-1]) GT 0 THEN BEGIN
       vis_model_arr=Ptrarr(n_pol)
-      FOR pol_i=0,n_pol-1 DO vis_model_arr[pol_i]=$
-        getvar_savefile(vis_filepath+'model_'+pol_names[pol_i]+'.sav','vis_ptr',verbose=~silent)
+      FOR pol_i=0,n_pol-1 DO BEGIN
+        fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        vis_model_arr[pol_i]=vis_model_ptr
+      ENDFOR
     ENDIF
   ENDIF ELSE model_flag=1
   
@@ -61,7 +59,7 @@ FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,
   IF Keyword_Set(residual_flag) THEN model_flag=0
   IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
     IF model_flag THEN BEGIN
-      vis_model_arr=vis_source_model(source_list,obs,psf,params,flag_arr_use,model_uv_arr=model_uv_arr,$
+      vis_model_arr=vis_source_model(source_list,obs,status_str,psf,params,flag_arr_use,model_uv_arr=model_uv_arr,$
         file_path_fhd=file_path_fhd,timing=t_model,silent=silent,_Extra=extra)
       IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
     ENDIF ELSE vis_model_arr=Ptrarr(n_pol)
