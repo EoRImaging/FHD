@@ -233,6 +233,11 @@ case version of
       uvfits_subversion=4
       time_cut=[2,-2]
    end
+   'nb_test_cotter_1': begin
+      uvfits_version=3
+      uvfits_version=3
+      n_avg=4
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
