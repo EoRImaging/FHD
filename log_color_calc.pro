@@ -1,5 +1,5 @@
 pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
-    color_profile = color_profile, log_cut_val = log_cut_val, oob_low = oob_low, $
+    color_profile = color_profile, log_cut_val = log_cut_val, min_abs = min_abs, oob_low = oob_low, $
     missing_value = missing_value, missing_color = missing_color
     
     
@@ -119,7 +119,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
     'sym_log': begin
       ;; find the middle of our color range
       if n_elements(data_range) gt 0 then max_abs = max(abs(data_range)) else max_abs = max(abs(data[where(abs(data) ne 0)]))
-      min_abs = min(abs(data[where(abs(data) gt 0)]))
+      if n_elements(min_abs) eq 0 then min_abs = min(abs(data[where(abs(data) gt 0)]))
       
       log_data_range = alog10([min_abs, max_abs])
       
