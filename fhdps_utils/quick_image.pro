@@ -50,7 +50,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   if keyword_set(missing_value) then begin
     good_locs = where(image ne missing_value, count_good, complement = wh_missing, ncomplement = count_missing)
     erase = 1
-  endif else good_locs = indgen(n_elements(image))
+  endif
   
   tvlct, r, g, b, /get
   
@@ -62,8 +62,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       
       
   endif else begin
-    if n_elements(data_range) eq 0 then data_range = minmax(image[good_locs])
-    
+    if n_elements(data_range) eq 0 then $
+      if keyword_set(missing_value) then data_range = minmax(image[good_locs]) else data_range = minmax(image)
+      
     cgloadct, 25, /brewer, /reverse, BOTTOM = 0, NCOLORS = 256, clip = [0, 235]
     
     color_range = [0, 255]
@@ -104,9 +105,11 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   
   plot_aspect = (plot_pos[3] - plot_pos[1]) / (plot_pos[2] - plot_pos[0])
   
-  xlength = xrange[1] - xrange[0]
-  ylength = yrange[1]-yrange[0]
-  data_aspect = float(ylength / xlength)
+  if n_elements(xvals) gt 0 and n_elements(yvals) gt 0 then begin
+    xlength = xrange[1] - xrange[0]
+    ylength = yrange[1]-yrange[0]
+    data_aspect = float(ylength / xlength)
+  endif else data_aspect=1
   
   aspect_ratio =  data_aspect /plot_aspect
   if aspect_ratio gt 1 then begin
@@ -146,6 +149,8 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       xoffset=sizes.xoffset, yoffset=sizes.yoffset, landscape = landscape
       
   endif else begin
+    xsize = round(base_size * x_factor)
+    ysize = round(base_size * y_factor)
     while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
       base_size = base_size - 100
       xsize = round(base_size * x_factor)

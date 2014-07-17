@@ -1,10 +1,10 @@
 FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
-    Jones_matrix_arr=Jones_matrix_arr,psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,$
+    psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,$
     psf_image_resolution=psf_image_resolution,timing=timing,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
-IF Tag_exist(obs,'instrument') THEN instrument=obs.instrument ELSE instrument='mwa'
+instrument=obs.instrument
 tile_gain_fn=instrument+'_beam_setup_gain' ;mwa_beam_setup_gain
 tile_init_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
 n_tiles=obs.n_tile

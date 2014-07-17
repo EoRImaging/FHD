@@ -15,8 +15,8 @@ icomp=Complex(0,1)
 IF Keyword_Set(dead_dipole_list) THEN BEGIN
     ;Format is 3xN array, column 0: Tile number (names, not index), 1: polarization (0:x, 1:y), 2: dipole number
     tile_id=Reform(dead_dipole_list[0,*])
-    pol_id=Reform(dead_dipole_list[0,*])
-    dipole_id=Reform(dead_dipole_list[0,*])
+    pol_id=Reform(dead_dipole_list[1,*])
+    dipole_id=Reform(dead_dipole_list[2,*])
     n_dead_dipole=N_Elements(tile_id)
     names_ref=Fix((*obs.baseline_info).tile_names,type=Size(tile_id,/type))
     FOR d_i=0L,n_dead_dipole-1 DO BEGIN

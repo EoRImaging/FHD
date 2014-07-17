@@ -74,7 +74,7 @@ if [ -z ${nslots} ]; then
 fi
 #Set typical memory needed for standard FHD firstpass if not set.
 if [ -z ${mem} ]; then
-    mem=6G
+    mem=4G
 fi
 
 

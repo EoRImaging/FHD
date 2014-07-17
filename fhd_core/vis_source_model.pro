@@ -1,4 +1,4 @@
-FUNCTION vis_source_model,source_list,obs,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
+FUNCTION vis_source_model,source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
     timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,beam_arr=beam_arr,$
     fill_model_vis=fill_model_vis,use_pointing_center=use_pointing_center,_Extra=extra
 
@@ -12,10 +12,10 @@ psf_filepath=file_path_fhd+'_beams.sav'
 obs_filepath=file_path_fhd+'_obs.sav'
 IF N_Elements(silent) EQ 0 THEN silent=1
 
-IF N_Elements(obs) EQ 0 THEN obs=getvar_savefile(obs_filepath,'obs')
-IF N_Elements(psf) EQ 0 THEN psf=getvar_savefile(psf_filepath,'psf')
-IF N_Elements(params) EQ 0 THEN params=getvar_savefile(params_filepath,'params')
-IF N_Elements(flag_ptr) EQ 0 THEN flag_ptr=getvar_savefile(flags_filepath,'flag_arr')
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(flag_ptr) EQ 0 THEN fhd_save_io,status_str,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd
 IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 
 heap_gc
@@ -46,10 +46,10 @@ IF ~Keyword_Set(uv_mask) THEN BEGIN
     uv_mask[mask_i_use]=1
 ENDIF ELSE uv_mask[*,elements/2+psf.dim:*]=0. 
 
-IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
+freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 bin_offset=(*obs.baseline_info).bin_offset
-IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+frequency_array=(*obs.baseline_info).freq
 
 ;kx_arr=params.uu/kbinsize
 ;ky_arr=params.vv/kbinsize

@@ -15,40 +15,40 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
+PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
     scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
-;calibration_model_subtract is passed through the fhd structure
+;calibration_model_subtract is passed through the fhd_params structure
 compile_opt idl2,strictarrsubs  
 
 t00=Systime(1)    
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ;image_uv_arr is a pointer array with dimensions (n_pol) 
 ;most parameters are set in fhd_init()
-n_pol=fhd.npol
-gain_factor=fhd.gain_factor
-max_iter=fhd.max_iter
-max_sources=fhd.max_sources
-check_iter=fhd.check_iter
-beam_threshold=fhd.beam_threshold
-add_threshold=fhd.add_threshold
-max_add_sources=fhd.max_add_sources
-;local_max_radius=fhd.local_max_radius
-pol_use=fhd.pol_use
-independent_fit=fhd.independent_fit
-reject_pol_sources=fhd.reject_pol_sources
+n_pol=fhd_params.npol
+gain_factor=fhd_params.gain_factor
+max_iter=fhd_params.max_iter
+max_sources=fhd_params.max_sources
+check_iter=fhd_params.check_iter
+beam_threshold=fhd_params.beam_threshold
+add_threshold=fhd_params.add_threshold
+max_add_sources=fhd_params.max_add_sources
+;local_max_radius=fhd_params.local_max_radius
+pol_use=fhd_params.pol_use
+independent_fit=fhd_params.independent_fit
+reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
-calibration_model_subtract=fhd.cal_subtract
-filter_background=fhd.filter_background
-decon_filter=fhd.decon_filter
-galaxy_model_fit=fhd.galaxy_subtract
-subtract_sidelobe_catalog=fhd.sidelobe_subtract
+calibration_model_subtract=fhd_params.cal_subtract
+filter_background=fhd_params.filter_background
+decon_filter=fhd_params.decon_filter
+galaxy_model_fit=fhd_params.galaxy_subtract
+subtract_sidelobe_catalog=fhd_params.sidelobe_subtract
 
 icomp=Complex(0,1)
-beam_max_threshold=fhd.beam_max_threshold
-smooth_width=fhd.smooth_width
+beam_max_threshold=fhd_params.beam_max_threshold
+smooth_width=fhd_params.smooth_width
 ;color_frequency_correction=fltarr(nfreq)+1. ;remove same component from all frequencies, but allow to be different in the future
 
 dimension=obs.dimension
@@ -212,12 +212,14 @@ ENDIF
 source_find_image=image_filtered*beam_avg*beam_mask*source_taper
 converge_check[0]=Stddev(source_find_image[where(beam_mask)],/nan)
 converge_check2[0]=Stddev(source_find_image[where(beam_mask)],/nan)
-print,"Gain factor used:",Strn(fhd.gain_factor)
+print,"Gain factor used:",Strn(fhd_params.gain_factor)
 print,"Initial convergence:",Strn(converge_check[0])
 
 model_holo_arr=Ptrarr(n_pol,/allocate)
 si=0L
 i0=0L
+source_n_arr=Lonarr(max_iter)
+detection_threshold_arr=Fltarr(max_iter)
 IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
     print,'Subtracting source model from the sidelobes'
     source_arr_sidelobe=generate_source_cal_list(obs,psf,catalog_path=subtract_sidelobe_catalog,$
@@ -239,6 +241,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     print,String(format='("Calibration source model subtracted (",A3,"%)")',Strn(calibration_model_subtract*100.,length=3))
     n_cal_src=cal.n_cal_src
     si+=n_cal_src
+    source_n_arr[i2]=n_cal_src
     i2+=1
     max_sources+=n_cal_src
     
@@ -324,15 +327,17 @@ FOR i=i0,max_iter-1 DO BEGIN
     model_I_use=model_I_use*beam_avg*source_taper*beam_mask
     image_use=image_filtered*beam_avg*beam_mask
    
-    comp_arr1=fhd_source_detect(obs,fhd,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
-        model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,$
+    comp_arr1=fhd_source_detect(obs,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+        model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
         beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     
+    source_n_arr[iter]=n_sources
+    detection_threshold_arr[iter]=detection_threshold
     image_use*=source_mask
     source_find_image*=source_mask
     model_I_use*=source_mask
-    IF i EQ 0 THEN converge_check[i]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
-    converge_check2[i]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
+    IF iter EQ 0 THEN converge_check[iter]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
+    converge_check2[iter]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
     ;use the composite image to locate sources, but then fit for flux independently
     
     IF si+n_sources GE max_sources THEN BEGIN
@@ -345,9 +350,10 @@ FOR i=i0,max_iter-1 DO BEGIN
         i2+=1
         t10=Systime(1)-t0
         converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
+        fhd_params.end_condition='Source fit failure'
         print,StrCompress(String(format='("Break after iteration ",I," from failure to fit any sources after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            i,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-        converge_check2=converge_check2[0:i]
+            iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+        converge_check2=converge_check2[0:iter]
         converge_check=converge_check[0:i2]
         BREAK
         recalc_flag=0
@@ -370,47 +376,60 @@ FOR i=i0,max_iter-1 DO BEGIN
     IF si+1 GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
+        fhd_params.end_condition='Max components'
         print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            i,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+            iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
         converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         BREAK
     ENDIF
     
-    IF (Round(i mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
+    IF (Round(iter mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
         i2+=1
         t10=Systime(1)-t0
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
-            i,si,t10,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+            iter,si,t10,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
         converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         IF sigma_threshold*converge_check[i2] GT Max(source_find_image) THEN BEGIN
+            fhd_params.end_condition='Low SNR'
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                i,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+                iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
         IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
+            fhd_params.end_condition='Convergence'
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                i,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-            converge_check2=converge_check2[0:i]
+                iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+            converge_check2=converge_check2[0:iter]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF
     ENDIF
 ENDFOR
-IF i EQ max_iter THEN BEGIN
+IF iter EQ max_iter THEN BEGIN
     t10=Systime(1)-t0
+    fhd_params.end_condition='Max iterations'
     print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds with ",I," sources (convergence:",F,")")',$
-        i,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-ENDIF
+        iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+ENDIF ELSE iter+=1 ;increment iter by one if the loop was exited by a BREAK statement
 
 ;condense clean components
-noise_map=Stddev(image_use[where(beam_mask*source_mask)],/nan)*beam_corr_avg
+fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
+noise_map=fhd_params.convergence*beam_corr_avg
 ;noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si-1]
 source_array=Components2Sources(comp_arr,obs,radius=beam_width>0.5,noise_map=noise_map,$
     reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
+fhd_params.n_iter=iter
+fhd_params.n_components=si
+fhd_params.detection_threshold=detection_threshold
+source_n_arr=source_n_arr[0:iter-1]
+detection_threshold_arr=detection_threshold[0:iter-1]
+fhd_params.n_sources=N_Elements(source_array)
+info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
+fhd_params.info=Ptr_new(info_struct)
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]

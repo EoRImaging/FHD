@@ -1,4 +1,4 @@
-FUNCTION beam_setup,obs,antenna,file_path_fhd=file_path_fhd,restore_last=restore_last,timing=timing,$
+FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
@@ -8,23 +8,20 @@ compile_opt idl2,strictarrsubs
 t00=Systime(1)
 
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
-IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_beams'+'.sav') EQ 0) THEN BEGIN 
-    IF not Keyword_Set(silent) THEN print,file_path_fhd+'_beams'+'.sav' +' Not found. Recalculating.' 
-    restore_last=0
-ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
-    IF not Keyword_Set(silent) THEN print,'Saved beam model restored'
-    RESTORE,file_path_fhd+'_beams'+'.sav' ;psf,antenna
-    RETURN,psf
+    fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
+    fhd_save_io,status_str,antenna,var='antenna',/restore,file_path_fhd=file_path_fhd
+    IF Keyword_Set(psf) AND Keyword_Set(antenna) THEN RETURN,psf $
+        ELSE IF not Keyword_Set(silent) THEN print,"Saved beam model not found. Recalculating."
 ENDIF
 
-IF Tag_exist(obs,'instrument') THEN instrument=obs.instrument ELSE instrument='mwa'
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
+instrument=obs.instrument
 tile_beam_fn=instrument+'_tile_beam_generate' ;mwa_tile_beam_generate
 tile_gain_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
 tile_mask_fn=instrument+'_tile_beam_mask' ;mwa_tile_beam_mask
 IF instrument EQ 'paper' THEN base_gain=fltarr(1)+1.
 ;Fixed parameters 
-IF N_Elements(obs) EQ 0 THEN RESTORE,file_path+'_obs.sav'
 ;extract information from the structures
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
@@ -53,8 +50,8 @@ ky_span=kx_span
 degpix=obs.degpix
 astr=obs.astr
 
-antenna=fhd_struct_init_antenna(obs,file_path_fhd=file_path_fhd,beam_model_version=beam_model_version,$
-    psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
+antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,$
+    psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
 
 IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
@@ -210,10 +207,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             Jones1=antenna[ant_1].Jones[*,*,freq_i]
             Jones2=antenna[ant_2].Jones[*,*,freq_i]
             ;FFT individual tile beams to uv space, crop there, and FFT back
-            beam_ant1=mask_beam(obs,antenna[ant_1],beam_ant1,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
-            beam_ant2=mask_beam(obs,antenna[ant_2],beam_ant2,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
+            beam_ant1b=mask_beam(obs,antenna[ant_1],beam_ant1,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
+            beam_ant2b=mask_beam(obs,antenna[ant_2],beam_ant2,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
             
-            power_beam=beam_ant1*Conj(beam_ant2)*(*Jones1[ant_pol1,ant_pol1]*Conj(*Jones2[ant_pol2,ant_pol2])+*Jones1[ant_pol1x,ant_pol1]*Conj(*Jones2[ant_pol2x,ant_pol2]))
+            power_beam=beam_ant1b*Conj(beam_ant2b)*(*Jones1[ant_pol1,ant_pol1]*Conj(*Jones2[ant_pol2,ant_pol2])+*Jones1[ant_pol1x,ant_pol1]*Conj(*Jones2[ant_pol2x,ant_pol2]))
             psf_base_single=dirty_image_generate(power_beam,/no_real)
             psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
             psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
@@ -267,7 +264,9 @@ beam_ptr=Ptr_new(beam_arr)
 psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr)
-IF ~Keyword_Set(no_save) THEN SAVE,psf,antenna,filename=file_path_fhd+'_beams'+'.sav',/compress
+    
+fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
+fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=no_save
 t5=Systime(1)-t5_a
 timing=Systime(1)-t00
 ;IF ~Keyword_Set(silent) THEN print,[timing,t1,t2,t3,t4,t5]

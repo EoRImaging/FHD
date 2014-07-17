@@ -79,7 +79,7 @@ IF n_dist_flag GT 0 THEN BEGIN
     flag_dist_i=0
 ENDIF
 
-IF Keyword_Set(flag_ptr) THEN BEGIN
+IF flag_switch THEN BEGIN
     flag_i=where(*flag_ptr LE 0,n_flag)
     IF Keyword_Set(fill_model_vis) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN

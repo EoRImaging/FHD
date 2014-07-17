@@ -1,7 +1,9 @@
-FUNCTION fhd_struct_init_jones,obs,jones_in,file_path_fhd=file_path_fhd,mask=mask,restore_last=restore_last,update_last=update_last
+FUNCTION fhd_struct_init_jones,obs,status_str,jones_in,file_path_fhd=file_path_fhd,mask=mask,restore_last=restore_last,update_last=update_last
 
-IF Keyword_Set(file_path_fhd) THEN proj_filename=file_path_fhd+'_jones.sav' ELSE proj_filename='' 
-IF Keyword_Set(restore_last) AND file_test(proj_filename) THEN RETURN,getvar_savefile(proj_filename,'jones')
+IF Keyword_Set(restore_last) THEN BEGIN
+    fhd_save_io,status_str,jones,var='jones',file_path_fhd=file_path_fhd,/restore
+    IF Keyword_Set(jones) THEN RETURN,jones
+ENDIF
 dimension=obs.dimension
 elements=obs.elements
 
@@ -79,6 +81,6 @@ ENDFOR
 
 jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
 ;jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_corr,Jinv:p_map}
-IF Keyword_Set(file_path_fhd) THEN SAVE,jones,filename=proj_filename,/compress
+fhd_save_io,status_str,jones,var='jones',/compress,file_path_fhd=file_path_fhd
 RETURN,jones
 END
