@@ -52,6 +52,13 @@ IF N_Elements(subtract_sidelobe_catalog) EQ 0 THEN sidelobe_subtract='' ELSE BEG
         ENDELSE
     ENDELSE
 ENDELSE
+end_condition='Not successfully run'
+n_iter=0
+n_components=0L
+n_sources=0L
+detection_threshold=0.
+convergence=0.
+info=Ptr_new()
 
 fhd={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
     gain_factor:gain_factor,add_threshold:add_threshold,max_add_sources:max_add_sources,independent_fit:independent_fit,$
@@ -59,7 +66,8 @@ fhd={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
     cal_subtract:calibration_image_subtract,galaxy_subtract:galaxy_model_fit,sidelobe_subtract:sidelobe_subtract,$
     filter_background:filter_background,decon_filter:deconvolution_filter,decon_mode:decon_mode,$
-    joint_obs:joint_obs}
+    joint_obs:joint_obs,end_condition:end_condition,n_iter:n_iter,n_components:n_components,n_sources:n_sources,$
+    detection_threshold:detection_threshold,convergence:convergence,info:info}
 
 RETURN,fhd
 END
