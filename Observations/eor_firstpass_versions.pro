@@ -233,6 +233,11 @@ case version of
       uvfits_subversion=4
       time_cut=[2,-2]
    end
+   'nb_test_new_cotter_2': begin
+      uvfits_version=3
+      uvfits_version=3
+      n_avg=4
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
@@ -244,7 +249,6 @@ endcase
 SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
   STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-vis_file_list=str_replace(vis_file_list,'/mwa-','/eor-') ; temporary because cluster
 undefine,uvfits_version ; don't need these passed further
 undefine,uvfits_subversion
 undefine,obs_id

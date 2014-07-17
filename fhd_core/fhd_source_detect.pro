@@ -62,6 +62,9 @@ ENDIF ELSE BEGIN
     n_sources=n_sources2
 ENDELSE
 
+;output={n_sources1:n_sources1,n_sources2:n_sources2,source_find_image:source_find_image,beam_mask:beam_mask,source_mask:source_mask,converge_check:converge_check}
+;save,output,filename=fhd.joint_obs+'_test_output.sav'
+
 additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
 add_x=additional_i mod dimension
 add_y=Float(Floor(additional_i/dimension))
