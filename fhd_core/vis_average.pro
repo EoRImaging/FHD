@@ -28,12 +28,14 @@ IF Keyword_Set(vis_freq_average) THEN BEGIN
     n_freq=hdr.n_freq
     FOR pol_i=0,n_pol-1 DO BEGIN
         vis_old=Temporary(*vis_arr[pol_i])
+        flag_old=Temporary(*flag_arr[pol_i])>0
         *vis_arr[pol_i]=Complexarr(n_freq,n_baseline_time)
         FOR fi=0L,n_freq-1 DO BEGIN
-            (*vis_arr[pol_i])[fi,*]=Total(vis_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)
+            (*vis_arr[pol_i])[fi,*]=Total(vis_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*]$
+                *flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)$
+                /Total(flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)
         ENDFOR
         vis_old=0 ;free memory
-        flag_old=Temporary(*flag_arr[pol_i])
         *flag_arr[pol_i]=Fltarr(n_freq,n_baseline_time)
         FOR fi=0L,n_freq-1 DO BEGIN
             (*flag_arr[pol_i])[fi,*]=Total(flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)
@@ -68,12 +70,14 @@ IF Keyword_Set(vis_time_average) THEN BEGIN
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         vis_old=Reform(Temporary(*vis_arr[pol_i]),n_freq,n_baselines,n_time0)
+        flags_old=Reform(Temporary(*flag_arr[pol_i]),n_freq,n_baselines,n_time0)>0
         vis_new=Make_array(n_freq,n_baselines*n_time,type=Size(vis_old,/type))
-        FOR ti=0L,n_time-1 DO vis_new[*,ti*n_baselines:(ti+1)*n_baselines-1]=Total(vis_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
+        FOR ti=0L,n_time-1 DO vis_new[*,ti*n_baselines:(ti+1)*n_baselines-1]=$
+            Total(vis_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1]*flags_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)$
+            /Total(flags_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)
         vis_old=0
         *vis_arr[pol_i]=Temporary(vis_new)
         
-        flags_old=Reform(Temporary(*flag_arr[pol_i]),n_freq,n_baselines,n_time0)
         flags_new=Make_array(n_freq,n_baselines*n_time,type=Size(flags_old,/type))
         FOR ti=0L,n_time-1 DO flags_new[*,ti*n_baselines:(ti+1)*n_baselines-1]=Total(flags_old[*,*,ti*vis_time_average:(ti+1)*vis_time_average-1],3)/vis_time_average
         flags_old=0
