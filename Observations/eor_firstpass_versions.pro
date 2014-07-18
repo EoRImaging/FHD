@@ -238,6 +238,16 @@ case version of
       uvfits_version=3
       n_avg=4
    end
+   'apb_test_single_compressed': begin
+      uvfits_version=3
+      uvfits_subversion=5
+      n_avg=4
+   end
+   'apb_test_single_uncompressed': begin
+      uvfits_version=3
+      uvfits_subversion=6
+      n_avg=4
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
