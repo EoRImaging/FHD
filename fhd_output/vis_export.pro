@@ -23,6 +23,6 @@ FOR i=0,n_pol-1 DO BEGIN
     vis_ptr=vis_ptr_arr[pol_i[i]]
     IF Ptr_valid(flag_ptr_use[pol_i[i]]) THEN flag_i=where(*flag_ptr_use[pol_i[i]] LE 0,n_flag) ELSE n_flag=0
     IF n_flag GT 0 THEN (*vis_ptr)[flag_i]=0
-    fhd_save_io,status_str,vis_ptr,var=var_name,/compress,file_path_fhd=file_path_fhd,obs=obs,compress=compress,pol_i=pol_i[i]
+    fhd_save_io,status_str,vis_ptr,var=var_name,file_path_fhd=file_path_fhd,obs=obs,compress=compress,pol_i=pol_i[i]
 ENDFOR
 END
