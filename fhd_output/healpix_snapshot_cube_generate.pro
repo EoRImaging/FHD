@@ -185,7 +185,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
             obs,nside,hpx_inds,n_avg
         ;call fhd_save_io a second time to update the status structure now that the file has actually been written
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force 
-        debug_point=1
+        dirty_cube=(model_cube=(res_cube=(weights_cube=(variance_cube=(beam_cube=0)))))
     ENDFOR
     undefine_fhd,dirty_hpx_arr,model_hpx_arr,residual_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr
 ENDFOR
