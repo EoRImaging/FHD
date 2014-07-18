@@ -1,36 +1,41 @@
 PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,var_name=var_name,$
-    text=text,restore=restore,obs=obs,reset=reset,force_set=force_set,no_save=no_save,path_use=path_use
+    text=text,restore=restore,obs=obs,reset=reset,force_set=force_set,no_save=no_save,path_use=path_use,$
+    transfer_filename=transfer_filename
 
 IF ~Keyword_Set(file_path_fhd) THEN RETURN
 
 IF N_Elements(compress) EQ 0 THEN compress=0
 IF Keyword_Set(obs) THEN pol_names=obs.pol_names ;ELSE pol_names=['XX','YY','XY','YX','I','Q','U','V']
 
-base_name=file_basename(file_path_fhd)
+IF Keyword_Set(transfer_filename) THEN base_name=transfer_filename ELSE base_name=file_basename(file_path_fhd)
 base_path=file_dirname(file_path_fhd)
-IF N_Elements(status_str) EQ 0 THEN BEGIN
-    no_save=1
-    reset=1
+status_path=filepath(base_name+'_status',root=base_path,subdir='metadata')
+IF not Keyword_Set(status_str) THEN BEGIN
+    IF not file_test(status_path+'.sav') THEN BEGIN
+        no_save=1
+        reset=1
+    ENDIF
 ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
-status_path=filepath(base_name+'_status',root=base_path,subdir='metadata')
-IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flags:0,autos:0,vis:intarr(4),vis_model:intarr(4),$
-    grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),mapfn:intarr(4),fhd:0,fhd_params:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
-
+IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flag_arr:0,autos:0,vis:intarr(4),vis_model:intarr(4),$
+    grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),mapfn:intarr(4),fhd:0,fhd_params:0,$
+    hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
+;
 IF N_Elements(status_str) EQ 0 THEN status_str=getvar_savefile(status_path+'.sav','status_str')
 
 status_use=status_str    
 IF N_Elements(var_name) EQ 0 THEN var_name=''
 CASE var_name OF ;listed in order typically generated
-;    'hdr':BEGIN status_use.hdr=1 & path_add='_hdr' & subdir='metadata'& END
+    'status':BEGIN path_add='status' & subdir='metadata' & END
+    'hdr':BEGIN status_use.hdr=1 & path_add='_hdr' & subdir='metadata'& END
     'obs':BEGIN status_use.obs=1 & path_add='_obs' & subdir='metadata'& END
     'params':BEGIN status_use.params=1 & path_add='_params' & subdir='metadata'& END
     'psf':BEGIN status_use.psf=1 & path_add='_beams' & subdir='beams'& END
     'antenna':BEGIN status_use.antenna=1 & path_add='_antenna' & subdir='beams'& END
     'jones':BEGIN status_use.jones=1 & path_add='_jones' & subdir='beams'& END
     'cal':BEGIN status_use.cal=1 & path_add='_cal' & subdir='calibration'& END
-    'flag_arr':BEGIN status_use.flags=1 & path_add='_flags' & subdir='vis_data'& END
+    'flag_arr':BEGIN status_use.flag_arr=1 & path_add='_flags' & subdir='vis_data'& END
     'auto_corr':BEGIN status_use.autos=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
     'vis_ptr':BEGIN status_use.vis[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
     'vis_model_ptr':BEGIN status_use.vis_model[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
@@ -40,9 +45,10 @@ CASE var_name OF ;listed in order typically generated
     'mapfn':BEGIN status_use.mapfn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn'& END
     'fhd_params':BEGIN status_use.fhd_params=1 & path_add='_fhd_params' & subdir='deconvolution'& END
     'fhd':BEGIN status_use.fhd=1 & path_add='_fhd' & subdir='deconvolution' & END 
-    'cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube' & subdir='healpix_cubes' & END
-    'even_cube':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube' & subdir='healpix_cubes' & END
-    'odd_cube':BEGIN status_use.hpx_odd[pol_i]=1 & path_add='_odd_cube' & subdir='healpix_cubes' & END
+    'hpx_cnv':BEGIN status_use.hpx_cnv=1 & path_add='_hpxcnv' & subdir='healpix' & END
+    'cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube' & subdir='healpix' & END
+    'even_cube':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube' & subdir='healpix' & END
+    'odd_cube':BEGIN status_use.hpx_odd[pol_i]=1 & path_add='_odd_cube' & subdir='healpix' & END
     ELSE:name_error=1
 ENDCASE
 
@@ -68,9 +74,9 @@ IF ~Keyword_Set(name_error) THEN BEGIN
     IF Keyword_Set(status_save) THEN status_str=status_use
 ENDIF ELSE status_save=0
 
-dir_use=file_dirname(status_path)
-IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
 IF Keyword_Set(status_save) THEN BEGIN
+    dir_use=file_dirname(status_path)
+    IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
     SAVE,status_str,filename=status_path+'.sav'
     IF Keyword_Set(text) THEN TextFast,structure_to_text(status_str),/write,file_path=status_path
 ENDIF

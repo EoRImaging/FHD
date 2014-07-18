@@ -47,15 +47,6 @@ except=!except
 error=0
 heap_gc 
 t0=Systime(1)
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
-IF N_Elements(calibrate_visibilities) EQ 0 THEN calibrate_visibilities=0
-IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
-IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
-IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=recalculate_all
-IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
-IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
-IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
-IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
 
 IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the mapping function to disk if it will be just deleted later anyway
 
@@ -69,13 +60,11 @@ IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the
 print,"Processing "+file_basename(file_path_vis)+" in "+file_dirname(file_path_vis)
 print,systime()
 print,'Output file_path:',file_path_fhd
-ext='.uvfits'
-fhd_dir=file_dirname(file_path_fhd)
-basename=file_basename(file_path_fhd)
-cal_filepath=file_path_fhd+'_cal.sav'
+
 log_filepath=file_path_fhd+'_log.txt'
 IF Keyword_Set(!Journal) THEN journal
 IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
+
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
@@ -85,7 +74,7 @@ data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
     snapshot_healpix_export=snapshot_healpix_export,log_store=log_store)
 
-IF Keyword_Set(data_flag) THEN BEGIN
+IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
     IF Keyword_Set(restore_vis_savefile) THEN BEGIN
@@ -162,14 +151,15 @@ IF Keyword_Set(data_flag) THEN BEGIN
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
         calibrate_visibilities=1
-        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=cal_filepath
+        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd+'_cal.sav'
     ENDIF
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
-        IF ~Keyword_Set(transfer_calibration) AND ~Keyword_Set(calibration_source_list) THEN $
+        IF ~Keyword_Set(calibration_source_list) THEN $
             calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path,_Extra=extra)
-        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,catalog_path=calibration_catalog_file_path,_Extra=extra)
+        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,$
+            catalog_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,_Extra=extra)
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
@@ -185,13 +175,12 @@ IF Keyword_Set(data_flag) THEN BEGIN
     IF min(Ptr_valid(vis_model_arr)) EQ 0 THEN return_cal_visibilities=0 ;set if model visibilities not actually returned
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr
-        IF basename EQ transfer_mapfn THEN BEGIN 
+        IF file_basename(file_path_fhd) EQ transfer_mapfn THEN BEGIN 
             IF Keyword_Set(flag_visibilities) THEN BEGIN
                 print,'Flagging anomalous data'
                 vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
             ENDIF
-            
-        ENDIF ELSE restore,filepath(transfer_mapfn+'_flags.sav',root=fhd_dir) ;flag_arr
+        ENDIF ELSE fhd_save_io,0,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,transfer=transfer_mapfn 
         fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd
         n0=N_Elements(*flag_arr[0])
         n1=N_Elements(*flag_arr1[0])
