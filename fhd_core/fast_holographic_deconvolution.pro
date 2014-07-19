@@ -281,7 +281,7 @@ IF ~Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : C
 
 recalc_flag=1
 t_init=Systime(1)-t00
-FOR i=i0,max_iter-1 DO BEGIN 
+FOR iter=i0,max_iter-1 DO BEGIN 
     IF Keyword_Set(recalc_flag) THEN BEGIN
         t1_0=Systime(1)
         FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
@@ -383,7 +383,7 @@ FOR i=i0,max_iter-1 DO BEGIN
         BREAK
     ENDIF
     
-    IF (Round(iter mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
+    IF (Round(iter mod check_iter) EQ 0) AND (iter GT 0) THEN BEGIN
         i2+=1
         t10=Systime(1)-t0
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
@@ -393,7 +393,7 @@ FOR i=i0,max_iter-1 DO BEGIN
             fhd_params.end_condition='Low SNR'
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
                 iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-            converge_check2=converge_check2[0:i]
+            converge_check2=converge_check2[0:iter]
             converge_check=converge_check[0:i2]
             BREAK
         ENDIF

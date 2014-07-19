@@ -10,7 +10,6 @@ FUNCTION fhd_setup,file_path_vis,status_str,export_images=export_images,cleanup=
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(calibrate_visibilities) EQ 0 THEN calibrate_visibilities=0
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
-IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
@@ -31,14 +30,15 @@ data_flag=status_str.obs*status_str.params*status_str.flag_arr*status_str.psf*st
 IF Keyword_Set(save_visibilities) THEN data_flag*=Min(status_str.vis[0:n_pol1-1])
 IF N_Elements(deconvolve) EQ 0 THEN IF status_str.fhd LE 0 THEN deconvolve=1
 IF Keyword_Set(deconvolve) THEN BEGIN
+    IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
     IF size(transfer_mapfn,/type) EQ 7 THEN BEGIN
         fhd_save_io,status_mapfn,file_path_fhd=file_path_fhd,transfer=transfer_mapfn
         IF Min(status_mapfn.mapfn[0:n_pol1-1]) LE 0 THEN mapfn_recalculate=1 ELSE mapfn_recalculate=0
     ENDIF ELSE IF Min(status_str.mapfn[0:n_pol1-1]) LE 0 THEN mapfn_recalculate=1
     IF Min(status_str.grid_uv[0:n_pol1-1]) LE 0 THEN grid_recalculate=1
-    IF mapfn_recalculate GT 0 THEN grid_recalculate=1
-    IF grid_recalculate GT 0 THEN data_flag=0
-ENDIF
+ENDIF ELSE IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=0
+IF mapfn_recalculate GT 0 THEN grid_recalculate=1
+IF grid_recalculate GT 0 THEN data_flag=0
 
 IF Keyword_Set(force_data) THEN data_flag=1
 IF Keyword_Set(force_no_data) THEN data_flag=0

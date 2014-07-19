@@ -96,7 +96,9 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
         ENDELSE
         
     ENDFOR
+    comp_arr=comp_arr_use
 ENDIF
+
 
 RETURN,source_arr
 END
