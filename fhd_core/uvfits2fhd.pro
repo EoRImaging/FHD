@@ -302,7 +302,7 @@ IF Keyword_Set(deconvolve) THEN BEGIN
     fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
         vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,flag_arr=flag_arr,_Extra=extra
-    IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+    IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
 ENDELSE

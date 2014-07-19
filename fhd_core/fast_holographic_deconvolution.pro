@@ -353,8 +353,6 @@ FOR iter=i0,max_iter-1 DO BEGIN
         fhd_params.end_condition='Source fit failure'
         print,StrCompress(String(format='("Break after iteration ",I," from failure to fit any sources after ",I," seconds with ",I," sources (convergence:",F,")")',$
             iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-        converge_check2=converge_check2[0:iter]
-        converge_check=converge_check[0:i2]
         BREAK
         recalc_flag=0
     ENDIF ELSE recalc_flag=1
@@ -393,16 +391,12 @@ FOR iter=i0,max_iter-1 DO BEGIN
             fhd_params.end_condition='Low SNR'
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
                 iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-            converge_check2=converge_check2[0:iter]
-            converge_check=converge_check[0:i2]
             BREAK
         ENDIF
         IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
             fhd_params.end_condition='Convergence'
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds with ",I," sources (convergence:",F,")")',$
                 iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-            converge_check2=converge_check2[0:iter]
-            converge_check=converge_check[0:i2]
             BREAK
         ENDIF
     ENDIF
@@ -413,6 +407,8 @@ IF iter EQ max_iter THEN BEGIN
     print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds with ",I," sources (convergence:",F,")")',$
         iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
 ENDIF ELSE iter+=1 ;increment iter by one if the loop was exited by a BREAK statement
+converge_check2=converge_check2[0:iter-1]
+converge_check=converge_check[0:i2]
 
 ;condense clean components
 fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)

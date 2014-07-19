@@ -372,7 +372,7 @@ IF map_flag THEN BEGIN
         error=1
         RETURN,image_uv
     ENDIF
-    fhd_save_io,status_str,mapfn,var='mapfn',file_path_fhd=file_path_fhd,pol_i=polarization,no_save=no_save,obs=obs
+    fhd_save_io,status_str,map_fn,var='mapfn',file_path_fhd=file_path_fhd,pol_i=polarization,no_save=no_save,obs=obs
     IF Arg_present(return_mapfn) THEN return_mapfn=map_fn
 ENDIF
 t7=Systime(1)-t7_0

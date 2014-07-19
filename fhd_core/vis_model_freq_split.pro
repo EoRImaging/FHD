@@ -34,7 +34,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
     ENDFOR
   ENDIF
   IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
-    IF Min(status_str.vis_model_ptr[0:n_pol-1]) GT 0 THEN BEGIN
+    IF Min(status_str.vis_model[0:n_pol-1]) GT 0 THEN BEGIN
       vis_model_arr=Ptrarr(n_pol)
       FOR pol_i=0,n_pol-1 DO BEGIN
         fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
