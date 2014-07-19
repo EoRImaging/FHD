@@ -352,7 +352,7 @@ FOR i=i0,max_iter-1 DO BEGIN
         converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         fhd_params.end_condition='Source fit failure'
         print,StrCompress(String(format='("Break after iteration ",I," from failure to fit any sources after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+            iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
         converge_check2=converge_check2[0:iter]
         converge_check=converge_check[0:i2]
         BREAK
@@ -387,12 +387,12 @@ FOR i=i0,max_iter-1 DO BEGIN
         i2+=1
         t10=Systime(1)-t0
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
-            iter,si,t10,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+            iter,si+1,t10,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
         converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         IF sigma_threshold*converge_check[i2] GT Max(source_find_image) THEN BEGIN
             fhd_params.end_condition='Low SNR'
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+                iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
             converge_check2=converge_check2[0:i]
             converge_check=converge_check[0:i2]
             BREAK
@@ -400,7 +400,7 @@ FOR i=i0,max_iter-1 DO BEGIN
         IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
             fhd_params.end_condition='Convergence'
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+                iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
             converge_check2=converge_check2[0:iter]
             converge_check=converge_check[0:i2]
             BREAK
@@ -411,7 +411,7 @@ IF iter EQ max_iter THEN BEGIN
     t10=Systime(1)-t0
     fhd_params.end_condition='Max iterations'
     print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds with ",I," sources (convergence:",F,")")',$
-        iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+        iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
 ENDIF ELSE iter+=1 ;increment iter by one if the loop was exited by a BREAK statement
 
 ;condense clean components
@@ -419,11 +419,11 @@ fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
 noise_map=fhd_params.convergence*beam_corr_avg
 ;noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
-comp_arr=comp_arr[0:si-1]
+comp_arr=comp_arr[0:si]
 source_array=Components2Sources(comp_arr,obs,radius=beam_width>0.5,noise_map=noise_map,$
     reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
 fhd_params.n_iter=iter
-fhd_params.n_components=si
+fhd_params.n_components=si+1
 fhd_params.detection_threshold=detection_threshold
 source_n_arr=source_n_arr[0:iter-1]
 detection_threshold_arr=detection_threshold[0:iter-1]
@@ -449,7 +449,7 @@ print,'Deconvolution timing [per iteration]'
 print,String(format='("Setup:",A," ")',Strn(Round(t_init)))
 print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))
 print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
-print,String(format='("DFT source modeling:",A,"[",A,", or ",A," per 100 sources]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.),Strn(Round(t3*10000./si)/100.))
+print,String(format='("DFT source modeling:",A,"[",A,", or ",A," per 100 sources]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.),Strn(Round(t3*10000./(si+1))/100.))
 print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
 timing=[t00,t1,t2,t3,t4]
 ;print,timing
