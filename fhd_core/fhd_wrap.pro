@@ -59,6 +59,18 @@ IF N_Elements(weights_arr) EQ 0 THEN BEGIN
         *weights_arr[pol_i]=weights_uv
     ENDFOR
 ENDIF
+IF Keyword_Set(transfer_mapfn) THEN print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
+
+IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+        fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,/restore,transfer=transfer_mapfn
+        ;IMPORTANT: this approach of restoring the map_fn uses the least memory
+;        print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
+;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+        *map_fn_arr[pol_i]=Temporary(map_fn)
+    ENDIF
+ENDFOR
 IF Keyword_Set(calibration_image_subtract) THEN BEGIN
     IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
         IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN

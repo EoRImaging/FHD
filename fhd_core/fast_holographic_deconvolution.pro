@@ -117,19 +117,6 @@ dirty_image_composite_U=fltarr(dimension,elements)
 dirty_image_composite_V=fltarr(dimension,elements)
 source_uv_mask=fltarr(dimension,elements)
 source_uv_mask2=fltarr(dimension,elements)
-IF Keyword_Set(transfer_mapfn) THEN BEGIN
-    file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) 
-    print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
-ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
-
-FOR pol_i=0,n_pol-1 DO BEGIN
-    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-        ;IMPORTANT: this approach of restoring the map_fn uses the least memory
-        print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
-        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-        *map_fn_arr[pol_i]=Temporary(map_fn)
-    ENDIF
-ENDFOR
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)

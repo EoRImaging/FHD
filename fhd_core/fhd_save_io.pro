@@ -19,7 +19,7 @@ ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
 IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flag_arr:0,autos:0,vis:intarr(4),vis_model:intarr(4),$
-    grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),mapfn:intarr(4),fhd:0,fhd_params:0,$
+    grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),map_fn:intarr(4),fhd:0,fhd_params:0,$
     hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
 ;
 IF N_Elements(status_str) EQ 0 THEN status_str=getvar_savefile(status_path+'.sav','status_str')
@@ -42,7 +42,7 @@ CASE var_name OF ;listed in order typically generated
     'grid_uv':BEGIN status_use.grid_uv[pol_i]=1 & path_add='_uv_'+pol_names[pol_i] & subdir='grid_data'& END
     'weights_uv':BEGIN status_use.weights_uv[pol_i]=1 & path_add='_uv_weights_'+pol_names[pol_i] & subdir='grid_data'& END
     'grid_uv_model':BEGIN status_use.grid_uv_model[pol_i]=1 & path_add='_uv_model_'+pol_names[pol_i] & subdir='grid_data'& END
-    'mapfn':BEGIN status_use.mapfn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn'& END
+    'map_fn':BEGIN status_use.map_fn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn'& END
     'fhd_params':BEGIN status_use.fhd_params=1 & path_add='_fhd_params' & subdir='deconvolution'& END
     'fhd':BEGIN status_use.fhd=1 & path_add='_fhd' & subdir='deconvolution' & END 
     'hpx_cnv':BEGIN status_use.hpx_cnv=1 & path_add='_hpxcnv' & subdir='healpix' & END
@@ -55,7 +55,7 @@ ENDCASE
 IF ~Keyword_Set(name_error) THEN BEGIN
     path_use=filepath(base_name+path_add+'.sav',root=base_path,subdir=subdir)
     
-    IF Keyword_Set(restore) THEN BEGIN
+    IF Keyword_Set(restore) AND ~Keyword_Set(no_save) THEN BEGIN
         IF file_test(path_use) THEN param=getvar_savefile(path_use,var_name)
         RETURN
     ENDIF

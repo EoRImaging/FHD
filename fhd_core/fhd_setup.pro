@@ -33,8 +33,8 @@ IF Keyword_Set(deconvolve) THEN BEGIN
     IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
     IF size(transfer_mapfn,/type) EQ 7 THEN BEGIN
         fhd_save_io,status_mapfn,file_path_fhd=file_path_fhd,transfer=transfer_mapfn
-        IF Min(status_mapfn.mapfn[0:n_pol1-1]) LE 0 THEN mapfn_recalculate=1 ELSE mapfn_recalculate=0
-    ENDIF ELSE IF Min(status_str.mapfn[0:n_pol1-1]) LE 0 THEN mapfn_recalculate=1
+        IF Min(status_mapfn.map_fn[0:n_pol1-1]) LE 0 THEN mapfn_recalculate=1 ELSE mapfn_recalculate=0
+    ENDIF ELSE IF Min(status_str.map_fn[0:n_pol1-1]) LE 0 THEN mapfn_recalculate=1
     IF Min(status_str.grid_uv[0:n_pol1-1]) LE 0 THEN grid_recalculate=1
 ENDIF ELSE IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=0
 IF mapfn_recalculate GT 0 THEN grid_recalculate=1
