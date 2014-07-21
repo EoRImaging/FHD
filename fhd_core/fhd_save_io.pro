@@ -55,7 +55,7 @@ ENDCASE
 IF ~Keyword_Set(name_error) THEN BEGIN
     path_use=filepath(base_name+path_add+'.sav',root=base_path,subdir=subdir)
     
-    IF Keyword_Set(restore) AND ~Keyword_Set(no_save) THEN BEGIN
+    IF Keyword_Set(restore) THEN BEGIN
         IF file_test(path_use) THEN param=getvar_savefile(path_use,var_name)
         RETURN
     ENDIF

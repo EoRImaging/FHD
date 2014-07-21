@@ -49,7 +49,7 @@ ENDIF ELSE filter_name=''
 ; *_fhd.sav contains:
 ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization_arr,weights_arr,$
 ;    beam_base,beam_correction,ra_arr,dec_arr,astr
-fhd_save_io,status_str,var='fhd',/restore,file_path_fhd=file_path_fhd,path_use=path_use,/no_save
+fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,path_use=path_use,/no_save
 restore,path_use
 
 n_pol=fhd_params.npol
