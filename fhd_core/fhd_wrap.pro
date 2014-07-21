@@ -40,7 +40,7 @@ fhd_params=fhd_init(obs,cal,calibration_image_subtract=calibration_image_subtrac
 
 n_pol=fhd_params.npol
 
-IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,file_path_fhd,/restore_last) 
+IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
 
 ;set to fit each polarization independantly 
 ;(only flux is independant, all locations are from Stokes I). 
