@@ -78,6 +78,10 @@ IF Keyword_Set(status_save) THEN BEGIN
     dir_use=file_dirname(status_path)
     IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
     SAVE,status_str,filename=status_path+'.sav'
-    IF Keyword_Set(text) THEN TextFast,structure_to_text(status_str),/write,file_path=status_path
+ENDIF
+IF Keyword_Set(text) THEN BEGIN
+    dir_use=file_dirname(status_path)
+    IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
+    TextFast,structure_to_text(status_str),/write,file_path=status_path
 ENDIF
 END
