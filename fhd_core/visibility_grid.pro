@@ -83,6 +83,7 @@ n_samples=obs.n_time
 n_freq_use=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
 psf_dim3=psf_dim*psf_dim
+bi_use_reduced=bi_use mod nbaselines
 
 image_uv=Complexarr(dimension,elements)
 weights=Complexarr(dimension,elements)
@@ -240,7 +241,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
     
     vis_n=bin_n[bin_i[bi]]
-    baseline_inds=bi_use[(inds mod n_f_use) mod n_samples]
+    baseline_inds=bi_use_reduced[(inds mod n_f_use) mod nbaselines]
     group_id=group_arr[inds]
     group_max=Max(group_id)+1
     

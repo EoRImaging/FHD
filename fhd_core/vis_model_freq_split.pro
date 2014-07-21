@@ -45,7 +45,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
   
   IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(flag_arr) ELSE flag_arr_use=flag_arr
   IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
-  bi_use=where(flag_test)
+  bi_use=where(flag_test GT 0)
   
   IF N_Elements(n_avg) EQ 0 THEN BEGIN
     freq_bin_i2=(*obs.baseline_info).fbin_i
@@ -103,8 +103,8 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
       weights_holo=1 ;initialize
       IF nf_use EQ 0 THEN n_vis=0 ELSE $
         dirty_UV=visibility_grid(vis_ptr,flag_arr_use[pol_i],obs_out,0,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
-        polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
-        model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
+            polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
+            model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
       ;        IF nf_use EQ 0 THEN n_vis=0 ELSE IF Keyword_Set(inds_patch) THEN $
       ;            dirty_UV=visibility_patch_grid(vis_ptr,flag_arr_use[pol_i],obs_out,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
       ;                polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
