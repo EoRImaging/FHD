@@ -233,14 +233,6 @@ case version of
       uvfits_subversion=4
       time_cut=[2,-2]
    end
-   'nb_test_new_cotter_2': begin
-      uvfits_version=3
-      uvfits_subversion=1
-      ;n_avg=4
-      ;rerun without averaging for cubes
-      n_avg=1
-      snapshot_recalculate=1
-   end
    'apb_test_single_compressed': begin
       uvfits_version=3
       uvfits_subversion=5
@@ -260,6 +252,14 @@ case version of
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
+   'nb_test_new_cotter_2': begin
+      uvfits_version=3
+      uvfits_subversion=1
+      ;n_avg=4
+      ;rerun without averaging for cubes
+      n_avg=1
+      snapshot_recalculate=1
+   end
 
 
 
