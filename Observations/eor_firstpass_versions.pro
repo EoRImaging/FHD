@@ -248,6 +248,12 @@ case version of
       uvfits_subversion=6
       n_avg=4
    end
+   'apb_test_single_compressed_transfer_cal': begin
+      uvfits_version=3
+      uvfits_subversion=5
+      n_avg=4
+      transfer_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_test_single_uncompressed/1061316296_cal.sav'
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
