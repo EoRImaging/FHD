@@ -1,6 +1,6 @@
 FUNCTION fhd_source_detect,obs,fhd,jones,source_find_image,image_I_flux=image_I_flux,image_Q_flux=image_Q_flux,$
     image_U_flux=image_U_flux,image_V_flux=image_V_flux,beam_arr=beam_arr,beam_corr_avg=beam_corr_avg,$
-    beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,$
+    beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,detection_threshold=detection_threshold,$
     model_I_image=model_I_image,_Extra=extra
 ;NOTE: if supplied, model_I_image should be in the same units and weighting scheme as source_find_image
 
@@ -47,11 +47,24 @@ source_find_image-=flux_offset
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 source_find_image*=source_mask1
 source_flux=Max(source_find_image*source_mask0,source_i)
-flux_ref=source_find_image[source_i]*add_threshold
-additional_i1=where(source_find_image GE flux_ref,n_sources1)
-additional_i2=where((source_find_image GE 5.*converge_check) AND (source_find_image GE source_find_image[source_i]/2.),n_sources2)
-additional_i=(n_sources1 GT n_sources2) ? additional_i1:additional_i2 
-n_sources=n_sources1>n_sources2
+flux_ref1=source_find_image[source_i]*add_threshold
+flux_ref2=source_find_image[source_i]*0.5
+
+additional_i1=where(source_find_image GE flux_ref1,n_sources1)
+additional_i2=where((source_find_image GE 5.*converge_check) AND (source_find_image GE flux_ref2),n_sources2)
+IF n_sources1 GT n_sources2 THEN BEGIN
+    additional_i=additional_i1
+    detection_threshold=flux_ref1
+    n_sources=n_sources1
+ENDIF ELSE BEGIN
+    additional_i=additional_i2
+    detection_threshold=flux_ref2
+    n_sources=n_sources2
+ENDELSE
+
+;output={n_sources1:n_sources1,n_sources2:n_sources2,source_find_image:source_find_image,beam_mask:beam_mask,source_mask:source_mask,converge_check:converge_check}
+;save,output,filename=fhd.joint_obs+'_test_output.sav'
+
 additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
 add_x=additional_i mod dimension
 add_y=Float(Floor(additional_i/dimension))

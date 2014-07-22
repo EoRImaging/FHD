@@ -241,6 +241,22 @@ case version of
       n_avg=1
       snapshot_recalculate=1
    end
+   'apb_test_single_compressed': begin
+      uvfits_version=3
+      uvfits_subversion=5
+      n_avg=4
+   end
+   'apb_test_single_uncompressed': begin
+      uvfits_version=3
+      uvfits_subversion=6
+      n_avg=4
+   end
+   'apb_test_single_compressed_transfer_cal': begin
+      uvfits_version=3
+      uvfits_subversion=5
+      n_avg=4
+      transfer_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_test_single_uncompressed/1061316296_cal.sav'
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
@@ -253,7 +269,6 @@ endcase
 SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
   STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-vis_file_list=str_replace(vis_file_list,'/mwa-','/eor-') ; temporary because cluster
 undefine,uvfits_version ; don't need these passed further
 undefine,uvfits_subversion
 undefine,obs_id

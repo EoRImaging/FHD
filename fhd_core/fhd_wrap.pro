@@ -65,14 +65,15 @@ IF Keyword_Set(calibration_image_subtract) THEN BEGIN
 ENDIF
 
 SAVE,fhd,filename=file_path_fhd+'_fhd_params.sav',/compress
-fhd_log_settings,file_path_fhd,fhd=fhd,obs=obs,psf=psf ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
+IF ~Keyword_Set(silent) THEN fhd_log_settings,file_path_fhd,fhd=fhd,obs=obs,psf=psf ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
 
 fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,model_uv_arr=model_uv_arr,$
     file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,_Extra=extra
-        
+
+fhd_log_settings,file_path_fhd,fhd=fhd,obs=obs,psf=psf ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
 ;compression reduces the file size by 50%, but takes 5-30 seconds longer
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,weights_arr,$
     beam_base,beam_correction,astr,filename=file_path_fhd+'_fhd.sav',/compress
