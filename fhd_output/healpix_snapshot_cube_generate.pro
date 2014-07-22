@@ -13,7 +13,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   IF Keyword_Set(split_ps_export) THEN cube_name=['even_cube','odd_cube'] $
     ELSE cube_name='cube'
   
-  IF N_Elements(obs_in) EQ 0 THEN fhd_save_io,status_str,obs_in,var='obs',/restore,file_path_fhd=file_path_fhd
+  IF N_Elements(obs_in) EQ 0 THEN fhd_save_io,status_str,obs_in,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
   n_pol=obs_in.n_pol
   n_freq=obs_in.n_freq
   
@@ -23,9 +23,9 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     IF cube_test GT 0 THEN RETURN
   ENDIF
   
-  IF N_Elements(psf_in) EQ 0 THEN fhd_save_io,status_str,psf_in,var='psf',/restore,file_path_fhd=file_path_fhd
-  IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
-  IF N_Elements(cal) EQ 0 THEN IF status_str.cal GT 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd
+  IF N_Elements(psf_in) EQ 0 THEN fhd_save_io,status_str,psf_in,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+  IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+  IF N_Elements(cal) EQ 0 THEN IF status_str.cal GT 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
   
   IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/48.)) ;default of 48 output frequency bins
   n_freq_use=Floor(n_freq/n_avg)
@@ -69,14 +69,14 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,antenna=antenna_out,cal=cal,cmd_args=cmd_args,/overwrite
   undefine_fhd,antenna_out
   
-  IF N_Elements(flag_arr) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='flag_arr',/restore,file_path_fhd=file_path_fhd $
+  IF N_Elements(flag_arr) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
     ELSE flag_arr_use=Pointer_copy(flag_arr)
   flags_use=Ptrarr(n_pol,/allocate)
   
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
   IF N_Elements(*vis_arr[0]) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i
+        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra
         vis_arr[pol_i]=vis_ptr
     ENDFOR
   ENDIF
@@ -105,7 +105,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     IF Min(status_str.vis_model[0:n_pol-1]) GT 0 THEN BEGIN
         model_flag=1
         FOR pol_i=0,n_pol-1 DO BEGIN
-            fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i
+            fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra
             vis_model_arr[pol_i]=vis_model_ptr
         ENDFOR 
     ENDIF
@@ -181,11 +181,11 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         FOR fi=0L,n_freq_use-1 DO beam_cube[n_hpx*fi]=Temporary(*beam_hpx_arr[pol_i,fi])
         
         ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
-        fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save 
+        fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save,_Extra=extra 
         save,filename=path_use,/compress,dirty_cube,model_cube,weights_cube,variance_cube,res_cube,beam_cube,$
             obs,nside,hpx_inds,n_avg
         ;call fhd_save_io a second time to update the status structure now that the file has actually been written
-        fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force 
+        fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force,_Extra=extra 
         dirty_cube=(model_cube=(res_cube=(weights_cube=(variance_cube=(beam_cube=0)))))
     ENDFOR
     undefine_fhd,dirty_hpx_arr,model_hpx_arr,residual_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr

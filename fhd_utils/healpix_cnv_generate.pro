@@ -7,11 +7,11 @@ IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0
 ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
     IF ~Keyword_Set(silent) THEN print,'Saved Healpix grid map restored'
-    fhd_save_io,status_str,hpx_cnv,var='hpx_cnv',/restore,file_path_fhd=file_path_fhd
+    fhd_save_io,status_str,hpx_cnv,var='hpx_cnv',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 ;    restore,file_path_fhd+'_hpxcnv'+'.sav'
     nside=hpx_cnv.nside
     RETURN,hpx_cnv
-ENDIF ELSE IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd
+ENDIF ELSE IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 t00=Systime(1)
 astr=obs.astr
@@ -144,6 +144,6 @@ IF tag_exist(obs,'healpix') THEN BEGIN
     obs.healpix.n_zero=Long(n_zero_hpx)
 ENDIF
 
-fhd_save_io,status_str,hpx_cnv,var='hpx_cnv',/compress,no_save=no_save,file_path_fhd=file_path_fhd
+fhd_save_io,status_str,hpx_cnv,var='hpx_cnv',/compress,no_save=no_save,file_path_fhd=file_path_fhd,_Extra=extra
 IF Keyword_Set(pointer_return) THEN RETURN,Ptr_new(hpx_cnv) ELSE RETURN,hpx_cnv
 END

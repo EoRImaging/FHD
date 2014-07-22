@@ -5,18 +5,13 @@ FUNCTION vis_source_model,source_list,obs,status_str,psf,params,flag_ptr,cal,jon
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
-flags_filepath=file_path_fhd+'_flags.sav'
-;vis_filepath=file_path_fhd+'_vis.sav'
-params_filepath=file_path_fhd+'_params.sav'
-psf_filepath=file_path_fhd+'_beams.sav'
-obs_filepath=file_path_fhd+'_obs.sav'
 IF N_Elements(silent) EQ 0 THEN silent=1
 
-IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(flag_ptr) EQ 0 THEN fhd_save_io,status_str,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(flag_ptr) EQ 0 THEN fhd_save_io,status_str,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 heap_gc
 

@@ -27,10 +27,10 @@ reverse_image=1   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=reverse_image;1 paper 3 memo
 label_spacing=1.
 
-IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,file_path_fhd=file_path_fhd,silent=silent,timing=t_beam,/restore,_Extra=extra)
-IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
@@ -42,7 +42,7 @@ IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     image_uv_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,grid_uv,var='grid_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        fhd_save_io,status_str,grid_uv,var='grid_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
         *image_uv_arr[pol_i]=grid_uv
     ENDFOR
 ENDIF
@@ -51,7 +51,7 @@ weights_flag=1
 IF N_Elements(weights_arr) EQ 0 THEN BEGIN
     weights_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,weights_uv,var='weights_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        fhd_save_io,status_str,weights_uv,var='weights_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
         *weights_arr[pol_i]=weights_uv
     ENDFOR
 ENDIF
@@ -69,7 +69,7 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO BEGIN
-            fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+            fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
             *model_uv_arr[pol_i]=grid_uv_model
         ENDFOR
     ENDIF ELSE model_flag=0

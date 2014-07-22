@@ -28,19 +28,19 @@ compile_opt idl2,strictarrsubs
 
 IF Keyword_Set(!Journal) THEN journal
 IF Keyword_Set(log_store) THEN journal,file_path_fhd+'_fhd_log.txt'
-IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF size(cal,/type) NE 8 THEN $
-    IF status_str.cal GT 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd $ 
+    IF status_str.cal GT 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra $ 
         ELSE cal=fhd_struct_init_cal(obs,params)
 
-IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 fhd_params=fhd_init(obs,cal,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,file_path_fhd=file_path_fhd,_Extra=extra)
 
 n_pol=fhd_params.npol
 
-IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 ;set to fit each polarization independantly 
 ;(only flux is independant, all locations are from Stokes I). 
@@ -48,14 +48,14 @@ IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     image_uv_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,grid_uv,var='grid_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        fhd_save_io,status_str,grid_uv,var='grid_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
         *image_uv_arr[pol_i]=grid_uv
     ENDFOR
 ENDIF
 IF N_Elements(weights_arr) EQ 0 THEN BEGIN
     weights_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,weights_uv,var='weights_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        fhd_save_io,status_str,weights_uv,var='weights_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
         *weights_arr[pol_i]=weights_uv
     ENDFOR
 ENDIF
@@ -64,7 +64,7 @@ IF Keyword_Set(transfer_mapfn) THEN print,String(format='("Transferring mapfn fr
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-        fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,/restore,transfer=transfer_mapfn,obs=obs
+        fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,/restore,transfer=transfer_mapfn,obs=obs,_Extra=extra
         ;IMPORTANT: this approach of restoring the map_fn uses the least memory
 ;        print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
 ;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
@@ -76,14 +76,14 @@ IF Keyword_Set(calibration_image_subtract) THEN BEGIN
         IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
             model_uv_arr=Ptrarr(n_pol,/allocate)
             FOR pol_i=0,n_pol-1 DO BEGIN
-                fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+                fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
                 *model_uv_arr[pol_i]=grid_uv_model
             ENDFOR
         ENDIF
     ENDIF
 ENDIF
 
-fhd_save_io,status_str,fhd_params,var='fhd_params',/compress,file_path_fhd=file_path_fhd
+fhd_save_io,status_str,fhd_params,var='fhd_params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 IF ~Keyword_Set(silent) THEN fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,psf=psf ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
 
 fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
@@ -94,10 +94,10 @@ fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,
 
 fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,psf=psf ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
 ;compression reduces the file size by 50%, but takes 5-30 seconds longer
-fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save ;call first to obtain the correct path. Will NOT update status structure yet
+fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra ;call first to obtain the correct path. Will NOT update status structure yet
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,weights_arr,$
     beam_base,beam_correction,astr,filename=fhd_sav_filepath,/compress
-fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,/force ;call a second time to update the status structure now that the file has actually been written
+fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,/force,_Extra=extra ;call a second time to update the status structure now that the file has actually been written
 
 IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_arr) THEN BEGIN

@@ -21,9 +21,9 @@ image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(output_dir) EQ 0 THEN file_mkdir,output_dir
 
-IF not Keyword_Set(obs) THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
-IF not Keyword_Set(fhd_params) THEN fhd_save_io,status_str,fhd_params,var='fhd_params',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
+IF not Keyword_Set(obs) THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF not Keyword_Set(fhd_params) THEN fhd_save_io,status_str,fhd_params,var='fhd_params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF tag_exist(fhd_params,'galaxy_subtract') THEN galaxy_model_fit=fhd_params.galaxy_subtract 
@@ -49,7 +49,7 @@ ENDIF ELSE filter_name=''
 ; *_fhd.sav contains:
 ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization_arr,weights_arr,$
 ;    beam_base,beam_correction,ra_arr,dec_arr,astr
-fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,path_use=path_use,/no_save
+fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,path_use=path_use,/no_save,_Extra=extra
 restore,path_use
 
 n_pol=fhd_params.npol

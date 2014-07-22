@@ -167,7 +167,7 @@ IF data_flag LE 0 THEN BEGIN
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
-        fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd
+        fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
     IF N_Elements(vis_model_arr) EQ 0 THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
@@ -180,8 +180,8 @@ IF data_flag LE 0 THEN BEGIN
                 print,'Flagging anomalous data'
                 vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
             ENDIF
-        ENDIF ELSE fhd_save_io,0,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,transfer=transfer_mapfn 
-        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd
+        ENDIF ELSE fhd_save_io,0,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,transfer=transfer_mapfn,_Extra=extra 
+        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         n0=N_Elements(*flag_arr[0])
         n1=N_Elements(*flag_arr1[0])
         IF n1 GT n0 THEN BEGIN
@@ -193,7 +193,7 @@ IF data_flag LE 0 THEN BEGIN
                 (*flag_arr1[pol_i])[0:nf0-1,0:nb0-1]*=*flag_arr[pol_i]
             ENDFOR
             flag_arr=flag_arr1
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd
+            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         ENDIF
         IF n0 GT n1 THEN BEGIN
             ;If less data, return with an error!
@@ -204,9 +204,9 @@ IF data_flag LE 0 THEN BEGIN
         IF Keyword_Set(flag_visibilities) THEN BEGIN
             print,'Flagging anomalous data'
             vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd
+            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd
+            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     ENDELSE
     
     vis_noise_calc,obs,vis_arr,flag_arr
@@ -224,8 +224,8 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
     ENDIF
     
-    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd
-    fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd
+    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+    fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite
     
     IF obs.n_vis EQ 0 THEN BEGIN
@@ -240,7 +240,7 @@ IF data_flag LE 0 THEN BEGIN
         auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
         auto_corr[pol_i]=Ptr_new(auto_vals)
     ENDFOR
-    fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd,obs=obs
+    fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd,obs=obs,_Extra=extra
     
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
@@ -271,13 +271,13 @@ IF data_flag LE 0 THEN BEGIN
                 model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
             IF Keyword_Set(error) THEN RETURN
             t_grid[pol_i]=t_grid0
-            fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs
-            fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs
+            fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
+            fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
 
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_uv_arr[pol_i]=Temporary(grid_uv)
             IF Keyword_Set(return_cal_visibilities) THEN BEGIN
-                fhd_save_io,status_str,model_return,var='grid_uv_model',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs
+                fhd_save_io,status_str,model_return,var='grid_uv_model',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
                 *model_uv_holo[pol_i]=Temporary(model_return)
                 model_return=1
             ENDIF
@@ -294,8 +294,8 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
 ENDIF
 
-IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd
-IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
+IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'

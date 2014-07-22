@@ -1,6 +1,6 @@
 PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,var_name=var_name,$
     text=text,restore=restore,obs=obs,reset=reset,force_set=force_set,no_save=no_save,path_use=path_use,$
-    transfer_filename=transfer_filename
+    transfer_filename=transfer_filename,compatibility_mode=compatibility_mode
 
 IF ~Keyword_Set(file_path_fhd) THEN RETURN
 
@@ -52,6 +52,13 @@ CASE var_name OF ;listed in order typically generated
     ELSE:name_error=1
 ENDCASE
 
+IF Keyword_Set(compatibility_mode) THEN BEGIN
+    subdir=''
+    CASE var_name OF
+        'fhd_params':var_name='fhd'
+        ELSE:
+    ENDCASE
+ENDIF
 IF ~Keyword_Set(name_error) THEN BEGIN
     path_use=filepath(base_name+path_add+'.sav',root=base_path,subdir=subdir)
     

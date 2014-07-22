@@ -29,7 +29,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
   IF Min(Ptr_valid(vis_data_arr)) EQ 0 THEN BEGIN
     vis_data_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
         vis_data_arr[pol_i]=vis_ptr
     ENDFOR
   ENDIF
@@ -37,7 +37,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
     IF Min(status_str.vis_model[0:n_pol-1]) GT 0 THEN BEGIN
       vis_model_arr=Ptrarr(n_pol)
       FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
         vis_model_arr[pol_i]=vis_model_ptr
       ENDFOR
     ENDIF
