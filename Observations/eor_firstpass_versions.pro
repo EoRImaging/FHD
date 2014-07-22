@@ -235,11 +235,15 @@ case version of
    end
    'nb_test_new_cotter_2': begin
       uvfits_version=3
-      uvfits_version=3
-      n_avg=4
+      uvfits_subversion=1
+      ;n_avg=4
+      ;rerun without averaging for cubes
+      n_avg=1
+      snapshot_recalculate=1
    end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
+
 
 
 
