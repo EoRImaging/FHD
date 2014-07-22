@@ -203,6 +203,14 @@ IF Keyword_Set(data_flag) THEN BEGIN
         save,cal,filename=cal_filepath,/compress
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
+    
+    IF Keyword_Set(model_visibilities) THEN BEGIN
+    
+        vis_model_arr=vis_source_model(cal.source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,$
+            timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_ptr,_Extra=extra) 
+        
+    ENDIF
+    
     IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     
     IF min(Ptr_valid(vis_model_ptr)) EQ 0 THEN return_cal_visibilities=0 ;set if model visibilities not actually returned
