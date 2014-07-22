@@ -1,7 +1,8 @@
-FUNCTION fhd_struct_init_jones,obs,status_str,jones_in,file_path_fhd=file_path_fhd,mask=mask,restore_last=restore_last,update_last=update_last
+FUNCTION fhd_struct_init_jones,obs,status_str,jones_in,file_path_fhd=file_path_fhd,mask=mask,$
+    restore_last=restore_last,update_last=update_last,_Extra=extra
 
 IF Keyword_Set(restore_last) THEN BEGIN
-    fhd_save_io,status_str,jones,var='jones',file_path_fhd=file_path_fhd,/restore
+    fhd_save_io,status_str,jones,var='jones',file_path_fhd=file_path_fhd,/restore,_Extra=extra
     IF Keyword_Set(jones) THEN RETURN,jones
 ENDIF
 dimension=obs.dimension
@@ -81,6 +82,6 @@ ENDFOR
 
 jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
 ;jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_corr,Jinv:p_map}
-fhd_save_io,status_str,jones,var='jones',/compress,file_path_fhd=file_path_fhd
+fhd_save_io,status_str,jones,var='jones',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 RETURN,jones
 END

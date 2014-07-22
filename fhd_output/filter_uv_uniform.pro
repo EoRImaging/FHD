@@ -9,7 +9,7 @@ IF Keyword_Set(return_name_only) THEN RETURN,image_uv
 
 IF ~(Keyword_Set(obs) AND Keyword_Set(psf) AND Keyword_Set(params)) THEN BEGIN
     IF Keyword_Set(file_path_fhd) THEN BEGIN
-        vis_count=visibility_count(obs,psf,params,file_path_fhd=file_path_fhd) 
+        vis_count=visibility_count(obs,psf,params,file_path_fhd=file_path_fhd,_Extra=extra) 
     ENDIF ELSE BEGIN
         IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
         vis_count=weights/Min(weights[where(weights GT 0)])
