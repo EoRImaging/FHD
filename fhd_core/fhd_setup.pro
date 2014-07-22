@@ -40,8 +40,8 @@ ENDIF ELSE IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=0
 IF mapfn_recalculate GT 0 THEN grid_recalculate=1
 IF grid_recalculate GT 0 THEN data_flag=0
 
-IF Keyword_Set(force_data) THEN data_flag=1
-IF Keyword_Set(force_no_data) THEN data_flag=0
+IF Keyword_Set(force_data) THEN data_flag=0
+IF Keyword_Set(force_no_data) THEN data_flag=1
     
 RETURN,data_flag
 END
