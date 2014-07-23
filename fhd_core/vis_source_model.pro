@@ -62,7 +62,7 @@ IF N_Elements(vis_model_ptr) LT n_pol THEN vis_model_ptr=intarr(n_pol)
 
 vis_dimension=Float(nbaselines*n_samples)
 n_sources=N_Elements(source_list)
-IF N_Elements(cal) NE 0 THEN BEGIN
+IF size(cal,/type) EQ 8 THEN BEGIN
     cal.n_cal_src=n_sources
     cal.galaxy_cal=Keyword_Set(galaxy_calibrate)
 ENDIF
