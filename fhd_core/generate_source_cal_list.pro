@@ -61,6 +61,7 @@ ENDELSE
 
 IF n_use GT 0 THEN BEGIN
     catalog=catalog[i_use]
+    IF N_Elements(spectral_index) GT 1 THEN spectral_index=spectral_index[i_use]
     source_list=catalog
 ;    source_list.ra=catalog.ra
 ;    source_list.dec=catalog.dec

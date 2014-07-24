@@ -211,7 +211,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN $
                 model_source_list=source_list_append(obs,model_source_list,cal.source_list,/exclude)
         ENDIF
-        vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_ptr,0,jones,model_uv_arr=model_uv_arr,$
+        vis_model_arr=vis_source_model(model_source_list,obs,psf,params,flag_ptr,0,jones,model_uv_arr=model_uv_arr,$
             timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_ptr,calibration_flag=0,_Extra=extra) 
         
     ENDIF
