@@ -10,7 +10,7 @@ IF Keyword_Set(obs) THEN pol_names=obs.pol_names ;ELSE pol_names=['XX','YY','XY'
 IF Keyword_Set(transfer_filename) THEN base_name=transfer_filename ELSE base_name=file_basename(file_path_fhd)
 base_path=file_dirname(file_path_fhd)
 status_path=filepath(base_name+'_status',root=base_path,subdir='metadata')
-IF not Keyword_Set(status_str) THEN BEGIN
+IF size(status_str,/type) NE 8 THEN BEGIN
     IF not file_test(status_path+'.sav') THEN BEGIN
         no_save=1
         reset=1
@@ -18,16 +18,16 @@ IF not Keyword_Set(status_str) THEN BEGIN
 ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
-IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flag_arr:0,autos:0,vis:intarr(4),vis_model:intarr(4),$
+IF size(status_str,/type) EQ 8  THEN status_use=status_str
+IF Keyword_Set(reset) THEN status_use={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flag_arr:0,autos:0,vis:intarr(4),vis_model:intarr(4),$
     grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),map_fn:intarr(4),fhd:0,fhd_params:0,$
     hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
 ;
-IF N_Elements(status_str) EQ 0 THEN status_str=getvar_savefile(status_path+'.sav','status_str')
-
-status_use=status_str    
+IF size(status_use,/type) NE 8  THEN status_use=getvar_savefile(status_path+'.sav','status_str')
+  
 IF N_Elements(var_name) EQ 0 THEN var_name=''
 CASE var_name OF ;listed in order typically generated
-    'status':BEGIN path_add='status' & subdir='metadata' & END
+    'status':BEGIN path_add='_status' & subdir='metadata' & END
     'hdr':BEGIN status_use.hdr=1 & path_add='_hdr' & subdir='metadata'& END
     'obs':BEGIN status_use.obs=1 & path_add='_obs' & subdir='metadata'& END
     'params':BEGIN status_use.params=1 & path_add='_params' & subdir='metadata'& END
