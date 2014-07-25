@@ -17,11 +17,11 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   n_pol=obs_in.n_pol
   n_freq=obs_in.n_freq
   
-  IF not Keyword_Set(snapshot_recalculate) THEN BEGIN
+;  IF not Keyword_Set(snapshot_recalculate) THEN BEGIN ;Now set in fhd_setup through status_str
     IF Keyword_Set(split_ps_export) THEN cube_test=Min(status_str.hpx_even[0:n_pol-1])<Min(status_str.hpx_odd[0:n_pol-1]) $
         ELSE cube_test=Min(status_str.healpix_cube[0:n_pol-1])
     IF cube_test GT 0 THEN RETURN
-  ENDIF
+;  ENDIF
   
   IF N_Elements(psf_in) EQ 0 THEN fhd_save_io,status_str,psf_in,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
   IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra

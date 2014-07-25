@@ -27,7 +27,7 @@ IF size(status_use,/type) NE 8  THEN status_use=getvar_savefile(status_path+'.sa
   
 IF N_Elements(var_name) EQ 0 THEN var_name=''
 CASE var_name OF ;listed in order typically generated
-    'status':BEGIN path_add='_status' & subdir='metadata' & END
+    'status_str':BEGIN path_add='_status' & subdir='metadata' & END
     'hdr':BEGIN status_use.hdr=1 & path_add='_hdr' & subdir='metadata'& END
     'obs':BEGIN status_use.obs=1 & path_add='_obs' & subdir='metadata'& END
     'params':BEGIN status_use.params=1 & path_add='_params' & subdir='metadata'& END
@@ -46,9 +46,9 @@ CASE var_name OF ;listed in order typically generated
     'fhd_params':BEGIN status_use.fhd_params=1 & path_add='_fhd_params' & subdir='deconvolution'& END
     'fhd':BEGIN status_use.fhd=1 & path_add='_fhd' & subdir='deconvolution' & END 
     'hpx_cnv':BEGIN status_use.hpx_cnv=1 & path_add='_hpxcnv' & subdir='healpix' & END
-    'cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube' & subdir='healpix' & END
-    'even_cube':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube' & subdir='healpix' & END
-    'odd_cube':BEGIN status_use.hpx_odd[pol_i]=1 & path_add='_odd_cube' & subdir='healpix' & END
+    'cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube'+pol_names[pol_i] & subdir='healpix' & END
+    'even_cube':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube'+pol_names[pol_i] & subdir='healpix' & END
+    'odd_cube':BEGIN status_use.hpx_odd[pol_i]=1 & path_add='_odd_cube'+pol_names[pol_i] & subdir='healpix' & END
     ELSE:name_error=1
 ENDCASE
 
@@ -56,6 +56,9 @@ IF Keyword_Set(compatibility_mode) THEN BEGIN
     subdir=''
     CASE var_name OF
         'fhd_params':var_name='fhd'
+        'cube': path_add='_cube'
+        'even_cube': path_add='_even_cube'
+        'odd_cube': path_add='_odd_cube'
         ELSE:
     ENDCASE
 ENDIF
