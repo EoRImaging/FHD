@@ -39,7 +39,8 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
-    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,_Extra=extra
+    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
+    model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -170,7 +171,19 @@ IF data_flag LE 0 THEN BEGIN
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
-    IF N_Elements(vis_model_arr) EQ 0 THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
+    
+    IF Keyword_Set(model_visibilities) THEN BEGIN
+        IF Keyword_Set(model_catalog_file_path) THEN BEGIN
+            model_source_list=generate_source_cal_list(obs,psf,catalog_path=model_catalog_file_path,/model_visibilities,_Extra=extra) 
+            IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN $
+                model_source_list=source_list_append(obs,model_source_list,cal.source_list,/exclude)
+        ENDIF
+        vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr,$
+            timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_ptr,calibration_flag=0,_Extra=extra) 
+        
+    ENDIF
+    
+    IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     
     IF min(Ptr_valid(vis_model_arr)) EQ 0 THEN return_cal_visibilities=0 ;set if model visibilities not actually returned
     IF Keyword_Set(transfer_mapfn) THEN BEGIN

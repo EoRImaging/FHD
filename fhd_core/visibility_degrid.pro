@@ -1,6 +1,7 @@
 FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
-    complex=complex,double=double,fill_model_vis=fill_model_vis,_Extra=extra
+    complex=complex,double=double,fill_model_vis=fill_model_vis,$
+    vis_input_ptr=vis_input_ptr,_Extra=extra
 t0=Systime(1)
 heap_gc
 
@@ -198,7 +199,13 @@ IF n_conj GT 0 THEN BEGIN
     visibility_array[*,conj_i]=Conj(visibility_array[*,conj_i])
 ENDIF
 
+IF Ptr_valid(vis_input_ptr) THEN IF N_Elements(*vis_input_ptr) EQ N_Elements(visibility_array) THEN BEGIN
+    vis_return=vis_input_ptr
+    *vis_return+=Temporary(visibility_array)
+ENDIF
+IF ~Ptr_valid(vis_return) THEN vis_return=Ptr_new(visibility_array,/no_copy)
+
 timing=Systime(1)-t0
 IF not Keyword_Set(silent) THEN print,timing,t1,t2,t3,t4,t5
-RETURN,Ptr_new(visibility_array)
+RETURN,vis_return
 END
