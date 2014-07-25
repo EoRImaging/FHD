@@ -19,10 +19,8 @@ inds_A=Rebin(Lindgen(n_freq),n_freq,n_baselines,/sample)+Rebin(transpose(tile_A_
 inds_B=Rebin(Lindgen(n_freq),n_freq,n_baselines,/sample)+Rebin(transpose(tile_B_i)*n_freq,n_freq,n_baselines)
 
 IF N_Elements(pol_i) EQ 0 THEN BEGIN
-    IF Keyword_Set(preserve_original) THEN BEGIN
-        vis_cal_ptr=Ptrarr(n_pol_vis,/allocate)
-        FOR pol_i=0,n_pol_vis-1 DO *vis_cal_ptr[pol_i]=*vis_ptr[pol_i]
-    ENDIF ELSE vis_cal_ptr=vis_ptr
+    IF Keyword_Set(preserve_original) THEN vis_cal_ptr=Pointer_copy(vis_ptr) $
+        ELSE vis_cal_ptr=vis_ptr
     
     FOR pol_i=0,n_pol_vis-1 DO BEGIN
         gain_arr1=*gain_ptr[gain_pol_arr1[pol_i]]
