@@ -40,7 +40,7 @@ PRO uvfits2fhd,file_path_vis,export_images=export_images,cleanup=cleanup,recalcu
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,$
     vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
-    model_visibilities=model_visibilities,_Extra=extra
+    model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -211,7 +211,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
             IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN $
                 model_source_list=source_list_append(obs,model_source_list,cal.source_list,/exclude)
         ENDIF
-        vis_model_arr=vis_source_model(model_source_list,obs,psf,params,flag_ptr,0,jones,model_uv_arr=model_uv_arr,$
+        vis_model_arr=vis_source_model(model_source_list,obs,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr,$
             timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_ptr,calibration_flag=0,_Extra=extra) 
         
     ENDIF

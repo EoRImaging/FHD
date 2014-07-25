@@ -9,7 +9,7 @@ dup_flag=lonarr(n1)-1
 degpix=obs.degpix
 ang_threshold=degpix/100.
 FOR si1=0L,n1-1 DO BEGIN
-    dup_flag=Min(where(Abs(angle_difference(source_list2.dec,source_list2.RA,$
+    dup_flag[si1]=Min(where(Abs(angle_difference(source_list2.dec,source_list2.RA,$
         source_list1[si1].dec,source_list1[si1].RA,/degree,/nearest)) LT ang_threshold))
 ENDFOR
 
