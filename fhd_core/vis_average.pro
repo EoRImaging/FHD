@@ -33,7 +33,7 @@ IF Keyword_Set(vis_freq_average) THEN BEGIN
         FOR fi=0L,n_freq-1 DO BEGIN
             (*vis_arr[pol_i])[fi,*]=Total(vis_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*]$
                 *flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)$
-                /Total(flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)
+                *weight_invert(Total(flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1))
         ENDFOR
         vis_old=0 ;free memory
         *flag_arr[pol_i]=Fltarr(n_freq,n_baseline_time)
