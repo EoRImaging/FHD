@@ -94,7 +94,7 @@ CASE size(initial_calibration,/type) OF
 ENDCASE
 
 vis_model_ptr=vis_source_model(cal.source_list,obs,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,$
-    timing=model_timing,silent=silent,error=error,_Extra=extra)    
+    timing=model_timing,silent=silent,error=error,/calibration_flag,_Extra=extra)    
 t1=Systime(1)-t0_0
 
 IF Keyword_Set(error) THEN BEGIN
