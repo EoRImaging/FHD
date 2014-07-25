@@ -249,6 +249,21 @@ case version of
       n_avg=4
       transfer_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_test_single_uncompressed/1061316296_cal.sav'
    end
+   'apb_test_fhd_2':begin
+      deconvolve=0 ; temporarily to bypass fhd
+      return_decon_visibilities=1
+      max_sources=30000.
+      pad_uv_image=1.
+      gain_factor=.2
+      uvfits_version=3
+      uvfits_subversion=1
+      time_cut=[2,-2]
+      vis_freq_average=2
+
+      snapshot_healpix_export=0
+      dimension=3072
+      FoV=80.
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 

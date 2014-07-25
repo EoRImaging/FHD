@@ -14,17 +14,19 @@ end_delimiter='##END'
 filler='##'
 max_len=132
 
-main_insert=Strarr(2,4) +filler
+main_insert=Strarr(2,5) +filler
 main_insert[1,0]+=delimiter
-main_insert[0,*]=[main_delimiter,'Calling program','Machine','User']
+main_insert[0,*]=[main_delimiter,'Calling program','Machine','User','Date']
 call_name=scope_traceback()
 IF N_Elements(call_name) GT 1 THEN call_name=call_name[1] ELSE call_name=call_name[0]
 main_insert[1,1]=(Strsplit(call_name,'<',/extract))[0]
 login=get_login_info()
 machine=StrCompress(login.machine_name,/remove_all)
 user=StrCompress(login.user_name,/remove_all)
+date=Systime()
 main_insert[1,2]=machine
 main_insert[1,3]=user
+main_insert[1,4]=date
 
 info_out=main_insert
 ;info_out=[[main_delimiter,filler],[main_insert,filler],[obs_delimiter,filler],[psf_delimiter,filler],$
