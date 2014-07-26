@@ -179,13 +179,13 @@ IF data_flag LE 0 THEN BEGIN
                 model_source_list=source_list_append(obs,model_source_list,cal.source_list,/exclude)
         ENDIF
         vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr,$
-            timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_ptr,calibration_flag=0,_Extra=extra) 
+            timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
         
     ENDIF
     
-    IF N_Elements(vis_model_ptr) EQ 0 THEN vis_model_ptr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
+    IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
+    model_flag=min(Ptr_valid(vis_model_arr))
     
-    IF min(Ptr_valid(vis_model_arr)) EQ 0 THEN return_cal_visibilities=0 ;set if model visibilities not actually returned
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
         flag_arr1=flag_arr
         IF file_basename(file_path_fhd) EQ transfer_mapfn THEN BEGIN 
@@ -258,8 +258,8 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
         vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
-        IF Keyword_Set(return_cal_visibilities) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
-        t_save=Systime(1)-t_save0
+        IF Keyword_Set(model_flag) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+        
         IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
     ENDIF
         
@@ -273,10 +273,10 @@ IF data_flag LE 0 THEN BEGIN
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
         
-        IF Keyword_Set(return_cal_visibilities) THEN model_uv_holo=Ptrarr(n_pol,/allocate)
+        IF Keyword_Set(model_flag) THEN model_uv_holo=Ptrarr(n_pol,/allocate)
         IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
         FOR pol_i=0,n_pol-1 DO BEGIN
-            IF Keyword_Set(return_cal_visibilities) THEN model_return=return_cal_visibilities
+            IF Keyword_Set(model_flag) THEN model_return=1
             IF Keyword_Set(snapshot_healpix_export) THEN preserve_visibilities=1 ELSE preserve_visibilities=0
             grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
                 timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
@@ -289,10 +289,9 @@ IF data_flag LE 0 THEN BEGIN
 
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_uv_arr[pol_i]=Temporary(grid_uv)
-            IF Keyword_Set(return_cal_visibilities) THEN BEGIN
+            IF Keyword_Set(model_flag) THEN BEGIN
                 fhd_save_io,status_str,model_return,var='grid_uv_model',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
                 *model_uv_holo[pol_i]=Temporary(model_return)
-                model_return=1
             ENDIF
             IF N_Elements(weights_grid) GT 0 THEN BEGIN
                 *weights_arr[pol_i]=Temporary(weights_grid)
@@ -303,7 +302,7 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
-    IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,flag_arr
+    IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,flag_arr,vis_model_arr
     IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
 ENDIF
 
