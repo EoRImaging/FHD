@@ -37,7 +37,7 @@ min_cal_baseline=50.
 no_fits=1
 silent=0
 smooth_width=11.
-nfreq_avg=16.
+nfreq_avg=4.
 ps_kbinsize=2.
 ps_kspan=600.
 split_ps=1
@@ -51,6 +51,7 @@ no_restrict_cal_sources=1
 no_rephase=Keyword_Set(data_version)
 calibrate_visibilities=1
 mark_zenith=1
+psf_resolution=32.
 
 cmd_args=extra
 extra=var_bundle()
