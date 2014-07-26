@@ -10,8 +10,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   IF N_Elements(silent) EQ 0 THEN silent=0
   IF N_Elements(status_str) EQ 0 THEN fhd_save_io,status_str,file_path_fhd=file_path_fhd,/no_save
   
-  IF Keyword_Set(split_ps_export) THEN cube_name=['even_cube','odd_cube'] $
-    ELSE cube_name='cube'
+  IF Keyword_Set(split_ps_export) THEN cube_name=['hpx_even','hpx_odd'] $
+    ELSE cube_name='healpix_cube'
   
   IF N_Elements(obs_in) EQ 0 THEN fhd_save_io,status_str,obs_in,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
   n_pol=obs_in.n_pol

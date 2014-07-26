@@ -5,7 +5,7 @@ FUNCTION fhd_setup,file_path_vis,status_str,export_images=export_images,cleanup=
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
-    snapshot_healpix_export=snapshot_healpix_export,log_store=log_store
+    snapshot_healpix_export=snapshot_healpix_export,log_store=log_store,compatibility_mode=compatibility_mode
     
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(calibrate_visibilities) EQ 0 THEN calibrate_visibilities=0
@@ -17,7 +17,14 @@ IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
 IF N_Elements(snapshot_recalculate) EQ 0 THEN snapshot_recalculate=recalculate_all
 
-fhd_save_io,0,status_str,file_path_fhd=file_path_fhd,var='status_str'
+fhd_save_io,status_str,file_path_fhd=file_path_fhd,var='status_str',compatibility_mode=compatibility_mode
+IF Keyword_Set(compatibility_mode) THEN BEGIN
+    names=Tag_names(status_str)
+    FOR ni=0,N_Elements(names)-1 DO BEGIN
+        FOR pi=0,N_Elements(status_str.(ni))-1 DO $
+            fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=names[ni],pol=pi,/compatibility_mode
+    ENDFOR
+ENDIF
 
 IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE BEGIN
     IF status_str.obs GT 0 THEN BEGIN
@@ -49,18 +56,20 @@ ENDIF
 IF Keyword_Set(healpix_recalculate) THEN status_str.hpx_cnv=0
 IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 IF Keyword_Set(grid_recalculate) THEN BEGIN
-    status_str.map_fn[*]=0
-    status_str.grid_uv[*]=0
-    status_str.weights_uv[*]=0
-    status_str.grid_uv_model[*]=0
+    status_str.map_fn=0
+    status_str.grid_uv=0
+    status_str.weights_uv=0
+    status_str.grid_uv_model=0
 ENDIF
 IF Keyword_Set(snapshot_recalculate) THEN BEGIN
-    status_str.healpix_cube[*]=0
-    status_str.hpx_even[*]=0
-    status_str.hpx_odd[*]=0
+    status_str.healpix_cube=0
+    status_str.hpx_even=0
+    status_str.hpx_odd=0
 ENDIF
     
-IF Keyword_Set(force_data) THEN BEGIN
+IF Keyword_Set(force_data) THEN data_flag=0
+IF Keyword_Set(force_no_data) THEN data_flag=1
+IF data_flag EQ 0 THEN BEGIN
     status_str.hdr=0
     status_str.obs=0
     status_str.params=0
@@ -69,15 +78,14 @@ IF Keyword_Set(force_data) THEN BEGIN
     status_str.jones=0
     status_str.cal=0
     status_str.flag_arr=0
-    status_str.autos=0
-    status_str.vis[*]=0
-    status_str.vis_model[*]=0
-    status_str.grid_uv[*]=0
-    status_str.weights_uv[*]=0
-    status_str.grid_uv_model[*]=0
-    data_flag=0
+    status_str.auto_corr=0
+    status_str.vis_ptr=0
+    status_str.vis_model_ptr=0
+    status_str.grid_uv=0
+    status_str.weights_uv=0
+    status_str.grid_uv_model=0
+    status_str.map_fn=0
 ENDIF
-IF Keyword_Set(force_no_data) THEN data_flag=1
 
 fhd_save_io,status_str,file_path_fhd=file_path_fhd,var='status_str',/force_set,/text
 RETURN,data_flag

@@ -2,30 +2,33 @@ PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compres
     text=text,restore=restore,obs=obs,reset=reset,force_set=force_set,no_save=no_save,path_use=path_use,$
     transfer_filename=transfer_filename,compatibility_mode=compatibility_mode
 
-IF ~Keyword_Set(file_path_fhd) THEN RETURN
+IF ~Keyword_Set(file_path_fhd) THEN BEGIN
+    file_path_fhd=''
+    no_save=1
+    retore=0
+ENDIF
 
 IF N_Elements(compress) EQ 0 THEN compress=0
-IF Keyword_Set(obs) THEN pol_names=obs.pol_names ;ELSE pol_names=['XX','YY','XY','YX','I','Q','U','V']
+IF Keyword_Set(obs) THEN pol_names=obs.pol_names ELSE pol_names=['XX','YY','XY','YX','I','Q','U','V']
 
 IF Keyword_Set(transfer_filename) THEN base_name=transfer_filename ELSE base_name=file_basename(file_path_fhd)
 base_path=file_dirname(file_path_fhd)
 status_path=filepath(base_name+'_status',root=base_path,subdir='metadata')
 IF size(status_str,/type) NE 8 THEN BEGIN
-    IF not file_test(status_path+'.sav') THEN BEGIN
+    IF ~file_test(status_path+'.sav') THEN BEGIN
         no_save=1
         reset=1
     ENDIF
 ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
-IF size(status_str,/type) EQ 8  THEN status_use=status_str
-IF Keyword_Set(reset) THEN status_use={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flag_arr:0,autos:0,vis:intarr(4),vis_model:intarr(4),$
-    grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),map_fn:intarr(4),fhd:0,fhd_params:0,$
-    hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
-;
-IF size(status_use,/type) NE 8  THEN status_use=getvar_savefile(status_path+'.sav','status_str')
+IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flag_arr:0,auto_corr:0,$
+    vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),$
+    map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
+IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str')
+status_use=status_str
   
-IF N_Elements(var_name) EQ 0 THEN var_name=''
+IF N_Elements(var_name) EQ 0 THEN var_name='' ELSE var_name=StrLowCase(var_name)
 CASE var_name OF ;listed in order typically generated
     'status_str':BEGIN path_add='_status' & subdir='metadata' & END
     'hdr':BEGIN status_use.hdr=1 & path_add='_hdr' & subdir='metadata'& END
@@ -36,9 +39,9 @@ CASE var_name OF ;listed in order typically generated
     'jones':BEGIN status_use.jones=1 & path_add='_jones' & subdir='beams'& END
     'cal':BEGIN status_use.cal=1 & path_add='_cal' & subdir='calibration'& END
     'flag_arr':BEGIN status_use.flag_arr=1 & path_add='_flags' & subdir='vis_data'& END
-    'auto_corr':BEGIN status_use.autos=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
-    'vis_ptr':BEGIN status_use.vis[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
-    'vis_model_ptr':BEGIN status_use.vis_model[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
+    'auto_corr':BEGIN status_use.auto_corr=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
+    'vis_ptr':BEGIN status_use.vis_ptr[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
+    'vis_model_ptr':BEGIN status_use.vis_model_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
     'grid_uv':BEGIN status_use.grid_uv[pol_i]=1 & path_add='_uv_'+pol_names[pol_i] & subdir='grid_data'& END
     'weights_uv':BEGIN status_use.weights_uv[pol_i]=1 & path_add='_uv_weights_'+pol_names[pol_i] & subdir='grid_data'& END
     'grid_uv_model':BEGIN status_use.grid_uv_model[pol_i]=1 & path_add='_uv_model_'+pol_names[pol_i] & subdir='grid_data'& END
@@ -46,35 +49,40 @@ CASE var_name OF ;listed in order typically generated
     'fhd_params':BEGIN status_use.fhd_params=1 & path_add='_fhd_params' & subdir='deconvolution'& END
     'fhd':BEGIN status_use.fhd=1 & path_add='_fhd' & subdir='deconvolution' & END 
     'hpx_cnv':BEGIN status_use.hpx_cnv=1 & path_add='_hpxcnv' & subdir='healpix' & END
-    'cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube'+pol_names[pol_i] & subdir='healpix' & END
-    'even_cube':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube'+pol_names[pol_i] & subdir='healpix' & END
-    'odd_cube':BEGIN status_use.hpx_odd[pol_i]=1 & path_add='_odd_cube'+pol_names[pol_i] & subdir='healpix' & END
+    'healpix_cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube'+pol_names[pol_i] & subdir='healpix' & END
+    'hpx_even':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube'+pol_names[pol_i] & subdir='healpix' & END
+    'hpx_odd':BEGIN status_use.hpx_odd[pol_i]=1 & path_add='_odd_cube'+pol_names[pol_i] & subdir='healpix' & END
     ELSE:name_error=1
 ENDCASE
 
+var_name_use=var_name
 IF Keyword_Set(compatibility_mode) THEN BEGIN
     subdir=''
+    status_path=filepath(base_name+'_status',root=base_path,subdir='')
     CASE var_name OF
-        'fhd_params':var_name='fhd'
-        'cube': path_add='_cube'
-        'even_cube': path_add='_even_cube'
-        'odd_cube': path_add='_odd_cube'
+        'fhd_params':var_name_use='fhd'
+        'weights_uv':path_add='_uv_'+pol_names[pol_i]
+        'healpix_cube': path_add='_cube'
+        'hpx_even': path_add='_even_cube'
+        'hpx_odd': path_add='_odd_cube'
         ELSE:
     ENDCASE
-ENDIF
+ENDIF 
 IF ~Keyword_Set(name_error) THEN BEGIN
     path_use=filepath(base_name+path_add+'.sav',root=base_path,subdir=subdir)
-    
+    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_use) THEN $
+        fhd_save_io,status_str,pol_i=pol_i,var_name=var_name,/force_set
+
     IF Keyword_Set(restore) THEN BEGIN
-        IF file_test(path_use) THEN param=getvar_savefile(path_use,var_name)
+        IF file_test(path_use) THEN param=getvar_savefile(path_use,var_name_use)
         RETURN
     ENDIF
     
     IF Keyword_Set(param) AND ~Keyword_Set(no_save) THEN BEGIN
         dir_use=file_dirname(path_use)
         IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
-        status_rename=Execute(var_name+'=param') ;rename the variable to be saved
-        fn_string='SAVE,'+var_name
+        status_rename=Execute(var_name_use+'=param') ;rename the variable to be saved
+        fn_string='SAVE,'+var_name_use
         IF Keyword_Set(obs_flag) THEN fn_string+=',obs'
         fn_string+=',filename="'+path_use+'",compress='+String(compress)
         status_save=Execute(fn_string,1,1)
@@ -84,6 +92,7 @@ IF ~Keyword_Set(name_error) THEN BEGIN
     IF Keyword_Set(status_save) THEN status_str=status_use
 ENDIF ELSE status_save=0
 
+IF ~Keyword_Set(file_path_fhd) THEN status_save=0
 IF Keyword_Set(status_save) THEN BEGIN
     dir_use=file_dirname(status_path)
     IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
