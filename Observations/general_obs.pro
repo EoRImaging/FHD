@@ -8,7 +8,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
     calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
     snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,$
-    firstpass=firstpass,return_cal_visibilities=return_cal_visibilities,cmd_args=cmd_args,_Extra=extra
+    firstpass=firstpass,return_cal_visibilities=return_cal_visibilities,cmd_args=cmd_args,silent=silent,_Extra=extra
 
 except=!except
 !except=0 
@@ -18,6 +18,10 @@ IF Keyword_Set(!Journal) THEN Journal ;if logs are somehow still being written f
 IF N_Elements(error_method) EQ 0 THEN error_method=0
 ON_ERROR,error_method
 
+IF ~Keyword_Set(silent) THEN BEGIN
+    git,'describe',result=code_version,project='fhd',args='--long'
+    print,"Using FHD version: "+code_version
+ENDIF
 ;Set which procedures are to be run
 IF Keyword_Set(firstpass) THEN BEGIN
     IF N_Elements(return_cal_visibilities) EQ 0 THEN return_cal_visibilities=1
@@ -110,7 +114,7 @@ WHILE fi LT n_files DO BEGIN
     uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid_recalculate=grid_recalculate,$
-        /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
+        silent=silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,save_visibilities=save_visibilities,$
@@ -146,14 +150,14 @@ fhd_file_list=fhd_file_list[fi_use]
 IF Keyword_Set(simultaneous) THEN BEGIN
     IF Total(simultaneous) GT 1 THEN N_simultaneous=simultaneous
     fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,n_pol=n_pol,$
-        independent_fit=independent_fit,/silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
+        independent_fit=independent_fit,silent=silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
         export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
         uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
-            /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
+            silent=silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
         fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
