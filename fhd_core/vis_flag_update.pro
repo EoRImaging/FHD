@@ -35,16 +35,16 @@ dist_test=frequency_array#dist_test
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
 dist_test=0
 
-xcen=frequency_array#kx_arr
-ycen=frequency_array#ky_arr
 
 conj_i=where(ky_arr GT 0,n_conj)
 IF n_conj GT 0 THEN BEGIN
-    xcen[*,conj_i]=-xcen[*,conj_i]
-    ycen[*,conj_i]=-ycen[*,conj_i]
+    kx_arr[conj_i]=-kx_arr[conj_i]
+    ky_arr[conj_i]=-ky_arr[conj_i]
 ENDIF
 
+xcen=frequency_array#kx_arr
 xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
+ycen=frequency_array#ky_arr
 ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
 
 range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)

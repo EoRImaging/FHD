@@ -99,19 +99,17 @@ dist_test=frequency_array#dist_test
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
 dist_test=0
 
-xcen=frequency_array#kx_arr
-ycen=frequency_array#ky_arr
-
 conj_i=where(ky_arr GT 0,n_conj)
 conj_flag=intarr(N_Elements(ky_arr)) 
-ky_arr=(kx_arr=0)
 IF n_conj GT 0 THEN BEGIN
     conj_flag[conj_i]=1
-    xcen[*,conj_i]=-xcen[*,conj_i]
-    ycen[*,conj_i]=-ycen[*,conj_i]
+    kx_arr[conj_i]=-kx_arr[conj_i]
+    ky_arr[conj_i]=-ky_arr[conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
     IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
 ENDIF
+xcen=frequency_array#Temporary(kx_arr)
+ycen=frequency_array#Temporary(ky_arr)
  
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
