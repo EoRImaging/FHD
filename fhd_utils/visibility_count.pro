@@ -8,7 +8,8 @@ SWITCH N_Params() OF
     ELSE:
 ENDSWITCH
 
-IF Min(Ptr_valid(flag_ptr)) EQ 0 THEN flag_ptr=getvar_savefile(file_path_fhd+'_flags.sav','flag_arr')
+IF Min(Ptr_valid(flag_ptr)) EQ 0 THEN IF Keyword_Set(file_path_fhd) THEN $
+    flag_ptr=getvar_savefile(file_path_fhd+'_flags.sav','flag_arr')
 ;extract information from the structures
 n_pol=obs.n_pol
 n_tile=obs.n_tile
