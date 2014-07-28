@@ -52,8 +52,8 @@ dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
 dist_test=0
 
-xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
-ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
+xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
 ;xmax=xmin+psf_dim-1
 ;ymax=ymin+psf_dim-1
 

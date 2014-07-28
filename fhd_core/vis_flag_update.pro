@@ -39,8 +39,12 @@ IF n_conj GT 0 THEN BEGIN
     ycen[*,conj_i]=-ycen[*,conj_i]
 ENDIF
 
-xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
-ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
+dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
+flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test=0
+
+xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
 
 range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
@@ -50,9 +54,6 @@ range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 range_test_y_i=0
 
-dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
-flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
-xcen=(ycen=(dist_test=0))
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1
     ymin[flag_dist_i]=-1

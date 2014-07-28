@@ -4,7 +4,7 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,status_str,psf,params,file_
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    phase_threshold=phase_threshold,error=error,_Extra=extra
+    error=error,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -107,22 +107,22 @@ IF n_conj GT 0 THEN BEGIN
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
     IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
 ENDIF
- 
-x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
-y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
-xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
-ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
-xmax=xmin+psf_dim-1
-ymax=ymin+psf_dim-1
-
-range_test_x_i=where((xmin LE 0) OR (xmax GE dimension-1),n_test_x)
-range_test_y_i=where((ymin LE 0) OR (ymax GE elements-1),n_test_y)
-xmax=(ymax=0)
-IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
-IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
 dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test=0
+ 
+x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
+y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
+xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
+
+range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
+range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
+
+IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
+IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
+
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1
     ymin[flag_dist_i]=-1
@@ -135,14 +135,7 @@ IF flag_switch THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
     ENDIF
-ENDIF
-
-IF Keyword_Set(phase_threshold) THEN BEGIN
-    phase_cut=where(Abs(Atan(vis_arr_use,/phase)) GT phase_threshold,n_phase_cut)
-    IF n_phase_cut GT 0 THEN BEGIN
-        xmin[phase_cut]=-1
-        ymin[phase_cut]=-1
-    ENDIF
+    flag_i=0
 ENDIF
 
 IF Keyword_Set(mask_mirror_indices) THEN BEGIN
@@ -151,8 +144,6 @@ IF Keyword_Set(mask_mirror_indices) THEN BEGIN
         ymin[*,conj_i]=-1
     ENDIF
 ENDIF
-
-xcen=(ycen=(dist_test=0)) ;free memory
 
 IF max(xmin)<max(ymin) LT 0 THEN BEGIN
     print,'All data flagged or cut! Returning'
