@@ -40,9 +40,9 @@ cal_remainder.gain=gain_arr_ptr3
 IF Keyword_Set(file_path_fhd) THEN BEGIN
     basename=file_basename(file_path_fhd)
     dirpath=file_dirname(file_path_fhd)
-    image_path=filepath(basename,root=dirpath,sub='images')
+    image_path=filepath(basename,root=dirpath,sub='output_images')
     IF file_test(file_dirname(image_path),/directory) EQ 0 THEN file_mkdir,file_dirname(image_path)
-    export_path=filepath(basename,root=dirpath,sub='export')
+    export_path=filepath(basename,root=dirpath,sub='calibration')
     IF file_test(file_dirname(export_path),/directory) EQ 0 THEN file_mkdir,file_dirname(export_path)
     Textfast,bandpass_arr,/write,file_path=export_path+'_bandpass'
     
