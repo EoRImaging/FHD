@@ -94,6 +94,11 @@ IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_fn=Ptrarr(dimension,elements)
 ENDIF ELSE map_flag=0
 
+dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
+dist_test=frequency_array#dist_test
+flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test=0
+
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 
@@ -107,10 +112,6 @@ IF n_conj GT 0 THEN BEGIN
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
     IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
 ENDIF
-
-dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
-flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
-dist_test=0
  
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 

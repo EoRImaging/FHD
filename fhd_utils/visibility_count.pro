@@ -39,6 +39,11 @@ psf_resolution=psf.resolution
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize
 
+dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
+dist_test=frequency_array#dist_test
+flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test=0
+
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
 
@@ -47,10 +52,6 @@ IF n_conj GT 0 THEN BEGIN
     xcen[*,conj_i]=-xcen[*,conj_i]
     ycen[*,conj_i]=-ycen[*,conj_i]
 ENDIF
-
-dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
-flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
-dist_test=0
 
 xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
 ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
