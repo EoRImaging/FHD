@@ -80,6 +80,9 @@ IF Keyword_Set(flag_ptr) THEN BEGIN
     ENDIF
     IF ~Arg_present(flag_ptr) THEN undefine_fhd,flag_ptr
 ENDIF
+IF ~Arg_present(obs) THEN undefine_fhd,obs
+IF ~Arg_present(params) THEN undefine_fhd,params
+IF ~Arg_present(psf) THEN undefine_fhd,psf
 
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
