@@ -35,7 +35,6 @@ dist_test=frequency_array#dist_test
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
 dist_test=0
 
-
 conj_i=where(ky_arr GT 0,n_conj)
 IF n_conj GT 0 THEN BEGIN
     kx_arr[conj_i]=-kx_arr[conj_i]

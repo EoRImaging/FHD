@@ -72,13 +72,13 @@ IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 range_test_y_i=0
 
 IF Keyword_Set(flag_ptr) THEN BEGIN
-    n_flag_dim=size(*flag_ptr[0],/n_dimension)
     flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
     IF Keyword_Set(fill_model_vis) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
     ENDIF
+    IF ~Arg_present(flag_ptr) THEN undefine_fhd,flag_ptr
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
