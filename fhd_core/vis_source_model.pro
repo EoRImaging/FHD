@@ -1,7 +1,7 @@
 FUNCTION vis_source_model,source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
     timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,beam_arr=beam_arr,$
     fill_model_vis=fill_model_vis,use_pointing_center=use_pointing_center,vis_model_ptr=vis_model_ptr,$
-    galaxy_model=galaxy_model,calibration_flag=calibration_flag,_Extra=extra
+    galaxy_model=galaxy_model,calibration_flag=calibration_flag,diffuse_calibrate=diffuse_calibrate,diffuse_model=diffuse_model,_Extra=extra
 
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
@@ -88,15 +88,11 @@ IF Keyword_Set(source_list) THEN BEGIN
 ENDIF
 
 
-IF galaxy_flag THEN BEGIN
-    gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
-    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask
-ENDIF
+IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
+IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask
 
-IF Keyword_Set(diffuse_flag) THEN BEGIN
-    diffuse_model_uv=fhd_diffuse_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
-    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask
-ENDIF
+IF Keyword_Set(diffuse_flag) THEN diffuse_model_uv=fhd_diffuse_model(obs,jones,/uv_return,_Extra=extra)
+IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask
 
 vis_arr=Ptrarr(n_pol)
 
