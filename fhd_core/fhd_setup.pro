@@ -6,7 +6,16 @@ FUNCTION fhd_setup,file_path_vis,status_str,export_images=export_images,cleanup=
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
     snapshot_healpix_export=snapshot_healpix_export,log_store=log_store,compatibility_mode=compatibility_mode
-    
+
+IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the mapping function to disk if it will be just deleted later anyway
+
+;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
+;IF Keyword_Set(GPU_enable) THEN BEGIN
+;    Defsysv,'GPU',exist=gpuvar_exist
+;    IF gpuvar_exist eq 0 THEN GPUinit
+;    IF !GPU.mode NE 1 THEN GPU_enable=0
+;ENDIF
+
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(calibrate_visibilities) EQ 0 THEN calibrate_visibilities=0
 IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all

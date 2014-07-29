@@ -49,15 +49,6 @@ error=0
 heap_gc 
 t0=Systime(1)
 
-IF Keyword_Set(cleanup) THEN IF cleanup GT 0 THEN no_save=1 ;set to not save the mapping function to disk if it will be just deleted later anyway
-
-;IF N_Elements(GPU_enable) EQ 0 THEN GPU_enable=0
-;IF Keyword_Set(GPU_enable) THEN BEGIN
-;    Defsysv,'GPU',exist=gpuvar_exist
-;    IF gpuvar_exist eq 0 THEN GPUinit
-;    IF !GPU.mode NE 1 THEN GPU_enable=0
-;ENDIF
-
 print,"Processing "+file_basename(file_path_vis)+" in "+file_dirname(file_path_vis)
 print,systime()
 print,'Output file_path:',file_path_fhd
@@ -127,8 +118,7 @@ IF data_flag LE 0 THEN BEGIN
             IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
             RETURN
         ENDIF
-    ENDELSE
-    
+    ENDELSE    
     
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     n_pol=obs.n_pol
@@ -138,6 +128,7 @@ IF data_flag LE 0 THEN BEGIN
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,antenna=antenna,cmd_args=cmd_args,/overwrite ;write preliminary settings file for debugging, in case later steps crash
 ;    IF ~Keyword_Set(silent) THEN BEGIN
 ;        beam_arr=Ptrarr(n_pol,/allocate)
 ;        FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
@@ -147,12 +138,13 @@ IF data_flag LE 0 THEN BEGIN
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
     vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
+    
     ;print informational messages
     obs_status,obs
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
         calibrate_visibilities=1
-        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd+'_cal.sav'
+        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd+'_cal.sav' ;this will not modify string or structure types, but will over-write it if set to a numerical type
     ENDIF
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
@@ -180,9 +172,7 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
         vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr,$
             timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
-        
-    ENDIF
-    
+    ENDIF 
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     model_flag=min(Ptr_valid(vis_model_arr))
     
@@ -207,6 +197,7 @@ IF data_flag LE 0 THEN BEGIN
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
         error=1
+        IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
         RETURN
     ENDIF
     
@@ -245,7 +236,10 @@ IF data_flag LE 0 THEN BEGIN
                 timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
                 model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
-            IF Keyword_Set(error) THEN RETURN
+            IF Keyword_Set(error) THEN BEGIN
+                IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
+                RETURN
+            ENDIF
             t_grid[pol_i]=t_grid0
             fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
             fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
