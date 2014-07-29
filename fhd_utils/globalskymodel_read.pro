@@ -1,9 +1,16 @@
-FUNCTION globalskymodel_read,frequency,ra_arr=ra_arr,dec_arr=dec_arr,components=components,haslam_filtered=haslam_filtered,_Extra=extra
+FUNCTION globalskymodel_read,obs,frequency,components=components,haslam_filtered=haslam_filtered,_Extra=extra
 ;gl supplied galactic longitude (or RA if celestial_coord is set)
 ;gb supplied galactic latitude (or Dec if celestial_coord is set)
 ;returns the model temperatures from the Global Sky Model at the specified galactic longitude and latitude
 ;output maps should be in units of Kelvin
 IF N_Elements(frequency) EQ 0 THEN frequency=300. ;MHz
+
+dimension=obs.dimension
+elements=obs.elements
+astr=obs.astr
+degpix=obs.degpix
+n_pol=obs.n_pol
+xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
 
 file_path_base=filepath('',root=rootdir('FHD'),sub='catalog_data')
 IF Keyword_Set(haslam_filtered) THEN BEGIN
@@ -20,17 +27,50 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     ra_use=ra_arr[radec_i]
     dec_use=dec_arr[radec_i]
     
-    GlactC,ra_use,dec_use,2000.,gl_use,gb_use,1,/degree
-    ang2vec,gb_use,gl_use,vec_use,/astro
-;    ang2vec,dec_use,ra_use,vec_use,/astro
-    vec2pix_nest,nside,vec_use,ipring
     
-    Temperature=Temperature[ipring]*pix_area*(model_freq/mean(frequency))^spectral_index
-;    Temperature=Temperature[ipring]*(model_freq/mean(frequency))^spectral_index
-    model0=fltarr(size(ra_arr,/dimension))
-    model0[radec_i]=Temperature
-    model=Ptr_new(model0)
-    RETURN,model 
+;    GlactC,ra_use,dec_use,2000.,gl_use,gb_use,1,/degree
+;    ang2vec,gb_use,gl_use,vec_use,/astro
+;;    ang2vec,dec_use,ra_use,vec_use,/astro
+;    vec2pix_nest,nside,vec_use,ipnest
+    
+;    Temperature=Temperature[ipnest]*pix_area*(model_freq/mean(frequency))^spectral_index
+;;    Temperature=Temperature[ipnest]*(model_freq/mean(frequency))^spectral_index
+;    model0=fltarr(size(ra_arr,/dimension))
+;    model0[radec_i]=Temperature
+;    model=Ptr_new(model0)
+;    RETURN,model 
+    
+    pix2vec_nest,nside,Lindgen(npix),pix_coords
+    vec2ang,pix_coords,pix_gb,pix_gl,/astro
+    GlactC,pix_ra,pix_dec,2000.,pix_gl,pix_gb,2,/degree
+    Eq2hor,pix_ra,pix_dec,obs.JD0,pix_alt,pix_az,lat=obs.lat,lon=obs.lon,alt=obs.alt
+    
+    ad2xy,pix_ra,pix_dec,astr,xv_hpx,yv_hpx
+    hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)) AND (pix_alt GT 0),n_hpx_use,complement=hpx_i_cut) 
+;    hpx_i_use=hpx_i_cut
+    IF n_hpx_use EQ 0 THEN RETURN,Ptrarr(n_pol)
+    xv_hpx=xv_hpx[hpx_i_use]
+    yv_hpx=yv_hpx[hpx_i_use]
+    
+    x_frac=1.-(xv_hpx-Floor(xv_hpx))
+    y_frac=1.-(yv_hpx-Floor(yv_hpx))
+    
+    weights_img=fltarr(dimension,elements)
+    weights_img[Floor(xv_hpx),Floor(yv_hpx)]+=x_frac*y_frac
+    weights_img[Floor(xv_hpx),Ceil(yv_hpx)]+=x_frac*(1-y_frac)
+    weights_img[Ceil(xv_hpx),Floor(yv_hpx)]+=(1-x_frac)*y_frac
+    weights_img[Ceil(xv_hpx),Ceil(yv_hpx)]+=(1-x_frac)*(1-y_frac)
+    
+    hpx_vals=Temperature[hpx_i_use]
+    Temperature=fltarr(dimension,elements)
+    Temperature[Floor(xv_hpx),Floor(yv_hpx)]+=x_frac*y_frac*hpx_vals
+    Temperature[Floor(xv_hpx),Ceil(yv_hpx)]+=x_frac*(1-y_frac)*hpx_vals
+    Temperature[Ceil(xv_hpx),Floor(yv_hpx)]+=(1-x_frac)*y_frac*hpx_vals
+    Temperature[Ceil(xv_hpx),Ceil(yv_hpx)]+=(1-x_frac)*(1-y_frac)*hpx_vals
+    Temperature*=weight_invert(weights_img)
+    Temperature=Temperature*(model_freq/mean(frequency))^spectral_index
+    RETURN,Ptr_new(Temperature)
+    
 ENDIF ELSE BEGIN
     print,"Using unfiltered Global Sky Model"
     ;the first time the file is read in, convert it to FITS format (MUCH faster to read when called again later!)
