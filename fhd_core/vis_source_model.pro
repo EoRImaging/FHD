@@ -17,8 +17,10 @@ IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore
 galaxy_flag=0
 IF Keyword_Set(calibration_flag) THEN BEGIN
     IF Keyword_Set(galaxy_calibrate) THEN galaxy_flag=1
+    IF Keyword_Set(diffuse_calibrate) THEN diffuse_flag=diffuse_calibrate
 ENDIF ELSE BEGIN
     IF Keyword_Set(galaxy_model) THEN galaxy_flag=1
+    IF Keyword_Set(diffuse_model) THEN diffuse_flag=diffuse_model
 ENDELSE
 heap_gc
 
@@ -89,6 +91,11 @@ ENDIF
 IF galaxy_flag THEN BEGIN
     gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask
+ENDIF
+
+IF Keyword_Set(diffuse_flag) THEN BEGIN
+    diffuse_model_uv=fhd_diffuse_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
+    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask
 ENDIF
 
 vis_arr=Ptrarr(n_pol)
