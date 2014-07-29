@@ -187,32 +187,7 @@ IF data_flag LE 0 THEN BEGIN
     model_flag=min(Ptr_valid(vis_model_arr))
     
     IF Keyword_Set(transfer_mapfn) THEN BEGIN
-        flag_arr1=flag_arr
-        IF file_basename(file_path_fhd) EQ transfer_mapfn THEN BEGIN 
-            IF Keyword_Set(flag_visibilities) THEN BEGIN
-                print,'Flagging anomalous data'
-                vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
-            ENDIF
-        ENDIF ELSE fhd_save_io,0,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,transfer=transfer_mapfn,_Extra=extra 
-        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-        n0=N_Elements(*flag_arr[0])
-        n1=N_Elements(*flag_arr1[0])
-        IF n1 GT n0 THEN BEGIN
-            ;If more data, zero out additional
-            nf0=(size(*flag_arr[0],/dimension))[0]
-            nb0=(size(*flag_arr[0],/dimension))[1]
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                *flag_arr1[pol_i]=fltarr(size(*flag_arr1[pol_i],/dimension))
-                (*flag_arr1[pol_i])[0:nf0-1,0:nb0-1]*=*flag_arr[pol_i]
-            ENDFOR
-            flag_arr=flag_arr1
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-        ENDIF
-        IF n0 GT n1 THEN BEGIN
-            ;If less data, return with an error!
-            error=1
-            RETURN
-        ENDIF
+        transfer_flag_data,flag_arr,obs,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_mapfn,error=error,flag_visibilities=flag_visibilities,_Extra=extra
     ENDIF ELSE BEGIN
         IF Keyword_Set(flag_visibilities) THEN BEGIN
             print,'Flagging anomalous data'
