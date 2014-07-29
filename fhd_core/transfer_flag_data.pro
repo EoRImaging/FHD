@@ -13,9 +13,10 @@ IF n1 GT n0 THEN BEGIN
     nb0=(size(*flag_arr_xfer[0],/dimension))[1]
     FOR pol_i=0,n_pol-1 DO BEGIN
         *flag_arr[pol_i]=fltarr(size(*flag_arr[pol_i],/dimension))
-        (*flag_arr[pol_i])[0:nf0-1,0:nb0-1]*=*flag_arr_xfer[pol_i]
+        (*flag_arr[pol_i])[0:nf0-1,0:nb0-1]*=Temporary(*flag_arr_xfer[pol_i])
     ENDFOR
 ENDIF
+Ptr_free,flag_arr_xfer
 IF n0 GT n1 THEN BEGIN
     ;If less data, return with an error!
     error=1

@@ -198,19 +198,7 @@ IF data_flag LE 0 THEN BEGIN
     ENDELSE
     
     vis_noise_calc,obs,vis_arr,flag_arr
-    IF ~Keyword_Set(silent) THEN BEGIN
-        tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
-        freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
-        print,String(format='(A," frequency channels used and ",A," channels flagged")',$
-            Strn(n_freq_use),Strn(n_freq_cut))
-        print,String(format='(A," tiles used and ",A," tiles flagged")',$
-            Strn(n_tile_use),Strn(n_tile_cut))
-        IF Tag_exist(*obs.baseline_info,'time_use') THEN BEGIN
-            time_use_i=where((*obs.baseline_info).time_use,n_time_use,ncomplement=n_time_cut)
-            print,String(format='(A," time steps used and ",A," time steps flagged")',$
-                Strn(n_time_use),Strn(n_time_cut))
-        ENDIF
-    ENDIF
+    IF ~Keyword_Set(silent) THEN flag_status,obs
     
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
