@@ -69,6 +69,20 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     Temperature[Ceil(xv_hpx),Ceil(yv_hpx)]+=(1-x_frac)*(1-y_frac)*hpx_vals
     Temperature*=weight_invert(weights_img)
     Temperature=Temperature*(model_freq/mean(frequency))^spectral_index
+    
+    mask=fltarr(dimension,elements)
+    mask[radec_i]=1
+    interp_i=where((Temperature EQ 0) AND (mask GT 0),n_interp)
+    IF n_interp GT 0 THEN BEGIN
+        fraction_int=n_interp/Total(mask)
+        min_valid=4.
+        min_width=Ceil(2.*Sqrt(min_valid/(!Pi*fraction_int)))>3.
+        Temp_int=Temperature
+        Temp_int[interp_i]=!Values.F_NAN
+        Temp_filtered=Median(Temp_int,min_width,/even)
+        IF nan_test(temp_filtered) THEN Temp_filtered[where(Finite(Temp_filtered,/nan))]=0
+        Temperature[interp_i]=Temp_filtered[interp_i]
+    ENDIF
     RETURN,Ptr_new(Temperature)
     
 ENDIF ELSE BEGIN
