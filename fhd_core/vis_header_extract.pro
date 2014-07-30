@@ -10,7 +10,7 @@ flag_index=2
 n_extensions=sxpar(header,'nextend')
 naxis=sxpar(header,'naxis') ;6
 n_grp_params=sxpar(header,'pcount') ;5
-gcount=sxpar(header,'gcount') ;variable, based on length of observation
+nbaselines=sxpar(header,'gcount') ;variable, based on length of observation
 n_complex=sxpar(header,'naxis2') ;3 columns are amplitude, phase (degrees), weights
 n_polarizations=sxpar(header,'naxis3') ;4 columns are xx, yy, xy, yx
 n_frequencies=sxpar(header,'naxis4') ;768
@@ -79,9 +79,9 @@ tile_nums=where(hist_AB,n_tile)
 ;tile_A=Long(Floor(baseline_arr/256)) ;tile numbers start from 1
 ;n_tile=n_elements(uniq(tile_A[sort(tile_A)]))
 
-grp_row_size=n_complex*n_polarizations*n_frequencies*gcount
+grp_row_size=n_complex*n_polarizations*n_frequencies*nbaselines
 
-struct={n_params:n_grp_params,gcount:gcount,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
+struct={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
     freq_ref:freq_ref,freq_width:freq_width,freq_ref_i:freq_ref_i,obsra:obsra,obsdec:obsdec,date:date_obs,$
     uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:Jdate0,$
     pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
