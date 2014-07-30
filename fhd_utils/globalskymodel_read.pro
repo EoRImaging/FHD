@@ -80,7 +80,18 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
         Temp_int=Temperature
         Temp_int[interp_i]=!Values.F_NAN
         Temp_filtered=Median(Temp_int,min_width,/even)
-        IF nan_test(temp_filtered) THEN Temp_filtered[where(Finite(Temp_filtered,/nan))]=0
+        i_nan=where(Finite(Temp_filtered,/nan),n_nan)
+        iter=0
+        WHILE n_nan GT 0 DO BEGIN
+            IF iter GT 5 THEN BREAK
+            nan_x=i_nan mod dimension
+            nan_y=Floor(i_nan/dimension)
+            width_use=Ceil(min_width*(1.+iter)/2.)
+            FOR i=0L,n_nan-1 DO Temp_filtered[i_nan[i]]=Median(Temp_filtered[(nan_x[i]-width_use)>0:(nan_x[i]+width_use)<(dimension-1),(nan_y[i]-width_use)>0:(nan_y[i]+width_use)<(elements-1)],/even)
+            i_nan=where(Finite(Temp_filtered,/nan),n_nan)
+            iter+=1
+        ENDWHILE
+        IF n_nan GT 0 THEN Temp_filtered[i_nan]=0.
         Temperature[interp_i]=Temp_filtered[interp_i]
     ENDIF
     RETURN,Ptr_new(Temperature)
