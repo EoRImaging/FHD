@@ -229,6 +229,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             breakpoint0=0
 ;            t4+=Systime(1)-t4_a
         ENDFOR
+        breakpoint_placeholder=1
     ENDFOR
     freq_norm_check/=mean(freq_norm_check)
 ;    FOR freq_i=0L,nfreq_bin-1 DO FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $

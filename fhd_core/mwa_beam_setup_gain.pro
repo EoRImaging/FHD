@@ -68,11 +68,16 @@ CASE beam_model_version OF
         phi_arr=median(phi_arr,dimension=1) ; all actually the same across freq, so reduce dimension
         phi_arr=270.-phi_arr ;change azimuth convention
         
+        ;normalize to zenith
+        norm_factor=fltarr(n_ant_pol)
+        FOR p_i=0,n_ant_pol-1 DO norm_factor[p_i]=abs(interpol(Jmat_arr[*,p_i,p_i,0],freq_arr_Jmat,median(freq_center)))
+        norm_factor=1./Mean(norm_factor)
+        
     ;    Jmat_return=Ptrarr(n_ant_pol,n_ant_pol)
         Jmat_interp=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO Jmat_interp[p_i,p_j,freq_i]=Ptr_new(Complexarr(n_ang))
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR a_i=0L,n_ang-1 DO BEGIN
-            Jmat_single_ang=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,freq_center)
+            Jmat_single_ang=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,freq_center)*norm_factor
             FOR freq_i=0L,nfreq_bin-1 DO (*Jmat_interp[p_i,p_j,freq_i])[a_i]=Jmat_single_ang[freq_i]
 ;            (*Jmat_interp[p_i,p_j])[a_i]=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,freq_center)
         ENDFOR
