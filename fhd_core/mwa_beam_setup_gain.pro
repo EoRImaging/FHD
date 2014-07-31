@@ -69,9 +69,9 @@ CASE beam_model_version OF
         phi_arr=270.-phi_arr ;change azimuth convention
         
         ;normalize to zenith
-        norm_factor=fltarr(n_ant_pol)
-        FOR p_i=0,n_ant_pol-1 DO norm_factor[p_i]=abs(interpol(Jmat_arr[*,p_i,p_i,0],freq_arr_Jmat,median(freq_center)))
-        norm_factor=1./Mean(norm_factor)
+        norm_factor=fltarr(nfreq_bin,n_ant_pol)
+        FOR p_i=0,n_ant_pol-1 DO norm_factor[*,p_i]=interpol(Max(abs(Jmat_arr[*,p_i,p_i,*]),dimension=4),freq_arr_Jmat,freq_center)
+        norm_factor=1./Median(norm_factor,dimension=2,/even)
         
     ;    Jmat_return=Ptrarr(n_ant_pol,n_ant_pol)
         Jmat_interp=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
