@@ -1,6 +1,7 @@
 FUNCTION array_match,array1,array2,value_match=value_match,n_match=n_match
 ;IF array2 is supplied, it should have the SAME number of elements as array1
 
+IF (size(value_match,/dimension))[0] EQ 0 THEN value_match=[value_match]
 IF N_Elements(array2) GT 0 THEN BEGIN
     min_use=Min(array1)<Min(array2)
     max_use=Max(array1)>Max(array2)
