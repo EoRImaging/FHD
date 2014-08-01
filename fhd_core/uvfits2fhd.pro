@@ -215,7 +215,7 @@ IF data_flag LE 0 THEN BEGIN
         t_save0=Systime(1)
         vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
         IF Keyword_Set(model_flag) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
-        
+        t_save=Systime(1)-t_save0
         IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
     ENDIF
         
