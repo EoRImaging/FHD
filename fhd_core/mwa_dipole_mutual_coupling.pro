@@ -1,6 +1,6 @@
 FUNCTION mwa_dipole_mutual_coupling,freq_arr
 
-file_path_Z_matrix=filepath('mwa_Zmatrix.fits',root=rootdir('FHD'),sub='instrument_config')
+file_path_Z_matrix=filepath('mwa_ZMatrix.fits',root=rootdir('FHD'),sub='instrument_config')
 file_path_Z_LNA=filepath('mwa_LNA_impedance.sav',root=rootdir('FHD'),sub='instrument_config')
 n_dipole=16
 n_ant_pol=2
