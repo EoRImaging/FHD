@@ -31,6 +31,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   header_filepath=file_path_fhd+'_header.sav'
   flags_filepath=file_path_fhd+'_flags.sav'
   input_model_filepath = file_path_fhd + '_input_model.sav'
+  coarse_input_model_filepath = file_path_fhd + '_input_model_coarse.sav'
   vis_filepath=file_path_fhd+'_vis.sav'
   obs_filepath=file_path_fhd+'_obs.sav'
   params_filepath=file_path_fhd+'_params.sav'
@@ -57,7 +58,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   data_array=Temporary(data_struct.array[*,0:n_pol-1,*])
   data_struct=0. ;free memory
   
-  obs=vis_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
+  obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
   pol_dim=hdr.pol_dim
   freq_dim=hdr.freq_dim
   real_index=hdr.real_index
@@ -120,6 +121,12 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         freq_arr = (*obs.baseline_info).freq
         delta_uv=obs.kpix
         uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
+        
+        uv_locs = findgen(101)*4.-200.
+        eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
+        save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, freq_arr, /compress
+        stop
+        
         time0 = systime(1)
         eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
         time1 = systime(1)
@@ -267,9 +274,9 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     ENDIF
     
   ENDIF
-    
+  
   ;optionally export frequency-split Healpix cubes
-  IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,$
+  IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,/restrict_hpx_inds,$
     vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
     
   undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr
