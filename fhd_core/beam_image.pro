@@ -62,7 +62,7 @@ IF Keyword_Set(square) THEN BEGIN
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=*(*beam_arr[pol_i,freq_i,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
-            beam_single/=Total(group_n)
+            beam_single/=Total(group_n[gi_use])
             IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
@@ -85,7 +85,7 @@ IF Keyword_Set(square) THEN BEGIN
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
-            beam_single/=Total(group_n)
+            beam_single/=Total(group_n[gi_use])
             IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
@@ -107,7 +107,7 @@ ENDIF ELSE BEGIN
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=*(*beam_arr[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
-            beam_single/=Total(group_n)
+            beam_single/=Total(group_n[gi_use])
             beam_base_uv+=beam_single
             n_bin_use+=1.*freq_norm[fi]
         ENDFOR
@@ -124,7 +124,7 @@ ENDIF ELSE BEGIN
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
-            beam_single/=Total(group_n)
+            beam_single/=Total(group_n[gi_use])
             beam_base_uv+=beam_single
             n_bin_use+=1.*freq_norm[fbin]
         ENDFOR
