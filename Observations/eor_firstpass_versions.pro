@@ -277,6 +277,23 @@ case version of
    end
 
 
+   ;;; Patti's versions!!! Only Patti may edit this section!!!
+   'pac_test_fhd':begin
+      deconvolve=1 
+      return_decon_visibilities=1
+      max_sources=30000.
+      pad_uv_image=1.
+      gain_factor=.2
+      uvfits_version=3
+      uvfits_subversion=1
+      time_cut=[2,-2]
+      vis_freq_average=2
+      snapshot_healpix_export=0
+      dimension=3072
+      FoV=80.
+      filter_background=0
+   end
+
 
    else: print,'Default parameters'
 endcase
