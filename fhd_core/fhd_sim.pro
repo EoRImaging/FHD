@@ -110,7 +110,6 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       for freq_i=0,n_freq-1 do beam2_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=pol_i)
     endfor
     save, file=init_beam_filepath, beam2_image, obs
-    
     fhd_undefine, beam2_image
     
     if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(eor_sim) then begin
@@ -296,7 +295,6 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     undefine_fhd, obs
     obs = obs_out
     save, file=gridded_beam_filepath, beam2_image, obs
-    stop
   endif
   undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr,beam2_image
   
