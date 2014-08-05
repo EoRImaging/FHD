@@ -1,4 +1,4 @@
-pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_path, $
+pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_path, obs_name = obs_name, $
     discard_unmatched_pix = discard_unmatched_pix, discard_unmatched_freq = discard_unmatched_freq
     
   compile_opt strictarr
@@ -45,9 +45,6 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   if n_elements(discard_unmatched_pix) eq 0 then discard_unmatched_pix = 1
   if n_elements(discard_unmatched_freq) eq 0 then discard_unmatched_freq = 1
   
-  obsids = long(stregex(file_basename(filenames), '[0-9]+', /extract))
-  obs_range = minmax(obsids)
-  
   even_mask = stregex(filenames, 'even', /boolean)
   n_even = total(even_mask)
   odd_mask = stregex(filenames, 'odd', /boolean)
@@ -71,6 +68,24 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     'evenoddallmix': print, 'Warning: Combining a mixture of even, odd and unsplit cubes'
   endcase
   
+  pol_exist = stregex(filenames, '[xy][xy]', /boolean, /foldcase)
+  if max(pol_exist) gt 0 then begin
+    wh_pol_exist = where(pol_exist gt 0, count_pol_exist, ncomplement = count_no_pol)
+    if count_no_pol gt 0 then begin
+      print, 'Warning: Combining a mixture of cubes with and without specified polarization.'
+      pol = 'polmix'
+    endif
+    
+    pols = stregex(filenames[wh_pol_exist], '[xy][xy]', /extract, /foldcase)
+    wh_pol_diff = where(pols ne pols[0], count_pol_diff)
+    if count_pol_diff gt 0 then begin
+      print, 'Warning: Combining a mixture of different polarization cubes'
+      pol = 'polmix'
+    endif else pol = pols[0]
+    
+    pol_str = '_' + pol
+  endif else pol_str = ''
+  
   if n_elements(save_file) ne 0 and n_elements(save_path) eq 0 then begin
     save_path = file_dirname(save_file, /mark_directory)
     if save_path eq '.' then undefine, save_dir
@@ -79,9 +94,32 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   
   if n_elements(save_file) eq 0 or n_elements(save_path) eq 0 then begin
     if n_elements(save_path) eq 0 then save_path = file_dirname(filenames[0], /mark_directory) + 'Healpix/'
-    if n_elements(save_file) eq 0 then save_base = 'Combined_obs_' + number_formatter(obs_range[0]) + '-' + number_formatter(obs_range[1]) + '_' + type + '_cube.sav'
-    
-    save_file = save_path + save_base
+    if n_elements(save_file) eq 0 then begin
+      if n_elements(obs_name) eq 0 then begin
+        ;; figure out if the input cubes are integrated or not
+        test_int = stregex(file_basename(filenames), 'Combined_obs_', /boolean)
+        if max(test_int) gt 0 then begin
+          wh_int = wher(test_int gt 0, complement = wh_single, ncomplement = count_single)
+          test_obsids = stregex(file_basename(filenames[wh_int]), '[0-9]+-[0-9]+', /boolean)
+          if min(test_int) lt 1 then begin
+            print, 'Input cubes include previously integrated cubes with custom names but no obs_name is specified. Using "custom".'
+            obs_name = 'custom'
+          endif else begin
+            obsids = long(strsplit(stregex(file_basename(filenames[wh_int]), '[0-9]+-[0-9]+', /extract), '-',/extract))
+            if count_single gt 0 then obsids = [obsids, long(stregex(file_basename(filenames[wh_single]), '[0-9]+', /extract))]
+            obs_name = number_formatter(min(obsids)) + '-' + number_formatter(max(obsids))
+          endelse
+        endif else begin
+          ;; these are single obsid cubes, use the range of obsids for the obs_name
+          obsids = long(stregex(file_basename(filenames), '[0-9]+', /extract))
+          obs_name = number_formatter(min(obsids)) + '-' + number_formatter(max(obsids))
+        endelse
+      endif
+      
+      save_base = 'Combined_obs_' + obs_name + '_' + type + pol_str + '_cube.sav'
+      
+      save_file = save_path + save_base
+    endif else if file_dirname(save_file) eq '.' then save_file = save_path + save_file
   endif
   
   freq_match_arr = intarr(nfiles)
@@ -110,36 +148,59 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     if n_elements(dirty_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('dirty_yy_cube', ptr_new(temporary(dirty_yy_cube))) else $
       cube_struct = create_struct(cube_struct, 'dirty_yy_cube', ptr_new(temporary(dirty_yy_cube)))
+    if n_elements(dirty_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
+      cube_struct = create_struct('dirty_cube', ptr_new(temporary(dirty_cube))) else $
+      cube_struct = create_struct(cube_struct, 'dirty_cube', ptr_new(temporary(dirty_cube)))
+
     if n_elements(model_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('model_xx_cube', ptr_new(temporary(model_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'model_xx_cube', ptr_new(temporary(model_xx_cube)))
     if n_elements(model_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('model_yy_cube', ptr_new(temporary(model_yy_cube))) else $
       cube_struct = create_struct(cube_struct, 'model_yy_cube', ptr_new(temporary(model_yy_cube)))
+    if n_elements(model_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
+      cube_struct = create_struct('model_cube', ptr_new(temporary(model_cube))) else $
+      cube_struct = create_struct(cube_struct, 'model_cube', ptr_new(temporary(model_cube)))
+
     if n_elements(res_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('res_xx_cube', ptr_new(temporary(res_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'res_xx_cube', ptr_new(temporary(res_xx_cube)))
     if n_elements(res_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('res_yy_cube', ptr_new(temporary(res_yy_cube))) else $
       cube_struct = create_struct(cube_struct, 'res_yy_cube', ptr_new(temporary(res_yy_cube)))
+    if n_elements(res_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
+      cube_struct = create_struct('res_cube', ptr_new(temporary(res_cube))) else $
+      cube_struct = create_struct(cube_struct, 'res_cube', ptr_new(temporary(res_cube)))
+
     if n_elements(weights_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('weights_xx_cube', ptr_new(temporary(weights_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'weights_xx_cube', ptr_new(temporary(weights_xx_cube)))
     if n_elements(weights_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('weights_yy_cube', ptr_new(temporary(weights_yy_cube))) else $
       cube_struct = create_struct(cube_struct, 'weights_yy_cube', ptr_new(temporary(weights_yy_cube)))
+    if n_elements(weights_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
+      cube_struct = create_struct('weights_cube', ptr_new(temporary(weights_cube))) else $
+      cube_struct = create_struct(cube_struct, 'weights_cube', ptr_new(temporary(weights_cube)))
+
     if n_elements(variance_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('variance_xx_cube', ptr_new(temporary(variance_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'variance_xx_cube', ptr_new(temporary(variance_xx_cube)))
     if n_elements(variance_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('variance_yy_cube', ptr_new(temporary(variance_yy_cube))) else $
       cube_struct = create_struct(cube_struct, 'variance_yy_cube', ptr_new(temporary(variance_yy_cube)))
+    if n_elements(variance_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
+      cube_struct = create_struct('variance_cube', ptr_new(temporary(variance_cube))) else $
+      cube_struct = create_struct(cube_struct, 'variance_cube', ptr_new(temporary(variance_cube)))
+
     if n_elements(beam_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('beam_xx_cube', ptr_new(temporary(beam_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'beam_xx_cube', ptr_new(temporary(beam_xx_cube)))
     if n_elements(beam_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('beam_yy_cube', ptr_new(temporary(beam_yy_cube))) else $
       cube_struct = create_struct(cube_struct, 'beam_yy_cube', ptr_new(temporary(beam_yy_cube)))
+     if n_elements(beam_squared_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
+      cube_struct = create_struct('beam_squared_cube', ptr_new(temporary(beam_squared_cube))) else $
+      cube_struct = create_struct(cube_struct, 'beam_squared_cube', ptr_new(temporary(beam_squared_cube)))
       
       
     if i eq 0 then begin
