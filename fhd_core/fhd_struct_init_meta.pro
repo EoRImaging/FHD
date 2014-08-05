@@ -2,7 +2,7 @@ FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,$
     zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
-    meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra
+    meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
 IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees

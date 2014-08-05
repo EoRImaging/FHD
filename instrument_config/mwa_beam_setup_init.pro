@@ -47,7 +47,7 @@ ENDIF
 
 freq_center=antenna_str.freq
 IF Keyword_Set(dipole_mutual_coupling_factor) THEN antenna_str.coupling=mwa_dipole_mutual_coupling(freq_center) $
-    ELSE FOR i=0L,N_Elements(antenna_str.coupling) DO antenna_str.coupling[i]=Ptr_new(Complex(Identity(n_dipoles)))
+    ELSE FOR i=0L,N_Elements(antenna_str.coupling)-1 DO antenna_str.coupling[i]=Ptr_new(Complex(Identity(n_dipoles)))
 
 base_gain=fltarr(16)+1.
 gain_arr=Ptrarr(n_ant_pol)

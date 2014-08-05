@@ -27,7 +27,11 @@ dist_hist = histogram(dist_arr, min=obs.min_baseline, binsize=5, max=obs.max_bas
         ENDIF
     ENDFOR
     vis_baseline_hist = {baseline_length:dist_locs, vis_res_ratio_mean:vis_res_ratio_mean, vis_res_sigma:vis_res_sigma}
-    IF Keyword_Set(file_path_fhd) THEN SAVE,vis_baseline_hist,filename=file_path_fhd+'_cal_hist.sav'
+    IF Keyword_Set(file_path_fhd) THEN BEGIN
+        path_use=filepath(file_basename(file_path_fhd+'_cal_hist.sav'),root=file_dirname(file_path_fhd),subdir='output_data')
+        IF file_test(file_dirname(path_use)) EQ 0 THEN file_mkdir,file_dirname(path_use)
+        SAVE,vis_baseline_hist,filename=path_use
+    ENDIF
 ;ENDIF ELSE BEGIN
 ;    FOR pol_i=0,n_pol-1 DO BEGIN
 ;        FOR i=0, n_elements(dist_locs)-1 DO IF dist_hist[i] GT 0 THEN BEGIN
