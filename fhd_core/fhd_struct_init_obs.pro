@@ -1,5 +1,5 @@
 FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
-    lon=lon,lat=lat,alt=alt, pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
+    pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
     FoV=FoV,precess=precess,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
@@ -52,24 +52,24 @@ freq_bin_i=fltarr(hdr.n_freq)
 FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
 freq_center=Median(frequency_array)
 
-IF Keyword_Set(scale_uv) THEN BEGIN
-    params.uu*=scale_uv
-    params.vv*=scale_uv
-    params.ww*=scale_uv
-ENDIF
-IF Keyword_Set(rotate_uv) THEN BEGIN
-    uu1=(uu=params.uu)
-    vv1=(vv=params.vv)
-    rotation_arr=fltarr(n_time)
-    FOR i=0,n_time-1 DO BEGIN
-        zenpos2,Jdate[i],zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
-        rotation_arr[i]=angle_difference(zendec,zenra,zendec2,zenra2,/degree);/2.
-        uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
-        vv1[bin_start[i]:bin_end[i]]=vv[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)+uu[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
-    ENDFOR
-    params.uu=uu1
-    params.vv=vv1        
-ENDIF
+;IF Keyword_Set(scale_uv) THEN BEGIN
+;    params.uu*=scale_uv
+;    params.vv*=scale_uv
+;    params.ww*=scale_uv
+;ENDIF
+;IF Keyword_Set(rotate_uv) THEN BEGIN
+;    uu1=(uu=params.uu)
+;    vv1=(vv=params.vv)
+;    rotation_arr=fltarr(n_time)
+;    FOR i=0,n_time-1 DO BEGIN
+;        zenpos2,Jdate[i],zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
+;        rotation_arr[i]=angle_difference(zendec,zenra,zendec2,zenra2,/degree);/2.
+;        uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
+;        vv1[bin_start[i]:bin_end[i]]=vv[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)+uu[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
+;    ENDFOR
+;    params.uu=uu1
+;    params.vv=vv1        
+;ENDIF
 
 calibration=fltarr(4)+1.
 IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol

@@ -20,10 +20,10 @@ antenna_coords[0]=Ptr_new(xc_arr)
 antenna_coords[1]=Ptr_new(yc_arr)
 antenna_coords[2]=Ptr_new(zc_arr)
 
-*delay_settings=Fltarr(n_dipoles)
+delay_settings=Ptr_new(Fltarr(n_dipoles))
 
 freq_center=antenna_str.freq
-FOR i=0L,N_Elements(antenna_str.coupling) DO antenna_str.coupling[i]=Ptr_new(Complex(Identity(n_dipoles)))
+FOR i=0L,N_Elements(antenna_str.coupling)-1 DO antenna_str.coupling[i]=Ptr_new(Complex(Identity(n_dipoles)))
 
 base_gain=fltarr(n_dipoles)+1.
 gain_arr=Ptrarr(n_ant_pol)
