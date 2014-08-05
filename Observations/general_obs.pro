@@ -19,7 +19,7 @@ ON_ERROR,error_method
 
 ;Set which procedures are to be run
 IF Keyword_Set(firstpass) THEN BEGIN
-    return_cal_visibilities=1
+    IF N_Elements(return_cal_visibilities) EQ 0 THEN return_cal_visibilities=1
     mapfn_recalculate=0
     deconvolve=0
     IF N_Elements(export_images) EQ 0 THEN export_images=1

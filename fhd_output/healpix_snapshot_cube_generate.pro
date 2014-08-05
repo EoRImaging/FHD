@@ -3,7 +3,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
     rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
-    snapshot_recalculate=snapshot_recalculate,_Extra=extra
+    snapshot_recalculate=snapshot_recalculate,obs_out=obs_out,psf_out=psf_out,_Extra=extra
     
   t0=Systime(1)
   

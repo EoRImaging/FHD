@@ -31,6 +31,9 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   header_filepath=file_path_fhd+'_header.sav'
   flags_filepath=file_path_fhd+'_flags.sav'
   input_model_filepath = file_path_fhd + '_input_model.sav'
+  coarse_input_model_filepath = file_path_fhd + '_input_model_coarse.sav'
+  init_beam_filepath = file_path_fhd + '_initial_beam2_image.sav'
+  gridded_beam_filepath = file_path_fhd + '_gridded_beam2_image.sav'
   vis_filepath=file_path_fhd+'_vis.sav'
   obs_filepath=file_path_fhd+'_obs.sav'
   params_filepath=file_path_fhd+'_params.sav'
@@ -57,7 +60,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   data_array=Temporary(data_struct.array[*,0:n_pol-1,*])
   data_struct=0. ;free memory
   
-  obs=vis_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
+  obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
   pol_dim=hdr.pol_dim
   freq_dim=hdr.freq_dim
   real_index=hdr.real_index
@@ -102,6 +105,12 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
     endif
     
+    beam2_image = fltarr(obs.dimension, obs.elements, n_freq)
+    for pol_i=0, n_pol-1 do begin
+      for freq_i=0,n_freq-1 do beam2_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=pol_i)
+    endfor
+    save, file=init_beam_filepath, beam2_image, obs
+    fhd_undefine, beam2_image
     
     if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(eor_sim) then begin
       model_uvf_arr=Ptrarr(n_pol,/allocate)
@@ -120,6 +129,11 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         freq_arr = (*obs.baseline_info).freq
         delta_uv=obs.kpix
         uv_arr = (findgen(obs.dimension)-obs.dimension/2)*delta_uv
+        
+        uv_locs = findgen(101)*4.-200.
+        eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
+        save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, freq_arr, /compress
+        
         time0 = systime(1)
         eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
         time1 = systime(1)
@@ -267,12 +281,22 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     ENDIF
     
   ENDIF
-    
+  
   ;optionally export frequency-split Healpix cubes
-  IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,$
-    vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
-    
-  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr
+  IF Keyword_Set(snapshot_healpix_export) THEN begin
+    healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,/restrict_hpx_inds,$
+      vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+      save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
+      
+    beam2_image = fltarr(obs_out.dimension, obs_out.elements, obs_out.n_freq)
+    for pol_i=0, n_pol-1 do begin
+      for freq_i=0,obs_out.n_freq-1 do beam2_image[*,*,freq_i] = beam_image(psf_out,obs_out,/square,freq_i=freq_i,pol_i=pol_i)
+    endfor
+    undefine_fhd, obs
+    obs = obs_out
+    save, file=gridded_beam_filepath, beam2_image, obs
+  endif
+  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr,beam2_image
   
   timing=Systime(1)-t0
   print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))

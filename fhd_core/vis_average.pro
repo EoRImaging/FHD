@@ -17,7 +17,7 @@ FOR i=1,n_time0-1 DO bin_width[i]=b0i[i]-b0i[i-1]
 bin_offset=fltarr(n_time0) & bin_offset[1:*]=total(bin_width[0:n_time0-2],/cumulative)    
 n_baselines=bin_width[0]
 
-;hdr={n_params:n_grp_params,gcount:gcount,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
+;hdr={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
 ;    freq_ref:freq_ref,freq_width:freq_width,freq_ref_i:freq_ref_i,obsra:obsra,obsdec:obsdec,date:date_obs,$
 ;    uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:Jdate0,$
 ;    pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
@@ -33,7 +33,7 @@ IF Keyword_Set(vis_freq_average) THEN BEGIN
         FOR fi=0L,n_freq-1 DO BEGIN
             (*vis_arr[pol_i])[fi,*]=Total(vis_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*]$
                 *flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)$
-                /Total(flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)
+                *weight_invert(Total(flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1))
         ENDFOR
         vis_old=0 ;free memory
         *flag_arr[pol_i]=Fltarr(n_freq,n_baseline_time)

@@ -48,36 +48,37 @@ IF Keyword_Set(freq_start) THEN BEGIN
             ENDFOR
         ENDIF
     ENDIF
-
-CASE instrument OF
-    'mwa32t':BEGIN
-        coarse_channel_width=32
-        channel_edge_flag_width=4
-        fine_channel_i=lindgen(n_freq) mod coarse_channel_width
-        channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
-        channel_center_flag=where(fine_channel_i EQ 15)
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            (*flag_ptr[pol_i])[channel_edge_flag,*]=0
-            (*flag_ptr[pol_i])[channel_center_flag,*]=0
-        ENDFOR
-;        freq_use=(*obs.baseline_info).freq_use 
-;        freq_use[channel_edge_flag]=0
-;        freq_use[channel_center_flag]=0
-;        (*obs.baseline_info).freq_use=freq_use
-    END
-    'mwa':BEGIN
-        freq_avg=Round(768./n_freq)
-        channel_edge_flag_width=Ceil(2./freq_avg)
-        coarse_channel_width=Round(32./freq_avg)
-        fine_channel_i=lindgen(n_freq) mod coarse_channel_width
-        channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
-        FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[channel_edge_flag,*]=0
-;        freq_use=(*obs.baseline_info).freq_use
-;        freq_use[channel_edge_flag]=0
-;        (*obs.baseline_info).freq_use=freq_use
-    END
-    ELSE:
-END
+IF Keyword_Set(no_frequency_flagging) OR Keyword_Set(unflag_all) THEN do_nothing=1 ELSE BEGIN
+  CASE instrument OF
+      'mwa32t':BEGIN
+          coarse_channel_width=32
+          channel_edge_flag_width=4
+          fine_channel_i=lindgen(n_freq) mod coarse_channel_width
+          channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
+          channel_center_flag=where(fine_channel_i EQ 15)
+          FOR pol_i=0,n_pol-1 DO BEGIN
+              (*flag_ptr[pol_i])[channel_edge_flag,*]=0
+              (*flag_ptr[pol_i])[channel_center_flag,*]=0
+          ENDFOR
+  ;        freq_use=(*obs.baseline_info).freq_use 
+  ;        freq_use[channel_edge_flag]=0
+  ;        freq_use[channel_center_flag]=0
+  ;        (*obs.baseline_info).freq_use=freq_use
+      END
+      'mwa':BEGIN
+          freq_avg=Round(768./n_freq)
+          channel_edge_flag_width=Ceil(2./freq_avg)
+          coarse_channel_width=Round(32./freq_avg)
+          fine_channel_i=lindgen(n_freq) mod coarse_channel_width
+          channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
+          FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[channel_edge_flag,*]=0
+  ;        freq_use=(*obs.baseline_info).freq_use
+  ;        freq_use[channel_edge_flag]=0
+  ;        (*obs.baseline_info).freq_use=freq_use
+      END
+      ELSE:
+  END
+ENDELSE
 
 tile_A_i=(*obs.baseline_info).tile_A-1
 tile_B_i=(*obs.baseline_info).tile_B-1
@@ -87,16 +88,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     baseline_flag=Max(*flag_ptr[pol_i],dimension=1)>0
     freq_flag=Max(*flag_ptr[pol_i],dimension=2)>0
     
-    fi_use=where(freq_flag GT 0)
-    bi_use=where(baseline_flag GT 0)
+    fi_use=where(freq_flag GT 0,nf_use)
+    bi_use=where(baseline_flag GT 0,nb_use)
     
     freq_use1=intarr(n_freq) 
-    freq_use1[fi_use]=1.
+    IF nf_use GT 0 THEN freq_use1[fi_use]=1.
     freq_use*=freq_use1
     
     tile_use1=intarr(n_tile)
-    tile_use1[tile_A_i[bi_use]]=1
-    tile_use1[tile_B_i[bi_use]]=1
+    IF nb_use GT 0 THEN tile_use1[tile_A_i[bi_use]]=1
+    IF nb_use GT 0 THEN tile_use1[tile_B_i[bi_use]]=1
     tile_use*=tile_use1
     
 ENDFOR
@@ -108,8 +109,9 @@ IF Keyword_Set(no_frequency_flagging) THEN BEGIN
         freq_unflag_i=where(freq_flag EQ 0,n_unflag)
         IF n_unflag GT 0 THEN BEGIN
             baseline_flag=Max(*flag_ptr[pol_i],dimension=1)>0
-            bi_use=where(baseline_flag GT 0)
+            bi_use=where(baseline_flag GT 0,nb_use)
             FOR fi=0L,n_unflag-1 DO BEGIN
+                IF nb_use EQ 0 THEN CONTINUE 
                 data_test=Abs((*vis_ptr[pol_i])[freq_unflag_i[fi],bi_use])
                 unflag_i=where(data_test GT 0,n_unflag1)
                 IF n_unflag1 GT 0 THEN (*flag_ptr[pol_i])[freq_unflag_i[fi],bi_use[unflag_i]]=1
