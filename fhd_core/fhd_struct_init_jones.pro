@@ -10,7 +10,7 @@ elements=obs.elements
 
 IF Keyword_Set(update_last) THEN BEGIN
     IF N_Elements(jones_in) EQ 0 THEN $
-        jones_in=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,mask=mask,/restore_last)
+        jones_in=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,mask=mask,/restore_last)
     dimension_in=jones_in.dimension
     elements_in=jones_in.elements
     mask_use=intarr(dimension_in,elements_in)
