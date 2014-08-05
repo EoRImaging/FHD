@@ -130,7 +130,7 @@ IF data_flag LE 0 THEN BEGIN
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,antenna=antenna,cmd_args=cmd_args,/overwrite ;write preliminary settings file for debugging, in case later steps crash
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata' ;write preliminary settings file for debugging, in case later steps crash
 ;    IF ~Keyword_Set(silent) THEN BEGIN
 ;        beam_arr=Ptrarr(n_pol,/allocate)
 ;        FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
@@ -194,7 +194,7 @@ IF data_flag LE 0 THEN BEGIN
     
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."

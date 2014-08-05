@@ -1,6 +1,8 @@
-PRO fhd_log_settings,file_path_fhd,obs=obs,antenna=antenna,psf=psf,cal=cal,fhd=fhd,cmd_args=cmd_args,overwrite=overwrite
+PRO fhd_log_settings,file_path_fhd,obs=obs,antenna=antenna,psf=psf,cal=cal,fhd=fhd,cmd_args=cmd_args,overwrite=overwrite,sub_directory=sub_directory
 
 descr_file_path=file_path_fhd+'_settings.txt'
+IF Keyword_Set(sub_directory) THEN descr_file_path=filepath(file_basename(descr_file_path),root=file_dirname(descr_file_path),sub=sub_directory)
+IF file_test(file_dirname(descr_file_path)) EQ 0 THEN file_mkdir,file_dirname(descr_file_path)
 
 delimiter=String(9B)
 main_delimiter='##MAIN'

@@ -66,7 +66,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   hpx_inds=hpx_cnv.inds
   n_hpx=N_Elements(hpx_inds)
   
-  fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,antenna=antenna_out,cal=cal,cmd_args=cmd_args,/overwrite
+  fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,antenna=antenna_out,cal=cal,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
   undefine_fhd,antenna_out
   
   IF N_Elements(flag_arr) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
