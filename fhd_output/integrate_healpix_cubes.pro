@@ -383,6 +383,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       if not keyword_set(discard_unmatched_pix) then undefine, combined_pix, subcmbpix, subcmbhpx
       if not keyword_set(discard_unmatched_freq) then undefine, combined_freq, subcmbfreq, subcmbtf
     endelse ;; ~first file
+    undefine_fhd, cube_struct
   endfor ;; loop over files
   
   nside = nside_use
