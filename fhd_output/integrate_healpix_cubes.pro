@@ -68,7 +68,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     'evenoddallmix': print, 'Warning: Combining a mixture of even, odd and unsplit cubes'
   endcase
   
-  pol_exist = stregex(filenames, '[xy][xy]', /boolean, /foldcase)
+  pol_exist = stregex(filenames, '[xy][xy]', /boolean, /fold_case)
   if max(pol_exist) gt 0 then begin
     wh_pol_exist = where(pol_exist gt 0, count_pol_exist, ncomplement = count_no_pol)
     if count_no_pol gt 0 then begin
@@ -76,7 +76,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       pol = 'polmix'
     endif
     
-    pols = stregex(filenames[wh_pol_exist], '[xy][xy]', /extract, /foldcase)
+    pols = stregex(filenames[wh_pol_exist], '[xy][xy]', /extract, /fold_case)
     wh_pol_diff = where(pols ne pols[0], count_pol_diff)
     if count_pol_diff gt 0 then begin
       print, 'Warning: Combining a mixture of different polarization cubes'
@@ -151,7 +151,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     if n_elements(dirty_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('dirty_cube', ptr_new(temporary(dirty_cube))) else $
       cube_struct = create_struct(cube_struct, 'dirty_cube', ptr_new(temporary(dirty_cube)))
-
+      
     if n_elements(model_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('model_xx_cube', ptr_new(temporary(model_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'model_xx_cube', ptr_new(temporary(model_xx_cube)))
@@ -161,7 +161,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     if n_elements(model_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('model_cube', ptr_new(temporary(model_cube))) else $
       cube_struct = create_struct(cube_struct, 'model_cube', ptr_new(temporary(model_cube)))
-
+      
     if n_elements(res_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('res_xx_cube', ptr_new(temporary(res_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'res_xx_cube', ptr_new(temporary(res_xx_cube)))
@@ -171,7 +171,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     if n_elements(res_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('res_cube', ptr_new(temporary(res_cube))) else $
       cube_struct = create_struct(cube_struct, 'res_cube', ptr_new(temporary(res_cube)))
-
+      
     if n_elements(weights_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('weights_xx_cube', ptr_new(temporary(weights_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'weights_xx_cube', ptr_new(temporary(weights_xx_cube)))
@@ -181,7 +181,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     if n_elements(weights_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('weights_cube', ptr_new(temporary(weights_cube))) else $
       cube_struct = create_struct(cube_struct, 'weights_cube', ptr_new(temporary(weights_cube)))
-
+      
     if n_elements(variance_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('variance_xx_cube', ptr_new(temporary(variance_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'variance_xx_cube', ptr_new(temporary(variance_xx_cube)))
@@ -191,14 +191,14 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     if n_elements(variance_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('variance_cube', ptr_new(temporary(variance_cube))) else $
       cube_struct = create_struct(cube_struct, 'variance_cube', ptr_new(temporary(variance_cube)))
-
+      
     if n_elements(beam_xx_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('beam_xx_cube', ptr_new(temporary(beam_xx_cube))) else $
       cube_struct = create_struct(cube_struct, 'beam_xx_cube', ptr_new(temporary(beam_xx_cube)))
     if n_elements(beam_yy_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('beam_yy_cube', ptr_new(temporary(beam_yy_cube))) else $
       cube_struct = create_struct(cube_struct, 'beam_yy_cube', ptr_new(temporary(beam_yy_cube)))
-     if n_elements(beam_squared_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
+    if n_elements(beam_squared_cube) ne 0 then if n_elements(cube_struct) eq 0 then $
       cube_struct = create_struct('beam_squared_cube', ptr_new(temporary(beam_squared_cube))) else $
       cube_struct = create_struct(cube_struct, 'beam_squared_cube', ptr_new(temporary(beam_squared_cube)))
       
@@ -399,6 +399,11 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     dirty_yy_cube = *int_struct.dirty_yy_cube
     ptr_free, int_struct.dirty_yy_cube
   endif
+  if tag_exist(int_struct, 'dirty_cube') then begin
+    dirty_cube = *int_struct.dirty_cube
+    ptr_free, int_struct.dirty_cube
+  endif
+  
   if tag_exist(int_struct, 'model_xx_cube') then begin
     model_xx_cube = *int_struct.model_xx_cube
     ptr_free, int_struct.model_xx_cube
@@ -407,6 +412,11 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     model_yy_cube = *int_struct.model_yy_cube
     ptr_free, int_struct.model_yy_cube
   endif
+  if tag_exist(int_struct, 'model_cube') then begin
+    model_cube = *int_struct.model_cube
+    ptr_free, int_struct.model_cube
+  endif
+  
   if tag_exist(int_struct, 'res_xx_cube') then begin
     res_xx_cube = *int_struct.res_xx_cube
     ptr_free, int_struct.res_xx_cube
@@ -415,6 +425,11 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     res_yy_cube = *int_struct.res_yy_cube
     ptr_free, int_struct.res_yy_cube
   endif
+  if tag_exist(int_struct, 'res_cube') then begin
+    res_cube = *int_struct.res_cube
+    ptr_free, int_struct.res_cube
+  endif
+  
   if tag_exist(int_struct, 'weights_xx_cube') then begin
     weights_xx_cube = *int_struct.weights_xx_cube
     ptr_free, int_struct.weights_xx_cube
@@ -423,6 +438,11 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     weights_yy_cube = *int_struct.weights_yy_cube
     ptr_free, int_struct.weights_yy_cube
   endif
+  if tag_exist(int_struct, 'weights_cube') then begin
+    weights_cube = *int_struct.weights_cube
+    ptr_free, int_struct.weights_cube
+  endif
+  
   if tag_exist(int_struct, 'variance_xx_cube') then begin
     variance_xx_cube = *int_struct.variance_xx_cube
     ptr_free, int_struct.variance_xx_cube
@@ -431,6 +451,11 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     variance_yy_cube = *int_struct.variance_yy_cube
     ptr_free, int_struct.variance_yy_cube
   endif
+  if tag_exist(int_struct, 'variance_cube') then begin
+    variance_cube = *int_struct.variance_cube
+    ptr_free, int_struct.variance_cube
+  endif
+  
   if tag_exist(int_struct, 'beam_xx_cube') then begin
     beam_xx_cube = *int_struct.beam_xx_cube
     ptr_free, int_struct.beam_xx_cube
@@ -439,9 +464,14 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     beam_yy_cube = *int_struct.beam_yy_cube
     ptr_free, int_struct.beam_yy_cube
   endif
+  if tag_exist(int_struct, 'beam_squared_cube') then begin
+    beam_squared_cube = *int_struct.beam_squared_cube
+    ptr_free, int_struct.beam_squared_cube
+  endif
   
-  save, file = save_file, dirty_xx_cube,  dirty_yy_cube,  model_xx_cube,  model_yy_cube,  res_xx_cube,  res_yy_cube, $
-    variance_xx_cube,  variance_yy_cube, weights_xx_cube,  weights_yy_cube, beam_xx_cube, beam_yy_cube, $
-    nside,  n_avg,  obs_arr,  hpx_inds, frequencies, nfile_contrib_pix, nfile_contrib_freq
+  save, file = save_file, dirty_xx_cube, dirty_yy_cube, dirty_cube, model_xx_cube, model_yy_cube, model_cube, $
+    res_xx_cube, res_yy_cube, res_cube, weights_xx_cube, weights_yy_cube, weights_cube, $
+    variance_xx_cube, variance_yy_cube, variance_cube, beam_xx_cube, beam_yy_cube, beam_squared_cube, $
+    nside, n_avg, obs_arr, hpx_inds, frequencies, nfile_contrib_pix, nfile_contrib_freq
     
 end
