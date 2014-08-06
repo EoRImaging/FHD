@@ -264,6 +264,10 @@ case version of
       dimension=3072
       FoV=80.
    end
+   'apb_test_diffuse_subtract':begin
+      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_8/Healpix/diffuse_model.sav'
+      model_visibilities=1
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
