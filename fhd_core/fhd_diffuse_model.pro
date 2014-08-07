@@ -27,9 +27,10 @@ nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
 IF file_test(model_filepath) EQ 0 THEN RETURN,Ptrarr(n_pol)
 var_dummy=getvar_savefile(model_filepath,names=var_names)
-;save file must have one variable called 'hpx_inds', and at least one other variable. If there are multiple other variables, it must be called 'model_arr'
+;save file must have one variable called 'hpx_inds', one called 'nside', and at least one other variable. If there are multiple other variables, it must be called 'model_arr'
 hpx_inds=getvar_savefile(model_filepath,'hpx_inds')
-var_name_inds=where(StrLowCase(var_names) NE 'hpx_inds')
+nside=getvar_savefile(model_filepath,'nside')
+var_name_inds=where((StrLowCase(var_names) NE 'hpx_inds') AND (StrLowCase(var_names) NE 'nside'))
 var_names=var_names[var_name_inds]
 var_name_use=var_names[(where(StrLowCase(var_names) EQ 'model_arr',n_match))[0]>0] ;will pick 'model_arr' if present, or the first variable that is not 'hpx_inds'
 model_hpx_arr=getvar_savefile(model_filepath,var_name_use)
