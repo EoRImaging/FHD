@@ -6,7 +6,7 @@ FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
 ;requires the jones structure from fhd_struct_init_jones.pro
 
-IF N_Elements(beam_arr) EQ 0 THEN BEGIN
+IF Min(Ptr_valid(beam_arr)) EQ 0 THEN BEGIN
     n_pol=4
     beam_use=Ptrarr(n_pol,/allocate)
     FOR ii=0L,n_pol-1 DO *beam_use[ii]=1.

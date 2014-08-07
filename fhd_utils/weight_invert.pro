@@ -1,6 +1,6 @@
 FUNCTION weight_invert,weights,threshold,abs=abs
 
-result=Make_array(size(weights,/dimension),type=size(weights,/type))
+result=Make_array(size(weights,/dimension)>1,type=size(weights,/type))
 ;result=fltarr(size(weights,/dimension))
 IF Keyword_Set(abs) THEN BEGIN
     IF Keyword_Set(threshold) THEN i_use=where(Abs(weights) GE threshold,n_use) $
