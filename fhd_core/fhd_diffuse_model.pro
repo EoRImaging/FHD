@@ -1,4 +1,4 @@
-FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,_Extra=extra
+FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,uv_return=uv_return,_Extra=extra
 
 dimension=obs.dimension
 elements=obs.elements
@@ -106,5 +106,13 @@ ENDFOR
 
 model_arr=Stokes_cnv(model_stokes_arr,jones,_Extra=extra)
 Ptr_free,model_stokes_arr
-RETURN,model_arr
+IF Keyword_Set(uv_return) THEN BEGIN
+    model_uv_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        model_uv=fft_shift(FFT(fft_shift(*model_arr[pol_i]),/inverse))
+        *model_uv_arr[pol_i]=model_uv
+    ENDFOR
+    Ptr_free,model_arr
+    RETURN,model_uv_arr 
+ENDIF ELSE RETURN,model_arr
 END
