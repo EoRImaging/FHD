@@ -105,12 +105,14 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
     endif
     
-    beam2_image = fltarr(obs.dimension, obs.elements, n_freq)
-    for pol_i=0, n_pol-1 do begin
-      for freq_i=0,n_freq-1 do beam2_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=pol_i)
+    beam2_xx_image = fltarr(obs.dimension, obs.elements, n_freq)
+    beam2_yy_image = fltarr(obs.dimension, obs.elements, n_freq)
+    for freq_i=0,n_freq-1 do begin
+      beam2_xx_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=0)
+      beam2_yy_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=1)
     endfor
-    save, file=init_beam_filepath, beam2_image, obs
-    fhd_undefine, beam2_image
+    save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
+    undefine, beam2_xx_image, beam2_yy_image
     
     if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(eor_sim) then begin
       model_uvf_arr=Ptrarr(n_pol,/allocate)
@@ -284,19 +286,19 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN begin
-    healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,/restrict_hpx_inds,$
+    healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
       vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
-    beam2_image = fltarr(obs_out.dimension, obs_out.elements, obs_out.n_freq)
-    for pol_i=0, n_pol-1 do begin
-      for freq_i=0,obs_out.n_freq-1 do beam2_image[*,*,freq_i] = beam_image(psf_out,obs_out,/square,freq_i=freq_i,pol_i=pol_i)
+    beam2_xx_image = fltarr(obs_out.dimension, obs_out.elements, obs_out.n_freq)
+    beam2_yy_image = fltarr(obs_out.dimension, obs_out.elements, obs_out.n_freq)
+    for freq_i=0,obs_out.n_freq-1 do begin
+      beam2_xx_image[*,*, freq_i] = beam_image(psf_out,obs_out,/square,freq_i=freq_i,pol_i=0)
+      beam2_yy_image[*,*, freq_i] = beam_image(psf_out,obs_out,/square,freq_i=freq_i,pol_i=1)
     endfor
-    undefine_fhd, obs
-    obs = obs_out
-    save, file=gridded_beam_filepath, beam2_image, obs
+    save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
   endif
-  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr,beam2_image
+  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out
   
   timing=Systime(1)-t0
   print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
