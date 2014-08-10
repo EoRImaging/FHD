@@ -194,7 +194,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             ant_1_n=hgroup1[g_i1]
             ant_2_n=hgroup2[g_i2]
             
-            bi_use=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)+Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n)*baseline_mod,baseline_group_n)
+            bi_use=Reform(rebin((ant_2_arr+1),ant_1_n,ant_2_n)+Rebin(Transpose(ant_1_arr+1),ant_1_n,ant_2_n)*baseline_mod,baseline_group_n)
             bi_inds=ri_bi[ri_bi[bi_use]] ;use these indices to index the reverse indices of the original baseline index histogram
 ;            bi_inds=bi_inds[uniq(bi_inds,radix_sort(bi_inds))] 
 ;            baseline_group_n=N_Elements(bi_inds)
