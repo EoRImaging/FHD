@@ -40,7 +40,8 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
     vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
-    model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,_Extra=extra
+    model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
+    reorder_visibilities=reorder_visibilities,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -105,6 +106,8 @@ IF data_flag LE 0 THEN BEGIN
         ;free memory
         data_array=0 
         flag_arr0=0
+        
+        IF Keyword_Set(reorder_visibilities) THEN vis_reorder,hdr,params,vis_arr,flag_arr
         
         ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
         IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
