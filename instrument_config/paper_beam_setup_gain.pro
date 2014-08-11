@@ -56,9 +56,9 @@ CASE beam_model_version OF
         
         projection_slant_orthographic,astr=astr,degpix=degpix,obsra=beam_RA0,obsdec=beam_Dec0,zenra=beam_RA0,zendec=beam_Dec0,$
             dimension=naxis1,elements=naxis2,obsx=beam_RA_pix0+1,obsy=beam_Dec_pix0+1,zenx=beam_RA_pix0+1,zeny=beam_Dec_pix0+1
-        xvals_use=az_arr
-        yvals_use=za_arr
-        mask_i=where((xvals_use EQ 0) AND (yvals_use EQ 90),n_mask)
+        xvals_use=xvals_instrument
+        yvals_use=yvals_instrument
+        mask_i=where((az_arr EQ 0) AND (za_arr EQ 90),n_mask)
         IF n_mask GT 0 THEN BEGIN
             xvals_use[mask_i]=!Values.F_NAN
             yvals_use[mask_i]=!Values.F_NAN
