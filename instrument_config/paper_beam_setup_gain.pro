@@ -49,8 +49,6 @@ CASE beam_model_version OF
         
         degpix=[beam_RA_delt,beam_Dec_delt]        
         
-        freq_i_test=Min(abs(freq_arr-frequency),freq_i_use)
-        beam_slice=Reform(beam_cube[*,*,freq_i_use])
         
         ;beam_slice=Sqrt(beam_slice>0.)
         
@@ -58,22 +56,26 @@ CASE beam_model_version OF
         
         projection_slant_orthographic,astr=astr,degpix=degpix,obsra=beam_RA0,obsdec=beam_Dec0,zenra=beam_RA0,zendec=beam_Dec0,$
             dimension=naxis1,elements=naxis2,obsx=beam_RA_pix0+1,obsy=beam_Dec_pix0+1,zenx=beam_RA_pix0+1,zeny=beam_Dec_pix0+1
-        
+        xvals_use=az_arr
+        yvals_use=za_arr
+        mask_i=where((xvals_use EQ 0) AND (yvals_use EQ 90),n_mask)
+        IF n_mask GT 0 THEN BEGIN
+            xvals_use[mask_i]=!Values.F_NAN
+            yvals_use[mask_i]=!Values.F_NAN
+        ENDIF
+        Jones_matrix=antenna.jones
         FOR pol_i=0,n_ant_pol-1 DO BEGIN
             IF pol_i EQ 1 THEN astr.cd=[[0.,1.],[1.,0.]] ELSE astr.cd=[[1.,0.],[0.,1.]]
-            mask_i=where((xvals_use EQ 0) AND (yvals_use EQ 90),n_mask)
-            IF n_mask GT 0 THEN BEGIN
-                xvals_use[mask_i]=!Values.F_NAN
-                yvals_use[mask_i]=!Values.F_NAN
-            ENDIF
             ad2xy,xvals_use,yvals_use,astr,x_int,y_int
-            tile_beam=Float(interpolate(beam_slice,x_int,y_int,missing=0,cubic=-0.5))>0.
-            Jones_matrix[pol_i,pol_i]=tile_beam
-            xpol_i=Abs(1-pol_i)
-            Jones_matrix[xpol_i,pol_i]=Fltarr(size(tile_beam,/dimension)) ;all zeroes
+            FOR freq_i=0,nfreq_bin-1 DO BEGIN
+                freq_i_test=Min(abs(freq_arr-freq_center[freq_i]),freq_i_use)
+                beam_slice=Reform(beam_cube[*,*,freq_i_use])
+                tile_beam=Float(interpolate(beam_slice,x_int,y_int,missing=0,cubic=-0.5))>0.
+                Jones_matrix[pol_i,pol_i,freq_i]=Ptr_new(tile_beam)
+                xpol_i=Abs(1-pol_i)
+                Jones_matrix[xpol_i,pol_i,freq_i]=Ptr_new(Fltarr(size(tile_beam,/dimension))) ;all zeroes
+            ENDFOR
         ENDFOR
-        
-
     END
     ELSE: BEGIN      
         print,"Using default beam model"
