@@ -5,7 +5,9 @@ IF Min(Ptr_valid(flag_arr)) THEN flag_switch=1 ELSE flag_switch=0
 n_pol=N_Elements(vis_arr)
 
 n_freq=hdr.n_freq
+n_tile=hdr.n_tile
 bi_arr=params.baseline_arr
+n_baselines_in=N_Elements(bi_arr)
 time_arr=params.time
 b0i=Uniq(time_arr)
 time_vals=time_arr[b0i]
@@ -26,10 +28,18 @@ bi_hist=lonarr(bi_max,n_time)
 ;ri_arr=Ptrarr(n_time)
 
 FOR t_i=0L,n_time-1 DO BEGIN
-    bi_hist[*,t_i]=histogram(bi_arr[bin_start[t_i]:bin_end[bin_end[t_i]]],min=1,max=bi_max,/binsize)
+    bi_hist[*,t_i]=histogram(bi_arr[bin_start[t_i]:bin_end[t_i]],min=1,max=bi_max,/binsize)
 ;    ri_arr[t_i]=Ptr_new(Temporary(ri))
 ENDFOR
 bi_hist_tot=Total(bi_hist,2)
+
+;name_mod=2.^((Ceil(Alog(Sqrt(Max(bin_width)*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(bi_arr))/Alog(2.)))
+;tile_A=Long(Floor(bi_arr/name_mod)) ;tile numbers start from 1
+;tile_B=Long(Fix(bi_arr mod name_mod))
+;n_tile_use=Max(tile_A)>Max(tile_B)
+;auto_i=lindgen(n_tile_use)*name_mod+name_mod;+1 ; no '+1' since bi_hist starts from 1, not 0
+;bi_hist_tot[auto_i]=bi_hist_tot[auto_i]>1 ;ensure that auto-correlations are included
+
 bi_use=where(bi_hist_tot,n_baselines)
 bi_map=lonarr(bi_max+1)
 bi_map[bi_use+1]=lindgen(n_baselines)
@@ -37,10 +47,10 @@ bi_map[bi_use+1]=lindgen(n_baselines)
 n_baselines_int=n_baselines*n_time
 bi_new=Rebin(bi_use+1,n_baselines,n_time)
 bi_new=Reform(bi_new,n_baselines_int)
-bi_order=lonarr(N_Elements(bi_arr))
+bi_order=lonarr(n_baselines_in)
 
-FOR t_i=0L,n_time-1 DO bi_order[bin_start[t_i]:bin_end[bin_end[t_i]]]=$
-    bi_map[bi_arr[bin_start[t_i]:bin_end[bin_end[t_i]]]]+n_baselines*t_i
+FOR t_i=0L,n_time-1 DO bi_order[bin_start[t_i]:bin_end[t_i]]=$
+    bi_map[bi_arr[bin_start[t_i]:bin_end[t_i]]]+n_baselines*t_i
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     vis_use=Complexarr(n_freq,n_baselines_int)

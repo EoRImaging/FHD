@@ -50,6 +50,7 @@ no_restrict_cal_sources=1
 no_rephase=1
 calibrate_visibilities=1
 save_visibilities=0
+reorder_visibilities=1
 
 cmd_args=extra
 
