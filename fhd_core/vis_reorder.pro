@@ -1,4 +1,5 @@
 PRO vis_reorder,hdr,params,vis_arr,flag_arr
+; reorder visibilities to have ascending basline index, and add any baselines missing from some time steps
 
 IF Min(Ptr_valid(flag_arr)) THEN flag_switch=1 ELSE flag_switch=0
 

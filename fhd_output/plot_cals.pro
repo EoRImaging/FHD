@@ -58,8 +58,8 @@ xrange=[min(freq)-(max(freq)-min(freq))/8,max(freq)+(max(freq)-min(freq))/8]
 
 FOR tile_i=0L,n_tiles-1 DO BEGIN
     tile_name=tile_names[tile_i]
-    rec=Floor(tile_name/10)
-    tile=tile_name mod 10
+;    rec=Floor(tile_name/10)
+;    tile=tile_name mod 10
 
     IF tile_exist[tile_i] EQ 0 THEN BEGIN
       ; no tile found... must have been flagged in pre-processing
@@ -109,8 +109,8 @@ ytickv=[0,max_amp/2,max_amp]
 
 FOR tile_i=0L,n_tiles-1 DO BEGIN
     tile_name=tile_names[tile_i]
-    rec=Floor(tile_name/10)
-    tile=tile_name mod 10
+;    rec=Floor(tile_name/10)
+;    tile=tile_name mod 10
     
     IF tile_exist[tile_i] EQ 0  THEN BEGIN
       ; no tile found... must have been flagged in pre-processing
@@ -173,8 +173,8 @@ IF Keyword_Set(cal_res) THEN BEGIN
         
         FOR tile_i=0L,n_tiles-1 DO BEGIN
             tile_name=tile_names[tile_i]
-            rec=Floor(tile_name/10)
-            tile=tile_name mod 10
+;            rec=Floor(tile_name/10)
+;            tile=tile_name mod 10
     
             IF tile_exist[tile_i] EQ 0  THEN BEGIN
               ; no tile found... must have been flagged in pre-processing

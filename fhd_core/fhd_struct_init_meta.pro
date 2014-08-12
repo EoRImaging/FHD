@@ -1,4 +1,4 @@
-FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,$
+FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n_tile=n_tile,$
     zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
@@ -81,14 +81,18 @@ ENDIF ELSE BEGIN
 ;    print,metafits_path+' not found. Calculating obs settings from the uvfits header instead'
     ;256 tile upper limit is hard-coded in CASA format
     ;these tile numbers have been verified to be correct
-    tile_A1=Long(Floor(params.baseline_arr/256)) ;tile numbers start from 1
-    tile_B1=Long(Fix(params.baseline_arr mod 256))
-    hist_A1=histogram(tile_A1,min=0,max=256,/binsize,reverse_ind=ria)
-    hist_B1=histogram(tile_B1,min=0,max=256,/binsize,reverse_ind=rib)
+    name_mod=2.^((Ceil(Alog(Sqrt(hdr.nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
+    tile_A1=Long(Floor(params.baseline_arr/name_mod)) ;tile numbers start from 1
+    tile_B1=Long(Fix(params.baseline_arr mod name_mod))
+    hist_A1=histogram(tile_A1,min=1,max=n_tile,/binsize,reverse_ind=ria)
+    hist_B1=histogram(tile_B1,min=1,max=n_tile,/binsize,reverse_ind=rib)
     hist_AB=hist_A1+hist_B1
-    tile_names=where(hist_AB,n_tile)
+    tile_names=indgen(n_tile)+1
+    tile_use=where(hist_AB,n_tile_exist,complement=missing_i,ncomplement=missing_n)+1
     tile_height=Fltarr(n_tile)
-    tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(intarr(n_tile))
+    tile_flag0=intarr(n_tile)
+    IF missing_n GT 0 THEN tile_flag0[missing_i]=1
+    tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(tile_flag0)
     date_obs=hdr.date
     JD0=date_string_to_julian(date_obs)
     epoch=date_conv(hdr.date)/1000.
@@ -141,8 +145,8 @@ projection_slant_orthographic,astr=astr,degpix=degpix2,obsra=obsra,obsdec=obsdec
 
 Eq2Hor,obsra,obsdec,JD0,obsalt,obsaz,lat=lat,lon=lon,alt=Mean(alt)
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
-    epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),astr:astr,$
-    obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),obsaz:Float(obsaz),obsalt:Float(obsalt),$
+    epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),$
+    astr:astr,obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),obsaz:Float(obsaz),obsalt:Float(obsalt),$
     delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Float(orig_phasera),orig_phasedec:Float(orig_phasedec)}
 
 RETURN,meta

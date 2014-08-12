@@ -151,7 +151,7 @@ complex_flag_arr=intarr(n_pol,nfreq_bin)
 beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
 ant_A_list=tile_A[0:nbaselines-1]
 ant_B_list=tile_B[0:nbaselines-1]
-baseline_mod=2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))
+baseline_mod=2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list))
 bi_list=ant_B_list+ant_A_list*baseline_mod
 bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
@@ -195,8 +195,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             ant_2_n=hgroup2[g_i2]
             
             bi_use=Reform(rebin((ant_2_arr+1),ant_1_n,ant_2_n)+Rebin(Transpose(ant_1_arr+1),ant_1_n,ant_2_n)*baseline_mod,baseline_group_n)
-            bi_max=Max(bi_list)
             IF Max(bi_use) GT bi_max THEN bi_use=bi_use[where(bi_use LE bi_max)]
+            bi_use_i=where(bi_hist0[bi_use],n_use)
+            IF n_use GT 0 THEN bi_use=bi_use[bi_use_i]
             baseline_group_n=N_Elements(bi_use)
             bi_inds=ri_bi[ri_bi[bi_use]] ;use these indices to index the reverse indices of the original baseline index histogram
 ;            bi_inds=bi_inds[uniq(bi_inds,radix_sort(bi_inds))] 
