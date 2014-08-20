@@ -5,7 +5,7 @@ PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compres
 IF ~Keyword_Set(file_path_fhd) THEN BEGIN
     file_path_fhd=''
     no_save=1
-    retore=0
+    restore=0
 ENDIF
 
 IF N_Elements(compress) EQ 0 THEN compress=0
