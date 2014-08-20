@@ -11,7 +11,7 @@ IF N_Elements(pflag) EQ 0 THEN pflag=0
 IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
-git,'describe',result=code_version,project='fhd',args='--long'
+git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
 speed_light=299792458.
