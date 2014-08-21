@@ -86,11 +86,8 @@ IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E3
 ;;freq_norm/=Mean(freq_norm) 
 freq_norm=Replicate(1.,nfreq_bin)
 
-;begin forming psf
-psf_residuals_i=Ptrarr(n_pol,nfreq_bin,nbaselines) ;contains arrays of pixel indices of pixels with modified psf for a given baseline id
-psf_residuals_val=Ptrarr(n_pol,nfreq_bin,nbaselines) ;contains arrays of values corresponding to the pixel indices above
-psf_residuals_n=fltarr(n_pol,nfreq_bin,nbaselines) ;contains the total number of modified pixels for each baseline id
-psf_base=Ptrarr(n_pol,nfreq_bin,psf_resolution,psf_resolution)
+;;begin forming psf
+;psf_base=Ptrarr(n_pol,nfreq_bin,psf_resolution,psf_resolution)
 
 psf_xvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 psf_yvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
@@ -110,33 +107,11 @@ t1_a=Systime(1)
 psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
 psf_superres_dim=psf_dim*psf_resolution
-psf_scale=dimension*psf_intermediate_res/psf_image_dim
-xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
-yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+;psf_scale=dimension*psf_intermediate_res/psf_image_dim
+;xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
+;yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+dimension/2.
 xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
-;
-;xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
-;valid_i=where(Finite(ra_arr),n_valid)
-;ra_use=ra_arr[valid_i]
-;dec_use=dec_arr[valid_i]
-
-;;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
-;;;NOTE: The NEW Eq2Hor REQUIRES Jdate to be a scalar! They created a new bug when they fixed the old one
-;Eq2Hor,ra_use,dec_use,Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
-;za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
-;az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
-;
-;xvals_instrument=za_arr*Sin(az_arr*!DtoR)
-;yvals_instrument=za_arr*Cos(az_arr*!DtoR)
-
-;hour_angle=obs.obsra - ra_use
-;h_neg = where(hour_angle LT 0, N_neg)
-;IF N_neg GT 0 THEN hour_angle[h_neg] = hour_angle[h_neg] + 360.
-;hour_angle = hour_angle mod 360.
-;hadec2altaz, hour_angle, dec_use, obs.obsdec, elevation_use, azimuth_use
-;elevation_arr=fltarr(psf_image_dim,psf_image_dim) & elevation_arr[valid_i]=elevation_use
-;azimuth_arr=fltarr(psf_image_dim,psf_image_dim) & azimuth_arr[valid_i]=azimuth_use
 
 norm=[sqrt(1.-(sin(obsza*!DtoR)*sin((obsaz)*!DtoR))^2.),sqrt(1.-(sin(obsza*!DtoR)*cos((obsaz)*!DtoR))^2.)]
 pol_norm=fltarr(n_pol)+1.
