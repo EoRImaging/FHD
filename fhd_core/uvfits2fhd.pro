@@ -41,7 +41,7 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
     vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
     model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
-    reorder_visibilities=reorder_visibilities,_Extra=extra
+    reorder_visibilities=reorder_visibilities,transfer_flags=transfer_flags,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -169,6 +169,20 @@ IF data_flag LE 0 THEN BEGIN
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
     
+    IF Keyword_Set(transfer_mapfn) THEN transfer_flags=transfer_mapfn
+    
+    
+    IF Keyword_Set(transfer_flags) THEN BEGIN
+        transfer_flag_data,flag_arr,obs,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_mapfn,error=error,flag_visibilities=flag_visibilities,_Extra=extra
+    ENDIF ELSE BEGIN
+        IF Keyword_Set(flag_visibilities) THEN BEGIN
+            print,'Flagging anomalous data'
+            vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
+            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+        ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
+            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+    ENDELSE
+    
     IF Keyword_Set(model_visibilities) THEN BEGIN
         IF Keyword_Set(model_catalog_file_path) THEN BEGIN
             model_source_list=generate_source_cal_list(obs,psf,catalog_path=model_catalog_file_path,/model_visibilities,_Extra=extra) 
@@ -180,17 +194,6 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF 
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     model_flag=min(Ptr_valid(vis_model_arr))
-    
-    IF Keyword_Set(transfer_mapfn) THEN BEGIN
-        transfer_flag_data,flag_arr,obs,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_mapfn,error=error,flag_visibilities=flag_visibilities,_Extra=extra
-    ENDIF ELSE BEGIN
-        IF Keyword_Set(flag_visibilities) THEN BEGIN
-            print,'Flagging anomalous data'
-            vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-        ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-    ENDELSE
     
     vis_noise_calc,obs,vis_arr,flag_arr
     IF ~Keyword_Set(silent) THEN flag_status,obs
