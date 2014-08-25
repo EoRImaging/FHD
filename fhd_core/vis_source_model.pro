@@ -11,7 +11,7 @@ IF N_Elements(silent) EQ 0 THEN silent=1
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-IF N_Elements(flag_ptr) EQ 0 THEN fhd_save_io,status_str,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(flag_ptr) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 galaxy_flag=0
