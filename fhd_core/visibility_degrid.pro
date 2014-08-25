@@ -25,7 +25,7 @@ frequency_array=(*obs.baseline_info).freq
 psf_dim=psf.dim
 psf_resolution=psf.resolution
 
-flag_switch=Keyword_Set(flag_ptr)
+flag_switch=Ptr_valid(flag_ptr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 ;baseline_i=params.baseline_arr
@@ -42,42 +42,36 @@ vis_dimension=Float(nbaselines*n_samples)
 IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
     ELSE visibility_array=Complexarr(n_freq,vis_dimension) 
 
-xcen=frequency_array#kx_arr
-ycen=frequency_array#ky_arr
+dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
+dist_test=frequency_array#dist_test
+flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test=0
 
 conj_i=where(ky_arr GT 0,n_conj)
 conj_flag=intarr(N_Elements(ky_arr)) 
 IF n_conj GT 0 THEN BEGIN
     conj_flag[conj_i]=1
-    xcen[*,conj_i]=-xcen[*,conj_i]
-    ycen[*,conj_i]=-ycen[*,conj_i]
+    kx_arr[conj_i]=-kx_arr[conj_i]
+    ky_arr[conj_i]=-ky_arr[conj_i]
 ENDIF
 
-xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
-ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
-
+xcen=frequency_array#kx_arr
+ycen=frequency_array#ky_arr
+ 
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
-;xmax=xmin+psf_dim-1
-range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
-;xmax=0
-IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
-range_test_x_i=0
-
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
-;ymax=ymin+psf_dim-1
+xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
+
+range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
 range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
-;ymax=0
+
+IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
-range_test_y_i=0
 
-
-dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
-flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
-xcen=(ycen=(dist_test=0))
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1
     ymin[flag_dist_i]=-1
-    flag_dist_i=0
 ENDIF
 
 IF flag_switch THEN BEGIN
@@ -86,8 +80,8 @@ IF flag_switch THEN BEGIN
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
-        flag_i=0
     ENDIF
+    flag_i=0
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
@@ -132,7 +126,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
      
     vis_n=bin_n[bin_i[bi]]
-    baseline_inds=(inds mod n_freq_use) mod n_samples
+    baseline_inds=Floor(inds/n_freq_use) mod nbaselines
     group_id=group_arr[inds]
     group_max=Max(group_id)+1
     

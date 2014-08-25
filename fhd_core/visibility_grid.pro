@@ -128,7 +128,7 @@ IF n_dist_flag GT 0 THEN BEGIN
 ENDIF
 
 IF flag_switch THEN BEGIN
-    flag_i=where(flag_arr LE 0,n_flag,ncomplement=n_unflag)
+    flag_i=where(flag_arr LE 0,n_flag)
     flag_arr=0
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
@@ -231,7 +231,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
     
     vis_n=bin_n[bin_i[bi]]
-    baseline_inds=bi_use_reduced[(inds mod n_f_use) mod nbaselines]
+    baseline_inds=bi_use_reduced[Floor(inds/n_f_use) mod nbaselines]
     group_id=group_arr[inds]
     group_max=Max(group_id)+1
     

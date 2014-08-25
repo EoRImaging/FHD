@@ -180,12 +180,12 @@ IF Keyword_Set(combine_healpix) THEN BEGIN
         output_path=healpix_path,image_filter_fn=image_filter_fn,_Extra=extra
 ENDIF
 
-IF Keyword_Set(ps_export) THEN BEGIN
-    IF Keyword_Set(split_ps_export) THEN BEGIN
-        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/even,_Extra=extra
-        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/odd,_Extra=extra
-    ENDIF ELSE vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,_Extra=extra
-ENDIF
+;IF Keyword_Set(ps_export) THEN BEGIN
+;    IF Keyword_Set(split_ps_export) THEN BEGIN
+;        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/even,_Extra=extra
+;        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/odd,_Extra=extra
+;    ENDIF ELSE vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,_Extra=extra
+;ENDIF
 IF Keyword_Set(cleanup) THEN FOR fi=0L,n_files_use-1 DO fhd_cleanup,fhd_file_list[fi],_Extra=extra
 
 heap_gc
