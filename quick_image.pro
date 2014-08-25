@@ -124,6 +124,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   max_xsize = 1200
   base_size = 600
   
+  xsize = round(base_size * x_factor)
+  ysize = round(base_size * y_factor)
+  
   if keyword_set(pub) then begin
     ps_aspect = y_factor / x_factor
     
@@ -149,9 +152,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       xoffset=sizes.xoffset, yoffset=sizes.yoffset, landscape = landscape
       
   endif else begin
-    xsize = round(base_size * x_factor)
-    ysize = round(base_size * y_factor)
-    while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
+     while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
       base_size = base_size - 100
       xsize = round(base_size * x_factor)
       ysize = round(base_size * y_factor)
