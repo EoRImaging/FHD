@@ -27,7 +27,7 @@ IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
 n_vis_arr=obs.nf_vis
 
-flag_switch=Keyword_Set(flag_arr)
+flag_switch=Ptr_valid(flag_ptr)
 IF flag_switch THEN BEGIN
     IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
 ENDIF
