@@ -17,7 +17,7 @@ n_tiles=obs.n_tile
 n_dipoles=16
 nfreq_bin=antenna_str.nfreq_bin
 
-IF tag_exist(obs,'delays') THEN delay_settings=obs.delays ;delays need to be generalized!
+IF tag_exist(obs,'delays') THEN delay_settings=Pointer_copy(obs.delays) ;delays need to be generalized!
 IF N_Elements(dipole_mutual_coupling_factor) EQ 0 THEN dipole_mutual_coupling_factor=1
 IF N_Elements(antenna_size) EQ 0 THEN antenna_size=5. ;meters (MWA groundscreen size)
 antenna_spacing=1.1 ;meters (Same as M&C SetDelays script) ; Was 1.071 before? Verified in Tingay et al 2013

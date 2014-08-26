@@ -60,7 +60,7 @@ IF Keyword_Set(square) THEN BEGIN
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*beam_arr[pol_i,freq_i,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=*(*beam_arr[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
