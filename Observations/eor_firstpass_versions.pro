@@ -268,6 +268,9 @@ case version of
       diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_8/Healpix/diffuse_model.sav'
       model_visibilities=1
    end
+   'apb_test_devel_no_coupling':begin
+      dipole_mutual_coupling_factor=0
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
