@@ -102,7 +102,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   IF Min(Ptr_valid(vis_model_arr)) THEN IF N_Elements(*vis_model_arr[0]) GT 0 THEN model_flag=1
   IF residual_flag EQ 0 THEN IF model_flag EQ 0 THEN BEGIN
     vis_model_arr=Ptrarr(n_pol)
-    IF Min(status_str.vis_model[0:n_pol-1]) GT 0 THEN BEGIN
+    IF Min(status_str.vis_model_ptr[0:n_pol-1]) GT 0 THEN BEGIN
         model_flag=1
         FOR pol_i=0,n_pol-1 DO BEGIN
             fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra

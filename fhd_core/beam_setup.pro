@@ -16,11 +16,6 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
-instrument=obs.instrument
-tile_beam_fn=instrument+'_tile_beam_generate' ;mwa_tile_beam_generate
-tile_gain_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
-tile_mask_fn=instrument+'_tile_beam_mask' ;mwa_tile_beam_mask
-IF instrument EQ 'paper' THEN base_gain=fltarr(1)+1.
 ;Fixed parameters 
 ;extract information from the structures
 n_tiles=obs.n_tile
@@ -68,10 +63,10 @@ psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbin
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
 
-;residual_tolerance is residual as fraction of psf_base above which to include 
-IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
-;residual_threshold is minimum residual above which to include
-IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
+;;residual_tolerance is residual as fraction of psf_base above which to include 
+;IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
+;;residual_threshold is minimum residual above which to include
+;IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
 IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E3
 
 ;freq_center=fltarr(nfreq_bin)
@@ -87,8 +82,6 @@ IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E3
 freq_norm=Replicate(1.,nfreq_bin)
 
 ;;begin forming psf
-;psf_base=Ptrarr(n_pol,nfreq_bin,psf_resolution,psf_resolution)
-
 psf_xvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 psf_yvals=Ptrarr(psf_resolution,psf_resolution,/allocate)
 xvals_i=Reform(meshgrid(psf_dim,psf_dim,1)*psf_resolution,psf_dim^2.)
