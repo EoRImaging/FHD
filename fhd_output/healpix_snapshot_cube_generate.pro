@@ -75,10 +75,12 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
   IF N_Elements(*vis_arr[0]) EQ 0 THEN BEGIN
+    IF ~Keyword_Set(silent) THEN print,"Restoring saved visibilities (this may take a while)"
     FOR pol_i=0,n_pol-1 DO BEGIN
         fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra
         vis_arr[pol_i]=vis_ptr
     ENDFOR
+    IF ~Keyword_Set(silent) THEN print,"...Done"
   ENDIF
   
   IF Keyword_Set(split_ps_export) THEN BEGIN
@@ -104,10 +106,12 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     vis_model_arr=Ptrarr(n_pol)
     IF Min(status_str.vis_model_ptr[0:n_pol-1]) GT 0 THEN BEGIN
         model_flag=1
+        IF ~Keyword_Set(silent) THEN print,"Restoring saved model visibilities (this may take a while)"
         FOR pol_i=0,n_pol-1 DO BEGIN
             fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra
             vis_model_arr[pol_i]=vis_model_ptr
         ENDFOR 
+        IF ~Keyword_Set(silent) THEN print,"...Done"
     ENDIF
   ENDIF
   IF model_flag AND ~residual_flag THEN dirty_flag=1 ELSE dirty_flag=0
