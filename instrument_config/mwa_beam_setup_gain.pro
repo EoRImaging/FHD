@@ -110,6 +110,21 @@ CASE beam_model_version OF
 ;            ELSE projection=Sqrt(*Jmat[1,1]*Conj(*Jmat[1,1])+*Jmat[0,1]*Conj(*Jmat[0,1]))
 ;        projection/=Max(projection)
     END
+    0: BEGIN
+        antenna_height=antenna[0].height
+        wavelength=speed_light/freq_center
+        Jones_matrix=antenna.jones
+        FOR freq_i=0,nfreq_bin-1 DO BEGIN
+            groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength[freq_i])) ;should technically have zc_arr, but until that is nonzero this is the same and faster
+            groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength[freq_i]) ;normalization factor
+            groundplane/=groundplane0
+            Jones_matrix[0,0,freq_i]=Ptr_new(Sqrt(1.-(Sin(za_arr*!DtoR)*Sin(az_arr*!DtoR))^2.)*groundplane)
+            Jones_matrix[1,0,freq_i]=Ptr_new(0.*groundplane)
+            Jones_matrix[0,1,freq_i]=Ptr_new(0.*groundplane)
+            Jones_matrix[1,1,freq_i]=Ptr_new(Sqrt(1.-(Sin(za_arr*!DtoR)*Cos(az_arr*!DtoR))^2.)*groundplane)
+        ENDFOR
+    
+    END
     ELSE: BEGIN      
         print,"Using default beam model"
         antenna_height=antenna[0].height

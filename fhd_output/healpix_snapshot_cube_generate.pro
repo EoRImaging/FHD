@@ -50,16 +50,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
   psf_out=beam_setup(obs_out,0,antenna_out,/no_save,psf_resolution=ps_psf_resolution,/silent,_Extra=extra)
   
-  beam=Ptrarr(n_pol,n_freq_use,/allocate)
-  beam_mask=fltarr(dimension_use,dimension_use)+1.
-  FOR pol_i=0,n_pol-1 DO FOR fi=0L,n_freq_use-1 DO BEGIN
-    *beam[pol_i,fi]=Sqrt(beam_image(psf_out,obs_out,pol_i=pol_i,freq_i=fi,/square)>0.)
-    b_i=obs_out.obsx+obs_out.obsy*dimension_use
-    beam_i=region_grow(*beam[pol_i,fi],b_i,thresh=[0,max(*beam[pol_i,fi])])
-    beam_mask1=fltarr(dimension_use,dimension_use)
-    beam_mask1[beam_i]=1.
-    beam_mask*=beam_mask1
-  ENDFOR
+  beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask)
   
   hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
     mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds)
@@ -153,13 +144,14 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv)
       IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv)
       IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv)
-      *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam[pol_i,freq_i])^2.,hpx_cnv)
+      *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])^2.,hpx_cnv)
     ENDFOR
     t_hpx+=Systime(1)-t_hpx0
     
     if keyword_set(save_imagecube) then $
       save, filename = imagecube_filepath[iter], dirty_arr1, residual_arr1, model_arr1, weights_arr1, variance_arr1, obs_out, /compress
       
+    undefine_fhd,weights_arr1,variance_arr1,residual_arr1,dirty_arr1,model_arr1,beam_arr
     FOR pol_i=0,n_pol-1 DO BEGIN      
         IF dirty_flag THEN BEGIN
           dirty_cube=fltarr(n_hpx,n_freq_use)
