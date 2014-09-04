@@ -12,7 +12,7 @@ IF N_Elements(compress) EQ 0 THEN compress=0
 IF Keyword_Set(obs) THEN pol_names=obs.pol_names ELSE pol_names=['XX','YY','XY','YX','I','Q','U','V']
 
 IF Keyword_Set(transfer_filename) THEN BEGIN
-    IF file_test(transfer_filename,/directory) THEN base_path=file_dirname(transfer_filename) $
+    IF file_test(transfer_filename,/directory) THEN base_path=transfer_filename $
         ELSE base_name=transfer_filename 
 ENDIF
 IF N_Elements(base_name) EQ 0 THEN base_name=file_basename(file_path_fhd)

@@ -7,21 +7,30 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,_Extra=extra
 t0_0=Systime(1)
 error=0
+timing=-1
 heap_gc
 IF N_Elements(flag_calibration) EQ 0 THEN flag_calibration=1
 
 IF Keyword_Set(transfer_calibration) THEN BEGIN
     IF size(transfer_calibration,/type) EQ 7 THEN BEGIN
         cal_file_use=transfer_calibration
-        IF file_test(cal_file_use) EQ 0 THEN BEGIN
-            fhd_save_io,file_path_fhd=cal_file_use,var='cal',path_use=cal_file_use2,_Extra=extra
-;            cal_file_use2=filepath(file_basename(cal_file_use,'_cal.sav',/fold_case)+'_cal.sav',root=file_dirname(file_path_fhd))
-            IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
-                print,'File:'+cal_file_use+' not found!'
-                error=1
-                RETURN,vis_ptr
-            ENDELSE
-        ENDIF
+        IF file_test(cal_file_use,/directory) THEN BEGIN
+            fhd_save_io,file_path_fhd=file_path_fhd,transfer=transfer_calibration,var='cal',path_use=cal_file_use2,_Extra=extra 
+                IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
+                    print,'File:'+cal_file_use+' not found!'
+                    error=1
+                    RETURN,vis_ptr
+                ENDELSE
+        ENDIF ELSE BEGIN
+            IF file_test(cal_file_use) EQ 0 THEN BEGIN
+                fhd_save_io,file_path_fhd=cal_file_use,var='cal',path_use=cal_file_use2,_Extra=extra
+                IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
+                    print,'File:'+cal_file_use+' not found!'
+                    error=1
+                    RETURN,vis_ptr
+                ENDELSE
+            ENDIF
+        ENDELSE
         CASE StrLowCase(Strmid(cal_file_use[0],3,/reverse)) OF
             '.sav':BEGIN
                 cal=getvar_savefile(cal_file_use,'cal')
