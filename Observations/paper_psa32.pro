@@ -24,13 +24,13 @@ calibration_catalog_file_path=filepath('MRC_calibration_catalog.sav',root=rootdi
 FoV=160.
 dimension=1024.
 
-max_sources=10000.
-pad_uv_image=2.
+max_sources=15000.
+pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 instrument='paper'
 lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
-n_pol=4
+n_pol=2
 ;mirror_X=1
 ;independent_fit=1 ;not sure of polarization calibration for now!
 time_offset=5.*60. ;time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time. 
@@ -51,6 +51,8 @@ no_rephase=1
 calibrate_visibilities=1
 save_visibilities=0
 reorder_visibilities=1
+freq_start=124.
+freq_end=174.
 
 cmd_args=extra
 
