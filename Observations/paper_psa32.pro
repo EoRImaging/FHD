@@ -13,7 +13,7 @@ image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 ;data_directory=rootdir('mwa')+filepath('',root='PAPER_DATA',subdir=['psa32'])
 ;data_directory='/data2/PAPER/psa32/'
 IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory='/data2/PAPER/psa32/' $
-    ELSE data_directory=rootdir('mwa')+filepath('',root='PAPER_DATA',subdir=['psa32'])
+    ELSE data_directory=rootdir('mwa')+filepath('',root='PAPER_DATA',subdir=['psa32_reprocessed'])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 
