@@ -150,8 +150,9 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     
     if keyword_set(save_imagecube) then $
       save, filename = imagecube_filepath[iter], dirty_arr1, residual_arr1, model_arr1, weights_arr1, variance_arr1, obs_out, /compress
-      
+    
     undefine_fhd,weights_arr1,variance_arr1,residual_arr1,dirty_arr1,model_arr1,beam_arr
+    
     FOR pol_i=0,n_pol-1 DO BEGIN      
         IF dirty_flag THEN BEGIN
           dirty_cube=fltarr(n_hpx,n_freq_use)
