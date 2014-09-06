@@ -149,7 +149,7 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
         calibrate_visibilities=1
-        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd+'_cal.sav' ;this will not modify string or structure types, but will over-write it if set to a numerical type
+        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd ;this will not modify string or structure types, but will over-write it if set to a numerical type
     ENDIF
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
