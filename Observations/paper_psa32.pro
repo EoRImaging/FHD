@@ -19,14 +19,14 @@ fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('MRC_calibration_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_source_list_nofornax.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 FoV=160.
 dimension=1024.
 
 max_sources=15000.
 pad_uv_image=1.
-precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
+precess=1 ;At least the new uvfits files from Jonnie need to be precessed to J2000
 instrument='paper'
 lat=Ten(-30,42,17.5)
 lon=Ten(21,25,41)
@@ -38,7 +38,7 @@ no_ps=1
 no_complex_beam=1
 nfreq_avg=1.
 
-gain_factor=0.2
+gain_factor=0.15
 min_baseline=1.
 min_cal_baseline=50.
 no_fits=1
@@ -53,6 +53,7 @@ save_visibilities=0
 reorder_visibilities=1
 freq_start=124.
 freq_end=174.
+beam_model_version=2
 
 cmd_args=extra
 
