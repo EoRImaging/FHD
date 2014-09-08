@@ -1,6 +1,6 @@
 PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,var_name=var_name,$
     text=text,restore=restore,obs=obs,reset=reset,force_set=force_set,no_save=no_save,path_use=path_use,$
-    transfer_filename=transfer_filename,compatibility_mode=compatibility_mode
+    transfer_filename=transfer_filename,compatibility_mode=compatibility_mode,sub_var_name=sub_var_name
 
 IF ~Keyword_Set(file_path_fhd) THEN BEGIN
     file_path_fhd=''
@@ -79,6 +79,7 @@ IF ~Keyword_Set(name_error) THEN BEGIN
         fhd_save_io,status_str,pol_i=pol_i,var_name=var_name,/force_set
 
     IF Keyword_Set(restore) THEN BEGIN
+        IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name 
         IF file_test(path_use) THEN param=getvar_savefile(path_use,var_name_use)
         RETURN
     ENDIF

@@ -166,26 +166,20 @@ IF Keyword_Set(simultaneous) THEN BEGIN
     ENDFOR
 ENDIF
 
-combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
+combine_obs_sources,fhd_file_list,status_arr,restore_last=0,output_path=healpix_path,_Extra=extra
 map_projection='orth'
 IF Keyword_Set(combine_healpix) THEN BEGIN
     IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
-    combine_obs_healpix,fhd_file_list,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
+    combine_obs_healpix,fhd_file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
         instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
         instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$
         output_path=healpix_path,image_filter_fn=image_filter_fn,catalog_file_path=catalog_file_path,_Extra=extra
-    combine_obs_hpx_image,fhd_file_list,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
+    combine_obs_hpx_image,fhd_file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
         instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
         instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$
         output_path=healpix_path,image_filter_fn=image_filter_fn,_Extra=extra
 ENDIF
 
-;IF Keyword_Set(ps_export) THEN BEGIN
-;    IF Keyword_Set(split_ps_export) THEN BEGIN
-;        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/even,_Extra=extra
-;        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/odd,_Extra=extra
-;    ENDIF ELSE vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,_Extra=extra
-;ENDIF
 IF Keyword_Set(cleanup) THEN FOR fi=0L,n_files_use-1 DO fhd_cleanup,fhd_file_list[fi],_Extra=extra
 
 heap_gc

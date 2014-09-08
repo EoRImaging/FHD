@@ -1,4 +1,4 @@
-PRO combine_obs_hpx_image,file_list,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
+PRO combine_obs_hpx_image,file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
     instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
     instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$
     output_path=output_path,image_filter_fn=image_filter_fn,color_table=color_table,$
