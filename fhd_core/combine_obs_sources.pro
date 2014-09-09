@@ -22,8 +22,8 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF
 
 fhd_save_io,status_init,/reset
-status_arr=Replicate(status_init,n_files)
 IF N_Elements(status_arr) NE n_files THEN BEGIN
+    status_arr=Replicate(status_init,n_files)
     FOR fi=0L,n_files-1 DO BEGIN
         fhd_save_io,status_single,file_path_fhd=file_list[fi]
         status_arr[fi]=status_single
@@ -31,14 +31,14 @@ IF N_Elements(status_arr) NE n_files THEN BEGIN
 ENDIF
 
 fi_use=where(status_arr.obs AND status_arr.fhd,n_files)
-file_list_use=file_list[fi_use]
-status_arr_use=status_arr[fi_use]
-
 IF n_files LT 2 THEN BEGIN
     RETURN
 ENDIF
-source_array=Ptrarr(n_files,/allocate)
 
+file_list_use=file_list[fi_use]
+status_arr_use=status_arr[fi_use]
+
+source_array=Ptrarr(n_files,/allocate)
 n_src=fltarr(n_files)
 src_i=Ptrarr(n_files,/allocate)
 FOR fi=0,n_files-1 DO BEGIN

@@ -169,7 +169,7 @@ ENDIF
 combine_obs_sources,fhd_file_list,status_arr,restore_last=0,output_path=healpix_path,_Extra=extra
 map_projection='orth'
 IF Keyword_Set(combine_healpix) THEN BEGIN
-    IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
+;    IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
     combine_obs_healpix,fhd_file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
         instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
         instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$

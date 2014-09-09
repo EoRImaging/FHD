@@ -21,22 +21,23 @@ IF Keyword_Set(restore_last) THEN BEGIN
 ENDIF
 
 fhd_save_io,status_init,/reset
-status_arr=Replicate(status_init,n_obs)
 IF N_Elements(status_arr) NE n_obs THEN BEGIN
-    FOR fi=0L,n_obs-1 DO BEGIN
-        fhd_save_io,status_single,file_path_fhd=file_list[fi]
-        status_arr[fi]=status_single
+    status_arr=Replicate(status_init,n_obs)
+    FOR obs_i=0L,n_obs-1 DO BEGIN
+        fhd_save_io,status_single,file_path_fhd=file_list[obs_i]
+        status_arr[obs_i]=status_single
     ENDFOR
 ENDIF
 
-file_i_use=where(status_arr.obs,n_obs)
+fi_use=where(status_arr.obs,n_obs)
+IF n_obs EQ 0 THEN RETURN
 file_list_use=file_list[fi_use]
 status_arr_use=status_arr[fi_use]
 fhd_flag=Min(status_arr.fhd)
 
 FOR obs_i=0,n_obs-1 DO BEGIN
-    file_path=file_list_use[obs_i]
-    fhd_save_io,status_arr_use[fi],obs,file_path_fhd=file_path_fhd,var='obs',/restore
+    file_path_fhd=file_list_use[obs_i]
+    fhd_save_io,status_arr_use[obs_i],obs,file_path_fhd=file_path_fhd,var='obs',/restore
     IF obs_i EQ 0 THEN obs_arr=[obs] ELSE obs_arr=[obs_arr,obs]
     
     beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
@@ -76,7 +77,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
     astr=obs.astr            
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-    fhd_save_io,status_str[fi],cal,file_path_fhd=file_path_fhd,var='cal',/restore
+    fhd_save_io,status_str[obs_i],cal,file_path_fhd=file_path_fhd,var='cal',/restore
     IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,file_path_fhd=file_path_fhd)
     
     image_uv_arr=Ptrarr(n_pol)
