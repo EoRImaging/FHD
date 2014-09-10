@@ -43,12 +43,13 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
     time_use[ti_start:ti_end]=0
 ENDFOR
 
-frequency_array=(findgen(hdr.n_freq)-hdr.freq_ref_i)*hdr.freq_width+hdr.freq_ref
+freq_res=hdr.freq_width
+frequency_array=(findgen(hdr.n_freq)-hdr.freq_ref_i)*freq_res+hdr.freq_ref
 IF N_Elements(nfreq_avg) EQ 0 THEN BEGIN
-    nfreq_avg=Round(hdr.freq_ref/hdr.freq_width/1000.)
+    nfreq_avg=Round(hdr.freq_ref/freq_res/1000.)
 ENDIF
 
-IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*hdr.freq_width  ;Hz
+IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*freq_res  ;Hz
 freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
 nfreq_bin=N_Elements(freq_hist)
 freq_bin_i=fltarr(hdr.n_freq)
@@ -151,7 +152,7 @@ struct={code_version:String(code_version),instrument:String(instrument),antenna_
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_freq:Long(n_freq),n_time:Long(n_time),$
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
-    freq_center:Float(freq_center),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
+    freq_center:Float(freq_center),freq_res:Float(freq_res),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
     residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,healpix:healpix}    
 RETURN,struct
 END

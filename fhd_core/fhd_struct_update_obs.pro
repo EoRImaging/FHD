@@ -21,6 +21,7 @@ ENDIF
 b_info=*(obs.baseline_info)
 n_freq=obs.n_freq
 IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=Round(n_freq/(Max(b_info.fbin_i)+1.))
+IF tag_exist(obs,'freq_res') THEN freq_bin=nfreq_avg*obs.freq_res ELSE freq_bin=nfreq_avg*(Max(frequency_array)-Min(frequency_array))/(n_freq-1.)
 frequency_array=b_info.freq
 freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
 nfreq_bin=N_Elements(freq_hist)
