@@ -298,10 +298,11 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
       beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
     endfor
-    Ptr_free,beam_arr
+    undefine_fhd,beam_arr
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
   endif
-  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out
+  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr
+  undefine_fhd,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out,flag_arr
   
   timing=Systime(1)-t0
   print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
