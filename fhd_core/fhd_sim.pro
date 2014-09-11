@@ -295,10 +295,10 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     
     beam_arr=beam_image_cube(obs_out,psf_out, n_freq_bin = obs_out.n_freq)
     for freq_i=0,obs_out.n_freq-1 do begin
-      beam2_xx_image[*,*, freq_i] = *beam_arr[0,freq_i]
-      beam2_yy_image[*,*, freq_i] = *beam_arr[1,freq_i]
+      beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])^2.
+      beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])^2.
     endfor
-    undefine_fhd,beam_arr
+    ptr_free,beam_arr
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
   endif
   undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr
