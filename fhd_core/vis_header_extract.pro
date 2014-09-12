@@ -53,8 +53,8 @@ ENDIF ELSE BEGIN
   wh_dec = where(param_names eq 'dec', count_dec)
   if count_dec eq 1 then dec_cnum = wh_dec+1 else message, 'DEC CTYPE not found'
  
-  obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
-  obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
+  obsra=sxpar(header,'CRVAL' + strn(ra_cnum[0]))
+  obsdec=sxpar(header,'CRVAL' + strn(dec_cnum[0]))  
 ENDELSE
 
 baseline_i=(where(Strmatch(param_list,'BASELINE'),found_baseline))[0]
