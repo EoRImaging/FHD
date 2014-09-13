@@ -303,10 +303,20 @@ case version of
    end
 
 
+   ;;; Abraham's versions!!! Only Abraham may edit this section!!!
+   'arn_test_fornax_cal_add_fornax_and_pic_abraham_BenMcKinley_uvmax400':begin
+	;calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_ForA_PicA.sav',root=rootdir('FHD'),subdir='catalog_data')
+	calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_fornax_and_pic_abraham_BenMcKinley.sav',root=rootdir('FHD'),subdir='catalog_data')
+	snapshot_healpix_export=0
+;	min_cal_baseline=50
+	max_cal_baseline=400
+   end
+
    else: print,'Default parameters'
 endcase
    
-SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+;SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
   STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
 undefine,uvfits_version ; don't need these passed further
