@@ -1,5 +1,6 @@
 FUNCTION vis_flag_basic,flag_ptr,obs,params,instrument=instrument,mask_mirror_indices=mask_mirror_indices,$
-    freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,no_frequency_flagging=no_frequency_flagging,unflag_all=unflag_all,vis_ptr=vis_ptr,_Extra=extra
+    freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,no_frequency_flagging=no_frequency_flagging,$
+    unflag_all=unflag_all,vis_ptr=vis_ptr,channel_edge_flag_width=channel_edge_flag_width,_Extra=extra
 
 IF tag_exist(obs,'instrument') THEN instrument=obs.instrument
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
@@ -52,7 +53,7 @@ IF Keyword_Set(no_frequency_flagging) OR Keyword_Set(unflag_all) THEN do_nothing
   CASE instrument OF
       'mwa32t':BEGIN
           coarse_channel_width=32
-          channel_edge_flag_width=4
+          IF N_Elements(channel_edge_flag_width) EQ 0 THEN channel_edge_flag_width=4
           fine_channel_i=lindgen(n_freq) mod coarse_channel_width
           channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
           channel_center_flag=where(fine_channel_i EQ 15)
@@ -67,7 +68,7 @@ IF Keyword_Set(no_frequency_flagging) OR Keyword_Set(unflag_all) THEN do_nothing
       END
       'mwa':BEGIN
           freq_avg=Round(768./n_freq)
-          channel_edge_flag_width=Ceil(2./freq_avg)
+          IF N_Elements(channel_edge_flag_width) EQ 0 THEN channel_edge_flag_width=Ceil(2./freq_avg)
           coarse_channel_width=Round(32./freq_avg)
           fine_channel_i=lindgen(n_freq) mod coarse_channel_width
           channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
