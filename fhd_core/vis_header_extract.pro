@@ -49,9 +49,9 @@ ENDIF ELSE BEGIN
  
   param_names = strlowcase(strtrim(sxpar(header, 'CTYPE*'), 2))
   wh_ra = where(param_names eq 'ra', count_ra)
-  if count_ra eq 1 then ra_cnum = wh_ra+1 else message, 'RA CTYPE not found'
+  if count_ra eq 1 then ra_cnum = wh_ra[0]+1 else message, 'RA CTYPE not found'
   wh_dec = where(param_names eq 'dec', count_dec)
-  if count_dec eq 1 then dec_cnum = wh_dec+1 else message, 'DEC CTYPE not found'
+  if count_dec eq 1 then dec_cnum = wh_dec[0]+1 else message, 'DEC CTYPE not found'
  
   obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
   obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
