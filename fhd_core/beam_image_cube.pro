@@ -12,7 +12,7 @@ elements=obs.elements
 IF N_Elements(pol_i_arr) EQ 0 THEN pol_i_arr=indgen(n_pol)
 n_pol=N_Elements(pol_i_arr)
 
-IF Keyword_Set(n_freq_bin) THEN freq_i_arr=Floor(indgen(n_freq_bin)*n_freq/((n_freq_bin-1)>1))
+IF Keyword_Set(n_freq_bin) THEN freq_i_arr=Floor(indgen(n_freq_bin)*n_freq/n_freq_bin)
 IF N_Elements(freq_i_arr) EQ 0 THEN BEGIN
     print,"Either freq_i_arr or n_freq_bin must be supplied!"
     RETURN,Ptrarr(n_pol,1) ;null pointer

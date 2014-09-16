@@ -63,5 +63,15 @@ struct.zeny=Float(zeny)
 struct.astr=astr
 struct.code_version=String(code_version)
 
+
+b_info=*obs.baseline_info
+;freq_use:Fix(freq_use)
+;tile_use:Fix(tile_use)
+;time_use:Fix(time_use)
+;tile_flag:meta.tile_flag
+b_info.fbin_i=Long(freq_bin_i)
+b_info.freq=Float(frequency_array)
+struct.baseline_info=Ptr_new(b_info)
+
 RETURN,struct
 END
