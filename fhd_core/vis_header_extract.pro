@@ -66,18 +66,18 @@ date_i=Max(where(Strmatch(param_list,'DATE'),found_date))
 Jdate_extract=sxpar(header,String(format='("PZERO",I1)',date_i+1),count=found_jd0)
 IF Keyword_Set(found_jd0) THEN IF Jdate_extract GT 2.4E6 THEN Jdate0=Jdate_extract
 
-;;; get number of tiles from number of baselines.
-;;256 tile upper limit is hard-coded in CASA format
-;;these tile numbers have been verified to be correct
-;baseline_arr=reform(params[baseline_i,*]) 
-;tile_A1=Long(Floor(baseline_arr/256)) ;tile numbers start from 1
-;tile_B1=Long(Fix(baseline_arr mod 256))
-;hist_A1=histogram(tile_A1,min=0,max=256,/binsize)
-;hist_B1=histogram(tile_B1,min=0,max=256,/binsize)
-;hist_AB=hist_A1+hist_B1
-;tile_nums=where(hist_AB,n_tile)
-;;tile_A=Long(Floor(baseline_arr/256)) ;tile numbers start from 1
-;;n_tile=n_elements(uniq(tile_A[sort(tile_A)]))
+;; get number of tiles from number of baselines.
+;256 tile upper limit is hard-coded in CASA format
+;these tile numbers have been verified to be correct
+baseline_arr=reform(params[baseline_i,*]) 
+tile_A1=Long(Floor(baseline_arr/256)) ;tile numbers start from 1
+tile_B1=Long(Fix(baseline_arr mod 256))
+hist_A1=histogram(tile_A1,min=0,max=256,/binsize)
+hist_B1=histogram(tile_B1,min=0,max=256,/binsize)
+hist_AB=hist_A1+hist_B1
+tile_nums=where(hist_AB,n_tile)
+;tile_A=Long(Floor(baseline_arr/256)) ;tile numbers start from 1
+;n_tile=n_elements(uniq(tile_A[sort(tile_A)]))
 
 grp_row_size=n_complex*n_polarizations*n_frequencies*nbaselines
 

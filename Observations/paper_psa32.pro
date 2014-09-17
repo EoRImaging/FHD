@@ -38,6 +38,7 @@ no_ps=1
 no_complex_beam=1
 nfreq_avg=1.
 
+calibration_flag_iterate=1
 gain_factor=0.15
 min_baseline=1.
 min_cal_baseline=50.

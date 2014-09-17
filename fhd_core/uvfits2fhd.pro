@@ -84,7 +84,7 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
         
         data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
-        hdr=vis_header_extract(data_header0);, params = data_struct.params)    
+        hdr=vis_header_extract(data_header0, params = data_struct.params)    
         IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
         params=vis_param_extract(data_struct.params,hdr)
         IF n_pol LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol-1,*]) ELSE data_array=Temporary(data_struct.array) 
