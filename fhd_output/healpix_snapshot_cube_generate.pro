@@ -1,6 +1,6 @@
 PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,vis_model_arr=vis_model_arr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
-    ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
+    ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
     rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
     snapshot_recalculate=snapshot_recalculate,obs_out=obs_out,psf_out=psf_out,_Extra=extra
@@ -39,6 +39,9 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     IF Keyword_Set(ps_dimension) THEN dimension_use=ps_dimension ELSE $
     IF Keyword_Set(ps_degpix) THEN dimension_use=FoV_use/ps_degpix ELSE dimension_use=FoV_use/obs_in.degpix
   
+  nfreq_avg_in=Round(n_freq/Max(psf_in.fbin_i+1))
+  IF ~Keyword_Set(ps_nfreq_avg) THEN  ps_nfreq_avg=nfreq_avg_in
+  
   degpix_use=FoV_use/dimension_use
   pix_sky=4.*!Pi*!RaDeg^2./degpix_use^2.
   Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
@@ -46,11 +49,11 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   nside_use=nside_use>Nside_chk
   IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
   
-  obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
+  obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=ps_nfreq_avg,FoV=FoV_use,dimension=dimension_use)
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
   psf_out=beam_setup(obs_out,0,antenna_out,/no_save,psf_resolution=ps_psf_resolution,/silent,_Extra=extra)
   
-  beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask)
+  beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask,/square)
   
   hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
     mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds)
@@ -146,7 +149,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
           *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv)
           IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv)
           IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv)
-          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])^2.,hpx_cnv)
+          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i]),hpx_cnv)
         ENDFOR
         t_hpx+=Systime(1)-t_hpx0
         save, filename = imagecube_filepath[iter], dirty_arr1, residual_arr1, model_arr1, weights_arr1, variance_arr1, obs_out, /compress
@@ -158,7 +161,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
           *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*residual_arr1[pol_i,freq_i]),hpx_cnv)
           IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*dirty_arr1[pol_i,freq_i]),hpx_cnv)
           IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*model_arr1[pol_i,freq_i]),hpx_cnv)
-          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*beam_arr[pol_i,freq_i])^2.,hpx_cnv)
+          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*beam_arr[pol_i,freq_i]),hpx_cnv)
         ENDFOR
     ENDELSE   
     undefine_fhd,weights_arr1,variance_arr1,residual_arr1,dirty_arr1,model_arr1,beam_arr 

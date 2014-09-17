@@ -1,13 +1,15 @@
 FUNCTION beam_image_cube,obs,psf,freq_i_arr=freq_i_arr,pol_i_arr=pol_i_arr,$
-    n_freq_bin=n_freq_bin,beam_mask=beam_mask
+    n_freq_bin=n_freq_bin,beam_mask=beam_mask,square=square
 
 n_pol=obs.n_pol
 n_freq=obs.n_freq
 n_freq_psf=psf.n_freq
 freq_arr=(*obs.baseline_info).freq
 freq_bin_i=(*obs.baseline_info).fbin_i
+nf_vis=obs.nf_vis
 dimension=obs.dimension
 elements=obs.elements
+IF N_Elements(square) EQ 0 THEN square=1
 
 IF N_Elements(pol_i_arr) EQ 0 THEN pol_i_arr=indgen(n_pol)
 n_pol=N_Elements(pol_i_arr)
@@ -36,8 +38,9 @@ FOR p_i=0,n_pol-1 DO FOR fb_i=0L,n_freq_use-1 DO BEGIN
     pol_i=pol_i_arr[p_i]
     f_i_i=bri[bri[bin_use[fb_i]]:bri[bin_use[fb_i]+1]-1]
     f_i=freq_i_use[f_i_i[0]]
-    beam_single=Sqrt(beam_image(psf,obs,pol_i=pol_i,freq_i=f_i,/square)>0.)
-    FOR b_i=0,bin_n[fb_i]-1 DO beam_arr[pol_i,f_i_i[b_i]]=Ptr_new(beam_single)
+    nf_vis_use=nf_vis[f_i_i]
+    beam_single=beam_image(psf,obs,pol_i=pol_i,freq_i=f_i,square=square)
+    FOR b_i=0,bin_n[fb_i]-1 DO beam_arr[pol_i,f_i_i[b_i]]=Ptr_new(beam_single*nf_vis_use[b_i])
     b_i=obs.obsx+obs.obsy*dimension
     beam_i=region_grow(beam_single,b_i,thresh=[0,max(beam_single)])
     beam_mask1=fltarr(dimension,elements)
