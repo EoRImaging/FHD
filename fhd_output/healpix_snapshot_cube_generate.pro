@@ -33,7 +33,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
   n_pol=obs_in.n_pol
   n_freq=obs_in.n_freq
   
-  IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/48.)) ;default of 48 output frequency bins
+  IF ~Keyword_Set(n_avg) THEN n_avg=1 ;default of no averaging
   n_freq_use=Floor(n_freq/n_avg)
   IF Keyword_Set(ps_beam_threshold) THEN beam_threshold=ps_beam_threshold ELSE beam_threshold=0.2
   
@@ -125,6 +125,9 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
       dirty_arr1=residual_arr1
       residual_arr1=Ptrarr(size(residual_arr1,/dimension),/allocate)
     ENDIF
+    nf_vis=obs_out.nf_vis
+    nf_vis_use=Lonarr(n_freq_use)
+    FOR freq_i=0L,n_freq_use-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
     
     residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
     model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
@@ -141,7 +144,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
           *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv)
           IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv)
           IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv)
-          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i]),hpx_cnv)
+          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv)
         ENDFOR
         t_hpx+=Systime(1)-t_hpx0
         save, filename = imagecube_filepath[iter], dirty_arr1, residual_arr1, model_arr1, weights_arr1, variance_arr1, obs_out, /compress
@@ -153,7 +156,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
           *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*residual_arr1[pol_i,freq_i]),hpx_cnv)
           IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*dirty_arr1[pol_i,freq_i]),hpx_cnv)
           IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*model_arr1[pol_i,freq_i]),hpx_cnv)
-          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*beam_arr[pol_i,freq_i]),hpx_cnv)
+          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv)
         ENDFOR
     ENDELSE   
     undefine_fhd,weights_arr1,variance_arr1,residual_arr1,dirty_arr1,model_arr1,beam_arr 
