@@ -1,6 +1,6 @@
 PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_ptr=vis_model_ptr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
-    ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,$
+    ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
     rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
     snapshot_recalculate=snapshot_recalculate,obs_out=obs_out,psf_out=psf_out,_Extra=extra
@@ -45,6 +45,9 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
     IF Keyword_Set(ps_dimension) THEN dimension_use=ps_dimension ELSE $
     IF Keyword_Set(ps_degpix) THEN dimension_use=FoV_use/ps_degpix ELSE dimension_use=FoV_use/obs_in.degpix
   
+  nfreq_avg_in=Round(n_freq/Max(psf_in.fbin_i+1))
+  IF ~Keyword_Set(ps_nfreq_avg) THEN  ps_nfreq_avg=nfreq_avg_in
+  
   degpix_use=FoV_use/dimension_use
   pix_sky=4.*!Pi*!RaDeg^2./degpix_use^2.
   Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
@@ -52,7 +55,7 @@ PRO healpix_snapshot_cube_generate,obs_in,psf_in,cal,params,vis_arr,vis_model_pt
   nside_use=nside_use>Nside_chk
   IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
   
-  obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
+  obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=ps_nfreq_avg,FoV=FoV_use,dimension=dimension_use)
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
   psf_out=beam_setup(obs_out,file_path_fhd,/no_save,psf_resolution=ps_psf_resolution,/silent)
   
