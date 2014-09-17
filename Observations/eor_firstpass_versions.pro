@@ -304,14 +304,22 @@ case version of
 
 
    ;;; Abraham's versions!!! Only Abraham may edit this section!!!
-   'arn_test_fornax_cal_add_fornax_and_pic_abraham_BenMcKinley_uvmax_deconvolve':begin
+   'arn_test_fornax_cal_add_fornax_and_pic_abraham_BenMcKinley_deconvolve':begin
 	;calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_ForA_PicA.sav',root=rootdir('FHD'),subdir='catalog_data')
 	calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_fornax_and_pic_abraham_BenMcKinley.sav',root=rootdir('FHD'),subdir='catalog_data')
 	snapshot_healpix_export=0
 ;	min_cal_baseline=50
 ;	max_cal_baseline=400
-	deconvolve=1
-	
+	deconvolve=1	
+   end
+
+   'arn_test_fornax_cal_add_fornax_and_pic_abraham_BenMcKinley':begin
+        ;calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_ForA_PicA.sav',root=rootdir('FHD'),subdir='catalog_data')
+        calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_fornax_and_pic_abraham_BenMcKinley.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+;       min_cal_baseline=50
+;       max_cal_baseline=400
+        deconvolve=0
    end
 
    else: print,'Default parameters'
