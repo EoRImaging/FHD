@@ -334,6 +334,7 @@ IF Keyword_Set(data_flag) THEN BEGIN
                 weights_grid=1
             ENDIF
         ENDFOR
+        SAVE,obs,filename=obs_filepath,/compress ;need to save here to enter nf_vis
         IF ~Keyword_Set(silent) THEN print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
