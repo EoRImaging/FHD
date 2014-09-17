@@ -8,7 +8,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube, $
     weights_grid=weights_grid,save_visibilities=save_visibilities,save_uvf=save_uvf,save_imagecube=save_imagecube,$
-    snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
+    snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,_Extra=extra
     
   compile_opt idl2,strictarrsubs
   except=!except
@@ -286,17 +286,22 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN begin
+    IF ~Keyword_Set(n_avg) THEN n_avg=1
     healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
-      vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+      vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
-    beam2_xx_image = fltarr(obs_out.dimension, obs_out.elements, obs_out.n_freq)
-    beam2_yy_image = fltarr(obs_out.dimension, obs_out.elements, obs_out.n_freq)
+    n_freq_cube=obs_out.n_freq/n_avg  
+    beam2_xx_image = fltarr(obs_out.dimension, obs_out.elements, n_freq_cube)
+    beam2_yy_image = fltarr(obs_out.dimension, obs_out.elements, n_freq_cube)
     
+    nf_vis=obs_out.nf_vis
+    nf_vis_use=Lonarr(n_freq_cube)
+    FOR freq_i=0L,n_freq_cube-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
     beam_arr=beam_image_cube(obs_out,psf_out, n_freq_bin = obs_out.n_freq,/square)
-    for freq_i=0,obs_out.n_freq-1 do begin
-      beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
-      beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
+    for freq_i=0,n_freq_cube-1 do begin
+      beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])*nf_vis_use[freq_i]
+      beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])*nf_vis_use[freq_i]
     endfor
     ptr_free,beam_arr
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
