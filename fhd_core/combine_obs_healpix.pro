@@ -35,6 +35,29 @@ file_list_use=file_list[fi_use]
 status_arr_use=status_arr[fi_use]
 fhd_flag=Min(status_arr.fhd)
 
+IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
+    hpx_inds=restrict_hpx_inds
+    n_hpx=N_Elements(restrict_hpx_inds)
+    fit_inds_flag=0
+ENDIF ELSE BEGIN
+    fit_inds_flag=1
+    RESTORE,file_list_use[0]+'_obs.sav'
+    IF size(restrict_hpx_inds,/type) NE 7 THEN restrict_hpx_inds_path=observation_healpix_inds_select(obs) ELSE restrict_hpx_inds_path=restrict_hpx_inds
+    IF size(restrict_hpx_inds_path,/type) EQ 7 THEN BEGIN 
+        file_path_use=restrict_hpx_inds_path
+        IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=Rootdir('fhd'),subdir='Observations')
+        
+        IF  file_test(file_path_use) THEN BEGIN
+            hpx_inds=getvar_savefile(file_path_use,'hpx_inds')
+            nside_test=getvar_savefile(file_path_use,names=sav_contents)
+            IF Max(strmatch(StrLowCase(sav_contents),'nside')) EQ 1 THEN nside=getvar_savefile(file_path_use,'nside') ELSE BEGIN
+                max_ind=Max(hpx_inds)
+                IF Keyword_Set(nside) THEN nside=(2.^(Ceil(ALOG(Sqrt(max_ind/12.))/ALOG(2))))>nside ELSE nside=2.^(Ceil(ALOG(Sqrt(max_ind/12.))/ALOG(2))) 
+            ENDELSE
+        ENDIF
+    ENDIF
+ENDELSE
+
 FOR obs_i=0,n_obs-1 DO BEGIN
     file_path_fhd=file_list_use[obs_i]
     fhd_save_io,status_arr_use[obs_i],obs,file_path_fhd=file_path_fhd,var='obs',/restore
@@ -61,11 +84,6 @@ instr_sources_hpx=Ptrarr(n_pol)
 instr_rings_hpx=Ptrarr(n_pol)
 instr_catalog_hpx=Ptrarr(n_pol)
 weights_hpx=Ptrarr(n_pol)
-IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
-    hpx_inds=restrict_hpx_inds
-    n_hpx=N_Elements(restrict_hpx_inds)
-    fit_inds_flag=0
-ENDIF ELSE fit_inds_flag=1
 
 FOR obs_i=0L,n_obs-1 DO BEGIN
     file_path_fhd=file_list_use[obs_i]
