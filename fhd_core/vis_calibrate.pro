@@ -138,9 +138,11 @@ IF N_Elements(flag_ptr) EQ 0 THEN BEGIN
 ENDIF
 
 ;calibration loop
+IF N_Elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=0
 IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) $
     OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
-IF N_Elements(calibration_flag_iterate) EQ 0 THEN calibration_flag_iterate=0
+IF N_Elements(calibration_flag_iterate) EQ 0 THEN $
+    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 
 t2=0
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
