@@ -121,7 +121,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
       *flags_use[pol_i]=flag_arr1
     ENDFOR
-    obs=obs_out ;will have some values over-written!
+    obs=obs_out_ref ;will have some values over-written!
+    obs_in=obs_in_ref
     psf=psf_out
     
     residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,flags_use,obs_out=obs,psf_out=psf,/rephase_weights,$
@@ -133,7 +134,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       dirty_arr1=residual_arr1
       residual_arr1=Ptrarr(size(residual_arr1,/dimension),/allocate)
     ENDIF
-    nf_vis=obs_out.nf_vis
+    nf_vis=obs.nf_vis
     nf_vis_use=Lonarr(n_freq_use)
     FOR freq_i=0L,n_freq_use-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
     
@@ -205,6 +206,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     ENDFOR
     undefine_fhd,dirty_hpx_arr,model_hpx_arr,residual_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr
 ENDFOR
+obs_out=obs ;for return
 Ptr_free,flag_arr_use
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
