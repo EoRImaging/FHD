@@ -272,6 +272,10 @@ case version of
    'apb_test_devel_no_coupling':begin
       dipole_mutual_coupling_factor=0
    end
+   'apb_test_devel_beam_0_no_coupling':begin
+      beam_model_version=0
+      dipole_mutual_coupling_factor=0
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
