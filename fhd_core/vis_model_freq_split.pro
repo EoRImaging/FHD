@@ -130,7 +130,7 @@ FUNCTION vis_model_freq_split,obs,psf,params,flag_arr,model_uv_arr=model_uv_arr,
         *dirty_uv_arr[pol_i,fi]=dirty_uv*n_vis
         *weights_uv_arr[pol_i,fi]=weights_holo*rephase_use*n_vis
         *variance_uv_arr[pol_i,fi]=variance_holo*rephase_use*n_vis
-        *model_uv_arr[pol_i,fi]=model_return*n_vis
+        IF Keyword_Set(model_flag) THEN *model_uv_arr[pol_i,fi]=model_return*n_vis
       endif
       
       IF Keyword_Set(fft) THEN BEGIN
