@@ -113,6 +113,13 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
 ;    endfor
 ;    save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
 ;    undefine, beam2_xx_image, beam2_yy_image
+    beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
+    for freq_i=0,n_freq_cube-1 do begin
+      beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
+      beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
+    endfor
+    save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
+    undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
     
     if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(eor_sim) then begin
       model_uvf_arr=Ptrarr(n_pol,/allocate)
