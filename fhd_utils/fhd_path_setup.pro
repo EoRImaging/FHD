@@ -36,7 +36,7 @@ IF n_files GT 1 THEN BEGIN
     ENDFOR
 
 ENDIF ELSE BEGIN
-    dir=filepath('',root_dir=output_dir_use,sub=subdir_use)
+    dir=filepath('',root_dir=output_dir_use[0],sub=subdir_use)
     IF file_test(dir) EQ 0 THEN file_mkdir,dir   
     file_path=filepath(filename,root_dir=dir)
 ENDELSE
