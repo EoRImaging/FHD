@@ -25,13 +25,13 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
   IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=0.5
   IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
   
-;  if n_elements(output_directory) eq 0 then output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+  if n_elements(output_directory) eq 0 then output_directory='/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
   image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
   ;image_filter_fn=''
   
   ; This file structure works at MIT
-;  data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
-  data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+'3'])
+  data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
+;  data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+'3'])
   
   vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
   fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)

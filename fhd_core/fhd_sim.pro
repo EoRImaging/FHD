@@ -105,14 +105,21 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
     endif
     
-    beam2_xx_image = fltarr(obs.dimension, obs.elements, n_freq)
-    beam2_yy_image = fltarr(obs.dimension, obs.elements, n_freq)
-    for freq_i=0,n_freq-1 do begin
-      beam2_xx_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=0)
-      beam2_yy_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=1)
+;    beam2_xx_image = fltarr(obs.dimension, obs.elements, n_freq)
+;    beam2_yy_image = fltarr(obs.dimension, obs.elements, n_freq)
+;    for freq_i=0,n_freq-1 do begin
+;      beam2_xx_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=0)
+;      beam2_yy_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=1)
+;    endfor
+;    save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
+;    undefine, beam2_xx_image, beam2_yy_image
+    beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
+    for freq_i=0,n_freq_cube-1 do begin
+      beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
+      beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
     endfor
     save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
-    undefine, beam2_xx_image, beam2_yy_image
+    undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
     
     if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(eor_sim) then begin
       model_uvf_arr=Ptrarr(n_pol,/allocate)
@@ -298,7 +305,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     nf_vis=obs_out.nf_vis
     nf_vis_use=Lonarr(n_freq_cube)
     FOR freq_i=0L,n_freq_cube-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
-    beam_arr=beam_image_cube(obs_out,psf_out, n_freq_bin = obs_out.n_freq,/square)
+    beam_arr=beam_image_cube(obs_out,psf_out, n_freq_bin = n_freq_cube,/square)
     for freq_i=0,n_freq_cube-1 do begin
       beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])*nf_vis_use[freq_i]
       beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])*nf_vis_use[freq_i]
