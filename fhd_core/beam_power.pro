@@ -9,8 +9,8 @@ beam_ant1=*(antenna1.response[ant_pol1,freq_i])
 beam_ant2=*(antenna2.response[ant_pol2,freq_i])
 Jones1=antenna1.Jones[*,*,freq_i]
 Jones2=antenna2.Jones[*,*,freq_i]
-Jones_inst_response=*Jones1[ant_pol1,0]*Conj(*Jones2[ant_pol2,0])+$
-                    *Jones1[ant_pol1,1]*Conj(*Jones2[ant_pol2,1])
+;Jones_inst_response=*Jones1[ant_pol1,0]*Conj(*Jones2[ant_pol2,0])+$
+;                    *Jones1[ant_pol1,1]*Conj(*Jones2[ant_pol2,1])
 
 beam_ant1=*(antenna1.response[ant_pol1,freq_i])
 beam_ant2=Conj(*(antenna2.response[ant_pol2,freq_i]))
@@ -30,7 +30,10 @@ uv_mask_superres[beam_i]=1.
 ;uv_mask[beam_i]=1.
 ;uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
 
-power_beam=beam_ant1*beam_ant2*Jones_inst_response
+power_beam=(*Jones1[ant_pol1,0]*beam_ant1)*(Conj(*Jones2[ant_pol2,0])*beam_ant2)+$
+           (*Jones1[ant_pol1,1]*beam_ant1)*(Conj(*Jones2[ant_pol2,1])*beam_ant2)
+;power_beam=(*Jones1[0,ant_pol1]*beam_ant1)*(Conj(*Jones2[0,ant_pol2])*beam_ant2)+$
+;           (*Jones1[1,ant_pol1]*beam_ant1)*(Conj(*Jones2[1,ant_pol2])*beam_ant2)           
 psf_base_single=dirty_image_generate(power_beam,/no_real)
 
 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)

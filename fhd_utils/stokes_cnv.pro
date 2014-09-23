@@ -1,6 +1,6 @@
 FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square=square,no_extend=no_extend,$
     rotate_pol=rotate_pol,no_dipole_projection_rotation=no_dipole_projection_rotation,$
-    center_rotate=center_rotate,debug_direction=debug_direction
+    center_rotate=center_rotate,debug_direction=debug_direction;,beam_threshold=beam_threshold
     ;/rotate_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
@@ -15,6 +15,8 @@ ENDIF ELSE BEGIN
     beam_use=pointer_copy(beam_arr)
     IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
 ENDELSE
+IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=1E-2
+IF Keyword_Set(square) THEN beam_threshold_use=beam_threshold^2 ELSE beam_threshold_use=beam_threshold
 
 inds=jones.inds
 p_map=jones.Jmat
