@@ -178,17 +178,19 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             beam_ant2=*(antenna[ant_2].response[ant_pol2,freq_i])
             Jones1=antenna[ant_1].Jones[*,*,freq_i]
             Jones2=antenna[ant_2].Jones[*,*,freq_i]
+            Jones_inst_response=*Jones1[ant_pol1,0]*Conj(*Jones2[ant_pol2,0])+*Jones1[ant_pol1,1]*Conj(*Jones2[ant_pol2,1])
+            
             IF Keyword_Set(beam_mask_electric_field) THEN BEGIN
                 ;FFT individual tile beams to uv space, crop there, and FFT back
                 beam_ant1b=mask_beam(obs,antenna[ant_1],beam_ant1,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
                 beam_ant2b=mask_beam(obs,antenna[ant_2],beam_ant2,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
-                power_beam=beam_ant1b*Conj(beam_ant2b)*(*Jones1[ant_pol1,ant_pol1]*Conj(*Jones2[ant_pol2,ant_pol2])+*Jones1[ant_pol1x,ant_pol1]*Conj(*Jones2[ant_pol2x,ant_pol2]))
+                power_beam=beam_ant1b*Conj(beam_ant2b)*Jones_inst_response
                 psf_base_single=dirty_image_generate(power_beam,/no_real)
                 
                 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
                 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
             ENDIF ELSE BEGIN
-                power_beam=beam_ant1*Conj(beam_ant2)*(*Jones1[ant_pol1,ant_pol1]*Conj(*Jones2[ant_pol2,ant_pol2])+*Jones1[ant_pol1x,ant_pol1]*Conj(*Jones2[ant_pol2x,ant_pol2]))
+                power_beam=beam_ant1*Conj(beam_ant2)*Jones_inst_response
                 psf_base_single=dirty_image_generate(power_beam,/no_real)
                 uv_mask=fltarr(psf_image_dim,psf_image_dim)
                 beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
