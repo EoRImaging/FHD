@@ -105,16 +105,16 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
     endif
     
-;    beam2_xx_image = fltarr(obs.dimension, obs.elements, n_freq)
-;    beam2_yy_image = fltarr(obs.dimension, obs.elements, n_freq)
-;    for freq_i=0,n_freq-1 do begin
-;      beam2_xx_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=0)
-;      beam2_yy_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=1)
-;    endfor
-;    save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
-;    undefine, beam2_xx_image, beam2_yy_image
+    ;    beam2_xx_image = fltarr(obs.dimension, obs.elements, n_freq)
+    ;    beam2_yy_image = fltarr(obs.dimension, obs.elements, n_freq)
+    ;    for freq_i=0,n_freq-1 do begin
+    ;      beam2_xx_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=0)
+    ;      beam2_yy_image[*,*, freq_i] = beam_image(psf,obs,/square,freq_i=freq_i,pol_i=1)
+    ;    endfor
+    ;    save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
+    ;    undefine, beam2_xx_image, beam2_yy_image
     beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
-    for freq_i=0,n_freq_cube-1 do begin
+    for freq_i=0,n_freq-1 do begin
       beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
       beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
     endfor
@@ -298,17 +298,18 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
-    n_freq_cube=obs_out.n_freq/n_avg  
-    beam2_xx_image = fltarr(obs_out.dimension, obs_out.elements, n_freq_cube)
-    beam2_yy_image = fltarr(obs_out.dimension, obs_out.elements, n_freq_cube)
+      
+    ;; now save beam cubes for the gridded pre-healpix cubes.
+    ;; These need to be at full freq resolution NOT averaged as in Healpix cubes
+    n_freq=obs_out.n_freq
+    beam2_xx_image = fltarr(obs_out.dimension, obs_out.elements, n_freq)
+    beam2_yy_image = fltarr(obs_out.dimension, obs_out.elements, n_freq)
     
     nf_vis=obs_out.nf_vis
-    nf_vis_use=Lonarr(n_freq_cube)
-    FOR freq_i=0L,n_freq_cube-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
-    beam_arr=beam_image_cube(obs_out,psf_out, n_freq_bin = n_freq_cube,/square)
-    for freq_i=0,n_freq_cube-1 do begin
-      beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])*nf_vis_use[freq_i]
-      beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])*nf_vis_use[freq_i]
+    beam_arr=beam_image_cube(obs_out,psf_out, n_freq_bin = n_freq,/square)
+    for freq_i=0,n_freq-1 do begin
+      beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])*nf_vis[freq_i]
+      beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])*nf_vis[freq_i]
     endfor
     ptr_free,beam_arr
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
