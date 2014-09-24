@@ -184,13 +184,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 ;FFT individual tile beams to uv space, crop there, and FFT back
                 beam_ant1b=mask_beam(obs,antenna[ant_1],beam_ant1,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
                 beam_ant2b=mask_beam(obs,antenna[ant_2],beam_ant2,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,freq=freq_center[freq_i]) 
-                power_beam=beam_ant1b*Conj(beam_ant2b)*Jones_inst_response
+                power_beam=*Jones1[ant_pol1,0]*beam_ant1b*Conj(*Jones2[ant_pol2,0]*beam_ant2b)+$
+                           *Jones1[ant_pol1,1]*beam_ant1b*Conj(*Jones2[ant_pol2,1]*beam_ant2b)
                 psf_base_single=dirty_image_generate(power_beam,/no_real)
                 
                 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
                 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
             ENDIF ELSE BEGIN
-                power_beam=beam_ant1*Conj(beam_ant2)*Jones_inst_response
+                power_beam=*Jones1[ant_pol1,0]*beam_ant1*Conj(*Jones2[ant_pol2,0]*beam_ant2)+$
+                           *Jones1[ant_pol1,1]*beam_ant1*Conj(*Jones2[ant_pol2,1]*beam_ant2)
                 psf_base_single=dirty_image_generate(power_beam,/no_real)
                 uv_mask=fltarr(psf_image_dim,psf_image_dim)
                 beam_i=region_grow(abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,thresh=[Max(abs(psf_base_single))/beam_mask_threshold,Max(abs(psf_base_single))])
