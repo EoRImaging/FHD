@@ -277,6 +277,12 @@ case version of
       dipole_mutual_coupling_factor=0
    end
 
+   'bjh_test_devel_beam_0_no_coupling_2':begin
+      beam_model_version=0
+      dipole_mutual_coupling_factor=0
+      calibration_flag_iterate = 0
+   end
+
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
    'nb_test_new_cotter_2': begin
