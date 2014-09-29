@@ -135,17 +135,13 @@ CASE beam_model_version OF
             groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength[freq_i]) ;normalization factor
             groundplane/=groundplane0
             Jones_matrix[0,0,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Sin(az_arr*!DtoR)*groundplane)
-            Jones_matrix[0,1,freq_i]=Ptr_new(Cos(az_arr*!DtoR)*groundplane)
-            Jones_matrix[1,0,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)
+            Jones_matrix[1,0,freq_i]=Ptr_new(Cos(az_arr*!DtoR)*groundplane)
+            Jones_matrix[0,1,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)
             Jones_matrix[1,1,freq_i]=Ptr_new(-Sin(az_arr*!DtoR)*groundplane)
-;            Jones_matrix[0,0,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Sin(az_arr*!DtoR)*groundplane)
-;            Jones_matrix[1,0,freq_i]=Ptr_new(Cos(az_arr*!DtoR)*groundplane)
-;            Jones_matrix[0,1,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)
-;            Jones_matrix[1,1,freq_i]=Ptr_new(-Sin(az_arr*!DtoR)*groundplane)
-;;            Jones_matrix[0,0,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)
-;;            Jones_matrix[1,0,freq_i]=Ptr_new(Sin(az_arr*!DtoR)*groundplane)
-;;            Jones_matrix[0,1,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Sin(az_arr*!DtoR)*groundplane)
-;;            Jones_matrix[1,1,freq_i]=Ptr_new(-Cos(az_arr*!DtoR)*groundplane)
+;            Jones_matrix[0,0,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)
+;            Jones_matrix[1,0,freq_i]=Ptr_new(Sin(az_arr*!DtoR)*groundplane)
+;            Jones_matrix[0,1,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Sin(az_arr*!DtoR)*groundplane)
+;            Jones_matrix[1,1,freq_i]=Ptr_new(-Cos(az_arr*!DtoR)*groundplane)
         ENDFOR
     ENDELSE
 ENDCASE
