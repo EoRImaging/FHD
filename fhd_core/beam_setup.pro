@@ -178,7 +178,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
                 xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
                 beam_mask_threshold=beam_mask_threshold,_Extra=extra)
-
+            
             freq_norm_check[freq_i]=Total(Abs(psf_base_superres))/psf_resolution^2.
             gain_normalization=1./(Total(Abs(psf_base_superres))/psf_resolution^2.)
 ;            t4_a=Systime(1)
