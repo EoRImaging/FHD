@@ -16,7 +16,8 @@ beam_ant1=*(antenna1.response[ant_pol1,freq_i])
 beam_ant2=Conj(*(antenna2.response[ant_pol2,freq_i]))
 
 
-beam_norm=Max(Abs(beam_ant1*beam_ant2))
+;beam_norm=Max(Abs(beam_ant1*beam_ant2))
+beam_norm=1.
 beam_test=dirty_image_generate(beam_ant1*beam_ant2)
 
 dimension_super=(size(xvals_uv_superres,/dimension))[0]
@@ -39,7 +40,7 @@ psf_base_single=dirty_image_generate(power_beam,/no_real)
 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
 psf_base_superres/=beam_norm
-psf_base_superres*=uv_mask_superres
+;psf_base_superres*=uv_mask_superres
 
 RETURN,psf_base_superres
 END
