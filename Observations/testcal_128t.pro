@@ -13,7 +13,7 @@ image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 IF N_Elements(data_version) EQ 0 THEN data_version='3'
 data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+data_version])
-vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
+vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
