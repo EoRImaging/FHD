@@ -325,7 +325,6 @@ case version of
    else: print,'Default parameters'
 endcase
    
-;SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
 SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
   STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
