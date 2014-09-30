@@ -31,7 +31,7 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
   
   ; This file structure works at MIT
   data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
-  
+;  data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+'3'])
   
   vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
   fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)

@@ -6,16 +6,18 @@ FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_
     no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
     allow_sidelobe_model_sources=allow_sidelobe_model_sources,_Extra=extra
 
-catalog_path_use=catalog_path
-UPNAME=StrUpCase(catalog_path_use)
+UPNAME=StrUpCase(catalog_path)
 psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
-IF psav EQ -1 THEN catalog_path_use+='.sav'
-IF file_test(catalog_path_use) EQ 0 THEN BEGIN
-    catalog_path_use=filepath(catalog_path_use,root=Rootdir('fhd'),subdir='catalog_data')
-    IF file_test(catalog_path_use) EQ 0 THEN catalog_path_use=$
-        filepath(obs.instrument+'_calibration_source_list.sav',root=Rootdir('fhd'),subdir='catalog_data')
-ENDIF
-RESTORE,catalog_path_use,/relaxed ;catalog
+IF psav EQ -1 THEN catalog_path+='.sav'
+IF file_test(catalog_path) EQ 0 THEN BEGIN
+    catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+    IF file_test(catalog_path_full) EQ 0 THEN BEGIN
+        print,String(format='(A," not found! Using default: ",A)',catalog_path,obs.instrument+'_calibration_source_list.sav')
+        catalog_path=obs.instrument+'_calibration_source_list.sav'
+        catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+    ENDIF
+ENDIF ELSE catalog_path_full=catalog_path
+RESTORE,catalog_path_full,/relaxed ;catalog
 
 IF Keyword_Set(model_visibilities) THEN BEGIN
     IF N_Elements(model_flux_threshold) GT 0 THEN flux_threshold=model_flux_threshold ELSE flux_threshold=0.

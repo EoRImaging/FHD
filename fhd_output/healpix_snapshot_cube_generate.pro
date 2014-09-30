@@ -29,7 +29,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   IF ~Keyword_Set(n_avg) THEN n_avg=1 ;default of no averaging
   n_freq_use=Floor(n_freq/n_avg)
-  IF Keyword_Set(ps_beam_threshold) THEN beam_threshold=ps_beam_threshold ELSE beam_threshold=0.2
+  IF N_Elements(ps_beam_threshold) GT 0 THEN beam_threshold=ps_beam_threshold ELSE beam_threshold=0
   
   IF Keyword_Set(ps_kbinsize) THEN kbinsize=ps_kbinsize ELSE $
     IF Keyword_Set(ps_fov) THEN kbinsize=!RaDeg/ps_FoV ELSE kbinsize=obs_in.kpix
@@ -53,10 +53,11 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
   psf_out=beam_setup(obs_out,0,antenna_out,/no_save,psf_resolution=ps_psf_resolution,/silent,_Extra=extra)
   
-  beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask,/square)
+  beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask,/square,beam_threshold=beam_threshold)
   
   hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
     mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds)
+  IF Keyword_Set(restrict_hpx_inds) THEN nside=nside_use
   hpx_inds=hpx_cnv.inds
   n_hpx=N_Elements(hpx_inds)
   
@@ -120,7 +121,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
       *flags_use[pol_i]=flag_arr1
     ENDFOR
-    obs=obs_out ;will have some values over-written!
+    obs=obs_out_ref ;will have some values over-written!
+    obs_in=obs_in_ref
     psf=psf_out
     
     residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,flags_use,obs_out=obs,psf_out=psf,/rephase_weights,$
@@ -132,7 +134,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       dirty_arr1=residual_arr1
       residual_arr1=Ptrarr(size(residual_arr1,/dimension),/allocate)
     ENDIF
-    nf_vis=obs_out.nf_vis
+    nf_vis=obs.nf_vis
     nf_vis_use=Lonarr(n_freq_use)
     FOR freq_i=0L,n_freq_use-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
     
@@ -164,10 +166,11 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
           *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*residual_arr1[pol_i,freq_i]),hpx_cnv)
           IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*dirty_arr1[pol_i,freq_i]),hpx_cnv)
           IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*model_arr1[pol_i,freq_i]),hpx_cnv)
-          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv)
+          *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv)
         ENDFOR
     ENDELSE   
-    undefine_fhd,weights_arr1,variance_arr1,residual_arr1,dirty_arr1,model_arr1,beam_arr 
+    undefine_fhd,weights_arr1,variance_arr1,residual_arr1,dirty_arr1,model_arr1 ;free memory for beam_arr later!
+    IF iter EQ n_iter-1 THEN undefine_fhd,beam_arr
     
     FOR pol_i=0,n_pol-1 DO BEGIN      
         IF dirty_flag THEN BEGIN
@@ -203,6 +206,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     ENDFOR
     undefine_fhd,dirty_hpx_arr,model_hpx_arr,residual_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr
 ENDFOR
+obs_out=obs ;for return
 Ptr_free,flag_arr_use
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx

@@ -272,6 +272,16 @@ case version of
    'apb_test_devel_no_coupling':begin
       dipole_mutual_coupling_factor=0
    end
+   'apb_test_devel_beam_0_no_coupling':begin
+      beam_model_version=0
+      dipole_mutual_coupling_factor=0
+   end
+
+   'bjh_test_devel_beam_0_no_coupling_2':begin
+      beam_model_version=0
+      dipole_mutual_coupling_factor=0
+      calibration_flag_iterate = 0
+   end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
@@ -321,7 +331,6 @@ case version of
    else: print,'Default parameters'
 endcase
    
-;SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
 SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
   STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.

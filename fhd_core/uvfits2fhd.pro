@@ -154,10 +154,11 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
+        IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
         IF ~Keyword_Set(calibration_source_list) THEN $
-            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=calibration_catalog_file_path,_Extra=extra)
+            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)
         cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,$
-            catalog_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,_Extra=extra)
+            catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
@@ -263,7 +264,7 @@ IF data_flag LE 0 THEN BEGIN
                 weights_grid=1
             ENDIF
         ENDFOR
-        SAVE,obs,filename=obs_filepath,/compress ;need to save here to enter nf_vis
+        fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;need to save here to enter nf_vis
         IF ~Keyword_Set(silent) THEN print,'Gridding time:',t_grid
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
