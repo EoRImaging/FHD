@@ -197,7 +197,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 
                 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
                 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
-;                psf_base_superres*=uv_mask_superres
+                psf_base_superres*=uv_mask_superres
             ENDELSE
             
             freq_norm_check[freq_i]=Total(Abs(psf_base_superres))/psf_resolution^2.
