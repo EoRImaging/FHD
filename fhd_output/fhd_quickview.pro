@@ -4,7 +4,8 @@ PRO fhd_quickview,obs,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weight
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
-    use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,_Extra=extra
+    use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
+    allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -19,6 +20,7 @@ IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
+IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=0.025
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
@@ -103,7 +105,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-3)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
-    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[0.025,Max(beam_mask_test)])
+    IF Keyword_Set(allow_sidelobe_image_output) THEN beam_i=where(beam_mask_test GE beam_output_threshold) ELSE $
+        beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_output_threshold,Max(beam_mask_test)])
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
     beam_avg+=*beam_base_out[pol_i]^2.
     beam_mask*=beam_mask0

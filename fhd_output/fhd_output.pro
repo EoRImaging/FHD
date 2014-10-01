@@ -4,7 +4,8 @@ PRO fhd_output,obs,fhd,cal,jones,file_path_fhd=file_path_fhd,version=version,map
     gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
-    use_pointing_center=use_pointing_center,no_fits=no_fits,no_png=no_png,_Extra=extra
+    use_pointing_center=use_pointing_center,no_fits=no_fits,no_png=no_png,$
+    allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
@@ -56,6 +57,7 @@ dimension_uv=obs.dimension
 IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
+IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=fhd.beam_threshold
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
@@ -134,7 +136,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold/10.)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
-    beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[fhd.beam_threshold,Max(beam_mask_test)])
+    IF Keyword_Set(allow_sidelobe_image_output) THEN beam_i=where(beam_mask_test GE beam_output_threshold) ELSE $
+        beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_output_threshold,Max(beam_mask_test)])
     beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
     beam_avg+=*beam_base_out[pol_i]
     beam_mask*=beam_mask0
