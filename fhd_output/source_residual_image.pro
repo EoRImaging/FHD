@@ -99,17 +99,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;        res[sx,sy]=res_img[sx,sy]*weight_invert(flux)
     ENDELSE
     
-    res_x_max=(Max(sx)+1)<(dimension-1)
-    res_x_min=(Min(sx)-1)>0 
-    res_y_max=(Max(sy)+1)<(elements-1)
-    res_y_min=(Min(sy)-1)>0
-    res_test=Smooth(res_img*source_weights,200,/edge)*weight_invert(Smooth(source_img,200,/edge))
-    res_cutsky=(res_img*beam_mask*source_mask)[res_x_min:res_x_max,res_y_min:res_y_max]
-    mask_cut=source_mask[res_x_min:res_x_max,res_y_min:res_y_max]
-    res_use=max_filter(res_cutsky,radius,/median,/circle,mask=mask_cut,missing=0)
-    res_fill=Fltarr(dimension,elements) & res_fill[res_x_min:res_x_max,res_y_min:res_y_max]=res_use
+    res_x_max=(Max(sx)+restored_beam_width/2)<(dimension-1)
+    res_x_min=(Min(sx)-restored_beam_width/2)>0 
+    res_y_max=(Max(sy)+restored_beam_width/2)<(elements-1)
+    res_y_min=(Min(sy)-restored_beam_width/2)>0
+    
+    res_test=Smooth(res_img*source_weights,radius,/edge)*weight_invert(Smooth(source_img,radius,/edge),min(source_arr_use.flux.I)/radius^2.)
+    res_test2=Smooth((res_img*source_weights)[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge)*$
+        weight_invert(Smooth(source_img[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge),min(source_arr_use.flux.I)/radius^2.)
+    
 ;    res_fill=max_filter(res,radius,/median,/circle,mask=res_mask,missing=0)
-    residual_arr[pol_i]=Ptr_new(res_fill)
+    residual_arr[pol_i]=Ptr_new(res_test)
 ENDFOR
 
 RETURN,residual_arr
