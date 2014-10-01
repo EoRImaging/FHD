@@ -67,7 +67,7 @@ psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger bo
 ;IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
 ;;residual_threshold is minimum residual above which to include
 ;IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
-IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E2
+IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E3
 
 ;freq_center=fltarr(nfreq_bin)
 ;FOR fi=0L,nfreq_bin-1 DO BEGIN
@@ -197,7 +197,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 
                 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
                 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
-                psf_base_superres*=uv_mask_superres
+;                psf_base_superres*=uv_mask_superres
             ENDELSE
             
             freq_norm_check[freq_i]=Total(Abs(psf_base_superres))/psf_resolution^2.
