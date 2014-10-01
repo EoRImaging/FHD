@@ -40,6 +40,7 @@ IF Keyword_Set(source_residual_ston_threshold) THEN BEGIN
         IF n_use GT 0 THEN source_arr_use=source_arr_use[si_use]
     ENDIF
 ENDIF
+n_use=N_Elements(source_arr_use)
 
 IF beam_flag THEN BEGIN
     beam_avg=fltarr(dimension,elements)
@@ -63,13 +64,16 @@ sx=source_arr_use.x
 sy=source_arr_use.y
 res_mask=fltarr(dimension,elements)
 res_mask[sx,sy]=1
+source_arr_ones=source_arr_use
+FOR pol_i=0,7 DO source_arr_ones.flux.(pol_i)=1.
 FOR pol_i=0,n_pol-1 DO BEGIN
     flux=source_arr_use.flux.(pol_offset+pol_i)
     res=Fltarr(dimension,elements)
 ;    res[sx,sy]=(*image_arr[pol_i])[sx,sy]*weight_invert(flux)
     source_img=source_image_generate(source_arr_use,obs,pol_i=pol_offset+pol_i,resolution=16,dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)
+    source_weights=source_image_generate(source_arr_ones,obs,pol_i=pol_offset+pol_i,resolution=16,dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)
     source_mask=Fltarr(dimension,elements)
-    smask_i=where(source_img,n_i_use)
+    smask_i=where(source_weights,n_i_use)
     IF n_i_use GT 0 THEN source_mask[smask_i]=1.
     IF beam_flag THEN BEGIN
         IF Keyword_Set(source_residual_stokes) THEN BEGIN
@@ -99,6 +103,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     res_x_min=(Min(sx)-1)>0 
     res_y_max=(Max(sy)+1)<(elements-1)
     res_y_min=(Min(sy)-1)>0
+    res_test=Smooth(res_img*source_weights,200,/edge)*weight_invert(Smooth(source_img,200,/edge))
     res_cutsky=(res_img*beam_mask*source_mask)[res_x_min:res_x_max,res_y_min:res_y_max]
     mask_cut=source_mask[res_x_min:res_x_max,res_y_min:res_y_max]
     res_use=max_filter(res_cutsky,radius,/median,/circle,mask=mask_cut,missing=0)
