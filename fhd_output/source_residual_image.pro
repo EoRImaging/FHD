@@ -3,7 +3,6 @@ FUNCTION source_residual_image,obs,source_arr,image_arr,jones=jones,source_resid
     source_residual_flux_threshold=source_residual_flux_threshold,source_residual_beam_threshold=source_residual_beam_threshold,$
     smooth_width=smooth_width,beam_threshold=beam_threshold,source_residual_include_sidelobe=source_residual_include_sidelobe
 
-
 source_arr_use=source_arr
 
 n_pol=obs.n_pol
@@ -51,7 +50,7 @@ IF beam_flag THEN BEGIN
     IF Keyword_Set(source_residual_include_sidelobe) THEN beam_i=where((beam_avg GE beam_threshold) AND (beam_avg GT 0),n_i_use) $
         ELSE beam_i=Region_grow(beam_avg,dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(beam_avg)])
     
-    IF beam_i[0] NE -1 THEN beam_mask[beam_i]=1.    
+    IF beam_i[0] EQ -1 THEN beam_flag=0 ELSE beam_mask[beam_i]=1. 
     
     IF Keyword_Set(source_residual_beam_threshold) THEN BEGIN
         si_use=where(beam_avg[source_arr_use.sx,source_arr_use.sy] GE source_residual_beam_threshold,n_use)
@@ -62,6 +61,21 @@ ENDIF ELSE beam_mask=Fltarr(dimension,elements)+1.
 residual_arr=Ptrarr(n_pol)
 sx=source_arr_use.x
 sy=source_arr_use.y
+
+;;IF (N_Elements(zoom_low) EQ 0) OR (N_Elements(zoom_high) EQ 0) THEN BEGIN
+;;    IF beam_flag THEN BEGIN
+;;        beam_xv=beam_i mod dimension
+;;        beam_yv=Floor(beam_i/dimension)
+;;        IF N_Elements(zoom_low) EQ 0 THEN zoom_low=Min(beam_xv)<Min(beam_yv)
+;;        IF N_Elements(zoom_high) EQ 0 THEN zoom_high=Max(beam_xv)>Max(beam_yv)
+;;    ENDIF ELSE BEGIN
+;;        IF N_Elements(zoom_low) EQ 0 THEN zoom_low=Min(sx)<Min(sy)
+;;        IF N_Elements(zoom_high) EQ 0 THEN zoom_high=Max(sx)>Max(sy)
+;;    ENDELSE
+;;ENDIF
+;IF N_Elements(zoom_low) EQ 0 THEN zoom_low=0.
+;IF N_Elements(zoom_high) EQ 0 THEN zoom_high=dimension-1.
+
 res_mask=fltarr(dimension,elements)
 res_mask[sx,sy]=1
 source_arr_ones=source_arr_use
@@ -98,15 +112,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         res_img2=res_img*source_img
 ;        res[sx,sy]=res_img[sx,sy]*weight_invert(flux)
     ENDELSE
-    
-    res_x_max=(Max(sx)+restored_beam_width/2)<(dimension-1)
-    res_x_min=(Min(sx)-restored_beam_width/2)>0 
-    res_y_max=(Max(sy)+restored_beam_width/2)<(elements-1)
-    res_y_min=(Min(sy)-restored_beam_width/2)>0
+;    
+;    res_x_max=(Max(sx)+restored_beam_width/2)<(dimension-1)
+;    res_x_min=(Min(sx)-restored_beam_width/2)>0 
+;    res_y_max=(Max(sy)+restored_beam_width/2)<(elements-1)
+;    res_y_min=(Min(sy)-restored_beam_width/2)>0
     
     res_test=Smooth(res_img*source_weights,radius,/edge)*weight_invert(Smooth(source_img,radius,/edge),min(source_arr_use.flux.I)/radius^2.)
-    res_test2=Smooth((res_img*source_weights)[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge)*$
-        weight_invert(Smooth(source_img[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge),min(source_arr_use.flux.I)/radius^2.)
+;    res_test2=Smooth((res_img*source_weights)[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge)*$
+;        weight_invert(Smooth(source_img[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge),min(source_arr_use.flux.I)/radius^2.)
     
 ;    res_fill=max_filter(res,radius,/median,/circle,mask=res_mask,missing=0)
     residual_arr[pol_i]=Ptr_new(res_test)
