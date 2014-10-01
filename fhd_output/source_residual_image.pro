@@ -85,7 +85,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     res=Fltarr(dimension,elements)
 ;    res[sx,sy]=(*image_arr[pol_i])[sx,sy]*weight_invert(flux)
     source_img=source_image_generate(source_arr_use,obs,pol_i=pol_offset+pol_i,resolution=16,dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)
-    source_weights=source_image_generate(source_arr_ones,obs,pol_i=pol_offset+pol_i,resolution=16,dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)
+    source_weights=source_image_generate(source_arr_ones,obs,pol_i=pol_offset+pol_i,resolution=16,dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)<1.
     source_mask=Fltarr(dimension,elements)
     smask_i=where(source_weights,n_i_use)
     IF n_i_use GT 0 THEN source_mask[smask_i]=1.
