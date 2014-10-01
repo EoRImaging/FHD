@@ -29,7 +29,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   IF ~Keyword_Set(n_avg) THEN n_avg=1 ;default of no averaging
   n_freq_use=Floor(n_freq/n_avg)
-  IF Keyword_Set(ps_beam_threshold) THEN beam_threshold=ps_beam_threshold ELSE beam_threshold=0.2
+  IF N_Elements(ps_beam_threshold) GT 0 THEN beam_threshold=ps_beam_threshold ELSE beam_threshold=0
   
   IF Keyword_Set(ps_kbinsize) THEN kbinsize=ps_kbinsize ELSE $
     IF Keyword_Set(ps_fov) THEN kbinsize=!RaDeg/ps_FoV ELSE kbinsize=obs_in.kpix

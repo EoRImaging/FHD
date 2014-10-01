@@ -321,18 +321,23 @@ case version of
 
 
    ;;; Abraham's versions!!! Only Abraham may edit this section!!!
-   'arn_mwacs_plus_ben_fornax_and_vla_pic_deconvolve':begin
-	calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_VLA_fornax_and_VLA_pic.sav',root=rootdir('FHD'),subdir='catalog_data')
+   'arn_mwacs_plus_ben_fornax_and_vla_pic':begin
+	calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
 	snapshot_healpix_export=0
 ;	min_cal_baseline=50
 ;	max_cal_baseline=400
-	deconvolve=1	
+	deconvolve=0
+   end
+
+   'arn_firstpass_eor1_with_fhd_fornax':begin
+        calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_FHDaug23deconvolve_fornax_and_VLA_pic.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=1
+        deconvolve=0
    end
 
    else: print,'Default parameters'
 endcase
    
-;SPAWN, 'python /nfs/grs1915/ha/nbarry/scripts/read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
 SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
   STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
