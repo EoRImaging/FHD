@@ -26,7 +26,7 @@ calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=
 combine_obs=0
 dimension=2048.
 max_sources=30000.
-pad_uv_image=2.
+pad_uv_image=1.
 IF dimension GT 2048 THEN pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FoV=80.

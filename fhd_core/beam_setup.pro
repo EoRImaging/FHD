@@ -67,7 +67,7 @@ psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger bo
 ;IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
 ;;residual_threshold is minimum residual above which to include
 ;IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
-IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E2
+IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E3
 
 ;freq_center=fltarr(nfreq_bin)
 ;FOR fi=0L,nfreq_bin-1 DO BEGIN
