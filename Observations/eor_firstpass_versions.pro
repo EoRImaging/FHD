@@ -265,6 +265,17 @@ case version of
       FoV=80.
    end
 
+   'apb_sidelobe_subtract_2':begin
+      allow_sidelobe_cal_sources=1
+      FoV=160
+      dimension=4096
+      snapshot_healpix_export=0
+      recalculate_all=0
+      allow_sidelobe_image_output=1
+      beam_output_threshold=0.01
+      ;ring_radius=30.*pad_uv_image
+   end
+
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
    'nb_test_new_cotter_2': begin
