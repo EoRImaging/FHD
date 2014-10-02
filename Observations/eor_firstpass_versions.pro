@@ -358,6 +358,9 @@ case version of
    ; Abraham's versions
 
    ; Bryna's versions
+   'bjh_test_max_cal_iter':begin
+      max_cal_iter=100
+   end
 
    ; Nichole's versions
 
