@@ -14,5 +14,6 @@ ENDELSE
 
 IF nan_test(result) NE 0 THEN result[where(Finite(result,/nan))]=0.
 IF inf_test(result) NE 0 THEN result[where(Finite(result,/inf))]=0.
+IF N_Elements(result) EQ 1 THEN result=result[0]
 RETURN,result
 END
