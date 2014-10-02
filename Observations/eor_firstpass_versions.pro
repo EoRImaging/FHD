@@ -363,6 +363,9 @@ case version of
    end
 
    ; Nichole's versions
+   'nb_test_debug_direction':begin
+      debug_direction=1
+   end
 
    ; Patti's versions
 
