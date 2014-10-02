@@ -58,7 +58,7 @@ FOR ti=0L,n_tags-1 DO BEGIN
             ENDIF
             result[1,ti_use]='Pointer' 
             result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent,max_len=max_len-1)
-            stretch=(size(result_insert,/dimension))[size(result_insert,/n_dim)-1]
+            stretch=N_Elements(result_insert)/2
             result=[[result],[Strarr(2,stretch)]]
             result[0,ti_use+1]=result_insert
             ti_use+=stretch+1
@@ -100,8 +100,8 @@ FOR ti=0L,n_tags-1 DO BEGIN
         format_code='("'+size_type(tag_val)+' array (",'+Strn(n_dims)+'(A,:," x "))'
         text_val=String(format=format_code,dim_arr)+' elements)'
     ENDIF ELSE BEGIN
-        format_code=Strcompress('('+String(format='(A,"(A),:,")',Strn(len)),/remove_all)+'"'+delimiter_use+'"'+')'
-        text_val=String(format=format_code,tag_val)
+        format_code='('+String(format='(A,"(A),:,")',Strn(len))+'"'+delimiter_use+'"'+')'
+        text_val=String(format=format_code,Strcompress(tag_val)+delimiter_use)
     ENDELSE
     result[1,ti_use]=text_val
     ti_use+=1

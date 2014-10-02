@@ -1,13 +1,16 @@
-FUNCTION fhd_struct_init_jones,obs,jones_in,file_path_fhd=file_path_fhd,mask=mask,restore_last=restore_last,update_last=update_last
+FUNCTION fhd_struct_init_jones,obs,status_str,jones_in,file_path_fhd=file_path_fhd,mask=mask,$
+    restore_last=restore_last,update_last=update_last,_Extra=extra
 
-IF Keyword_Set(file_path_fhd) THEN proj_filename=file_path_fhd+'_jones.sav' ELSE proj_filename='' 
-IF Keyword_Set(restore_last) AND file_test(proj_filename) THEN RETURN,getvar_savefile(proj_filename,'jones')
+IF Keyword_Set(restore_last) THEN BEGIN
+    fhd_save_io,status_str,jones,var='jones',file_path_fhd=file_path_fhd,/restore,_Extra=extra
+    IF Keyword_Set(jones) THEN RETURN,jones
+ENDIF
 dimension=obs.dimension
 elements=obs.elements
 
 IF Keyword_Set(update_last) THEN BEGIN
     IF N_Elements(jones_in) EQ 0 THEN $
-        jones_in=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,mask=mask,/restore_last)
+        jones_in=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,mask=mask,/restore_last)
     dimension_in=jones_in.dimension
     elements_in=jones_in.elements
     mask_use=intarr(dimension_in,elements_in)
@@ -79,6 +82,6 @@ ENDFOR
 
 jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
 ;jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_corr,Jinv:p_map}
-IF Keyword_Set(file_path_fhd) THEN SAVE,jones,filename=proj_filename,/compress
+fhd_save_io,status_str,jones,var='jones',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 RETURN,jones
 END

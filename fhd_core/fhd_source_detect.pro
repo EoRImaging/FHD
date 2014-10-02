@@ -1,17 +1,17 @@
-FUNCTION fhd_source_detect,obs,fhd,jones,source_find_image,image_I_flux=image_I_flux,image_Q_flux=image_Q_flux,$
+FUNCTION fhd_source_detect,obs,fhd_params,jones,source_find_image,image_I_flux=image_I_flux,image_Q_flux=image_Q_flux,$
     image_U_flux=image_U_flux,image_V_flux=image_V_flux,beam_arr=beam_arr,beam_corr_avg=beam_corr_avg,$
     beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,detection_threshold=detection_threshold,$
     model_I_image=model_I_image,_Extra=extra
 ;NOTE: if supplied, model_I_image should be in the same units and weighting scheme as source_find_image
 
-add_threshold=fhd.add_threshold
-max_add_sources=fhd.max_add_sources
-pol_use=fhd.pol_use
-independent_fit=fhd.independent_fit
-reject_pol_sources=fhd.reject_pol_sources
+add_threshold=fhd_params.add_threshold
+max_add_sources=fhd_params.max_add_sources
+pol_use=fhd_params.pol_use
+independent_fit=fhd_params.independent_fit
+reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
 
-n_pol=fhd.npol
+n_pol=fhd_params.npol
 dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix

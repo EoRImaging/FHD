@@ -1,15 +1,11 @@
 FUNCTION visibility_count,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
-    no_conjugate=no_conjugate,fill_model_vis=fill_model_vis
+    no_conjugate=no_conjugate,fill_model_vis=fill_model_vis,_Extra=extra
 
-SWITCH N_Params() OF
-    0:obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
-    1:psf=getvar_savefile(file_path_fhd+'_beams.sav','psf')
-    2:params=getvar_savefile(file_path_fhd+'_params.sav','params')
-    ELSE:
-ENDSWITCH
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF Min(ptr_valid(flag_ptr)) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
-IF Min(Ptr_valid(flag_ptr)) EQ 0 THEN IF Keyword_Set(file_path_fhd) THEN $
-    flag_ptr=getvar_savefile(file_path_fhd+'_flags.sav','flag_arr')
 ;extract information from the structures
 n_pol=obs.n_pol
 n_tile=obs.n_tile
@@ -37,12 +33,16 @@ bi_use=array_match(b_info.tile_A,b_info.tile_B,value_match=tile_use)
 n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
 
-psf_base=psf.base
-psf_dim=Sqrt((Size(*psf_base[0],/dimension))[0])
-psf_resolution=(Size(psf_base,/dimension))[2]
+psf_dim=psf.dim
+psf_resolution=psf.resolution
 
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize
+
+dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
+dist_test=frequency_array#dist_test
+flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test=0
 
 xcen=frequency_array#kx_arr
 ycen=frequency_array#ky_arr
@@ -53,12 +53,8 @@ IF n_conj GT 0 THEN BEGIN
     ycen[*,conj_i]=-ycen[*,conj_i]
 ENDIF
 
-dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
-flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
-dist_test=0
-
-xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
-ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
+xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
 ;xmax=xmin+psf_dim-1
 ;ymax=ymin+psf_dim-1
 
@@ -76,14 +72,17 @@ IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 range_test_y_i=0
 
 IF Keyword_Set(flag_ptr) THEN BEGIN
-    n_flag_dim=size(*flag_ptr[0],/n_dimension)
     flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
     IF Keyword_Set(fill_model_vis) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
     ENDIF
+    IF ~Arg_present(flag_ptr) THEN undefine_fhd,flag_ptr
 ENDIF
+IF ~Arg_present(obs) THEN undefine_fhd,obs
+IF ~Arg_present(params) THEN undefine_fhd,params
+IF ~Arg_present(psf) THEN undefine_fhd,psf
 
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags

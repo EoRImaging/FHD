@@ -1,4 +1,4 @@
-PRO combine_obs_sources,file_list,calibration,source_list,restore_last=restore_last,output_path=output_path,_Extra=extra
+PRO combine_obs_sources,file_list,status_arr,source_list,restore_last=restore_last,output_path=output_path,_Extra=extra
 
 except=!except
 !except=0 
@@ -14,45 +14,56 @@ detect_radius=3.0 ;maximum radius in pixels to consider sources as matches. Conv
 
 ns_use=0.
 
+n_files=N_Elements(file_list)
 IF file_test(save_path) EQ 0 THEN restore_last=0
 IF Keyword_Set(restore_last) THEN BEGIN
     restore,filename=save_path 
-    n_files=N_Elements(file_list)
     RETURN
 ENDIF
 
-n_files=N_Elements(file_list)
+fhd_save_io,status_init,/reset
+IF N_Elements(status_arr) NE n_files THEN BEGIN
+    status_arr=Replicate(status_init,n_files)
+    FOR fi=0L,n_files-1 DO BEGIN
+        fhd_save_io,status_single,file_path_fhd=file_list[fi]
+        status_arr[fi]=status_single
+    ENDFOR
+ENDIF
+
+fi_use=where(status_arr.obs AND status_arr.fhd,n_files)
 IF n_files LT 2 THEN BEGIN
     RETURN
 ENDIF
-source_array=Ptrarr(n_files,/allocate)
 
+file_list_use=file_list[fi_use]
+status_arr_use=status_arr[fi_use]
+
+source_array=Ptrarr(n_files,/allocate)
 n_src=fltarr(n_files)
 src_i=Ptrarr(n_files,/allocate)
-fi_c=-1
 FOR fi=0,n_files-1 DO BEGIN
-    file_path_fhd=file_list[fi]
-    IF (file_test(file_path_fhd+'_obs.sav') EQ 0) OR (file_test(file_path_fhd+'_fhd.sav') EQ 0) THEN CONTINUE ELSE fi_c+=1
+    file_path_fhd=file_list_use[fi]
     
-    sa=getvar_savefile(file_path_fhd+'_fhd.sav','source_array')
-    obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
-    IF fi_c EQ 0 THEN obs_arr=Replicate(obs,n_files)
-    obs_arr[fi]=obs
+    
+    fhd_save_io,status_arr_use[fi],obs,file_path_fhd=file_path_fhd,var='obs',/restore
+    fhd_save_io,status_arr_use[fi],sa,file_path_fhd=file_path_fhd,$
+        var='fhd',sub_var='source_array',/restore
+    IF fi EQ 0 THEN obs_arr=[obs] ELSE obs_arr=[obs_arr,obs]
+;    obs_arr[fi]=obs
     
     src_i0=where(sa.ston GE StoN,n_src0)
     n_src[fi]=n_src0
     *src_i[fi]=src_i0
     *source_array[fi]=sa
 ENDFOR
-IF fi_c LE 1 THEN RETURN
 degpix=Median(obs_arr.degpix)
 n_pol=Min(obs_arr.n_pol)
 
 beam_arr=Ptrarr(n_files,n_pol)
 FOR fi=0,n_files-1 DO BEGIN
-    file_path_fhd=file_list[fi]
-    IF (file_test(file_path_fhd+'_obs.sav') EQ 0) OR (file_test(file_path_fhd+'_fhd.sav') EQ 0) THEN CONTINUE
-    beam_arr_single=getvar_savefile(file_path_fhd+'_fhd.sav','beam_base')
+    file_path_fhd=file_list_use[fi]
+    fhd_save_io,status_arr_use[fi],beam_arr_single,file_path_fhd=file_path_fhd,$
+        var='fhd',sub_var='beam_base',/restore
     beam_arr[fi,*]=beam_arr_single[0:n_pol-1]
 ENDFOR
 
@@ -153,7 +164,7 @@ FOR gi=0L,ng-1 DO BEGIN
     source_sub.y=sa_y[si_g_use]
     source_sub.ra=sa_ra[si_g_use]
     source_sub.dec=sa_dec[si_g_use]
-    source_sub.filename=file_basename(file_list[source_sub.fi])
+    source_sub.filename=file_basename(file_list_use[source_sub.fi])
     source_sub.extend=sa_extend[si_g_use]
     source_sub.radius=sa_radius[si_g_use]
     source_list[gi].extend=median(sa_extend[si_g_use])

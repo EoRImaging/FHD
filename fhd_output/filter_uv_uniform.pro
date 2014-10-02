@@ -9,10 +9,7 @@ IF Keyword_Set(return_name_only) THEN RETURN,image_uv
 
 IF ~(Keyword_Set(obs) AND Keyword_Set(psf) AND Keyword_Set(params)) THEN BEGIN
     IF Keyword_Set(file_path_fhd) THEN BEGIN
-        IF ~Keyword_Set(obs) THEN obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
-        IF ~Keyword_Set(psf) THEN psf=getvar_savefile(file_path_fhd+'_beams.sav','psf') 
-        IF ~Keyword_Set(params) THEN params=getvar_savefile(file_path_fhd+'_params.sav','params')
-        vis_count=visibility_count(obs,psf,params)
+        vis_count=visibility_count(obs,psf,params,file_path_fhd=file_path_fhd,_Extra=extra) 
     ENDIF ELSE BEGIN
         IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
         vis_count=weights/Min(weights[where(weights GT 0)])

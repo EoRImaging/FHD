@@ -23,7 +23,7 @@ IF Keyword_Set(no_extend) THEN n_ext=0
 
 IF n_ext GT 0 THEN BEGIN
     IF n_point GT 0 THEN src_arr_use=[src_arr[point_i],*(src_arr[extend_i[0]].extend)] $
-        ELSE src_arr_use=*(src_arr[extend_i[ext_i]].extend)
+        ELSE src_arr_use=*(src_arr[extend_i[0]].extend)
     FOR ext_i=1L,n_ext-1 DO src_arr_use=[src_arr_use,*(src_arr[extend_i[ext_i]].extend)]
 ENDIF ELSE src_arr_use=src_arr
 

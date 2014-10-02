@@ -15,40 +15,40 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
+PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
     scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
-;calibration_model_subtract is passed through the fhd structure
+;calibration_model_subtract is passed through the fhd_params structure
 compile_opt idl2,strictarrsubs  
 
 t00=Systime(1)    
 ;vis_path_default,data_directory,filename,file_path,obs=obs
 ;image_uv_arr is a pointer array with dimensions (n_pol) 
 ;most parameters are set in fhd_init()
-n_pol=fhd.npol
-gain_factor=fhd.gain_factor
-max_iter=fhd.max_iter
-max_sources=fhd.max_sources
-check_iter=fhd.check_iter
-beam_threshold=fhd.beam_threshold
-add_threshold=fhd.add_threshold
-max_add_sources=fhd.max_add_sources
-;local_max_radius=fhd.local_max_radius
-pol_use=fhd.pol_use
-independent_fit=fhd.independent_fit
-reject_pol_sources=fhd.reject_pol_sources
+n_pol=fhd_params.npol
+gain_factor=fhd_params.gain_factor
+max_iter=fhd_params.max_iter
+max_sources=fhd_params.max_sources
+check_iter=fhd_params.check_iter
+beam_threshold=fhd_params.beam_threshold
+add_threshold=fhd_params.add_threshold
+max_add_sources=fhd_params.max_add_sources
+;local_max_radius=fhd_params.local_max_radius
+pol_use=fhd_params.pol_use
+independent_fit=fhd_params.independent_fit
+reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
-calibration_model_subtract=fhd.cal_subtract
-filter_background=fhd.filter_background
-decon_filter=fhd.decon_filter
-galaxy_model_fit=fhd.galaxy_subtract
-subtract_sidelobe_catalog=fhd.sidelobe_subtract
+calibration_model_subtract=fhd_params.cal_subtract
+filter_background=fhd_params.filter_background
+decon_filter=fhd_params.decon_filter
+galaxy_model_fit=fhd_params.galaxy_subtract
+subtract_sidelobe_catalog=fhd_params.sidelobe_subtract
 
 icomp=Complex(0,1)
-beam_max_threshold=fhd.beam_max_threshold
-smooth_width=fhd.smooth_width
+beam_max_threshold=fhd_params.beam_max_threshold
+smooth_width=fhd_params.smooth_width
 ;color_frequency_correction=fltarr(nfreq)+1. ;remove same component from all frequencies, but allow to be different in the future
 
 dimension=obs.dimension
@@ -63,8 +63,8 @@ yvals=meshgrid(dimension,elements,2)-elements/2
 
 ;the particular set of beams read will be the ones specified by file_path_fhd.
 ;that will include all polarizations and frequencies, at ONE time snapshot
-IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last,/silent)
-nfreq_beam=(size(psf.base,/dimension))[1]
+;IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last,/silent)
+nfreq_beam=psf.n_freq
 beam_base=Ptrarr(n_pol,/allocate)
 beam_correction=Ptrarr(n_pol,/allocate)
 beam_i=Ptrarr(n_pol,/allocate)
@@ -108,7 +108,7 @@ model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
 IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
-pol_names=['xx','yy','xy','yx','I','Q','U','V'] 
+pol_names=obs.pol_names
 
 ;load holo map functions and initialize output arrays
 dirty_image_composite=fltarr(dimension,elements)
@@ -117,19 +117,6 @@ dirty_image_composite_U=fltarr(dimension,elements)
 dirty_image_composite_V=fltarr(dimension,elements)
 source_uv_mask=fltarr(dimension,elements)
 source_uv_mask2=fltarr(dimension,elements)
-IF Keyword_Set(transfer_mapfn) THEN BEGIN
-    file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) 
-    print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
-ENDIF ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
-
-FOR pol_i=0,n_pol-1 DO BEGIN
-    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-        ;IMPORTANT: this approach of restoring the map_fn uses the least memory
-        print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
-        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-        *map_fn_arr[pol_i]=Temporary(map_fn)
-    ENDIF
-ENDFOR
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
@@ -212,7 +199,7 @@ ENDIF
 source_find_image=image_filtered*beam_avg*beam_mask*source_taper
 converge_check[0]=Stddev(source_find_image[where(beam_mask)],/nan)
 converge_check2[0]=Stddev(source_find_image[where(beam_mask)],/nan)
-print,"Gain factor used:",Strn(fhd.gain_factor)
+print,"Gain factor used:",Strn(fhd_params.gain_factor)
 print,"Initial convergence:",Strn(converge_check[0])
 
 model_holo_arr=Ptrarr(n_pol,/allocate)
@@ -281,7 +268,7 @@ IF ~Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : C
 
 recalc_flag=1
 t_init=Systime(1)-t00
-FOR i=i0,max_iter-1 DO BEGIN 
+FOR iter=i0,max_iter-1 DO BEGIN 
     IF Keyword_Set(recalc_flag) THEN BEGIN
         t1_0=Systime(1)
         FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
@@ -327,7 +314,7 @@ FOR i=i0,max_iter-1 DO BEGIN
     model_I_use=model_I_use*beam_avg*source_taper*beam_mask
     image_use=image_filtered*beam_avg*beam_mask
    
-    comp_arr1=fhd_source_detect(obs,fhd,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+    comp_arr1=fhd_source_detect(obs,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
         model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
         beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     
@@ -350,11 +337,9 @@ FOR i=i0,max_iter-1 DO BEGIN
         i2+=1
         t10=Systime(1)-t0
         converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
-        fhd.end_condition='Source fit failure'
+        fhd_params.end_condition='Source fit failure'
         print,StrCompress(String(format='("Break after iteration ",I," from failure to fit any sources after ",I," seconds with ",I," sources (convergence:",F,")")',$
-            iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-        converge_check2=converge_check2[0:iter]
-        converge_check=converge_check[0:i2]
+            iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
         BREAK
         recalc_flag=0
     ENDIF ELSE recalc_flag=1
@@ -376,60 +361,58 @@ FOR i=i0,max_iter-1 DO BEGIN
     IF si+1 GE max_sources THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
-        fhd.end_condition='Max components'
+        fhd_params.end_condition='Max components'
         print,StrCompress(String(format='("Max sources found by iteration ",I," after ",I," seconds with ",I," sources (convergence:",F,")")',$
             iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
         converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         BREAK
     ENDIF
     
-    IF (Round(iter mod check_iter) EQ 0) AND (i GT 0) THEN BEGIN
+    IF (Round(iter mod check_iter) EQ 0) AND (iter GT 0) THEN BEGIN
         i2+=1
         t10=Systime(1)-t0
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',$
-            iter,si,t10,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+            iter,si+1,t10,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
         converge_check[i2]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
         IF sigma_threshold*converge_check[i2] GT Max(source_find_image) THEN BEGIN
-            fhd.end_condition='Low SNR'
+            fhd_params.end_condition='Low SNR'
             print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-            converge_check2=converge_check2[0:i]
-            converge_check=converge_check[0:i2]
+                iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
             BREAK
         ENDIF
         IF converge_check[i2] GE converge_check[i2-1] THEN BEGIN
-            fhd.end_condition='Convergence'
+            fhd_params.end_condition='Convergence'
             print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds with ",I," sources (convergence:",F,")")',$
-                iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
-            converge_check2=converge_check2[0:iter]
-            converge_check=converge_check[0:i2]
+                iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
             BREAK
         ENDIF
     ENDIF
 ENDFOR
 IF iter EQ max_iter THEN BEGIN
     t10=Systime(1)-t0
-    fhd.end_condition='Max iterations'
+    fhd_params.end_condition='Max iterations'
     print,StrCompress(String(format='("Max iteration ",I," reached after ",I," seconds with ",I," sources (convergence:",F,")")',$
-        iter,t10,si,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
+        iter,t10,si+1,Stddev(image_use[where(beam_mask*source_mask)],/nan)))
 ENDIF ELSE iter+=1 ;increment iter by one if the loop was exited by a BREAK statement
+converge_check2=converge_check2[0:iter-1]
+converge_check=converge_check[0:i2]
 
 ;condense clean components
-fhd.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
-noise_map=fhd.convergence*beam_corr_avg
+fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
+noise_map=fhd_params.convergence*beam_corr_avg
 ;noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
-comp_arr=comp_arr[0:si-1]
+comp_arr=comp_arr[0:si]
 source_array=Components2Sources(comp_arr,obs,radius=beam_width>0.5,noise_map=noise_map,$
     reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
-fhd.n_iter=iter
-fhd.n_components=si
-fhd.detection_threshold=detection_threshold
+fhd_params.n_iter=iter
+fhd_params.n_components=si+1
+fhd_params.detection_threshold=detection_threshold
 source_n_arr=source_n_arr[0:iter-1]
-detection_threshold_arr=detection_threshold[0:iter-1]
-fhd.n_sources=N_Elements(source_array)
+detection_threshold_arr=detection_threshold_arr[0:iter-1]
+fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
-fhd.info=Ptr_new(info_struct)
+fhd_params.info=Ptr_new(info_struct)
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
@@ -447,10 +430,10 @@ t1+=Systime(1)-t1_0
 t00=Systime(1)-t00
 print,'Deconvolution timing [per iteration]'
 print,String(format='("Setup:",A," ")',Strn(Round(t_init)))
-print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/100.))
-print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
-print,String(format='("DFT source modeling:",A,"[",A,", or ",A," per 100 sources]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.),Strn(Round(t3*10000./si)/100.))
-print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
+print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/iter)/100.))
+print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/iter)/100.))
+print,String(format='("DFT source modeling:",A,"[",A,", or ",A," per 100 sources]")',Strn(Round(t3)),Strn(Round(t3*100/iter)/100.),Strn(Round(t3*10000./(si+1))/100.))
+print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/iter)/100.))
 timing=[t00,t1,t2,t3,t4]
 ;print,timing
 

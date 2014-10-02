@@ -8,15 +8,20 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
     calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
     snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,$
-    firstpass=firstpass,return_cal_visibilities=return_cal_visibilities,cmd_args=cmd_args,_Extra=extra
+    firstpass=firstpass,return_cal_visibilities=return_cal_visibilities,cmd_args=cmd_args,silent=silent,_Extra=extra
 
 except=!except
 !except=0 
 heap_gc
+IF Keyword_Set(!Journal) THEN Journal ;if logs are somehow still being written from a different run, clean that up first
 
 IF N_Elements(error_method) EQ 0 THEN error_method=0
 ON_ERROR,error_method
 
+IF ~Keyword_Set(silent) THEN BEGIN
+    git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long'
+    print,"Using FHD version: "+code_version
+ENDIF
 ;Set which procedures are to be run
 IF Keyword_Set(firstpass) THEN BEGIN
     IF N_Elements(return_cal_visibilities) EQ 0 THEN return_cal_visibilities=1
@@ -106,10 +111,11 @@ WHILE fi LT n_files DO BEGIN
     ENDIF
 ;    IF (recalculate_all EQ 0) AND Keyword_Set(cleanup) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
 ;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
-    uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
+    undefine_fhd,status_str
+    uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
         independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid_recalculate=grid_recalculate,$
-        /silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
+        silent=silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,save_visibilities=save_visibilities,$
@@ -117,6 +123,9 @@ WHILE fi LT n_files DO BEGIN
         healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,return_cal_visibilities=return_cal_visibilities,$
         snapshot_healpix_export=snapshot_healpix_export,snapshot_recalculate=snapshot_recalculate,$
         split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
+    
+    fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
+    IF N_Elements(status_arr) EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     IF Keyword_Set(error) THEN BEGIN
         print,'###########################################################################'
         print,'###########################################################################'
@@ -142,39 +151,35 @@ fhd_file_list=fhd_file_list[fi_use]
 IF Keyword_Set(simultaneous) THEN BEGIN
     IF Total(simultaneous) GT 1 THEN N_simultaneous=simultaneous
     fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,n_pol=n_pol,$
-        independent_fit=independent_fit,/silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
+        independent_fit=independent_fit,silent=silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
         export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
-        uvfits2fhd,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
+        uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
-            /silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
+            silent=silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
+        fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
+        IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     ENDFOR
 ENDIF
 
-combine_obs_sources,fhd_file_list,restore_last=0,output_path=healpix_path,_Extra=extra
+combine_obs_sources,fhd_file_list,status_arr,restore_last=0,output_path=healpix_path,_Extra=extra
 map_projection='orth'
 IF Keyword_Set(combine_healpix) THEN BEGIN
-    IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
-    combine_obs_healpix,fhd_file_list,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
+;    IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
+    combine_obs_healpix,fhd_file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
         instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
         instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$
         output_path=healpix_path,image_filter_fn=image_filter_fn,catalog_file_path=catalog_file_path,_Extra=extra
-    combine_obs_hpx_image,fhd_file_list,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
+    combine_obs_hpx_image,fhd_file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
         instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
         instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,nside=nside,$
         output_path=healpix_path,image_filter_fn=image_filter_fn,_Extra=extra
 ENDIF
 
-IF Keyword_Set(ps_export) THEN BEGIN
-    IF Keyword_Set(split_ps_export) THEN BEGIN
-        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/even,_Extra=extra
-        vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,/odd,_Extra=extra
-    ENDIF ELSE vis_split_export_multi,n_avg=n_avg,output_path=healpix_path,fhd_file_list=fhd_file_list,_Extra=extra
-ENDIF
 IF Keyword_Set(cleanup) THEN FOR fi=0L,n_files_use-1 DO fhd_cleanup,fhd_file_list[fi],_Extra=extra
 
 heap_gc

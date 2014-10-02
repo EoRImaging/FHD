@@ -1,4 +1,4 @@
-PRO fhd_output,obs,fhd,cal,jones,file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
+PRO fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
     silent=silent,show_grid=show_grid,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
     gridline_image_show=gridline_image_show,transfer_mapfn=transfer_mapfn,show_obsname=show_obsname,mark_zenith=mark_zenith,$
@@ -14,24 +14,24 @@ IF N_Elements(silent) EQ 0 THEN silent=0
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
 print,'Exporting: ',basename
-export_path=filepath(basename,root=dirpath,sub='export')
-export_dir=file_dirname(export_path)
+output_path=filepath(basename,root=dirpath,sub='output_data')
+output_dir=file_dirname(output_path)
 
-image_path=filepath(basename,root=dirpath,sub='images')
+image_path=filepath(basename,root=dirpath,sub='output_images')
 image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
-IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
+IF file_test(output_dir) EQ 0 THEN file_mkdir,output_dir
 
-IF not Keyword_Set(obs) THEN obs=getvar_savefile(file_path_fhd+'_obs.sav','obs')
-IF not Keyword_Set(fhd) THEN fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
-IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
+IF not Keyword_Set(obs) THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF not Keyword_Set(fhd_params) THEN fhd_save_io,status_str,fhd_params,var='fhd_params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
-IF tag_exist(fhd,'galaxy_subtract') THEN galaxy_model_fit=fhd.galaxy_subtract 
+IF tag_exist(fhd_params,'galaxy_subtract') THEN galaxy_model_fit=fhd_params.galaxy_subtract 
 IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 stats_radius=10. ;degrees
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
+pol_names=obs.pol_names
 
 grid_spacing=10.
 offset_lat=5.;15. paper 10 memo
@@ -50,21 +50,22 @@ ENDIF ELSE filter_name=''
 ; *_fhd.sav contains:
 ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization_arr,weights_arr,$
 ;    beam_base,beam_correction,ra_arr,dec_arr,astr
-restore,file_path_fhd+'_fhd.sav'
+fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,path_use=path_use,/no_save,_Extra=extra
+restore,path_use
 
-n_pol=fhd.npol
+n_pol=fhd_params.npol
 dimension_uv=obs.dimension
 IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
-IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=fhd.beam_threshold
+IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=fhd_params.beam_threshold
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 ;pix_area_cnv=pixel_area(astr_out,dimension=dimension)/degpix^2.
 
-si_use=where(source_array.ston GE fhd.sigma_cut,ns_use)
+si_use=where(source_array.ston GE fhd_params.sigma_cut,ns_use)
 source_arr=source_array[si_use]
 source_arr_out=source_arr
 comp_arr_out=comp_arr
@@ -118,7 +119,7 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
     uv_mask=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
-    model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd.sigma_cut)
+    model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
@@ -126,14 +127,14 @@ ENDIF
 t2a=Systime(1)
 t1+=t2a-t1a
 
-jones_out=fhd_struct_init_jones(obs_out,jones,file_path_fhd=file_path_fhd,/update)
+jones_out=fhd_struct_init_jones(obs_out,0,jones,file_path_fhd=file_path_fhd,/update,/no_save)
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
 beam_correction_out=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     *beam_base_out[pol_i]=Rebin(*beam_base[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
-    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd.beam_threshold/10.)
+    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd_params.beam_threshold/10.)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
     IF Keyword_Set(allow_sidelobe_image_output) THEN beam_i=where(beam_mask_test GE beam_output_threshold) ELSE $
@@ -261,8 +262,8 @@ IF n_mrc GT 2 THEN BEGIN
         restored_beam_width=pad_uv_image,ring=6.*pad_uv_image)
 ENDIF
 ;write sources to a text file
-source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_source_list2'
-source_array_export,comp_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=export_path+'_component_list2'
+source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=output_path+'_source_list2'
+source_array_export,comp_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_images,file_path=output_path+'_component_list2'
 
 t6a=Systime(1)
 t5+=t6a-t5a
@@ -288,7 +289,7 @@ astr_out2.crpix-=zoom_low
 astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 
 image_path_fg=image_path+filter_name;+gal_name
-export_path_fg=export_path+filter_name;+gal_name
+output_path_fg=output_path+filter_name;+gal_name
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_residual=*instr_images[pol_i]*(*beam_correction_out[pol_i])
@@ -313,20 +314,20 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     
     t8a=Systime(1)
     IF ~Keyword_Set(no_fits) THEN BEGIN
-        FitsFast,instr_dirty,fits_header,/write,file_path=export_path+filter_name+'_Dirty_'+pol_names[pol_i]
-        FitsFast,instr_residual,fits_header,/write,file_path=export_path_fg+'_Residual_'+pol_names[pol_i]
-        FitsFast,instr_res_phase,fits_header,/write,file_path=export_path_fg+'_ResidualPhase_'+pol_names[pol_i]
-        FitsFast,instr_source,fits_header,/write,file_path=export_path_fg+'_Sources_'+pol_names[pol_i]
-        FitsFast,instr_restored,fits_header,/write,file_path=export_path_fg+'_Restored_'+pol_names[pol_i]
-        FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
-        FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
+        FitsFast,instr_dirty,fits_header,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
+        FitsFast,instr_residual,fits_header,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i]
+        FitsFast,instr_res_phase,fits_header,/write,file_path=output_path_fg+'_ResidualPhase_'+pol_names[pol_i]
+        FitsFast,instr_source,fits_header,/write,file_path=output_path_fg+'_Sources_'+pol_names[pol_i]
+        FitsFast,instr_restored,fits_header,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i]
+        FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
+        FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
         
-        FitsFast,*stokes_images[pol_i],fits_header,/write,file_path=export_path_fg+'_Residual_'+pol_names[pol_i+4]
-        FitsFast,*stokes_sources[pol_i],fits_header,/write,file_path=export_path+'_Sources_'+pol_names[pol_i+4]
-        FitsFast,*stokes_images[pol_i]+*stokes_sources[pol_i],fits_header,/write,file_path=export_path_fg+'_Restored_'+pol_names[pol_i+4]
+        FitsFast,*stokes_images[pol_i],fits_header,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i+4]
+        FitsFast,*stokes_sources[pol_i],fits_header,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
+        FitsFast,*stokes_images[pol_i]+*stokes_sources[pol_i],fits_header,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i+4]
         IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-            FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i]
-            IF Ptr_valid(gal_holo_img[pol_i]) THEN FitsFast,*gal_holo_img[pol_i],fits_header,/write,file_path=export_path+'_GalHolo_'+pol_names[pol_i]
+            FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
+            IF Ptr_valid(gal_holo_img[pol_i]) THEN FitsFast,*gal_holo_img[pol_i],fits_header,/write,file_path=output_path+'_GalHolo_'+pol_names[pol_i]
         ENDIF
     ENDIF
     
@@ -423,9 +424,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
 ;    IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ;        IF ~Keyword_Set(no_fits) THEN BEGIN
-;            FitsFast,*stokes_gal_model[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i+4]
-;            FitsFast,*gal_holo_img[pol_i],fits_header,/write,file_path=export_path+'_GalHolo_'+pol_names[pol_i]
-;            FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i]
+;            FitsFast,*stokes_gal_model[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i+4]
+;            FitsFast,*gal_holo_img[pol_i],fits_header,/write,file_path=output_path+'_GalHolo_'+pol_names[pol_i]
+;            FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
 ;        ENDIF
 ;        gal_low=0.
 ;        gal_high=Max((*gal_model_img[pol_i])[beam_i])
@@ -466,7 +467,7 @@ ENDFOR
 
 t10b=Systime(1)
 
-residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd,radius=stats_radius,beam_base=beam_base_out,ston=fhd.sigma_cut,/center,$
+residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd_params,radius=stats_radius,beam_base=beam_base_out,ston=fhd_params.sigma_cut,/center,$
     file_path_base=image_path_fg,_Extra=extra
 
 ; plot calibration solutions, export to png

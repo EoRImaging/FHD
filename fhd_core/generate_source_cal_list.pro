@@ -1,21 +1,23 @@
 FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
     no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,$
-    allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,model_visibilities=model_visibilities,$
+    allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,beam_arr=beam_arr,model_visibilities=model_visibilities,$
     max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,$
     no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
     allow_sidelobe_model_sources=allow_sidelobe_model_sources,_Extra=extra
 
-catalog_path_use=catalog_path
-UPNAME=StrUpCase(catalog_path_use)
+UPNAME=StrUpCase(catalog_path)
 psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
-IF psav EQ -1 THEN catalog_path_use+='.sav'
-IF file_test(catalog_path_use) EQ 0 THEN BEGIN
-    catalog_path_use=filepath(catalog_path_use,root=Rootdir('fhd'),subdir='catalog_data')
-    IF file_test(catalog_path_use) EQ 0 THEN catalog_path_use=$
-        filepath(obs.instrument+'_calibration_source_list.sav',root=Rootdir('fhd'),subdir='catalog_data')
-ENDIF
-RESTORE,catalog_path_use,/relaxed ;catalog
+IF psav EQ -1 THEN catalog_path+='.sav'
+IF file_test(catalog_path) EQ 0 THEN BEGIN
+    catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+    IF file_test(catalog_path_full) EQ 0 THEN BEGIN
+        print,String(format='(A," not found! Using default: ",A)',catalog_path,obs.instrument+'_calibration_source_list.sav')
+        catalog_path=obs.instrument+'_calibration_source_list.sav'
+        catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+    ENDIF
+ENDIF ELSE catalog_path_full=catalog_path
+RESTORE,catalog_path_full,/relaxed ;catalog
 
 IF Keyword_Set(model_visibilities) THEN BEGIN
     IF N_Elements(model_flux_threshold) GT 0 THEN flux_threshold=model_flux_threshold ELSE flux_threshold=0.
@@ -73,13 +75,14 @@ IF n_use GT 0 THEN BEGIN
     source_list.alpha=spectral_index
 ;    source_list.StoN=catalog.StoN
     
+    IF N_Elements(beam_arr) LT (n_pol<2) THEN BEGIN 
+        beam_arr=Ptrarr(n_pol<2)
+        FOR pol_i=0,(n_pol<2)-1 DO beam_arr[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,square=0)>0.)
+    ENDIF
     beam=fltarr(dimension,elements)
-    beam_arr=Ptrarr(n_pol<2)
-    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
-        beam_arr[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,/fast)>0.)
-        beam+=*beam_arr[pol_i]^2.
-    ENDFOR
+    FOR pol_i=0,(n_pol<2)-1 DO beam+=*beam_arr[pol_i]^2.
     beam=Sqrt(beam/(n_pol<2))
+
     IF Keyword_Set(allow_sidelobe_sources) THEN beam_i=where(beam GT beam_threshold) $
         ELSE beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
     beam_mask=fltarr(dimension,elements) & beam_mask[beam_i]=1.

@@ -87,7 +87,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             sx=source_arr[si].x & sy=source_arr[si].y
             sra=source_arr[si].ra & sdec=source_arr[si].dec
             salpha=source_arr[si].alpha & sfreq=source_arr[si].freq
-            comp_arr_use=source_comp_init(comp_arr_use,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi)
+            comp_arr_use=source_comp_init(comp_arr_use,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi) ;this will append a new component to the end of comp_arr_use
             ci=N_Elements(comp_arr_use)-1
             FOR pol_i=0,7 DO BEGIN
                 comp_arr_use[ci].flux.(pol_i)=source_arr[si].flux.(pol_i)*(1.-flux_frac_arr[si])
@@ -96,7 +96,9 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
         ENDELSE
         
     ENDFOR
+    comp_arr=comp_arr_use
 ENDIF
+
 
 RETURN,source_arr
 END

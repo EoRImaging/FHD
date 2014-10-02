@@ -1,4 +1,4 @@
-PRO combine_obs_healpix,file_list,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
+PRO combine_obs_healpix,file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
     instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
     instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,$
     nside=nside,restore_last=restore_last,output_path=output_path,$
@@ -19,18 +19,21 @@ IF Keyword_Set(restore_last) THEN BEGIN
     RESTORE,save_path
     RETURN
 ENDIF
-pol_names=['xx','yy','xy','yx']
 
-ftest=file_test(file_list+'_obs.sav') 
-;ftest=intarr(n_obs)
-;FOR file_i=0,n_obs-1 DO ftest[file_i]=file_test(file_list[file_i]+'_obs.sav')   
-file_i_use=where(ftest,n_obs) 
-file_list_use=file_list[file_i_use]
-fhd_test=file_test(file_list_use+'_fhd.sav')
-IF max(fhd_test) GT 0 THEN BEGIN
-    fhd_flag=1
-    IF min(fhd_test) EQ 0 THEN file_list_use=file_list_use[where(fhd_test,n_obs)]
-ENDIF ELSE fhd_flag=0
+fhd_save_io,status_init,/reset
+IF N_Elements(status_arr) NE n_obs THEN BEGIN
+    status_arr=Replicate(status_init,n_obs)
+    FOR obs_i=0L,n_obs-1 DO BEGIN
+        fhd_save_io,status_single,file_path_fhd=file_list[obs_i]
+        status_arr[obs_i]=status_single
+    ENDFOR
+ENDIF
+
+fi_use=where(status_arr.obs,n_obs)
+IF n_obs EQ 0 THEN RETURN
+file_list_use=file_list[fi_use]
+status_arr_use=status_arr[fi_use]
+fhd_flag=Min(status_arr.fhd)
 
 IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
     hpx_inds=restrict_hpx_inds
@@ -56,10 +59,9 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 FOR obs_i=0,n_obs-1 DO BEGIN
-    file_path=file_list_use[obs_i]
-    RESTORE,file_path+'_obs.sav'
-    IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs)
-    obs_arr[obs_i]=obs
+    file_path_fhd=file_list_use[obs_i]
+    fhd_save_io,status_arr_use[obs_i],obs,file_path_fhd=file_path_fhd,var='obs',/restore
+    IF obs_i EQ 0 THEN obs_arr=[obs] ELSE obs_arr=[obs_arr,obs]
     
     beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
 ;    beam_area=2.*!Pi*(beam_width*obs.degpix)^2. 
@@ -87,38 +89,48 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     file_path_fhd=file_list_use[obs_i]
     IF ~Keyword_Set(silent) THEN print,StrCompress('Converting '+file_basename(file_path_fhd)+'('+Strn(obs_i+1)+' of '+Strn(n_obs)+')')
     obs=obs_arr[obs_i]
+    status_str=status_arr_use[obs_i]
     dimension=obs.dimension
     elements=obs.elements
     n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
     astr=obs.astr            
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-    IF file_test(file_path_fhd+'_cal.sav') THEN cal=getvar_savefile(file_path_fhd+'_cal.sav','cal') ELSE $
-        cal=fhd_struct_init_cal(obs,file_path_fhd=file_path_fhd)
+    fhd_save_io,status_str,cal,file_path_fhd=file_path_fhd,var='cal',/restore
+    IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,file_path_fhd=file_path_fhd)
     
     image_uv_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv',/pointer)
     weights_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid',/pointer)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        fhd_save_io,status_str,grid_uv,var='grid_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        IF N_Elements(grid_uv) GT 0 THEN image_uv_arr[pol_i]=Ptr_new(grid_uv)
+        fhd_save_io,status_str,weights_uv,var='weights_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+        IF N_Elements(weights_uv) GT 0 THEN weights_arr[pol_i]=Ptr_new(weights_uv)
+        undefine_fhd,grid_uv,weights_uv
+    ENDFOR
+    
     IF fhd_flag THEN BEGIN
-        fhd=getvar_savefile(file_path_fhd+'_fhd_params.sav','fhd')
-        source_array=getvar_savefile(file_path_fhd+'_fhd.sav','source_array')
-        model_uv_holo=getvar_savefile(file_path_fhd+'_fhd.sav','model_uv_holo')
-        beam_base=getvar_savefile(file_path_fhd+'_fhd.sav','beam_base')
+        fhd_save_io,status_str,source_array,var='fhd',/restore,file_path_fhd=file_path_fhd,sub_var='source_array'
+        fhd_save_io,status_str,model_uv_holo,var='fhd',/restore,file_path_fhd=file_path_fhd,sub_var='model_uv_holo'
+        fhd_save_io,status_str,beam_base,var='fhd',/restore,file_path_fhd=file_path_fhd,sub_var='beam_base'
         beam_base2=Ptrarr(n_pol)
         FOR pol_i=0,n_pol-1 DO beam_base2[pol_i]=Ptr_new((*beam_base[pol_i])^2.)
         model_flag=1
         source_flag=1
     ENDIF ELSE BEGIN
         model_uv_holo=Ptrarr(n_pol)
-        IF min(file_test(file_path_fhd+'_uv_model_'+pol_names[0:n_pol-1]+'.sav')) GT 0 THEN model_flag=1 ELSE model_flag=0 
-        IF model_flag THEN FOR pol_i=0,n_pol-1 DO model_uv_holo[pol_i]=getvar_savefile(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
+        model_flag=Min(status_str.grid_uv_model[0:n_pol-1])
+        IF model_flag THEN FOR pol_i=0,n_pol-1 DO BEGIN
+            fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i
+            IF N_Elements(grid_uv_model) GT 0 THEN model_uv_holo[pol_i]=Ptr_new(grid_uv_model)
+            undefine_fhd,grid_uv_model
+        ENDFOR
         IF cal.n_cal_src GT 0 THEN BEGIN
             source_flag=1
             source_array=cal.source_list
         ENDIF ELSE source_flag=0
         
-        IF file_test(file_path_fhd+'_beams.sav') THEN psf=getvar_savefile(file_path_fhd+'_beams.sav','psf') $
-            ELSE psf=beam_setup(obs,file_path_fhd,restore_last=0,silent=1,no_save=1,_Extra=extra)
+        IF status_str.psf THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd $
+            ELSE psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=1,no_save=1,_Extra=extra)
         beam_base=Ptrarr(n_pol)
         FOR pol_i=0,n_pol-1 DO beam_base[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,square=0))
         beam_base2=Ptrarr(n_pol)
@@ -165,7 +177,8 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         *beam_base2[pol_i]*=n_vis_rel
     ENDFOR
     
-    hpx_cnv=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_mask,restore_last=0,restrict_hpx_inds=restrict_hpx_inds,/no_save,_Extra=extra)
+    hpx_cnv=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside,$
+        mask=beam_mask,restore_last=0,restrict_hpx_inds=restrict_hpx_inds,/no_save,_Extra=extra)
     hpx_inds1=hpx_cnv.inds 
     
     IF fit_inds_flag THEN BEGIN
@@ -269,5 +282,6 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv,beam_base2,beam_base
 ENDFOR
 
-SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,instr_dirty_hpx,instr_model_hpx,weights_hpx,instr_sources_hpx,instr_rings_hpx,instr_catalog_hpx,filename=save_path,/compress
+SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,instr_dirty_hpx,instr_model_hpx,weights_hpx,$
+    instr_sources_hpx,instr_rings_hpx,instr_catalog_hpx,filename=save_path,/compress
 END

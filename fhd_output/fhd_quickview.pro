@@ -1,4 +1,4 @@
-PRO fhd_quickview,obs,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
@@ -11,13 +11,13 @@ t0=Systime(1)
 basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
 IF not Keyword_Set(silent) THEN print,'Exporting (quickview): ',basename
-export_path=filepath(basename,root=dirpath,sub='export')
-export_dir=file_dirname(export_path)
+output_path=filepath(basename,root=dirpath,sub='output_data')
+output_dir=file_dirname(output_path)
 
-image_path=filepath(basename,root=dirpath,sub='images')
+image_path=filepath(basename,root=dirpath,sub='output_images')
 image_dir=file_dirname(image_path)
 IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
-IF file_test(export_dir) EQ 0 THEN file_mkdir,export_dir
+IF file_test(output_dir) EQ 0 THEN file_mkdir,output_dir
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=0.025
@@ -29,31 +29,34 @@ reverse_image=1   ;1: reverse x axis, 2: y-axis, 3: reverse both x and y axes
 map_reverse=reverse_image;1 paper 3 memo
 label_spacing=1.
 
-IF N_Elements(obs) EQ 0 THEN RESTORE,file_path_fhd+'_obs.sav' 
-IF N_Elements(psf) EQ 0 THEN IF file_test(file_path_fhd+'_beams.sav') THEN RESTORE,file_path_fhd+'_beams.sav' ELSE $
-    psf=beam_setup(obs,file_path_fhd,silent=silent,timing=t_beam,_Extra=extra)
-IF N_Elements(cal) EQ 0 THEN IF file_test(file_path_fhd+'_cal.sav') THEN RESTORE,file_path_fhd+'_cal.sav'
-IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
+pol_names=obs.pol_names
 residual_flag=obs.residual
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     image_uv_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *image_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv');*obs.cal[pol_i]
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        fhd_save_io,status_str,grid_uv,var='grid_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
+        *image_uv_arr[pol_i]=grid_uv
+    ENDFOR
 ENDIF
-IF N_Elements(weights_arr) EQ 0 THEN BEGIN
-    weights_arr=Ptrarr(n_pol)
-    weights_flag=1
-    FOR pol_i=0,n_pol-1 DO weights_flag*=file_test(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav')
-    IF weights_flag THEN FOR pol_i=0,n_pol-1 DO $
-        weights_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','weights_grid',/pointer)
-ENDIF ELSE weights_flag=1
 
+weights_flag=1
+IF N_Elements(weights_arr) EQ 0 THEN BEGIN
+    weights_arr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        fhd_save_io,status_str,weights_uv,var='weights_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
+        *weights_arr[pol_i]=weights_uv
+    ENDFOR
+ENDIF
 IF Min(Ptr_valid(weights_arr)) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO weights_arr[pol_i]=Ptr_new(Abs(*image_uv_arr[pol_i]))
     weights_flag=0
@@ -63,16 +66,17 @@ FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN BEGIN
     weights_flag=0
 ENDIF
 
-IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN BEGIN
-    model_flag=1
-    FOR pol_i=0,n_pol-1 DO IF N_Elements(*model_uv_arr[pol_i]) EQ 0 THEN model_flag=0
-ENDIF ELSE BEGIN
-    model_flag=1
-    model_uv_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO model_flag*=file_test(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav')
-    IF model_flag THEN FOR pol_i=0,n_pol-1 DO $
-        model_uv_arr[pol_i]=getvar_savefile(file_path_fhd+'_uv_model_'+pol_names[pol_i]+'.sav','model_uv',/pointer)
-ENDELSE
+model_flag=1
+IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
+    IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
+        model_uv_arr=Ptrarr(n_pol,/allocate)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
+            *model_uv_arr[pol_i]=grid_uv_model
+        ENDFOR
+    ENDIF ELSE model_flag=0
+ENDIF
+
 IF residual_flag THEN model_flag=0
 IF residual_flag OR model_flag THEN IF N_Elements(source_array) EQ 0 THEN source_array=cal.source_list
 
@@ -91,7 +95,7 @@ elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
-jones_out=fhd_struct_init_jones(obs_out,jones,file_path_fhd=file_path_fhd,/update)
+jones_out=fhd_struct_init_jones(obs_out,status_str,jones,file_path_fhd=file_path_fhd,/update)
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
@@ -197,7 +201,7 @@ IF source_flag THEN BEGIN
     IF Keyword_Set(ring_radius) THEN stokes_rings=stokes_cnv(instr_rings,jones_out,beam=beam_base_out,_Extra=extra) 
 ENDIF    
 
-IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=export_path+'_source_list'
+IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=output_path+'_source_list'
 
 ; plot calibration solutions, export to png
 IF N_Elements(cal) GT 0 THEN BEGIN
@@ -297,12 +301,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
     ENDIF
     IF ~Keyword_Set(no_fits) THEN BEGIN
-        FitsFast,stokes_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i+4]
-        IF model_flag THEN FitsFast,instr_dirty,fits_header,/write,file_path=export_path+filter_name+'_Dirty_'+pol_names[pol_i]
-        FitsFast,instr_residual,fits_header,/write,file_path=export_path+filter_name+res_name+pol_names[pol_i]
-        FitsFast,beam_use,fits_header,/write,file_path=export_path+'_Beam_'+pol_names[pol_i]
-        IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=export_path+'_UV_weights_'+pol_names[pol_i]
-        IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=export_path+'_GalModel_'+pol_names[pol_i]
+        FitsFast,stokes_residual,fits_header,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i+4]
+        IF model_flag THEN FitsFast,instr_dirty,fits_header,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
+        FitsFast,instr_residual,fits_header,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
+        FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
+        IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
+        IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
     ENDIF
     
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
@@ -310,10 +314,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN restored_name='_Restored_rings_' ELSE restored_name='_Restored_'
         IF ~Keyword_Set(no_fits) THEN BEGIN
-    ;        FitsFast,instr_source,fits_header,/write,file_path=export_path+filter_name+'_Sources_'+pol_names[pol_i]
-            FitsFast,instr_residual+instr_source,fits_header,/write,file_path=export_path+filter_name+restored_name+pol_names[pol_i]
-    ;        FitsFast,stokes_source,fits_header,/write,file_path=export_path+'_Sources_'+pol_names[pol_i+4]
-            FitsFast,stokes_residual+stokes_source,fits_header,/write,file_path=export_path+filter_name+restored_name+pol_names[pol_i+4]
+    ;        FitsFast,instr_source,fits_header,/write,file_path=output_path+filter_name+'_Sources_'+pol_names[pol_i]
+            FitsFast,instr_residual+instr_source,fits_header,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i]
+    ;        FitsFast,stokes_source,fits_header,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
+            FitsFast,stokes_residual+stokes_source,fits_header,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i+4]
         ENDIF
         IF ~Keyword_Set(no_png) THEN BEGIN
             instrS_high=Max(instr_restored[beam_i])

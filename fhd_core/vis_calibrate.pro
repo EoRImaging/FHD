@@ -1,26 +1,36 @@
-FUNCTION vis_calibrate,vis_ptr,cal,obs,psf,params,jones,flag_ptr=flag_ptr,model_uv_arr=model_uv_arr,$
+FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_ptr,model_uv_arr=model_uv_arr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
-    debug=debug,gain_arr_ptr=gain_arr_ptr,$
+    debug=debug,gain_arr_ptr=gain_arr_ptr,calibration_flag_iterate=calibration_flag_iterate,$
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
-    flag_calibration=flag_calibration,vis_model_ptr=vis_model_ptr,_Extra=extra
+    flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,_Extra=extra
 t0_0=Systime(1)
 error=0
+timing=-1
 heap_gc
 IF N_Elements(flag_calibration) EQ 0 THEN flag_calibration=1
 
 IF Keyword_Set(transfer_calibration) THEN BEGIN
     IF size(transfer_calibration,/type) EQ 7 THEN BEGIN
         cal_file_use=transfer_calibration
-        IF file_test(cal_file_use) EQ 0 THEN BEGIN
-            cal_file_use2=filepath(file_basename(cal_file_use,'_cal.sav',/fold_case)+'_cal.sav',root=file_dirname(file_path_fhd))
-            IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
-                print,'File:'+cal_file_use+' not found!'
-                error=1
-                RETURN,vis_ptr
-            ENDELSE
-        ENDIF
+        IF file_test(cal_file_use,/directory) THEN BEGIN
+            fhd_save_io,file_path_fhd=file_path_fhd,transfer=transfer_calibration,var='cal',path_use=cal_file_use2,_Extra=extra 
+                IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
+                    print,'File:'+cal_file_use+' not found!'
+                    error=1
+                    RETURN,vis_ptr
+                ENDELSE
+        ENDIF ELSE BEGIN
+            IF file_test(cal_file_use) EQ 0 THEN BEGIN
+                fhd_save_io,file_path_fhd=cal_file_use,var='cal',path_use=cal_file_use2,_Extra=extra
+                IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
+                    print,'File:'+cal_file_use+' not found!'
+                    error=1
+                    RETURN,vis_ptr
+                ENDELSE
+            ENDIF
+        ENDELSE
         CASE StrLowCase(Strmid(cal_file_use[0],3,/reverse)) OF
             '.sav':BEGIN
                 cal=getvar_savefile(cal_file_use,'cal')
@@ -93,7 +103,7 @@ CASE size(initial_calibration,/type) OF
     ELSE:IF Keyword_Set(initial_calibration) THEN initial_calibration=file_path_fhd+'_cal' ;if set to a numeric type, assume this calibration solution will be wanted for future iterations
 ENDCASE
 
-vis_model_ptr=vis_source_model(cal.source_list,obs,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,$
+vis_model_arr=vis_source_model(cal.source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,$
     timing=model_timing,silent=silent,error=error,/calibration_flag,_Extra=extra)    
 t1=Systime(1)-t0_0
 
@@ -101,7 +111,7 @@ IF Keyword_Set(error) THEN BEGIN
     timing=Systime(1)-t0_0
     RETURN,vis_ptr
 ENDIF
-pol_names=['xx','yy','xy','yx']
+pol_names=obs.pol_names
 
 ;extract information from the structures
 n_pol=obs.n_pol
@@ -128,13 +138,25 @@ IF N_Elements(flag_ptr) EQ 0 THEN BEGIN
 ENDIF
 
 ;calibration loop
-t2_a=Systime(1)
-IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
-cal=vis_calibrate_subroutine(vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,_Extra=extra)
-t3_a=Systime(1)
-t2=t3_a-t2_a
+IF N_Elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=0
+IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) $
+    OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
+IF N_Elements(calibration_flag_iterate) EQ 0 THEN $
+    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 
-IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
+t2=0
+cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
+FOR iter=0,calibration_flag_iterate DO BEGIN
+    t2_a=Systime(1)
+    IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
+    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,flag_ptr,obs,params,cal_base,$
+        preserve_visibilities=preserve_flag,_Extra=extra)
+    t3_a=Systime(1)
+    t2+=t3_a-t2_a
+    
+    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal
+ENDFOR
+undefine_fhd,cal_base
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
@@ -147,21 +169,22 @@ ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 cal_res=vis_cal_subtract(cal_base,cal,/abs)
 cal.gain_residual=cal_res.gain
+undefine_fhd,cal_base
 
 IF Keyword_Set(vis_baseline_hist) THEN $
-    vis_baseline_hist,obs,params,vis_ptr=vis_cal,vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd
+    vis_baseline_hist,obs,params,vis_arr=vis_cal,vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd
 
 IF ~Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=0
 IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
-    FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_ptr[pol_i] 
+    FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_arr[pol_i] 
     IF tag_exist(obs,'residual') THEN obs.residual=1
 ENDIF
-IF ~Keyword_Set(return_cal_visibilities) THEN undefine_fhd,vis_model_ptr
+IF ~Keyword_Set(return_cal_visibilities) THEN undefine_fhd,vis_model_arr
 
 ;IF ~Keyword_Set(silent) THEN BEGIN
     basename=file_basename(file_path_fhd)
     dirpath=file_dirname(file_path_fhd)
-    image_path=filepath(basename,root=dirpath,sub='images')
+    image_path=filepath(basename,root=dirpath,sub='output_images')
     plot_cals,cal,obs,cal_res=cal_res,file_path_base=image_path,_Extra=extra
 ;ENDIF
 

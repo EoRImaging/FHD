@@ -5,8 +5,8 @@ FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
 t0=Systime(1)
 heap_gc
 
-pol_names=['xx','yy','xy','yx']
-IF tag_exist(psf,'complex_flag') THEN complex=psf.complex_flag ELSE IF N_Elements(complex) EQ 0 THEN complex=1
+pol_names=obs.pol_names
+complex=psf.complex_flag
 
 ;extract information from the structures
 dimension=Float(obs.dimension)
@@ -17,76 +17,71 @@ ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 
-IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
-nfreq_bin=Max(freq_bin_i)+1
+freq_bin_i=(*obs.baseline_info).fbin_i
+nfreq_bin=psf.n_freq
 bin_offset=(*obs.baseline_info).bin_offset
-IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+frequency_array=(*obs.baseline_info).freq
 
-psf_base=psf.base
 psf_dim=psf.dim
 psf_resolution=psf.resolution
 
-flag_switch=Keyword_Set(flag_ptr)
+flag_switch=Ptr_valid(flag_ptr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
-baseline_i=params.baseline_arr
-nbaselines=bin_offset[1]
-n_samples=N_Elements(bin_offset)
+;baseline_i=params.baseline_arr
+nbaselines=obs.nbaselines
+n_samples=obs.n_time
 n_freq_use=N_Elements(frequency_array)
 n_freq=Long(obs.n_freq)
 n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
+group_arr=reform(psf.id[polarization,freq_bin_i,*])
+beam_arr=*psf.beam_ptr
 
 vis_dimension=Float(nbaselines*n_samples)
 IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
     ELSE visibility_array=Complexarr(n_freq,vis_dimension) 
 
-xcen=frequency_array#kx_arr
-ycen=frequency_array#ky_arr
+dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
+dist_test=frequency_array#dist_test
+flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test=0
 
 conj_i=where(ky_arr GT 0,n_conj)
 conj_flag=intarr(N_Elements(ky_arr)) 
 IF n_conj GT 0 THEN BEGIN
     conj_flag[conj_i]=1
-    xcen[*,conj_i]=-xcen[*,conj_i]
-    ycen[*,conj_i]=-ycen[*,conj_i]
+    kx_arr[conj_i]=-kx_arr[conj_i]
+    ky_arr[conj_i]=-ky_arr[conj_i]
 ENDIF
 
-xmin=Long(Floor(xcen)+dimension/2.-(psf_dim/2.-1))
-ymin=Long(Floor(ycen)+elements/2.-(psf_dim/2.-1))
-
+xcen=frequency_array#kx_arr
+ycen=frequency_array#ky_arr
+ 
 x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
-;xmax=xmin+psf_dim-1
-range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
-;xmax=0
-IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
-range_test_x_i=0
-
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
-;ymax=ymin+psf_dim-1
+xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
+
+range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
 range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
-;ymax=0
+
+IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
-range_test_y_i=0
 
-
-dist_test=Sqrt((xcen)^2.+(ycen)^2.)*kbinsize
-flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
-xcen=(ycen=(dist_test=0))
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1
     ymin[flag_dist_i]=-1
-    flag_dist_i=0
 ENDIF
 
-IF Keyword_Set(flag_ptr) THEN BEGIN
+IF flag_switch THEN BEGIN
     flag_i=where(*flag_ptr LE 0,n_flag)
     IF Keyword_Set(fill_model_vis) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
-        flag_i=0
     ENDIF
+    flag_i=0
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
@@ -131,6 +126,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
      
     vis_n=bin_n[bin_i[bi]]
+    baseline_inds=Floor(inds/n_freq_use) mod nbaselines
+    group_id=group_arr[inds]
+    group_max=Max(group_id)+1
     
 ;    psf_conj_flag=intarr(vis_n)
 ;    IF n_conj GT 0 THEN BEGIN
@@ -138,7 +136,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ;        psf_conj_flag=conj_flag[bi_vals]
 ;    ENDIF 
     
-    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.);*2.+psf_conj_flag
+    xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.)*group_max+group_id
     xyf_si=Sort(xyf_i)
     xyf_i=xyf_i[xyf_si]
     xyf_ui=Uniq(xyf_i)
@@ -153,6 +151,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
+        baseline_inds=baseline_inds[inds_use]
 ;        psf_conj_flag=psf_conj_flag[inds_use]
         
         IF n_xyf_bin EQ 1 THEN ind_remap=intarr(vis_n) ELSE BEGIN
@@ -169,7 +168,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
-    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
+;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]] ;more efficient array subscript notation
+    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
 ;        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     

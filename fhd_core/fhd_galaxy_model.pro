@@ -36,7 +36,7 @@ freq_arr_use=freq_arr[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
-model_arr=globalskymodel_read(freq_arr_use,ra_arr=ra_arr,dec_arr=dec_arr,/haslam_filtered,_Extra=extra) ;maps should be in Kelvin
+model_arr=globalskymodel_read(obs,freq_arr_use,/haslam_filtered,_Extra=extra) ;maps should be in Kelvin
 
 IF N_Elements(model_arr) GT 1 THEN BEGIN
     model=fltarr(dimension,elements)
