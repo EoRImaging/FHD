@@ -77,23 +77,24 @@ IF Keyword_Set(compatibility_mode) THEN BEGIN
     ENDCASE
 ENDIF 
 IF ~Keyword_Set(name_error) THEN BEGIN
-    path_use=filepath(base_name+path_add+'.sav',root=base_path,subdir=subdir)
-    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_use) THEN $
+    path_use=filepath(base_name+path_add,root=base_path,subdir=subdir)
+    path_sav=path_use+'.sav'
+    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_sav) THEN $
         fhd_save_io,status_str,pol_i=pol_i,var_name=var_name,/force_set
 
     IF Keyword_Set(restore) THEN BEGIN
         IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name 
-        IF file_test(path_use) THEN param=getvar_savefile(path_use,var_name_use)
+        IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use)
         RETURN
     ENDIF
     
     IF Keyword_Set(param) AND ~Keyword_Set(no_save) THEN BEGIN
-        dir_use=file_dirname(path_use)
+        dir_use=file_dirname(path_sav)
         IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
         status_rename=Execute(var_name_use+'=param') ;rename the variable to be saved
         fn_string='SAVE,'+var_name_use
         IF Keyword_Set(obs_flag) THEN fn_string+=',obs'
-        fn_string+=',filename="'+path_use+'",compress='+String(compress)
+        fn_string+=',filename="'+path_sav+'",compress='+String(compress)
         status_save=Execute(fn_string,1,1)
     ENDIF ELSE status_save=0
     
