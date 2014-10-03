@@ -121,7 +121,6 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   n_freq=cal.n_freq
   n_tile=cal.n_tile
   n_time=cal.n_time
-  convergence=Fltarr(n_freq,n_tile)
   
   flag_ptr_use=flag_ptr ;flags WILL be over-written! (Only for NAN gain solutions)
   tile_A_i=cal.tile_A-1
@@ -136,6 +135,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   FOR pol_i=0,n_pol-1 DO cal_return.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
   
   FOR pol_i=0,n_pol-1 DO BEGIN
+    convergence=Fltarr(n_freq,n_tile)
     gain_arr=*cal.gain[pol_i]
     
     IF Keyword_Set(time_average) THEN BEGIN
@@ -551,11 +551,11 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       
     ENDIF
     *cal_return.gain[pol_i]=gain_arr
+    cal_return.convergence[pol_i]=Ptr_new(convergence)
   ENDFOR
   
   vis_count_i=where(*flag_ptr_use[0],n_vis_cal)
   cal_return.n_vis_cal=n_vis_cal
-  cal_return.convergence=convergence
   
   RETURN,cal_return
 END
