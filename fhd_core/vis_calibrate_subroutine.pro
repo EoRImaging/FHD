@@ -121,6 +121,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   n_freq=cal.n_freq
   n_tile=cal.n_tile
   n_time=cal.n_time
+  convergence=Fltarr(n_freq,n_tile)
   
   flag_ptr_use=flag_ptr ;flags WILL be over-written! (Only for NAN gain solutions)
   tile_A_i=cal.tile_A-1
@@ -230,7 +231,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
           n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
         ENDFOR
         
-        phase_fit_iter=Floor(max_cal_iter/4.)
+        phase_fit_iter=Floor(max_cal_iter/4.)<Floor(Sqrt(max_cal_iter))
         
         gain_new=Complexarr(n_tile_use)
         conv_test=fltarr(max_cal_iter)
@@ -258,6 +259,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
           conv_test[i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
           IF i GE phase_fit_iter THEN IF conv_test[i] LE conv_thresh THEN BREAK
         ENDFOR
+        convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
         Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr
       ENDFOR
@@ -553,6 +555,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   
   vis_count_i=where(*flag_ptr_use[0],n_vis_cal)
   cal_return.n_vis_cal=n_vis_cal
+  cal_return.convergence=convergence
   
   RETURN,cal_return
 END

@@ -160,9 +160,7 @@ model_holo_arr=Ptrarr(n_pol,/allocate)
 res_uv_arr=Ptrarr(n_pol,/allocate)
 filter_arr=Ptrarr(n_pol,/allocate) 
 
-;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
-restored_beam_width=(!RaDeg/(obs_out.MAX_BASELINE/obs_out.KPIX)/obs_out.degpix)/(2.*Sqrt(2.*Alog(2.)))
-restored_beam_width=restored_beam_width>0.75
+restored_beam_width=beam_width_calculate(obs_out,min_restored_beam_width=0.75)
 ;IF Keyword_Set(pad_uv_image) THEN restored_beam_width*=pad_uv_image
 gal_model_img=Ptrarr(n_pol)
 gal_holo_img=Ptrarr(n_pol)

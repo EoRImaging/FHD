@@ -28,7 +28,7 @@ IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline ELSE
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline ELSE max_cal_baseline=max_cal_baseline<obs.max_baseline
 IF N_Elements(cal_time_average) EQ 0 THEN cal_time_average=1 ;time average visibilities before calculating calibration solutions by default
 IF N_Elements(min_cal_solutions) EQ 0 THEN min_cal_solutions=5
-IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=10L
+IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=100L
 IF N_Elements(ref_antenna) EQ 0 THEN ref_antenna=1L
 ref_antenna_name=(*obs.baseline_info).tile_names[ref_antenna]
 IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-3
@@ -49,13 +49,14 @@ phase_params=Ptrarr(n_pol,n_tile)
 
 IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
 IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0.
+convergence=Fltarr(n_freq,n_tile)-1.
 mode_params=Ptrarr(n_pol,n_tile)
 
 cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,$
     tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,gain_residual:gain_residual,$
     galaxy_cal:galaxy_cal,min_cal_baseline:min_cal_baseline,max_cal_baseline:max_cal_baseline,n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,ref_antenna_name:ref_antenna_name,$
-    conv_thresh:cal_convergence_threshold,polyfit:calibration_polyfit,amp_params:amp_params,phase_params:phase_params,$
+    conv_thresh:cal_convergence_threshold,convergence:convergence,polyfit:calibration_polyfit,amp_params:amp_params,phase_params:phase_params,$
     bandpass:bandpass_calibrate,mode_fit:cal_mode_fit,mode_params:mode_params,cal_origin:calibration_origin,$
     n_cal_src:n_cal_src,catalog_name:catalog_path_use}
 RETURN,cal_struct

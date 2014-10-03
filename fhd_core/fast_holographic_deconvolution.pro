@@ -55,7 +55,8 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 astr=obs.astr
-beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
+beam_width=beam_width_calculate(obs_out,min_restored_beam_width=1.,/FWHM)
+;beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
 local_max_radius=beam_width*2.
 box_radius=Ceil(local_max_radius)
 xvals=meshgrid(dimension,elements,1)-dimension/2

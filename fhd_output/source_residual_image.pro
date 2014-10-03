@@ -14,7 +14,7 @@ IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 IF N_Elements(beam_power) EQ 0 THEN beam_power=1.
 IF Keyword_Set(source_residual_stokes) THEN pol_offset=4 ELSE pol_offset=0
 beam_flag=Min(Ptr_valid(beam_arr))
-restored_beam_width=((!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.))))>1.
+restored_beam_width=beam_width_calculate(obs_out,min_restored_beam_width=1.)
 IF N_Elements(smooth_width) EQ 0 THEN smooth_width=5.*restored_beam_width
 
 IF Keyword_Set(source_residual_stokes) THEN BEGIN

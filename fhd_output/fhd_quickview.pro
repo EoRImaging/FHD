@@ -89,8 +89,7 @@ ENDIF ELSE filter_name=''
 IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
-restored_beam_width=(!RaDeg/(obs_out.MAX_BASELINE/obs_out.KPIX)/obs_out.degpix)/(2.*Sqrt(2.*Alog(2.)))
-restored_beam_width=restored_beam_width>0.75
+restored_beam_width=beam_width_calculate(obs_out,min_restored_beam_width=0.75)
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
