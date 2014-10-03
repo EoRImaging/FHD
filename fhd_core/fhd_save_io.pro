@@ -27,13 +27,15 @@ IF size(status_str,/type) NE 8 THEN BEGIN
 ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
-IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flag_arr:0,auto_corr:0,$
+IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,source_aray:0,flag_arr:0,auto_corr:0,$
     vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),$
     map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
 IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str')
 status_use=status_str
-  
+
 IF N_Elements(var_name) EQ 0 THEN var_name='' ELSE var_name=StrLowCase(var_name)
+IF not tag_exist(status_use,var_name) THEN RETURN
+
 CASE var_name OF ;listed in order typically generated
     'status_str':BEGIN path_add='_status' & subdir='metadata' & END
     'hdr':BEGIN status_use.hdr=1 & path_add='_hdr' & subdir='metadata'& END
@@ -43,6 +45,7 @@ CASE var_name OF ;listed in order typically generated
     'antenna':BEGIN status_use.antenna=1 & path_add='_antenna' & subdir='beams'& END
     'jones':BEGIN status_use.jones=1 & path_add='_jones' & subdir='beams'& END
     'cal':BEGIN status_use.cal=1 & path_add='_cal' & subdir='calibration'& END
+    'source_array':BEGIN status_use.source_array=1 & path_add='_source_array' & subdir='output_data'& END
     'flag_arr':BEGIN status_use.flag_arr=1 & path_add='_flags' & subdir='vis_data'& END
     'auto_corr':BEGIN status_use.auto_corr=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
     'vis_ptr':BEGIN status_use.vis_ptr[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
