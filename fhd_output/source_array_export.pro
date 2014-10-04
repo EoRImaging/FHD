@@ -1,5 +1,6 @@
 PRO source_array_export,source_array,obs,beam=beam,stokes_images=stokes_images,file_path=file_path
 
+IF N_Elements(file_path) EQ 0 THEN RETURN 
 radius=angle_difference(obs.obsdec,obs.obsra,source_array.dec,source_array.ra,/degree)
 Ires=(Qres=fltarr(N_Elements(source_array)))
 n_pol=obs.n_pol
