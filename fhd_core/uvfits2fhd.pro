@@ -169,10 +169,8 @@ IF data_flag LE 0 THEN BEGIN
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
-    
+        
     IF Keyword_Set(transfer_mapfn) THEN transfer_flags=transfer_mapfn
-    
-    
     IF Keyword_Set(transfer_flags) THEN BEGIN
         transfer_flag_data,flag_arr,obs,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,_Extra=extra
     ENDIF ELSE BEGIN
@@ -187,18 +185,27 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(model_visibilities) THEN BEGIN
         IF Keyword_Set(model_catalog_file_path) THEN BEGIN
             model_source_list=generate_source_cal_list(obs,psf,catalog_path=model_catalog_file_path,/model_visibilities,_Extra=extra) 
-            IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN $
+            IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
                 model_source_list=source_list_append(obs,model_source_list,cal.source_list,/exclude)
-        ENDIF
-        vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr,$
+                source_array=source_list_append(obs,model_source_list,cal.source_list)
+            ENDIF ELSE source_array=model_source_list
+        ENDIF ELSE IF N_Elements(model_source_list) GT 0 THEN source_array=model_source_list 
+        vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr2,$
             timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
-    ENDIF 
+        IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr2[pol_i] $
+            ELSE model_uv_arr=Pointer_copy(model_uv_arr2) 
+        undefine_fhd,model_uv_arr2
+    ENDIF ELSE IF Keyword_Set(calibrate_visibilities) THEN source_array=cal.source_list
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     model_flag=min(Ptr_valid(vis_model_arr))
     
+    IF N_Elements(source_array) GT 0 THEN BEGIN
+        fhd_save_io,status_str,source_array,var='source_array',/compress,file_path_fhd=file_path_fhd,path_use=path_use,_Extra=extra 
+        source_array_export,source_array,obs,file_path=path_use
+    ENDIF
+    
     vis_noise_calc,obs,vis_arr,flag_arr
     IF ~Keyword_Set(silent) THEN flag_status,obs
-    
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'

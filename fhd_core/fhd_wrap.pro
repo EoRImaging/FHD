@@ -96,8 +96,16 @@ fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,psf=psf,sub_dir='metadata'
 ;compression reduces the file size by 50%, but takes 5-30 seconds longer
 fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra ;call first to obtain the correct path. Will NOT update status structure yet
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,weights_arr,$
-    beam_base,beam_correction,astr,filename=fhd_sav_filepath,/compress
+    beam_base,beam_correction,astr,filename=fhd_sav_filepath+'.sav',/compress
 fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,/force,_Extra=extra ;call a second time to update the status structure now that the file has actually been written
+
+;save and export deconvolved source list
+beam_avg=*beam_base[0]
+IF n_pol GT 1 THEN beam_avg=Sqrt(beam_avg^2.+*beam_base[1]^2.)/Sqrt(2.)
+stokes_residual_arr=Stokes_cnv(residual_array,jones,obs,beam_arr=beam_arr,_Extra=extra)
+fhd_save_io,status_str,source_array,var='source_array',/compress,file_path_fhd=file_path_fhd,path_use=path_use,_Extra=extra 
+source_array_export,source_array,obs,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=path_use
+;source_array_export,comp_arr,obs,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=path_use+'_components'
 
 IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_arr) THEN BEGIN

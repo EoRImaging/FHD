@@ -27,13 +27,15 @@ IF size(status_str,/type) NE 8 THEN BEGIN
 ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
-IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,flag_arr:0,auto_corr:0,$
+IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,source_array:0,flag_arr:0,auto_corr:0,$
     vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),$
     map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
 IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str')
 status_use=status_str
-  
+
 IF N_Elements(var_name) EQ 0 THEN var_name='' ELSE var_name=StrLowCase(var_name)
+IF not tag_exist(status_use,var_name) THEN RETURN
+
 CASE var_name OF ;listed in order typically generated
     'status_str':BEGIN path_add='_status' & subdir='metadata' & END
     'hdr':BEGIN status_use.hdr=1 & path_add='_hdr' & subdir='metadata'& END
@@ -43,6 +45,7 @@ CASE var_name OF ;listed in order typically generated
     'antenna':BEGIN status_use.antenna=1 & path_add='_antenna' & subdir='beams'& END
     'jones':BEGIN status_use.jones=1 & path_add='_jones' & subdir='beams'& END
     'cal':BEGIN status_use.cal=1 & path_add='_cal' & subdir='calibration'& END
+    'source_array':BEGIN status_use.source_array=1 & path_add='_source_array' & subdir='output_data'& END
     'flag_arr':BEGIN status_use.flag_arr=1 & path_add='_flags' & subdir='vis_data'& END
     'auto_corr':BEGIN status_use.auto_corr=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
     'vis_ptr':BEGIN status_use.vis_ptr[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
@@ -74,23 +77,24 @@ IF Keyword_Set(compatibility_mode) THEN BEGIN
     ENDCASE
 ENDIF 
 IF ~Keyword_Set(name_error) THEN BEGIN
-    path_use=filepath(base_name+path_add+'.sav',root=base_path,subdir=subdir)
-    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_use) THEN $
+    path_use=filepath(base_name+path_add,root=base_path,subdir=subdir)
+    path_sav=path_use+'.sav'
+    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_sav) THEN $
         fhd_save_io,status_str,pol_i=pol_i,var_name=var_name,/force_set
 
     IF Keyword_Set(restore) THEN BEGIN
         IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name 
-        IF file_test(path_use) THEN param=getvar_savefile(path_use,var_name_use)
+        IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use)
         RETURN
     ENDIF
     
     IF Keyword_Set(param) AND ~Keyword_Set(no_save) THEN BEGIN
-        dir_use=file_dirname(path_use)
+        dir_use=file_dirname(path_sav)
         IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
         status_rename=Execute(var_name_use+'=param') ;rename the variable to be saved
         fn_string='SAVE,'+var_name_use
         IF Keyword_Set(obs_flag) THEN fn_string+=',obs'
-        fn_string+=',filename="'+path_use+'",compress='+String(compress)
+        fn_string+=',filename="'+path_sav+'",compress='+String(compress)
         status_save=Execute(fn_string,1,1)
     ENDIF ELSE status_save=0
     

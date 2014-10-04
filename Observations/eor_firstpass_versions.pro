@@ -37,8 +37,8 @@ ps_kbinsize=0.5
 ps_kspan=600.
 image_filter_fn='filter_uv_uniform'
 
-uvfits_version=2
-uvfits_subversion=0
+uvfits_version=4
+uvfits_subversion=1
 
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -63,6 +63,11 @@ restrict_hpx_inds=1
 
 kbinsize=0.5
 psf_resolution=100
+
+; some new defaults (possibly temporary)
+beam_model_version=0
+dipole_mutual_coupling_factor=0
+calibration_flag_iterate = 0
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
@@ -290,6 +295,17 @@ case version of
    end
 
 
+   'apb_sidelobe_subtract_2':begin
+      allow_sidelobe_cal_sources=1
+      FoV=160
+      dimension=4096
+      snapshot_healpix_export=0
+      recalculate_all=0
+      allow_sidelobe_image_output=1
+      beam_output_threshold=0.01
+      ;ring_radius=30.*pad_uv_image
+   end
+
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
 
    'nb_test_new_cotter_2': begin
@@ -333,7 +349,25 @@ case version of
         calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_FHDaug23deconvolve_fornax_and_VLA_pic.sav',root=rootdir('FHD'),subdir='catalog_data')
         snapshot_healpix_export=1
         deconvolve=0
+     end
+
+   ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
+   
+   ; Adam's versions. only Adam can make versions here.
+
+   ; Abraham's versions
+
+   ; Bryna's versions
+   'bjh_test_max_cal_iter':begin
+      max_cal_iter=100
    end
+
+   ; Nichole's versions
+   'nb_test_debug_direction':begin
+      debug_direction=1
+   end
+
+   ; Patti's versions
 
    else: print,'Default parameters'
 endcase
