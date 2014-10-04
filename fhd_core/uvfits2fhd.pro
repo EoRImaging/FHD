@@ -169,10 +169,8 @@ IF data_flag LE 0 THEN BEGIN
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
-    
+        
     IF Keyword_Set(transfer_mapfn) THEN transfer_flags=transfer_mapfn
-    
-    
     IF Keyword_Set(transfer_flags) THEN BEGIN
         transfer_flag_data,flag_arr,obs,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,_Extra=extra
     ENDIF ELSE BEGIN
@@ -192,8 +190,11 @@ IF data_flag LE 0 THEN BEGIN
                 source_array=source_list_append(obs,model_source_list,cal.source_list)
             ENDIF ELSE source_array=model_source_list
         ENDIF ELSE IF N_Elements(model_source_list) GT 0 THEN source_array=model_source_list 
-        vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr,$
+        vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr2,$
             timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
+        IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr2[pol_i] $
+            ELSE model_uv_arr=Pointer_copy(model_uv_arr2) 
+        undefine_fhd,model_uv_arr2
     ENDIF ELSE IF Keyword_Set(calibrate_visibilities) THEN source_array=cal.source_list
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     model_flag=min(Ptr_valid(vis_model_arr))
