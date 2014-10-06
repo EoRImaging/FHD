@@ -13,8 +13,6 @@
 ;    filename - uvfits filename, omitting the .uvfits extension. 
 ;       If the data is already calibrated, it should end with _cal.uvfits instead of just .uvfits
 ;    
-;    beam_recalculate - if set, generates a new beam model
-;    
 ;    mapfn_recalculate - if not set to 0, will generate Holographic Mapping Functions for each polarization
 ;    
 ;    dimension - desired dimension in pixels of the final images
@@ -30,7 +28,7 @@
 ; :Author: isullivan 2012
 ;-
 PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
-    beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
@@ -59,7 +57,7 @@ IF Keyword_Set(!Journal) THEN journal
 IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
 
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
-    beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     healpix_recalculate=healpix_recalculate,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
@@ -131,7 +129,7 @@ IF data_flag LE 0 THEN BEGIN
         
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
-    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata' ;write preliminary settings file for debugging, in case later steps crash
 ;    IF ~Keyword_Set(silent) THEN BEGIN

@@ -1,5 +1,5 @@
 PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
+    healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid_recalculate=grid_recalculate,snapshot_recalculate=snapshot_recalculate,deconvolve=deconvolve,$
     image_filter_fn=image_filter_fn,data_directory=data_directory,output_directory=output_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
@@ -58,7 +58,6 @@ n_files=N_Elements(vis_file_list)
 
 ;Set which files to restore or recalculate (if the file is not found and needed, it will be recalculated
 IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
-IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
@@ -113,7 +112,7 @@ WHILE fi LT n_files DO BEGIN
 ;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
     undefine_fhd,status_str
     uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
-        independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
+        independent_fit=independent_fit,transfer_mapfn=transfer_mapfn,$
         mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid_recalculate=grid_recalculate,$
         silent=silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
@@ -157,7 +156,7 @@ IF Keyword_Set(simultaneous) THEN BEGIN
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
         uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
-            beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
+            transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             silent=silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
