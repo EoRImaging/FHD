@@ -288,7 +288,7 @@ astr_out2.crpix-=zoom_low
 astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 
 IF Keyword_Set(beam_diff_image) THEN BEGIN
-    source_res_arr=source_residual_image(obs_out,source_arr_out,instr_residual_arr,beam_arr=beam_base_out,$
+    source_res_arr=source_residual_image(obs_out,source_arr_out,instr_images,beam_arr=beam_base_out,$
         jones=jones_out,source_residual_radius=100.,source_residual_flux_threshold=1.,beam_power=2,_Extra=extra)
     source_res_stks=stokes_cnv(source_res_arr,jones_out,_Extra=extra)
     beam_diff_low_use=0
