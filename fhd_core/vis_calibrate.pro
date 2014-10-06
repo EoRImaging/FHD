@@ -74,7 +74,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
 ;        ENDIF ELSE cal=cal_bandpass
 ;    ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
 ;    vis_cal=vis_calibration_apply(vis_ptr,cal)
-;    cal_res=vis_cal_subtract(cal_base,cal,/abs)
+;    cal_res=vis_cal_subtract(cal_base,cal)
 ;    
 ;    IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
 ;    
@@ -167,7 +167,7 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
     ENDIF ELSE cal=cal_bandpass
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
 vis_cal=vis_calibration_apply(vis_ptr,cal)
-cal_res=vis_cal_subtract(cal_base,cal,/abs)
+cal_res=vis_cal_subtract(cal_base,cal)
 cal.gain_residual=cal_res.gain
 undefine_fhd,cal_base
 

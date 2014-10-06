@@ -95,7 +95,7 @@ IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q
 ;dimension=1024.
 
 ;Set up output image parameters
-IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=2. ;grid output images at a higher resolution if set (ignored for quickview images)
+IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=1. ;grid output images at a higher resolution if set (ignored for quickview images)
 IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 IF N_Elements(start_fi) EQ 0 THEN start_fi=0
