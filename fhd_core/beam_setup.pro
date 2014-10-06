@@ -2,7 +2,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
-    psf_max_dim=psf_max_dim,beam_model_version=beam_model_version,_Extra=extra
+    beam_model_version=beam_model_version,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -45,7 +45,7 @@ ky_span=kx_span
 degpix=obs.degpix
 astr=obs.astr
 
-antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,$
+antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
 
 IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
@@ -53,14 +53,12 @@ IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 speed_light=299792458. ;speed of light, in meters/second
-IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32? ;super-resolution factor
 ;IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
-Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
-obsalt=Float(obsalt)
-obsaz=Float(obsaz)
-obsza=90.-obsalt
-psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR))  
-psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
+;Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+;obsalt=Float(obsalt)
+;obsaz=Float(obsaz)
+;obsza=90.-obsalt
+
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
 
 ;;residual_tolerance is residual as fraction of psf_base above which to include 
@@ -106,9 +104,9 @@ psf_superres_dim=psf_dim*psf_resolution
 xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
-norm=[sqrt(1.-(sin(obsza*!DtoR)*sin((obsaz)*!DtoR))^2.),sqrt(1.-(sin(obsza*!DtoR)*cos((obsaz)*!DtoR))^2.)]
-pol_norm=fltarr(n_pol)+1.
-FOR pol_i=0,n_pol-1 DO pol_norm[pol_i]=(norm[pol_arr[0,pol_i]]*norm[pol_arr[1,pol_i]])
+;norm=[sqrt(1.-(sin(obsza*!DtoR)*sin((obsaz)*!DtoR))^2.),sqrt(1.-(sin(obsza*!DtoR)*cos((obsaz)*!DtoR))^2.)]
+;pol_norm=fltarr(n_pol)+1.
+;FOR pol_i=0,n_pol-1 DO pol_norm[pol_i]=(norm[pol_arr[0,pol_i]]*norm[pol_arr[1,pol_i]])
 
 t1=Systime(1)-t1_a
 t2=0
