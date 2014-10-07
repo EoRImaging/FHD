@@ -198,7 +198,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         
         ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save,_Extra=extra 
-        save,filename=path_use,/compress,dirty_cube,model_cube,weights_cube,variance_cube,res_cube,beam_squared_cube,$
+        save,filename=path_use+'.sav',/compress,dirty_cube,model_cube,weights_cube,variance_cube,res_cube,beam_squared_cube,$
             obs,nside,hpx_inds,n_avg
         ;call fhd_save_io a second time to update the status structure now that the file has actually been written
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force,_Extra=extra 
