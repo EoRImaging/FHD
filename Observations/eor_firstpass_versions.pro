@@ -319,6 +319,7 @@ case version of
 
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
+
    'pac_test_fhd':begin
       deconvolve=1 
       return_decon_visibilities=1
@@ -334,6 +335,69 @@ case version of
       FoV=80.
       filter_background=0
    end
+
+  ;catalog based on pac_test_fhd run using all 93 observations, fdet>.9
+   'pac_test_catalog_3': begin
+      calibration_catalog_file_path=filepath('patti_v3.0b.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end     
+  
+
+   ;catalog based on first 75 obsids
+   'pac_test_catalog_3_5': begin
+      calibration_catalog_file_path=filepath('patti_v3.5.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+  
+   ;shallow clean >.5Jy sources
+   'pac_test_catalog_3_7': begin
+      calibration_catalog_file_path=filepath('patti_v3.7.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+
+  'pac_test_catalog_3': begin
+      calibration_catalog_file_path=filepath('patti_v3.0b.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end     
+
+   'pac_test_catalog_3_1': begin
+      calibration_catalog_file_path=filepath('patti_v3.1.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end  
+
+   'pac_test_catalog_3_2': begin
+      calibration_catalog_file_path=filepath('patti_v3.2.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+
+
+   'pac_test_catalog_3_4': begin
+      calibration_catalog_file_path=filepath('patti_v3.4.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+
+   'pac_test_catalog_3_5': begin
+      calibration_catalog_file_path=filepath('patti_v3.5.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+  
+   ;FHD zenith, beam 1a
+   'pac_zenith_beam_1a': begin
+      beam_model_version=1
+      dipole_mutual_coupling_factor=0
+   end   
+
+   ;FHD zenith, beam 1b
+   'pac_zenith_beam_1a': begin
+      beam_model_version=1
+      dipole_mutual_coupling_factor=1
+   end 
+
+   ;FHD zenith, beam 2a
+   'pac_zenith_beam_1a': begin
+      beam_model_version=2
+      dipole_mutual_coupling_factor=0
+   end 
+
+   ;FHD zenith, beam 2b
+   'pac_zenith_beam_1a': begin
+      beam_model_version=2
+      dipole_mutual_coupling_factor=1
+   end 
+
+
 
 
    ;;; Abraham's versions!!! Only Abraham may edit this section!!!
