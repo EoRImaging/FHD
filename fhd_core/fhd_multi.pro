@@ -1,4 +1,4 @@
-PRO fhd_multi,fhd_file_list,source_array,comp_arr,fhd=fhd,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
+PRO fhd_multi,fhd_file_list,source_array,comp_arr,fhd_params=fhd_params,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
     residual_array=residual_array,dirty_uv_arr=dirty_uv_arr,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     silent=silent,beam_model=beam_model,beam_corr=beam_corr,norm_arr=norm_arr,source_mask=source_mask,hpx_inds=hpx_inds,$
     transfer_mapfn=transfer_mapfn,galaxy_model_fit=galaxy_model_fit,_Extra=extra
@@ -20,42 +20,42 @@ ENDIF
 n_obs=N_Elements(obs_arr)
 ;Note that defaults supplied here will be overwritten by any keywords passed through Extra
 ;use the same deconvolution parameters for all observations. obs is used for very little in here!
-fhd0=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_sources=Sqrt(n_obs)*10000.,joint_deconvolution_list=fhd_file_list,_Extra=extra) 
+fhd_params0=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_sources=Sqrt(n_obs)*10000.,joint_deconvolution_list=fhd_file_list,_Extra=extra) 
 
-FOR obs_i=0,n_obs-1 DO BEGIN
-    file_path_fhd=fhd_file_list[obs_i]
-    fhd=fhd0
-    IF Keyword_Set(transfer_mapfn) THEN IF N_Elements(transfer_mapfn) GT 1 THEN fhd.transfer_mapfn=transfer_mapfn[obs_i] ELSE fhd.transfer_mapfn=transfer_mapfn
-    fhd_log_settings,file_path_fhd,fhd=fhd,obs=obs_arr[obs_i] ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
-    save,fhd,filename=file_path_fhd+'_fhd_params.sav',/compress
-ENDFOR
-fhd=fhd0
+;FOR obs_i=0,n_obs-1 DO BEGIN
+;    file_path_fhd=fhd_file_list[obs_i]
+;    fhd_params=fhd_params0
+;    IF Keyword_Set(transfer_mapfn) THEN IF N_Elements(transfer_mapfn) GT 1 THEN fhd_params.transfer_mapfn=transfer_mapfn[obs_i] ELSE fhd_params.transfer_mapfn=transfer_mapfn
+;    fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs_arr[obs_i] ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
+;    save,fhd_params,filename=file_path_fhd+'_fhd_params.sav',/compress
+;ENDFOR
+fhd_params=fhd_params0
 
-n_pol=fhd.npol
-gain_factor=fhd.gain_factor
+n_pol=fhd_params.npol
+gain_factor=fhd_params.gain_factor
 ;gain_factor_use=gain_factor*(!RaDeg/(obs_arr.MAX_BASELINE/obs_arr.KPIX)/obs_arr.degpix)^2. ;correct by approx. beam area
-max_iter=fhd.max_iter
-max_sources=fhd.max_sources
-check_iter=fhd.check_iter
-beam_threshold=fhd.beam_threshold
+max_iter=fhd_params.max_iter
+max_sources=fhd_params.max_sources
+check_iter=fhd_params.check_iter
+beam_threshold=fhd_params.beam_threshold
 beam_model_threshold=0.05
-add_threshold=fhd.add_threshold
-max_add_sources=fhd.max_add_sources
-;local_max_radius=fhd.local_max_radius
-pol_use=fhd.pol_use
-independent_fit=fhd.independent_fit
-reject_pol_sources=fhd.reject_pol_sources
+add_threshold=fhd_params.add_threshold
+max_add_sources=fhd_params.max_add_sources
+;local_max_radius=fhd_params.local_max_radius
+pol_use=fhd_params.pol_use
+independent_fit=fhd_params.independent_fit
+reject_pol_sources=fhd_params.reject_pol_sources
 beam_width=(!RaDeg/Median(obs_arr.degpix*obs_arr.MAX_BASELINE/obs_arr.KPIX))>1.
 local_max_radius=beam_width*2.
 local_radius=local_max_radius*Mean(obs_arr.degpix)
 source_alias_radius=Mean(obs_arr.degpix*obs_arr.dimension)/4.
-calibration_model_subtract=fhd.cal_subtract
-filter_background=fhd.filter_background
-decon_filter=fhd.decon_filter
+calibration_model_subtract=fhd_params.cal_subtract
+filter_background=fhd_params.filter_background
+decon_filter=fhd_params.decon_filter
 
 icomp=Complex(0,1)
-beam_max_threshold=fhd.beam_max_threshold
-smooth_width=fhd.smooth_width
+beam_max_threshold=fhd_params.beam_max_threshold
+smooth_width=fhd_params.smooth_width
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
 beam_model=Ptrarr(n_pol,n_obs,/allocate)
@@ -295,7 +295,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     t3_0=Systime(1)
     
 ;    ;detect sources
-    comp_arr1=fhd_source_detect_healpix(obs_arr,fhd,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
+    comp_arr1=fhd_source_detect_healpix(obs_arr,fhd_params,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
         residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
         source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,gain_factor_use=gain_factor_use,$
         nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr,source_mask_hpx=source_mask_hpx)

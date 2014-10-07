@@ -20,7 +20,7 @@ FOR j=0L,n_rep-1 DO BEGIN
     fhd_file_list_sub=fhd_file_list[file_i_use]
     
     IF N_Elements(transfer_mapfn) GT 1 THEN transfer_mapfn_use=transfer_mapfn[file_i_use] ELSE IF N_Elements(transfer_mapfn) EQ 1 THEN transfer_mapfn_use=transfer_mapfn 
-    fhd_multi,fhd_file_list_sub,source_array2,comp_arr2,fhd=fhd,obs_arr=obs_arr,weights_arr=weights_arr2,timing=timing,$
+    fhd_multi,fhd_file_list_sub,source_array2,comp_arr2,fhd_params=fhd_params,obs_arr=obs_arr,weights_arr=weights_arr2,timing=timing,$
         residual_array=residual_array2,dirty_uv_arr=dirty_uv_arr2,model_uv_full=model_uv_full2,model_uv_holo=model_uv_holo2,$
         silent=silent,beam_model=beam_model2,beam_corr=beam_corr2,norm_arr=norm_arr2,source_mask=source_mask2,$
         hpx_inds=hpx_inds2,transfer_mapfn=transfer_mapfn_use,_Extra=extra
@@ -46,9 +46,16 @@ FOR j=0L,n_rep-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             dirty_array[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix)*(*beam_correction[pol_i]))
         ENDFOR
-        save,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization,weights_arr,$
-            beam_base,beam_correction,ra_arr,dec_arr,astr,filename=file_path_fhd+'_fhd.sav',/compress
-        undefine_fhd,weights_arr,residual_array,image_uv_arr,model_uv_full,model_uv_holo,beam_base,beam_correction,dirty_array
+        
+        fhd_save_io,status_str,fhd_params,var='fhd_params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+        fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,psf=psf,sub_dir='metadata' ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
+        ;compression reduces the file size by 50%, but takes 5-30 seconds longer
+        fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra ;call first to obtain the correct path. Will NOT update status structure yet
+        SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,weights_arr,$
+            beam_base,beam_correction,astr,filename=fhd_sav_filepath+'.sav',/compress
+        fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,/force,_Extra=extra ;call a second time to update the status structure now that the file has actually been written
+        
+        undefine_fhd,weights_arr,residual_array,image_uv_arr,model_uv_full,model_uv_holo,beam_base,beam_correction,dirty_array,status_str
     ENDFOR
     undefine_fhd,weights_arr2,residual_array2,dirty_uv_arr2,model_uv_full2,model_uv_holo2,beam_model2,beam_corr2,source_mask2,hpx_inds2
 ENDFOR
