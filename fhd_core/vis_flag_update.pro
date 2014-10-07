@@ -102,4 +102,7 @@ bin_n=histogram(Temporary(xmin)+Temporary(ymin)*dimension,binsize=1,min=0) ;shou
 bin_i=where(bin_n,n_bin_use);+bin_min
 obs.n_vis=Total(bin_n)
 
+IF Tag_exist(obs,'n_time_flag') THEN obs.n_time_flag=Total(1L-(*obs.baseline_info).time_use)
+IF Tag_exist(obs,'n_tile_flag') THEN obs.n_tile_flag=Total(1L-(*obs.baseline_info).tile_use)
+IF Tag_exist(obs,'n_freq_flag') THEN obs.n_freq_flag=Total(1L-(*obs.baseline_info).freq_use)
 END
