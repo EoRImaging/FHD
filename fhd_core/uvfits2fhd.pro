@@ -164,6 +164,10 @@ IF data_flag LE 0 THEN BEGIN
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
+        IF Keyword_Set(error) THEN BEGIN
+            print,"Error occured during calibration. Returning."
+            RETURN
+        ENDIF
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
@@ -171,6 +175,10 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(transfer_mapfn) THEN transfer_flags=transfer_mapfn
     IF Keyword_Set(transfer_flags) THEN BEGIN
         transfer_flag_data,flag_arr,obs,status_str,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,_Extra=extra
+        IF Keyword_Set(error) THEN BEGIN
+            print,"Error occured while attempting to transfer flags. Returning."
+            RETURN
+        ENDIF
     ENDIF ELSE BEGIN
         IF Keyword_Set(flag_visibilities) THEN BEGIN
             print,'Flagging anomalous data'
@@ -196,6 +204,11 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF ELSE IF Keyword_Set(calibrate_visibilities) THEN source_array=cal.source_list
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
     model_flag=min(Ptr_valid(vis_model_arr))
+    
+    IF Keyword_Set(error) THEN BEGIN
+        print,"Error occured during source modeling"
+        RETURN
+    ENDIF
     
     IF N_Elements(source_array) GT 0 THEN BEGIN
         fhd_save_io,status_str,source_array,var='source_array',/compress,file_path_fhd=file_path_fhd,path_use=path_use,_Extra=extra 
@@ -251,6 +264,7 @@ IF data_flag LE 0 THEN BEGIN
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
                 model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
             IF Keyword_Set(error) THEN BEGIN
+                print,"Error occured during gridding. Returning."
                 IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
                 RETURN
             ENDIF

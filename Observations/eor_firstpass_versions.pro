@@ -430,6 +430,14 @@ case version of
    'nb_test_debug_direction':begin
       debug_direction=1
    end
+   
+   'nb_subtract_sidelobes_nocal':begin
+      model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      return_cal_visibilities=0
+      allow_sidelobe_cal_sources=1
+      allow_sidelobe_model_sources=0
+   end
 
    ; Patti's versions
 
