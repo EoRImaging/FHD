@@ -1,4 +1,4 @@
-FUNCTION fhd_source_detect_healpix,obs_arr,fhd,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
+FUNCTION fhd_source_detect_healpix,obs_arr,jones_arr,fhd_params,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
     residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,ra_hpx=ra_hpx,dec_hpx=dec_hpx,gain_factor_use=gain_factor_use,$
     beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,$
     nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr,$
@@ -10,18 +10,18 @@ beam_width=(!RaDeg/Median(obs_arr.degpix*obs_arr.MAX_BASELINE/obs_arr.KPIX))>1.
 local_max_radius=beam_width*2.
 local_radius=local_max_radius*Mean(obs_arr.degpix)
 smooth_width=Ceil(local_max_radius*2.)
-filter_background=fhd.filter_background
-IF N_Elements(gain_factor_use) EQ 0 THEN gain_factor_use=fhd.gain_factor
+filter_background=fhd_params.filter_background
+IF N_Elements(gain_factor_use) EQ 0 THEN gain_factor_use=fhd_params.gain_factor
 IF N_Elements(gain_factor_use) EQ 1 THEN gain_factor_use=Replicate(gain_factor_use,n_obs)
 
-add_threshold=fhd.add_threshold
-max_add_sources=fhd.max_add_sources
-pol_use=fhd.pol_use
-independent_fit=fhd.independent_fit
-reject_pol_sources=fhd.reject_pol_sources
+add_threshold=fhd_params.add_threshold
+max_add_sources=fhd_params.max_add_sources
+pol_use=fhd_params.pol_use
+independent_fit=fhd_params.independent_fit
+reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
 
-n_pol=fhd.npol
+n_pol=fhd_params.npol
 source_alias_radius=Median(obs_arr.degpix*obs_arr.dimension)/4.
 
 ;detect sources

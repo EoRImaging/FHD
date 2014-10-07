@@ -1,4 +1,4 @@
-PRO fhd_multi,fhd_file_list,source_array,comp_arr,fhd_params=fhd_params,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
+PRO fhd_multi,status_arr,fhd_file_list,source_array,comp_arr,fhd_params=fhd_params,obs_arr=obs_arr,weights_arr=weights_arr,timing=timing,nside=nside,$
     residual_array=residual_array,dirty_uv_arr=dirty_uv_arr,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     silent=silent,beam_model=beam_model,beam_corr=beam_corr,norm_arr=norm_arr,source_mask=source_mask,hpx_inds=hpx_inds,$
     transfer_mapfn=transfer_mapfn,galaxy_model_fit=galaxy_model_fit,_Extra=extra
@@ -10,8 +10,7 @@ t00=Systime(1)
 IF N_Elements(obs_arr) EQ 0 THEN BEGIN
     n_obs=N_Elements(fhd_file_list)
     FOR obs_i=0,n_obs-1 DO BEGIN
-        file_path_fhd=fhd_file_list[obs_i]
-        restore,file_path_fhd+'_obs.sav'
+        fhd_save_io,status_arr[fi],obs,var='obs',/restore,file_path_fhd=fhd_file_list[obs_i],_Extra=extra
         IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs)
         obs_arr[obs_i]=obs
     ENDFOR
@@ -20,17 +19,10 @@ ENDIF
 n_obs=N_Elements(obs_arr)
 ;Note that defaults supplied here will be overwritten by any keywords passed through Extra
 ;use the same deconvolution parameters for all observations. obs is used for very little in here!
-fhd_params0=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_sources=Sqrt(n_obs)*10000.,joint_deconvolution_list=fhd_file_list,_Extra=extra) 
+fhd_params=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_sources=Sqrt(n_obs)*10000.,$
+    joint_deconvolution_list=fhd_file_list,_Extra=extra) 
 
-;FOR obs_i=0,n_obs-1 DO BEGIN
-;    file_path_fhd=fhd_file_list[obs_i]
-;    fhd_params=fhd_params0
-;    IF Keyword_Set(transfer_mapfn) THEN IF N_Elements(transfer_mapfn) GT 1 THEN fhd_params.transfer_mapfn=transfer_mapfn[obs_i] ELSE fhd_params.transfer_mapfn=transfer_mapfn
-;    fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs_arr[obs_i] ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
-;    save,fhd_params,filename=file_path_fhd+'_fhd_params.sav',/compress
-;ENDFOR
-fhd_params=fhd_params0
-
+jones_arr=Ptrarr(n_obs)
 n_pol=fhd_params.npol
 gain_factor=fhd_params.gain_factor
 ;gain_factor_use=gain_factor*(!RaDeg/(obs_arr.MAX_BASELINE/obs_arr.KPIX)/obs_arr.degpix)^2. ;correct by approx. beam area
@@ -45,7 +37,7 @@ max_add_sources=fhd_params.max_add_sources
 pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
-beam_width=(!RaDeg/Median(obs_arr.degpix*obs_arr.MAX_BASELINE/obs_arr.KPIX))>1.
+beam_width=beam_width_calculate(obs_arr,min_restored_beam_width=1.,/FWHM)
 local_max_radius=beam_width*2.
 local_radius=local_max_radius*Mean(obs_arr.degpix)
 source_alias_radius=Mean(obs_arr.degpix*obs_arr.dimension)/4.
@@ -56,7 +48,6 @@ decon_filter=fhd_params.decon_filter
 icomp=Complex(0,1)
 beam_max_threshold=fhd_params.beam_max_threshold
 smooth_width=fhd_params.smooth_width
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
 
 beam_model=Ptrarr(n_pol,n_obs,/allocate)
 beam_corr=Ptrarr(n_pol,n_obs,/allocate)
@@ -85,21 +76,23 @@ box_coords=Lonarr(n_obs,4)
 norm_arr=Fltarr(n_obs)
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
     IF N_Elements(transfer_mapfn) EQ 1 THEN BEGIN
-        file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(fhd_file_list[0])) 
         print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
         FOR pol_i=0,n_pol-1 DO BEGIN
-            map_fn_ptr=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav',map_fn,/pointer)
-            FOR obs_i=0L,n_obs-1 DO map_fn_arr[pol_i,obs_i]=map_fn_ptr
+            fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=fhd_file_list[0],pol_i=pol_i,$
+                /restore,transfer=transfer_mapfn,obs=obs_arr[0],_Extra=extra
+            FOR obs_i=0L,n_obs-1 DO map_fn_arr[pol_i,obs_i]=map_fn
         ENDFOR
     ENDIF ELSE BEGIN
         transfer_mapfn_uniq=transfer_mapfn[Uniq(transfer_mapfn,sort(transfer_mapfn))]
         n_mapfn=N_Elements(transfer_mapfn_uniq)
         FOR trans_map_i=0L,n_mapfn-1 DO BEGIN
             transfer_mapfn_use=transfer_mapfn_uniq[trans_map_i]
-            file_path_mapfn=filepath(transfer_mapfn_use+'_mapfn_',root=file_dirname(fhd_file_list[0])) 
-            map_fn_ptr=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav',map_fn,/pointer)
-            obs_trans_i=where(transfer_mapfn EQ transfer_mapfn_use,n_obs_match)
-            IF n_obs_match GT 0 THEN map_fn_arr[pol_i,obs_trans_i]=map_fn_ptr
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=fhd_file_list[0],pol_i=pol_i,$
+                    /restore,transfer=transfer_mapfn_use,obs=obs_arr[0],_Extra=extra
+                obs_trans_i=where(transfer_mapfn EQ transfer_mapfn_use,n_obs_match)
+                IF n_obs_match GT 0 THEN map_fn_arr[pol_i,obs_trans_i]=map_fn
+            ENDFOR
         ENDFOR
     ENDELSE
 ENDIF
@@ -107,13 +100,16 @@ ENDIF
 FOR obs_i=0.,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
     obs=obs_arr[obs_i]
-    params=getvar_savefile(file_path_fhd+'_params.sav','params')
+    status_str=status_arr[obs_i]
+    fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+    fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+    IF N_Elements(jones_arr) EQ 0 THEN jones_arr=Temporary(jones) ELSE jones_arr=[jones_arr,jones]
     dimension=obs.dimension
     elements=obs.elements
     xvals=meshgrid(dimension,elements,1)-dimension/2
     yvals=meshgrid(dimension,elements,2)-elements/2
     
-    psf=beam_setup(obs,file_path_fhd,restore_last=1,silent=1)
+    psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=1,silent=1)
     FOR pol_i=0,n_pol-1 DO *beam_model[pol_i,obs_i]=Sqrt(beam_image(psf,pol_i=pol_i,dimension=obs.dimension,/square))
     
     beam_sourcefind_mask=(beam_mask=fltarr(obs.dimension,obs.elements)+1)
@@ -134,13 +130,13 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
-    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside_chk,mask=beam_sourcefind_mask,hpx_radius=hpx_radius,restore_last=0) 
+    *hpx_cnv[obs_i]=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside_chk,mask=beam_sourcefind_mask,hpx_radius=hpx_radius,restore_last=0) 
     IF N_Elements(nside) EQ 0 THEN nside=nside_chk
-    IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,file_path_fhd=file_path_fhd,nside=nside,mask=beam_sourcefind_mask,hpx_radius=hpx_radius,restore_last=0)
+    IF nside_chk NE nside THEN *hpx_cnv[obs_i]=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside,mask=beam_sourcefind_mask,hpx_radius=hpx_radius,restore_last=0)
     
     FOR pol_i=0,n_pol-1 DO BEGIN
-;        restore,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav' ; dirty_uv,weights_grid
-        *dirty_uv_arr[pol_i,obs_i]=getvar_savefile(file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav','dirty_uv')*obs.cal[pol_i];dirty_uv*obs.cal[pol_i]
+        fhd_save_io,status_str,grid_uv,var='grid_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
+        *dirty_uv_arr[pol_i,obs_i]=grid_uv
         *model_uv_full[pol_i,obs_i]=Complexarr(dimension,elements)
         *model_uv_holo[pol_i,obs_i]=Complexarr(dimension,elements)
         *beam_model_hpx_arr[pol_i,obs_i]=healpix_cnv_apply(*beam_model[pol_i,obs_i],*hpx_cnv[obs_i])
@@ -152,7 +148,9 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         IF N_Elements(*map_fn_arr[pol_i,obs_i]) EQ 0 THEN BEGIN
             ;IMPORTANT: this approach of restoring the map_fn uses the least memory
             print,'Restoring: ' + file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav'
-            RESTORE,file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav' ;map_fn
+            fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
+                /no_save,path_use=path_use,obs=obs,_Extra=extra
+            RESTORE,path_use+'.sav' ;map_fn
             *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
         ENDIF
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
@@ -167,7 +165,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-        gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
+        gal_model_uv=fhd_galaxy_model(obs,jones_arr[obs_i],file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
         FOR pol_i=0,n_pol-1 DO BEGIN
             *model_uv_full[pol_i,obs_i]+=*gal_model_uv[pol_i]
             *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],map_fn_arr[pol_i,obs_i],_Extra=extra,/indexed)
@@ -295,7 +293,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     t3_0=Systime(1)
     
 ;    ;detect sources
-    comp_arr1=fhd_source_detect_healpix(obs_arr,fhd_params,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
+    comp_arr1=fhd_source_detect_healpix(obs_arr,jones_arr,fhd_params,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
         residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
         source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,gain_factor_use=gain_factor_use,$
         nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr,source_mask_hpx=source_mask_hpx)
