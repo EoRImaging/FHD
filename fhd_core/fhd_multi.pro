@@ -166,9 +166,9 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         IF N_Elements(*map_fn_arr[pol_i,obs_i]) EQ 0 THEN BEGIN
             ;IMPORTANT: this approach of restoring the map_fn uses the least memory
-            print,'Restoring: ' + file_path_fhd+'_mapfn_'+pol_names[pol_i]+'.sav'
             fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
                 /no_save,path_use=path_use,obs=obs,_Extra=extra
+            print,'Restoring: ' + path_use+'.sav' 
             RESTORE,path_use+'.sav' ;map_fn
             *map_fn_arr[pol_i,obs_i]=Temporary(map_fn)
         ENDIF
@@ -197,7 +197,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     uv_i_use=where(Temporary(source_uv_mask),n_uv_use)
     uv_use_frac=Float(n_uv_use)/(dimension*elements)
-    print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
+    print,"Fractional uv coverage: ",uv_use_frac,", normalization: ",gain_normalization
     *uv_i_arr[obs_i]=where(Temporary(source_uv_mask2),n_uv_use2)
     *xv_arr[obs_i]=xvals[*uv_i_arr[obs_i]]
     *yv_arr[obs_i]=yvals[*uv_i_arr[obs_i]]
