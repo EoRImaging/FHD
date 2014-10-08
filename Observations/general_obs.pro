@@ -149,7 +149,7 @@ vis_file_list=vis_file_list[fi_use]
 fhd_file_list=fhd_file_list[fi_use]
 IF Keyword_Set(simultaneous) THEN BEGIN
     IF Total(simultaneous) GT 1 THEN N_simultaneous=simultaneous
-    fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,n_pol=n_pol,$
+    fhd_multi_wrap,fhd_file_list,status_arr,N_simultaneous=N_simultaneous,n_pol=n_pol,$
         independent_fit=independent_fit,silent=silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
         export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    

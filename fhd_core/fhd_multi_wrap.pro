@@ -3,6 +3,7 @@ except=!except
 !except=0
 compile_opt idl2,strictarrsubs  
 individual_save=1
+heap_gc
 
 nd=size(fhd_file_list,/n_dim)
 IF nd EQ 2 THEN BEGIN

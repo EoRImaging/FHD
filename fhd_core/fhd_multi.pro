@@ -11,7 +11,7 @@ t00=Systime(1)
 IF N_Elements(obs_arr) EQ 0 THEN BEGIN
     n_obs=N_Elements(fhd_file_list)
     FOR obs_i=0,n_obs-1 DO BEGIN
-        fhd_save_io,status_arr[fi],obs,var='obs',/restore,file_path_fhd=fhd_file_list[obs_i],_Extra=extra
+        fhd_save_io,status_arr[obs_i],obs,var='obs',/restore,file_path_fhd=fhd_file_list[obs_i],_Extra=extra
         IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs)
         obs_arr[obs_i]=obs
     ENDFOR
@@ -80,7 +80,11 @@ IF Keyword_Set(transfer_mapfn) THEN BEGIN
         print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
         FOR pol_i=0,n_pol-1 DO BEGIN
             fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=fhd_file_list[0],pol_i=pol_i,$
-                /restore,transfer=transfer_mapfn,obs=obs_arr[0],_Extra=extra
+                transfer=transfer_mapfn,/no_save,path_use=path_use,obs=obs_arr[0],_Extra=extra
+            RESTORE,path_use+'.sav' ;map_fn
+;        print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
+;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
+            map_fn=Ptr_new(Temporary(map_fn))
             FOR obs_i=0L,n_obs-1 DO map_fn_arr[pol_i,obs_i]=map_fn
         ENDFOR
     ENDIF ELSE BEGIN
@@ -90,7 +94,9 @@ IF Keyword_Set(transfer_mapfn) THEN BEGIN
             transfer_mapfn_use=transfer_mapfn_uniq[trans_map_i]
             FOR pol_i=0,n_pol-1 DO BEGIN
                 fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=fhd_file_list[0],pol_i=pol_i,$
-                    /restore,transfer=transfer_mapfn_use,obs=obs_arr[0],_Extra=extra
+                    transfer=transfer_mapfn_use,/no_save,path_use=path_use,obs=obs_arr[0],_Extra=extra
+                RESTORE,path_use+'.sav' ;map_fn
+                map_fn=Ptr_new(Temporary(map_fn))
                 obs_trans_i=where(transfer_mapfn EQ transfer_mapfn_use,n_obs_match)
                 IF n_obs_match GT 0 THEN map_fn_arr[pol_i,obs_trans_i]=map_fn
             ENDFOR
@@ -105,7 +111,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     status_str=status_arr[obs_i]
     fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-    IF N_Elements(jones_arr) EQ 0 THEN jones_arr=Temporary(jones) ELSE jones_arr=[jones_arr,jones]
+    jones_arr[obs_i]=Ptr_new(Temporary(jones))
     dimension=obs.dimension
     elements=obs.elements
     xvals=meshgrid(dimension,elements,1)-dimension/2
@@ -133,7 +139,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     *beam_sourcefind_mask_arr[obs_i]=beam_sourcefind_mask
     *beam_mask_arr[obs_i]=beam_mask
     *source_mask_arr[obs_i]=beam_mask
-    obs_weight_single=*(Stokes_cnv(beam_square,jones_arr[obs_i],obs_arr[obs_i],_Extra=extra))[0]
+    obs_weight_single=*(Stokes_cnv(beam_square,*jones_arr[obs_i],obs_arr[obs_i],_Extra=extra))[0]
     obs_weight_single*=beam_sourcefind_mask
     obs_weight[obs_i]=Ptr_new(obs_weight_single)
 ;    FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
@@ -176,7 +182,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-        gal_model_uv=fhd_galaxy_model(obs,jones_arr[obs_i],file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
+        gal_model_uv=fhd_galaxy_model(obs,*jones_arr[obs_i],file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
         FOR pol_i=0,n_pol-1 DO BEGIN
             *model_uv_full[pol_i,obs_i]+=*gal_model_uv[pol_i]
             *model_uv_holo[pol_i,obs_i]=$
@@ -286,7 +292,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             t2+=t2_0b-t2_0a
         ENDFOR
         
-        res_stokes=stokes_cnv(res_arr[*],jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],/square,_Extra=extra)
+        res_stokes=stokes_cnv(res_arr[*],*jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],/square,_Extra=extra)
         FOR pol_i=0,n_pol-1 DO (*residual_stokes_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(*res_stokes[pol_i]*(*obs_weight[obs_i]),*hpx_cnv[obs_i])
     ENDFOR
     
@@ -328,7 +334,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF ~Ptr_valid(comp_arr1[obs_i]) THEN BEGIN recalc_flag[obs_i]=0 & CONTINUE & ENDIF
         IF n_src_use EQ n_sources THEN comp_single=*comp_arr1[obs_i] ELSE comp_single=(*comp_arr1[obs_i])[0:n_src_use-1]
         (*comp_arr[obs_i])[si:si+n_src_use-1]=comp_single
-        source_dft_multi,obs_arr[obs_i],jones_arr[obs_i],comp_single,model_uv_full[*,obs_i],$
+        source_dft_multi,obs_arr[obs_i],*jones_arr[obs_i],comp_single,model_uv_full[*,obs_i],$
             xvals=*xv_arr[obs_i],yvals=*yv_arr[obs_i],uv_i_use=*uv_i_arr[obs_i]
     ENDFOR
     si+=n_src_use
