@@ -18,11 +18,19 @@ ENDELSE
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=1E-2
 IF Keyword_Set(square) THEN beam_threshold_use=beam_threshold^2 ELSE beam_threshold_use=beam_threshold
 
-inds=jones.inds
-p_map=jones.Jmat
-p_corr=jones.Jinv
-dimension=jones.dimension
-elements=jones.elements
+IF size(jones,/type) EQ 10 THEN BEGIN
+    inds=(*jones).inds
+    p_map=(*jones).Jmat
+    p_corr=(*jones).Jinv
+    dimension=(*jones).dimension
+    elements=(*jones).elements
+ENDIF ELSE BEGIN
+    inds=jones.inds
+    p_map=jones.Jmat
+    p_corr=jones.Jinv
+    dimension=jones.dimension
+    elements=jones.elements
+ENDELSE
 n_pix=N_Elements(inds)
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 

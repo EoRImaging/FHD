@@ -1,18 +1,17 @@
-FUNCTION fhd_source_detect_healpix,obs_arr,jones_arr,fhd_params,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
-    residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,ra_hpx=ra_hpx,dec_hpx=dec_hpx,gain_factor_use=gain_factor_use,$
+FUNCTION fhd_source_detect_healpix,obs_arr,jones_arr,fhd_params,source_find_hpx,residual_stokes_hpx=residual_stokes_hpx,$
+    beam_model=beam_model,ra_hpx=ra_hpx,dec_hpx=dec_hpx,gain_factor_use=gain_factor_use,$
     beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,$
-    nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr,$
+    nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_stokes_arr=res_stokes_arr,$
     source_mask_hpx=source_mask_hpx
 
 n_obs=N_Elements(obs_arr)
 recalc_flag=Intarr(n_obs)
-beam_width=(!RaDeg/Median(obs_arr.degpix*obs_arr.MAX_BASELINE/obs_arr.KPIX))>1.
+beam_width=beam_width_calculate(obs_arr,min_restored_beam_width=1.,/FWHM)
 local_max_radius=beam_width*2.
 local_radius=local_max_radius*Mean(obs_arr.degpix)
 smooth_width=Ceil(local_max_radius*2.)
-filter_background=fhd_params.filter_background
+;filter_background=fhd_params.filter_background
 IF N_Elements(gain_factor_use) EQ 0 THEN gain_factor_use=fhd_params.gain_factor
-IF N_Elements(gain_factor_use) EQ 1 THEN gain_factor_use=Replicate(gain_factor_use,n_obs)
 
 add_threshold=fhd_params.add_threshold
 max_add_sources=fhd_params.max_add_sources
@@ -47,31 +46,41 @@ source_dec=dec_hpx[source_i]
 IF n_src GT max_add_sources THEN source_i=source_i[0:max_add_sources-1]
 n_src=Long(N_Elements(source_i))
 
-flux_src_arr=residual_I[source_i]
+;flux_src_arr=residual_I[source_i]
 ra_arr=fltarr(n_src)
 dec_arr=fltarr(n_src)
 source_cut_arr=fltarr(n_src)
 FOR src_i=0L,n_src-1 DO BEGIN
     Query_disc,nside,pix_coords[source_i[src_i],*],local_radius,region_inds,ninds,/deg
     region_i=reverse_inds[region_inds]
-    region_i=region_i[where(region_i GE 0)] ;guaranteed at least the center pixel
+    i_use=where(region_i GE 0,n_use)
+    IF n_use EQ 0 THEN BEGIN
+        source_cut_arr[src_i]+=1
+        CONTINUE
+    ENDIF
+    region_i=region_i[i_use] ;guaranteed at least the center pixel
     ra1=ra_hpx[region_i]
     IF Max(ra1)-Min(ra1) GT 100. THEN ra1[where(ra1 GE (Min(ra1)+100))]-=360. ;watch out for branch cut at 360 degrees
     dec1=dec_hpx[region_i]
     dist_weights=Exp(-(angle_difference(source_dec[src_i],source_ra[src_i],dec1,ra1,/degree)/(2.*local_radius))^2.)
-    simg1=(source_find_hpx[region_i]*dist_weights)>0.
+    simg1=((*residual_stokes_hpx[0])[region_i]*dist_weights)>0.
     
     ra_arr[src_i]=Total(ra1*simg1)/Total(simg1)
     dec_arr[src_i]=Total(dec1*simg1)/Total(simg1)
 ENDFOR
+source_i_i=where(source_cut_arr EQ 0,n_src)
+source_i=source_i[source_i_i]
+ra_arr=ra_arr[source_i_i]
+dec_arr=dec_arr[source_i_i]
+source_cut_arr=Fltarr(n_src)
+flux_vals=Ptrarr(n_pol)
+FOR pol_i=0,n_pol-1 DO flux_vals[pol_i]=Ptr_new((*residual_stokes_hpx[pol_i])[source_i])
+IF ~Keyword_Set(independent_fit) THEN BEGIN
+    IF n_pol GE 2 THEN *flux_vals[1]=Fltarr(n_src)
+    IF n_pol GE 4 THEN *flux_vals[3]=Fltarr(n_src)
+ENDIF
 
 ;update models
-flux_I=residual_I[source_i]
-flux_Q=residual_Q[source_i]
-IF n_pol GT 2 THEN BEGIN
-    flux_U=residual_U[source_i]
-    flux_V=residual_V[source_i]
-ENDIF
 
 source_array=Ptrarr(n_obs)
 FOR obs_i=0L,n_obs-1 DO BEGIN
@@ -84,7 +93,6 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     dimension=obs_arr[obs_i].dimension
     elements=obs_arr[obs_i].elements
     beam_mask=*beam_mask_arr[obs_i]
-    
     
     si_use=lonarr(n_src)-1
     si_cut=lonarr(n_src)
