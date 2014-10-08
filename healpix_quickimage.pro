@@ -19,7 +19,7 @@
 
 pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, map_out = map_out, noplot = noplot, $
     dec_range = dec_range, ra_range = ra_range, noerase = noerase, savefile = savefile, png = png, eps = eps, $
-    map = map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
+    plot_as_map = plot_as_map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
     data_range = data_range, silent=silent, title=title, note = note, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
     projection=projection, coord_in=coord_in, coord_out = coord_out, $
     color_profile = color_profile, log = log, window_num = window_num
@@ -67,7 +67,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   
   if n_elements(coord_in) eq 0 then coord_in='C'
   
-  if not keyword_set(map) then projection = 'orthographic'
+  if not keyword_set(plot_as_map) then projection = 'orthographic'
   
   IF N_Elements(projection) EQ 0 THEN BEGIN
     CASE 1 OF
@@ -90,7 +90,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   
   IF Keyword_Set(degpix) THEN resolution=degpix ELSE resolution=.1 ;output resolution in degrees
   
-  if keyword_set(map) then begin
+  if keyword_set(plot_as_map) then begin
     half_sky = 1
     pxsize=360./resolution
     charsize=Ceil(pxsize/800.)
@@ -104,15 +104,10 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
   
   ;; find mid point (work in x/y because of possible jumps in phi)
   vec_mid = [mean(pix_center_vec[*,0]), mean(pix_center_vec[*,1]), mean(pix_center_vec[*,2])]
-  theta_vals = acos(pix_center_vec[*,2])
-  phi_vals = atan(pix_center_vec[*,1], pix_center_vec[*,0])
-  theta0 = acos(vec_mid[2]) ;; range is 0 -> pi
-  phi0 = atan(vec_mid[1], vec_mid[0]) ;; range is -pi -> pi
+  vec2ang, vec_mid, dec_mid, ra_mid,/astro
+  rot=[ra_mid,dec_mid]
   
-  ra0=phi0*180./!pi
-  dec0=theta0*180./!pi - 90.
-  
-  rot=[ra0,dec0+90.]
+  vec2ang, pix_center_vec, dec_vals, ra_vals,/astro
   
   hsize_cm=26.
   
@@ -141,7 +136,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     POLARIZATION=polarization, HALF_SKY=half_sky, SILENT=silent, PIXEL_LIST=pixels, $
     TRUECOLORS=truecolors, DATA_TC=data_tc, MAP_OUT=map_out, ROT=rot, FITS=fits, STAGGER=stagger
     
-  if not keyword_set(map) then begin
+  if not keyword_set(plot_as_map) then begin
     mask = fix(map_out*0)
     mask[where(map_out gt min(map_out))]=1
     
@@ -151,25 +146,22 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     bad_val = min(map_out)
     map_out = map_out[xrange_map[0]:xrange_map[1], yrange_map[0]:yrange_map[1]]
     
-    dec_vals = (theta_vals*180./!pi) - 90.
     dec_range = minmax(dec_vals)
+    ra_range = reverse(minmax(ra_vals)) ;; astronomical RA increases to the left
     
-    ra_vals = phi_vals*180./!pi
-    ra_range = minmax(ra_vals)
+    ra_hist = histogram(ra_vals, binsize = 10, min=0, max=360, locations=locs)
     
-    ra_hist = histogram(ra_vals, binsize = 10, min=-180, max=180, locations=locs)
     wh_ra_0 = where(ra_hist eq 0, count_ra_0, ncomplement = count_ra_inc)
     if count_ra_0 eq 0 then full_ra = 1 else begin
       full_ra = 0
       ;; check for ra branch cut
-      if ra_range[1] - ra_range[0] gt count_ra_inc*10 then begin
-        ;; ra branch cut (-180, 180)
-        ;; figure out where non-branchcut break is
-        ra_break = locs[wh_ra_0[0]]
-        wh_below_break = where(ra_vals lt ra_break, count_below)
-        if count_below gt 0 then ra_vals[wh_below_break] = ra_vals[wh_below_break] + 360 else stop
+      if ra_range[0] - ra_range[1] gt count_ra_inc*10 then begin
+        ;; ra branch cut (0, 360)
+        ;; adjust so ra runs -180 to 180 instead
+        wh_gt180 = where(ra_vals gt 180, count_gt180)
+        if count_gt180 gt 0 then ra_vals[wh_gt180] = ra_vals[wh_gt180] - 360 else stop
         
-        ra_range = minmax(ra_vals)
+        ra_range = reverse(minmax(ra_vals)) ;; astronomical RA increases to the left
       endif
     endelse
     
