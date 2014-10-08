@@ -362,6 +362,11 @@ case version of
       max_cal_iter=100
    end
 
+   'bjh_test_max_cal_iter_no_cal_freq_flag':begin
+      max_cal_iter=100
+      no_calibration_frequency_flagging=1
+   end
+
    ; Nichole's versions
    'nb_test_debug_direction':begin
       debug_direction=1
