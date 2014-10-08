@@ -107,17 +107,17 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
     obs=obs_arr[obs_i]
     status_str=status_arr[obs_i]
-    fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+;    fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-    jones_arr[obs_i]=Ptr_new(Temporary(jones))
+    jones_arr[obs_i]=Ptr_new(Temporary(jones)) ;do NOT use undefine_fhd or some pointers will be null
     dimension=obs.dimension
     elements=obs.elements
     xvals=meshgrid(dimension,elements,1)-dimension/2
     yvals=meshgrid(dimension,elements,2)-elements/2
     
-    psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=1,silent=1)
+    psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=1,silent=1,/no_save)
     FOR pol_i=0,n_pol-1 DO *beam_model[pol_i,obs_i]=Sqrt(beam_image(psf,pol_i=pol_i,dimension=obs.dimension,/square))
-    
+    undefine_fhd,psf
     beam_sourcefind_mask=(beam_mask=fltarr(obs.dimension,obs.elements)+1)
     
     beam_square=Ptrarr(n_pol<2)
@@ -141,7 +141,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     Ptr_free,beam_square
     obs_weight_single*=beam_sourcefind_mask
     obs_weight[obs_i]=Ptr_new(obs_weight_single)
-;    FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
+    FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
     hpx_cnv0=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside_chk,$

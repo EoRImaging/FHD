@@ -7,11 +7,12 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
 
+antenna_flag=Arg_present(antenna)
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF Keyword_Set(restore_last) THEN BEGIN
     fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
-    fhd_save_io,status_str,antenna,var='antenna',/restore,file_path_fhd=file_path_fhd
-    IF Keyword_Set(psf) AND Keyword_Set(antenna) THEN RETURN,psf $
+    IF antenna_flag THEN fhd_save_io,status_str,antenna,var='antenna',/restore,file_path_fhd=file_path_fhd
+    IF Keyword_Set(psf) THEN RETURN,psf $
         ELSE IF not Keyword_Set(silent) THEN print,"Saved beam model not found. Recalculating."
 ENDIF
 
@@ -160,6 +161,7 @@ psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i
     
 fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
 fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=no_save
+IF not antenna_flag THEN undefine_fhd,antenna
 timing=Systime(1)-t00
 RETURN,psf
 END
