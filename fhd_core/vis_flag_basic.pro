@@ -142,6 +142,10 @@ freq_use_new=freq_use AND (*obs.baseline_info).freq_use
 (*obs.baseline_info).tile_use=tile_use_new
 (*obs.baseline_info).freq_use=freq_use_new
 
+IF Tag_exist(obs,'n_time_flag') THEN obs.n_time_flag=Total(1L-(*obs.baseline_info).time_use)
+IF Tag_exist(obs,'n_tile_flag') THEN obs.n_tile_flag=Total(1L-(*obs.baseline_info).tile_use)
+IF Tag_exist(obs,'n_freq_flag') THEN obs.n_freq_flag=Total(1L-(*obs.baseline_info).freq_use)
+
 vis_count_i=where(*flag_ptr[0],n_vis_in)
 obs.n_vis_in=n_vis_in
 RETURN,flag_ptr
