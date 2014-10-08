@@ -98,6 +98,7 @@ IF Keyword_Set(transfer_mapfn) THEN BEGIN
     ENDELSE
 ENDIF
 
+obs_weight=Ptrarr(n_obs)
 FOR obs_i=0.,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
     obs=obs_arr[obs_i]
@@ -114,7 +115,11 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO *beam_model[pol_i,obs_i]=Sqrt(beam_image(psf,pol_i=pol_i,dimension=obs.dimension,/square))
     
     beam_sourcefind_mask=(beam_mask=fltarr(obs.dimension,obs.elements)+1)
+    
+    beam_square=Ptrarr(n_pol<2)
+    
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
+        beam_square[pol_i]=Ptr_new((*beam_model[pol_i,obs_i])^2.)
         mask0=(mask1=fltarr(obs.dimension,obs.elements))
         ref_pix=Long(obs.obsx)+Long(obs.dimension)*Long(obs.obsy)
         mask_i=region_grow(*beam_model[pol_i,obs_i],ref_pix,thresh=[beam_threshold,max(*beam_model[pol_i,obs_i])])
@@ -128,7 +133,10 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     *beam_sourcefind_mask_arr[obs_i]=beam_sourcefind_mask
     *beam_mask_arr[obs_i]=beam_mask
     *source_mask_arr[obs_i]=beam_mask
-    FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
+    obs_weight_single=*(Stokes_cnv(beam_square,jones_arr[obs_i],obs_arr[obs_i],_Extra=extra))[0]
+    obs_weight_single*=beam_sourcefind_mask
+    obs_weight[obs_i]=Ptr_new(obs_weight_single)
+;    FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
     *hpx_cnv[obs_i]=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside_chk,$
@@ -142,7 +150,7 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         *dirty_uv_arr[pol_i,obs_i]=grid_uv
         *model_uv_full[pol_i,obs_i]=Complexarr(dimension,elements)
         *model_uv_holo[pol_i,obs_i]=Complexarr(dimension,elements)
-        *beam_model_hpx_arr[pol_i,obs_i]=healpix_cnv_apply(*beam_model[pol_i,obs_i],*hpx_cnv[obs_i])
+;        *beam_model_hpx_arr[pol_i,obs_i]=healpix_cnv_apply(*beam_model[pol_i,obs_i],*hpx_cnv[obs_i])
     ENDFOR
     
     source_uv_mask=fltarr(dimension,elements)
@@ -203,6 +211,17 @@ degpix_hpx=Sqrt((4*!Pi*!Radeg^2.)/n_hpx_full)
 pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,dec_hpx,ra_hpx,/astro
 
+;set up effective beam^2 weighting
+
+weight_hpx=Fltarr(n_hpx)
+FOR obs_i=0L,n_obs-1 DO BEGIN
+;                smooth_hpx=healpix_cnv_apply(smooth0*(*beam_sourcefind_mask_arr[obs_i]),*hpx_cnv[obs_i])
+;                (*smooth_map[pol_i])[*hpx_ind_map[obs_i]]+=smooth_hpx
+    weight_hpx[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(*obs_weight[obs_i],*hpx_cnv[obs_i])
+ENDFOR
+weight_hpx_corr=weight_invert(weight_hpx)
+weight_hpx_corr_sqrt=Sqrt(weight_hpx_corr>0.)
+
 converge_check=Fltarr(Ceil(max_iter/check_iter))
 converge_check2=Fltarr(max_iter)
 
@@ -237,7 +256,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF n_zero GT 0 THEN source_mask_hpx[zero_ind]=0
 ENDFOR
 
-res_arr=Ptrarr(n_pol,n_obs,/allocate)
+res_arr=Ptrarr(n_pol,/allocate)
 ;smooth_arr=Ptrarr(n_pol,n_obs,/allocate)
 recalc_flag=Intarr(n_obs)+1
 residual_stokes_hpx=Ptrarr(n_pol,/allocate)
@@ -249,7 +268,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             t1_0=Systime(1)
             residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
-                degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias)*norm_arr[obs_i]
+                degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[obs_i])
             
             t2_0a=Systime(1)
             t1+=t2_0a-t1_0
@@ -260,42 +279,46 @@ FOR i=0L,max_iter-1 DO BEGIN
                     *(*beam_model[pol_i,obs_i])[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]
                 res_use[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]=$
                     residual[box_coords[obs_i,0]:box_coords[obs_i,1],box_coords[obs_i,2]:box_coords[obs_i,3]]-res_smooth
-                *res_arr[pol_i,obs_i]=res_use
-            ENDIF ELSE *res_arr[pol_i,obs_i]=residual
+                *res_arr[pol_i]=res_use
+            ENDIF ELSE *res_arr[pol_i]=residual
             
             t2_0b=Systime(1)
             t2+=t2_0b-t2_0a
         ENDFOR
-        res_stokes=stokes_cnv(res_arr[*,obs_i],jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],/square,_Extra=extra)
+        
+        res_stokes=stokes_cnv(res_arr[*],jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],/square,_Extra=extra)
+        FOR pol_i=0,n_pol-1 DO (*residual_stokes_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(*res_stokes[pol_i]*(*obs_weight[obs_i]),*hpx_cnv[obs_i])
     ENDFOR
     
-    ;NOTE healpix_map and smooth_hpx are in instrumental polarization, weighted by the beam squared
+    source_find_hpx= *residual_stokes_hpx[0]*weight_hpx_corr_sqrt
+    FOR pol_i=0,n_pol-1 DO *residual_stokes_hpx[pol_i]*=weight_hpx_corr
     
-    ;convert to Stokes I
-    source_find_hpx=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map[0])
-    IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map[1])
-    
-    source_find_hpx*=source_mask_hpx
-    residual_I=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map2[0])
-    IF n_pol GT 1 THEN residual_I+=(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map2[1])
-    IF n_pol GT 2 THEN residual_U=(*healpix_map[2]-*smooth_map[2])*(*beam_corr_map2[2])$
-        +(*healpix_map[3]-*smooth_map[3])*(*beam_corr_map2[3])
-    IF Keyword_Set(independent_fit) AND (n_pol GT 1) THEN BEGIN
-        residual_Q=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map2[0])-(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map2[1])
-        IF n_pol GT 3 THEN residual_V=(*healpix_map[2]-*smooth_map[2])*(*beam_corr_map2[2])$
-            -(*healpix_map[3]-*smooth_map[3])*(*beam_corr_map2[3])
-    ENDIF ELSE BEGIN
-        residual_Q=fltarr(n_hpx)
-        IF n_pol GT 2 THEN residual_V=fltarr(n_hpx)
-    ENDELSE
+;    ;NOTE healpix_map and smooth_hpx are in instrumental polarization, weighted by the beam squared
+;    ;convert to Stokes I
+;    source_find_hpx=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map[0])
+;    IF n_pol GT 1 THEN source_find_hpx+=(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map[1])
+;    
+;    source_find_hpx*=source_mask_hpx
+;    residual_I=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map2[0])
+;    IF n_pol GT 1 THEN residual_I+=(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map2[1])
+;    IF n_pol GT 2 THEN residual_U=(*healpix_map[2]-*smooth_map[2])*(*beam_corr_map2[2])$
+;        +(*healpix_map[3]-*smooth_map[3])*(*beam_corr_map2[3])
+;    IF Keyword_Set(independent_fit) AND (n_pol GT 1) THEN BEGIN
+;        residual_Q=(*healpix_map[0]-*smooth_map[0])*(*beam_corr_map2[0])-(*healpix_map[1]-*smooth_map[1])*(*beam_corr_map2[1])
+;        IF n_pol GT 3 THEN residual_V=(*healpix_map[2]-*smooth_map[2])*(*beam_corr_map2[2])$
+;            -(*healpix_map[3]-*smooth_map[3])*(*beam_corr_map2[3])
+;    ENDIF ELSE BEGIN
+;        residual_Q=fltarr(n_hpx)
+;        IF n_pol GT 2 THEN residual_V=fltarr(n_hpx)
+;    ENDELSE
     
     converge_check2[i]=Stddev(source_find_hpx[where(source_mask_hpx)],/nan)
     IF i EQ 0 THEN converge_check[0]=converge_check2[0]
     t3_0=Systime(1)
     
 ;    ;detect sources
-    comp_arr1=fhd_source_detect_healpix(obs_arr,jones_arr,fhd_params,source_find_hpx,residual_I=residual_I,residual_Q=residual_Q,$
-        residual_U=residual_U,residual_V=residual_V,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
+    comp_arr1=fhd_source_detect_healpix(obs_arr,jones_arr,fhd_params,source_find_hpx,residual_stokes_hpx=residual_stokes_hpx,$
+        independent_fit=independent_fit,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
         source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,gain_factor_use=gain_factor_use,$
         nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_arr=res_arr,source_mask_hpx=source_mask_hpx)
     
@@ -362,7 +385,7 @@ FOR obs_i=0L,n_obs-1 DO *comp_arr[obs_i]=(*comp_arr[obs_i])[0:si-1] ;truncate co
 FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
-            degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias)*(*beam_corr[pol_i,obs_i])*norm_arr[obs_i]
+            degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[obs_i])*(*beam_corr[pol_i,obs_i])
     ENDFOR
     
     image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]
