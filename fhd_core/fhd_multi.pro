@@ -103,8 +103,9 @@ IF Keyword_Set(transfer_mapfn) THEN BEGIN
 ENDIF
 
 obs_weight=Ptrarr(n_obs)
-FOR obs_i=0.,n_obs-1 DO BEGIN
+FOR obs_i=0L,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
+    print,String(format='("Pre-processing obs ",A," of ",A," (",A,")")',Strn(obs_i+1),Strn(Long(n_obs)),file_basename(file_path_fhd))
     obs=obs_arr[obs_i]
     status_str=status_arr[obs_i]
     fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
@@ -207,6 +208,7 @@ ENDFOR
 gain_factor_use=gain_factor;*norm_arr
 print,"Gain normalization factors used: ",norm_arr
 
+print,"Generating combined healpix map indices in sparse format"
 ;healpix indices are in sparse format. Need to combine them
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_inds)
 n_hpx=N_Elements(hpx_inds)
@@ -243,6 +245,7 @@ res_stokes_arr=Ptrarr(n_obs)
 ;smooth_arr=Ptrarr(n_pol,n_obs,/allocate)
 recalc_flag=Intarr(n_obs)+1
 residual_stokes_hpx=Ptrarr(n_pol)
+print,"Starting joint deconvolution loop"
 FOR i=0L,max_iter-1 DO BEGIN 
     FOR pol_i=0,n_pol-1 DO residual_stokes_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
     FOR obs_i=0,n_obs-1 DO BEGIN
