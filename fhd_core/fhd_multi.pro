@@ -61,7 +61,7 @@ map_fn_arr=Ptrarr(n_pol,n_obs)
 dirty_uv_arr=Ptrarr(n_pol,n_obs,/allocate) 
 model_uv_holo=Ptrarr(n_pol,n_obs,/allocate)
 model_uv_full=Ptrarr(n_pol,n_obs,/allocate)
-weights_arr=Ptrarr(n_pol,n_obs,/allocate)
+weights_arr=Ptrarr(n_pol,/allocate)
 filter_arr=Ptrarr(n_pol,n_obs,/allocate)
 
 uv_mask_arr=Ptrarr(n_obs,/allocate)
@@ -103,8 +103,9 @@ IF Keyword_Set(transfer_mapfn) THEN BEGIN
 ENDIF
 
 obs_weight=Ptrarr(n_obs)
-FOR obs_i=0.,n_obs-1 DO BEGIN
+FOR obs_i=0L,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
+    print,String(format='("Pre-processing obs ",A," of ",A," (",A,")")',Strn(obs_i+1),Strn(Long(n_obs)),file_basename(file_path_fhd))
     obs=obs_arr[obs_i]
     status_str=status_arr[obs_i]
 ;    fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
@@ -134,6 +135,8 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         mask1[mask_i]=1
         beam_mask*=mask1
     ENDFOR
+    
+    mask_i=(mask0=(mask1=0))
     *beam_sourcefind_mask_arr[obs_i]=beam_sourcefind_mask
     *beam_mask_arr[obs_i]=beam_mask
     *source_mask_arr[obs_i]=beam_mask
@@ -171,31 +174,31 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
         ENDIF
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
-        *weights_arr[pol_i,obs_i]=(weights_single+weights_single_conj)/2.
-        source_uv_mask[where(*weights_arr[pol_i,obs_i])]=1.
+        *weights_arr[pol_i]=(weights_single+weights_single_conj)/2.
+        source_uv_mask[where(*weights_arr[pol_i])]=1.
         source_uv_mask2[where(weights_single)]=1.
+        weights_single=(weights_single_conj=0)
     ENDFOR
-    gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
+    gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_model[*,obs_i],$
         filter_arr=filter_arr[*,obs_i],image_filter_fn=decon_filter,degpix=obs.degpix,/antialias,file_path_fhd=file_path_fhd)
-    
+    Ptr_free,weights_arr
     *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
         gal_model_uv=fhd_galaxy_model(obs,jones_arr[obs_i],file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
         FOR pol_i=0,n_pol-1 DO BEGIN
             *model_uv_full[pol_i,obs_i]+=*gal_model_uv[pol_i]
-            *model_uv_holo[pol_i,obs_i]=$
-                holo_mapfn_apply(*model_uv_full[pol_i,obs_i],map_fn_arr[pol_i,obs_i],_Extra=extra,/indexed)
+            *model_uv_holo[pol_i,obs_i]=holo_mapfn_apply(*model_uv_full[pol_i,obs_i],map_fn_arr[pol_i,obs_i],_Extra=extra,/indexed)
         ENDFOR
-        Ptr_free,gal_model_uv
+        undefine_fhd,gal_model_uv
     ENDIF
     *uv_mask_arr[obs_i]=source_uv_mask
     norm_arr[obs_i]=gain_normalization
     
-    uv_i_use=where(source_uv_mask,n_uv_use)
+    uv_i_use=where(Temporary(source_uv_mask),n_uv_use)
     uv_use_frac=Float(n_uv_use)/(dimension*elements)
-;    print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
-    *uv_i_arr[obs_i]=where(source_uv_mask2,n_uv_use2)
+    print,"Fractional uv coverage: ",uv_use_frac,"normalization: ",normalization
+    *uv_i_arr[obs_i]=where(Temporary(source_uv_mask2),n_uv_use2)
     *xv_arr[obs_i]=xvals[*uv_i_arr[obs_i]]
     *yv_arr[obs_i]=yvals[*uv_i_arr[obs_i]]
     
@@ -203,10 +206,12 @@ FOR obs_i=0.,n_obs-1 DO BEGIN
     box_coords[obs_i,1]=(Max(xvals[where(beam_mask)])+dimension/2.+smooth_width)<(dimension-1)
     box_coords[obs_i,2]=(Min(yvals[where(beam_mask)])+elements/2.-smooth_width)>0
     box_coords[obs_i,3]=(Max(yvals[where(beam_mask)])+elements/2.+smooth_width)<(elements-1)
+    beam_mask=(xvals=(yvals=0))
 ENDFOR
 gain_factor_use=gain_factor;*norm_arr
 print,"Gain normalization factors used: ",norm_arr
 
+print,"Generating combined healpix map indices in sparse format"
 ;healpix indices are in sparse format. Need to combine them
 hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_inds)
 n_hpx=N_Elements(hpx_inds)
@@ -243,6 +248,7 @@ res_stokes_arr=Ptrarr(n_obs)
 ;smooth_arr=Ptrarr(n_pol,n_obs,/allocate)
 recalc_flag=Intarr(n_obs)+1
 residual_stokes_hpx=Ptrarr(n_pol)
+print,"Starting joint deconvolution loop"
 FOR i=0L,max_iter-1 DO BEGIN 
     FOR pol_i=0,n_pol-1 DO residual_stokes_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
     FOR obs_i=0,n_obs-1 DO BEGIN
