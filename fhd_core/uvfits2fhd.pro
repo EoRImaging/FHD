@@ -174,7 +174,7 @@ IF data_flag LE 0 THEN BEGIN
         
     IF Keyword_Set(transfer_mapfn) THEN transfer_flags=transfer_mapfn
     IF Keyword_Set(transfer_flags) THEN BEGIN
-        transfer_flag_data,flag_arr,obs,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,_Extra=extra
+        transfer_flag_data,flag_arr,obs,status_str,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,_Extra=extra
         IF Keyword_Set(error) THEN BEGIN
             print,"Error occured while attempting to transfer flags. Returning."
             RETURN
