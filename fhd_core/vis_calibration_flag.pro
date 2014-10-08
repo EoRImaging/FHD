@@ -1,4 +1,5 @@
-PRO vis_calibration_flag,obs,cal,error=error,degree=degree,phase_degree=phase_degree,no_frequency_flagging=no_frequency_flagging
+PRO vis_calibration_flag,obs,cal,error=error,degree=degree,phase_degree=phase_degree,$
+    no_frequency_flagging=no_frequency_flagging,no_calibration_frequency_flagging=no_calibration_frequency_flagging
 
 IF ~Keyword_Set(degree) THEN degree=2.
 IF ~Keyword_Set(phase_degree) THEN phase_degree=degree-1.
@@ -105,6 +106,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 obs_info.tile_use=tile_use
 IF Keyword_Set(no_frequency_flagging) THEN freq_use[*]=1
-obs_info.freq_use=freq_use
+IF ~Keyword_Set(no_calibration_frequency_flagging) THEN obs_info.freq_use=freq_use
 *obs.baseline_info=obs_info
 END

@@ -32,14 +32,17 @@ hpx_inds=getvar_savefile(model_filepath,'hpx_inds')
 nside=getvar_savefile(model_filepath,'nside')
 var_name_inds=where((StrLowCase(var_names) NE 'hpx_inds') AND (StrLowCase(var_names) NE 'nside'))
 var_names=var_names[var_name_inds]
-var_name_use=var_names[(where(StrLowCase(var_names) EQ 'model_arr',n_match))[0]>0] ;will pick 'model_arr' if present, or the first variable that is not 'hpx_inds'
+var_name_use=var_names[(where(StrLowCase(var_names) EQ 'model_arr',n_match))[0]>0] ;will pick 'model_arr' if present, or the first variable that is not 'hpx_inds' or 'nside'
 model_hpx_arr=getvar_savefile(model_filepath,var_name_use)
 
 pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,pix_dec,pix_ra,/astro
 ad2xy,pix_ra,pix_dec,astr,xv_hpx,yv_hpx
 hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)),n_hpx_use) 
-IF n_hpx_use EQ 0 THEN RETURN,Ptrarr(n_pol)
+IF n_hpx_use EQ 0 THEN BEGIN
+    print,"Error: Diffuse model has no valid Healpix indices"
+    RETURN,Ptrarr(n_pol)
+ENDIF
 xv_hpx=xv_hpx[hpx_i_use]
 yv_hpx=yv_hpx[hpx_i_use]
 
