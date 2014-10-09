@@ -354,6 +354,10 @@ case version of
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
    ; Adam's versions. only Adam can make versions here.
+   'apb_sidelobe_subtract_3':begin
+      allow_sidelobe_cal_sources=1
+   end
+      
 
    ; Abraham's versions
 
