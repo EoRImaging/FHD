@@ -181,6 +181,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     ENDFOR
     gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_model[*,obs_i],$
         filter_arr=filter_arr[*,obs_i],image_filter_fn=decon_filter,degpix=obs.degpix,/antialias,file_path_fhd=file_path_fhd)
+    
     Ptr_free,weights_arr
     *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
     
@@ -291,7 +292,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         independent_fit=independent_fit,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
         source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,gain_factor_use=gain_factor_use,$
         nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_stokes_arr=res_stokes_arr,$
-        source_mask_hpx=source_mask_hpx)
+        source_mask_hpx=source_mask_hpx,si_start=si,_Extra=extra)
     
     Ptr_free,residual_stokes_hpx,res_stokes_arr ;free memory
     n_src_use=(max_sources-si-1.)<n_sources

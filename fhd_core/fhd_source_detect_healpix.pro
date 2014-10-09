@@ -2,8 +2,9 @@ FUNCTION fhd_source_detect_healpix,obs_arr,jones_arr,fhd_params,source_find_hpx,
     beam_model=beam_model,ra_hpx=ra_hpx,dec_hpx=dec_hpx,gain_factor_use=gain_factor_use,$
     beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,$
     nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_stokes_arr=res_stokes_arr,$
-    source_mask_hpx=source_mask_hpx
+    source_mask_hpx=source_mask_hpx,start_si=start_si
 
+IF N_Elements(start_si) EQ 0 THEN start_si=0L
 n_obs=N_Elements(obs_arr)
 recalc_flag=Intarr(n_obs)
 beam_width=beam_width_calculate(obs_arr,min_restored_beam_width=1.,/FWHM)
@@ -74,7 +75,7 @@ ra_arr=ra_arr[source_i_i]
 dec_arr=dec_arr[source_i_i]
 source_cut_arr=Fltarr(n_src)
 flux_vals=Ptrarr(n_pol)
-FOR pol_i=0,n_pol-1 DO flux_vals[pol_i]=Ptr_new((*residual_stokes_hpx[pol_i])[source_i])
+FOR pol_i=0,n_pol-1 DO flux_vals[pol_i]=Ptr_new((*residual_stokes_hpx[pol_i])[source_i]*gain_factor_use)
 IF ~Keyword_Set(independent_fit) THEN BEGIN
     IF n_pol GE 2 THEN *flux_vals[1]=Fltarr(n_src)
     IF n_pol GE 4 THEN *flux_vals[3]=Fltarr(n_src)
@@ -82,90 +83,70 @@ ENDIF
 
 ;update models
 
+comp_arr=source_comp_init(n_sources=n_src,id=Lindgen(n_src))
+FOR pol_i=0,n_pol-1 DO comp_arr1.flux.(pol_i+4)=*flux_vals[pol_i]
 source_array=Ptrarr(n_obs)
+si_use_arr=Ptrarr(n_obs)
 FOR obs_i=0L,n_obs-1 DO BEGIN
     si=0L
     ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
-    dist_test=angle_difference(obs_arr[obs_i].obsdec,obs_arr[obs_i].obsra,dec_arr,ra_arr,/degree)
-    dist_cut=where(dist_test GT source_alias_radius,n_dist_cut)
+;    dist_test=angle_difference(obs_arr[obs_i].obsdec,obs_arr[obs_i].obsra,dec_arr,ra_arr,/degree)
+;    dist_cut=where(dist_test GT source_alias_radius,n_dist_cut)
 
-    comp_arr1=source_comp_init(n_sources=n_src)
+    comp_arr1=comp_arr
     dimension=obs_arr[obs_i].dimension
     elements=obs_arr[obs_i].elements
     beam_mask=*beam_mask_arr[obs_i]
     
-    si_use=lonarr(n_src)-1
-    si_cut=lonarr(n_src)
-    IF n_dist_cut GT 0 THEN si_cut[dist_cut]=1
-    residual_test=*res_arr[0,obs_i] & IF n_pol GT 1 THEN residual_test=residual_test<*res_arr[1,obs_i]
-    FOR src_i=0L,n_src-1 DO BEGIN    
-        flux_arr=fltarr(4)
-        si1=si+src_i
-        beam_corr_src=fltarr(n_pol)
-        beam_src=fltarr(n_pol)
-        xv=x_arr[src_i]
-        yv=y_arr[src_i]
-        IF si_cut[src_i] THEN CONTINUE
-        source_use_flag=1
-        IF xv<yv GE 0 AND xv>yv LE (dimension<elements)-1 THEN BEGIN 
-            IF beam_mask[xv,yv] EQ 0 THEN source_use_flag=0
-            residual_test_val=residual_test[xv,yv]-$
-                Median(residual_test[(xv-smooth_width/2.)>0:(xv+smooth_width/2.)<(dimension-1),(yv-smooth_width/2.)>0:(yv+smooth_width/2.)<(elements-1)])
-            IF residual_test_val LE 0 THEN BEGIN
-              (*source_mask_arr[obs_i])[xv,yv]=0
-              source_use_flag=0
-            ENDIF
-            IF Keyword_Set(source_use_flag) THEN BEGIN
-                source_cut_arr[src_i]+=1.
-                FOR pol_i=0,n_pol-1 DO BEGIN   
-;                    beam_corr_src[pol_i]=(*beam_corr[pol_i,obs_i])[xv,yv]
-                    beam_src[pol_i]=(*beam_model[pol_i,obs_i])[xv,yv]
-                    
-                     IF Keyword_Set(independent_fit) THEN BEGIN
-                        sign=(pol_i mod 2) ? -1:1
-                        IF pol_i LE 1 THEN flux_use=flux_I[src_i]+sign*flux_Q[src_i]
-                        IF pol_i GE 2 THEN flux_use=flux_U[src_i]+sign*flux_V[src_i]
-                    ENDIF ELSE IF pol_i LE 1 THEN flux_use=flux_I[src_i] ELSE flux_use=flux_U[src_i]
-                    
-                    flux_use*=gain_factor_use[obs_i]/2.
-                    comp_arr1[si1].flux.(pol_i)=flux_use*beam_src[pol_i] ;Apparent brightness, instrumental polarization X gain (a scalar)
-                    flux_arr[pol_i]=flux_use;"True sky" instrumental pol
-                ENDFOR
-            ENDIF
-        ENDIF
-        
-        comp_arr1[si1].flux.I=flux_arr[0]+flux_arr[1]
-        comp_arr1[si1].flux.Q=flux_arr[0]-flux_arr[1]
-        comp_arr1[si1].flux.U=flux_arr[2]+flux_arr[3]
-        comp_arr1[si1].flux.V=flux_arr[2]-flux_arr[3]
-        
-        comp_arr1[si1].x=xv
-        comp_arr1[si1].y=yv
-        comp_arr1[si1].ra=ra_arr[src_i]
-        comp_arr1[si1].dec=dec_arr[src_i]
-        si_use[src_i]=si1
-    ENDFOR
+    si_use=lonarr(n_src)
+;    si_cut=lonarr(n_src)
+;    IF n_dist_cut GT 0 THEN si_cut[dist_cut]=1
+    residual_test=*res_stokes_arr[0,obs_i] 
     
-    source_array[obs_i]=Ptr_new(comp_arr1)
-    si_use_i=where(si_use GE 0,n_si_use)
-    IF n_si_use EQ 0 THEN BEGIN
-        ;do something to end loop if n_mask EQ 0
+    ;first, cut any sources that are physically outside of the image
+    src_i_use1=where((x_arr GE 0) AND (x_arr LE dimension-1) AND (y_arr GE 0) AND (y_arr LE elements-1),n_src_use1)
+    IF n_src_use1 EQ 0 THEN CONTINUE
+    comp_arr1=comp_arr1[src_i_use1]
+    x_arr=x_arr[src_i_use1]
+    y_arr=y_arr[src_i_use1]
+    
+    ;Second, cut sources that are outside the beam mask region
+    src_i_use2=where(beam_mask[x_arr,y_arr],n_src_use2)
+    IF n_src_use2 EQ 0 THEN CONTINUE
+    comp_arr2=comp_arr2[src_i_use2]
+    x_arr=x_arr[src_i_use2]
+    y_arr=y_arr[src_i_use2]
+    
+    ;Finally, cut sources that are already negative in Stokes I
+    src_i_use3=where(residual_test[x_arr,y_arr] GT 0,n_src_use3)
+    IF n_src_use3 EQ 0 THEN CONTINUE
+    comp_arr3=comp_arr3[src_i_use3]
+    x_arr=x_arr[src_i_use3]
+    y_arr=y_arr[src_i_use3]
         
-        recalc_flag[obs_i]=0
-        CONTINUE
-    ENDIF ELSE recalc_flag[obs_i]=1
+    source_array[obs_i]=Ptr_new(stokes_cnv(comp_arr1,jones_arr[obs_i],obs_arr[obs_i],beam_arr=beam_model[*,obs_i],/square,/inverse,_Extra=extra))
+    comp_arr1=0 ;free memory
+    recalc_flag[obs_i]=1
     
-    si_use=si_use[si_use_i]
-;    source_dft_multi,obs,comp_arr1[si_use],model_uv_full[*,obs_i],xvals=*xv_arr[obs_i],yvals=*xvy_arr[obs_i],uv_i_use=*uv_i_arr[obs_i]
-    
+    si_use[src_i_use1[src_i_use2[src_i_use3]]]=1
+    si_use_arr[obs_i]=Ptr_new(si_use)
 ENDFOR
 
-si_use=where(source_cut_arr,n_sources,complement=si_mask,ncomplement=n_si_mask)
-IF n_si_mask GT 0 THEN BEGIN
-    source_mask_hpx[source_i[si_mask]]=0.
-    FOR obs_i=0L,n_obs-1 DO BEGIN
-        *source_array[obs_i]=(*source_array[obs_i])[si_use]
-    ENDFOR
-ENDIF
+si_use=Intarr(n_src)
+obs_i_use=Where(Ptr_valid(si_use_arr),n_obs_use)
+
+FOR obs_i=0L,n_obs_use-1 DO si_use[*si_use_arr[obs_i_use[obs_i]]]+=1
+si_i_use=where(si_use,n_sources)
+IF n_sources GT 0 THEN si_use[si_i_use]=si_i_use
+
+FOR obs_i=0L,n_obs_use-1 DO (*source_array[obs_i_use[obs_i]]).id=si_use[*si_use_arr[obs_i_use[obs_i]]]+start_si
+
+;si_use=where(source_cut_arr,n_sources,complement=si_mask,ncomplement=n_si_mask)
+;IF n_si_mask GT 0 THEN BEGIN
+;    source_mask_hpx[source_i[si_mask]]=0.
+;    FOR obs_i=0L,n_obs-1 DO BEGIN
+;        *source_array[obs_i]=(*source_array[obs_i])[si_use]
+;    ENDFOR
+;ENDIF
 RETURN,source_array
 END
