@@ -28,7 +28,7 @@ IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline ELSE
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline ELSE max_cal_baseline=max_cal_baseline<obs.max_baseline
 IF N_Elements(cal_time_average) EQ 0 THEN cal_time_average=1 ;time average visibilities before calculating calibration solutions by default
 IF N_Elements(min_cal_solutions) EQ 0 THEN min_cal_solutions=5
-IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=100L
+IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=10L
 IF N_Elements(ref_antenna) EQ 0 THEN ref_antenna=1L
 ref_antenna_name=(*obs.baseline_info).tile_names[ref_antenna]
 IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-3
