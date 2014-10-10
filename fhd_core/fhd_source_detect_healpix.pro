@@ -20,6 +20,7 @@ pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
+freq_use=Median(obs_arr.freq_center)
 
 n_pol=fhd_params.npol
 source_alias_radius=Median(obs_arr.degpix*obs_arr.dimension)/4.
@@ -83,7 +84,7 @@ ENDIF
 
 ;update models
 
-comp_arr=source_comp_init(n_sources=n_src,id=Lindgen(n_src))
+comp_arr=source_comp_init(n_sources=n_src,id=Lindgen(n_src),ra=ra_arr,dec=dec_arr,freq=freq_use)
 FOR pol_i=0,n_pol-1 DO comp_arr.flux.(pol_i+4)=*flux_vals[pol_i]
 source_array=Ptrarr(n_obs)
 si_use_arr=Ptrarr(n_obs)
@@ -97,32 +98,28 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     dimension=obs_arr[obs_i].dimension
     elements=obs_arr[obs_i].elements
     beam_mask=*beam_mask_arr[obs_i]
+    comp_arr1.x=x_arr
+    comp_arr1.y=y_arr
     
     si_use=lonarr(n_src)
 ;    si_cut=lonarr(n_src)
 ;    IF n_dist_cut GT 0 THEN si_cut[dist_cut]=1
-    residual_test=*res_stokes_arr[0,obs_i] 
+    residual_test=*res_stokes_arr[obs_i] 
     
     ;first, cut any sources that are physically outside of the image
-    src_i_use1=where((x_arr GE 0) AND (x_arr LE dimension-1) AND (y_arr GE 0) AND (y_arr LE elements-1),n_src_use1)
+    src_i_use1=where((comp_arr1.x GE 0) AND (comp_arr1.x LE dimension-1) AND (comp_arr1.y GE 0) AND (comp_arr1.y LE elements-1),n_src_use1)
     IF n_src_use1 EQ 0 THEN CONTINUE
     comp_arr1=comp_arr1[src_i_use1]
-    x_arr=x_arr[src_i_use1]
-    y_arr=y_arr[src_i_use1]
     
     ;Second, cut sources that are outside the beam mask region
-    src_i_use2=where(beam_mask[x_arr,y_arr],n_src_use2)
+    src_i_use2=where(beam_mask[comp_arr1.x,comp_arr1.y],n_src_use2)
     IF n_src_use2 EQ 0 THEN CONTINUE
     comp_arr1=comp_arr1[src_i_use2]
-    x_arr=x_arr[src_i_use2]
-    y_arr=y_arr[src_i_use2]
     
     ;Finally, cut sources that are already negative in Stokes I
-    src_i_use3=where(residual_test[x_arr,y_arr] GT 0,n_src_use3)
+    src_i_use3=where(residual_test[comp_arr1.x,comp_arr1.y] GT 0,n_src_use3)
     IF n_src_use3 EQ 0 THEN CONTINUE
-    comp_arr3=comp_arr3[src_i_use3]
-    x_arr=x_arr[src_i_use3]
-    y_arr=y_arr[src_i_use3]
+    comp_arr1=comp_arr1[src_i_use3]
         
     source_array[obs_i]=Ptr_new(stokes_cnv(comp_arr1,jones_arr[obs_i],obs_arr[obs_i],beam_arr=beam_model[*,obs_i],/square,/inverse,_Extra=extra))
     comp_arr1=0 ;free memory
@@ -139,7 +136,10 @@ FOR obs_i=0L,n_obs_use-1 DO si_use[*si_use_arr[obs_i_use[obs_i]]]+=1
 si_i_use=where(si_use,n_sources)
 IF n_sources GT 0 THEN si_use[si_i_use]=si_i_use
 
-FOR obs_i=0L,n_obs_use-1 DO (*source_array[obs_i_use[obs_i]]).id=si_use[*si_use_arr[obs_i_use[obs_i]]]+si_start
+FOR obs_i=0L,n_obs_use-1 DO BEGIN
+    (*source_array[obs_i_use[obs_i]])=(*source_array[obs_i_use[obs_i]])[si_i_use]
+    (*source_array[obs_i_use[obs_i]]).id=Lindgen(n_sources)+si_start
+ENDFOR
 
 ;si_use=where(source_cut_arr,n_sources,complement=si_mask,ncomplement=n_si_mask)
 ;IF n_si_mask GT 0 THEN BEGIN
