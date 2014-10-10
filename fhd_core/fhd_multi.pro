@@ -294,7 +294,6 @@ FOR i=0L,max_iter-1 DO BEGIN
         nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_stokes_arr=res_stokes_arr,$
         source_mask_hpx=source_mask_hpx,si_start=si,_Extra=extra)
     
-    Ptr_free,residual_stokes_hpx,res_stokes_arr ;free memory
     n_src_use=(max_sources-si-1.)<n_sources
     ;generate UV model from source list
     FOR obs_i=0L,n_obs-1 DO BEGIN
@@ -305,6 +304,7 @@ FOR i=0L,max_iter-1 DO BEGIN
             xvals=*xv_arr[obs_i],yvals=*yv_arr[obs_i],uv_i_use=*uv_i_arr[obs_i]
     ENDFOR
     si+=n_src_use
+    Ptr_free,residual_stokes_hpx,res_stokes_arr ;free memory
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     

@@ -113,7 +113,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     ;Second, cut sources that are outside the beam mask region
     src_i_use2=where(beam_mask[x_arr,y_arr],n_src_use2)
     IF n_src_use2 EQ 0 THEN CONTINUE
-    comp_arr2=comp_arr2[src_i_use2]
+    comp_arr1=comp_arr1[src_i_use2]
     x_arr=x_arr[src_i_use2]
     y_arr=y_arr[src_i_use2]
     
