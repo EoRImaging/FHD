@@ -418,12 +418,21 @@ case version of
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
    ; Adam's versions. only Adam can make versions here.
+   'apb_sidelobe_subtract_3':begin
+      allow_sidelobe_cal_sources=1
+   end
+      
 
    ; Abraham's versions
 
    ; Bryna's versions
    'bjh_test_max_cal_iter':begin
       max_cal_iter=100
+   end
+
+   'bjh_test_max_cal_iter_no_cal_freq_flag':begin
+      max_cal_iter=100
+      no_calibration_frequency_flagging=1
    end
 
    ; Nichole's versions
@@ -435,8 +444,8 @@ case version of
       model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
       model_visibilities=1
       return_cal_visibilities=0
-      allow_sidelobe_cal_sources=1
-      allow_sidelobe_model_sources=0
+      allow_sidelobe_cal_sources=0
+      allow_sidelobe_model_sources=1
    end
 
    ; Patti's versions
