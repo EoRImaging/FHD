@@ -2,9 +2,9 @@ FUNCTION fhd_source_detect_healpix,obs_arr,jones_arr,fhd_params,source_find_hpx,
     beam_model=beam_model,ra_hpx=ra_hpx,dec_hpx=dec_hpx,gain_factor_use=gain_factor_use,$
     beam_mask_arr=beam_mask_arr,source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,$
     nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_stokes_arr=res_stokes_arr,$
-    source_mask_hpx=source_mask_hpx,start_si=start_si
+    source_mask_hpx=source_mask_hpx,si_start=si_start
 
-IF N_Elements(start_si) EQ 0 THEN start_si=0L
+IF N_Elements(si_start) EQ 0 THEN si_start=0L
 n_obs=N_Elements(obs_arr)
 recalc_flag=Intarr(n_obs)
 beam_width=beam_width_calculate(obs_arr,min_restored_beam_width=1.,/FWHM)
@@ -84,7 +84,7 @@ ENDIF
 ;update models
 
 comp_arr=source_comp_init(n_sources=n_src,id=Lindgen(n_src))
-FOR pol_i=0,n_pol-1 DO comp_arr1.flux.(pol_i+4)=*flux_vals[pol_i]
+FOR pol_i=0,n_pol-1 DO comp_arr.flux.(pol_i+4)=*flux_vals[pol_i]
 source_array=Ptrarr(n_obs)
 si_use_arr=Ptrarr(n_obs)
 FOR obs_i=0L,n_obs-1 DO BEGIN
@@ -139,7 +139,7 @@ FOR obs_i=0L,n_obs_use-1 DO si_use[*si_use_arr[obs_i_use[obs_i]]]+=1
 si_i_use=where(si_use,n_sources)
 IF n_sources GT 0 THEN si_use[si_i_use]=si_i_use
 
-FOR obs_i=0L,n_obs_use-1 DO (*source_array[obs_i_use[obs_i]]).id=si_use[*si_use_arr[obs_i_use[obs_i]]]+start_si
+FOR obs_i=0L,n_obs_use-1 DO (*source_array[obs_i_use[obs_i]]).id=si_use[*si_use_arr[obs_i_use[obs_i]]]+si_start
 
 ;si_use=where(source_cut_arr,n_sources,complement=si_mask,ncomplement=n_si_mask)
 ;IF n_si_mask GT 0 THEN BEGIN

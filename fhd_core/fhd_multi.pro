@@ -61,7 +61,7 @@ map_fn_arr=Ptrarr(n_pol,n_obs)
 dirty_uv_arr=Ptrarr(n_pol,n_obs,/allocate) 
 model_uv_holo=Ptrarr(n_pol,n_obs,/allocate)
 model_uv_full=Ptrarr(n_pol,n_obs,/allocate)
-weights_arr=Ptrarr(n_pol,/allocate)
+weights_arr=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,n_obs,/allocate)
 
 uv_mask_arr=Ptrarr(n_obs,/allocate)
@@ -174,7 +174,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         ENDIF
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
-        *weights_arr[pol_i]=(weights_single+weights_single_conj)/2.
+        weights_arr[pol_i]=Ptr_new((weights_single+weights_single_conj)/2.)
         source_uv_mask[where(*weights_arr[pol_i])]=1.
         source_uv_mask2[where(weights_single)]=1.
         weights_single=(weights_single_conj=0)
@@ -289,7 +289,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     
 ;    ;detect sources
     comp_arr1=fhd_source_detect_healpix(obs_arr,jones_arr,fhd_params,source_find_hpx,residual_stokes_hpx=residual_stokes_hpx,$
-        independent_fit=independent_fit,beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
+        beam_model=beam_model,beam_mask_arr=beam_mask_arr,ra_hpx=ra_hpx,dec_hpx=dec_hpx,$
         source_mask_arr=source_mask_arr,recalc_flag=recalc_flag,n_sources=n_sources,gain_factor_use=gain_factor_use,$
         nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_stokes_arr=res_stokes_arr,$
         source_mask_hpx=source_mask_hpx,si_start=si,_Extra=extra)
