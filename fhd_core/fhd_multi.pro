@@ -245,13 +245,13 @@ zero_ind=where(weight_hpx EQ 0,n_zero)
 IF n_zero GT 0 THEN source_mask_hpx[zero_ind]=0
 
 res_arr=Ptrarr(n_pol,/allocate)
-res_stokes_arr=Ptrarr(n_obs,/allocate)
 ;smooth_arr=Ptrarr(n_pol,n_obs,/allocate)
 recalc_flag=Intarr(n_obs)+1
 residual_stokes_hpx=Ptrarr(n_pol)
 print,"Starting joint deconvolution loop"
 FOR i=0L,max_iter-1 DO BEGIN 
     FOR pol_i=0,n_pol-1 DO residual_stokes_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
+    res_stokes_arr=Ptrarr(n_obs,/allocate)
     FOR obs_i=0,n_obs-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             t1_0=Systime(1)
