@@ -245,7 +245,7 @@ zero_ind=where(weight_hpx EQ 0,n_zero)
 IF n_zero GT 0 THEN source_mask_hpx[zero_ind]=0
 
 res_arr=Ptrarr(n_pol,/allocate)
-res_stokes_arr=Ptrarr(n_obs)
+res_stokes_arr=Ptrarr(n_obs,/allocate)
 ;smooth_arr=Ptrarr(n_pol,n_obs,/allocate)
 recalc_flag=Intarr(n_obs)+1
 residual_stokes_hpx=Ptrarr(n_pol)
@@ -276,8 +276,9 @@ FOR i=0L,max_iter-1 DO BEGIN
         ENDFOR
         
         res_stokes=stokes_cnv(res_arr,jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],/square,_Extra=extra)
-        res_stokes_arr[obs_i]=res_stokes[0]
+        *res_stokes_arr[obs_i]=*res_stokes[0]
         FOR pol_i=0,n_pol-1 DO (*residual_stokes_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(*res_stokes[pol_i]*(*obs_weight[obs_i]),hpx_cnv[obs_i])
+        ptr_free,res_stokes
     ENDFOR
     
     source_find_hpx=*residual_stokes_hpx[0]*Sqrt(weight_hpx_corr>0.)
