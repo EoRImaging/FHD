@@ -107,7 +107,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     model_stokes_arr[pol_i]=Ptr_new(model_img)
 ENDFOR
 
-model_arr=Stokes_cnv(model_stokes_arr,jones,_Extra=extra)
+model_arr=Stokes_cnv(model_stokes_arr,jones,/inverse,_Extra=extra)
 Ptr_free,model_stokes_arr
 IF Keyword_Set(uv_return) THEN BEGIN
     model_uv_arr=Ptrarr(n_pol,/allocate)
