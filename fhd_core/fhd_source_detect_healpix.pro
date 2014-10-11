@@ -87,7 +87,7 @@ ENDIF
 comp_arr=source_comp_init(n_sources=n_src,id=Lindgen(n_src),ra=ra_arr,dec=dec_arr,freq=freq_use)
 FOR pol_i=0,n_pol-1 DO comp_arr.flux.(pol_i+4)=*flux_vals[pol_i]
 source_array=Ptrarr(n_obs)
-si_use_arr=Ptrarr(n_obs)
+si_i_arr=Ptrarr(n_obs)
 FOR obs_i=0L,n_obs-1 DO BEGIN
     si=0L
     ad2xy,ra_arr,dec_arr,obs_arr[obs_i].astr,x_arr,y_arr
@@ -126,13 +126,13 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     recalc_flag[obs_i]=1
     
     si_use[src_i_use1[src_i_use2[src_i_use3]]]=1
-    si_use_arr[obs_i]=Ptr_new(si_use)
+    si_i_arr[obs_i]=Ptr_new(where(si_use))
 ENDFOR
 
 si_use=Intarr(n_src)
-obs_i_use=Where(Ptr_valid(si_use_arr),n_obs_use)
+obs_i_use=Where(Ptr_valid(si_i_arr),n_obs_use)
 
-FOR obs_i=0L,n_obs_use-1 DO si_use[*si_use_arr[obs_i_use[obs_i]]]+=1
+FOR obs_i=0L,n_obs_use-1 DO si_use[*si_i_arr[obs_i_use[obs_i]]]+=1
 si_i_use=where(si_use,n_sources)
 IF n_sources GT 0 THEN si_use[si_i_use]=si_i_use
 
@@ -140,7 +140,7 @@ FOR obs_i=0L,n_obs_use-1 DO BEGIN
     (*source_array[obs_i_use[obs_i]])=(*source_array[obs_i_use[obs_i]])[si_i_use]
     (*source_array[obs_i_use[obs_i]]).id=Lindgen(n_sources)+si_start
 ENDFOR
-
+Ptr_free,si_i_arr,flux_vals
 ;si_use=where(source_cut_arr,n_sources,complement=si_mask,ncomplement=n_si_mask)
 ;IF n_si_mask GT 0 THEN BEGIN
 ;    source_mask_hpx[source_i[si_mask]]=0.
