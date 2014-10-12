@@ -155,13 +155,12 @@ IF Keyword_Set(simultaneous) THEN BEGIN
         gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
-        uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
+        uvfits2fhd,vis_file_list[fi],status_arr[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             silent=silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
-        fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
-        IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
+        fhd_save_io,status_arr[fi],file_path_fhd=fhd_file_list[fi],/text
     ENDFOR
 ENDIF
 

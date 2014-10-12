@@ -67,6 +67,7 @@ FOR j=0L,n_rep-1 DO BEGIN
         
         undefine_fhd,weights_arr,residual_array,image_uv_arr,model_uv_full,model_uv_holo,beam_base,beam_correction,dirty_array
     ENDFOR
+    status_arr[file_i_use]=status_arr_sub
     undefine_fhd,weights_arr2,residual_array2,dirty_uv_arr2,model_uv_full2,model_uv_holo2,beam_model2,beam_corr2,source_mask2,hpx_inds2
 ENDFOR
 

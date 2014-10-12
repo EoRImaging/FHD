@@ -61,7 +61,7 @@ map_fn_arr=Ptrarr(n_pol,n_obs)
 dirty_uv_arr=Ptrarr(n_pol,n_obs,/allocate) 
 model_uv_holo=Ptrarr(n_pol,n_obs,/allocate)
 model_uv_full=Ptrarr(n_pol,n_obs,/allocate)
-weights_arr=Ptrarr(n_pol)
+weights_arr=Ptrarr(n_pol,n_obs)
 filter_arr=Ptrarr(n_pol,n_obs,/allocate)
 
 uv_mask_arr=Ptrarr(n_obs,/allocate)
@@ -174,15 +174,14 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         ENDIF
         weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i,obs_i],/no_conj,/indexed,_Extra=extra)
         weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
-        weights_arr[pol_i]=Ptr_new((weights_single+weights_single_conj)/2.)
-        source_uv_mask[where(*weights_arr[pol_i])]=1.
+        weights_arr[pol_i,obs_i]=Ptr_new((weights_single+weights_single_conj)/2.)
+        source_uv_mask[where(*weights_arr[pol_i,obs_i])]=1.
         source_uv_mask2[where(weights_single)]=1.
         weights_single=(weights_single_conj=0)
     ENDFOR
-    gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_model[*,obs_i],$
+    gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
         filter_arr=filter_arr[*,obs_i],image_filter_fn=decon_filter,degpix=obs.degpix,/antialias,file_path_fhd=file_path_fhd)
     
-    Ptr_free,weights_arr
     *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
@@ -362,20 +361,14 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
             degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[obs_i])*(*beam_corr[pol_i,obs_i])
     ENDFOR
-    
-    image_use=*residual_array[0,obs_i] & IF n_pol GT 1 THEN image_use+=*residual_array[1,obs_i]
+    res_stokes=stokes_cnv(residual_array,jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],_Extra=extra)
+    image_use=*res_stokes[0]
+    Ptr_free,res_stokes
     image_use-=Median(image_use,smooth_width)
-    beam_avg=*beam_model[0,obs_i] & IF n_pol GT 1 THEN beam_avg=(beam_avg+*beam_model[1,obs_i])/2.
-    noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(beam_avg)
+    noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(*obs_weight[obs_i])
     comp_arr1=*comp_arr[obs_i]
     source_array1=Components2Sources(comp_arr1,obs,radius=(local_max_radius/2.)>0.5,noise_map=noise_map)
     source_array[obs_i]=Ptr_new(source_array1)
-;    t3_0=Systime(1)
-;    model_uv_full=source_dft_model(obs,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
-;    IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
-;    t4_0=Systime(1)
-;    t3+=t4_0-t3_0
-;    FOR pol_i=0,n_pol-1 DO *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     
 ENDFOR
 
