@@ -361,8 +361,8 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
             degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[obs_i])*(*beam_corr[pol_i,obs_i])
     ENDFOR
-    res_stokes=stokes_cnv(residual_array,jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],_Extra=extra)
-    image_use=*res_stokes[0]
+    res_stokes=stokes_cnv(residual_array[*,obs_i],jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],_Extra=extra)
+    image_use=*res_stokes[0]*(*obs_weight[obs_i])
     Ptr_free,res_stokes
     image_use-=Median(image_use,smooth_width)
     noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(*obs_weight[obs_i])
