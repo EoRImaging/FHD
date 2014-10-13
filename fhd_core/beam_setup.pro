@@ -149,9 +149,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
 ENDFOR
 
-;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
-;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
-beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,beam_mask_threshold=beam_mask_threshold,_Extra=extra
+;;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
+;;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
+;beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,beam_mask_threshold=beam_mask_threshold,_Extra=extra
 
 complex_flag=1
 beam_ptr=Ptr_new(beam_arr)
