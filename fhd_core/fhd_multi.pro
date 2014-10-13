@@ -217,6 +217,9 @@ hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds,reverse_ind=reverse_i
 n_hpx=N_Elements(hpx_inds)
 n_hpx_full=nside2npix(nside)
 degpix_hpx=Sqrt((4*!Pi*!Radeg^2.)/n_hpx_full)
+print,"Nside: ",nside
+print,"Effective resolution (degrees): ",degpix_hpx
+print,String(format='("Total pixels: ",A," (sky fraction: ",A,")")',Strn(n_hpx),Strn(Float(n_hpx)/Float(n_hpx_full)))
 
 pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,dec_hpx,ra_hpx,/astro
@@ -335,7 +338,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         IF i GT 0 THEN BEGIN
             i2+=1
             converge_check[i2]=conv_chk
-            IF 2.*converge_check[i2] GT Max(source_mask_hpx) THEN BEGIN
+            IF 2.*converge_check[i2] GT Max(source_find_hpx[where(source_mask_hpx)]) THEN BEGIN
                 print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
                 converge_check2=converge_check2[0:i]
                 converge_check=converge_check[0:i2]
@@ -362,7 +365,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[obs_i])*(*beam_corr[pol_i,obs_i])
     ENDFOR
     res_stokes=stokes_cnv(residual_array[*,obs_i],jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],_Extra=extra)
-    image_use=*res_stokes[0]*(*obs_weight[obs_i])
+    image_use=*res_stokes[0]*Sqrt(*obs_weight[obs_i])
     Ptr_free,res_stokes
     image_use-=Median(image_use,smooth_width)
     noise_map=Stddev(image_use[where(*beam_mask_arr[obs_i])],/nan)*weight_invert(*obs_weight[obs_i])
