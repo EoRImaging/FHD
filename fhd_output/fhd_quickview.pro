@@ -6,7 +6,7 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
     use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,$
-    beam_diff_image=beam_diff_image,_Extra=extra
+    beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -381,8 +381,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=1,/sphere,_Extra=extra
     ENDIF
 ENDFOR
-residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,/center,$
-    file_path_base=image_path+filter_name,_Extra=extra
+IF Keyword_Set(output_residual_histogram) THEN $
+    residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,$
+        /center,file_path_base=image_path+filter_name,_Extra=extra
+
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Image output timing (quickview): ',timing
 END

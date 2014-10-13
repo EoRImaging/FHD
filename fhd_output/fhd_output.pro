@@ -6,7 +6,7 @@ PRO fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,v
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
     use_pointing_center=use_pointing_center,no_fits=no_fits,no_png=no_png,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_diff_image=beam_diff_image,$
-    beam_output_threshold=beam_output_threshold,_Extra=extra
+    beam_output_threshold=beam_output_threshold,output_residual_histogram=output_residual_histogram,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
@@ -267,10 +267,21 @@ source_array_export,comp_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_imag
 t6a=Systime(1)
 t5+=t6a-t5a
 
+; plot calibration solutions, export to png
+IF N_Elements(cal) GT 0 THEN BEGIN
+   IF cal.n_cal_src ne 0 THEN BEGIN
+      IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
+         vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
+         plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist,_Extra=extra
+      ENDIF ELSE BEGIN
+         plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
+      ENDELSE
+   ENDIF
+ENDIF
+
 ;FREE MEMORY
 undefine_fhd,map_fn_arr,image_uv_arr,model_uv_full,model_uv_holo,gal_model_uv
     
-
 t7a=Systime(1)
 IF Keyword_Set(t6a) THEN t6=t7a-t6a
 
@@ -500,20 +511,10 @@ ENDFOR
 
 t10b=Systime(1)
 
-residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd_params,radius=stats_radius,beam_base=beam_base_out,ston=fhd_params.sigma_cut,/center,$
-    file_path_base=image_path_fg,_Extra=extra
+IF Keyword_Set(output_residual_histogram) THEN $
+    residual_statistics,(*stokes_images[0])*beam_mask,obs_out,fhd_params,radius=stats_radius,beam_base=beam_base_out,$
+        ston=fhd_params.sigma_cut,/center,file_path_base=image_path_fg,_Extra=extra
 
-; plot calibration solutions, export to png
-IF N_Elements(cal) GT 0 THEN BEGIN
-   IF cal.n_cal_src ne 0 THEN BEGIN
-      IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
-         vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
-         plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist,_Extra=extra
-      ENDIF ELSE BEGIN
-         plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
-      ENDELSE
-   ENDIF
-ENDIF
 t10=Systime(1)-t10b
 t00=Systime(1)-t0a
 IF ~Keyword_Set(silent) THEN print,'Image output timing: ',t00

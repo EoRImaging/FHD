@@ -55,6 +55,7 @@ mark_zenith=1
 psf_resolution=32.
 beam_diff_image=1
 beam_residual_threshold=0.1
+output_residual_histogram=1
 
 cmd_args=extra
 extra=var_bundle()
