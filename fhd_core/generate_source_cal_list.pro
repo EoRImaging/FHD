@@ -1,10 +1,10 @@
 FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
-    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,$
+    no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,beam_cal_threshold=beam_cal_threshold,$
     allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,beam_arr=beam_arr,model_visibilities=model_visibilities,$
     max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,$
     no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
-    allow_sidelobe_model_sources=allow_sidelobe_model_sources,_Extra=extra
+    allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,_Extra=extra
 
 UPNAME=StrUpCase(catalog_path)
 psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
@@ -26,6 +26,7 @@ IF Keyword_Set(model_visibilities) THEN BEGIN
         ELSE no_restrict_sources=1
     IF N_Elements(max_model_sources) GT 0 THEN max_sources=max_model_sources ELSE max_sources=0 ;0 turns it off
     IF N_Elements(model_spectral_index) GT 0 THEN spectral_index=model_spectral_index ELSE spectral_index=catalog.alpha
+    IF N_Elements(beam_model_threshold) GT 0 THEN beam_threshold=beam_model_threshold
 ENDIF ELSE BEGIN
     IF N_Elements(calibration_flux_threshold) GT 0 THEN flux_threshold=calibration_flux_threshold ELSE flux_threshold=0.
     IF N_Elements(allow_sidelobe_cal_sources) GT 0 THEN allow_sidelobe_sources=allow_sidelobe_cal_sources ELSE allow_sidelobe_sources=0
@@ -33,6 +34,7 @@ ENDIF ELSE BEGIN
         ELSE no_restrict_sources=1
     IF N_Elements(max_calibration_sources) GT 0 THEN max_sources=max_calibration_sources ELSE max_sources=0 ;0 turns it off
     IF N_Elements(calibration_spectral_index) GT 0 THEN spectral_index=calibration_spectral_index ELSE spectral_index=catalog.alpha
+    IF N_Elements(beam_cal_threshold) GT 0 THEN beam_threshold=beam_cal_threshold
 ENDELSE
     
 ;IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
@@ -55,10 +57,11 @@ i_use=where(Abs(angs) LE FoV/2.,n_use)
 
 IF Keyword_Set(no_restrict_sources) THEN BEGIN
     fft_alias_range=0.
-    IF Keyword_Set(allow_sidelobe_sources) THEN beam_threshold=0.01 ELSE beam_threshold=0.05
+    IF N_Elements(beam_threshold) EQ 0 THEN $
+        IF Keyword_Set(allow_sidelobe_sources) THEN beam_threshold=0.01 ELSE beam_threshold=0.05
 ENDIF ELSE BEGIN
     fft_alias_range=dimension/4.
-    beam_threshold=0.2
+    IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.2
 ENDELSE
 
 IF n_use GT 0 THEN BEGIN
