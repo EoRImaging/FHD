@@ -2,12 +2,13 @@ FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n
     zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
-    meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,zenith_ra=zenith_ra,zenith_dec=zenith_dec,_Extra=extra
+    meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,zenith_ra=zenith_ra,zenith_dec=zenith_dec,$
+    cotter_precess_fix=cotter_precess_fix,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
-IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees
-IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees
-IF N_Elements(alt) EQ 0 THEN alt=377.83 & alt=Float(alt);altitude (meters)
+IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, from Tingay et al. 2013)
+IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
+IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
 metafits_ext='.metafits'
 metafits_dir=file_dirname(file_path_vis)
 metafits_name=file_basename(file_path_vis,'.sav',/fold_case)
@@ -69,7 +70,19 @@ IF file_test(metafits_path) THEN BEGIN
     zenra=LST
     zendec=lat
     epoch=date_conv(date_obs,'REAL')/1000.
+    epoch_year=Floor(epoch)
+    epoch_fraction=(epoch-epoch_year)*1000./365.2422 ; convert days to fractional years
+    epoch=epoch_year+epoch_fraction
     Precess,zenra,zendec,epoch,2000.    
+    
+    IF Keyword_Set(cotter_precess_fix) THEN BEGIN
+        cotter_epoch=date_conv(sxpar(meta_hdr,'MWADATE'),'REAL')/1000.
+        cotter_year=Floor(cotter_epoch)
+        cotter_fraction=(cotter_epoch-cotter_year)*1000./365.2422 ; convert days to fractional years
+        cotter_epoch=cotter_year+cotter_fraction
+        precess,obsra,obsdec,2000.,cotter_epoch
+        precess,obsra,obsdec,epoch,2000.
+    ENDIF
     
     beamformer_delays=sxpar(meta_hdr,'DELAYS')
     beamformer_delays=Ptr_new(Float(Strsplit(beamformer_delays,',',/extract)))
