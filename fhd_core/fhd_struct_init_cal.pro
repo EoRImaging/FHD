@@ -31,7 +31,7 @@ IF N_Elements(min_cal_solutions) EQ 0 THEN min_cal_solutions=5
 IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=10L
 IF N_Elements(ref_antenna) EQ 0 THEN ref_antenna=1L
 ref_antenna_name=(*obs.baseline_info).tile_names[ref_antenna]
-IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-3
+IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-6
 IF N_Elements(calibration_origin) EQ 0 THEN $
     IF Tag_exist(obs,'obsname') THEN calibration_origin=obs.obsname ELSE calibration_origin=''
 IF N_Elements(catalog_path) EQ 0 THEN catalog_path_use='' ELSE catalog_path_use=file_basename(catalog_path,'.sav',/fold_case)
