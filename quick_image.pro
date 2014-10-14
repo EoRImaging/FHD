@@ -65,6 +65,8 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     if n_elements(data_range) eq 0 then $
       if keyword_set(missing_value) then data_range = minmax(image[good_locs]) else data_range = minmax(image)
       
+    if abs(data_range[0] - data_range[1]) lt 1e-15 and data_range[0] ne 0 then data_range = minmax([data_range[0], 0])
+    
     cgloadct, 25, /brewer, /reverse, BOTTOM = 0, NCOLORS = 256, clip = [0, 235]
     
     color_range = [0, 255]
@@ -77,7 +79,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     n_colors = color_range[1] - color_range[0] + 1
     data_n_colors = data_color_range[1] - data_color_range[0] + 1
     
-    plot_image = (image-data_range[0])*data_n_colors/(data_range[1]-data_range[0]) + data_color_range[0]
+    plot_image = (image-data_range[0])*(data_n_colors-1)/(data_range[1]-data_range[0]) + data_color_range[0]
     
     wh_low = where(image lt data_range[0], count_low)
     if count_low gt 0 then plot_image[wh_low] = data_color_range[0]
@@ -152,7 +154,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       xoffset=sizes.xoffset, yoffset=sizes.yoffset, landscape = landscape
       
   endif else begin
-     while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
+    while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
       base_size = base_size - 100
       xsize = round(base_size * x_factor)
       ysize = round(base_size * y_factor)
