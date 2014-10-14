@@ -18,7 +18,7 @@
 
 
 pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, map_out = map_out, noplot = noplot, $
-    dec_range = dec_range, ra_range = ra_range, noerase = noerase, savefile = savefile, png = png, eps = eps, $
+    dec_range = dec_range, ra_range = ra_range, noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf, $
     plot_as_map = plot_as_map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
     data_range = data_range, silent=silent, title=title, note = note, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
     projection=projection, coord_in=coord_in, coord_out = coord_out, $
@@ -178,7 +178,8 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     
     if not keyword_set(noplot) then begin
       quick_image, map_out, missing_val = bad_val, data_range = data_range, xtitle = 'ra (degrees)', ytitle = 'dec (degrees)', $
-        title = title, note = note, charsize = charsize, noerase = noerase, xrange = ra_range, yrange = dec_range, savefile = savefile, png = png, eps = eps, $
+        title = title, note = note, charsize = charsize, noerase = noerase, xrange = ra_range, yrange = dec_range, $
+        savefile = savefile, png = png, eps = eps, pdf = pdf, $
         log = log, color_profile = color_profile, window_num = window_num
     endif
   endif else begin
@@ -190,6 +191,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     if not keyword_set(noplot) then begin
       IF Keyword_Set(png) THEN png_filename=savefile+'.png' ELSE png_filename=0
       IF Keyword_Set(eps) THEN ps_filename=savefile+'.ps' ELSE ps_filename=0
+      IF Keyword_Set(pdf) THEN message, 'pdf option does not work with plot_as_map keyword'
       
       proj2out, $
         planmap, Tmax, Tmin, color_bar, 0., title, $

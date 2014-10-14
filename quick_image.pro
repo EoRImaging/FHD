@@ -1,18 +1,19 @@
 pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, yrange = yrange, $
     log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
     note = note, charsize = charsize, xlog = xlog, ylog = ylog, window_num = window_num, $
-    missing_value = missing_value, noerase = noerase, savefile = savefile, png = png, eps = eps
+    missing_value = missing_value, noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf
     
   if n_elements(window_num) eq 0 then window_num = 1
   
-  if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) then pub = 1 else pub = 0
+  if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) or keyword_set(pdf) then pub = 1 else pub = 0
   if pub eq 1 then begin
-    if not (keyword_set(png) or keyword_set(eps)) then begin
+    if not (keyword_set(png) or keyword_set(eps) or keyword_set(pdf)) then begin
       basename = cgRootName(savefile, directory=directory, extension=extension)
       
       case extension of
         'eps': eps=1
         'png': png=1
+        'pdf': pdf=1
         '': png = 1
         else: begin
           print, 'Unrecognized extension, using png'
@@ -22,17 +23,33 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       
     endif
     if n_elements(savefile) eq 0 then begin
-      if keyword_set(eps) then savefile = 'idl_quick_image.eps' else savefile = 'idl_quick_image'
+      savefile = 'idl_quick_image'
       cd, current = current_dir
       print, 'no filename specified for quick_image output. Using ' + current_dir + path_sep() + savefile
     endif
     
-    if keyword_set(png) and keyword_set(eps) then begin
-      print, 'both eps and png cannot be set, using png'
+    n_ext_set = 0
+    if keyword_set(png) then n_ext_set +=1
+    if keyword_set(pdf) then n_ext_set +=1
+    if keyword_set(eps) then n_ext_set +=1
+    if n_ext_set gt 1 then begin
+      print, 'only one of eps, png, pdf keywords can be set, using png'
       eps = 0
+      pdf = 0
     endif
     
-    if keyword_set(eps) then delete_ps = 0 else delete_ps = 1
+    if keyword_set(png) then begin
+      plot_exten = '.png'
+      delete_ps = 1
+    endif else if keyword_set(pdf) then begin
+      plot_exten = '.pdf'
+      delete_ps = 1
+    endif else if keyword_set(eps) then begin
+      plot_exten = '.eps'
+      delete_ps = 0
+    endif
+    
+    savefile = savefile + plot_exten
   endif
   
   ;; precaution in case a slice is passed in but it still appears > 2d (ie shallow dimension)
@@ -190,7 +207,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   
   
   if keyword_set(pub) then begin
-    cgps_close, png = png, delete_ps = delete_ps, density=600
+    cgps_close, png = png, pdf = pdf, delete_ps = delete_ps, density=600
     if make_win eq 1 then wdelete, window_num
   endif
   
