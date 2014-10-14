@@ -39,7 +39,7 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
     vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
     model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
-    reorder_visibilities=reorder_visibilities,transfer_flags=transfer_flags,_Extra=extra
+    reorder_visibilities=reorder_visibilities,transfer_flags=transfer_flags,flag_calibration=flag_calibration,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -59,7 +59,7 @@ IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
-    healpix_recalculate=healpix_recalculate,$
+    transfer_flags=transfer_flags,healpix_recalculate=healpix_recalculate,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
@@ -138,6 +138,17 @@ IF data_flag LE 0 THEN BEGIN
 ;    ENDIF
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
     
+    IF Keyword_Set(transfer_flags) THEN BEGIN
+        flag_visibilities=0 ;
+        transfer_flag_data,flag_arr,obs,status_str,params,file_path_fhd=file_path_fhd,$
+            transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,$
+            flag_calibration=flag_calibration,_Extra=extra
+        IF Keyword_Set(error) THEN BEGIN
+            print,"Error occured while attempting to transfer flags. Returning."
+            RETURN
+        ENDIF
+    ENDIF
+    
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
     vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
@@ -162,7 +173,8 @@ IF data_flag LE 0 THEN BEGIN
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
-             calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
+             calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,$
+             flag_calibration=flag_calibration,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         IF Keyword_Set(error) THEN BEGIN
             print,"Error occured during calibration. Returning."
@@ -171,22 +183,13 @@ IF data_flag LE 0 THEN BEGIN
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
-        
-    IF Keyword_Set(transfer_mapfn) THEN transfer_flags=transfer_mapfn
-    IF Keyword_Set(transfer_flags) THEN BEGIN
-        transfer_flag_data,flag_arr,obs,status_str,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,_Extra=extra
-        IF Keyword_Set(error) THEN BEGIN
-            print,"Error occured while attempting to transfer flags. Returning."
-            RETURN
-        ENDIF
-    ENDIF ELSE BEGIN
-        IF Keyword_Set(flag_visibilities) THEN BEGIN
-            print,'Flagging anomalous data'
-            vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-        ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-    ENDELSE
+    
+    IF Keyword_Set(flag_visibilities) THEN BEGIN
+        print,'Flagging anomalous data'
+        vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
+        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+    ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
+        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF Keyword_Set(model_visibilities) THEN BEGIN
         IF Keyword_Set(model_catalog_file_path) THEN BEGIN
