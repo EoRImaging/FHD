@@ -56,33 +56,7 @@ IF file_test(metafits_path) THEN BEGIN
     date_obs=sxpar(meta_hdr,'DATE-OBS')
     JD0=date_conv(date_obs,'JULIAN')
     
-;    IF instrument EQ 'mwa' THEN BEGIN
-;        ;if the MWA, check if the uvfits files were created during a period when there was a one-day offset in the time
-;        cotter_date=date_conv(sxpar(meta_hdr,'DATE'),'REAL')
-;        IF (cotter_date LT 2014115.) AND (cotter_date GT 2013115.) THEN BEGIN
-;            JD0+=1.
-;            date_obs=date_conv(jd0,'FITS')
-;        ENDIF
-;    ENDIF
-    ct2lst,LST_hr,lon,0,JD0
-    LST=LST_hr*360./24.
-    
-    zenra=LST
-    zendec=lat
-    epoch=date_conv(date_obs,'REAL')/1000.
-    epoch_year=Floor(epoch)
-    epoch_fraction=(epoch-epoch_year)*1000./365.2422 ; convert days to fractional years
-    epoch=epoch_year+epoch_fraction
-    Precess,zenra,zendec,epoch,2000.    
-    
-    IF Keyword_Set(cotter_precess_fix) THEN BEGIN
-        cotter_epoch=date_conv(sxpar(meta_hdr,'MWADATE'),'REAL')/1000.
-        cotter_year=Floor(cotter_epoch)
-        cotter_fraction=(cotter_epoch-cotter_year)*1000./365.2422 ; convert days to fractional years
-        cotter_epoch=cotter_year+cotter_fraction
-        precess,obsra,obsdec,2000.,cotter_epoch
-        precess,obsra,obsdec,epoch,2000.
-    ENDIF
+    hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate    
     
     beamformer_delays=sxpar(meta_hdr,'DELAYS')
     beamformer_delays=Ptr_new(Float(Strsplit(beamformer_delays,',',/extract)))
