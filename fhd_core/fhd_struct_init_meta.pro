@@ -55,21 +55,7 @@ IF file_test(metafits_path) THEN BEGIN
     date_obs=sxpar(meta_hdr,'DATE-OBS')
     JD0=date_conv(date_obs,'JULIAN')
     
-;    IF instrument EQ 'mwa' THEN BEGIN
-;        ;if the MWA, check if the uvfits files were created during a period when there was a one-day offset in the time
-;        cotter_date=date_conv(sxpar(meta_hdr,'DATE'),'REAL')
-;        IF (cotter_date LT 2014115.) AND (cotter_date GT 2013115.) THEN BEGIN
-;            JD0+=1.
-;            date_obs=date_conv(jd0,'FITS')
-;        ENDIF
-;    ENDIF
-    ct2lst,LST_hr,lon,0,JD0
-    LST=LST_hr*360./24.
-    
-    zenra=LST
-    zendec=lat
-    epoch=date_conv(date_obs,'REAL')/1000.
-    Precess,zenra,zendec,epoch,2000.    
+    hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate
     
     beamformer_delays=sxpar(meta_hdr,'DELAYS')
     beamformer_delays=Ptr_new(Float(Strsplit(beamformer_delays,',',/extract)))
