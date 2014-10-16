@@ -55,6 +55,10 @@ IF file_test(metafits_path) THEN BEGIN
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
     date_obs=sxpar(meta_hdr,'DATE-OBS')
     JD0=date_conv(date_obs,'JULIAN')
+    epoch=date_conv(date_obs,'REAL')/1000.
+    epoch_year=Floor(epoch)
+    epoch_fraction=(epoch-epoch_year)*1000./365.24218967
+    epoch=epoch_year+epoch_fraction    
     
     hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate    
     
