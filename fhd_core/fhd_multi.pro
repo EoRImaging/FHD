@@ -293,7 +293,10 @@ FOR i=0L,max_iter-1 DO BEGIN
     ;generate UV model from source list
     FOR obs_i=0L,n_obs-1 DO BEGIN
         IF ~Ptr_valid(comp_arr1[obs_i]) THEN BEGIN recalc_flag[obs_i]=0 & CONTINUE & ENDIF
-        IF n_src_use EQ n_sources THEN comp_single=*comp_arr1[obs_i] ELSE comp_single=(*comp_arr1[obs_i])[0:n_src_use-1]
+        IF n_src_use EQ n_sources THEN comp_single=*comp_arr1[obs_i] ELSE BEGIN
+            si_use=where((*comp_arr1[obs_i]).id LT max_sources)
+            comp_single=(*comp_arr1[obs_i])[si_use]
+        ENDELSE
         (*comp_arr[obs_i])[comp_single.id]=comp_single
         source_dft_multi,obs_arr[obs_i],jones_arr[obs_i],comp_single,model_uv_full[*,obs_i],$
             xvals=*xv_arr[obs_i],yvals=*yv_arr[obs_i],uv_i_use=*uv_i_arr[obs_i]
