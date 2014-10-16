@@ -111,9 +111,10 @@ fi=Long(start_fi)
 IF N_Elements(end_fi) GT 0 THEN n_files=end_fi+1 ;changed to allow end_fi and update to both be specified
 
 IF ~Keyword_Set(update_file_list) THEN BEGIN
-    fi_arr=lindgen(n_files-start_fi)
-    start_fi=0
+    n_files-=start_fi
+    fi_arr=lindgen(n_files)+start_fi
     fi=0L
+    start_fi=0
     
     IF N_Elements(skip_fi) GT 0 THEN BEGIN
         fi_cut=lonarr(n_files)
