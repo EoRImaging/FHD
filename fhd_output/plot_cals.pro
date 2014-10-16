@@ -11,6 +11,7 @@ res_filename=file_path_base+'_cal_residual'+ext_name
 vis_hist_filename=file_path_base+'_cal_hist'+ext_name
 IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
+IF N_Elements(cal_res) EQ 0 THEN IF tag_exist(cal,'gain_residual') THEN cal_res=cal.gain_residual
 tile_names = cal.tile_names
 n_tiles=obs.n_tile
 n_pol=cal.n_pol
@@ -153,18 +154,30 @@ cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 
 IF Keyword_Set(cal_res) THEN BEGIN
 
-    
     gains0r=*cal_res.gain[0]
     gains0r=gains0r[freq_i_use,*]
-    sign0r=Real_part(gains0r)*weight_invert(Abs(real_part(gains0r)))
-    gains0r=Abs(gains0r)*sign0r
+    
+    gains0_orig=gains0r+gains0
+    gains0r=Abs(gains0_orig)-Abs(gains0)
     IF n_pol GT 1 THEN BEGIN    
         gains1r=*cal_res.gain[1]
         gains1r=gains1r[freq_i_use,*]
-        sign1r=Real_part(gains1r)*weight_invert(Abs(real_part(gains1r)))
-        gains1r=Abs(gains1r)*sign1r
+        gains1_orig=gains1r+gains1
+        gains1r=Abs(gains1_orig)-Abs(gains1)
         max_amp = mean(abs([gains0r,gains1r])) + 2*stddev(abs([gains0r,gains1r]))
     ENDIF ELSE max_amp = mean(abs(gains0r)) + 2*stddev(abs(gains0r))
+    
+;    gains0r=*cal_res.gain[0]
+;    gains0r=gains0r[freq_i_use,*]
+;    sign0r=Real_part(gains0r)*weight_invert(Abs(real_part(gains0r)))
+;    gains0r=Abs(gains0r)*sign0r
+;    IF n_pol GT 1 THEN BEGIN    
+;        gains1r=*cal_res.gain[1]
+;        gains1r=gains1r[freq_i_use,*]
+;        sign1r=Real_part(gains1r)*weight_invert(Abs(real_part(gains1r)))
+;        gains1r=Abs(gains1r)*sign1r
+;        max_amp = mean(abs([gains0r,gains1r])) + 2*stddev(abs([gains0r,gains1r]))
+;    ENDIF ELSE max_amp = mean(abs(gains0r)) + 2*stddev(abs(gains0r))
     
     IF max_amp GT 0 THEN BEGIN
         cgPS_Open,res_filename,scale_factor=2,/quiet,/nomatch
