@@ -11,7 +11,7 @@ res_filename=file_path_base+'_cal_residual'+ext_name
 vis_hist_filename=file_path_base+'_cal_hist'+ext_name
 IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
-IF N_Elements(cal_res) EQ 0 THEN IF tag_exist(cal,'gain_residual') THEN res_gain_arr=cal.gain_residual ELSE res_gain_arr=cal_res.gain
+IF Keyword_Set(cal_res) THEN res_gain_arr=cal_res.gain ELSE IF tag_exist(cal,'gain_residual') THEN res_gain_arr=cal.gain_residual
 tile_names = cal.tile_names
 n_tiles=obs.n_tile
 n_pol=cal.n_pol
