@@ -421,6 +421,9 @@ case version of
    'apb_sidelobe_subtract_3':begin
       allow_sidelobe_cal_sources=1
    end
+   'apb_test_reflect_coefficients_1':begin
+      cal_cable_reflection_correct=150
+   end
       
 
    ; Abraham's versions
