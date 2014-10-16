@@ -153,14 +153,15 @@ cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
 cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
 
 IF Keyword_Set(cal_res) THEN BEGIN
-
+    res_type=Size(*cal_res[0],/type)
+    IF res_type EQ 8 THEN gains0r=*cal_res.gain[0] ELSE gains0r=*cal_res[0]
     gains0r=*cal_res.gain[0]
     gains0r=gains0r[freq_i_use,*]
     
     gains0_orig=gains0r+gains0
     gains0r=Abs(gains0_orig)-Abs(gains0)
     IF n_pol GT 1 THEN BEGIN    
-        gains1r=*cal_res.gain[1]
+        IF res_type EQ 8 THEN gains1r=*cal_res.gain[1] ELSE gains1r=*cal_res[1]
         gains1r=gains1r[freq_i_use,*]
         gains1_orig=gains1r+gains1
         gains1r=Abs(gains1_orig)-Abs(gains1)
