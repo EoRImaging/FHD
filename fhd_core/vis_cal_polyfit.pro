@@ -74,27 +74,6 @@ ENDFOR
 
 IF Keyword_Set(cal_mode_fit) THEN BEGIN
     CASE 1 OF
-        Keyword_Set(cal_cable_reflection_fit): BEGIN
-            cable_filepath=filepath(obs.instrument+'_cable_length.txt',root=rootdir('FHD'),subdir='instrument_config')
-            textfast,data_array,/read,file_path=cable_filepath,first_line=1
-            tile_i_file=Reform(data_array[0,*])
-            tile_name_file=Reform(data_array[1,*])
-            cable_len=Reform(data_array[2,*])
-            cable_vf=Reform(data_array[3,*])
-            tile_ref_flag=0>Reform(data_array[4,*])<1
-            IF cal_cable_reflection_fit GT 1 THEN BEGIN
-                cable_cut_i=where(cable_len NE cal_cable_reflection_fit,n_cable_cut)
-                IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
-            ENDIF ELSE IF cal_cable_reflection_fit LT -1 THEN BEGIN
-                cable_cut_i=where(cable_len EQ Abs(cal_cable_reflection_fit),n_cable_cut)
-                IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
-            ENDIF
-            
-            reflect_time=2.*cable_len/(c_light*cable_vf)
-            bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1)
-            mode_i_arr=Fltarr(n_pol,n_tile)
-            FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time*tile_ref_flag
-        END
         Keyword_Set(cal_cable_reflection_correct): BEGIN
             IF size(cal_cable_reflection_correct,/type) EQ 7 THEN mode_filepath=cal_cable_reflection_correct ELSE $
                 mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=rootdir('FHD'),subdir='instrument_config')
@@ -130,6 +109,27 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
             amp_arr[1,*]=tile_amp_Y
             phase_arr[0,*]=tile_phase_X
             phase_arr[1,*]=tile_phase_Y
+        END
+        Keyword_Set(cal_cable_reflection_fit): BEGIN
+            cable_filepath=filepath(obs.instrument+'_cable_length.txt',root=rootdir('FHD'),subdir='instrument_config')
+            textfast,data_array,/read,file_path=cable_filepath,first_line=1
+            tile_i_file=Reform(data_array[0,*])
+            tile_name_file=Reform(data_array[1,*])
+            cable_len=Reform(data_array[2,*])
+            cable_vf=Reform(data_array[3,*])
+            tile_ref_flag=0>Reform(data_array[4,*])<1
+            IF cal_cable_reflection_fit GT 1 THEN BEGIN
+                cable_cut_i=where(cable_len NE cal_cable_reflection_fit,n_cable_cut)
+                IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
+            ENDIF ELSE IF cal_cable_reflection_fit LT -1 THEN BEGIN
+                cable_cut_i=where(cable_len EQ Abs(cal_cable_reflection_fit),n_cable_cut)
+                IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
+            ENDIF
+            
+            reflect_time=2.*cable_len/(c_light*cable_vf)
+            bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1)
+            mode_i_arr=Fltarr(n_pol,n_tile)
+            FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time*tile_ref_flag
         END
         (cal_mode_fit EQ -1): BEGIN
             spec_mask=fltarr(n_freq)
