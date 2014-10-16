@@ -137,8 +137,8 @@ si_i_use=where(si_use,n_sources)
 IF n_sources GT 0 THEN si_use[si_i_use]=si_i_use
 
 FOR obs_i=0L,n_obs_use-1 DO BEGIN
-    (*source_array[obs_i_use[obs_i]])=(*source_array[obs_i_use[obs_i]])[si_i_use]
-    (*source_array[obs_i_use[obs_i]]).id=Lindgen(n_sources)+si_start
+;    (*source_array[obs_i_use[obs_i]])=(*source_array[obs_i_use[obs_i]])[si_i_use]
+    (*source_array[obs_i_use[obs_i]]).id+=si_start
 ENDFOR
 Ptr_free,si_i_arr,flux_vals
 ;si_use=where(source_cut_arr,n_sources,complement=si_mask,ncomplement=n_si_mask)

@@ -55,7 +55,7 @@ beam_corr=Ptrarr(n_pol,n_obs,/allocate)
 beam_mask_arr=Ptrarr(n_obs,/allocate)
 source_mask_arr=Ptrarr(n_obs,/allocate)
 beam_sourcefind_mask_arr=Ptrarr(n_obs,/allocate)
-beam_model_hpx_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
+;beam_model_hpx_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 ;weights_inv_arr=Ptrarr(n_pol,n_obs,/allocate) ;this one will be in Healpix pixels
 map_fn_arr=Ptrarr(n_pol,n_obs)
 dirty_uv_arr=Ptrarr(n_pol,n_obs,/allocate) 
@@ -64,7 +64,7 @@ model_uv_full=Ptrarr(n_pol,n_obs,/allocate)
 weights_arr=Ptrarr(n_pol,n_obs)
 filter_arr=Ptrarr(n_pol,n_obs,/allocate)
 
-uv_mask_arr=Ptrarr(n_obs,/allocate)
+;uv_mask_arr=Ptrarr(n_obs,/allocate)
 comp_arr=Ptrarr(n_obs,/allocate)
 hpx_cnv=Ptrarr(n_obs)
 xv_arr=Ptrarr(n_obs,/allocate)
@@ -121,10 +121,8 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     undefine_fhd,psf
     beam_sourcefind_mask=(beam_mask=fltarr(obs.dimension,obs.elements)+1)
     
-    beam_square=Ptrarr(n_pol<2)
     
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN
-        beam_square[pol_i]=Ptr_new((*beam_model[pol_i,obs_i])^2.)
         mask0=(mask1=fltarr(obs.dimension,obs.elements))
         ref_pix=Long(obs.obsx)+Long(obs.dimension)*Long(obs.obsy)
         mask_i=region_grow(*beam_model[pol_i,obs_i],ref_pix,thresh=[beam_threshold,max(*beam_model[pol_i,obs_i])])
@@ -140,18 +138,14 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     *beam_sourcefind_mask_arr[obs_i]=beam_sourcefind_mask
     *beam_mask_arr[obs_i]=beam_mask
     *source_mask_arr[obs_i]=beam_mask
-    obs_weight_single=*(Stokes_cnv(beam_square,jones_arr[obs_i],obs_arr[obs_i],_Extra=extra))[0]>0.
-    Ptr_free,beam_square
-    obs_weight_single*=beam_sourcefind_mask
-    obs_weight[obs_i]=Ptr_new(obs_weight_single)
     FOR pol_i=0,n_pol-1 DO *beam_corr[pol_i,obs_i]=weight_invert(*beam_model[pol_i,obs_i]*beam_mask)
 
     ;supply beam_mask in case file is missing and needs to be generated
     hpx_cnv0=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside_chk,$
-        mask=beam_sourcefind_mask,hpx_radius=hpx_radius,restore_last=0) 
+        mask=beam_sourcefind_mask,restore_last=0) 
     IF N_Elements(nside) EQ 0 THEN nside=nside_chk
     IF nside_chk NE nside THEN hpx_cnv0=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,$
-        nside=nside,mask=beam_sourcefind_mask,hpx_radius=hpx_radius,restore_last=0)
+        nside=nside,mask=beam_sourcefind_mask,restore_last=0)
     hpx_cnv[obs_i]=Ptr_new(Temporary(hpx_cnv0))
     
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -192,7 +186,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         ENDFOR
         undefine_fhd,gal_model_uv
     ENDIF
-    *uv_mask_arr[obs_i]=source_uv_mask
+;    *uv_mask_arr[obs_i]=source_uv_mask
     norm_arr[obs_i]=gain_normalization
     
     uv_i_use=where(Temporary(source_uv_mask),n_uv_use)
@@ -225,14 +219,12 @@ pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,dec_hpx,ra_hpx,/astro
 
 ;set up effective beam^2 weighting
-weight_hpx=Fltarr(n_hpx)
-FOR obs_i=0L,n_obs-1 DO BEGIN
-    weight_hpx[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(*obs_weight[obs_i],hpx_cnv[obs_i])
-ENDFOR
+weight_hpx=obs_weight_healpix(obs_arr,beam_model,jones_arr,hpx_ind_map,hpx_cnv,hpx_inds,$
+    obs_weight_arr=obs_weight,beam_mask_arr=beam_sourcefind_mask_arr,_Extra=extra)
 weight_hpx_corr=weight_invert(weight_hpx)
 
-converge_check=Fltarr(Ceil(max_iter/check_iter))
-converge_check2=Fltarr(max_iter)
+;converge_check=Fltarr(Ceil(max_iter/check_iter))
+converge_check=Fltarr(max_iter)
 
 t1=0 ;generation of model_images and image_use for source detection
 t2=0 ;source extraction
@@ -286,8 +278,8 @@ FOR i=0L,max_iter-1 DO BEGIN
     source_find_hpx=*residual_stokes_hpx[0]*Sqrt(weight_hpx_corr>0.)
     FOR pol_i=0,n_pol-1 DO *residual_stokes_hpx[pol_i]*=weight_hpx_corr
     
-    converge_check2[i]=Stddev(source_find_hpx[where(source_mask_hpx)],/nan)
-    IF i EQ 0 THEN converge_check[0]=converge_check2[0]
+    converge_check[i]=Stddev(source_find_hpx[where(source_mask_hpx)],/nan)
+;    IF i EQ 0 THEN converge_check[0]=converge_check[0]
     t3_0=Systime(1)
     
 ;    ;detect sources
@@ -302,12 +294,11 @@ FOR i=0L,max_iter-1 DO BEGIN
     FOR obs_i=0L,n_obs-1 DO BEGIN
         IF ~Ptr_valid(comp_arr1[obs_i]) THEN BEGIN recalc_flag[obs_i]=0 & CONTINUE & ENDIF
         IF n_src_use EQ n_sources THEN comp_single=*comp_arr1[obs_i] ELSE comp_single=(*comp_arr1[obs_i])[0:n_src_use-1]
-        (*comp_arr[obs_i])[si:si+n_src_use-1]=comp_single
+        (*comp_arr[obs_i])[comp_single.id]=comp_single
         source_dft_multi,obs_arr[obs_i],jones_arr[obs_i],comp_single,model_uv_full[*,obs_i],$
             xvals=*xv_arr[obs_i],yvals=*yv_arr[obs_i],uv_i_use=*uv_i_arr[obs_i]
     ENDFOR
     si+=n_src_use
-    Ptr_free,residual_stokes_hpx,res_stokes_arr ;free memory
     t4_0=Systime(1)
     t3+=t4_0-t3_0
     
@@ -331,28 +322,29 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDIF
     
     ;check convergence
+    t10=Systime(1)-t0
+    conv_chk=Stddev(source_find_hpx[where(source_mask_hpx)],/nan)
     IF (Round(i mod check_iter) EQ 0) THEN BEGIN
-        t10=Systime(1)-t0
-        conv_chk=Stddev(source_find_hpx[where(source_mask_hpx)],/nan)
         IF ~Keyword_Set(silent) THEN print,StrCompress(String(format='(I," : ",I," : ",I," : ",F)',i,si,t10,conv_chk))
-        IF i GT 0 THEN BEGIN
-            i2+=1
-            converge_check[i2]=conv_chk
-            IF 2.*converge_check[i2] GT Max(source_find_hpx[where(source_mask_hpx)]) THEN BEGIN
-                print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
-                converge_check2=converge_check2[0:i]
-                converge_check=converge_check[0:i2]
-                BREAK
-            ENDIF
-            IF converge_check[i2] GE Max(converge_check[((i2-Ceil(Alog10(i)))>0):i2-1]) THEN BEGIN ;add more tolerance for small variations
-                print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
-                converge_check2=converge_check2[0:i]
-                converge_check=converge_check[0:i2]
-                BREAK
-            ENDIF
+    ENDIF
+    IF i GT 1 THEN BEGIN
+;        i2+=1
+;        converge_check[i2]=conv_chk
+        IF 2.*converge_check[i] GT Max(source_find_hpx[where(source_mask_hpx)]) THEN BEGIN
+            print,StrCompress(String(format='("Break after iteration ",I," from low signal to noise after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
+            converge_check=converge_check[0:i]
+;            converge_check=converge_check[0:i2]
+            BREAK
+        ENDIF
+        IF converge_check[i] GE Max(converge_check[((i-Ceil(Alog10(i)))>0):i-1]) THEN BEGIN ;add more tolerance for small variations
+            print,StrCompress(String(format='("Break after iteration ",I," from lack of convergence after ",I," seconds (convergence:",F,")")',i,t10,conv_chk))
+            converge_check=converge_check[0:i]
+;            converge_check=converge_check[0:i2]
+            BREAK
         ENDIF
     ENDIF
     source_find_hpx=0.
+    Ptr_free,residual_stokes_hpx,res_stokes_arr ;free memory, but only after the BREAK statements (for debugging)
 ENDFOR
 
 ;condense clean components
@@ -381,7 +373,9 @@ print,String(format='("FFT:",A,"[",A,"]")',Strn(Round(t1)),Strn(Round(t1*100/i)/
 print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*100/i)/100.))
 print,String(format='("DFT source modeling:",A,"[",A,"]")',Strn(Round(t3)),Strn(Round(t3*100/i)/100.))
 print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/i)/100.))
-undefine_fhd,map_fn_arr,hpx_cnv,hpx_ind_map,res_arr,smooth_arr,healpix_map,filter_arr
+undefine_fhd,map_fn_arr,hpx_cnv,hpx_ind_map,res_arr,smooth_arr,healpix_map,filter_arr,obs_weight,beam_mask_arr
+undefine_fhd,source_mask_arr,beam_sourcefind_mask_arr
+Ptr_free,residual_stokes_hpx,res_stokes_arr ;free memory
 timing=[t00,t1,t2,t3,t4]
 !except=except
 END
