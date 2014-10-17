@@ -24,6 +24,7 @@ ENDIF ELSE BEGIN
     ytickv=[0,max_amp/2,max_amp]
 ENDELSE
 
+gain_type=size(gains_A,/type)
 FOR tile_i=0L,n_tiles-1 DO BEGIN
     tile_name=tile_names[tile_i]
 ;    rec=Floor(tile_name/10)
@@ -46,8 +47,9 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
           gain_vals_B=Real_part(gains_B[*,tile_i])
         END
         ELSE: BEGIN
-          gain_vals_A=abs(gains_A[*,tile_i])
-          IF n_pol GT 1 THEN gain_vals_B=abs(gains_B[*,tile_i])
+          IF gain_type GE 6 THEN gain_vals_A=abs(gains_A[*,tile_i]) ELSE gain_vals_A=gains_A[*,tile_i]
+          
+          IF n_pol GT 1 THEN IF gain_type GE 6 THEN gain_vals_B=abs(gains_B[*,tile_i]) ELSE gain_vals_B=gains_B[*,tile_i]
         ENDELSE  
       ENDCASE
       IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
