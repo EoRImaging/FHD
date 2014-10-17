@@ -106,7 +106,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
           
           if log_cut_val gt min_pos then log_data_range = [log_cut_val-data_n_colors/(log_data_range[1]-log_data_range[0]), alog10(data_range[1])]
           
-        endif
+        endif else min_pos_color=0
                 
         data_log = alog10(data)
         wh_under = where(data lt 10^double(log_cut_val), count_under)
