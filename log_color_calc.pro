@@ -54,15 +54,14 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       
       log_data_range = [log_cut_val, alog10(data_range[1])]
       
+      wh_zero = where(data eq 0, count_zero)
       ;; if log_cut_val is less than min_pos then indicate it in the color bar
       if min(data) lt 0 then begin
       
-      
-        wh_zero = where(data eq 0, count_zero)
         if count_zero gt 0 then begin
           min_pos_color = 2
           zero_color=1
-          zero_val = data_n_colors/(log_data_range[1]-log_data_range[0])
+          zero_val = log_data_range[0]
           
           if log_cut_val gt min_pos then log_data_range = [log_cut_val-2*data_n_colors/(log_data_range[1]-log_data_range[0]), alog10(data_range[1])]
           
@@ -75,13 +74,12 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
         neg_val = log_data_range[0]
         
         data_log = alog10(data)
-        wh_under = where(data lt 10^double(log_cut_val), count)
-        if count ne 0 then data_log[wh_under] = log_data_range[0]
-        wh_neg = where(data lt 0, count)
-        if count ne 0 then data_log[wh_neg] = neg_val
-        wh_over = where(data_log gt log_data_range[1], count)
-        if count ne 0 then data_log[wh_over] = log_data_range[1]
-        if count_zero ne 0 then data_log[wh_zero] = zero_val
+        wh_under = where(data lt 10^double(log_cut_val), count_under)
+        if count_under ne 0 then data_log[wh_under] = log_data_range[0]
+        wh_over = where(data_log gt log_data_range[1], count_over)
+        if count_over ne 0 then data_log[wh_over] = log_data_range[1]
+        
+        wh_neg = where(data lt 0, count_neg)
         
         oob_low = 0
         
@@ -99,13 +97,22 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
         
       endif else begin
       
-        min_pos_color = 0
-        
+        count_neg = 0
+
+        if count_zero gt 0 then begin
+          min_pos_color = 1
+          zero_color=0
+          zero_val = log_data_range[0]
+          
+          if log_cut_val gt min_pos then log_data_range = [log_cut_val-data_n_colors/(log_data_range[1]-log_data_range[0]), alog10(data_range[1])]
+          
+        endif
+                
         data_log = alog10(data)
-        wh_under = where(data lt 10^double(log_cut_val), count)
-        if count ne 0 then data_log[wh_under] = log_data_range[0]
-        wh_over = where(data_log gt log_data_range[1], count)
-        if count ne 0 then data_log[wh_over] = log_data_range[1]
+        wh_under = where(data lt 10^double(log_cut_val), count_under)
+        if count_under gt 0 then data_log[wh_under] = log_data_range[0]
+        wh_over = where(data_log gt log_data_range[1], count_over)
+        if count_over gt 0 then data_log[wh_over] = log_data_range[1]
         
         cgloadct, 25, /brewer, /reverse, clip = [0, 235]
         
@@ -113,7 +120,10 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       
       if no_input_data_range eq 1 then data_range = 10^log_data_range
       
-      data_log_norm = (data_log-log_data_range[0])*data_n_colors/(log_data_range[1]-log_data_range[0]) + data_color_range[0]
+      data_log_norm = (data_log-log_data_range[0])*(data_n_colors-min_pos_color-1)/(log_data_range[1]-log_data_range[0]) + data_color_range[0] + min_pos_color
+      
+      if count_neg ne 0 then data_log_norm[wh_neg] = neg_color
+      if count_zero ne 0 then data_log_norm[wh_zero] = zero_color
       
     end
     'sym_log': begin
