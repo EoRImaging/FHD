@@ -12,7 +12,8 @@ res_filename=file_path_base+'_cal_residual'+ext_name
 vis_hist_filename=file_path_base+'_cal_hist'+ext_name
 IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
-IF Keyword_Set(cal_res) THEN res_gain_arr=cal_res.gain ELSE IF tag_exist(cal,'gain_residual') THEN res_gain_arr=cal.gain_residual
+IF Keyword_Set(cal_res) THEN res_gain_arr=cal_res.gain ELSE IF tag_exist(cal,'gain_residual') THEN $
+    IF Min(Ptr_valid(cal.gain_residual)) THEN res_gain_arr=cal.gain_residual
 tile_names = cal.tile_names
 n_tiles=obs.n_tile
 n_pol=cal.n_pol
@@ -46,191 +47,139 @@ plot_pos[*,1] += height/2
 plot_pos[*,2] -= width/2
 plot_pos[*,3] += height/2
 
-cgPS_Open,phase_filename,scale_factor=2,/quiet,/nomatch
-
 n_baselines=obs.nbaselines
 tile_A=obs2.tile_A[0:n_baselines-1]
 tile_B=obs2.tile_B[0:n_baselines-1]
 tile_exist=(histogram(tile_A,min=1,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=1,/bin,max=(max(tile_A)>max(tile_B))))<1
 
-ytickv=[-!pi,0,!pi]
-ytickname=['-!9p!X','0','!9p!X']
-yrange=[-1.5*!pi,1.5*!pi]
-xtickv=[ceil(min(freq)/10)*10,floor(max(freq)/10)*10]
-;xtickv=[min(freq),max(freq)]
-xtickname=strtrim(round(xtickv),2)
-xrange=[min(freq)-(max(freq)-min(freq))/8,max(freq)+(max(freq)-min(freq))/8]
+;plot fitted phase solutions
+plot_cals_sub,freq,gains0,gains1,filename=phase_filename,/phase,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+    obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
 
-FOR tile_i=0L,n_tiles-1 DO BEGIN
-    tile_name=tile_names[tile_i]
-;    rec=Floor(tile_name/10)
-;    tile=tile_name mod 10
-
-    IF tile_exist[tile_i] EQ 0 THEN BEGIN
-      ; no tile found... must have been flagged in pre-processing
-      axiscolor='grey'
-      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
-        /noerase,charsize=cal_plot_charsize,axiscolor=axiscolor
-    ENDIF ELSE BEGIN
-      IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
-      IF tile_i EQ cal.ref_antenna THEN axiscolor='blue'
-      IF ~(tile_i mod 16) THEN BEGIN
-        IF (tile_i gt (n_tiles-17)) THEN BEGIN
-          ; both axes
-          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
-            xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,ytickname=ytickname,position=plot_pos[tile_i,*],$
-            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-        ENDIF ELSE BEGIN
-          ; just the y-axis
-          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
-            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,ytickname=ytickname,position=plot_pos[tile_i,*],$
-            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-        ENDELSE
-      ENDIF ELSE BEGIN
-        IF (tile_i gt (n_tiles-17)) THEN BEGIN
-          ; just x-axis
-          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
-            xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
-            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-        ENDIF ELSE BEGIN
-          ; No axes
-          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
-            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
-            yticklen=0.04,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-        ENDELSE
-      ENDELSE
-      IF n_pol GT 1 THEN cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red',psym=3,symsize=cal_plot_symsize
-    ENDELSE
-ENDFOR
-cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-cgPS_Close,/png,Density=300,Resize=cal_plot_resize,/allow_transparent,/nomessage
-    
-cgPS_Open,amp_filename,scale_factor=2,/quiet,/nomatch
-
-IF n_pol GT 1 THEN max_amp = mean(abs([gains0,gains1])) + 2*stddev(abs([gains0,gains1])) $
-    ELSE max_amp = Mean(abs(gains0)) + 2*stddev(abs(gains0))
-yrange=[0,max_amp]
-ytickv=[0,max_amp/2,max_amp]
-
-FOR tile_i=0L,n_tiles-1 DO BEGIN
-    tile_name=tile_names[tile_i]
-;    rec=Floor(tile_name/10)
-;    tile=tile_name mod 10
-    
-    IF tile_exist[tile_i] EQ 0  THEN BEGIN
-      ; no tile found... must have been flagged in pre-processing
-      axiscolor='grey'
-      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
-        /noerase,charsize=cal_plot_charsize,axiscolor=axiscolor
-    ENDIF ELSE BEGIN
-      IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
-      IF ~(tile_i mod 16) THEN BEGIN
-        IF (tile_i gt (n_tiles-17)) THEN BEGIN
-          ; both axes
-          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
-            xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
-            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-        ENDIF ELSE BEGIN
-          ; just the y-axis
-          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
-            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
-            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-        ENDELSE
-      ENDIF ELSE BEGIN
-        IF (tile_i gt (n_tiles-17)) THEN BEGIN
-          ; just x-axis
-          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
-            xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
-            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-        ENDIF ELSE BEGIN
-          ; No axes
-          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
-            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
-            yticklen=0.04,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-        ENDELSE
-      ENDELSE
-      IF n_pol GT 1 THEN cgoplot,freq,abs(gains1[*,tile_i]),color='red',psym=3,symsize=cal_plot_symsize
-    ENDELSE
-ENDFOR
-
-cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-cgPS_Close,/png,Density=300,Resize=cal_plot_resize,/allow_transparent,/nomessage
+;plot fitted amplitude solutions
+plot_cals_sub,freq,gains0,gains1,filename=amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+    obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+;cgPS_Open,phase_filename,scale_factor=2,/quiet,/nomatch
+;ytickv=[-!pi,0,!pi]
+;ytickname=['-!9p!X','0','!9p!X']
+;yrange=[-1.5*!pi,1.5*!pi]
+;xtickv=[ceil(min(freq)/10)*10,floor(max(freq)/10)*10]
+;;xtickv=[min(freq),max(freq)]
+;xtickname=strtrim(round(xtickv),2)
+;xrange=[min(freq)-(max(freq)-min(freq))/8,max(freq)+(max(freq)-min(freq))/8]
+;
+;FOR tile_i=0L,n_tiles-1 DO BEGIN
+;    tile_name=tile_names[tile_i]
+;;    rec=Floor(tile_name/10)
+;;    tile=tile_name mod 10
+;
+;    IF tile_exist[tile_i] EQ 0 THEN BEGIN
+;      ; no tile found... must have been flagged in pre-processing
+;      axiscolor='grey'
+;      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+;        /noerase,charsize=cal_plot_charsize,axiscolor=axiscolor
+;    ENDIF ELSE BEGIN
+;      IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
+;      IF tile_i EQ cal.ref_antenna THEN axiscolor='blue'
+;      IF ~(tile_i mod 16) THEN BEGIN
+;        IF (tile_i gt (n_tiles-17)) THEN BEGIN
+;          ; both axes
+;          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+;            xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,ytickname=ytickname,position=plot_pos[tile_i,*],$
+;            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
+;        ENDIF ELSE BEGIN
+;          ; just the y-axis
+;          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+;            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,ytickname=ytickname,position=plot_pos[tile_i,*],$
+;            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
+;        ENDELSE
+;      ENDIF ELSE BEGIN
+;        IF (tile_i gt (n_tiles-17)) THEN BEGIN
+;          ; just x-axis
+;          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+;            xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+;            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
+;        ENDIF ELSE BEGIN
+;          ; No axes
+;          cgplot,freq,phunwrap(atan(gains0[*,tile_i],/phase)),color='blue',title=strtrim(tile_name,2),$
+;            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
+;            yticklen=0.04,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
+;        ENDELSE
+;      ENDELSE
+;      IF n_pol GT 1 THEN cgoplot,freq,phunwrap(atan(gains1[*,tile_i],/phase)),color='red',psym=3,symsize=cal_plot_symsize
+;    ENDELSE
+;ENDFOR
+;cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
+;cgPS_Close,/png,Density=300,Resize=cal_plot_resize,/allow_transparent,/nomessage
+;    
+;cgPS_Open,amp_filename,scale_factor=2,/quiet,/nomatch
+;
+;IF n_pol GT 1 THEN max_amp = mean(abs([gains0,gains1])) + 2*stddev(abs([gains0,gains1])) $
+;    ELSE max_amp = Mean(abs(gains0)) + 2*stddev(abs(gains0))
+;yrange=[0,max_amp]
+;ytickv=[0,max_amp/2,max_amp]
+;
+;FOR tile_i=0L,n_tiles-1 DO BEGIN
+;    tile_name=tile_names[tile_i]
+;;    rec=Floor(tile_name/10)
+;;    tile=tile_name mod 10
+;    
+;    IF tile_exist[tile_i] EQ 0  THEN BEGIN
+;      ; no tile found... must have been flagged in pre-processing
+;      axiscolor='grey'
+;      cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+;        /noerase,charsize=cal_plot_charsize,axiscolor=axiscolor
+;    ENDIF ELSE BEGIN
+;      IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
+;      IF ~(tile_i mod 16) THEN BEGIN
+;        IF (tile_i gt (n_tiles-17)) THEN BEGIN
+;          ; both axes
+;          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+;            xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
+;            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
+;        ENDIF ELSE BEGIN
+;          ; just the y-axis
+;          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+;            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
+;            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
+;        ENDELSE
+;      ENDIF ELSE BEGIN
+;        IF (tile_i gt (n_tiles-17)) THEN BEGIN
+;          ; just x-axis
+;          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+;            xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
+;            yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
+;        ENDIF ELSE BEGIN
+;          ; No axes
+;          cgplot,freq,abs(gains0[*,tile_i]),color='blue',title=strtrim(tile_name,2),$
+;            xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
+;            yticklen=0.04,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
+;        ENDELSE
+;      ENDELSE
+;      IF n_pol GT 1 THEN cgoplot,freq,abs(gains1[*,tile_i]),color='red',psym=3,symsize=cal_plot_symsize
+;    ENDELSE
+;ENDFOR
+;
+;cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
+;cgPS_Close,/png,Density=300,Resize=cal_plot_resize,/allow_transparent,/nomessage
 
 IF Keyword_Set(res_gain_arr) THEN BEGIN
-    gains0r=*res_gain_arr[0]
-    gains0r=gains0r[freq_i_use,*]
+    gains0_res=*res_gain_arr[0]
+    gains0_res=gains0_res[freq_i_use,*]
     
-    gains0_orig=gains0r+gains0
-    gains0r=Abs(gains0_orig)-Abs(gains0)
+    gains0_orig=gains0_res+gains0
+    gains0_res=Abs(gains0_orig)-Abs(gains0)
     IF n_pol GT 1 THEN BEGIN    
-        gains1r=*res_gain_arr[1]
-        gains1r=gains1r[freq_i_use,*]
-        gains1_orig=gains1r+gains1
-        gains1r=Abs(gains1_orig)-Abs(gains1)
-        max_amp = mean(abs([gains0r,gains1r])) + 2*stddev(abs([gains0r,gains1r]))
-    ENDIF ELSE max_amp = mean(abs(gains0r)) + 2*stddev(abs(gains0r))
+        gains1_res=*res_gain_arr[1]
+        gains1_res=gains1_res[freq_i_use,*]
+        gains1_orig=gains1_res+gains1
+        gains1_res=Abs(gains1_orig)-Abs(gains1)
+        max_amp = mean(abs([gains0_res,gains1_res])) + 2*stddev(abs([gains0_res,gains1_res]))
+    ENDIF ELSE max_amp = mean(abs(gains0_res)) + 2*stddev(abs(gains0_res))
     
-;    gains0r=*cal_res.gain[0]
-;    gains0r=gains0r[freq_i_use,*]
-;    sign0r=Real_part(gains0r)*weight_invert(Abs(real_part(gains0r)))
-;    gains0r=Abs(gains0r)*sign0r
-;    IF n_pol GT 1 THEN BEGIN    
-;        gains1r=*cal_res.gain[1]
-;        gains1r=gains1r[freq_i_use,*]
-;        sign1r=Real_part(gains1r)*weight_invert(Abs(real_part(gains1r)))
-;        gains1r=Abs(gains1r)*sign1r
-;        max_amp = mean(abs([gains0r,gains1r])) + 2*stddev(abs([gains0r,gains1r]))
-;    ENDIF ELSE max_amp = mean(abs(gains0r)) + 2*stddev(abs(gains0r))
-    
-    IF max_amp GT 0 THEN BEGIN
-        cgPS_Open,res_filename,scale_factor=2,/quiet,/nomatch
-        yrange=[-max_amp,max_amp]
-        ytickv=[-max_amp,0,max_amp]
-        
-        FOR tile_i=0L,n_tiles-1 DO BEGIN
-            tile_name=tile_names[tile_i]
-;            rec=Floor(tile_name/10)
-;            tile=tile_name mod 10
-    
-            IF tile_exist[tile_i] EQ 0  THEN BEGIN
-              ; no tile found... must have been flagged in pre-processing
-              axiscolor='grey'
-              cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
-                /noerase,charsize=cal_plot_charsize,axiscolor=axiscolor,symsize=cal_plot_symsize
-            ENDIF ELSE BEGIN
-              IF tile_use[tile_i] EQ 0 THEN axiscolor='red' ELSE axiscolor='black'
-              IF ~(tile_i mod 16) THEN BEGIN
-                IF (tile_i gt (n_tiles-17)) THEN BEGIN
-                  ; both axes
-                  cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
-                    xticks=1,xtickv=xtickv,xtickname=xtickname,yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
-                    yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-                ENDIF ELSE BEGIN
-                  ; just the y-axis
-                  cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
-                    xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,position=plot_pos[tile_i,*],$
-                    yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-                ENDELSE
-              ENDIF ELSE BEGIN
-                IF (tile_i gt (n_tiles-17)) THEN BEGIN
-                  ; just x-axis
-                  cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
-                    xticks=1,xtickv=xtickv,yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$
-                    yticklen=0.04,yrange=yrange,xrange=xrange,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-                ENDIF ELSE BEGIN
-                  ; No axes
-                  cgplot,freq,gains0r[*,tile_i],color='blue',title=strtrim(tile_name,2),$
-                    xticks=1,xtickv=xtickv,XTICKFORMAT="(A1)",yticks=2,ytickv=ytickv,YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],yrange=yrange,xrange=xrange,$
-                    yticklen=0.04,charsize=cal_plot_charsize,/noerase,axiscolor=axiscolor,psym=3,symsize=cal_plot_symsize
-                ENDELSE
-              ENDELSE
-              IF n_pol GT 1 THEN cgoplot,freq,gains1r[*,tile_i],color='red',psym=3,symsize=cal_plot_symsize
-            ENDELSE
-        ENDFOR
-        
-        cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-        cgPS_Close,/png,Density=300,Resize=cal_plot_resize,/allow_transparent,/nomessage
-    ENDIF
+    ;plot amplitude residuals
+    IF max_amp GT 0 THEN plot_cals_sub,freq,gains0_res,gains1_res,filename=res_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+        obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
 ENDIF
 
 IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
