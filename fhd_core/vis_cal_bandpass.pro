@@ -57,7 +57,7 @@ IF Keyword_Set(file_path_fhd) THEN BEGIN
     cgplot,freq[freq_use],bandpass_arr[1,freq_use],color='blue',title=obs.obsname,xtitle='Frequency [MHz]',ytitle='Gain',$
         yrange=yrange,xrange=xrange,/noerase,axiscolor=axiscolor,psym=2,symsize=0.2
     IF n_pol GT 1 THEN cgoplot,freq[freq_use],bandpass_arr[2,freq_use],color='red',psym=2,symsize=0.2
-    cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+    cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
 ENDIF
 
 RETURN,cal_bandpass

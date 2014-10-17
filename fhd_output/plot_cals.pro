@@ -99,7 +99,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
     ENDELSE
 ENDFOR
 cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
     
 cgPS_Open,amp_filename,scale_factor=2,/quiet,/nomatch
 
@@ -150,7 +150,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
 ENDFOR
 
 cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
 
 IF Keyword_Set(res_gain_arr) THEN BEGIN
     gains0r=*res_gain_arr[0]
@@ -225,7 +225,7 @@ IF Keyword_Set(res_gain_arr) THEN BEGIN
         ENDFOR
         
         cgtext,.4,max(plot_pos[*,3]+height/4),obs.obsname,/normal
-        cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+        cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
     ENDIF
 ENDIF
 
@@ -241,7 +241,7 @@ IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
       cgoplot,base_len,ratio[pol,*]+sigma[pol,*],linestyle=2
       cgoplot,base_len,ratio[pol,*]-sigma[pol,*],linestyle=2
    ENDFOR
-   cgPS_Close,/png,Density=75,Resize=100.,/allow_transparent,/nomessage
+   cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
 ENDIF
 
 END    
