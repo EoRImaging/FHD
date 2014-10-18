@@ -149,12 +149,13 @@ cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[po
 FOR iter=0,calibration_flag_iterate DO BEGIN
     t2_a=Systime(1)
     IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
-    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,flag_ptr,obs,params,cal_base,$
+    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,flag_ptr,obs,params,cal,$
         preserve_visibilities=preserve_flag,_Extra=extra)
     t3_a=Systime(1)
     t2+=t3_a-t2_a
     
-    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,_Extra=extra
+    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
+    IF n_tile_cut EQ 0 THEN BREAK
 ENDFOR
 undefine_fhd,cal_base
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])

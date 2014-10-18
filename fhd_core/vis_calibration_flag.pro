@@ -1,10 +1,11 @@
 PRO vis_calibration_flag,obs,cal,error=error,degree=degree,phase_degree=phase_degree,$
-    no_frequency_flagging=no_frequency_flagging,no_calibration_frequency_flagging=no_calibration_frequency_flagging
+    no_frequency_flagging=no_frequency_flagging,n_tile_cut=n_tile_cut,$
+    no_calibration_frequency_flagging=no_calibration_frequency_flagging
 
 IF ~Keyword_Set(degree) THEN degree=2.
 IF ~Keyword_Set(phase_degree) THEN phase_degree=degree-1.
-amp_sigma_threshold=5.
-phase_sigma_threshold=5.
+amp_sigma_threshold=10.
+phase_sigma_threshold=10.
 n_tile=obs.n_tile
 n_freq=obs.n_freq
 n_pol=cal.n_pol
@@ -104,6 +105,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDWHILE
     IF n_tile_cut GT 0 THEN tile_use[tile_use_i1[tile_cut_i]]=0
 ENDFOR
+n_tile_cut=Total(obs_info.tile_use-tile_use)
 obs_info.tile_use=tile_use
 IF Keyword_Set(no_frequency_flagging) THEN freq_use[*]=1
 IF ~Keyword_Set(no_calibration_frequency_flagging) THEN obs_info.freq_use=freq_use
