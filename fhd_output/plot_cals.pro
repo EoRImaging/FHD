@@ -4,19 +4,13 @@ pro plot_cals,cal,obs,cal_res=cal_res,vis_baseline_hist=vis_baseline_hist,file_p
 ; cgPS_Open/cgPS_Close write .ps first, then converts to png. Supply .png
 ; filename to automatically overwrite .ps.
 
-no_ps=1
-IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
-phase_filename=file_path_base+'_cal_phase'+ext_name
-amp_filename=file_path_base+'_cal_amp'+ext_name
-res_filename=file_path_base+'_cal_residual'+ext_name
-vis_hist_filename=file_path_base+'_cal_hist'+ext_name
-IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
 IF Keyword_Set(cal_res) THEN res_gain_arr=cal_res.gain ELSE IF tag_exist(cal,'gain_residual') THEN $
     IF Min(Ptr_valid(cal.gain_residual)) THEN res_gain_arr=cal.gain_residual
 tile_names = cal.tile_names
 n_tiles=obs.n_tile
 n_pol=cal.n_pol
+pol_names=Strmid(obs.pol_names[0:1],0,1)
 obs2=*obs.baseline_info
 tile_use=obs2.tile_use
 freq_use=obs2.freq_use
@@ -24,6 +18,17 @@ freq_i_use=where(freq_use,nf_use) & IF nf_use EQ 0 THEN freq_i_use=lindgen(obs.n
 IF not Keyword_Set(cal_plot_charsize) THEN cal_plot_charsize=0.5
 IF not Keyword_Set(cal_plot_symsize) THEN cal_plot_symsize=1
 IF not Keyword_Set(cal_plot_resize) THEN cal_plot_resize=100.
+no_ps=1
+
+IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
+phase_filename=file_path_base+'_cal_phase'+ext_name
+amp_filename=file_path_base+'_cal_amp'+ext_name
+res_filename=file_path_base+'_cal_residual'+ext_name
+res_real_im_filename0=file_path_base+'_cal_residual_'+pol_names[0]+ext_name
+res_real_im_filename1=file_path_base+'_cal_residual_'+pol_names[1]+ext_name
+orig_amp_filename=file_path_base+'_cal_unfit_'+ext_name
+vis_hist_filename=file_path_base+'_cal_hist'+ext_name
+IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
 gains0 = *cal.gain[0] ; save on typing
 IF n_pol GT 1 THEN gains1 = *cal.gain[1]
@@ -65,18 +70,26 @@ IF Keyword_Set(res_gain_arr) THEN BEGIN
     gains0_res=gains0_res[freq_i_use,*]
     
     gains0_orig=gains0_res+gains0
-    gains0_res=Abs(gains0_orig)-Abs(gains0)
+    gains0_res_abs=Abs(gains0_orig)-Abs(gains0)
     IF n_pol GT 1 THEN BEGIN    
         gains1_res=*res_gain_arr[1]
         gains1_res=gains1_res[freq_i_use,*]
         gains1_orig=gains1_res+gains1
-        gains1_res=Abs(gains1_orig)-Abs(gains1)
-        max_amp = mean(abs([gains0_res,gains1_res])) + 2*stddev(abs([gains0_res,gains1_res]))
-    ENDIF ELSE max_amp = mean(abs(gains0_res)) + 2*stddev(abs(gains0_res))
+        gains1_res_abs=Abs(gains1_orig)-Abs(gains1)
+        max_amp = mean(abs([gains0_res_abs,gains1_res_abs])) + 2*stddev(abs([gains0_res_abs,gains1_res_abs]))
+    ENDIF ELSE max_amp = mean(abs(gains0_res_abs)) + 2*stddev(abs(gains0_res_abs))
     
     ;plot amplitude residuals
-    IF max_amp GT 0 THEN plot_cals_sub,freq,gains0_res,gains1_res,filename=res_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-        obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+    IF max_amp GT 0 THEN BEGIN
+        plot_cals_sub,freq,gains0_res_abs,gains1_res_abs,filename=res_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+        plot_cals_sub,freq,gains0_res,filename=res_real_im_filename0,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+        IF n_pol GT 1 THEN plot_cals_sub,freq,gains1_res,filename=res_real_im_filename1,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+        plot_cals_sub,freq,gains0_orig,gains1_orig,filename=orig_amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+    ENDIF
 ENDIF
 
 IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN

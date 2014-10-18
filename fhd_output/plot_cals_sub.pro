@@ -24,7 +24,8 @@ ENDIF ELSE BEGIN
     yrange=[0,max_amp]
     ytickv=[0,max_amp/2,max_amp]
     IF (gain_type LE 5) OR Keyword_Set(real_vs_imaginary) THEN BEGIN
-        min_amp=Min(Real_part(gains_A)<Imaginary(gains_B))
+        min_amp=Min(Real_part(gains_A)<Imaginary(gains_A))
+        IF n_pol GT 1 THEN min_amp=min_amp<Min(Real_part(gains_B)<Imaginary(gains_B))
         IF min_amp LT 0 THEN BEGIN
             yrange=[-max_amp,max_amp]
             ytickv=[-max_amp,0,max_amp]
@@ -51,7 +52,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
         Keyword_Set(real_vs_imaginary): BEGIN
           n_pol=2
           gain_vals_A=Real_part(gains_A[*,tile_i])
-          gain_vals_B=Real_part(gains_B[*,tile_i])
+          gain_vals_B=Imaginary(gains_A[*,tile_i])
         END
         ELSE: BEGIN
           IF gain_type GE 6 THEN gain_vals_A=abs(gains_A[*,tile_i]) ELSE gain_vals_A=gains_A[*,tile_i]
