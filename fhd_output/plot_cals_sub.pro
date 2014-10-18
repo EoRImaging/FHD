@@ -10,6 +10,7 @@ n_tiles=N_Elements(tile_names)
 width = plot_pos[1,0]-plot_pos[0,0]
 height = abs(plot_pos[16,1]-plot_pos[0,1])
 
+gain_type=size(gains_A,/type)
 xtickv=[ceil(min(freq_arr)/10)*10,floor(max(freq_arr)/10)*10]
 xtickname=strtrim(round(xtickv),2)
 xrange=[min(freq_arr)-(max(freq_arr)-min(freq_arr))/8,max(freq_arr)+(max(freq_arr)-min(freq_arr))/8]
@@ -22,9 +23,15 @@ ENDIF ELSE BEGIN
         ELSE max_amp = Mean(abs(gains_A)) + 2*stddev(abs(gains_A))
     yrange=[0,max_amp]
     ytickv=[0,max_amp/2,max_amp]
+    IF (gain_type LE 5) OR Keyword_Set(real_vs_imaginary) THEN BEGIN
+        min_amp=Min(Real_part(gains_A)<Imaginary(gains_B))
+        IF min_amp LT 0 THEN BEGIN
+            yrange=[-max_amp,max_amp]
+            ytickv=[-max_amp,0,max_amp]
+        ENDIF
+    ENDIF 
 ENDELSE
 
-gain_type=size(gains_A,/type)
 FOR tile_i=0L,n_tiles-1 DO BEGIN
     tile_name=tile_names[tile_i]
 ;    rec=Floor(tile_name/10)
