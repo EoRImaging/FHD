@@ -1,7 +1,10 @@
 #!/bin/bash
 
 #####################################################################################
+#This is the top level script for processing FHD firstpass job on the cluster.
+#
 #NOTE: print statements must be turned off in idl_startup file (e.g. healpix check)
+#
 #What is needed: a file with observation id's separated by newlines, and an output 
 #                  directory in which to put FHD output folder.
 #What is optional: specified starting and ending observation id's to choose a range
@@ -31,7 +34,9 @@ do
 	w) wallclock_time=$OPTARG;;	#Time for execution in grid engine
 	n) nslots=$OPTARG;;		#Number of slots for grid engine
 	m) mem=$OPTARG;;		#Memory per core for grid engine
-	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), and -v (version input for FHD)" 
+	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), "
+	    echo "-v (version input for FHD), -p (priority in grid engine), -w (wallclock time in grid engine), -n (number of slots to use),"
+	    echo "and -m (memory per core for grid engine)." 
 	    exit 1;;
 	:) echo "Missing option argument for input flag"
 	   exit 1;;
