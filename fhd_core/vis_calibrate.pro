@@ -16,16 +16,18 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
         cal_file_use=transfer_calibration
         IF file_test(cal_file_use,/directory) THEN BEGIN
             fhd_save_io,file_path_fhd=file_path_fhd,transfer=transfer_calibration,var='cal',path_use=cal_file_use2,_Extra=extra 
-                IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
-                    print,'File:'+cal_file_use+' not found!'
-                    error=1
-                    RETURN,vis_ptr
-                ENDELSE
+            cal_file_use2+='.sav'
+            IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
+                print,'File:'+cal_file_use2+' not found!'
+                error=1
+                RETURN,vis_ptr
+            ENDELSE
         ENDIF ELSE BEGIN
             IF file_test(cal_file_use) EQ 0 THEN BEGIN
                 fhd_save_io,file_path_fhd=cal_file_use,var='cal',path_use=cal_file_use2,_Extra=extra
+                cal_file_use2+='.sav'
                 IF file_test(cal_file_use2) THEN cal_file_use=cal_file_use2 ELSE BEGIN
-                    print,'File:'+cal_file_use+' not found!'
+                    print,'File:'+cal_file_use2+' not found!'
                     error=1
                     RETURN,vis_ptr
                 ENDELSE
