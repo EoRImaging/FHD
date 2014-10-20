@@ -325,8 +325,8 @@ ENDIF
 IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,$
     vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
 
-undefine_fhd,map_fn_arr,cal,obs,fhd_params,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_arr
-
+undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_arr
+undefine_fhd,obs,cal,jones,psf,antenna,fhd_params
 ;;generate images showing the uv contributions of each tile. Very helpful for debugging!
 ;print,'Calculating individual tile uv coverage'
 timing=Systime(1)-t0
