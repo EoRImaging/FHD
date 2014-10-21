@@ -40,7 +40,7 @@ psf_base_single=dirty_image_generate(power_beam,/no_real)
 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
 psf_base_superres/=beam_norm
-;psf_base_superres*=uv_mask_superres
+psf_base_superres*=uv_mask_superres
 
 RETURN,psf_base_superres
 END
