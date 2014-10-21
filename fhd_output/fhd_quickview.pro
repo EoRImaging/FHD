@@ -241,39 +241,39 @@ IF Keyword_Set(show_beam_contour) THEN BEGIN
     ENDFOR
 ENDIF 
 
-IF Keyword_Set(beam_diff_image) AND Keyword_Set(source_flag) THEN BEGIN
-    source_res_arr=source_residual_image(obs_out,source_arr_out,instr_residual_arr,beam_arr=beam_base_out,$
-        jones=jones_out,source_residual_radius=100.,source_residual_flux_threshold=1.,beam_power=2,_Extra=extra)
-    source_res_stks=stokes_cnv(source_res_arr,jones_out,_Extra=extra)
-    beam_diff_low_use=0
-    beam_diff_high_use=0
-    FOR pol_i=0,n_pol-1 DO beam_diff_low_use=beam_diff_low_use<((Median((*source_res_arr[pol_i])[beam_i])-3.*Stddev((*source_res_arr[pol_i])[beam_i]))>Min((*source_res_arr[pol_i])[beam_i]))
-    FOR pol_i=0,n_pol-1 DO beam_diff_high_use=beam_diff_high_use>((Median((*source_res_arr[pol_i])[beam_i])+3.*Stddev((*source_res_arr[pol_i])[beam_i]))<Max((*source_res_arr[pol_i])[beam_i]))
-    IF N_Elements(beam_diff_low) GT 0 THEN beam_diff_low_use=beam_diff_low
-    IF N_Elements(beam_diff_high) GT 0 THEN beam_diff_high_use=beam_diff_high
-    
-    mark_thick=1.
-    mark_length=6.
-    IF Keyword_Set(mark_zenith) AND (Floor(obs_out.zenx) GT mark_length) AND (Floor(obs_out.zenx) LT dimension-mark_length) $
-        AND (Floor(obs_out.zeny) GT mark_length) AND (Floor(obs_out.zeny) LT elements-mark_length) THEN BEGIN 
-        mark_image=fltarr(dimension,elements)
-        mark_amp=beam_diff_low_use
-        mark_image[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
-        mark_image[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
-        mark_image=mark_image[zoom_low:zoom_high,zoom_low:zoom_high]
-    ENDIF
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        IF ~Keyword_Set(no_png) THEN BEGIN
-            Imagefast,(*source_res_arr[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i],$
-                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
-                low=beam_diff_low_use,high=beam_diff_high_use,title=title_fhd,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
-            Imagefast,(*source_res_stks[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i+4],$
-                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
-                low=beam_diff_low_use*2.,high=beam_diff_high_use*2.,title=title_fhd,astr=astr_out2,_Extra=extra
-        ENDIF
-        IF ~Keyword_Set(no_fits) THEN FitsFast,*source_res_arr[pol_i],fits_header,/write,file_path=output_path+'_Beam_diff_'+pol_names[pol_i]
-    ENDFOR
-ENDIF
+;IF Keyword_Set(beam_diff_image) AND Keyword_Set(source_flag) THEN BEGIN
+;    source_res_arr=source_residual_image(obs_out,source_arr_out,instr_residual_arr,beam_arr=beam_base_out,$
+;        jones=jones_out,source_residual_radius=100.,source_residual_flux_threshold=1.,beam_power=2,_Extra=extra)
+;    source_res_stks=stokes_cnv(source_res_arr,jones_out,_Extra=extra)
+;    beam_diff_low_use=0
+;    beam_diff_high_use=0
+;    FOR pol_i=0,n_pol-1 DO beam_diff_low_use=beam_diff_low_use<((Median((*source_res_arr[pol_i])[beam_i])-3.*Stddev((*source_res_arr[pol_i])[beam_i]))>Min((*source_res_arr[pol_i])[beam_i]))
+;    FOR pol_i=0,n_pol-1 DO beam_diff_high_use=beam_diff_high_use>((Median((*source_res_arr[pol_i])[beam_i])+3.*Stddev((*source_res_arr[pol_i])[beam_i]))<Max((*source_res_arr[pol_i])[beam_i]))
+;    IF N_Elements(beam_diff_low) GT 0 THEN beam_diff_low_use=beam_diff_low
+;    IF N_Elements(beam_diff_high) GT 0 THEN beam_diff_high_use=beam_diff_high
+;    
+;    mark_thick=1.
+;    mark_length=6.
+;    IF Keyword_Set(mark_zenith) AND (Floor(obs_out.zenx) GT mark_length) AND (Floor(obs_out.zenx) LT dimension-mark_length) $
+;        AND (Floor(obs_out.zeny) GT mark_length) AND (Floor(obs_out.zeny) LT elements-mark_length) THEN BEGIN 
+;        mark_image=fltarr(dimension,elements)
+;        mark_amp=beam_diff_low_use
+;        mark_image[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
+;        mark_image[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
+;        mark_image=mark_image[zoom_low:zoom_high,zoom_low:zoom_high]
+;    ENDIF
+;    FOR pol_i=0,n_pol-1 DO BEGIN
+;        IF ~Keyword_Set(no_png) THEN BEGIN
+;            Imagefast,(*source_res_arr[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i],$
+;                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
+;                low=beam_diff_low_use,high=beam_diff_high_use,title=title_fhd,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
+;            Imagefast,(*source_res_stks[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i+4],$
+;                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
+;                low=beam_diff_low_use*2.,high=beam_diff_high_use*2.,title=title_fhd,astr=astr_out2,_Extra=extra
+;        ENDIF
+;        IF ~Keyword_Set(no_fits) THEN FitsFast,*source_res_arr[pol_i],fits_header,/write,file_path=output_path+'_Beam_diff_'+pol_names[pol_i]
+;    ENDFOR
+;ENDIF
 
 IF (residual_flag EQ 0) AND (model_flag EQ 0) THEN res_name='_Dirty_' ELSE res_name='_Residual_'
 
