@@ -304,6 +304,8 @@ case version of
       allow_sidelobe_image_output=1
       beam_output_threshold=0.01
       ;ring_radius=30.*pad_uv_image
+      show_beam_contour=1
+      contour_levels=[0.01]
    end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!

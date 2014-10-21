@@ -39,7 +39,7 @@ image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 ;image_filter_fn=''
 
 ; This file structure works at MIT
-data_directory='/nfs/mwa-09/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
+data_directory='/nfs/mwa-14/r1/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
 
 
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
