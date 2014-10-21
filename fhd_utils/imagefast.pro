@@ -310,7 +310,7 @@ IF Keyword_Set(contour_image) THEN BEGIN
         2:contour_image_use=Reverse(contour_image_use,2)
         3:contour_image_use=Reverse(Reverse(contour_image_use,1),2)
     ENDCASE
-    cgcontour,contour_image,levels=contour_levels,nlevels=contour_nlevels,/overplot,/noerase,position=oposition,/onimage,color=contour_color
+    cgcontour,contour_image_use,levels=contour_levels,nlevels=contour_nlevels,/overplot,/noerase,position=oposition,/onimage,color=contour_color
 ENDIF
 
 IF not Keyword_Set(no_colorbar) THEN BEGIN
