@@ -9,7 +9,8 @@ PRO imagefast,Image,astr=astr,file_path=file_path,no_ps=no_ps,$
     show_grid=show_grid,projection=projection,grid_spacing=grid_spacing,degpix=degpix,sphere=sphere,$
     lat_center=lat_center,lon_center=lon_center,zenith_ra=zenith_ra,zenith_dec=zenith_dec,$
     rotation=rotation,offset_lat=offset_lat,offset_lon=offset_lon,$
-    label_spacing=label_spacing,map_reverse=map_reverse,zero_black=zero_black,zero_white=zero_white,_EXTRA=extra
+    label_spacing=label_spacing,map_reverse=map_reverse,zero_black=zero_black,zero_white=zero_white,$
+    contour_image=contour_image,contour_levels=contour_levels,contour_nlevels=contour_nlevels,contour_color=contour_color,_EXTRA=extra
     
 ;use _Extra to pass keywords such as:
 ;   bold,cmyk,encapsulated,font (type!),narrow,oblique,preview,xoffset,xsize,yoffset,ysize
@@ -91,8 +92,8 @@ IF Keyword_Set(zero_black) OR Keyword_Set(zero_white) THEN BEGIN
     zero_i=Keyword_Set(mask_use) ? where(mask_use EQ 0,n_zero):where(image_use EQ 0,n_zero)
 ENDIF ELSE n_zero=0
 
-dimension=(size(Image_use,/dimension))[0]
-elements=(size(Image_use,/dimension))[1]
+dimension=Float((size(Image_use,/dimension))[0])
+elements=Float((size(Image_use,/dimension))[1])
 IF N_Elements(charsize) EQ 0 THEN charsize=(Alog10(dimension)-1.)>1
 IF N_Elements(high) EQ 0 THEN high=Max(image_use)
 IF N_Elements(low) EQ 0 THEN low=Min(image_use)
@@ -300,6 +301,12 @@ IF Keyword_Set(show_grid) THEN BEGIN
         ;Obsolete
     ENDELSE
 ENDIF  
+
+IF Keyword_Set(contour_image) THEN BEGIN
+    IF Ptr_valid(contour_image) THEN cgcontour,*contour_image,levels=contour_levels,nlevels=contour_nlevels,/overplot,/noerase,position=oposition,/onimage,color=contour_color $
+        ELSE cgcontour,contour_image,levels=contour_levels,nlevels=contour_nlevels,/overplot,/noerase,position=oposition,/onimage,color=contour_color
+ENDIF
+
 IF not Keyword_Set(no_colorbar) THEN BEGIN
     CASE 1 OF
         Keyword_Set(right_colorbar):cb_position=[oposition[2],ystart/ysize+colorbar_pad,oposition[2]+colorbar_width/xsize,oposition[3]-colorbar_pad]
