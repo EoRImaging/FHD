@@ -303,8 +303,14 @@ IF Keyword_Set(show_grid) THEN BEGIN
 ENDIF  
 
 IF Keyword_Set(contour_image) THEN BEGIN
-    IF Ptr_valid(contour_image) THEN cgcontour,*contour_image,levels=contour_levels,nlevels=contour_nlevels,/overplot,/noerase,position=oposition,/onimage,color=contour_color $
-        ELSE cgcontour,contour_image,levels=contour_levels,nlevels=contour_nlevels,/overplot,/noerase,position=oposition,/onimage,color=contour_color
+    IF Ptr_valid(contour_image) THEN contour_image_use=*contour_image ELSE contour_image_use=contour_image
+    CASE reverse_image OF
+        0:contour_image_use=contour_image_use
+        1:contour_image_use=Reverse(contour_image_use,1)
+        2:contour_image_use=Reverse(contour_image_use,2)
+        3:contour_image_use=Reverse(Reverse(contour_image_use,1),2)
+    ENDCASE
+    cgcontour,contour_image,levels=contour_levels,nlevels=contour_nlevels,/overplot,/noerase,position=oposition,/onimage,color=contour_color
 ENDIF
 
 IF not Keyword_Set(no_colorbar) THEN BEGIN
