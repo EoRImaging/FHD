@@ -53,7 +53,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR tile_i=0L,n_tile-1 DO BEGIN
         gain=reform(gain_amp[freq_use,tile_i])
         fit_params=poly_fit(freq_use,gain,degree)
-        cal.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
+        cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
         gain_fit=fltarr(n_freq)
         FOR di=0L,degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
         
@@ -63,7 +63,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF phase_degree GT 0 THEN BEGIN
             phase_use=PhUnwrap(reform(gain_phase[freq_use,tile_i]))
             phase_params=poly_fit(freq_use,phase_use,phase_degree,yfit=phase_fit)
-            cal.phase_params[pol_i,tile_i]=Ptr_new(phase_params)
+            cal_return.phase_params[pol_i,tile_i]=Ptr_new(phase_params)
             phase_fit=fltarr(n_freq)
             FOR di=0L,phase_degree DO phase_fit+=phase_params[di]*findgen(n_freq)^di
             gain_arr[*,tile_i]=gain_fit*Exp(i_comp*phase_fit)
