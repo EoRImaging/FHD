@@ -69,6 +69,8 @@ beam_model_version=0
 dipole_mutual_coupling_factor=0
 calibration_flag_iterate = 0
 
+no_calibration_frequency_flagging=1
+
 case version of
    'apb_test_restrict_hpx_inds_1': begin
       restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'       ; now graduated to a default
@@ -359,7 +361,9 @@ case version of
    'apb_sidelobe_subtract_3':begin
       allow_sidelobe_cal_sources=1
    end
-      
+   'apb_test_max_cal_iter':begin
+      max_cal_iter=100
+   end
 
    ; Abraham's versions
 
