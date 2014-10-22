@@ -7,6 +7,8 @@ cgPS_Open,filename,scale_factor=2,/quiet,/nomatch
 IF Keyword_Set(gains_B) THEN n_pol=2 ELSE n_pol=1
 n_tiles=N_Elements(tile_names)
 
+tile_use_i=where(tile_use,n_tile_use)
+IF n_tile_use LE 2 THEN tile_use_i=lindgen(n_tiles) 
 width = plot_pos[1,0]-plot_pos[0,0]
 height = abs(plot_pos[16,1]-plot_pos[0,1])
 
@@ -19,13 +21,13 @@ IF Keyword_Set(phase) THEN BEGIN
     ytickname=['-!9p!X','0','!9p!X']
     yrange=[-1.5*!pi,1.5*!pi]
 ENDIF ELSE BEGIN
-    IF n_pol GT 1 THEN max_amp = mean(abs([gains_A,gains_B])) + 2*stddev(abs([gains_A,gains_B])) $
-        ELSE max_amp = Mean(abs(gains_A)) + 2*stddev(abs(gains_A))
+    IF n_pol GT 1 THEN max_amp = mean(abs([gains_A[tile_use_i],gains_B[tile_use_i]])) + 2*stddev(abs([gains_A[tile_use_i],gains_B[tile_use_i]])) $
+        ELSE max_amp = Mean(abs(gains_A[tile_use_i])) + 2*stddev(abs(gains_A[tile_use_i]))
     yrange=[0,max_amp]
     ytickv=[0,max_amp/2,max_amp]
     IF (gain_type LE 5) OR Keyword_Set(real_vs_imaginary) THEN BEGIN
-        min_amp=Min(Real_part(gains_A)<Imaginary(gains_A))
-        IF n_pol GT 1 THEN min_amp=min_amp<Min(Real_part(gains_B)<Imaginary(gains_B))
+        min_amp=Min(Real_part(gains_A[tile_use_i])<Imaginary(gains_A[tile_use_i]))
+        IF n_pol GT 1 THEN min_amp=min_amp<Min(Real_part(gains_B[tile_use_i])<Imaginary(gains_B[tile_use_i]))
         IF min_amp LT 0 THEN BEGIN
             yrange=[-max_amp,max_amp]
             ytickv=[-max_amp,0,max_amp]
