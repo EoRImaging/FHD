@@ -69,6 +69,8 @@ beam_model_version=0
 dipole_mutual_coupling_factor=0
 calibration_flag_iterate = 0
 
+no_calibration_frequency_flagging=1
+
 case version of
    'apb_test_restrict_hpx_inds_1': begin
       restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'       ; now graduated to a default
@@ -304,6 +306,8 @@ case version of
       allow_sidelobe_image_output=1
       beam_output_threshold=0.01
       ;ring_radius=30.*pad_uv_image
+      show_beam_contour=1
+      contour_levels=[0.01]
    end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
@@ -425,6 +429,16 @@ case version of
       cal_cable_reflection_correct=150
    end
       
+   'apb_test_max_cal_iter':begin
+      max_cal_iter=100
+   end
+   'apb_test_diffuse_subtract_1':begin
+      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_8/Healpix/diffuse_model.sav'
+      model_visibilities=1
+      calibration_visibilities_subtract=1
+      return_cal_visibilities=0
+      snapshot_healpix_export=0
+   end
 
    ; Abraham's versions
 
