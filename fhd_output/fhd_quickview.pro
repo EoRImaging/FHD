@@ -234,11 +234,13 @@ astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 
 beam_contour_arr=Ptrarr(n_pol)
 beam_contour_arr2=Ptrarr(n_pol)
+beam_contour_stokes=Ptr_new()
 IF Keyword_Set(show_beam_contour) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         IF Keyword_Set(gridline_image_show) THEN beam_contour_arr2[pol_i]=Ptr_new((*beam_base_out[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]) $
-        ELSE beam_contour_arr[pol_i]=Ptr_new((*beam_base_out[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high])
+            ELSE beam_contour_arr[pol_i]=Ptr_new((*beam_base_out[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high])
     ENDFOR
+    beam_contour_stokes=Ptr_new(beam_avg[zoom_low:zoom_high,zoom_low:zoom_high])
 ENDIF 
 
 IF Keyword_Set(beam_diff_image) AND Keyword_Set(source_flag) THEN BEGIN
@@ -331,7 +333,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low_use,high=stokes_high_use,$
             lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
             offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
-            title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+            title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_stokes,_Extra=extra
         IF Keyword_Set(galaxy_model_fit) THEN BEGIN
             gal_img=*gal_model_img[pol_i]
             gal_low_use=Min(gal_img[beam_i])
@@ -369,12 +371,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
-                title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+                title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_stokes,_Extra=extra
             Imagefast,stokes_restored[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+restored_name+pol_names[pol_i+4],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=stokes_low_use,high=stokes_high_use,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
-                title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+                title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_stokes,_Extra=extra
             
     ;        Imagefast,instr_source[zoom_low:zoom_high,zoom_low:zoom_high],file_path=image_path+filter_name+'_Sources_'+pol_names[pol_i],$
     ;            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=0,high=instr_high_use,/invert_color,contour_image=contour_image,_Extra=extra
