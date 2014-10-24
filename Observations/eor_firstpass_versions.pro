@@ -364,6 +364,13 @@ case version of
    'apb_test_max_cal_iter':begin
       max_cal_iter=100
    end
+   'apb_test_diffuse_subtract_1':begin
+      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_8/Healpix/diffuse_model.sav'
+      model_visibilities=1
+      calibration_visibilities_subtract=1
+      return_cal_visibilities=0
+      snapshot_healpix_export=0
+   end
 
    ; Abraham's versions
 
