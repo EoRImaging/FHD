@@ -21,8 +21,13 @@ IF Keyword_Set(phase) THEN BEGIN
     ytickname=['-!9p!X','0','!9p!X']
     yrange=[-1.5*!pi,1.5*!pi]
 ENDIF ELSE BEGIN
-    IF n_pol GT 1 THEN max_amp = mean(abs([gains_A[tile_use_i],gains_B[tile_use_i]])) + 2*stddev(abs([gains_A[tile_use_i],gains_B[tile_use_i]])) $
-        ELSE max_amp = Mean(abs(gains_A[tile_use_i])) + 2*stddev(abs(gains_A[tile_use_i]))
+    IF n_pol GT 1 THEN max_amp = mean(abs([gains_A[tile_use_i],gains_B[tile_use_i]])) + 5*stddev(abs([gains_A[tile_use_i],gains_B[tile_use_i]])) $
+        ELSE max_amp = Mean(abs(gains_A[tile_use_i])) + 5*stddev(abs(gains_A[tile_use_i]))
+    amp_range=Floor(Alog10(max_amp))
+    IF amp_range LT 0 THEN amp_digits=1. ELSE amp_digits=2.
+    amp_test=max_amp/10.^(amp_range-amp_digits)
+    max_amp=Round(amp_test)*10.^(amp_range-amp_digits)
+     
     yrange=[0,max_amp]
     ytickv=[0,max_amp/2,max_amp]
     IF (gain_type LE 5) OR Keyword_Set(real_vs_imaginary) THEN BEGIN
