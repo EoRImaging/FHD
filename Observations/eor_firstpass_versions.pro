@@ -307,7 +307,7 @@ case version of
       beam_output_threshold=0.01
       ;ring_radius=30.*pad_uv_image
       show_beam_contour=1
-      contour_levels=[0.01]
+      contour_levels=[0.005]
    end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
@@ -370,6 +370,7 @@ case version of
       calibration_visibilities_subtract=1
       return_cal_visibilities=0
       snapshot_healpix_export=0
+      image_filter_fn='filter_uv_natural'
    end
 
    ; Abraham's versions
