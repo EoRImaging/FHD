@@ -428,7 +428,9 @@ case version of
    'apb_test_reflect_coefficients_1':begin
       cal_cable_reflection_correct=150
    end
-      
+   'apb_test_reflect_coefficients_2':begin
+      cal_cable_reflection_correct=150
+   end      
    'apb_test_max_cal_iter':begin
       max_cal_iter=100
    end
