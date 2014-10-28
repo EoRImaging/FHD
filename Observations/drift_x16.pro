@@ -44,17 +44,13 @@ no_restrict_cal_sources=1
 no_rephase=Keyword_Set(data_version)
 calibrate_visibilities=1
 save_visibilities=0
+mark_zenith=1
+psf_resolution=32.
+beam_diff_image=1
+beam_residual_threshold=0.1
 
 cmd_args=extra
-general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    image_filter_fn=image_filter_fn,data_directory=data_directory,$
-    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
-    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,$
-    FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,nfreq_avg=nfreq_avg,$
-    no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,$
-    gain_factor=gain_factor,smooth_width=smooth_width,min_cal_baseline=min_cal_baseline,silent=silent,$
-    combine_obs=combine_obs,calibrate_visibilities=calibrate_visibilities,$
-    ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,split_ps=split_ps,bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,$
-    no_restrict_cal_sources=no_restrict_cal_sources,save_visibilities=save_visibilities,cmd_args=cmd_args,_Extra=extra
+extra=var_bundle()
+general_obs,_Extra=extra
 !except=except
 END
