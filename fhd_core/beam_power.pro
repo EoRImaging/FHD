@@ -15,9 +15,11 @@ beam_ant1=*(antenna1.response[ant_pol1,freq_i])
 beam_ant2=Conj(*(antenna2.response[ant_pol2,freq_i]))
 beam_norm=1.
 
+power_zenith=(*Jones1[0,ant_pol1])[zen_int_x,zen_int_y]*(Conj(*Jones2[0,ant_pol2]))[zen_int_x,zen_int_y]+$
+             (*Jones1[1,ant_pol1])[zen_int_x,zen_int_y]*(Conj(*Jones2[1,ant_pol2]))[zen_int_x,zen_int_y]
 power_beam=(*Jones1[0,ant_pol1]*beam_ant1)*(Conj(*Jones2[0,ant_pol2])*beam_ant2)+$
            (*Jones1[1,ant_pol1]*beam_ant1)*(Conj(*Jones2[1,ant_pol2])*beam_ant2)           
-psf_base_single=dirty_image_generate(power_beam,/no_real)
+psf_base_single=dirty_image_generate(power_beam/power_zenith,/no_real)
 
 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
 uv_mask_superres=Fltarr(dimension_super,dimension_super)
