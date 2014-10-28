@@ -68,16 +68,21 @@ CASE beam_model_version OF
         phi_arr=median(phi_arr,dimension=1) ; all actually the same across freq, so reduce dimension
         phi_arr=270.-phi_arr ;change azimuth convention
         
-        ;normalize to zenith
-        norm_factor=fltarr(nfreq_bin,n_ant_pol)
-        FOR p_i=0,n_ant_pol-1 DO norm_factor[*,p_i]=interpol(Max(abs(Jmat_arr[*,p_i,p_i,*]),dimension=4),freq_arr_Jmat,freq_center)
-        norm_factor=1./Median(norm_factor,dimension=2,/even)
+;        ;normalize to zenith
+;        norm_factor=fltarr(nfreq_bin,n_ant_pol)
+;        FOR p_i=0,n_ant_pol-1 DO norm_factor[*,p_i]=interpol(Max(abs(Jmat_arr[*,p_i,p_i,*]),dimension=4),freq_arr_Jmat,freq_center)
+;        norm_factor=1./Median(norm_factor,dimension=2,/even)
+        
+;        zenith_i=where(theta_arr EQ 0,n_zen)
+;        max_zen=Max(abs(Jmat_arr[*,*,*,zenith_i]),max_zen_i,dimension=4)
+;        FOR z_i=0L,n_zen-1 DO FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR ext_i=0,n_ext-1 DO $
+;            Jmat_arr[ext_i,p_i,p_j,zenith_i[z_i]]=(Jmat_arr[*,*,*,zenith_i])[max_zen_i[ext_i,p_i,p_j]]
         
     ;    Jmat_return=Ptrarr(n_ant_pol,n_ant_pol)
         Jmat_interp=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO Jmat_interp[p_i,p_j,freq_i]=Ptr_new(Complexarr(n_ang))
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR a_i=0L,n_ang-1 DO BEGIN
-            Jmat_single_ang=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,freq_center)*norm_factor
+            Jmat_single_ang=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,freq_center);*norm_factor
             FOR freq_i=0L,nfreq_bin-1 DO (*Jmat_interp[p_i,p_j,freq_i])[a_i]=Jmat_single_ang[freq_i]
 ;            (*Jmat_interp[p_i,p_j])[a_i]=Interpol(Jmat_arr[*,p_i,p_j,a_i],freq_arr_Jmat,freq_center)
         ENDFOR
@@ -95,16 +100,25 @@ CASE beam_model_version OF
             xv_instrument1=xvals_instrument[pix_use[i]]
             yv_instrument1=yvals_instrument[pix_use[i]]
             
+            IF Abs(xv_instrument1) LT 1 AND Abs(yv_instrument1) LT 1 THEN BEGIN
+                debug_point=1
+            ENDIF
+            
             dist_test=Sqrt((xv_instrument1-xv_model)^2.+(yv_instrument1-yv_model)^2.)
-            IF Min(dist_test,min_i) EQ 0 THEN BEGIN ;test if there is an exact match. Then just take that value and do no interpolation
-                FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
-                    (*Jones_matrix[p_i,p_j,freq_i])[pix_use[i]]=(*Jmat_interp[p_i,p_j,freq_i])[min_i]
-                CONTINUE ;move on to next iteration of pixel FOR loop
-            ENDIF 
-            i_use=(Sort(dist_test))[0:3] ;there had better be at least four points in the model!
+;            IF Min(dist_test,min_i) EQ 0 THEN BEGIN ;test if there is an exact match. Then just take that value and do no interpolation
+;                FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
+;                    (*Jones_matrix[p_i,p_j,freq_i])[pix_use[i]]=(*Jmat_interp[p_i,p_j,freq_i])[min_i]
+;                CONTINUE ;move on to next iteration of pixel FOR loop
+;            ENDIF ;SKIP THIS TEST, BECAUSE THERE ARE DUPLICATE ENTRIES WITH DIFFERENT VALUES
+            dist_ref=Min(dist_test)
+            i_use=where(dist_test LE dist_ref*Sqrt(2.),n_use)
+            IF n_use LT 4 THEN i_use=(Sort(dist_test))[0:3] ;there had better be at least four points in the model!
             weight=1./dist_test[i_use]
-            FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
-                (*Jones_matrix[p_i,p_j,freq_i])[pix_use[i]]=Total((*Jmat_interp[p_i,p_j,freq_i])[i_use]*weight)/Total(weight)
+            FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO BEGIN
+                amp=Sqrt(Total(Abs((*Jmat_interp[p_i,p_j,freq_i])[i_use])^2.*weight)/Total(weight))
+                phase=Total(Atan((*Jmat_interp[p_i,p_j,freq_i])[i_use],/phase)*weight)/Total(weight)
+                (*Jones_matrix[p_i,p_j,freq_i])[pix_use[i]]=amp*Exp(icomp*phase)
+            ENDFOR
         ENDFOR
 ;        IF polarization EQ 0 THEN projection=Sqrt(*Jmat[0,0]*Conj(*Jmat[0,0])+*Jmat[1,0]*Conj(*Jmat[1,0])) $
 ;            ELSE projection=Sqrt(*Jmat[1,1]*Conj(*Jmat[1,1])+*Jmat[0,1]*Conj(*Jmat[0,1]))

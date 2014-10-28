@@ -79,6 +79,8 @@ ENDFOR
 ;;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
 psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+zen_int_x=(obs.zenx-obs.obsx)/psf_intermediate_res+psf_image_dim/2
+zen_int_y=(obs.zeny-obs.obsy)/psf_intermediate_res+psf_image_dim/2
 psf_superres_dim=psf_dim*psf_resolution
 xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
@@ -139,7 +141,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,$
                 freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
                 xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
-                beam_mask_threshold=beam_mask_threshold,_Extra=extra)
+                beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,_Extra=extra)
             
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
