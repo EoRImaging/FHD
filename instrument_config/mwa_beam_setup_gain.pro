@@ -160,7 +160,7 @@ ENDCASE
 ;FOR pol_i=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
 ;    zenith_norm[pol_i,freq_i]=Sqrt(Max(abs((*Jones_matrix[0,pol_i,freq_i])*(Conj(*Jones_matrix[0,pol_i,freq_i]))+$
 ;         (*Jones_matrix[1,pol_i,freq_i])*(Conj(*Jones_matrix[1,pol_i,freq_i])))))
-;antenna.jones=Jones_matrix
+antenna.jones=Jones_matrix
 
 
 RETURN,antenna
