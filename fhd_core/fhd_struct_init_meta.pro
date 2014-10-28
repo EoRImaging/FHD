@@ -110,7 +110,7 @@ ENDIF ELSE BEGIN
                 Precess,zenra0,zendec,epoch,2000. ;slight error, since zenra0 is NOT in J2000, but assume the effect on zendec is small
             ENDIF
         ENDELSE
-    ENDIF ELSE zenpos2,JD0,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
+    ENDIF ELSE hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate 
     beamformer_delays=Ptr_new()
 ENDELSE
 
