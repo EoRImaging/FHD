@@ -398,6 +398,20 @@ case version of
       allow_sidelobe_model_sources=1
    end
 
+   'nb_test_transfercal_on_devel':begin
+      model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      transfer_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_9/'
+   end
+
+   'nb_std_Oct2014':begin
+      max_cal_iter=10
+      cal_convergence_threshold=1E-3
+      dipole_mutual_coupling=0
+      beam_model=0
+      calibration_flag_iterate=0
+   end
+
    ; Patti's versions
 
    else: print,'Default parameters'
