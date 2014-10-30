@@ -1,7 +1,7 @@
 FUNCTION source_residual_image,obs,source_arr,image_arr,jones=jones,source_residual_stokes=source_residual_stokes,beam_arr=beam_arr,beam_power=beam_power,$
     image_path=image_path,source_residual_radius=source_residual_radius,source_residual_ston_threshold=source_residual_ston_threshold,$
     source_residual_flux_threshold=source_residual_flux_threshold,source_residual_beam_threshold=source_residual_beam_threshold,$
-    smooth_width=smooth_width,beam_threshold=beam_threshold,source_residual_include_sidelobe=source_residual_include_sidelobe
+    smooth_width=smooth_width,beam_threshold=beam_threshold,source_residual_include_sidelobe=source_residual_include_sidelobe,smooth_iter=smooth_iter
 
 source_arr_use=source_arr
 
@@ -9,13 +9,13 @@ n_pol=obs.n_pol
 dimension=obs.dimension
 elements=obs.elements
 pol_names=obs.pol_names
-IF N_Elements(source_residual_radius) EQ 0 THEN radius=11 ELSE radius=source_residual_radius;could define default from source density
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 IF N_Elements(beam_power) EQ 0 THEN beam_power=1.
 IF Keyword_Set(source_residual_stokes) THEN pol_offset=4 ELSE pol_offset=0
 beam_flag=Min(Ptr_valid(beam_arr))
 restored_beam_width=beam_width_calculate(obs,min_restored_beam_width=1.)
 IF N_Elements(smooth_width) EQ 0 THEN smooth_width=5.*restored_beam_width
+IF N_Elements(smooth_iter) EQ 0 THEN smooth_iter=4.
 
 IF Keyword_Set(source_residual_stokes) THEN BEGIN
     IF Max(source_arr_use.flux.I) EQ 0 THEN BEGIN
@@ -57,6 +57,9 @@ IF beam_flag THEN BEGIN
         IF n_use GT 0 THEN source_arr_use=source_arr_use[si_use]
     ENDIF
 ENDIF ELSE beam_mask=Fltarr(dimension,elements)+1.
+
+IF N_Elements(source_residual_radius) EQ 0 THEN radius=Ceil(Sqrt(N_Elements(where(beam_mask))/(n_use/4.)/!Pi))>11. $ ; want an average of 4 sources per smooth box
+    ELSE radius=source_residual_radius
 
 residual_arr=Ptrarr(n_pol)
 sx=source_arr_use.x
@@ -118,7 +121,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    res_y_max=(Max(sy)+restored_beam_width/2)<(elements-1)
 ;    res_y_min=(Min(sy)-restored_beam_width/2)>0
     
-    res_test=Smooth(res_img*source_weights,radius,/edge)*weight_invert(Smooth(source_img,radius,/edge),min(source_arr_use.flux.I)/radius^2.)
+    res_img2=Smooth(res_img*source_weights,radius,/edge)
+    source_img2=Smooth(source_img,radius,/edge)
+    FOR i=0L,smooth_iter-1 DO BEGIN
+        res_img2=Smooth(res_img2,radius,/edge)
+        source_img2=Smooth(source_img2,radius,/edge)
+    ENDFOR
+    ;power of 3 intentional: after 1 iteration a source will be smeared at 1/radius^2 in all surrounding pixels. 
+    ;Want to pick up one more iteration out, and the final row of radius pixels will be smeared at an additional 1/r^2 for a total of 1/r^3
+    res_test=res_img2*weight_invert(source_img2,min(source_arr_use.flux.I)/radius^3.)
 ;    res_test2=Smooth((res_img*source_weights)[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge)*$
 ;        weight_invert(Smooth(source_img[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge),min(source_arr_use.flux.I)/radius^2.)
     
