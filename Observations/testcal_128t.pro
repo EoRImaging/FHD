@@ -63,7 +63,7 @@ contour_color='blue'
 n_pol=2
 restore_vis_savefile=1
 firstpass=1
-max_cal_iter=10L
+max_cal_iter=100L
 
 cmd_args=extra
 extra=var_bundle()

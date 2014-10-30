@@ -79,8 +79,9 @@ ENDFOR
 ;;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
 psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
-zen_int_x=(obs.zenx-obs.obsx)/psf_intermediate_res+psf_image_dim/2
-zen_int_y=(obs.zeny-obs.obsy)/psf_intermediate_res+psf_image_dim/2
+image_res_scale=dimension*psf_intermediate_res/psf_image_dim
+zen_int_x=(obs.zenx-obs.obsx)/image_res_scale+psf_image_dim/2
+zen_int_y=(obs.zeny-obs.obsy)/image_res_scale+psf_image_dim/2
 psf_superres_dim=psf_dim*psf_resolution
 xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
