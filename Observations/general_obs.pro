@@ -150,7 +150,7 @@ WHILE fi LT n_files DO BEGIN
         healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,return_cal_visibilities=return_cal_visibilities,$
         snapshot_healpix_export=snapshot_healpix_export,snapshot_recalculate=snapshot_recalculate,$
         split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
-    
+    IF ~Keyword_Set(error) THEN IF Tag_exist(status_str,'complete') THEN status_str.complete=1
     fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
     IF N_Elements(status_arr) EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     IF Keyword_Set(error) THEN BEGIN
