@@ -12,9 +12,14 @@ IF psav EQ -1 THEN catalog_path+='.sav'
 IF file_test(catalog_path) EQ 0 THEN BEGIN
     catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
     IF file_test(catalog_path_full) EQ 0 THEN BEGIN
-        print,String(format='(A," not found! Using default: ",A)',catalog_path,obs.instrument+'_calibration_source_list.sav')
-        catalog_path=obs.instrument+'_calibration_source_list.sav'
-        catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+        if keyword_set(delicate_calibration_catalog) then begin
+          print,String(format='(A," not found! Critical problem, quitting!',catalog_path)
+          exit
+        endif else begin
+          print,String(format='(A," not found! Using default: ",A)',catalog_path,obs.instrument+'_calibration_source_list.sav')
+          catalog_path=obs.instrument+'_calibration_source_list.sav'
+          catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+        endelse
     ENDIF
 ENDIF ELSE catalog_path_full=catalog_path
 RESTORE,catalog_path_full,/relaxed ;catalog
