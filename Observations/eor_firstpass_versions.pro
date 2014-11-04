@@ -304,10 +304,10 @@ case version of
       snapshot_healpix_export=0
       recalculate_all=0
       allow_sidelobe_image_output=1
-      beam_output_threshold=0.01
+      beam_output_threshold=0.005
       ;ring_radius=30.*pad_uv_image
       show_beam_contour=1
-      contour_levels=[0.005]
+      contour_levels=[0.01]
    end
 
    ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
@@ -372,6 +372,22 @@ case version of
       snapshot_healpix_export=0
       image_filter_fn='filter_uv_natural'
    end
+   'apb_cal_sidelobes_N':begin
+      calibration_catalog_file_path=filepath('MRC_calibration_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+      snapshot_healpix_export=0
+   end
+   'apb_cal_sidelobes_S':begin
+      snapshot_healpix_export=0
+   end
+   'apb_cal_sidelobes_E':begin
+      snapshot_healpix_export=0
+   end
+   'apb_cal_sidelobes_W':begin
+      snapshot_healpix_export=0
+   end
+   ;'apb_make_diffuse_model':begin
+      
+   
 
    ; Abraham's versions
 
