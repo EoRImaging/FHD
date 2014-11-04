@@ -1,17 +1,14 @@
-PRO galaxy_test,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,channel=channel,data_version=data_version,calibrate_visibilities=calibrate_visibilities,_Extra=extra
+PRO galaxy_test,_Extra=extra
 except=!except
 !except=0 
 heap_gc
 
-IF N_Elements(calibrate_visibilities) EQ 0 THEN calibrate_visibilities=0
-IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
-IF N_Elements(export_images) EQ 0 THEN export_images=1
-IF N_Elements(cleanup) EQ 0 THEN cleanup=0
-IF N_Elements(ps_export) EQ 0 THEN ps_export=0
-IF N_Elements(version) EQ 0 THEN version=''
-image_filter_fn='' ;applied ONLY to output images
+export_images=1
+cleanup=0
+ps_export=0
+version=''
+image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
+deconvolution_filter='filter_uv_uniform' ;filter applied to images for deconvolution (but not for output)
 
 data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','galaxy_test'])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
@@ -20,33 +17,46 @@ healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_fi
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_galactic_center_catalog2.sav',root=rootdir('FHD'),subdir='catalog_data')
 
-;calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
-dimension=3072.
-max_sources=200000.
-pad_uv_image=2.
-IF dimension GT 2048 THEN pad_uv_image=1.
-FoV=80.
+combine_obs=0
+dimension=2048.
+max_sources=300000.
+pad_uv_image=1.
+
+n_pol=2
+precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
+FoV=!Radeg*2. 
 no_ps=1 ;don't save postscript copy of images
+gain_factor=0.2
 min_baseline=1.
-min_cal_baseline=10.
-ring_radius=10.*pad_uv_image
-nfreq_avg=16
-no_rephase=0 ;set to use obsra, obsdec for phase center even if phasera, phasedec present in a .metafits file
-no_fits=0
-combine_healpix=1
-gain_factor=2./3.
+min_cal_baseline=50.
+no_fits=1
+silent=0
 smooth_width=11.
+nfreq_avg=4.
+ps_kbinsize=0.5
+ps_kspan=600.
+split_ps=1
+bandpass_calibrate=1
+calibration_polyfit=2.
+save_vis=0
+cal_mode_fit=1
+cal_cable_reflection_fit=150.
+recalculate_all=0
+no_restrict_cal_sources=1
+no_rephase=1
+calibrate_visibilities=1
+mark_zenith=1
+psf_resolution=32.
+beam_diff_image=1
+beam_residual_threshold=0.1
+output_residual_histogram=1
+show_beam_contour=1
+contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
+contour_color='blue'
 
-general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid=grid,deconvolve=deconvolve,image_filter_fn=image_filter_fn,data_directory=data_directory,$
-    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
-    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,$
-    complex_beam=complex_beam,double_precison_beam=double_precison_beam,FoV=FoV,no_ps=no_ps,$
-    min_baseline=min_baseline,calibrate_visibilities=calibrate_visibilities,nfreq_avg=nfreq_avg,$
-    no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,/mark_zenith,$
-    show_obsname=1,silent=silent,smooth_width=smooth_width,gain_factor=gain_factor,combine_healpix=combine_healpix,$
-    min_cal_baseline=min_cal_baseline,_Extra=extra
+cmd_args=extra
+extra=var_bundle()
+general_obs,_Extra=extra
 !except=except
 END
