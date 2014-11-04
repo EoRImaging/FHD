@@ -17,6 +17,8 @@ IF file_test(catalog_path) EQ 0 THEN BEGIN
         catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
     ENDIF
 ENDIF ELSE catalog_path_full=catalog_path
+
+cat_init=source_comp_init(n_sources=0) ;define structure BEFORE restoring, in case the definition has changed
 RESTORE,catalog_path_full,/relaxed ;catalog
 
 IF Keyword_Set(model_visibilities) THEN BEGIN
@@ -64,7 +66,9 @@ ENDELSE
 IF n_use GT 0 THEN BEGIN
     catalog=catalog[i_use]
     IF N_Elements(spectral_index) GT 1 THEN spectral_index=spectral_index[i_use]
-    source_list=catalog
+    source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
+        alpha=spectral_index,extend=catalog.extend)
+        
     ad2xy,source_list.ra,source_list.dec,astr,x_arr,y_arr
     source_list.x=x_arr
     source_list.y=y_arr

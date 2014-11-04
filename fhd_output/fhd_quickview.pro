@@ -219,6 +219,12 @@ ENDIF
 mkhdr,fits_header,*instr_dirty_arr[0]
 putast, fits_header, astr_out;, cd_type=1
 
+fits_header_Jy=fits_header
+sxaddpar,fits_header_Jy,'BUNIT','Jy/beam'
+
+fits_header_apparent=fits_header
+sxaddpar,fits_header_apparent,'BUNIT','Jy/beam (apparent)'
+
 x_inc=beam_i mod dimension
 y_inc=Floor(beam_i/dimension)
 IF N_Elements(zoom_radius) GT 0 THEN BEGIN
@@ -346,12 +352,12 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
     ENDIF
     IF ~Keyword_Set(no_fits) THEN BEGIN
-        FitsFast,stokes_residual,fits_header,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i+4]
-        IF model_flag THEN FitsFast,instr_dirty,fits_header,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
-        FitsFast,instr_residual,fits_header,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
+        FitsFast,stokes_residual,fits_header_Jy,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i+4]
+        IF model_flag THEN FitsFast,instr_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
+        FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
         IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
-        IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
+        IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
     ENDIF
     
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
@@ -359,10 +365,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN restored_name='_Restored_rings_' ELSE restored_name='_Restored_'
         IF ~Keyword_Set(no_fits) THEN BEGIN
-    ;        FitsFast,instr_source,fits_header,/write,file_path=output_path+filter_name+'_Sources_'+pol_names[pol_i]
-            FitsFast,instr_residual+instr_source,fits_header,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i]
-    ;        FitsFast,stokes_source,fits_header,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
-            FitsFast,stokes_residual+stokes_source,fits_header,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i+4]
+    ;        FitsFast,instr_source,fits_header_apparent,/write,file_path=output_path+filter_name+'_Sources_'+pol_names[pol_i]
+            FitsFast,instr_residual+instr_source,fits_header_apparent,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i]
+    ;        FitsFast,stokes_source,fits_header_Jy,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
+            FitsFast,stokes_residual+stokes_source,fits_header_Jy,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i+4]
         ENDIF
         IF ~Keyword_Set(no_png) THEN BEGIN
             instrS_high=Max(instr_restored[beam_i])

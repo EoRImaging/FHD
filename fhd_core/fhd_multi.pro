@@ -176,7 +176,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
         filter_arr=filter_arr[*,obs_i],image_filter_fn=decon_filter,degpix=obs.degpix,/antialias,file_path_fhd=file_path_fhd)
     
-    *comp_arr[obs_i]=source_comp_init(n_sources=max_sources)
+    *comp_arr[obs_i]=source_comp_init(n_sources=max_sources,gain_factor=gain_factor)
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
         gal_model_uv=fhd_galaxy_model(obs,jones_arr[obs_i],file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)

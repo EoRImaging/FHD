@@ -91,6 +91,11 @@ ENDIF
 mkhdr,fits_header,*residual_array[0]
 putast, fits_header, astr_out;, cd_type=1
 
+fits_header_Jy=fits_header
+sxaddpar,fits_header_Jy,'BUNIT','Jy/beam'
+
+fits_header_apparent=fits_header
+sxaddpar,fits_header_apparent,'BUNIT','Jy/beam (apparent)'
 t1a=Systime(1)
 t0+=t1a-t0a
 
@@ -358,20 +363,20 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     
     t8a=Systime(1)
     IF ~Keyword_Set(no_fits) THEN BEGIN
-        FitsFast,instr_dirty,fits_header,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
-        FitsFast,instr_residual,fits_header,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i]
-        FitsFast,instr_res_phase,fits_header,/write,file_path=output_path_fg+'_ResidualPhase_'+pol_names[pol_i]
-        FitsFast,instr_source,fits_header,/write,file_path=output_path_fg+'_Sources_'+pol_names[pol_i]
-        FitsFast,instr_restored,fits_header,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i]
+        FitsFast,instr_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
+        FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i]
+;        FitsFast,instr_res_phase,fits_header,/write,file_path=output_path_fg+'_ResidualPhase_'+pol_names[pol_i]
+        FitsFast,instr_source,fits_header_apparent,/write,file_path=output_path_fg+'_Sources_'+pol_names[pol_i]
+        FitsFast,instr_restored,fits_header_apparent,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
         FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
         
-        FitsFast,*stokes_images[pol_i],fits_header,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i+4]
-        FitsFast,*stokes_sources[pol_i],fits_header,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
-        FitsFast,*stokes_images[pol_i]+*stokes_sources[pol_i],fits_header,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i+4]
+        FitsFast,*stokes_images[pol_i],fits_header_Jy,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i+4]
+        FitsFast,*stokes_sources[pol_i],fits_header_Jy,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
+        FitsFast,*stokes_images[pol_i]+*stokes_sources[pol_i],fits_header_Jy,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i+4]
         IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-            FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
-            IF Ptr_valid(gal_holo_img[pol_i]) THEN FitsFast,*gal_holo_img[pol_i],fits_header,/write,file_path=output_path+'_GalHolo_'+pol_names[pol_i]
+            FitsFast,*gal_model_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
+            IF Ptr_valid(gal_holo_img[pol_i]) THEN FitsFast,*gal_holo_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalHolo_'+pol_names[pol_i]
         ENDIF
     ENDIF
     
@@ -468,9 +473,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
 ;    IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ;        IF ~Keyword_Set(no_fits) THEN BEGIN
-;            FitsFast,*stokes_gal_model[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i+4]
-;            FitsFast,*gal_holo_img[pol_i],fits_header,/write,file_path=output_path+'_GalHolo_'+pol_names[pol_i]
-;            FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
+;            FitsFast,*stokes_gal_model[pol_i],fits_header_Jy,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i+4]
+;            FitsFast,*gal_holo_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalHolo_'+pol_names[pol_i]
+;            FitsFast,*gal_model_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
 ;        ENDIF
 ;        gal_low=0.
 ;        gal_high=Max((*gal_model_img[pol_i])[beam_i])

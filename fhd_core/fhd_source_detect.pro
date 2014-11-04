@@ -165,6 +165,7 @@ FOR src_i=0L,n_sources-1 DO BEGIN
     comp_arr[si].ra=ra
     comp_arr[si].dec=dec
     comp_arr[si].flux.I=flux_use*gain_factor_use
+    comp_arr[si].gain=gain_factor_use
     IF Keyword_Set(independent_fit) AND (N_Elements(image_Q_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.Q=$
         Interpolate(image_Q_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
     IF (N_Elements(image_U_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.U=$
