@@ -1,7 +1,7 @@
 FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i=freq_i,$
     psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
     beam_mask_electric_field=beam_mask_electric_field,beam_mask_threshold=beam_mask_threshold,$
-    xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres
+    xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,debug_beam_clipping=debug_beam_clipping
     
 freq_center=antenna1.freq[freq_i]
 dimension_super=(size(xvals_uv_superres,/dimension))[0]
@@ -20,10 +20,19 @@ power_beam=(*Jones1[0,ant_pol1]*beam_ant1)*(Conj(*Jones2[0,ant_pol2])*beam_ant2)
 psf_base_single=dirty_image_generate(power_beam,/no_real)
 
 psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-uv_mask_superres=Fltarr(dimension_super,dimension_super)
-beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
-    thresh=[Max(Abs(psf_base_superres))/beam_mask_threshold,Max(Abs(psf_base_superres))])
-uv_mask_superres[beam_i]=1
+
+IF Keyword_Set(debug_beam_clipping) THEN BEGIN
+    uv_mask=Fltarr(psf_image_dim,psf_image_dim)
+    beam_i=region_grow(Abs(psf_base_single),psf_image_dim*(1.+psf_image_dim)/2.,$
+        thresh=[Max(Abs(psf_base_single))/beam_mask_threshold,Max(Abs(psf_base_single))])
+    uv_mask[beam_i]=1
+    uv_mask_superres=Interpolate(uv_mask,xvals_uv_superres,yvals_uv_superres)
+ENDIF ELSE BEGIN
+    uv_mask_superres=Fltarr(dimension_super,dimension_super)
+    beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
+        thresh=[Max(Abs(psf_base_superres))/beam_mask_threshold,Max(Abs(psf_base_superres))])
+    uv_mask_superres[beam_i]=1
+ENDELSE
 
 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
 psf_base_superres/=beam_norm
