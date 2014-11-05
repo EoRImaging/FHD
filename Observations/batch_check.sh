@@ -24,6 +24,7 @@ for obs in $obslist; do
     if [ ! -f ${file} ]; then
 	echo Obs $obs did not finish successfully.
 	resubmit_list+=($obs)
+	rm */${obs}*
 	continue
     fi
     # Read in last line
@@ -31,12 +32,14 @@ for obs in $obslist; do
     if [ "${last_tag}" != "COMPLETE" ]; then
 	echo Obs $obs did not finish successfully.
 	resubmit_list+=($obs)
+	rm */${obs}*
 	continue
     fi
     complete=`cut -f2 ${file} | tail -1`
     if [ "${complete}" -ne "1" ]; then
 	echo Obs $obs did not finish successfully.
 	resubmit_list+=($obs)
+	rm */${obs}*
 	continue
     fi
     # if we've gotten this far, it must have succeeded.
