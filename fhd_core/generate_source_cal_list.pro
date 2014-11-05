@@ -2,7 +2,7 @@ FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
     no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,beam_cal_threshold=beam_cal_threshold,$
     allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,beam_arr=beam_arr,model_visibilities=model_visibilities,$
-    max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,$
+    max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,delicate_calibration_catalog=delicate_calibration_catalog,$
     no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
     allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,_Extra=extra
 
