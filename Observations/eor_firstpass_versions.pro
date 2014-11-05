@@ -441,6 +441,16 @@ case version of
       return_cal_visibilities=0
       snapshot_healpix_export=0
    end
+   'apb_test_reflect_coefficients_3':begin
+                                ; don't actually set
+                                ; anything. I changed the
+                                ; expression for bandwidth in the mode
+                                ; fitting code.
+   end
+   'apb_test_delicate':begin
+      calibration_catalog_file_path=filepath('foo.sav',root=rootdir('FHD'),subdir='catalog_data')
+      delicate_calibration_catalog=1
+   end
 
    ; Abraham's versions
 
