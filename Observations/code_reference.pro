@@ -25,7 +25,7 @@ WHILE file_test(test_dir,/directory) EQ 1 DO BEGIN
         RETURN
     ENDIF
     version_use=version+'_run'+Strn(iter)
-    test_dir=filepath(root=data_directory,sub='fhd_'+version_use)
+    test_dir=filepath('',root=data_directory,sub='fhd_'+version_use)
 ENDWHILE
 fhd_file_list=fhd_path_setup(vis_file_list,version=version_use,_Extra=extra)
 undefine_fhd,iter,branch
@@ -78,11 +78,11 @@ cal_cable_reflection_fit=150
 restrict_hpx_inds=1
 
 kbinsize=0.5
-psf_resolution=100
+psf_resolution=32
 
 ; some new defaults (possibly temporary)
-beam_model_version=2
-dipole_mutual_coupling_factor=1
+beam_model_version=0
+dipole_mutual_coupling_factor=0
 calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
 
@@ -93,12 +93,13 @@ beam_residual_threshold=0.1
 no_fits=1
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 n_pol=2
+max_cal_iter=100.
 
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
 general_obs,_Extra=extra
 
-code_reference_wrapper,file_dirname(fhd_file_list[0])
+code_reference_wrapper,file_dirname(fhd_file_list[0]),/set_data_ranges
 
 !except=except
 END
