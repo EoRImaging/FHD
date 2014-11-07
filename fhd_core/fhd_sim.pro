@@ -197,7 +197,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       
       if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
       
-      this_model_ptr=vis_source_model(0,obs,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+      this_model_ptr=vis_source_model(0,obs,0,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
         timing=model_timing,silent=silent,error=error,_Extra=extra)
       print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
       
