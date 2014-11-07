@@ -84,8 +84,6 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   print,'Calculating beam model'
   psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
   IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
-  beam=Ptrarr(n_pol,/allocate)
-  FOR pol_i=0,n_pol-1 DO *beam[pol_i]=beam_image(psf,obs,pol_i=pol_i,/fast)>0.
   
   flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
     freq_end=freq_end,tile_flag_list=tile_flag_list,_Extra=extra)
