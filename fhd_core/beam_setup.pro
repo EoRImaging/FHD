@@ -2,7 +2,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
-    beam_model_version=beam_model_version,_Extra=extra
+    beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -154,7 +154,7 @@ ENDFOR
 
 ;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
 ;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
-beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,beam_mask_threshold=beam_mask_threshold,$
+IF Keyword_Set(beam_dim_fit) THEN beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,beam_mask_threshold=beam_mask_threshold,$
     psf_xvals=psf_xvals,psf_yvals=psf_yvals,_Extra=extra
 
 complex_flag=1

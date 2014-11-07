@@ -4,8 +4,8 @@ PRO vis_calibration_flag,obs,cal,error=error,degree=degree,phase_degree=phase_de
 
 IF ~Keyword_Set(degree) THEN degree=2.
 IF ~Keyword_Set(phase_degree) THEN phase_degree=degree-1.
-amp_sigma_threshold=10.
-phase_sigma_threshold=10.
+amp_sigma_threshold=5.
+phase_sigma_threshold=5.
 n_tile=obs.n_tile
 n_freq=obs.n_freq
 n_pol=cal.n_pol
