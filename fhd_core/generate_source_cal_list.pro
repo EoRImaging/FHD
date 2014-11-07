@@ -2,7 +2,7 @@ FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
     no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,beam_cal_threshold=beam_cal_threshold,$
     allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,beam_arr=beam_arr,model_visibilities=model_visibilities,$
-    max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,$
+    max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,delicate_calibration_catalog=delicate_calibration_catalog,$
     no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
     allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,_Extra=extra
 
@@ -12,9 +12,14 @@ IF psav EQ -1 THEN catalog_path+='.sav'
 IF file_test(catalog_path) EQ 0 THEN BEGIN
     catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
     IF file_test(catalog_path_full) EQ 0 THEN BEGIN
-        print,String(format='(A," not found! Using default: ",A)',catalog_path,obs.instrument+'_calibration_source_list.sav')
-        catalog_path=obs.instrument+'_calibration_source_list.sav'
-        catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+        if keyword_set(delicate_calibration_catalog) then begin
+          print,String(format='(A," not found! Critical problem, quitting!',catalog_path)
+          exit
+        endif else begin
+          print,String(format='(A," not found! Using default: ",A)',catalog_path,obs.instrument+'_calibration_source_list.sav')
+          catalog_path=obs.instrument+'_calibration_source_list.sav'
+          catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+        endelse
     ENDIF
 ENDIF ELSE catalog_path_full=catalog_path
 

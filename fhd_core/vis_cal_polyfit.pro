@@ -4,7 +4,7 @@ FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
 IF N_Elements(phase_degree) EQ 0 THEN phase_degree=degree-1.
-IF Keyword_Set(cal_cable_reflection_fit) THEN cal.mode_fit=1.
+IF Keyword_Set(cal_cable_reflection_fit) OR Keyword_Set(cal_cable_reflection_fit) THEN cal.mode_fit=1.
 cal_mode_fit=cal.mode_fit
 
 n_pol=cal.n_pol
@@ -99,7 +99,7 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
                 ENDIF
             ENDIF
             reflect_time=2.*cable_len/(c_light*cable_vf)
-            bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1)
+            bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1) 
             mode_i_arr=Fltarr(n_pol,n_tile)
             FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time*tile_ref_flag
             
