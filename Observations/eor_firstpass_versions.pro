@@ -304,7 +304,7 @@ case version of
       snapshot_healpix_export=0
       recalculate_all=0
       allow_sidelobe_image_output=1
-      beam_output_threshold=0.01
+      beam_output_threshold=0.005
       ;ring_radius=30.*pad_uv_image
       show_beam_contour=1
       contour_levels=[0.01]
@@ -440,6 +440,20 @@ case version of
       calibration_visibilities_subtract=1
       return_cal_visibilities=0
       snapshot_healpix_export=0
+      image_filter_fn='filter_uv_natural'
+   end
+   'apb_cal_sidelobes_N':begin
+      calibration_catalog_file_path=filepath('MRC_calibration_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+      snapshot_healpix_export=0
+   end
+   'apb_cal_sidelobes_S':begin
+      snapshot_healpix_export=0
+   end
+   'apb_cal_sidelobes_E':begin
+      snapshot_healpix_export=0
+   end
+   'apb_cal_sidelobes_W':begin
+      snapshot_healpix_export=0
    end
    'apb_test_reflect_coefficients_3':begin
                                 ; don't actually set
@@ -478,6 +492,20 @@ case version of
       return_cal_visibilities=0
       allow_sidelobe_cal_sources=0
       allow_sidelobe_model_sources=1
+   end
+
+   'nb_test_transfercal_on_devel':begin
+      model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      transfer_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_9/'
+   end
+
+   'nb_std_Oct2014':begin
+      max_cal_iter=10
+      cal_convergence_threshold=1E-3
+      dipole_mutual_coupling=0
+      beam_model=0
+      calibration_flag_iterate=0
    end
 
    ; Patti's versions
