@@ -463,7 +463,6 @@ case version of
    end
    'apb_test_reflect_coefficients_4':begin
       cal_cable_reflection_correct=150
-      cal_cable_reflection_fit=0
    end
    'apb_test_delicate':begin
       calibration_catalog_file_path=filepath('foo.sav',root=rootdir('FHD'),subdir='catalog_data')

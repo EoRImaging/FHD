@@ -101,8 +101,10 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
             reflect_time=2.*cable_len/(c_light*cable_vf)
             bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1) 
             mode_i_arr=Fltarr(n_pol,n_tile)
-            FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time*tile_ref_flag
-            
+            ;FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time*tile_ref_flag
+            mode_i_arr[0,*]=tile_mode_X
+            mode_i_arr[1,*]=tile_mode_Y
+
             amp_arr=Fltarr(2,n_tile)
             phase_arr=Fltarr(2,n_tile)
             amp_arr[0,*]=tile_amp_X

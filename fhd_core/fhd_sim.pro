@@ -22,6 +22,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
   IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
   
+  fhd_save_io,status_str_placeholder,file_path_fhd=file_path_fhd,/no_save
+  
   print,'Simulating: ',file_path_vis
   print,systime()
   print,'Output file_path:',file_path_fhd
@@ -82,7 +84,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   ;Read in or construct a new beam model. Also sets up the structure PSF
   print,'Calculating beam model'
-  psf=beam_setup(obs,file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+  psf=beam_setup(obs,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
   IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
   
   flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
@@ -99,7 +101,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     endif
     
     if n_elements(source_list) gt 0 then begin
-      source_model_uv_arr=source_dft_model(obs,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
+      source_model_uv_arr=source_dft_model(obs,0,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
     endif
     
@@ -195,7 +197,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       
       if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
       
-      this_model_ptr=vis_source_model(0,obs,0,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+      this_model_ptr=vis_source_model(0,obs,status_str_placeholder,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
         timing=model_timing,silent=silent,error=error,_Extra=extra)
       print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
       
@@ -238,8 +240,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   IF Keyword_Set(save_visibilities) THEN BEGIN
     t_save0=Systime(1)
-    vis_export,obs,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
-    vis_export,obs,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
+    vis_export,obs,status_str_placeholder,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+    vis_export,obs,status_str_placeholder,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
     t_save=Systime(1)-t_save0
     IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
   ENDIF
@@ -259,7 +261,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     mapfn_recalculate=0
     preserve_visibilities=1
     FOR pol_i=0,n_pol-1 DO BEGIN
-      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,psf,params,file_path_fhd,$
+      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str_placeholder,psf,params,file_path_fhd,$
         timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
         mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
         model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
@@ -277,7 +279,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     ;Generate fits data files and images
     IF Keyword_Set(export_images) THEN BEGIN
     
-      fhd_quickview,obs,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+      fhd_quickview,obs,status_str_placeholder,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
         model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDIF
     
@@ -286,7 +288,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN begin
     IF ~Keyword_Set(n_avg) THEN n_avg=1
-    healpix_snapshot_cube_generate,obs,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
+    healpix_snapshot_cube_generate,obs,status_str_placeholder,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
       vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
@@ -306,7 +308,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     ptr_free,beam_arr
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
   endif
-  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr
+  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,status_str_placeholder
   undefine_fhd,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out,flag_arr
   
   timing=Systime(1)-t0

@@ -34,7 +34,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
     ENDFOR
   ENDIF
   IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
-    IF Min(status_str.vis_model[0:n_pol-1]) GT 0 THEN BEGIN
+    IF Min(status_str.vis_model_ptr[0:n_pol-1]) GT 0 THEN BEGIN
       vis_model_arr=Ptrarr(n_pol)
       FOR pol_i=0,n_pol-1 DO BEGIN
         fhd_save_io,status_str,vis_model_ptr,var='vis_model_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
@@ -58,7 +58,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
   IF Keyword_Set(source_list) OR Keyword_Set(model_uv_arr) THEN model_flag=1; ELSE model_flag=0 ;now set above
   IF Keyword_Set(residual_flag) THEN model_flag=0
   IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
-    IF model_flag THEN BEGIN
+    IF Keyword_Set(model_flag) THEN BEGIN
       vis_model_arr=vis_source_model(source_list,obs,status_str,psf,params,flag_arr_use,model_uv_arr=model_uv_arr,$
         file_path_fhd=file_path_fhd,timing=t_model,silent=silent,_Extra=extra)
       IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
