@@ -14,15 +14,16 @@ obslist=$*
 echo JOBID ${JOB_ID}
 echo OBSLIST $obslist
 
-metadir=${outdir}/fhd_${version}
+metadir=${outdir}/fhd_${version}/metadata
 ls $outdir > /dev/null # ping output directory so nfs automounts
+cd ${outdir}/fhd_${version}
 
 unset resubmit_list
 for obs in $obslist; do
     file=${metadir}/${obs}_status.txt
     # first check if the status file even exists.
     if [ ! -f ${file} ]; then
-	echo Obs $obs did not finish successfully.
+	echo Obs $obs did not finish successfully. (no file).
 	resubmit_list+=($obs)
 	rm */${obs}*
 	continue
@@ -30,14 +31,14 @@ for obs in $obslist; do
     # Read in last line
     last_tag=`cut -f1 ${file} | tail -1`
     if [ "${last_tag}" != "COMPLETE" ]; then
-	echo Obs $obs did not finish successfully.
+	echo Obs $obs did not finish successfully. (no complete line).
 	resubmit_list+=($obs)
 	rm */${obs}*
 	continue
     fi
     complete=`cut -f2 ${file} | tail -1`
     if [ "${complete}" -ne "1" ]; then
-	echo Obs $obs did not finish successfully.
+	echo Obs $obs did not finish successfully. (complete is zero).
 	resubmit_list+=($obs)
 	rm */${obs}*
 	continue
