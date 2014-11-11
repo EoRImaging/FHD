@@ -286,7 +286,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       new_tick_vals = [10^log_data_range[0], tick_vals]
       
       min_tick_color = (alog10(min(tick_vals))-log_data_range[0])*n_colors/(log_data_range[1]-log_data_range[0]) + color_range[0]
-      if min_tick_color lt 10 then names = ['<0', ' ', number_formatter(tick_vals[1:*], format = '(e0)',/print_exp)] $
+      if min_tick_color lt 10 and n_elements(tick_vals) gt 1 then names = ['<0', ' ', number_formatter(tick_vals[1:*], format = '(e0)',/print_exp)] $
       else names = ['<0',  number_formatter(tick_vals, format = '(e0)',/print_exp)]
       
       tick_vals = new_tick_vals
