@@ -210,80 +210,46 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     print, 'model visibility timing(s):'+ number_formatter(time1-time0)
     
     SAVE,flag_arr,filename=flags_filepath,/compress
-  endif
-  
-  vis_noise_calc,obs,vis_arr,flag_arr
-  tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
-  freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
-  print,String(format='(A," frequency channels used and ",A," channels flagged")',$
-    Strn(n_freq_use),Strn(n_freq_cut))
-  print,String(format='(A," tiles used and ",A," tiles flagged")',$
-    Strn(n_tile_use),Strn(n_tile_cut))
     
-  SAVE,obs,filename=obs_filepath,/compress
-  SAVE,params,filename=params_filepath,/compress
-  fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
-  
-  IF obs.n_vis EQ 0 THEN BEGIN
-    print,"All data flagged! Returning."
-    error=1
-    RETURN
-  ENDIF
-  
-  autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
-  auto_corr=Ptrarr(n_pol)
-  IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
-    auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
-    auto_corr[pol_i]=Ptr_new(auto_vals)
-  ENDFOR
-  SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
-  
-  IF Keyword_Set(save_visibilities) THEN BEGIN
-    t_save0=Systime(1)
-    vis_export,obs,status_str_placeholder,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
-    vis_export,obs,status_str_placeholder,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
-    t_save=Systime(1)-t_save0
-    IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
-  ENDIF
+    vis_noise_calc,obs,vis_arr,flag_arr
+    tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
+    freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
+    print,String(format='(A," frequency channels used and ",A," channels flagged")',$
+      Strn(n_freq_use),Strn(n_freq_cut))
+    print,String(format='(A," tiles used and ",A," tiles flagged")',$
+      Strn(n_tile_use),Strn(n_tile_cut))
+      
+    SAVE,obs,filename=obs_filepath,/compress
+    SAVE,params,filename=params_filepath,/compress
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
+    
+    IF obs.n_vis EQ 0 THEN BEGIN
+      print,"All data flagged! Returning." 
+      error=1
+      RETURN
+    ENDIF
+    
+    autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
+    auto_corr=Ptrarr(n_pol)
+    IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
+      auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
+      auto_corr[pol_i]=Ptr_new(auto_vals)
+    ENDFOR
+    SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
+    
+    IF Keyword_Set(save_visibilities) THEN BEGIN
+      t_save0=Systime(1)
+      vis_export,obs,status_str_placeholder,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+      vis_export,obs,status_str_placeholder,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
+      t_save=Systime(1)-t_save0
+      IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
+    ENDIF
+  endif
   
   t_grid=fltarr(n_pol)
   t_mapfn_gen=fltarr(n_pol)
   
   IF N_Elements(obs) EQ 0 THEN IF file_test(obs_filepath) THEN obs=getvar_savefile(obs_filepath,'obs')
-  
-  ;Grid the visibilities
-  IF Keyword_Set(grid_recalculate) THEN BEGIN
-    print,'Gridding visibilities'
-    image_uv_arr=Ptrarr(n_pol,/allocate)
-    weights_arr=Ptrarr(n_pol,/allocate)
-    
-    weights_grid=1
-    mapfn_recalculate=0
-    preserve_visibilities=1
-    FOR pol_i=0,n_pol-1 DO BEGIN
-      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str_placeholder,psf,params,file_path_fhd,$
-        timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
-        mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
-        model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
-      t_grid[pol_i]=t_grid0
-      ;            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
-      *image_uv_arr[pol_i]=Temporary(dirty_UV)
-      
-      IF N_Elements(weights_grid) GT 0 THEN BEGIN
-        *weights_arr[pol_i]=Temporary(weights_grid)
-        weights_grid=1
-      ENDIF
-    ENDFOR
-    print,'Gridding time:',t_grid
-    
-    ;Generate fits data files and images
-    IF Keyword_Set(export_images) THEN BEGIN
-    
-      fhd_quickview,obs,status_str_placeholder,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
-        model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
-    ENDIF
-    
-  ENDIF
   
   ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN begin
