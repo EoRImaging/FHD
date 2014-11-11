@@ -4,17 +4,17 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
     psf_dim=psf_dim,nside=nside,restrict_hpx_inds=restrict_hpx_inds,$
-    n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,_Extra=extra
+    n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
 IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
-git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long'
+git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
-speed_light=299792458.
+speed_light=299792458. 
 time=params.time
 b0i=Uniq(time)
 n_time=N_Elements(b0i)
@@ -82,9 +82,10 @@ n_vis_arr=Lonarr(n_freq)
 
 ;256 tile upper limit is hard-coded in CASA format
 ;these tile numbers have been verified to be correct
-name_mod=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
-tile_A=Long(Floor(params.baseline_arr/name_mod)) ;tile numbers start from 1
-tile_B=Long(Fix(params.baseline_arr mod name_mod))
+IF not Keyword_Set(antenna_mod_index) THEN antenna_mod_index=256L 
+;antenna_mod_index=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
+tile_A=Long(Floor(params.baseline_arr/antenna_mod_index)) ;tile numbers start from 1
+tile_B=Long(Fix(params.baseline_arr mod antenna_mod_index))
 IF (max(tile_A)>max(tile_B)) NE n_tile THEN BEGIN
     print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
     n_tile=max(tile_A)>max(tile_B)
