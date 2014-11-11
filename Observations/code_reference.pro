@@ -1,12 +1,10 @@
-PRO code_reference,_Extra=extra
+PRO code_reference,iter=iter,recalculate_all=recalculate_all,use_hash=use_hash,_Extra=extra
 except=!except
+;NOTE: to go back to an earlier commit HASH123 for testing, use git reset --hard HASH123 
+;NOTE: requires the Power Spectrum (PS) repository to work (https://github.com/miguelfmorales/PS)
 !except=0 
 heap_gc
 
-calibrate_visibilities=1
-recalculate_all=0
-export_images=1
-cleanup=0
 git,'rev-parse --abbrev-ref HEAD',repo=rootdir('fhd'),result=branch & branch=branch[0]
 git,'describe',result=version,repo_path=rootdir('FHD') & version=version[0]
 
@@ -15,18 +13,37 @@ IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'version') THEN version=extra.
 data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','code_reference'])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
-iter=0
-version_use=version
-test_dir=filepath('',root=data_directory,sub='fhd_'+version_use)
-WHILE file_test(test_dir,/directory) EQ 1 DO BEGIN
-    iter+=1
-    IF iter GE 100 THEN BEGIN
-        print,'Could not make fhd directory, too many versions exist: fhd_'+version
-        RETURN
-    ENDIF
-    version_use=version+'_run'+Strn(iter)
+
+IF Keyword_Set(use_hash) THEN BEGIN
+    dir_list=file_search(data_directory,'fhd*'+path_sep(),/Test_directory,count=n_directories)
+    
+    hash_match=Strarr(n_directories)
+    FOR di=0,n_directories-1 DO hash_match[di]=Strpos(dir_list[di],use_hash)
+    match_i=where(hash_match GE 0,n_match)
+    CASE n_match OF
+        0: BEGIN print,"Hash"+use_hash+" not found! Returning." & RETURN & END
+        1: version=file_basename(dir_list[match_i])
+        ELSE: IF N_Elements(iter) GT 0 THEN version=file_basename(dir_list[match_i[iter<(n_match-1)]]) $
+            ELSE version=file_basename(dir_list[Max(match_i)])
+    ENDCASE
+    iter=0
+    IF Strpos(version,'fhd_') EQ 0 THEN version=strmid(version,4)
+ENDIF
+
+version_use=version+(Keyword_Set(iter) ? '_run'+Strn(iter):'')
+IF N_Elements(iter) EQ 0 THEN BEGIN
     test_dir=filepath('',root=data_directory,sub='fhd_'+version_use)
-ENDWHILE
+    iter=0
+    WHILE file_test(test_dir,/directory) EQ 1 DO BEGIN
+        iter+=1
+        IF iter GE 100 THEN BEGIN
+            print,'Could not make fhd directory, too many versions exist: fhd_'+version
+            RETURN
+        ENDIF
+        version_use=version+'_run'+Strn(iter)
+        test_dir=filepath('',root=data_directory,sub='fhd_'+version_use)
+    ENDWHILE
+ENDIF
 fhd_file_list=fhd_path_setup(vis_file_list,version=version_use,_Extra=extra)
 undefine_fhd,iter,branch
 
@@ -37,8 +54,8 @@ calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_FHDaug
 firstpass=1
 
 calibrate_visibilities=1
-recalculate_all=0
-export_image=1
+IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
+IF Keyword_Set(recalculate_all) THEN export_image=1 ELSE export_images=0
 cleanup=0
 ps_export=0
 split_ps_export=1
@@ -99,7 +116,7 @@ IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
 general_obs,_Extra=extra
 
-code_reference_wrapper,file_dirname(fhd_file_list[0]),/set_data_ranges
+code_reference_wrapper,file_dirname(fhd_file_list[0]),/png
 
 !except=except
 END

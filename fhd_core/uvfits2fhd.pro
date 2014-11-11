@@ -126,7 +126,8 @@ IF data_flag LE 0 THEN BEGIN
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     n_pol=obs.n_pol
     n_freq=obs.n_freq
-        
+    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end 
+       
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
