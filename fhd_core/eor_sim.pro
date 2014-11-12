@@ -52,7 +52,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, 
   log_diff = log_diff[1:*]
   log_binsize = log_diff[0]
   
-  if n_elements(flat_sigma) ne 0 then begin
+  if keyword_set(flat_sigma) ne 0 then begin
     power_3d = dblarr(n_kx, n_ky, n_kz) + max(power)
     
   endif else if keyword_set(delta_power) then begin
