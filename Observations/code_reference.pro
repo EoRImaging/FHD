@@ -1,4 +1,4 @@
-PRO code_reference,iter=iter,recalculate_all=recalculate_all,use_hash=use_hash,_Extra=extra
+PRO code_reference,iter=iter,recalculate_all=recalculate_all,use_hash=use_hash,reference_hash=reference_hash,iter_ref=iter_ref,_Extra=extra
 except=!except
 ;NOTE: to go back to an earlier commit HASH123 for testing, use git reset --hard HASH123 
 ;NOTE: requires the Power Spectrum (PS) repository to work (https://github.com/miguelfmorales/PS)
@@ -45,7 +45,7 @@ IF N_Elements(iter) EQ 0 THEN BEGIN
     ENDWHILE
 ENDIF
 fhd_file_list=fhd_path_setup(vis_file_list,version=version_use,_Extra=extra)
-undefine_fhd,iter,branch
+undefine_fhd,branch
 
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
@@ -117,6 +117,11 @@ extra=var_bundle()
 general_obs,_Extra=extra
 
 code_reference_wrapper,file_dirname(fhd_file_list[0]),/png
+
+IF Keyword_Set(reference_hash) THEN BEGIN
+    hash_diff=Strmid(version,Strpos(version,'-g')+2,7)
+    code_reference_diff,hash_ref=reference_hash,hash_diff=hash_diff,iter_ref=iter_ref,iter_diff=iter,_Extra=extra
+ENDIF
 
 !except=except
 END
