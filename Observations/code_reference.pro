@@ -120,7 +120,7 @@ code_reference_wrapper,file_dirname(fhd_file_list[0]),/png
 
 IF Keyword_Set(reference_hash) THEN BEGIN
     hash_diff=Strmid(version,Strpos(version,'-g')+2,7)
-    code_reference_diff,hash_ref=reference_hash,hash_diff=hash_diff,iter_ref=iter_ref,iter_diff=iter,_Extra=extra
+    code_reference_diff,hash_ref=reference_hash,hash_diff=hash_diff,iter_ref=iter_ref,iter_diff=iter,_Extra=cmd_args
 ENDIF
 
 !except=except
