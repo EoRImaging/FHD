@@ -19,7 +19,7 @@ IF N_Elements(error_method) EQ 0 THEN error_method=0
 ON_ERROR,error_method
 
 IF ~Keyword_Set(silent) THEN BEGIN
-    git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long'
+    git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
     print,"Using FHD version: "+code_version
 ENDIF
 ;Set which procedures are to be run
