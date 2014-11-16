@@ -322,24 +322,6 @@ case version of
    end
 
 
-   ;;; Patti's versions!!! Only Patti may edit this section!!!
-   'pac_test_fhd':begin
-      deconvolve=1 
-      return_decon_visibilities=1
-      max_sources=30000.
-      pad_uv_image=1.
-      gain_factor=.2
-      uvfits_version=3
-      uvfits_subversion=1
-      time_cut=[2,-2]
-      vis_freq_average=2
-      snapshot_healpix_export=0
-      dimension=3072
-      FoV=80.
-      filter_background=0
-   end
-
-
    ;;; Abraham's versions!!! Only Abraham may edit this section!!!
    'arn_mwacs_plus_ben_fornax_and_vla_pic':begin
 	calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -428,7 +410,49 @@ case version of
       calibration_flag_iterate=0
    end
 
-   ; Patti's versions
+
+   ;;; Patti's versions!!! Only Patti may edit this section!!!
+
+   'pac_test_3':begin
+      deconvolve=1 
+      return_decon_visibilities=1
+      max_sources=30000.
+      pad_uv_image=1.
+      gain_factor=.2
+      uvfits_version=4
+      uvfits_subversion=0
+      time_cut=[2,-2]
+      vis_freq_average=2
+      snapshot_healpix_export=0
+      dimension=3072
+      FoV=80.
+      filter_background=0
+      decon_filter='filter_uv_uniform'
+   end
+ 
+   ;shallow clean >.5Jy sources
+   'pac_shallow_clean': begin
+      calibration_catalog_file_path=filepath('patti_v3.7.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+
+
+   ;Standard MWACS for comparison
+   'pac_standard_cat': begin
+      calibration_catalog_file_path=filepath('standard_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+   
+   ; NOTE combined_cat.sav here is called combined_cat2.sav in the settings
+   ;Updated MWACS with FHD positions where well matched and fluxes where confident
+   'pac_combined_cat2': begin
+      calibration_catalog_file_path=filepath('combined_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+
+   ; NOTE this combined_cat.sav is true to the catalog in catalog_data
+   ;Updated combined cat with NVSS and SUMSS  positions where well matched
+   'pac_combined_cat_2': begin
+      calibration_catalog_file_path=filepath('combined_cat_2.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end  
+
 
    else: print,'Default parameters'
 endcase
