@@ -8,7 +8,7 @@ IF N_Elements(spectral_index) EQ 0 THEN spectral_index=obs.alpha
 IF N_Elements(n_pol) EQ 0 THEN n_pol=obs.n_pol
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline=obs.max_baseline
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=obs.min_baseline
-git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long'
+git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
 IF Tag_exist(obs,'healpix') THEN BEGIN
