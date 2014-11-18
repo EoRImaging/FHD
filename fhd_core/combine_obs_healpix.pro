@@ -41,7 +41,7 @@ IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
     fit_inds_flag=0
 ENDIF ELSE BEGIN
     fit_inds_flag=1
-    RESTORE,file_list_use[0]+'_obs.sav'
+    fhd_save_io,status_arr_use[0],obs,file_path_fhd=file_list_use[0],var='obs',/restore
     IF size(restrict_hpx_inds,/type) NE 7 THEN restrict_hpx_inds_path=observation_healpix_inds_select(obs) ELSE restrict_hpx_inds_path=restrict_hpx_inds
     IF size(restrict_hpx_inds_path,/type) EQ 7 THEN BEGIN 
         file_path_use=restrict_hpx_inds_path
@@ -63,7 +63,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     fhd_save_io,status_arr_use[obs_i],obs,file_path_fhd=file_path_fhd,var='obs',/restore
     IF obs_i EQ 0 THEN obs_arr=[obs] ELSE obs_arr=[obs_arr,obs]
     
-    beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
+    beam_width=beam_width_calculate(obs)
 ;    beam_area=2.*!Pi*(beam_width*obs.degpix)^2. 
     beam_area=(beam_width*obs.degpix)^2.
     pix_sky=4.*!Pi*!RaDeg^2./beam_area

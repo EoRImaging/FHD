@@ -55,7 +55,8 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 astr=obs.astr
-beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
+beam_width=beam_width_calculate(obs,min_restored_beam_width=1.,/FWHM)
+;beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
 local_max_radius=beam_width*2.
 box_radius=Ceil(local_max_radius)
 xvals=meshgrid(dimension,elements,1)-dimension/2
@@ -262,7 +263,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     converge_check[i2]=Stddev(source_find_image[where(beam_mask)],/nan)
     converge_check2[i2]=Stddev(source_find_image[where(beam_mask)],/nan)
     print,"Convergence after subtracting input source model:",Strn(converge_check[i2])
-ENDIF ELSE comp_arr=source_comp_init(n_sources=max_sources,alpha=alpha,freq=obs.freq_center)
+ENDIF ELSE comp_arr=source_comp_init(n_sources=max_sources,alpha=alpha,freq=obs.freq_center,gain_factor=gain_use)
 
 IF ~Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 

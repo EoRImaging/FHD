@@ -64,8 +64,11 @@ IF Keyword_Set(transfer_mapfn) THEN print,String(format='("Transferring mapfn fr
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
     IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
-        fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,/restore,transfer=transfer_mapfn,obs=obs,_Extra=extra
+;        fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,/restore,transfer=transfer_mapfn,obs=obs,_Extra=extra
         ;IMPORTANT: this approach of restoring the map_fn uses the least memory
+        fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
+            transfer=transfer_mapfn,/no_save,path_use=path_use,obs=obs,_Extra=extra
+        RESTORE,path_use+'.sav' ;map_fn
 ;        print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
 ;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
         *map_fn_arr[pol_i]=Temporary(map_fn)

@@ -1,6 +1,6 @@
 FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square=square,no_extend=no_extend,$
     rotate_pol=rotate_pol,no_dipole_projection_rotation=no_dipole_projection_rotation,$
-    center_rotate=center_rotate,debug_direction=debug_direction
+    center_rotate=center_rotate,debug_direction=debug_direction;,beam_threshold=beam_threshold
     ;/rotate_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
@@ -15,12 +15,22 @@ ENDIF ELSE BEGIN
     beam_use=pointer_copy(beam_arr)
     IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
 ENDELSE
+IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=1E-2
+IF Keyword_Set(square) THEN beam_threshold_use=beam_threshold^2 ELSE beam_threshold_use=beam_threshold
 
-inds=jones.inds
-p_map=jones.Jmat
-p_corr=jones.Jinv
-dimension=jones.dimension
-elements=jones.elements
+IF size(jones,/type) EQ 10 THEN BEGIN
+    inds=(*jones).inds
+    p_map=(*jones).Jmat
+    p_corr=(*jones).Jinv
+    dimension=(*jones).dimension
+    elements=(*jones).elements
+ENDIF ELSE BEGIN
+    inds=jones.inds
+    p_map=jones.Jmat
+    p_corr=jones.Jinv
+    dimension=jones.dimension
+    elements=jones.elements
+ENDELSE
 n_pix=N_Elements(inds)
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 
@@ -132,7 +142,10 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
 ENDIF ELSE BEGIN
     n_pol=N_Elements(image_arr) ;redefine n_pol here, just to make sure it matches the images
     image_arr_out=Ptrarr(n_pol)
-    IF ~Ptr_valid(image_arr[0]) THEN RETURN,image_arr_out
+    IF ~Ptr_valid(image_arr[0]) THEN BEGIN
+        Ptr_Free,beam_use
+        RETURN,image_arr_out
+    ENDIF
     dimension=(size(*image_arr[0],/dimension))[0]
     elements=(size(*image_arr[0],/dimension))[1]
     

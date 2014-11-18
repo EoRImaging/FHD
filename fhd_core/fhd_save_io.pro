@@ -29,12 +29,17 @@ IF Keyword_Set(restore) THEN no_save=1
 
 IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,source_array:0,flag_arr:0,auto_corr:0,$
     vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),$
-    map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4)}
+    map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4),complete:0}
 IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str')
 status_use=status_str
+IF Keyword_Set(text) THEN BEGIN
+    dir_use=file_dirname(status_path)
+    IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
+    TextFast,structure_to_text(status_str),/write,file_path=status_path
+ENDIF
 
 IF N_Elements(var_name) EQ 0 THEN var_name='' ELSE var_name=StrLowCase(var_name)
-IF not tag_exist(status_use,var_name) THEN RETURN
+IF var_name NE 'status_str' THEN IF not tag_exist(status_use,var_name) THEN RETURN
 
 CASE var_name OF ;listed in order typically generated
     'status_str':BEGIN path_add='_status' & subdir='metadata' & END
@@ -107,10 +112,5 @@ IF Keyword_Set(status_save) THEN BEGIN
     dir_use=file_dirname(status_path)
     IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
     SAVE,status_str,filename=status_path+'.sav'
-ENDIF
-IF Keyword_Set(text) THEN BEGIN
-    dir_use=file_dirname(status_path)
-    IF file_test(dir_use) EQ 0 THEN file_mkdir,dir_use
-    TextFast,structure_to_text(status_str),/write,file_path=status_path
 ENDIF
 END

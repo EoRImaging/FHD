@@ -17,7 +17,17 @@ t00=Systime(1)
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
-IF N_Elements(hpx_radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4. ELSE radius=hpx_radius
+IF N_Elements(hpx_radius) EQ 0 THEN BEGIN
+    IF Keyword_Set(mask) THEN BEGIN
+        xv_arr=meshgrid(dimension,elements,1)
+        yv_arr=meshgrid(dimension,elements,2)
+        xy2ad,xv_arr,yv_arr,astr,ra_arr,dec_arr
+        ang_arr=angle_difference(dec_arr,ra_arr,obs.obsdec,obs.obsra,/degree)
+        ang_i=where((mask GT 0) AND Finite(ang_arr),n_ang_use)
+        IF n_ang_use GT 0 THEN radius=Max(ang_arr[ang_i])
+    ENDIF ELSE radius=obs.degpix*(dimension>elements)/4. 
+ENDIF ELSE radius=hpx_radius
+
 ;all angles in DEGREES
 ;uses RING index scheme
 

@@ -54,25 +54,6 @@ freq_bin_i=fltarr(hdr.n_freq)
 FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
 freq_center=Median(frequency_array)
 
-;IF Keyword_Set(scale_uv) THEN BEGIN
-;    params.uu*=scale_uv
-;    params.vv*=scale_uv
-;    params.ww*=scale_uv
-;ENDIF
-;IF Keyword_Set(rotate_uv) THEN BEGIN
-;    uu1=(uu=params.uu)
-;    vv1=(vv=params.vv)
-;    rotation_arr=fltarr(n_time)
-;    FOR i=0,n_time-1 DO BEGIN
-;        zenpos2,Jdate[i],zenra2,zendec2, lat=lat, lng=lon,/degree,/J2000
-;        rotation_arr[i]=angle_difference(zendec,zenra,zendec2,zenra2,/degree);/2.
-;        uu1[bin_start[i]:bin_end[i]]=uu[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)-vv[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
-;        vv1[bin_start[i]:bin_end[i]]=vv[bin_start[i]:bin_end[i]]*Cos(rotation_arr[i]*!DtoR)+uu[bin_start[i]:bin_end[i]]*Sin(rotation_arr[i]*!DtoR)
-;    ENDFOR
-;    params.uu=uu1
-;    params.vv=vv1        
-;ENDIF
-
 calibration=fltarr(4)+1.
 IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
 n_tile=hdr.n_tile
@@ -90,10 +71,7 @@ IF (max(tile_A)>max(tile_B)) NE n_tile THEN BEGIN
     print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
     n_tile=max(tile_A)>max(tile_B)
 ENDIF
-;IF (max(tile_A)) NE n_tile THEN BEGIN
-;    print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)))
-;    n_tile=max(tile_A)
-;ENDIF
+
 freq_use=Lonarr(n_freq)+1
 tile_use=Lonarr(n_tile)+1
 
@@ -103,8 +81,6 @@ kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr)) $
     ELSE max_baseline_use=max_baseline
 
-;psf_dim=Ceil((obs.antenna_size*2.*Max(frequency_array)/speed_light)/kbinsize)+1
-;psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 IF Keyword_Set(psf_dim) THEN BEGIN
     psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
     kbinsize=(antenna_size*2.*Max(frequency_array)/speed_light)/(psf_dim-1.)
