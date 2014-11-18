@@ -6,7 +6,7 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
     use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,$
-    beam_diff_image=beam_diff_image,show_beam_contour=show_beam_contour,_Extra=extra
+    beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -269,7 +269,7 @@ IF Keyword_Set(beam_diff_image) AND Keyword_Set(source_flag) THEN BEGIN
         mark_image[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
         mark_image[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
         mark_image=mark_image[zoom_low:zoom_high,zoom_low:zoom_high]
-    ENDIF
+    ENDIF ELSE mark_image=0.
     FOR pol_i=0,n_pol-1 DO BEGIN
         IF ~Keyword_Set(no_png) THEN BEGIN
             Imagefast,(*source_res_arr[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i],$
@@ -333,7 +333,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
         Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.+mark_image,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
-            low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),$
+            low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100)>0,high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),$
             title=title_fhd,/invert,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
         Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i+4],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low_use,high=stokes_high_use,$
@@ -405,14 +405,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
     ENDIF
 ENDFOR
-residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,/center,$
-    file_path_base=image_path+filter_name,_Extra=extra
+IF Keyword_Set(output_residual_histogram) THEN $
+    residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,$
+        /center,file_path_base=image_path+filter_name,_Extra=extra
 
 undefine_fhd,beam_contour_arr,beam_contour_arr2,beam_correction_out,beam_base_out
 undefine_fhd,instr_residual_arr,instr_dirty_arr,instr_sources,instr_rings
 undefine_fhd,stokes_residual_arr,stokes_sources,stokes_rings
 undefine_fhd,gal_model_img
 undefine_fhd,obs_out
+
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Image output timing (quickview): ',timing
 END

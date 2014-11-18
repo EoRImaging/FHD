@@ -2,7 +2,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
-    beam_model_version=beam_model_version,_Extra=extra
+    beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -79,6 +79,9 @@ ENDFOR
 ;;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
 psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+image_res_scale=dimension*psf_intermediate_res/psf_image_dim
+zen_int_x=(obs.zenx-obs.obsx)/image_res_scale+psf_image_dim/2
+zen_int_y=(obs.zeny-obs.obsy)/image_res_scale+psf_image_dim/2
 psf_superres_dim=psf_dim*psf_resolution
 xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
@@ -139,7 +142,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,$
                 freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
                 xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
-                beam_mask_threshold=beam_mask_threshold,_Extra=extra)
+                beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,_Extra=extra)
             
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
@@ -149,9 +152,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
 ENDFOR
 
-;;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
-;;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
-;beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,beam_mask_threshold=beam_mask_threshold,_Extra=extra
+;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
+;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
+IF Keyword_Set(beam_dim_fit) THEN beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,beam_mask_threshold=beam_mask_threshold,$
+    psf_xvals=psf_xvals,psf_yvals=psf_yvals,_Extra=extra
 
 complex_flag=1
 beam_ptr=Ptr_new(beam_arr)

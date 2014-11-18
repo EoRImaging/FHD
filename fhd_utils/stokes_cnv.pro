@@ -142,7 +142,10 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
 ENDIF ELSE BEGIN
     n_pol=N_Elements(image_arr) ;redefine n_pol here, just to make sure it matches the images
     image_arr_out=Ptrarr(n_pol)
-    IF ~Ptr_valid(image_arr[0]) THEN RETURN,image_arr_out
+    IF ~Ptr_valid(image_arr[0]) THEN BEGIN
+        Ptr_Free,beam_use
+        RETURN,image_arr_out
+    ENDIF
     dimension=(size(*image_arr[0],/dimension))[0]
     elements=(size(*image_arr[0],/dimension))[1]
     

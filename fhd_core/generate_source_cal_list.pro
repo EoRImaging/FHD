@@ -44,9 +44,6 @@ ENDIF ELSE BEGIN
     IF N_Elements(beam_cal_threshold) GT 0 THEN beam_threshold=beam_cal_threshold
 ENDELSE
     
-;IF N_Elements(calibration_flux_threshold) EQ 0 THEN calibration_flux_threshold=0.
-;IF Keyword_Set(allow_sidelobe_cal_sources) THEN IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_cal_sources=1
-;IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_cal_sources=1
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
@@ -76,9 +73,7 @@ IF n_use GT 0 THEN BEGIN
     IF N_Elements(spectral_index) GT 1 THEN spectral_index=spectral_index[i_use]
     source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
         alpha=spectral_index,extend=catalog.extend)
-;    source_list=catalog
-;;    source_list.ra=catalog.ra
-;;    source_list.dec=catalog.dec
+        
     ad2xy,source_list.ra,source_list.dec,astr,x_arr,y_arr
     source_list.x=x_arr
     source_list.y=y_arr
@@ -108,10 +103,6 @@ IF n_use GT 0 THEN BEGIN
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
     source_list=source_list[src_use]
     beam_list=Ptrarr(n_pol<2)
-;    FOR pol_i=0,(n_pol<2)-1 DO BEGIN
-;        beam_list[pol_i]=Ptr_new((*beam_arr[pol_i])[source_list.x,source_list.y])
-;        source_list.flux.(pol_i)=source_list.flux.I*(*beam_list[pol_i])
-;    ENDFOR
     
     influence=source_list.flux.I*beam[source_list.x,source_list.y]
     

@@ -83,6 +83,12 @@ IF size(transfer_mapfn,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_mapfn[0],3
 IF N_Elements(transfer_calibration) EQ 0 THEN transfer_calibration=0
 IF size(transfer_calibration,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_calibration[0],3,/reverse)) EQ '.txt' THEN $
     transfer_calibration=string_list_read(transfer_calibration,data_directory=data_directory)
+CASE 1 OF
+    Keyword_Set(transfer_mapfn):transfer_file=transfer_mapfn
+    Keyword_Set(transfer_flags):transfer_file=transfer_flags
+    Keyword_Set(transfer_calibration):transfer_file=transfer_calibration
+    ELSE:transfer_file=''
+ENDCASE
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
 
 ;Set up gridding and deconvolution parameters
@@ -101,18 +107,37 @@ IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=1. ;grid output images at a h
 IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 IF N_Elements(start_fi) EQ 0 THEN start_fi=0
-fi=start_fi
+fi=Long(start_fi)
 IF N_Elements(end_fi) GT 0 THEN n_files=end_fi+1 ;changed to allow end_fi and update to both be specified
+
+IF ~Keyword_Set(update_file_list) THEN BEGIN
+    n_files-=start_fi
+    fi_arr=lindgen(n_files)+start_fi
+    fi=0L
+    start_fi=0
+    
+    IF N_Elements(skip_fi) GT 0 THEN BEGIN
+        fi_cut=lonarr(n_files)
+        fi_cut[skip_fi]=1
+        fi_uncut=where(fi_cut NE 1,n_files)
+        fi_arr=fi_arr[fi_uncut]
+    ENDIF
+    vis_file_list=vis_file_list[fi_arr]
+    fhd_file_list=fhd_file_list[fi_arr]
+    IF size(transfer_file,/type) EQ 7 THEN BEGIN
+        fi_init=where(file_basename(fhd_file_list) EQ file_basename(transfer_file[0]),$
+            n_fi_init,complement=fi_remainder,ncomplement=n_fi_remainder)
+        CASE 1 OF
+            (n_fi_init NE 1):fi_order=lindgen(n_files) ;do nothing
+            (n_fi_remainder EQ 0):fi_order=lindgen(n_files) ;do nothing
+            ELSE: fi_order=[fi_init,fi_remainder]
+        ENDCASE
+        vis_file_list=vis_file_list[fi_order]
+        fhd_file_list=fhd_file_list[fi_order]
+    ENDIF
+ENDIF
 WHILE fi LT n_files DO BEGIN
     IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(n_files-start_fi)))
-    IF N_Elements(skip_fi) GT 0 THEN BEGIN
-        IF max(skip_fi EQ fi) GT 0 THEN BEGIN
-            fi+=1
-            CONTINUE
-        ENDIF
-    ENDIF
-;    IF (recalculate_all EQ 0) AND Keyword_Set(cleanup) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
-;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
     undefine_fhd,status_str
     uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
         independent_fit=independent_fit,transfer_mapfn=transfer_mapfn,transfer_flags=transfer_flags,$
@@ -158,13 +183,12 @@ IF Keyword_Set(simultaneous) THEN BEGIN
         gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
-        uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
+        uvfits2fhd,vis_file_list[fi],status_arr[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             silent=silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
-        fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
-        IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
+        fhd_save_io,status_arr[fi],file_path_fhd=fhd_file_list[fi],/text
     ENDFOR
 ENDIF
 
