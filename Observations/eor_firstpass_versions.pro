@@ -333,7 +333,7 @@ case version of
 
    'pac_test_fhd':begin
       deconvolve=1 
-      return_decon_visibilities=1
+      return_decon_visibilities=0
       max_sources=30000.
       pad_uv_image=1.
       gain_factor=.2
@@ -580,7 +580,7 @@ case version of
    'pac_sidelobes': begin
       calibration_catalog_file_path=filepath('testmaster_cat.sav',root=rootdir('FHD'),subdir='catalog_data/pattis_tests/')
       deconvolve=1 
-      return_decon_visibilities=1
+      return_decon_visibilities=0
       max_sources=30000.
       pad_uv_image=1.
       gain_factor=.2
