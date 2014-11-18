@@ -16,7 +16,7 @@ n_polarizations=sxpar(header,'naxis3') ;4 columns are xx, yy, xy, yx
 n_frequencies=sxpar(header,'naxis4') ;768
 freq_ref=sxpar(header,'crval4') ;1.5424E8
 freq_width=sxpar(header,'cdelt4') ;40000 
-freq_ref_i=sxpar(header,'crpix4') ;368
+freq_ref_i=sxpar(header,'crpix4') -1;368-1 (Remember, FITS indices start from 1, IDL indices start from 0)
 date_obs=sxpar(header,'date-obs')
 
 n_fields=sxpar(header,'tfields') ;12
