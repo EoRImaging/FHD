@@ -17,7 +17,6 @@ cmd_args={version:version}
 ; Set default values for everything
 calibrate_visibilities=1
 recalculate_all=0
-export_image=1
 cleanup=0
 ps_export=0
 split_ps_export=1
@@ -30,7 +29,6 @@ vis_baseline_hist=1
 silent=0
 save_visibilities=1
 calibration_visibilities_subtract=0
-return_cal_visibilities=1
 snapshot_healpix_export=1
 n_avg=2
 ps_kbinsize=0.5
@@ -41,7 +39,7 @@ uvfits_version=4
 uvfits_subversion=1
 
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_sourcelist.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=2048
 max_sources=20000
@@ -70,6 +68,15 @@ dipole_mutual_coupling_factor=0
 calibration_flag_iterate = 0
 
 no_calibration_frequency_flagging=1
+
+; even newer defaults
+export_images=0
+cal_cable_reflection_correct=150
+model_catalog_file_path=filepath('mwa_calibration_sourcelist.sav',root=rootdir('FHD'),subdir='catalog_data')
+model_visibilities=1
+return_cal_visibilities=1
+allow_sidelobe_cal_sources=0
+allow_sidelobe_model_sources=1
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
@@ -466,6 +473,23 @@ case version of
    'apb_test_delicate':begin
       calibration_catalog_file_path=filepath('foo.sav',root=rootdir('FHD'),subdir='catalog_data')
       delicate_calibration_catalog=1
+   end
+   'apb_std_Nov2014':begin
+	export_images=1
+   end
+   'apb_test_beam_1B':begin
+	; set the beam
+	beam_model_version=1
+	dipole_mutual_coupling_factor=1
+	; turn fits back on
+	export_images=1
+   end
+   'apb_test_beam_2B':begin
+	; set the beam
+	beam_model_version=2
+	dipole_mutual_coupling_factor=1
+	; turn fits back on
+	export_images=1
    end
 
    ; Abraham's versions
