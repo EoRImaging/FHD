@@ -470,6 +470,10 @@ case version of
    'apb_test_reflect_coefficients_4':begin
       cal_cable_reflection_correct=150
    end
+   'apb_test_reflect_coefficients_5':begin
+      cal_cable_reflection_correct=0
+      cal_cable_reflection_mode_fit=150
+   end
    'apb_test_delicate':begin
       calibration_catalog_file_path=filepath('foo.sav',root=rootdir('FHD'),subdir='catalog_data')
       delicate_calibration_catalog=1

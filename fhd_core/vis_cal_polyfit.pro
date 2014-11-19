@@ -1,4 +1,4 @@
-FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
+FUNCTION vis_cal_polyfit_test,cal,obs,degree=degree,phase_degree=phase_degree,$
     cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_cable_reflection_fit=cal_cable_reflection_fit,cal_cable_reflection_correct=cal_cable_reflection_correct,_Extra=extra
 
@@ -167,11 +167,25 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
 ;        gain_amp=Abs(gain_arr)
 ;        gain_phase=Atan(gain_arr,/phase)
         gain_arr_fit=*cal_return.gain[pol_i]
+        gain_arr-=gain_arr_fit ; Subtract the polyfit outright so they don't talk to one another
         FOR ti=0L,nt_use-1 DO BEGIN
             tile_i=tile_use[ti]
             mode_i=mode_i_arr[pol_i,tile_i]
             IF mode_i EQ 0 THEN CONTINUE
-            IF Keyword_Set(amp_arr) OR Keyword_Set(phase_arr) THEN BEGIN
+            IF Keyword_Set(cal_cable_reflection_mode_fit) THEN BEGIN
+              ; We are going to fit the actual mode to subtract.
+              mode0=mode_i ; start with nominal cable length
+              dmode=0.05 ; pretty fine
+              nmodes=101 ; range around the central mode to test
+              modes=(dindgen(nmodes)-nmodes/2)*dmode+mode0 ; array of modes to try
+              modes=rebin(modes,nmodes,nf_use) ; hopefully this is right...
+              gain_temp=rebin(transpose(reform(gain_arr[freq_use,tile_i])),nmodes,nf_use) ; and this...
+              freq_mat=rebin(transpose(freq_use),nmodes,nf_use) ; this too...
+              test_fits=Total(exp(i_comp*2.*!Pi/n_freq*modes*freq_mat)*gain_temp,dim=1)
+              amp_use=max(abs(test_fits),mode_ind)/nf_use
+              phase_use=atan(test_fits[mode_ind],/phase)
+              mode_i=modes[mode_ind]
+            ENDIF ELSE IF Keyword_Set(amp_arr) OR Keyword_Set(phase_arr) THEN BEGIN
                 amp_use=amp_arr[pol_i,tile_i]
                 phase_use=phase_arr[pol_i,tile_i]
             ENDIF ELSE BEGIN
