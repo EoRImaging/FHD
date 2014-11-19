@@ -35,6 +35,7 @@ pol1=[0,0,2,2]
 pol2=[1,1,3,3]
 pol_names=['I','Q','U','V']
 n_hpx=nside2npix(nside)
+hpx_degpix=Sqrt(4.*!Pi/n_hpx)*!Radeg
 n_pix_use=N_Elements(hpx_inds)
 n_obs=N_Elements(obs_arr)
 n_pol=Min(obs_arr.n_pol)<2
@@ -99,8 +100,10 @@ FOR stk_i=0,n_pol-1 DO BEGIN
             sign[stk_i]*(*instr_dirty_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
     ENDIF
     
+    source_flag_use=source_flag
     IF source_flag THEN BEGIN
         stokes_sources=(*instr_sources_hpx[pol1[stk_i]])*(*weight_corr[pol1[stk_i]])+(*instr_sources_hpx[pol2[stk_i]])*(*weight_corr[pol2[stk_i]])
+        IF Max(stokes_sources) EQ Min(stokes_sources) THEN source_flag_use=0
     ENDIF
     
     IF rings_flag THEN BEGIN
@@ -113,15 +116,22 @@ FOR stk_i=0,n_pol-1 DO BEGIN
 ;    IF restored_flag THEN stokes_restored=stokes_residual+stokes_sources
     
     IF ~Keyword_Set(no_hpx_fits) THEN BEGIN
+        ;Must use NESTED healpix indices here
         write_fits_cut4,file_path_weights+'.fits',hpx_inds_nest,stokes_weights,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         IF (residual_flag OR model_flag) THEN write_fits_cut4,file_path_residual+'.fits',hpx_inds_nest,stokes_residual,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         IF restored_flag THEN write_fits_cut4,file_path_restored+'.fits',hpx_inds_nest,stokes_residual+stokes_sources,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
-        IF source_flag THEN write_fits_cut4,file_path_sources+'.fits',hpx_inds_nest,Stokes_sources,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        IF source_flag_use THEN write_fits_cut4,file_path_sources+'.fits',hpx_inds_nest,Stokes_sources,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         IF dirty_flag THEN write_fits_cut4,file_path_dirty+'.fits',hpx_inds_nest,Stokes_dirty,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         IF rings_flag THEN write_fits_cut4,file_path_rings+'.fits',hpx_inds_nest,Stokes_rings,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
     ENDIF
     IF ~Keyword_Set(no_hpx_png) THEN BEGIN
-        
+        ;Must use RING healpix indices here
+        healpix_quickimage,stokes_weights,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_weights
+        IF (residual_flag OR model_flag) THEN healpix_quickimage,stokes_residual,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_residual
+        IF restored_flag THEN healpix_quickimage,stokes_residual+stokes_sources,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_restored
+        IF source_flag_use THEN healpix_quickimage,Stokes_sources,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_sources
+        IF dirty_flag THEN healpix_quickimage,Stokes_dirty,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_dirty
+        IF rings_flag THEN healpix_quickimage,Stokes_rings,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_rings
     ENDIF
 ENDFOR
 ;FOR stk_i=0,n_pol-1 DO BEGIN
