@@ -39,7 +39,7 @@ uvfits_version=4
 uvfits_subversion=1
 
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_calibration_sourcelist.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=2048
 max_sources=20000
@@ -72,7 +72,7 @@ no_calibration_frequency_flagging=1
 ; even newer defaults
 export_images=0
 cal_cable_reflection_correct=150
-model_catalog_file_path=filepath('mwa_calibration_sourcelist.sav',root=rootdir('FHD'),subdir='catalog_data')
+model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 model_visibilities=1
 return_cal_visibilities=1
 allow_sidelobe_cal_sources=0
