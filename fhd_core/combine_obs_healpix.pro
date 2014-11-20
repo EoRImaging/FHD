@@ -42,7 +42,8 @@ IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
 ENDIF ELSE BEGIN
     fit_inds_flag=1
     fhd_save_io,status_arr_use[0],obs,file_path_fhd=file_list_use[0],var='obs',/restore
-    IF size(restrict_hpx_inds,/type) NE 7 THEN restrict_hpx_inds_path=observation_healpix_inds_select(obs) ELSE restrict_hpx_inds_path=restrict_hpx_inds
+    IF Keyword_Set(restrict_hpx_inds) THEN $
+        IF size(restrict_hpx_inds,/type) NE 7 THEN restrict_hpx_inds_path=observation_healpix_inds_select(obs) ELSE restrict_hpx_inds_path=restrict_hpx_inds
     IF size(restrict_hpx_inds_path,/type) EQ 7 THEN BEGIN 
         file_path_use=restrict_hpx_inds_path
         IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=Rootdir('fhd'),subdir='Observations')
