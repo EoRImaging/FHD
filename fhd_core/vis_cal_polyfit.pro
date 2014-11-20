@@ -183,10 +183,10 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
               gaini=rebin(transpose(reform(imaginary(gain_arr[freq_use,tile_i]))),nmodes,nf_use) ; and this...
               gain_temp=gainr+i_comp*gaini ; for some reason I cant rebin complex numbers
               freq_mat=rebin(transpose(freq_use),nmodes,nf_use) ; this too...
-              test_fits=Total(exp(i_comp*2.*!Pi/n_freq*modes*freq_mat)*gain_temp,1)
+              test_fits=Total(exp(i_comp*2.*!Pi/n_freq*modes*freq_mat)*gain_temp,2)
               amp_use=max(abs(test_fits),mode_ind)/nf_use
               phase_use=atan(test_fits[mode_ind],/phase)
-              mode_i=modes[mode_ind]
+              mode_i=modes[mode_ind,0]
             ENDIF ELSE IF Keyword_Set(amp_arr) OR Keyword_Set(phase_arr) THEN BEGIN
                 amp_use=amp_arr[pol_i,tile_i]
                 phase_use=phase_arr[pol_i,tile_i]
