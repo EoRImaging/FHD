@@ -1,4 +1,4 @@
-FUNCTION vis_cal_polyfit_test,cal,obs,degree=degree,phase_degree=phase_degree,$
+FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
     cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_cable_reflection_fit=cal_cable_reflection_fit,cal_cable_reflection_correct=cal_cable_reflection_correct,_Extra=extra
 
