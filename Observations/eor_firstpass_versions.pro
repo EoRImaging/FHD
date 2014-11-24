@@ -442,12 +442,13 @@ case version of
       max_cal_iter=100
    end
    'apb_test_diffuse_subtract_1':begin
-      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_8/Healpix/diffuse_model.sav'
+      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_std_Nov2014/Healpix/diffuse_model.sav'
       model_visibilities=1
       calibration_visibilities_subtract=1
       return_cal_visibilities=0
-      snapshot_healpix_export=0
-      image_filter_fn='filter_uv_natural'
+      snapshot_healpix_export=1
+      export_images=1
+	image_filter_fn='filter_uv_natural'
    end
    'apb_cal_sidelobes_N':begin
       calibration_catalog_file_path=filepath('MRC_calibration_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -494,6 +495,10 @@ case version of
 	beam_model_version=2
 	dipole_mutual_coupling_factor=1
 	; turn fits back on
+	export_images=1
+   end
+   'apb_std_Nov2014b':begin
+        image_filter_fn='filter_uv_natural'
 	export_images=1
    end
 
