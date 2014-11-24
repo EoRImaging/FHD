@@ -23,14 +23,14 @@ n_tiles=obs.n_tile
 n_freq=obs.n_freq
 n_pol=obs.n_pol
 
-obsra=obs.obsra
-obsdec=obs.obsdec
-zenra=obs.zenra
-zendec=obs.zendec
-phasera=obs.phasera
-phasedec=obs.phasedec
-Jdate=obs.Jd0
-frequency_array=(*obs.baseline_info).freq
+;obsra=obs.obsra
+;obsdec=obs.obsdec
+;zenra=obs.zenra
+;zendec=obs.zendec
+;phasera=obs.phasera
+;phasedec=obs.phasedec
+;Jdate=obs.Jd0
+;frequency_array=(*obs.baseline_info).freq
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 
@@ -40,16 +40,16 @@ nbaselines=obs.nbaselines
 
 dimension=obs.dimension
 elements=obs.elements
-kbinsize=obs.kpix
-kx_span=kbinsize*dimension ;Units are # of wavelengths
-ky_span=kx_span
+;kbinsize=obs.kpix
+;kx_span=kbinsize*dimension ;Units are # of wavelengths
+;ky_span=kx_span
 degpix=obs.degpix
-astr=obs.astr
+;astr=obs.astr
 
 antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
 
-IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
+;IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
 ;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 

@@ -71,7 +71,8 @@ no_calibration_frequency_flagging=1
 
 ; even newer defaults
 export_images=0
-cal_cable_reflection_correct=150
+;cal_cable_reflection_correct=150
+cal_cable_reflection_mode_fit=150
 model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 model_visibilities=1
 return_cal_visibilities=1
@@ -469,6 +470,10 @@ case version of
    end
    'apb_test_reflect_coefficients_4':begin
       cal_cable_reflection_correct=150
+   end
+   'apb_test_reflect_coefficients_5':begin
+      cal_cable_reflection_correct=0
+      cal_cable_reflection_mode_fit=150
    end
    'apb_test_delicate':begin
       calibration_catalog_file_path=filepath('foo.sav',root=rootdir('FHD'),subdir='catalog_data')
