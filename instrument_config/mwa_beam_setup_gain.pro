@@ -123,7 +123,7 @@ CASE beam_model_version OF
             FOR a_i=0L,n_ang_slice-1 DO Jmat_single1[*,a_i]+=Interpol(Jmat_use[where(phi_arr EQ phi_arr[angle_slice_i0[a_i]])],zen_ang_in,zen_ang_out)
             Jmat_single=Complexarr(n_zen_ang,n_az_ang)
             FOR a_i=0L,n_zen_ang-1 DO Jmat_single[a_i,*]=Interpol(Jmat_single1[a_i,*],az_ang_in,az_ang_out)
-            (*Jones_matrix[p_i,p_j,freq_i])[pix_use]=Interpolate(Jmat_single,zen_ang_inst/interp_res,az_ang_inst/interp_res)
+            (*Jones_matrix[p_i,p_j,freq_i])[pix_use]=Interpolate(Jmat_single,zen_ang_inst/interp_res,az_ang_inst/interp_res,cubic=-0.5)
             debug_point=1
         ENDFOR
         debug_point=1
