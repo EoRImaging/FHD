@@ -1,4 +1,4 @@
-PRO code_reference,iter=iter,recalculate_all=recalculate_all,use_hash=use_hash,reference_hash=reference_hash,iter_ref=iter_ref,_Extra=extra
+PRO code_reference,set_iter=set_iter,recalculate_all=recalculate_all,use_hash=use_hash,reference_hash=reference_hash,iter_ref=iter_ref,_Extra=extra
 except=!except
 ;NOTE: to go back to an earlier commit HASH123 for testing, use git reset --hard HASH123 
 ;NOTE: requires the Power Spectrum (PS) repository to work (https://github.com/miguelfmorales/PS)
@@ -14,6 +14,7 @@ data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','code_refe
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
 
+IF N_Elements(set_iter) GT 0 THEN iter=set_iter
 IF Keyword_Set(use_hash) THEN BEGIN
     dir_list=file_search(data_directory,'fhd*'+path_sep(),/Test_directory,count=n_directories)
     
