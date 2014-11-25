@@ -45,7 +45,7 @@ yvals=meshgrid(dimension,elements,2)-elements/2
 ; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half 
 IF ~Keyword_Set(uv_mask) THEN BEGIN
     uv_mask=Fltarr(dimension,elements)
-    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1,fill_model_vis=fill_model_vis)
+    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1,fill_model_vis=fill_model_vis,file_path_fhd=file_path_fhd)
     mask_i_use=where(vis_count)
     uv_mask[mask_i_use]=1
 ENDIF ELSE uv_mask[*,elements/2+psf.dim:*]=0. 
