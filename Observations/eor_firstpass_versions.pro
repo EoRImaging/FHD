@@ -497,6 +497,20 @@ case version of
 	; turn fits back on
 	export_images=1
    end
+   'apb_test_beam_1A':begin
+	; set the beam
+	beam_model_version=1
+	dipole_mutual_coupling_factor=0
+	; turn fits back on
+	export_images=1
+     end
+   'apb_test_beam_2A':begin
+	; set the beam
+	beam_model_version=2
+	dipole_mutual_coupling_factor=0
+	; turn fits back on
+	export_images=1
+   end
    'apb_std_Nov2014b':begin
         image_filter_fn='filter_uv_natural'
 	export_images=1
