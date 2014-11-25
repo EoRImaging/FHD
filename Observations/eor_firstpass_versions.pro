@@ -70,7 +70,7 @@ calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
 
 ; even newer defaults
-export_images=0
+export_images=1
 ;cal_cable_reflection_correct=150
 cal_cable_reflection_mode_fit=150
 model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
