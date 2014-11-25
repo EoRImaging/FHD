@@ -74,9 +74,9 @@ export_images=1
 ;cal_cable_reflection_correct=150
 cal_cable_reflection_mode_fit=150
 model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-model_visibilities=1
+model_visibilities=0
 return_cal_visibilities=1
-allow_sidelobe_cal_sources=0
+allow_sidelobe_cal_sources=1
 allow_sidelobe_model_sources=1
 
 case version of
