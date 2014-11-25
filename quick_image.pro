@@ -208,7 +208,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   
   if keyword_set(pub) then begin
     cgps_close, png = png, pdf = pdf, delete_ps = delete_ps, density=600
-    if make_win eq 1 then wdelete, window_num
+    if n_elements(make_win) gt 0 then if make_win eq 1 then wdelete, window_num
   endif
   
   tvlct, r, g, b
