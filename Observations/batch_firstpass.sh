@@ -34,6 +34,7 @@ do
 	w) wallclock_time=$OPTARG;;	#Time for execution in grid engine
 	n) nslots=$OPTARG;;		#Number of slots for grid engine
 	m) mem=$OPTARG;;		#Memory per core for grid engine
+	t) thresh=$OPTARG;;		#Wedge threshold to use to determine whether or not to run
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), "
 	    echo "-v (version input for FHD), -p (priority in grid engine), -w (wallclock time in grid engine), -n (number of slots to use),"
 	    echo "and -m (memory per core for grid engine)." 
@@ -81,7 +82,9 @@ fi
 if [ -z ${mem} ]; then
     mem=4G
 fi
-
+if [ -z ${thresh} ]; then
+    thresh=-1
+fi
 
 echo Setting priority = $priority
 
@@ -150,7 +153,7 @@ message=$(qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_
 message=($message)
 id=`echo ${message[2]} | cut -f1 -d"."`
 
-qsub -hold_jid $id -l h_vmem=1G,h_stack=512k,h_rt=00:05:00 -V -v nslots=$nslots,outdir=$outdir,version=$version,FHDpath=$FHDpath,mem=$mem,wallclock_time=${wallclock_time},priority=$priority -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -pe chost 1 ${FHDpath}Observations/batch_check.sh ${good_obs_list[@]}
+qsub -hold_jid $id -l h_vmem=1G,h_stack=512k,h_rt=00:05:00 -V -v nslots=$nslots,outdir=$outdir,version=$version,FHDpath=$FHDpath,mem=$mem,wallclock_time=${wallclock_time},priority=$priority,thresh=thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -pe chost 1 ${FHDpath}Observations/batch_check.sh ${good_obs_list[@]}
 
 echo "Done"
 
