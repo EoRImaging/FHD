@@ -77,7 +77,7 @@ IF Min(Ptr_valid(model_uv_arr)) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(dimension,elements)
 ENDIF
 
-IF Keyword_Set(source_list) THEN BEGIN
+IF n_sources GT 1 THEN BEGIN ;test that there are actual sources in the source list
     ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
     ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
     source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 

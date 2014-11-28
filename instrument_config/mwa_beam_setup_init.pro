@@ -1,5 +1,5 @@
 FUNCTION mwa_beam_setup_init,obs,antenna_str,antenna_size=antenna_size,dead_dipole_list=dead_dipole_list,$
-    dipole_mutual_coupling_factor=dipole_mutual_coupling_factor
+    dipole_mutual_coupling_factor=dipole_mutual_coupling_factor,antenna_spacing=antenna_spacing
 ;indices of gain_arr correspond to these antenna locations
 ;         N
 ;    0  1  2  3
@@ -20,7 +20,7 @@ nfreq_bin=antenna_str.nfreq_bin
 IF tag_exist(obs,'delays') THEN delay_settings=Pointer_copy(obs.delays) ;delays need to be generalized!
 IF N_Elements(dipole_mutual_coupling_factor) EQ 0 THEN dipole_mutual_coupling_factor=1
 IF N_Elements(antenna_size) EQ 0 THEN antenna_size=5. ;meters (MWA groundscreen size)
-antenna_spacing=1.1 ;meters (Same as M&C SetDelays script) ; Was 1.071 before? Verified in Tingay et al 2013
+IF not Keyword_Set(antenna_spacing) THEN antenna_spacing=1.1 ;meters (Same as M&C SetDelays script) ; Was 1.071 before? Verified in Tingay et al 2013
 antenna_length=29.125*2.54/100. ;meters (measured) (NOT USED)
 antenna_height=0.29 ;meters (June 2014 e-mail from Brian Crosse) ; Was 0.35 before
 velocity_factor=0.673
