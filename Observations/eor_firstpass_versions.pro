@@ -518,6 +518,7 @@ case version of
    end
    'apb_compare_rts_catalog':begin
 	calibration_catalog_file_path=filepath('RTS_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+   	transfer_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_std_Nov2014b/'
    end
 
    ; Abraham's versions
