@@ -517,8 +517,10 @@ case version of
 	export_images=1
    end
    'apb_compare_rts_catalog':begin
-	calibration_catalog_file_path=filepath('RTS_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
-   	transfer_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_std_Nov2014b/'
+	model_catalog_file_path=filepath('RTS_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+	model_visibilities=1
+	return_cal_visibilities=0
+	allow_sidelobe_model_sources=1
    end
 
    ; Abraham's versions
