@@ -516,6 +516,9 @@ case version of
         image_filter_fn='filter_uv_natural'
 	export_images=1
    end
+   'apb_compare_rts_catalog':begin
+	calibration_catalog_file_path=filepath('RTS_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
 
    ; Abraham's versions
 
