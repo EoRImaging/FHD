@@ -517,7 +517,7 @@ case version of
 	export_images=1
    end
    'apb_compare_rts_catalog':begin
-	model_catalog_file_path=filepath('RTS_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+	model_catalog_file_path=filepath('RTS_catalog2.sav',root=rootdir('FHD'),subdir='catalog_data')
 	model_visibilities=1
 	return_cal_visibilities=0
 	allow_sidelobe_model_sources=1
