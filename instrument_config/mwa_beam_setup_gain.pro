@@ -60,8 +60,9 @@ CASE beam_model_version OF
             ENDIF
             theta_arr[ext_i,*]=Jmat1[0,*] ;zenith angle in degrees
             phi_arr[ext_i,*]=Jmat1[1,*] ;azimuth angle in degrees, clockwise from East
-            FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO $
+            FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO BEGIN
                 Jmat_arr[ext_i,p_i,p_j,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
+            ENDFOR
             freq_arr_Jmat[ext_i]=Float(sxpar(header,'FREQ')) ;in Hz
         ENDFOR
         theta_arr=median(theta_arr,dimension=1) ; all actually the same across freq, so reduce dimension

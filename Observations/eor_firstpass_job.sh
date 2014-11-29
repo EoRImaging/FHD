@@ -20,7 +20,7 @@ echo OBSID ${obs_id}
 # TODO: check wedge stats and stop if above thresh
 if [ "${thresh}" -gt "0" ]; then
 	# check db for wedgie
-	
+	echo TODO: Check wedgie	
 fi
 
 ls $outdir > /dev/null # ping the output directory so nfs automounts
