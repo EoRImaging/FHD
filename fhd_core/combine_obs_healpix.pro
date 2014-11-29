@@ -212,8 +212,8 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             ENDELSE
             ind_order1=Sort(ri1[ri1[hpx_inds_i[ind_use1]]])
             ri1=0
-            ind_map1=ind_use1[(ind_order1)]
-            hpx_inds=(hpx_inds_i)+hist_min
+            ind_map1=ind_use1;[ind_order1]
+            hpx_inds=hpx_inds_i[ind_order1]+hist_min
         ENDELSE
     ENDIF ELSE BEGIN
     ;This option is not debugged!
