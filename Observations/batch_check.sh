@@ -60,7 +60,7 @@ if [ "${nobs}" -gt 0 ]; then
     echo priority=$priority
     echo mem=$mem
     echo h_rt=${wallclock_time}
-    ssh eor-00 "qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v nslots=$nslots,outdir=$outdir,version=$version -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh ${resubmit_list[@]}"
+    ssh eor-00 "qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v nslots=$nslots,outdir=$outdir,version=$version,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh ${resubmit_list[@]}"
 else
     echo Congratulations, your run finished successfully.
 fi
