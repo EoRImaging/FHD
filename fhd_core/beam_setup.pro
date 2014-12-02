@@ -40,7 +40,6 @@ nbaselines=obs.nbaselines
 
 dimension=obs.dimension
 elements=obs.elements
-;kbinsize=obs.kpix
 ;kx_span=kbinsize*dimension ;Units are # of wavelengths
 ;ky_span=kx_span
 degpix=obs.degpix
@@ -55,6 +54,9 @@ antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_re
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+kbinsize=obs.kpix
+kbinsize_superres=kbinsize/psf_resolution
+beam_integral=Ptrarr(n_pol,/allocate)
 
 ;;residual_tolerance is residual as fraction of psf_base above which to include 
 ;IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
@@ -96,7 +98,7 @@ bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
 group_arr=Lonarr(n_pol,nfreq_bin,nbaselines)-1
 FOR pol_i=0,n_pol-1 DO BEGIN
-
+    *beam_integral[pol_i]=Fltarr(n_freq)
     ant_pol1=pol_arr[0,pol_i]
     ant_pol1x=Abs(1-ant_pol1)
     ant_pol2=pol_arr[1,pol_i]
@@ -116,6 +118,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
         t2_a=Systime(1)
         
+        beam_int=0.
+        n_grp_use=0.
         FOR g_i=0L,n_group-1 DO BEGIN
             g_i1=gi_use[g_i] mod ng1
             g_i2=Floor(gi_use[g_i]/ng1)
@@ -144,13 +148,21 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
                 beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,_Extra=extra)
             
+            beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)*kbinsize_superres^2.
+            n_grp_use+=baseline_group_n
+            
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
             psf_single=Ptr_new(psf_single)
             FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
         ENDFOR
+        beam_int*=weight_invert(n_grp_use)
+        fi_use=where(freq_bin_i EQ freq_i,nf_use)
+        FOR fi1=0L,nf_use-1 DO (*beam_integral[pol_i])[fi_use[fi1]]=beam_int
     ENDFOR
 ENDFOR
+
+IF Tag_exist(obs,'beam_integral') THEN obs.beam_integral=beam_integral
 
 ;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
 ;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
