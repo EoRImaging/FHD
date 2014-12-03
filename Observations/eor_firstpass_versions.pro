@@ -442,10 +442,10 @@ case version of
       max_cal_iter=100
    end
    'apb_test_diffuse_subtract_1':begin
-      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_std_Nov2014/Healpix/diffuse_model_1.sav'
+      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/old/fhd_apb_std_Nov2014/Healpix/diffuse_model_1.sav'
       model_visibilities=1
-      calibration_visibilities_subtract=1
-      return_cal_visibilities=0
+      calibration_visibilities_subtract=0
+      return_cal_visibilities=1
       snapshot_healpix_export=1
       export_images=1
 	image_filter_fn='filter_uv_natural'
@@ -521,6 +521,9 @@ case version of
 	model_visibilities=1
 	return_cal_visibilities=0
 	allow_sidelobe_model_sources=1
+     end
+   'apb_std_Dec2014b':begin
+      beam_offset_time=56
    end
 
    ; Abraham's versions
