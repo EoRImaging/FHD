@@ -58,6 +58,7 @@ cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_
     galaxy_cal:galaxy_cal,min_cal_baseline:min_cal_baseline,max_cal_baseline:max_cal_baseline,n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,ref_antenna_name:ref_antenna_name,$
     conv_thresh:cal_convergence_threshold,convergence:convergence,polyfit:calibration_polyfit,amp_params:amp_params,phase_params:phase_params,$
+    mean_gain:Fltarr(n_pol),mean_gain_residual:Fltarr(n_pol),mean_gain_restrict:Fltarr(n_pol),stddev_gain_residual:Fltarr(n_pol),$
     bandpass:bandpass_calibrate,mode_fit:cal_mode_fit,mode_params:mode_params,cal_origin:calibration_origin,$
     n_cal_src:n_cal_src,catalog_name:catalog_path_use}
 RETURN,cal_struct

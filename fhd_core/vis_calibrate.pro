@@ -191,6 +191,26 @@ IF ~Keyword_Set(return_cal_visibilities) THEN undefine_fhd,vis_model_arr
     plot_cals,cal,obs,cal_res=cal_res,file_path_base=image_path,_Extra=extra
 ;ENDIF
 
+cal_gain_avg=Fltarr(nc_pol)
+cal_res_avg=Fltarr(nc_pol)
+cal_res_restrict=Fltarr(nc_pol)
+cal_res_stddev=Fltarr(nc_pol)
+FOR pol_i=0,nc_pol-1 DO BEGIN
+    tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use)
+    freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use)
+    IF n_tile_use EQ 0 OR n_freq_use EQ 0 THEN CONTINUE
+    cal_gain_avg[pol_i]=Mean(Abs(*cal.gain[pol_i]))
+    cal_res_avg[pol_i]=Mean(Abs(*cal_res.gain[pol_i]))
+    resistant_mean,Abs(*cal_res.gain[pol_i]),2,res_mean
+    cal_res_restrict[pol_i]=res_mean
+    cal_res_stddev[pol_i]=Stddev(Abs(*cal_res.gain[pol_i]))
+    restrictive_mean
+ENDFOR
+IF Tag_exist(cal,'Mean_gain') THEN cal.mean_gain=cal_gain_avg
+IF Tag_exist(cal,'Mean_gain_residual') THEN cal.mean_gain_residual=cal_res_avg
+IF Tag_exist(cal,'Mean_gain_restrict') THEN cal.mean_gain_restrict=cal_res_restrict
+IF Tag_exist(cal,'Stddev_gain_residual') THEN cal.stddev_gain_residual=cal_res_stddev
+
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0
 IF ~Keyword_Set(silent) THEN print,timing,t1,t2,t3
