@@ -97,6 +97,8 @@ bi_list=ant_B_list+ant_A_list*baseline_mod
 bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
 group_arr=Lonarr(n_pol,nfreq_bin,nbaselines)-1
+t_beam_int=0.
+t_beam_power=0.
 FOR pol_i=0,n_pol-1 DO BEGIN
     *beam_integral[pol_i]=Fltarr(n_freq)
     ant_pol1=pol_arr[0,pol_i]
@@ -143,14 +145,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             bi_inds=ri_bi[ri_bi[bi_use]] ;use these indices to index the reverse indices of the original baseline index histogram
             group_arr[pol_i,freq_i,bi_inds]=g_i
             
+            t_bpwr=Systime(1)
             psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,$
                 freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
                 xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
                 beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,_Extra=extra)
             
+            t_beam_power+=Systime(1)-t_bpwr
+            t_bint=Systime(1)
             beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)*kbinsize_superres^2.
             n_grp_use+=baseline_group_n
-            
+            t_beam_int+=Systime(1)-t_bint
             psf_single=Ptrarr(psf_resolution,psf_resolution)
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
             psf_single=Ptr_new(psf_single)
@@ -163,6 +168,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 IF Tag_exist(obs,'beam_integral') THEN obs.beam_integral=beam_integral
+print,t_ant,t_beam_power,t_beam_int
 
 ;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
 ;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
