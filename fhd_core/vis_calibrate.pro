@@ -143,8 +143,8 @@ ENDIF
 IF N_Elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=0
 IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) $
     OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
-IF N_Elements(calibration_flag_iterate) EQ 0 THEN $
-    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
+IF N_Elements(calibration_flag_iterate) EQ 0 THEN calibration_flag_iterate=0
+;    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 
 t2=0
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
@@ -204,7 +204,6 @@ FOR pol_i=0,nc_pol-1 DO BEGIN
     resistant_mean,Abs(*cal_res.gain[pol_i]),2,res_mean
     cal_res_restrict[pol_i]=res_mean
     cal_res_stddev[pol_i]=Stddev(Abs(*cal_res.gain[pol_i]))
-    restrictive_mean
 ENDFOR
 IF Tag_exist(cal,'Mean_gain') THEN cal.mean_gain=cal_gain_avg
 IF Tag_exist(cal,'Mean_gain_residual') THEN cal.mean_gain_residual=cal_res_avg
