@@ -126,12 +126,12 @@ FOR stk_i=0,n_pol-1 DO BEGIN
     ENDIF
     IF ~Keyword_Set(no_hpx_png) THEN BEGIN
         ;Must use RING healpix indices here
-        healpix_quickimage,stokes_weights,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_weights
-        IF (residual_flag OR model_flag) THEN healpix_quickimage,stokes_residual,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_residual
-        IF restored_flag THEN healpix_quickimage,stokes_residual+stokes_sources,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_restored
-        IF source_flag_use THEN healpix_quickimage,Stokes_sources,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_sources
-        IF dirty_flag THEN healpix_quickimage,Stokes_dirty,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_dirty
-        IF rings_flag THEN healpix_quickimage,Stokes_rings,hpx_inds,nside,degpix=hpx_degpix,/png,savefile=file_path_rings
+        healpix_quickimage,stokes_weights,hpx_inds,nside,/png,savefile=file_path_weights
+        IF (residual_flag OR model_flag) THEN healpix_quickimage,stokes_residual,hpx_inds,nside,/png,savefile=file_path_residual
+        IF restored_flag THEN healpix_quickimage,stokes_residual+stokes_sources,hpx_inds,nside,/png,savefile=file_path_restored
+        IF source_flag_use THEN healpix_quickimage,Stokes_sources,hpx_inds,nside,/png,savefile=file_path_sources
+        IF dirty_flag THEN healpix_quickimage,Stokes_dirty,hpx_inds,nside,/png,savefile=file_path_dirty
+        IF rings_flag THEN healpix_quickimage,Stokes_rings,hpx_inds,nside,/png,savefile=file_path_rings
     ENDIF
 ENDFOR
 ;FOR stk_i=0,n_pol-1 DO BEGIN
