@@ -160,7 +160,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
       dist_arr=(freq_arr#kr_arr)*kbinsize
       IF Keyword_Set(calibration_weights) THEN BEGIN
-        baseline_weights=1.-sqrt((((min_cal_baseline-dist_arr)>0)/min_cal_baseline+((dist_arr-max_cal_baseline)>0)/min_cal_baseline)>0)
+        baseline_weights=(1.-((((Sqrt(2.)*min_cal_baseline-dist_arr)>0)/min_cal_baseline+((dist_arr-max_cal_baseline)>0)/min_cal_baseline)>0)^2.)
         flag_dist_cut=where((dist_arr LT min_baseline) OR (dist_arr GT max_baseline),n_dist_cut)
       ENDIF ELSE flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
     ENDIF ELSE BEGIN
