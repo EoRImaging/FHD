@@ -526,7 +526,7 @@ case version of
       beam_offset_time=56
    end
    'apb_test_diffuse_subtract_94':begin
-      diffuse_model=filepath('diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      diffuse_model=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
       model_visibilities=1
       calibration_visibilities_subtract=0
       return_cal_visibilities=1
@@ -537,7 +537,7 @@ case version of
       beam_offset_time=56
    end
    'apb_test_diffuse_subtract_94_tapered':begin
-      diffuse_model=filepath('diffuse_model_94_tapered.sav',root=rootdir('FHD'),subdir='catalog_data')
+      diffuse_model=filepath('EoR0_diffuse_model_94_tapered.sav',root=rootdir('FHD'),subdir='catalog_data')
       model_visibilities=1
       calibration_visibilities_subtract=0
       return_cal_visibilities=1
