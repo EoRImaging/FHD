@@ -525,6 +525,28 @@ case version of
    'apb_std_Dec2014b':begin
       beam_offset_time=56
    end
+   'apb_test_diffuse_subtract_94':begin
+      diffuse_model=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      calibration_visibilities_subtract=0
+      return_cal_visibilities=1
+      snapshot_healpix_export=1
+      export_images=1
+      image_filter_fn='filter_uv_natural'
+      undefine,model_catalog_file_path
+      beam_offset_time=56
+   end
+   'apb_test_diffuse_subtract_94_tapered':begin
+      diffuse_model=filepath('EoR0_diffuse_model_94_tapered.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      calibration_visibilities_subtract=0
+      return_cal_visibilities=1
+      snapshot_healpix_export=1
+      export_images=1
+      image_filter_fn='filter_uv_natural'
+      undefine,model_catalog_file_path
+      beam_offset_time=56
+   end
 
    ; Abraham's versions
 
