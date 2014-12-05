@@ -91,8 +91,13 @@ ENDIF
 IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
 IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask
 
-IF Keyword_Set(diffuse_filepath) THEN diffuse_model_uv=fhd_diffuse_model(obs,jones,/uv_return,model_filepath=diffuse_filepath,_Extra=extra)
-IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask*0.25 ; adding fudge factor to test
+IF Keyword_Set(diffuse_filepath) THEN BEGIN
+    IF Keyword_Set(calibration_flag) THEN print,"Reading diffuse model file for calibration: "+diffuse_filepath $
+        ELSE print,"Reading diffuse model file for model subtraction: "+diffuse_filepath
+    diffuse_model_uv=fhd_diffuse_model(obs,jones,/uv_return,model_filepath=diffuse_filepath,_Extra=extra)
+    IF Max(Ptr_valid(diffuse_model_uv)) EQ 0 THEN print,"Error reading or building diffuse model. Null pointer returned!"
+ENDIF
+IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask
 
 vis_arr=Ptrarr(n_pol)
 

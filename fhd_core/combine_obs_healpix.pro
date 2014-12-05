@@ -145,6 +145,9 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         beam_mask*=mask0
     ENDFOR
     
+    IF status_str.jones THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd $
+        ELSE jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
+    IF source_flag THEN source_array=Stokes_Cnv(source_array,jones,obs,/inverse)
     instr_model_arr=Ptrarr(n_pol)
     instr_dirty_arr=Ptrarr(n_pol)
     instr_sources=Ptrarr(n_pol)
@@ -287,7 +290,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     ri0=0
     ri1=0
-    undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv,beam_base2,beam_base
+    undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv,beam_base2,beam_base,jones
 ENDFOR
 
 SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,instr_dirty_hpx,instr_model_hpx,weights_hpx,$
