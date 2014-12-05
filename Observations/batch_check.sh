@@ -33,7 +33,7 @@ for obs in $obslist; do
     if [ "${last_tag}" != "COMPLETE" ]; then
 	echo "Obs $obs did not finish successfully. (no complete line)."
 	resubmit_list+=($obs)
-	rm */${obs}*
+	#rm */${obs}*
 	continue
     fi
     complete=`cut -f2 ${file} | tail -1`
