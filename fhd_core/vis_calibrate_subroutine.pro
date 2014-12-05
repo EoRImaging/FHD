@@ -111,6 +111,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   reference_tile=cal.ref_antenna
   min_baseline=obs.min_baseline
   max_baseline=obs.max_baseline
+  dimension=obs.dimension
   min_cal_baseline=cal.min_cal_baseline
   max_cal_baseline=cal.max_cal_baseline
   min_cal_solutions=cal.min_solns ;minimum number of calibration equations needed to solve for the gain of one baseline
@@ -161,7 +162,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       dist_arr=(freq_arr#kr_arr)*kbinsize
       IF Keyword_Set(calibration_weights) THEN BEGIN
         baseline_weights=(1.-((((Sqrt(2.)*min_cal_baseline-dist_arr)>0)/min_cal_baseline+((dist_arr-max_cal_baseline)>0)/min_cal_baseline)>0)^2.)
-        flag_dist_cut=where((dist_arr LT min_baseline) OR (dist_arr GT max_baseline),n_dist_cut)
+        flag_dist_cut=where((dist_arr LT min_baseline) OR (dist_arr GT max_baseline<(kbinsize*dimension/2.)),n_dist_cut)
       ENDIF ELSE flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
     ENDIF ELSE BEGIN
       flag_use=0>*flag_ptr_use[pol_i]<1
