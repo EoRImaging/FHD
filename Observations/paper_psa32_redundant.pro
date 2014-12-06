@@ -19,7 +19,7 @@ fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_ForA_PicA.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('PAPER_EOR1_calibration_catalog4.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 FoV=160.
 dimension=1024.
@@ -35,26 +35,38 @@ n_pol=2
 ;independent_fit=1 ;not sure of polarization calibration for now!
 time_offset=5.*60. ;time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time. 
 no_ps=1
-no_complex_beam=1
+;no_complex_beam=1
 nfreq_avg=1.
 
-calibration_flag_iterate=1
+;calibration_flag_iterate=1
+max_cal_iter=100.
 gain_factor=0.15
 min_baseline=1.
 min_cal_baseline=20.
 no_fits=1
 silent=0
 smooth_width=11.
-bandpass_calibrate=0
-calibration_polyfit=0.
+bandpass_calibrate=1
+calibration_polyfit=2.
 no_restrict_cal_sources=1
 no_rephase=1
 calibrate_visibilities=1
-save_visibilities=0
+save_visibilities=1
 reorder_visibilities=1
 freq_start=124.
-freq_end=174.
+freq_end=180.
 beam_model_version=2
+tile_flag_list=['19','20','25']
+firstpass=1
+
+mark_zenith=1
+psf_resolution=32.
+beam_diff_image=1
+beam_residual_threshold=0.1
+output_residual_histogram=1
+show_beam_contour=1
+contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
+contour_color='blue'
 
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 
