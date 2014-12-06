@@ -4,7 +4,7 @@ FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,status_str,psf,params,file_
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    error=error,_Extra=extra
+    error=error,grid_uniform=grid_uniform,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -88,6 +88,11 @@ bi_use_reduced=bi_use mod nbaselines
 image_uv=Complexarr(dimension,elements)
 weights=Complexarr(dimension,elements)
 variance=Fltarr(dimension,elements)
+uniform_filter=Fltarr(dimension,elements)
+IF Keyword_Set(grid_uniform) THEN BEGIN
+    mapfn_recalculate=0 ;mapfn is incompatible with uniformly gridded images!
+    uniform_flag=1
+ENDIF ELSE uniform_flag=0
 
 IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_flag=1
@@ -230,12 +235,12 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     freq_i=(inds mod n_freq_use)
     fbin=freq_bin_i[freq_i]
     
-    vis_n=bin_n[bin_i[bi]]
+    n_vis_single=bin_n[bin_i[bi]]
     baseline_inds=bi_use_reduced[Floor(inds/n_f_use) mod nbaselines]
     group_id=group_arr[inds]
     group_max=Max(group_id)+1
     
-;    psf_conj_flag=intarr(vis_n)
+;    psf_conj_flag=intarr(n_vis_single)
 ;    IF n_conj GT 0 THEN BEGIN
 ;        bi_vals=Floor(inds/n_freq_use)
 ;        psf_conj_flag=conj_flag[bi_vals]
@@ -248,7 +253,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xyf_ui=[Uniq(xyf_i)]
     n_xyf_bin=N_Elements(xyf_ui)
     
-    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF n_vis_single GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         rep_flag=1
         inds=inds[xyf_si]
         freq_i=freq_i[xyf_si]
@@ -279,28 +284,28 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         IF model_flag THEN FOR rep_ii=0,n_rep-1 DO $
             model_box[repeat_i[rep_ii]]=Total(model_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
         
-        vis_n=n_xyf_bin
+        n_vis_single=n_xyf_bin
     ENDIF ELSE BEGIN
         rep_flag=0
         IF model_flag THEN model_box=model_use[inds];*freq_norm[freq_i]
         vis_box=vis_arr_use[inds];*freq_norm[freq_i]
-        psf_weight=Replicate(1.,vis_n)
+        psf_weight=Replicate(1.,n_vis_single)
     ENDELSE
     
-    box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
+    box_matrix=Make_array(psf_dim3,n_vis_single,type=arr_type)
     IF verbose THEN BEGIN
         t3_0=Systime(1)
         t2+=t3_0-t1_0
     ENDIF
     
-;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
-    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
-;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
+;    FOR ii=0L,n_vis_single-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
+    FOR ii=0L,n_vis_single-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+;    FOR ii=0L,n_vis_single-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
 ;        *psf_base_dag[polarization,fbin[ii],x_off[ii],y_off[ii]]:*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
     
     IF map_flag THEN BEGIN
         IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=real_part(box_matrix) 
-        IF rep_flag THEN box_matrix*=Rebin(Transpose(psf_weight),psf_dim3,vis_n)
+        IF rep_flag THEN box_matrix*=Rebin(Transpose(psf_weight),psf_dim3,n_vis_single)
     ENDIF ELSE BEGIN
         IF complex_flag THEN box_matrix_dag=Conj(Temporary(box_matrix)) ELSE box_matrix_dag=Real_part(Temporary(box_matrix))
     ENDELSE
@@ -328,6 +333,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         var_box=matrix_multiply(psf_weight/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
+    IF uniform_flag THEN uniform_filter[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=n_vis_single
     
     IF verbose THEN BEGIN
         t6_0=Systime(1)
@@ -367,6 +373,16 @@ IF map_flag THEN BEGIN
     IF Arg_present(return_mapfn) THEN return_mapfn=map_fn
 ENDIF
 t7=Systime(1)-t7_0
+
+IF uniform_flag THEN BEGIN
+    filter_use=weight_invert(uniform_filter,1.) 
+    wts_i=where(filter_use,n_wts)
+    IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)
+    image_uv*=weight_invert(filter_use)
+    IF weights_flag THEN weights*=weight_invert(filter_use)
+    IF variance_flag THEN variance*=weight_invert(filter_use)
+    IF model_flag THEN model_return*=weight_invert(filter_use)
+ENDIF
 
 IF ~Keyword_Set(no_conjugate) THEN BEGIN
     image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
