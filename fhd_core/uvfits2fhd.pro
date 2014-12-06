@@ -73,7 +73,10 @@ IF data_flag LE 0 THEN BEGIN
             error=1
             RETURN
         ENDIF
+        t_readfits=Systime(1)-t_readfits
         RESTORE,file_path_vis_sav
+        t_readfits=Systime(1)-t_readfits
+        print,"Time restoring visibility save file: "+Strn(t_readfits)
     ENDIF ELSE BEGIN
         IF file_test(file_path_vis) EQ 0 THEN BEGIN
             print,"File: "+file_path_vis+" not found! Returning"
@@ -81,10 +84,13 @@ IF data_flag LE 0 THEN BEGIN
             RETURN
         ENDIF
         
+        t_readfits=Systime(1)
         data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
         hdr=vis_header_extract(data_header0, params = data_struct.params)    
         IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
         params=vis_param_extract(data_struct.params,hdr)
+        t_readfits=Systime(1)-t_readfits
+        print,"Time reading UVFITS files and extracting header: "+Strn(t_readfits)
         IF n_pol LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol-1,*]) ELSE data_array=Temporary(data_struct.array) 
         data_struct=0. ;free memory
         
