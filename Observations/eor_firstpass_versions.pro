@@ -79,6 +79,8 @@ return_cal_visibilities=1
 allow_sidelobe_cal_sources=1
 allow_sidelobe_model_sources=1
 
+beam_offset_time=56 ; make this a default. But it won't compound with setting it directly in a version so I think it's ok.
+
 case version of
    'apb_test_restrict_hpx_inds_1': begin
       restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'       ; now graduated to a default
@@ -546,6 +548,9 @@ case version of
       image_filter_fn='filter_uv_natural'
       undefine,model_catalog_file_path
       beam_offset_time=56
+   end
+   'apb_test_beam_model_timing':begin
+      nfreq_avg=1
    end
 
    ; Abraham's versions
