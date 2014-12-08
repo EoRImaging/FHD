@@ -16,7 +16,7 @@ vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('MRC_calibration_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 combine_obs=0
 dimension=3072.
@@ -55,7 +55,16 @@ show_beam_contour=1
 contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
 contour_color='blue'
 
-cmd_args=extra
+end_fi=3
+skip_fi=[1,2]
+mapfn_recalculate=1
+firstpass=1
+beam_model_version=2
+max_cal_iter=100L
+allow_sidelobe_cal_sources=1
+cal_cable_reflection_mode_fit=150.
+
+IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
 general_obs,_Extra=extra
 !except=except
