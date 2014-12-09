@@ -73,7 +73,7 @@ IF data_flag LE 0 THEN BEGIN
             error=1
             RETURN
         ENDIF
-        t_readfits=Systime(1)-t_readfits
+        t_readfits=Systime(1)
         RESTORE,file_path_vis_sav
         t_readfits=Systime(1)-t_readfits
         print,"Time restoring visibility save file: "+Strn(t_readfits)
