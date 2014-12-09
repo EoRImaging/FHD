@@ -6,7 +6,8 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
     use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,$
-    beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,_Extra=extra
+    beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,$
+    image_mask_horizon=image_mask_horizon,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -22,6 +23,7 @@ IF file_test(output_dir) EQ 0 THEN file_mkdir,output_dir
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=0.025
+IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
@@ -95,8 +97,13 @@ elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
-jones_out=fhd_struct_init_jones(obs_out,status_str,jones,file_path_fhd=file_path_fhd,/update)
 beam_mask=fltarr(dimension,elements)+1
+IF Keyword_Set(image_mask_horizon) THEN BEGIN
+    xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr_out,ra_arr,dec_arr
+    horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
+    IF n_horizon_mask GT 0 THEN beam_mask[horizon_test]=0
+ENDIF
+
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
 beam_correction_out=Ptrarr(n_pol,/allocate)
@@ -120,6 +127,7 @@ ENDFOR
 beam_avg/=(n_pol<2)
 beam_avg=Sqrt(beam_avg>0)*beam_mask
 beam_i=where(beam_mask)
+jones_out=fhd_struct_init_jones(obs_out,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
 
 IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1

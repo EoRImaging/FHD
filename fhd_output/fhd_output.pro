@@ -6,7 +6,8 @@ PRO fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,v
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
     use_pointing_center=use_pointing_center,no_fits=no_fits,no_png=no_png,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_diff_image=beam_diff_image,$
-    beam_output_threshold=beam_output_threshold,output_residual_histogram=output_residual_histogram,_Extra=extra
+    beam_output_threshold=beam_output_threshold,output_residual_histogram=output_residual_histogram,$
+   show_beam_contour=show_beam_contour, image_mask_horizon=image_mask_horizon,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
@@ -27,6 +28,7 @@ IF not Keyword_Set(obs) THEN fhd_save_io,status_str,obs,var='obs',/restore,file_
 IF not Keyword_Set(fhd_params) THEN fhd_save_io,status_str,fhd_params,var='fhd_params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
+IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF tag_exist(fhd_params,'galaxy_subtract') THEN galaxy_model_fit=fhd_params.galaxy_subtract 
 IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
@@ -133,8 +135,13 @@ ENDIF
 t2a=Systime(1)
 t1+=t2a-t1a
 
-jones_out=fhd_struct_init_jones(obs_out,0,jones,file_path_fhd=file_path_fhd,/update,/no_save)
 beam_mask=fltarr(dimension,elements)+1
+IF Keyword_Set(image_mask_horizon) THEN BEGIN
+    xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr_out,ra_arr,dec_arr
+    horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
+    IF n_horizon_mask GT 0 THEN beam_mask[horizon_test]=0
+ENDIF
+
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
 beam_correction_out=Ptrarr(n_pol,/allocate)
@@ -153,6 +160,7 @@ psf=0
 heap_gc
 beam_avg/=(n_pol<2)
 beam_i=where(beam_mask)
+jones_out=fhd_struct_init_jones(obs_out,0,jones,file_path_fhd=file_path_fhd,/update,/no_save,mask=beam_mask)
 
 t3a=Systime(1)
 t2+=t3a-t2a
@@ -303,6 +311,17 @@ astr_out2=astr_out
 astr_out2.crpix-=zoom_low
 astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 
+beam_contour_arr=Ptrarr(n_pol)
+beam_contour_arr2=Ptrarr(n_pol)
+beam_contour_stokes=Ptr_new()
+IF Keyword_Set(show_beam_contour) THEN BEGIN
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        IF Keyword_Set(gridline_image_show) THEN beam_contour_arr2[pol_i]=Ptr_new((*beam_base_out[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]) $
+            ELSE beam_contour_arr[pol_i]=Ptr_new((*beam_base_out[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high])
+    ENDFOR
+    beam_contour_stokes=Ptr_new(beam_avg[zoom_low:zoom_high,zoom_low:zoom_high])
+ENDIF 
+
 IF Keyword_Set(beam_diff_image) THEN BEGIN
     source_res_arr=source_residual_image(obs_out,source_arr_out,instr_images,beam_arr=beam_base_out,$
         jones=jones_out,source_residual_radius=100.,source_residual_flux_threshold=1.,beam_power=2,_Extra=extra)
@@ -428,11 +447,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_source,low=gal_low_use,high=gal_high_use,$
                 lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
-                title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+                title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
             IF Keyword_Set(gal_holo) THEN Imagefast,gal_holo[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path_fg+'_GalHolo_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log_dirty,low=instr_low_use,high=instr_high_use,$
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
-                title=title_fhd,/sphere,astr=astr_out2,_Extra=extra
+                title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
         ENDIF
         t9+=t8b-t9a
         
@@ -459,10 +478,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             show_grid=show_grid,/sphere,title=title_fhd,astr=astr_out2,_Extra=extra
         
         IF pol_i EQ 0 THEN BEGIN
-            IF Keyword_Set(gridline_image_show) THEN Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path_fg+'_Grid',$
-                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
-                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,astr=astr_out2,$
-                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+            IF Keyword_Set(gridline_image_show) THEN BEGIN
+                Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path_fg+'_Grid',$
+                    /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
+                    lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,astr=astr_out2,$
+                    offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,/sphere,_Extra=extra
+                IF Max(Ptr_valid(beam_contour_arr2)) THEN BEGIN
+                    Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path+filter_name+'_beam_contour_'+pol_names[pol_i],$
+                        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
+                        title=title_fhd,show_grid=0,astr=astr_out2,contour_image=beam_contour_arr2[pol_i],/zero_white,_Extra=extra
+                ENDIF
+            ENDIF
         
             IF Keyword_Set(mrc_image) THEN BEGIN
                 mrc_comp=(stokes_source+mrc_image)[zoom_low:zoom_high,zoom_low:zoom_high]
