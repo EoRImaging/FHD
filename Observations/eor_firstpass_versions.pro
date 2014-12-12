@@ -552,6 +552,9 @@ case version of
    'apb_test_beam_model_timing':begin
       nfreq_avg=1
    end
+   'apb_transfer_rts_cal_1':begin
+      transfer_calibration='/nfs/eor-00/h1/beards/rts_cal/cal_rts.sav'
+   end
 
    ; Abraham's versions
 
