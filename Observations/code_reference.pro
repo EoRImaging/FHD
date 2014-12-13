@@ -99,8 +99,8 @@ kbinsize=0.5
 psf_resolution=32
 
 ; some new defaults (possibly temporary)
-beam_model_version=0
-dipole_mutual_coupling_factor=0
+beam_model_version=2
+dipole_mutual_coupling_factor=1
 calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
 
