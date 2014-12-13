@@ -17,6 +17,7 @@ t00=Systime(1)
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
+
 IF N_Elements(hpx_radius) EQ 0 THEN BEGIN
     IF Keyword_Set(mask) THEN BEGIN
         xv_arr=meshgrid(dimension,elements,1)
@@ -53,6 +54,7 @@ IF ~Keyword_Set(nside) THEN BEGIN
 ;    nside*=2.
 ENDIF
 npix=nside2npix(nside)
+pixel_area_cnv=(1./(obs.degpix*!DtoR)^2.)*(4.*!Pi/npix) ; (old pixel/steradian)*(steradian/new pixel)
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
     pix2vec_ring,nside,hpx_inds,pix_coords
@@ -135,7 +137,7 @@ FOR i=0L,n_img_use-1L DO BEGIN
         sa0[bin_i[bi]:bin_i[bi+1]-1]=(1.-x_frac[inds1])*(1.-y_frac[inds1])
         ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
-    *sa[i]=sa0
+    *sa[i]=sa0*pixel_area_cnv
     *ija[i]=ija0
         
 ENDFOR
