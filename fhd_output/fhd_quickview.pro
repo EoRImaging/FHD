@@ -97,13 +97,14 @@ elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
-beam_mask=fltarr(dimension,elements)+1
-IF Keyword_Set(image_mask_horizon) THEN BEGIN
+horizon_mask=fltarr(dimension,elements)+1.
+;IF Keyword_Set(image_mask_horizon) THEN BEGIN
     xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr_out,ra_arr,dec_arr
     horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
-    IF n_horizon_mask GT 0 THEN beam_mask[horizon_test]=0
-ENDIF
+    IF n_horizon_mask GT 0 THEN horizon_mask[horizon_test]=0
+;ENDIF
 
+beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
 beam_correction_out=Ptrarr(n_pol,/allocate)
@@ -112,7 +113,7 @@ IF N_Elements(beam_arr) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=beam_image(psf,obs,pol_i=pol_i,square=0)
 ENDIF
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *beam_base_out[pol_i]=Rebin(*beam_arr[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
+    *beam_base_out[pol_i]=Rebin(*beam_arr[pol_i],dimension,elements)*horizon_mask ;should be fine even if pad_uv_image is not set
     *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-3)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
