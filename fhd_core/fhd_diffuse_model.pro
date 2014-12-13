@@ -1,4 +1,4 @@
-FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,uv_return=uv_return,_Extra=extra
+FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,uv_return=uv_return,diffuse_units_kelvin=diffuse_units_kelvin,_Extra=extra
 
 dimension=obs.dimension
 elements=obs.elements
@@ -35,7 +35,7 @@ var_names=var_names[var_name_inds]
 var_name_use=var_names[(where(StrLowCase(var_names) EQ 'model_arr',n_match))[0]>0] ;will pick 'model_arr' if present, or the first variable that is not 'hpx_inds' or 'nside'
 model_hpx_arr=getvar_savefile(model_filepath,var_name_use)
 
-model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds)
+model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=diffuse_units_kelvin)
 IF size(model_stokes_arr,/type) EQ 10 THEN BEGIN
     np_hpx=Total(Ptr_valid(model_hpx_arr))
     IF np_hpx LT n_pol THEN BEGIN
