@@ -113,6 +113,7 @@ precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 n_pol=2
 max_cal_iter=100.
 restore_vis_savefile=1
+export_images=1
 
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
