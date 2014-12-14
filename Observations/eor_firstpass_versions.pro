@@ -418,7 +418,7 @@ case version of
       FoV=120.
       dimension=4096
       tile_flag_list=[77,18,89,113,114,115,116,117,118,119,120]
-      
+   end
 
    ;;; Abraham's versions!!! Only Abraham may edit this section!!!
    'arn_mwacs_plus_ben_fornax_and_vla_pic':begin
