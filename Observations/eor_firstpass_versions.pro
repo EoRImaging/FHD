@@ -208,7 +208,7 @@ case version of
       snapshot_healpix_export=0
       uvfits_version=0 ; just testing
       uvfits_subversion=0
-      tile_flag_list=[111,128,121,131,132,133,141,142,151,152,163,164,165,107,108,118]
+      tile_flag_`list=[111,128,121,131,132,133,141,142,151,152,163,164,165,107,108,118]
       save_visibilities=0
       calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
@@ -411,7 +411,14 @@ case version of
       dipole_mutual_coupling_factor=1
    end 
 
-
+   ;;; Aaron's versions!!! Only Aaron may edit this section!!!
+   'aew_mwacs_plus_ben_fornax_and_vla_pic_ultralow_sept5':begin
+      calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+      deconvolve=0
+      FoV=120.
+      dimension=4096
+      tile_flag_list=[77,18,89,113,114,115,116,117,118,119,120]
+   end
 
    ;;; Abraham's versions!!! Only Abraham may edit this section!!!
    'arn_mwacs_plus_ben_fornax_and_vla_pic':begin
@@ -551,6 +558,9 @@ case version of
    end
    'apb_test_beam_model_timing':begin
       nfreq_avg=1
+   end
+   'apb_transfer_rts_cal_1':begin
+      transfer_calibration='/nfs/eor-00/h1/beards/rts_cal/cal_rts.sav'
    end
 
    ; Abraham's versions
