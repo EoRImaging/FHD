@@ -39,7 +39,7 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
     vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
     model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
-    reorder_visibilities=reorder_visibilities,transfer_flags=transfer_flags,flag_calibration=flag_calibration,_Extra=extra
+    reorder_visibilities=reorder_visibilities,transfer_flags=transfer_flags,flag_calibration=flag_calibration, production=production,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -331,6 +331,19 @@ ENDIF
 ;optionally export frequency-splt Healpix cubes
 IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,$
     vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
+
+;Optionally fill the fhd table on the mwa_qc database located on eor-00 under the mwa username. See the python script 
+;for more information about possible queries.
+IF Keyword_Set(production) THEN BEGIN
+  ;Set up paths and keywords for the database filler, including the complete tag
+  IF ~Keyword_Set(error) THEN complete='1'
+  descr_file_path=file_path_fhd+'_settings.txt'
+  descr_file_path=filepath(file_basename(descr_file_path),root=file_dirname(descr_file_path),sub="metadata")
+
+  ;Spawn a child process to run the database filler, located in MWA_Tools
+  SPAWN, 'fhd_database_filler.py -s ' + descr_file_path + ' -o ' + obs.obsname + ' -c ' + obs.code_version + $
+      ' -p ' + file_path_fhd + ' -m ' + complete
+ENDIF
 
 undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_arr
 undefine_fhd,obs,cal,jones,psf,antenna,fhd_params

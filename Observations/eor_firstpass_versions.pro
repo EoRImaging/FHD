@@ -10,8 +10,11 @@ heap_gc
 compile_opt strictarr
 args = Command_Line_Args(count=nargs)
 obs_id = args[0]
+;obs_id = '1061316296'
 output_directory = args[1]
+;output_directory = '/nfs/eor-00/h1/nbarry/'
 version = args[2]
+;version = 'default'
 cmd_args={version:version}
 
 ; Set default values for everything
@@ -592,6 +595,15 @@ case version of
       calibration_flag_iterate=0
    end
 
+   'nb_database_test':begin
+      production=1
+   end
+
+   'nb_cable_cal_ps':begin
+   end
+   
+   'nb_cable_cal_pointing_ps':begin
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
