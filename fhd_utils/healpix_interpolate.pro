@@ -24,6 +24,7 @@ ENDELSE
 pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,pix_dec,pix_ra,/astro
 ad2xy,pix_ra,pix_dec,astr,xv_hpx,yv_hpx
+
 hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)),n_hpx_use) 
 IF n_hpx_use EQ 0 THEN BEGIN
     print,"Error: Map has no valid Healpix indices"
@@ -31,6 +32,9 @@ IF n_hpx_use EQ 0 THEN BEGIN
 ENDIF
 xv_hpx=xv_hpx[hpx_i_use]
 yv_hpx=yv_hpx[hpx_i_use]
+
+image_mask=Fltarr(dimension,elements)
+image_mask[Min(Floor(xv_hpx)):Max(Ceil(xv_hpx)),Min(Floor(yv_hpx)):Max(Ceil(yv_hpx))]=1
 
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
@@ -78,7 +82,7 @@ FOR map_i=0,n_map-1 DO BEGIN
         model_img[interp_i]=model_filtered[interp_i]
     ENDIF
     
-    IF Ptr_flag THEN *map_interp[map_i]=model_img ELSE map_interp=model_img
+    IF Ptr_flag THEN *map_interp[map_i]=model_img*image_mask ELSE map_interp=model_img*image_mask
 ENDFOR
 
 RETURN,map_interp

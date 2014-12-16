@@ -55,10 +55,10 @@ edge_match,model
 valid_i=where(Finite(ra_arr),n_valid)
 Jdate=obs.Jd0
 
-antialias_filter=Sqrt(Hanning(dimension,elements))
-antialias_filter/=Mean(antialias_filter[valid_i])
+;antialias_filter=Sqrt(Hanning(dimension,elements))
+;antialias_filter/=Mean(antialias_filter[valid_i])
 model_use=model
-IF Keyword_Set(antialias) THEN model_use*=antialias_filter
+;IF Keyword_Set(antialias) THEN model_use*=antialias_filter
 gal_model_img=model_use
 
 gal_model_stks=Ptrarr(4,/allocate)
