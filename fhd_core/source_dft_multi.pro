@@ -6,10 +6,10 @@ elements=obs.elements
 degpix=obs.degpix
 n_pol=obs.n_pol
 
-IF N_Elements(uv_i_use) EQ 0 THEN uv_i_use=Lindgen(dimension*elements/2.+dimension)
+IF N_Elements(uv_i_use) EQ 0 THEN uv_i_use=Lindgen(dimension*elements)
 
-IF N_Elements(xvals) NE N_Elements(uv_i_use) THEN xvals=(meshgrid(dimension,elements,1))[uv_i_use]
-IF N_Elements(yvals) NE N_Elements(uv_i_use) THEN yvals=(meshgrid(dimension,elements,2))[uv_i_use]
+IF N_Elements(xvals) NE N_Elements(uv_i_use) THEN xvals=(meshgrid(dimension,elements,1))[uv_i_use]-dimension/2
+IF N_Elements(yvals) NE N_Elements(uv_i_use) THEN yvals=(meshgrid(dimension,elements,2))[uv_i_use]-elements/2
 
 x_vec=source_array.x
 y_vec=source_array.y
