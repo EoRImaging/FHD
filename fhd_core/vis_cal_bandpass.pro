@@ -30,39 +30,14 @@ mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=
 textfast,data_array,/read,file_path=mode_filepath,first_line=1
 cable_len=Reform(data_array[2,*])
 
-;Locating tiles by cable length.
-cable90 = where(cable_len EQ 90)
-cable150 = where(cable_len EQ 150)
-cable230 = where(cable_len EQ 230)
-cable320 = where(cable_len EQ 320)
-cable400 = where(cable_len EQ 400)
-cable524 = where(cable_len EQ 524)
-
-;Taking tile information and rebinning it to be used with the nonflagged tiles array, resulting in nonflagged tile arrays
+;Taking tile information and cross-matching it with the nonflagged tiles array, resulting in nonflagged tile arrays
 ;grouped by cable length
-sub_dim90=N_Elements(cable90)
-inds90=Rebin(cable90,sub_dim90,/sample)
-tile_use_90=tile_use[inds90]
-
-sub_dim150=N_Elements(cable150)
-inds150=Rebin(cable150,sub_dim150,/sample)
-tile_use_150=tile_use[inds150]
-
-sub_dim230=N_Elements(cable230)
-inds230=Rebin(cable230,sub_dim230,/sample)
-tile_use_230=tile_use[inds230]
-
-sub_dim320=N_Elements(cable320)
-inds320=Rebin(cable320,sub_dim320,/sample)
-tile_use_320=tile_use[inds320]
-
-sub_dim400=N_Elements(cable400)
-inds400=Rebin(cable400,sub_dim400,/sample)
-tile_use_400=tile_use[inds400]
-
-sub_dim524=N_Elements(cable524)
-inds524=Rebin(cable524,sub_dim524,/sample)
-tile_use_524=tile_use[inds524]
+tile_use_90=where((*obs.baseline_info).tile_use AND cable_len EQ 90)
+tile_use_150=where((*obs.baseline_info).tile_use AND cable_len EQ 150)
+tile_use_230=where((*obs.baseline_info).tile_use AND cable_len EQ 230)
+tile_use_320=where((*obs.baseline_info).tile_use AND cable_len EQ 320)
+tile_use_400=where((*obs.baseline_info).tile_use AND cable_len EQ 400)
+tile_use_524=where((*obs.baseline_info).tile_use AND cable_len EQ 524)
 
 ;Main gain calculation loop
 FOR cable_i=0,5 DO BEGIN
@@ -138,9 +113,11 @@ cal_remainder.gain=gain_arr_ptr3
 IF Keyword_Set(file_path_fhd) THEN BEGIN
     basename=file_basename(file_path_fhd)
     dirpath=file_dirname(file_path_fhd)
-    image_path=filepath(basename,root=dirpath,sub='output_images')
+    image_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_cable_cal_v2/output_images/'
+    ;image_path=filepath(basename,root=dirpath,sub='output_images')
     IF file_test(file_dirname(image_path),/directory) EQ 0 THEN file_mkdir,file_dirname(image_path)
-    export_path=filepath(basename,root=dirpath,sub='calibration')
+    export_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_cable_cal_v2/calibration/'
+    ;export_path=filepath(basename,root=dirpath,sub='calibration')
     IF file_test(file_dirname(export_path),/directory) EQ 0 THEN file_mkdir,file_dirname(export_path)
     Textfast,bandpass_arr,/write,file_path=export_path+obs.obsname+'_bandpass'
     
@@ -188,7 +165,7 @@ ENDIF
 
 ;This is where a bandpass fractional change is calculated if a directory is supplied. Below is an example. It is assumed that the bandpass
 ;supplied is a single, 'global' bandpass. Uncomment cgLegend below if a legend is wanted.
-;bp_change_dir='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_std_Dec2014b/calibration/'
+bp_change_dir='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_std_Dec2014b/calibration/'
 IF Keyword_Set(bp_change_dir) THEN BEGIN
     bandpass_arr_change=bandpass_arr
     filename=bp_change_dir + obs.obsname + '_bandpass.txt'
@@ -200,9 +177,11 @@ IF Keyword_Set(bp_change_dir) THEN BEGIN
 
     basename=file_basename(file_path_fhd)
     dirpath=file_dirname(file_path_fhd)
-    image_path=filepath(basename,root=dirpath,sub='output_images')
+    image_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_cable_cal_v2/output_images/'
+    ;image_path=filepath(basename,root=dirpath,sub='output_images')
     IF file_test(file_dirname(image_path),/directory) EQ 0 THEN file_mkdir,file_dirname(image_path)
-    export_path=filepath(basename,root=dirpath,sub='calibration')
+    export_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_cable_cal_v2/calibration/'
+    ;export_path=filepath(basename,root=dirpath,sub='calibration')
     IF file_test(file_dirname(export_path),/directory) EQ 0 THEN file_mkdir,file_dirname(export_path)
     Textfast,bandpass_arr_change,/write,file_path=export_path+obs.obsname+'_bandpass_change'
     
