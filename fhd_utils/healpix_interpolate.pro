@@ -5,6 +5,8 @@ IF N_Elements(hpx_inds) EQ 0 THEN hpx_inds=Lindgen(n_hpx)
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
+xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
+radec_i=where(Finite(ra_arr))
 
 IF size(healpix_map,/type) EQ 10 THEN BEGIN ;check if pointer type, and if so allow it to be a pointer array
     ptr_flag=1
@@ -33,7 +35,7 @@ yv_hpx=yv_hpx[hpx_i_use]
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
 IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,obs,nside=nside,freq=obs.freq_center) $
-    ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/npix) ; (steradian/new pixel)/(steradian/old pixel)
+    ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/n_hpx) ; (steradian/new pixel)/(steradian/old pixel)
 
 weights_img=fltarr(dimension,elements)
 weights_img[Floor(xv_hpx),Floor(yv_hpx)]+=x_frac*y_frac

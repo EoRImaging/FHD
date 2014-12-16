@@ -68,7 +68,7 @@ gal_model_instr=Stokes_cnv(gal_model_stks,jones,/inverse,_Extra=extra)
 
 gal_model_uv=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    model_uv=2.*!Pi*fft_shift(FFT(fft_shift(*gal_model_instr[pol_i]),/inverse))
+    model_uv=fft_shift(FFT(fft_shift(*gal_model_instr[pol_i]),/inverse))
     *gal_model_uv[pol_i]=model_uv
 ENDFOR
   
