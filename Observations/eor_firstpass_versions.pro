@@ -568,7 +568,7 @@ case version of
    'apb_std_Dec2014b':begin
 	production=1
    end
-   'apb_EoR0_high_sem1_1.txt':begin
+   'apb_EoR0_high_sem1_1':begin
 	production=1
 	diffuse_model=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
         model_visibilities=1
