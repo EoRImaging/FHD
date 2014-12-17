@@ -1,5 +1,6 @@
 FUNCTION healpix_cnv_generate,obs,status_str,file_path_fhd=file_path_fhd,nside=nside,mask=mask,hpx_radius=hpx_radius,$
-    restore_last=restore_last,silent=silent,pointer_return=pointer_return,no_save=no_save,restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
+    restore_last=restore_last,silent=silent,pointer_return=pointer_return,no_save=no_save,$
+    restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
 
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
     IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
@@ -55,6 +56,7 @@ IF ~Keyword_Set(nside) THEN BEGIN
 ENDIF
 npix=nside2npix(nside)
 pixel_area_cnv=(1./(obs.degpix*!DtoR)^2.)*(4.*!Pi/npix) ; (old pixel/steradian)*(steradian/new pixel)
+pixel_area_cnv=1. ;turn this off for now
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
     pix2vec_ring,nside,hpx_inds,pix_coords
