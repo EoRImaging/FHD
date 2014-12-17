@@ -46,7 +46,7 @@ IF N_Elements(iter) EQ 0 THEN BEGIN
     ENDWHILE
 ENDIF
 fhd_file_list=fhd_path_setup(vis_file_list,version=version_use,_Extra=extra)
-undefine_fhd,branch
+undefine_fhd,branch,di,iter,match_i,n_match,hash_match,dir_list,test_dir
 
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
@@ -99,8 +99,8 @@ kbinsize=0.5
 psf_resolution=32
 
 ; some new defaults (possibly temporary)
-beam_model_version=0
-dipole_mutual_coupling_factor=0
+beam_model_version=2
+dipole_mutual_coupling_factor=1
 calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
 
@@ -112,6 +112,8 @@ no_fits=1
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 n_pol=2
 max_cal_iter=100.
+restore_vis_savefile=1
+export_images=1
 
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()

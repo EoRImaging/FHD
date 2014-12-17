@@ -161,7 +161,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_single=Ptr_new(psf_single)
             FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
         ENDFOR
-        beam_int*=weight_invert(n_grp_use)
+        beam_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
         fi_use=where(freq_bin_i EQ freq_i,nf_use)
         FOR fi1=0L,nf_use-1 DO (*beam_integral[pol_i])[fi_use[fi1]]=beam_int
     ENDFOR

@@ -66,8 +66,16 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     IF clean_bias_threshold GE 1 THEN clean_bias_threshold=0.5
     ns=N_Elements(source_arr)
     comp_gi=comp_arr_use.id
-    hcomp_gi=histogram(comp_gi,min=0,/bin)
+    hcomp_gi=histogram(comp_gi,min=0,/bin,reverse_ind=c_ri)
     gain_factor=gain_array[source_arr.x,source_arr.y]
+    gain_factor_arr=comp_arr_use.gain
+    id_use=where(hcomp_gi,n_id_use)
+    flux_frac_arr=Fltarr(ns)+1.
+    FOR i=0L,n_id_use-1 DO BEGIN
+        id_i=id_use[i]
+        
+    ENDFOR
+;    product(
     flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi[source_arr.id]
     
     si_use=where(flux_frac_arr GE Abs(clean_bias_threshold),n_use)

@@ -565,6 +565,17 @@ case version of
    'apb_transfer_rts_cal_1':begin
       transfer_calibration='/nfs/eor-00/h1/beards/rts_cal/cal_rts.sav'
    end
+   'apb_std_Dec2014b':begin
+	production=1
+   end
+   'apb_EoR0_high_sem1_1':begin
+	production=1
+	diffuse_model=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+        model_visibilities=1
+        calibration_visibilities_subtract=0
+        return_cal_visibilities=1
+	undefine,model_catalog_file_path
+   end
 
    ; Abraham's versions
 

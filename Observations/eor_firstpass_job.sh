@@ -17,6 +17,8 @@ echo TASKID ${SGE_TASK_ID}
 obs_id=$(pull_args.py $*)
 echo OBSID ${obs_id}
 
+ls $outdir > /dev/null # ping the output directory so nfs automounts
+
 # TODO: check wedge stats and stop if above thresh
 if [ "${thresh}" -gt "0" ]; then
     # check db for wedgie
@@ -28,6 +30,9 @@ if [ "${thresh}" -gt "0" ]; then
 	under=`psql -h eor-00 mwa_qc -U mwa -c "select count(*) from qs where obsid=${obs_id} and window_x<${thresh} and window_y<${thresh};" -t -A`
 	if [ $under -eq 0 ]; then
 	    echo Obs $obs_id did not meet wedge threshold. Skipping!
+	    status_file=${outdir}/fhd_${version}/metdata/${obs_id}_status.txt
+	    echo 'WEDGE_FLAGGED 1' > ${status_file}
+	    echo 'COMPLETE 1' >> ${status_file}
 	    exit 1
 	else
 	    echo Obs $obs_id met wedge criteria. Proceeding.

@@ -17,7 +17,7 @@ ENDFOR
 renorm_factor=mean(normalization_arr[0:n_pol-1])
 
 ;pix_area=beam_width_calculate(obs,min_restored_beam_width=0,/area)
-;renorm_factor*=pix_area
+;renorm_factor/=pix_area
 RETURN,renorm_factor
 
 end
