@@ -269,10 +269,12 @@ IF data_flag LE 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             IF Keyword_Set(model_flag) THEN model_return=1
             IF Keyword_Set(snapshot_healpix_export) THEN preserve_visibilities=1 ELSE preserve_visibilities=0
+            IF Keyword_Set(preserve_visibilities) THEN return_mapfn=0 ELSE return_mapfn=mapfn_recalculate
+            IF Keyword_Set(mapfn_recalculate) AND Keyword_Set(save_visibilities) THEN preserve_vis_grid=0 ELSE preserve_vis_grid=preserve_visibilities
             grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
                 timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
-                model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
+                model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_vis_grid,_Extra=extra)
             IF Keyword_Set(error) THEN BEGIN
                 print,"Error occured during gridding. Returning."
                 IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
