@@ -165,7 +165,7 @@ ENDIF
 
 ;This is where a bandpass fractional change is calculated if a directory is supplied. Below is an example. It is assumed that the bandpass
 ;supplied is a single, 'global' bandpass. Uncomment cgLegend below if a legend is wanted.
-bp_change_dir='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_std_Dec2014b/calibration/'
+;bp_change_dir='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_std_Dec2014b/calibration/'
 IF Keyword_Set(bp_change_dir) THEN BEGIN
     bandpass_arr_change=bandpass_arr
     filename=bp_change_dir + obs.obsname + '_bandpass.txt'
