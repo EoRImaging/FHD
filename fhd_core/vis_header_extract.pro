@@ -15,9 +15,10 @@ n_complex=sxpar(header,'naxis2') ;3 columns are amplitude, phase (degrees), weig
 n_polarizations=sxpar(header,'naxis3') ;4 columns are xx, yy, xy, yx
 n_frequencies=sxpar(header,'naxis4') ;768
 freq_ref=sxpar(header,'crval4') ;1.5424E8
-freq_width=sxpar(header,'cdelt4') ;40000 
+freq_res=sxpar(header,'cdelt4') ;40000 
 freq_ref_i=sxpar(header,'crpix4') -1;368-1 (Remember, FITS indices start from 1, IDL indices start from 0)
 date_obs=sxpar(header,'date-obs')
+frequency_array=(findgen(n_frequencies)-(freq_ref_i-1))*freq_res+freq_ref 
 
 n_fields=sxpar(header,'tfields') ;12
 
@@ -82,7 +83,7 @@ tile_nums=where(hist_AB,n_tile)
 grp_row_size=n_complex*n_polarizations*n_frequencies*nbaselines
 
 struct={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
-    freq_ref:freq_ref,freq_width:freq_width,freq_ref_i:freq_ref_i,obsra:obsra,obsdec:obsdec,date:date_obs,$
+    freq_res:freq_res,freq_arr:frequency_array,obsra:obsra,obsdec:obsdec,date:date_obs,$
     uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:Jdate0,$
     pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
 RETURN,struct

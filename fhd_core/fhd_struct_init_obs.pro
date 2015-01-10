@@ -42,9 +42,14 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
     time_use[ti_start:ti_end]=0
 ENDFOR
 
-freq_res=hdr.freq_width
-;frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i-1))*freq_res+hdr.freq_ref ;FITS header indices start at 1
-frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i))*freq_res+hdr.freq_ref ;LEAVE unchanged for now to allow comparison!
+IF Tag_exist(hdr,'freq_arr') THEN BEGIN
+    freq_res=hdr.freq_res
+    frequency_array=hdr.freq_arr
+ENDIF ELSE BEGIN
+    freq_res=hdr.freq_width
+    ;frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i-1))*freq_res+hdr.freq_ref ;FITS header indices start at 1
+    frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i))*freq_res+hdr.freq_ref ;LEAVE unchanged for now to allow comparison!
+ENDELSE
 IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=1.
 
 IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*freq_res  ;Hz
