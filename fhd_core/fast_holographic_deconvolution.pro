@@ -273,6 +273,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     IF Keyword_Set(recalc_flag) THEN BEGIN
         t1_0=Systime(1)
         FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+        undefine_fhd,model_stokes_arr
         model_stokes_arr=stokes_cnv(model_holo_arr,jones,beam_arr=beam_base,/square,_Extra=extra)
         model_image_composite=*model_stokes_arr[0]
         IF n_pol GT 1 THEN model_image_composite_Q=*model_stokes_arr[1]
@@ -357,7 +358,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
-    t4+=Systime(1)-t4_0    
+    t4+=Systime(1)-t4_0
     
     IF si+1 GE max_sources THEN BEGIN
         i2+=1                                        

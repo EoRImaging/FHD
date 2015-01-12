@@ -153,7 +153,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             
             t_beam_power+=Systime(1)-t_bpwr
             t_bint=Systime(1)
-            beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)*kbinsize_superres^2.
+            ;divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
+            beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)/psf_resolution^2. 
             n_grp_use+=baseline_group_n
             t_beam_int+=Systime(1)-t_bint
             psf_single=Ptrarr(psf_resolution,psf_resolution)
