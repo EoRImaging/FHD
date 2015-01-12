@@ -144,8 +144,9 @@ WHILE n_sources EQ 0 DO BEGIN
     ;            CONTINUE
             xcen=sx
             ycen=sy
-            gain_mod=1./beam_width^2. ;divide by the area of the beam for diffuse sources
-        ENDIF ELSE gain_mod=1.
+;            gain_mod=1./beam_width^2. ;divide by the area of the beam for diffuse sources
+        ENDIF ;ELSE gain_mod=1./beam_width^2.
+        gain_mod=1.
         sx0=Floor(xcen)
         sy0=Floor(ycen)
         IF source_mask1[sx0,sy0] EQ 0 THEN CONTINUE

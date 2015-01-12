@@ -31,6 +31,7 @@ if [ "${thresh}" -gt "0" ]; then
 	if [ $under -eq 0 ]; then
 	    echo Obs $obs_id did not meet wedge threshold. Skipping!
 	    status_file=${outdir}/fhd_${version}/metdata/${obs_id}_status.txt
+	    touch $status_file
 	    echo 'WEDGE_FLAGGED 1' > ${status_file}
 	    echo 'COMPLETE 1' >> ${status_file}
 	    exit 1
