@@ -230,6 +230,7 @@ IF data_flag LE 0 THEN BEGIN
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
+    undefine_fhd,antenna
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
