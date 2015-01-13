@@ -94,6 +94,10 @@ no_restrict_cal_sources=1
 cal_mode_fit=1
 cal_cable_reflection_fit=150
 restrict_hpx_inds=1
+output_residual_histogram=1
+show_beam_contour=1
+contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
+contour_color='blue'
 
 kbinsize=0.5
 psf_resolution=32
