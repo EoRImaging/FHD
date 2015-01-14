@@ -154,8 +154,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             t_beam_power+=Systime(1)-t_bpwr
             t_bint=Systime(1)
             ;divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
-;            beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)/psf_resolution^2. 
-            beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)*kbinsize_superres^2. ;TEMPORARY to check code version changes
+            beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)/psf_resolution^2. 
             n_grp_use+=baseline_group_n
             t_beam_int+=Systime(1)-t_bint
             psf_single=Ptrarr(psf_resolution,psf_resolution)
@@ -163,8 +162,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_single=Ptr_new(psf_single)
             FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
         ENDFOR
-;        beam_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
-        beam_int*=weight_invert(n_grp_use) ;TEMPORARY to check code version changes
+        beam_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
         fi_use=where(freq_bin_i EQ freq_i,nf_use)
         FOR fi1=0L,nf_use-1 DO (*beam_integral[pol_i])[fi_use[fi1]]=beam_int
     ENDFOR
