@@ -110,9 +110,9 @@ IF Keyword_Set(cable_bandpass_fit) THEN BEGIN
     ;Begin plotting
     
     ;This is where regular plots of each cable group's bandpass per xx and yy are plotted.
-    IF Keyword_Set(bandpass_directory) THEN BEGIN
-        basename=file_basename(bandpass_directory)
-        dirpath=file_dirname(bandpass_directory)
+    IF Keyword_Set(file_path_fhd) THEN BEGIN
+        basename=file_basename(file_path_fhd)
+        dirpath=file_dirname(file_path_fhd)
 ;        image_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_cable_cal_v2/output_images/'
         image_path=filepath(basename,root=dirpath,sub='output_images')
         IF file_test(file_dirname(image_path),/directory) EQ 0 THEN file_mkdir,file_dirname(image_path)
