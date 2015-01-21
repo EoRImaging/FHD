@@ -37,9 +37,8 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
-    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
-    model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
-    reorder_visibilities=reorder_visibilities,transfer_flags=transfer_flags,flag_calibration=flag_calibration, production=production,_Extra=extra
+    generate_vis_savefile=generate_vis_savefile,model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
+    transfer_flags=transfer_flags,flag_calibration=flag_calibration, production=production,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -54,7 +53,6 @@ print,'Output file_path:',file_path_fhd
 
 log_filepath=file_path_fhd+'_log.txt'
 IF Keyword_Set(!Journal) THEN journal
-IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
 
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
@@ -68,67 +66,15 @@ data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup
 IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
-    IF Keyword_Set(restore_vis_savefile) THEN BEGIN
-        IF file_test(file_path_vis_sav) EQ 0 THEN BEGIN
-            error=1
-            RETURN
-        ENDIF
-        t_readfits=Systime(1)
-        RESTORE,file_path_vis_sav
-        t_readfits=Systime(1)-t_readfits
-        print,"Time restoring visibility save file: "+Strn(t_readfits)
-    ENDIF ELSE BEGIN
-        IF file_test(file_path_vis) EQ 0 THEN BEGIN
-            print,"File: "+file_path_vis+" not found! Returning"
-            error=1
-            RETURN
-        ENDIF
-        
-        t_readfits=Systime(1)
-        data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
-        hdr=vis_header_extract(data_header0, params = data_struct.params)    
-        IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
-        params=vis_param_extract(data_struct.params,hdr)
-        t_readfits=Systime(1)-t_readfits
-        print,"Time reading UVFITS files and extracting header: "+Strn(t_readfits)
-        IF n_pol LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol-1,*]) ELSE data_array=Temporary(data_struct.array) 
-        data_struct=0. ;free memory
-        
-        pol_dim=hdr.pol_dim
-        freq_dim=hdr.freq_dim
-        real_index=hdr.real_index
-        imaginary_index=hdr.imaginary_index
-        flag_index=hdr.flag_index
-        vis_arr=Ptrarr(n_pol,/allocate)
-        flag_arr=Ptrarr(n_pol,/allocate)
-        n_freq0=hdr.n_freq
-        nbaselines0=hdr.nbaselines
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*],n_freq0,nbaselines0),Reform(data_array[imaginary_index,pol_i,*,*],n_freq0,nbaselines0))
-            *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*],n_freq0,nbaselines0)
-        ENDFOR
-        ;free memory
-        data_array=0 
-        flag_arr0=0
-        
-        IF Keyword_Set(reorder_visibilities) THEN vis_reorder,hdr,params,vis_arr,flag_arr
-        
-        ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
-        IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
-            IF Keyword_Set(vis_time_average) THEN print,"Averaging visibilities in time by a factor of: "+Strtrim(Strn(vis_time_average),2)
-            IF Keyword_Set(vis_freq_average) THEN print,"Averaging visibilities in frequency by a factor of: "+Strtrim(Strn(vis_freq_average),2)
-            vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
-            IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
-        ENDIF
-        
-        IF Keyword_Set(generate_vis_savefile) THEN BEGIN
-            SAVE,vis_arr,flag_arr,hdr,params,filename=file_path_vis_sav
-            timing=Systime(1)-t0
-            IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
-            RETURN
-        ENDIF
-    ENDELSE    
     
+    uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
+    IF Keyword_Set(generate_vis_savefile) THEN BEGIN
+        IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
+        SAVE,vis_arr,flag_arr,hdr,params,filename=file_path_vis_sav
+        timing=Systime(1)-t0
+        IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
+        RETURN
+    ENDIF
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     n_pol=obs.n_pol
     n_freq=obs.n_freq

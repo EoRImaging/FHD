@@ -28,59 +28,33 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   print,systime()
   print,'Output file_path:',file_path_fhd
   ext='.uvfits'
-  fhd_dir=file_dirname(file_path_fhd)
-  basename=file_basename(file_path_fhd)
-  header_filepath=file_path_fhd+'_header.sav'
+;  fhd_dir=file_dirname(file_path_fhd)
+;  basename=file_basename(file_path_fhd)
+;  header_filepath=file_path_fhd+'_header.sav'
   flags_filepath=file_path_fhd+'_flags.sav'
   input_model_filepath = file_path_fhd + '_input_model.sav'
   coarse_input_model_filepath = file_path_fhd + '_input_model_coarse.sav'
   init_beam_filepath = file_path_fhd + '_initial_beam2_image.sav'
   gridded_beam_filepath = file_path_fhd + '_gridded_beam2_image.sav'
-  vis_filepath=file_path_fhd+'_vis.sav'
+;  vis_filepath=file_path_fhd+'_vis.sav'
   obs_filepath=file_path_fhd+'_obs.sav'
   params_filepath=file_path_fhd+'_params.sav'
-  hdr_filepath=file_path_fhd+'_hdr.sav'
-  fhd_filepath=file_path_fhd+'_fhd.sav'
+;  hdr_filepath=file_path_fhd+'_hdr.sav'
+;  fhd_filepath=file_path_fhd+'_fhd.sav'
   autocorr_filepath=file_path_fhd+'_autos.sav'
-  model_filepath=file_path_fhd+'_vis_model.sav'
+;  model_filepath=file_path_fhd+'_vis_model.sav'
   
-  pol_names=['xx','yy','xy','yx','I','Q','U','V']
-  
-  IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE n_pol1=1
-  
-  vis_file_list=file_search(file_path_fhd+'_vis*',count=vis_file_flag)
   
   IF file_test(file_path_vis) EQ 0 THEN BEGIN
     print,"File: "+file_path_vis+" not found! Returning"
     error=1
     return
   ENDIF
-  
-  data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
-  hdr=vis_header_extract(data_header0, params = data_struct.params)
-  params=vis_param_extract(data_struct.params,hdr)
-  data_array=Temporary(data_struct.array[*,0:n_pol-1,*])
-  data_struct=0. ;free memory
-  
+  uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
+    
   obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
-  pol_dim=hdr.pol_dim
-  freq_dim=hdr.freq_dim
-  real_index=hdr.real_index
-  imaginary_index=hdr.imaginary_index
-  flag_index=hdr.flag_index
   n_pol=obs.n_pol
   n_freq=obs.n_freq
-  
-  
-  vis_arr=Ptrarr(n_pol,/allocate)
-  flag_arr=Ptrarr(n_pol,/allocate)
-  FOR pol_i=0,n_pol-1 DO BEGIN
-    *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))
-    *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
-  ENDFOR
-  ;free memory
-  data_array=0
-  flag_arr0=0
   
   ;Read in or construct a new beam model. Also sets up the structure PSF
   print,'Calculating beam model'
