@@ -274,6 +274,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         weights_grid=1
       ENDIF
     ENDFOR
+    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;over-write saved obs structure now that nf_vis has been calculated
     print,'Gridding time:',t_grid
     
     ;Generate fits data files and images
