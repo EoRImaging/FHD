@@ -112,7 +112,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 IF Keyword_Set(coplanar_baseline_threshold) AND Keyword_Set(params) THEN BEGIN
-    ww=params.ww#freq_arr
+    ww=params.ww
+    ww-=Median(ww)
+    ww=Abs(ww)#freq_arr
+    
     w_flag_i=where(ww GT coplanar_baseline_threshold,n_w_flag)
     IF n_w_flag GT 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[w_flag_i]=0
