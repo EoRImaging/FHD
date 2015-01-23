@@ -576,6 +576,12 @@ case version of
         return_cal_visibilities=1
 	undefine,model_catalog_file_path
    end
+   'apb_find_moon':begin
+      snapshot_healpix_export=0
+   end
+   'apb_look_for_variable_1':begin
+        snapshot_healpix_export=0
+   end
 
    ; Abraham's versions
 
