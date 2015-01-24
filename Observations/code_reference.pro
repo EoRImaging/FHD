@@ -123,7 +123,7 @@ IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
 general_obs,_Extra=extra
 
-code_reference_wrapper,file_dirname(fhd_file_list[0]),/png
+code_reference_wrapper,file_dirname(fhd_file_list[0]),/png,_Extra=extra
 
 IF Keyword_Set(reference_hash) THEN BEGIN
     hash_diff=Strmid(version,Strpos(version,'-g')+2,7)
