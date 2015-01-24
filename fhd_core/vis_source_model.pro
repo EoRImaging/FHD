@@ -43,12 +43,14 @@ yvals=meshgrid(dimension,elements,2)-elements/2
 
 ;only the LOWER half of the u-v plane is used for gridding/degridding. 
 ; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half 
-IF ~Keyword_Set(uv_mask) THEN BEGIN
-    uv_mask=Fltarr(dimension,elements)
-    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1,fill_model_vis=fill_model_vis,file_path_fhd=file_path_fhd)
-    mask_i_use=where(vis_count)
-    uv_mask[mask_i_use]=1
-ENDIF ELSE uv_mask[*,elements/2+psf.dim:*]=0. 
+;IF ~Keyword_Set(uv_mask) THEN BEGIN
+;    uv_mask=Fltarr(dimension,elements)
+;    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1,fill_model_vis=fill_model_vis,file_path_fhd=file_path_fhd)
+;    mask_i_use=where(vis_count)
+;    uv_mask[mask_i_use]=1
+;ENDIF ELSE 
+IF Keyword_Set(uv_mask) THEN uv_mask_use=uv_mask ELSE uv_mask_use=Fltarr(dimension,elements)+1
+uv_mask_use[*,elements/2+psf.dim:*]=0. 
 
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
@@ -81,7 +83,7 @@ IF n_sources GT 1 THEN BEGIN ;test that there are actual sources in the source l
     ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
     ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
     source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 
-    model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask,_Extra=extra)
+    model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask_use,_Extra=extra)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr1[pol_i]
     undefine_fhd,model_uv_arr1
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
@@ -89,7 +91,7 @@ ENDIF
 
 
 IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
-IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask
+IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask_use
 
 IF Keyword_Set(diffuse_filepath) THEN BEGIN
     IF Keyword_Set(calibration_flag) THEN print,"Reading diffuse model file for calibration: "+diffuse_filepath $
@@ -97,7 +99,7 @@ IF Keyword_Set(diffuse_filepath) THEN BEGIN
     diffuse_model_uv=fhd_diffuse_model(obs,jones,/uv_return,model_filepath=diffuse_filepath,_Extra=extra)
     IF Max(Ptr_valid(diffuse_model_uv)) EQ 0 THEN print,"Error reading or building diffuse model. Null pointer returned!"
 ENDIF
-IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask
+IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask_use
 
 vis_arr=Ptrarr(n_pol)
 

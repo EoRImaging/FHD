@@ -102,5 +102,7 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
     weights_mirror=Shift(Reverse(reverse(weights,1),2),1,1)
     weights=(weights+weights_mirror)/2.
 ENDIF
+
+fhd_save_io,status_str,weights,var='vis_count',file_path_fhd=file_path_fhd,_Extra=extra
 RETURN,weights
 END
