@@ -86,8 +86,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+['_even','_odd'] + '_gridded_imagecube.sav'
   ENDIF ELSE BEGIN
     n_iter=1
-    bi_use=Ptrarr(n_iter,/allocate)
-    *bi_use[0]=lindgen(nb)
+    bi_use=Ptrarr(n_iter)
+;    *bi_use[0]=lindgen(nb)
     vis_noise_calc,obs_out,vis_arr,flag_arr_use
     uvf_name = ''
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+'_gridded_imagecube.sav'
@@ -116,11 +116,13 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   obs_out_ref=obs_out
   obs_in_ref=obs_in
   FOR iter=0,n_iter-1 DO BEGIN
-    FOR pol_i=0,n_pol-1 DO BEGIN
-      flag_arr1=fltarr(size(*flag_arr_use[pol_i],/dimension))
-      flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
-      *flags_use[pol_i]=flag_arr1
-    ENDFOR
+    IF Ptr_valid(bi_use[iter]) THEN BEGIN
+        FOR pol_i=0,n_pol-1 DO BEGIN
+          flag_arr1=fltarr(size(*flag_arr_use[pol_i],/dimension))
+          flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
+          *flags_use[pol_i]=Temporary(flag_arr1)
+        ENDFOR
+    ENDIF ELSE flags_use=Pointer_copy(flag_arr_use)
     obs=obs_out_ref ;will have some values over-written!
     obs_in=obs_in_ref
     psf=psf_out
@@ -129,6 +131,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
       file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_arr,$
       save_uvf=save_uvf, uvf_name=uvf_name[iter])
+    Ptr_free,flags_use
     t_split+=t_split1
     IF dirty_flag THEN BEGIN
       dirty_arr1=residual_arr1
