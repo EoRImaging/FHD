@@ -22,8 +22,8 @@ CASE 1 OF
 ENDCASE
 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
-instrument_setup_fn=instrument+'_header_simulate'
-uvfits_header_simulate
+;instrument_setup_fn=instrument+'_header_simulate'
+;uvfits_header_simulate
 
 ;    hdr={Xn_params:Xn_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
 ;        freq_res:freq_res,freq_arr:frequency_array,obsra:obsra,obsdec:obsdec,date:date_obs,jd0:Jdate0}
