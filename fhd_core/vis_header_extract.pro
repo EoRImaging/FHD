@@ -1,4 +1,4 @@
-FUNCTION vis_header_extract,header,header2=header2, params=params
+FUNCTION vis_header_extract,header,header2=header2, params=params,lon=lon,lat=lat,alt=alt
 compile_opt idl2,strictarrsubs  
 
 pol_dim=2
@@ -58,6 +58,10 @@ ENDIF ELSE BEGIN
   obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
 ENDELSE
 
+IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, from Tingay et al. 2013)
+IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
+IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
+
 baseline_i=(where(Strmatch(param_list,'BASELINE'),found_baseline))[0]
 uu_i=(where(Strmatch(param_list,'UU'),found_uu))[0]
 vv_i=(where(Strmatch(param_list,'VV'),found_vv))[0]
@@ -83,8 +87,8 @@ tile_nums=where(hist_AB,n_tile)
 grp_row_size=n_complex*n_polarizations*n_frequencies*nbaselines
 
 struct={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
-    freq_res:freq_res,freq_arr:frequency_array,obsra:obsra,obsdec:obsdec,date:date_obs,$
-    uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:Jdate0,$
+    freq_res:freq_res,freq_arr:frequency_array,lon:lon,lat:lat,alt:alt,obsra:obsra,obsdec:obsdec,$
+    uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:Jdate0,date:date_obs,$
     pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
 RETURN,struct
 END

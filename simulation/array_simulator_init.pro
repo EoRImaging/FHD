@@ -1,5 +1,5 @@
 PRO array_simulator_init,obs,params,error=error,sim_from_uvfits_filepath=sim_from_uvfits_filepath,$
-    sim_from_fhd_filepath=sim_from_fhd_filepath,$
+    sim_from_fhd_filepath=sim_from_fhd_filepath,simulate_header=simulate_header,simulate_baselines=simulate_baselines,$
     instrument=instrument,_Extra=extra
 
 CASE 1 OF
@@ -23,15 +23,10 @@ CASE 1 OF
 ENDCASE
 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
-;instrument_setup_fn=instrument+'_header_simulate'
-hdr=uvfits_header_simulate(_Extra=extra)
+IF Keyword_Set(simulate_header) OR ~Keyword_Set(hdr) THEN hdr=uvfits_header_simulate(hdr,_Extra=extra)
 
-;    hdr={Xn_params:Xn_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
-;        freq_res:freq_res,freq_arr:frequency_array,obsra:obsra,obsdec:obsdec,date:date_obs,jd0:Jdate0}
+IF Keyword_Set(simulate_baselines) OR ~Keyword_Set(params) THEN params=uvfits_params_simulate(hdr,params,_Extra=extra)
 
-params=uvfits_params_simulate(hdr,_Extra=extra)
-
-;    params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time}
 IF N_Elements(file_path_vis) EQ 0 THEN file_path_vis='simulation'
 obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,instrument=instrument,_Extra=extra)
 END

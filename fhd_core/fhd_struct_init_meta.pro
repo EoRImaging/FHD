@@ -6,9 +6,6 @@ FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n
     cotter_precess_fix=cotter_precess_fix,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
-IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, from Tingay et al. 2013)
-IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
-IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
 metafits_ext='.metafits'
 metafits_dir=file_dirname(file_path_vis)
 metafits_name=file_basename(file_path_vis,'.sav',/fold_case)
@@ -19,6 +16,15 @@ metafits_path=metafits_dir+path_sep()+metafits_name+metafits_ext
 time=params.time
 b0i=Uniq(time)
 jdate=double(hdr.jd0)+time[b0i]
+IF Tag_exist(hdr,'lat') THEN BEGIN
+    lat=hdr.lat
+    lon=hdr.lon
+    alt=hdr.alt
+ENDIF ELSE BEGIN
+    IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, from Tingay et al. 2013)
+    IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
+    IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
+ENDELSE
 
 IF N_Elements(dimension) EQ 0 THEN dimension=1024.
 IF N_Elements(elements) EQ 0 THEN elements=dimension

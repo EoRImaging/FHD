@@ -41,7 +41,7 @@ IF vis_test AND metadata_test THEN BEGIN
     RETURN
 ENDIF
 
-;set up the obs and params structure
+;set up the obs and params structure. Will generate arbitary array layout if supplied
 array_simulator_init,obs,params,error=error,instrument=instrument,_Extra=extra
 n_pol=obs.n_pol
 n_freq=obs.n_freq
