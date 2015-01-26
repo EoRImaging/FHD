@@ -17,13 +17,14 @@ CASE 1 OF
     END
     Keyword_Set(sim_from_uvfits_filepath): BEGIN
         file_path_vis=sim_from_uvfits_filepath
-        uvfits_read,hdr,params,file_path_vis=file_path_vis,n_pol=0,silent=silent,_Extra=extra
+        uvfits_read,hdr_in,params,file_path_vis=file_path_vis,n_pol=0,silent=silent,_Extra=extra
     END
     ELSE: ;do nothing
 ENDCASE
 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
-IF Keyword_Set(simulate_header) OR ~Keyword_Set(hdr) THEN hdr=uvfits_header_simulate(hdr,_Extra=extra)
+IF Keyword_Set(simulate_header) OR ~Keyword_Set(hdr_in) THEN hdr=uvfits_header_simulate(hdr_in,_Extra=extra) $
+    ELSE hdr=hdr_in
 
 IF Keyword_Set(simulate_baselines) OR ~Keyword_Set(params) THEN params=uvfits_params_simulate(hdr,params,_Extra=extra)
 
