@@ -1,5 +1,5 @@
 FUNCTION uvfits_header_simulate,hdr_in,instrument=instrument,nbaselines=nbaselines,n_tile=n_tile,n_pol=n_pol,n_freq=n_freq,$
-    date_obs=date_obs,jd0=Jdate0,frequency_resolution=frequency_resolution,frequency_array=frequency_array,$
+    date_obs=date_obs,jd0=Jdate0,freq_res=freq_res,frequency_array=frequency_array,$
     reference_frequency=reference_frequency,ref_freq_i=ref_freq_i,lon=lon,lat=lat,alt=alt,$
     obsra=obsra,obsdec=obsdec;,time_resolution=time_resolution,time_integration=time_integration
     
@@ -27,11 +27,11 @@ IF Keyword_Set(hdr_in) THEN BEGIN
     ENDCASE
     
     IF N_Elements(frequency_array) EQ 0 THEN BEGIN
-        IF N_Elements(frequency_resolution) EQ 0 THEN frequency_resolution=hdr_in.freq_res
+        IF N_Elements(freq_res) EQ 0 THEN freq_res=hdr_in.freq_res
         IF N_Elements(reference_frequency) EQ 0 THEN reference_frequency=1.5424E8 ;Hz
         IF N_Elements(ref_freq_i) EQ 0 THEN ref_freq_i=Ceil(n_freq/2)
     ENDIF ELSE BEGIN
-        IF N_Elements(frequency_resolution) EQ 0 THEN frequency_resolution=Median(frequency_array-shift(frequency_array,1))
+        IF N_Elements(freq_res) EQ 0 THEN freq_res=Median(frequency_array-shift(frequency_array,1))
     ENDELSE
     
 ;    IF N_Elements(time_resolution) EQ 0 THEN time_resolution=2. ;seconds
@@ -39,7 +39,7 @@ IF Keyword_Set(hdr_in) THEN BEGIN
 ENDIF ELSE BEGIN
     inst_settings_fn=instrument+'_simulation_instr_config' ;mwa_simulation_instr_config
     Call_Procedure,inst_settings_fn,n_tile=n_tile,n_pol=n_pol,n_freq=n_freq,lon=lon,lat=lat,alt=alt,$
-        frequency_resolution=frequency_resolution,reference_frequency=reference_frequency
+        freq_res=freq_res,reference_frequency=reference_frequency
     
     CASE 1 OF
         Keyword_Set(date_obs): julian_date_start=date_conv(date_obs,type='julian') ;NOT debugged
@@ -47,26 +47,40 @@ ENDIF ELSE BEGIN
         ELSE: BEGIN
             ;figure out a sensible time and date to use if nothing is supplied
             ;if obsra is supplied, find the time when obsra transits zenith closest to midnight within a year of the current date
-            time_zone=Round(lon/15.)
+            time_zone=Double(Round(lon/15.))
             current_time=Systime(/julian)
-            midnight_arr=(Floor(current_time)+0.5)-time_zone/24.+Findgen(366)-183.
-            IF Keyword_Set(obsra) THEN BEGIN
-                EQ2Hor,obsra,lat,midnight_arr,alt,az,HA,lat=lat,lon=lon
-                HA_min=Min(HA,jd_i)
-                julian_date_start=midnight_arr[jd_i]
-                date_obs=date_conv(julian_date_start,'fits')
-            ENDIF
+            n_day=366
+            midnight_arr=(Floor(current_time-.5)+0.5)-time_zone/24.+Findgen(n_day)-Floor(n_day/2)
+            IF N_Elements(obsra) EQ 0 THEN obsra=0
+            IF N_Elements(obsdec) EQ 0 THEN obsdec=lat
+            zenpos2,midnight_arr,zenra,zendec,lat=lat,lng=lon,/degree
+            ang=angle_difference(zendec,zenra,lat,obsra,/degree,/nearest)
+            min_ang=Min(ang,jd_i)
+            julian_date_start0=midnight_arr[jd_i]
+            ;now, refine the start minute of the observation
+            n_minute=120
+            midnight_arr2=julian_date_start0+(Findgen(n_minute)-Floor(n_minute/2))/(24.*60.)
+            zenpos2,midnight_arr2,zenra2,zendec2,lat=lat,lng=lon,/degree
+            ang2=angle_difference(zendec2,zenra2,lat,obsra,/degree,/nearest)
+            min_ang2=Min(ang2,jd_i2)
+            julian_date_start=midnight_arr2[jd_i2]
+            date_obs=date_conv(julian_date_start,'fits')
         ENDELSE
     ENDCASE
+    zenpos2,julian_date_start,zenra_use,zendec_use,lat=lat,lng=lon,/degree
+    IF N_Elements(obsra) EQ 0 THEN obsra=zenra
+    IF N_Elements(obsdec) EQ 0 THEN obsdec=zendec
 ENDELSE
 
 IF N_Elements(nbaselines) EQ 0 THEN nbaselines=n_tile*(n_tile-1.)/2.
 IF N_Elements(frequency_array) EQ 0 THEN BEGIN
     IF N_Elements(ref_freq_i) EQ 0 THEN ref_freq_i=Ceil(n_freq/2) +1 ;NOTE!!! THIS USES THE FITS CONVENTION THAT ARRAY INDICES START FROM 1
-    frequency_array=(Findgen(n_freq)-(ref_freq_i-1))*frequency_resolution+reference_frequency
+    frequency_array=(Findgen(n_freq)-(ref_freq_i-1))*freq_res+reference_frequency
 ENDIF
 
-
+hdr=fhd_struct_init_hdr(nbaselines=nbaselines,n_tile=n_tile,n_pol=n_pol,n_freq=n_freq,$
+    freq_res=freq_res,freq_arr=frequency_array,lon=lon,lat=lat,alt=alt,obsra=obsra,obsdec=obsdec,$
+    jd0=julian_date_start,date_obs=date_obs)
 
 RETURN,hdr
 END
