@@ -51,7 +51,7 @@ ENDIF ELSE BEGIN
             current_time=Systime(/julian)
             midnight_arr=(Floor(current_time)+0.5)-time_zone/24.+Findgen(366)-183.
             IF Keyword_Set(obsra) THEN BEGIN
-                EQ2Hor,obsra,lat,midnight_arr,alt,az,HA
+                EQ2Hor,obsra,lat,midnight_arr,alt,az,HA,lat=lat,lon=lon
                 HA_min=Min(HA,jd_i)
                 julian_date_start=midnight_arr[jd_i]
                 date_obs=date_conv(julian_date_start,'fits')
