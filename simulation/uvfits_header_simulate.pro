@@ -16,10 +16,11 @@ IF Keyword_Set(hdr_in) THEN BEGIN
     IF N_Elements(alt) EQ 0 THEN alt=hdr_in.alt ;altitude above sea level of the array, in meters
     
     IF N_Elements(frequency_array) EQ 0 THEN BEGIN
-    IF N_Elements(frequency_resolution) EQ 0 THEN frequency_resolution=hdr_in.freq_res
-    IF N_Elements(reference_frequency) EQ 0 THEN reference_frequency=1.5424E8 ;Hz
+        IF N_Elements(frequency_resolution) EQ 0 THEN frequency_resolution=hdr_in.freq_res
+        IF N_Elements(reference_frequency) EQ 0 THEN reference_frequency=1.5424E8 ;Hz
+        IF N_Elements(ref_freq_i) EQ 0 THEN ref_freq_i=Ceil(n_freq/2)
     ENDIF ELSE BEGIN
-    
+        IF N_Elements(frequency_resolution) EQ 0 THEN frequency_resolution=Median(frequency_array-shift(frequency_array,1))
     ENDELSE
     
 ;    IF N_Elements(time_resolution) EQ 0 THEN time_resolution=2. ;seconds
