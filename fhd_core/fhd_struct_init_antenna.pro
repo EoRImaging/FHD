@@ -67,6 +67,7 @@ psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
 IF Keyword_Set(psf_max_dim) THEN BEGIN
     psf_max_dim=Ceil(psf_max_dim/2.)*2 ;dimension MUST be even
+    IF psf_max_dim LT psf_dim THEN print,'Warning! PSF dim cut to '+Strn(psf_max_dim)+', fit dim was '+Strn(psf_dim)
     psf_dim=psf_dim<psf_max_dim
 ENDIF
 
