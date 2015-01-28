@@ -29,11 +29,11 @@ IF N_Elements(vv_i) EQ 0 THEN vv_i=-1
 IF N_Elements(ww_i) EQ 0 THEN ww_i=-1
 IF N_Elements(date_i) EQ 0 THEN date_i=-1
 CASE 1 OF
-    Keyword_Set(date_obs): jd0=date_conv(date_obs,type='julian') ;NOT debugged
-    Keyword_Set(jd0):date_obs=date_conv(jd0,type='fits')
+    Keyword_Set(jd0):date_obs=date_conv(jd0,'fits')
+    Keyword_Set(date_obs): jd0=date_conv(date_obs,'julian') 
     ELSE: BEGIN
         jd0=Systime(/julian)
-        date_obs=date_conv(jd0,type='fits')
+        date_obs=date_conv(jd0,'fits')
     ENDELSE
 ENDCASE
 
