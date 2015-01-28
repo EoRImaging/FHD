@@ -17,7 +17,7 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO vis_flag,vis_arr,flag_ptr,obs,psf,params,flag_nsigma=flag_nsigma,flag_aparse_uv_coverage=flag_sparse_uv_coverage,_Extra=extra
+PRO vis_flag,vis_arr,flag_ptr,obs,psf,params,flag_nsigma=flag_nsigma,flag_sparse_uv_coverage=flag_sparse_uv_coverage,_Extra=extra
 
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
@@ -140,51 +140,7 @@ FOR ti=0L,n_time_cut-1 DO BEGIN
     IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,ti_cut]=0
 ENDFOR
 
-IF Keyword_Set(flag_sparse_uv_coverage) THEN BEGIN
-    t_sparse=Systime(1)
-    dimension=obs.dimension
-    elements=obs.elements
-    psf_dim=psf.dim
-    psf_resolution=psf.resolution
-    xcen=freq#(params.uu/obs.kpix)
-    ycen=freq#(params.vv/obs.kpix)
-    x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
-    y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
-    xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
-    ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
-    flag_base=Fix(0<*flag_ptr[0]<1)
-    IF n_pol GE 2 THEN flag_base*=Fix(0<*flag_ptr[1]<1)
-    flag_i=where(flag_base LE 0,n_flag)
-    IF n_flag GT 0 THEN xmin[flag_i]=-1
-    IF n_flag GT 0 THEN ymin[flag_i]=-1
-    bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0)
-    bin_i=where(bin_n,n_bin_use)
-    count=Lonarr(dimension,elements)
-    FOR bi=0L,n_bin_use-1 DO BEGIN
-        inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
-        ind0=inds[0]
-        
-        xmin_use=xmin[ind0] ;should all be the same, but don't want an array
-        ymin_use=ymin[ind0]
-        count[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=bin_n[bin_i[bi]]
-    ENDFOR
-    cut_i=where((count GT 0) AND (count LE flag_sparse_uv_coverage),n_cut)
-    n_cut_total=0L
-    FOR c_i=0L,n_cut-1 DO BEGIN
-        cx=cut_i mod dimension
-        cy=Floor(cut_i/dimension)
-        bi_cut=where(((cx-xmin) LE psf_dim) AND ((cy-ymin) LE psf_dim) AND (flag_base GT 0),n_add_cut)
-        IF n_add_cut GT 0 THEN BEGIN
-            n_cut_total+=n_add_cut
-            flag_base[bi_cut]=0
-        ENDIF
-    ENDFOR
-    IF n_cut_total THEN FOR pol_i=0,n_pol-1 DO *flag_ptr[pol_i]=flag_base
-    t_sparse=Systime(1)-t_sparse
-    print,'Flagging: '+Strn(n_cut_total)+' visibilities flagged because of sparse uv coverage (threshold='$
-        +Strn(flag_sparse_uv_coverage)+' baselines)'
-    print,t_sparse
-ENDIF
+IF Keyword_Set(flag_sparse_uv_coverage) THEN sparse_uv_flag,obs,psf,params,flag_ptr,flag_sparse_uv_coverage=flag_sparse_uv_coverage
 
 obs.n_vis=N_Elements(where(*flag_ptr[0] GT 0))
 END
