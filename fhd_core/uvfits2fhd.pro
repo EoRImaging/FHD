@@ -139,7 +139,7 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(flag_visibilities) THEN BEGIN
         print,'Flagging anomalous data'
-        vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
+        vis_flag,vis_arr,flag_arr,obs,psf,params,_Extra=extra
         fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
         fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
