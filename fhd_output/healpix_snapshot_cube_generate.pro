@@ -66,13 +66,17 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   IF N_Elements(flag_arr) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
     ELSE flag_arr_use=Pointer_copy(flag_arr)
-  flags_use=Ptrarr(n_pol,/allocate)
   
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
   IF N_Elements(*vis_arr[0]) EQ 0 THEN BEGIN
     IF ~Keyword_Set(silent) THEN print,"Restoring saved visibilities (this may take a while)"
     FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra
+        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,path_use=path_use,_Extra=extra
+        IF status_str.vis_ptr[pol_i] EQ 0 THEN BEGIN
+            error=1
+            print,"Error: file not found!: "+path_use
+            RETURN
+        ENDIF
         vis_arr[pol_i]=vis_ptr
     ENDFOR
     IF ~Keyword_Set(silent) THEN print,"...Done"
@@ -117,6 +121,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   obs_in_ref=obs_in
   FOR iter=0,n_iter-1 DO BEGIN
     IF Ptr_valid(bi_use[iter]) THEN BEGIN
+        flags_use=Ptrarr(n_pol,/allocate)
         FOR pol_i=0,n_pol-1 DO BEGIN
           flag_arr1=fltarr(size(*flag_arr_use[pol_i],/dimension))
           flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
