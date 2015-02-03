@@ -1,5 +1,6 @@
-FUNCTION healpix_interpolate,healpix_map,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=from_kelvin
+FUNCTION healpix_interpolate,healpix_map,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=from_kelvin,hpx_ordering=hpx_ordering
 
+IF N_Elements(hpx_ordering) EQ 0 THEN hpx_ordering='ring' ELSE hpx_ordering=StrLowCase(hpx_ordering) ;other ordering is 'nested'
 n_hpx=nside2npix(nside)
 IF N_Elements(hpx_inds) EQ 0 THEN hpx_inds=Lindgen(n_hpx)
 astr=obs.astr
@@ -21,7 +22,7 @@ ENDIF ELSE BEGIN
     map_interp=Fltarr(dimension,elements)
 ENDELSE
 
-pix2vec_ring,nside,hpx_inds,pix_coords
+IF hpx_ordering EQ 'ring' THEN pix2vec_ring,nside,hpx_inds,pix_coords
 vec2ang,pix_coords,pix_dec,pix_ra,/astro
 ad2xy,pix_ra,pix_dec,astr,xv_hpx,yv_hpx
 

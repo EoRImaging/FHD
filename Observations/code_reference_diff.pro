@@ -7,11 +7,11 @@ data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','code_refe
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
 
-dir_list=file_search(data_directory,'fhd*'+path_sep(),/Test_directory,count=n_directories)
+dir_list=file_search(data_directory,'fhd_v*'+path_sep(),/Test_directory,count=n_directories)
     
-hash_match=Strarr(n_directories)
-FOR di=0,n_directories-1 DO hash_match[di]=Strpos(dir_list[di],hash_ref)
-match_i=where(hash_match GE 0,n_match)
+hash_match=Strpos(file_basename(dir_list),hash_ref)
+false_match=Strpos(file_basename(dir_list),'minus')
+match_i=where((hash_match GE 0) AND (false_match EQ -1),n_match)
 CASE n_match OF
     0: BEGIN print,"Hash"+hash_ref+" not found! Returning." & RETURN & END
     1: version_ref=file_basename(dir_list[match_i])
@@ -94,7 +94,7 @@ endif else begin
     note = obs_info.fhd_types[0]
 ;    plot_path = obs_info.plot_paths[0]
 endelse
-ps_difference_plots, obs_info.info_files, cube_types, pols, spec_window_types = spec_window_types, all_type_pol = all_type_pol, $
+ps_difference_plots, folder_names,obs_info, cube_types, pols, spec_window_types = spec_window_types, all_type_pol = all_type_pol, $
     plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
     note = note, kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, data_range = data_range, data_min_abs = data_min_abs, $
     quiet = quiet, png = png, eps = eps, pdf = pdf
