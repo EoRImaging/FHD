@@ -1,8 +1,8 @@
 FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n_tile=n_tile,$
-    zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
+    zenra_in=zenra_in,zendec_in=zendec_in,obsra_in=obsra_in,obsdec_in=obsdec_in,phasera_in=phasera_in,phasedec_in=phasedec_in,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
-    meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,zenith_ra=zenith_ra,zenith_dec=zenith_dec,$
+    meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,$
     cotter_precess_fix=cotter_precess_fix,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
@@ -108,23 +108,16 @@ ENDIF ELSE BEGIN
     IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec
 ;    Precess,obsra,obsdec,2000.,epoch
 
-    IF Keyword_Set(zenra) THEN BEGIN
-        IF Keyword_Set(precess) THEN BEGIN
-            IF N_Elements(zendec) EQ 0 THEN zendec=lat
-            Precess,zenra,zendec,epoch,2000.
-        ENDIF ELSE BEGIN
-            IF N_Elements(zendec) EQ 0 THEN BEGIN
-                zendec=lat
-                zenra0=zenra
-                Precess,zenra0,zendec,epoch,2000. ;slight error, since zenra0 is NOT in J2000, but assume the effect on zendec is small
-            ENDIF
-        ENDELSE
-    ENDIF ELSE hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate
+    hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate
     beamformer_delays=Ptr_new()
 ENDELSE
 
-IF Keyword_Set(zenith_ra) THEN zenra=zenith_ra
-IF Keyword_Set(zenith_dec) THEN zendec=zenith_dec
+IF N_Elements(zenra_in) EQ 1 THEN zenra=zenra_in
+IF N_Elements(zendec_in) EQ 1 THEN zendec=zendec_in
+IF N_Elements(obsra_in) EQ 1 THEN obsra=obsra_in
+IF N_Elements(obsdec_in) EQ 1 THEN obsdec=obsdec_in
+IF N_Elements(phasedec_in) EQ 1 THEN phasedec=phasedec_in
+IF N_Elements(phasedec_in) EQ 1 THEN phasedec=zendec_in
 
 orig_phasera=phasera
 orig_phasedec=phasedec
