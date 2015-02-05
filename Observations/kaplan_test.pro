@@ -13,6 +13,7 @@ image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 IF N_Elements(data_version) EQ 0 THEN data_version='3'
 data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['Kaplan'])
+IF file_test(data_directory) EQ 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['Kaplan'])
 vis_file_list=file_search(data_directory,'*.fits',count=n_files)
 IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.fits.sav',count=n_files) ;compatibility with my laptop 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
