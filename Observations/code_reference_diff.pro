@@ -15,8 +15,17 @@ match_i=where((hash_match GE 0) AND (false_match EQ -1),n_match)
 CASE n_match OF
     0: BEGIN print,"Hash"+hash_ref+" not found! Returning." & RETURN & END
     1: version_ref=file_basename(dir_list[match_i])
-    ELSE: IF N_Elements(iter_ref) GT 0 THEN version_ref=file_basename(dir_list[match_i[iter_ref<(n_match-1)]]) $
-        ELSE version_ref=file_basename(dir_list[Max(match_i)])
+    ELSE: BEGIN
+        IF N_Elements(iter_ref) GT 0 THEN BEGIN
+            match_list=file_basename(dir_list[match_i])
+            iter_pos=Strpos(match_list,'run') 
+            iter_list=Strarr(n_match)
+            FOR i=0,n_match-1 DO iter_list[i]=(iter_pos[i] GT 0) ? Strmid(match_list[i],iter_pos[i]+3):'0'
+            match_i_i=where(Strn(iter_ref) EQ iter_list,n_match2)
+            IF n_match2 EQ 0 THEN match_i_i=0
+            version_ref=file_basename(dir_list[match_i[match_i_i[0]]])
+        ENDIF ELSE version_ref=file_basename(dir_list[match_i[0]]) 
+    ENDELSE
 ENDCASE
 IF Strpos(version_ref,'fhd_') EQ 0 THEN version_ref=strmid(version_ref,4)
 version_ref=version_ref[0]
