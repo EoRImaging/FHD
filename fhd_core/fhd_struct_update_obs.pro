@@ -39,6 +39,8 @@ max_baseline=max_baseline<(k_span/sqrt(2.))
 IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ELSE dimension=Float(dimension);dimension of the image in pixels; dimension = x direction
 IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
 degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
+k_span=Sqrt(dimension*elements/2.)
+max_baseline=max_baseline<(k_span/sqrt(2.))
 
 struct=obs
 struct.dimension=Float(dimension)

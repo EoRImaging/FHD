@@ -18,7 +18,7 @@ speed_light=299792458.
 time=params.time
 b0i=Uniq(time)
 n_time=N_Elements(b0i)
-IF n_time GT 1 THEN time_step=(time[b0i[1]]-time[b0i[0]])*24.*3600. ELSE time_step=1. ;have to put something in if there is only one time interval
+IF n_time GT 1 THEN time_res=(time[b0i[1]]-time[b0i[0]])*24.*3600. ELSE time_res=1. ;have to put something in if there is only one time interval
 time_total=(Max(time)-Min(time))*24.*3600.
 bin_start=fltarr(n_time) & IF n_time GT 1 THEN bin_start[1:*]=b0i[0:n_time-2]+1
 bin_end=b0i
@@ -33,18 +33,23 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
     ;time cut is specified in seconds to cut (rounded up to next time integration point). 
     ;Specify negative time_cut to cut time off the end. Specify a vector to cut at both the start and end
     IF time_cut[ti] LT 0 THEN BEGIN
-        ti_start=((n_time-Ceil(Abs(time_cut[ti])/time_step))>0)<(n_time-1)
+        ti_start=((n_time-Ceil(Abs(time_cut[ti])/time_res))>0)<(n_time-1)
         ti_end=n_time-1
     ENDIF ELSE BEGIN
         ti_start=0
-        ti_end=(Ceil(Abs(time_cut[ti])/time_step)-1)<(n_time-1)
+        ti_end=(Ceil(Abs(time_cut[ti])/time_res)-1)<(n_time-1)
     ENDELSE
     time_use[ti_start:ti_end]=0
 ENDFOR
 
-freq_res=hdr.freq_width
-;frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i-1))*freq_res+hdr.freq_ref ;FITS header indices start at 1
-frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i))*freq_res+hdr.freq_ref ;LEAVE unchanged for now to allow comparison!
+IF Tag_exist(hdr,'freq_arr') THEN BEGIN
+    freq_res=hdr.freq_res
+    frequency_array=hdr.freq_arr
+ENDIF ELSE BEGIN
+    freq_res=hdr.freq_width
+    ;frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i-1))*freq_res+hdr.freq_ref ;FITS header indices start at 1
+    frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i))*freq_res+hdr.freq_ref ;LEAVE unchanged for now to allow comparison!
+ENDELSE
 IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=1.
 
 IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*freq_res  ;Hz
@@ -131,7 +136,7 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_tile_flag:Long(n_flag),n_freq:Long(n_freq),n_freq_flag:0L,n_time:Long(n_time),n_time_flag:0L,$
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),beam_integral:Ptrarr(4),pol_names:pol_names,$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
-    freq_center:Float(freq_center),freq_res:Float(freq_res),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
+    freq_center:Float(freq_center),freq_res:Float(freq_res),time_res:Float(time_res),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
     residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,healpix:healpix}    
 RETURN,struct
 END

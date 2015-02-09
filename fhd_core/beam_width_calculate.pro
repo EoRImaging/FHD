@@ -9,7 +9,7 @@ beam_width=1./(obs.MAX_BASELINE)
 IF ~Keyword_Set(degrees) THEN beam_width/=obs.degpix
 IF ~Keyword_Set(radians) THEN beam_width*=!RaDeg
 IF N_Elements(beam_width) GT 1 THEN beam_width=Median(beam_width,/even)
-beam_area=!Pi*beam_width^2.;/(4.*Alog(2.)) ;area under a 2D gaussian with given FWHM 
+beam_area=!Pi*beam_width^2./(4.*Alog(2.)) ;area under a 2D gaussian with given FWHM 
 ;factor of (2.*Sqrt(2.*Alog(2.))) is to convert FWHM and sigma of gaussian
 IF ~Keyword_Set(fwhm) THEN beam_width/=2.*Sqrt(2.*Alog(2.))
 IF N_Elements(min_restored_beam_width) EQ 0 THEN min_restored_beam_width=0.

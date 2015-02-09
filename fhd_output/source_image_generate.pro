@@ -1,4 +1,4 @@
-FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolution,threshold=threshold,$
+FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolution,threshold=threshold,conserve_flux=conserve_flux,$
     dimension=dimension,elements=elements,restored_beam_width=restored_beam_width,ring_radius=ring_radius,n_sources=n_sources,_Extra=extra
 IF Keyword_Set(obs) THEN BEGIN
     dimension=obs.dimension
@@ -36,11 +36,13 @@ ELSE beam_useR=Exp(-Abs(((x_valsR)/(restored_beam_width*resolution))^2.+((y_vals
 ;beam_useR/=Max(beam_useR) ;make sure it is normalized to 1
 IF Keyword_Set(ring_radius) THEN beam_useR*=ring_radius
 beam_useR_arr=Ptrarr(resolution,resolution,/allocate)
-;FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-;    *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Total(beam_useR[xvals_i+i,yvals_i+j])
-FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-    *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Max(beam_useR[xvals_i+i,yvals_i+j])
-    
+IF Keyword_Set(conserve_flux) THEN BEGIN
+    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
+        *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Total(beam_useR[xvals_i+i,yvals_i+j])
+ENDIF ELSE BEGIN
+    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
+        *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Max(beam_useR[xvals_i+i,yvals_i+j])
+ENDELSE
 sx=source_array[0:ns-1].x
 sy=source_array[0:ns-1].y
 flux=source_array[0:ns-1].flux.(pol_i)

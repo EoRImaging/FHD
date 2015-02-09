@@ -25,8 +25,8 @@ time_use[time_start_i:time_start_i+nt3-1:2]=time_use_01
 time_use[time_start_i+1:time_start_i+nt3-1:2]=time_use_01
 time_cut_i=where(time_use LE 0,nt_cut)
 IF nt_cut GT 0 THEN BEGIN
-    
-    bin_i[time_cut_i]=-1 ; will be skipped by using where(bin_i mod 2 EQ 0,1) below (-1 mod 2 is still -1)
+    bin_i_cut=where(bin_i EQ time_cut_i,n_cut)
+    IF n_cut GT 0 THEN bin_i[bin_i_cut]=-1 ; will be skipped by using where(bin_i mod 2 EQ 0,1) below (-1 mod 2 is still -1)
 ENDIF
 
 bi_use=Ptrarr(2,/allocate)
@@ -37,7 +37,7 @@ IF n_even LT n_odd THEN *bi_use[1]=(*bi_use[1])[0:n_even-1]
 IF n_odd LT n_even THEN *bi_use[0]=(*bi_use[0])[0:n_odd-1]
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    flag_use0=(*flag_arr_use[pol_i])[*,*bi_use[0]]<(*flag_arr_use[pol_i])[*,*bi_use[1]]
+    flag_use0=0>(*flag_arr_use[pol_i])[*,*bi_use[0]]<(*flag_arr_use[pol_i])[*,*bi_use[1]]<1
     *flag_arr_use[pol_i]*=0
     IF ~Keyword_Set(odd_only) THEN (*flag_arr_use[pol_i])[*,*bi_use[0]]=flag_use0
     IF ~Keyword_Set(even_only) THEN (*flag_arr_use[pol_i])[*,*bi_use[1]]=flag_use0 
