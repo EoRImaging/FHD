@@ -40,14 +40,23 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 IF N_Elements(hash_diff) EQ 0 THEN hash_diff=hash_ref
-hash_match=Strarr(n_directories)
-FOR di=0,n_directories-1 DO hash_match[di]=Strpos(dir_list[di],hash_diff)
-match_i=where(hash_match GE 0,n_match)
+hash_match=Strpos(file_basename(dir_list),hash_diff)
+false_match=Strpos(file_basename(dir_list),'minus')
+match_i=where((hash_match GE 0) AND (false_match EQ -1),n_match)
 CASE n_match OF
     0: BEGIN print,"Hash"+hash_diff+" not found! Returning." & RETURN & END
     1: version_diff=file_basename(dir_list[match_i])
-    ELSE: IF N_Elements(iter_diff) GT 0 THEN version_diff=file_basename(dir_list[match_i[iter_diff<(n_match-1)]]) $
-        ELSE version_diff=file_basename(dir_list[Max(match_i)])
+    ELSE: BEGIN
+        IF N_Elements(iter_diff) GT 0 THEN BEGIN
+            match_list=file_basename(dir_list[match_i])
+            iter_pos=Strpos(match_list,'run') 
+            iter_list=Strarr(n_match)
+            FOR i=0,n_match-1 DO iter_list[i]=(iter_pos[i] GT 0) ? Strmid(match_list[i],iter_pos[i]+3):'0'
+            match_i_i=where(Strn(iter_diff) EQ iter_list,n_match2)
+            IF n_match2 EQ 0 THEN match_i_i=0
+            version_diff=file_basename(dir_list[match_i[match_i_i[0]]])
+        ENDIF ELSE version_diff=file_basename(dir_list[match_i[0]]) 
+    ENDELSE
 ENDCASE
 IF Strpos(version_diff,'fhd_') EQ 0 THEN version_diff=strmid(version_diff,4)
 version_diff=version_diff[0]
@@ -70,7 +79,9 @@ IF file_test(plot_path,/directory) EQ 0 THEN file_mkdir,plot_path
 
 
 folder_names=[fhd_dir_ref,fhd_dir_diff]
-save_path =plot_path; folder_names+path_sep()+'ps'+path_sep()
+save_path = plot_path ; folder_names+path_sep()+'ps'+path_sep()
+IF file_test(save_path) THEN file_delete,save_path,/quiet,/recursive
+file_mkdir,save_path
 data_subdirs = 'Healpix'+path_sep()
 obs_info = ps_filenames(folder_names, rts = 0, sim = 0, casa = 0, data_subdirs = data_subdirs, save_paths = folder_names+path_sep()+'ps'+path_sep())
 
@@ -107,4 +118,6 @@ ps_difference_plots, folder_names,obs_info, cube_types, pols, spec_window_types 
     plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
     note = note, kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, data_range = data_range, data_min_abs = data_min_abs, $
     quiet = quiet, png = png, eps = eps, pdf = pdf
+    
+file_delete,save_path,/quiet,/recursive
 END
