@@ -118,6 +118,7 @@ n_pol=2
 max_cal_iter=100.
 restore_vis_savefile=1
 export_images=1
+plot_k0_power=1
 
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
