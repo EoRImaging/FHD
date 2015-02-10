@@ -25,19 +25,19 @@ IF Keyword_Set(n_pol) THEN vis_test=Min(status_str.vis_ptr[0:n_pol-1]) ELSE vis_
 metadata_test=status_str.obs<status_str.params<status_str.psf<status_str.jones
 IF Keyword_Set(recalculate_all) THEN vis_test=(metadata_test=0)
 
-IF vis_test AND metadata_test THEN BEGIN
+IF metadata_test THEN BEGIN
     fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
     n_pol=obs.n_pol
-    vis_arr=Ptrarr(n_pol)
-    IF ~silent THEN print,"Restoring saved visibilities (this may take a while)"
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
-        vis_arr[pol_i]=vis_ptr
-    ENDFOR
-    IF ~silent THEN print,"...Done"
+;    vis_arr=Ptrarr(n_pol)
+;    IF ~silent THEN print,"Restoring saved visibilities (this may take a while)"
+;    FOR pol_i=0,n_pol-1 DO BEGIN
+;        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
+;        vis_arr[pol_i]=vis_ptr
+;    ENDFOR
+;    IF ~silent THEN print,"...Done"
     RETURN
 ENDIF
 

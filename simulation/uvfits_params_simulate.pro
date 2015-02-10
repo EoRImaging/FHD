@@ -6,6 +6,7 @@ FUNCTION uvfits_params_simulate,hdr,params_in,sim_baseline_uu=sim_baseline_uu,si
 
 n_tile=hdr.n_tile
 n_baseline=hdr.nbaseline ;excludes time axis!
+IF N_Elements(n_time) EQ 0 THEN n_time=1. 
 
 tile_sim=(N_Elements(sim_tile_locations_x)+N_Elements(sim_tile_locations_y)) GT 0
 baseline_sim=(N_Elements(sim_baseline_uu)+N_Elements(sim_baseline_vv)+$
@@ -19,8 +20,22 @@ IF params_in_flag THEN BEGIN
     default_ww=params_in.ww
     default_i=params_in.baseline_arr
     default_time=params_in.time
+    
+    n_time=N_Elements(Uniq(default_time))
+    n_bt=N_Elements(default_uu)
+    n_baseline=Ceil(n_bt/n_time)
 ENDIF ELSE BEGIN
-
+    n_default=N_Elements(sim_baseline_uu)>N_Elements(sim_baseline_vv)>N_Elements(sim_baseline_ww)>N_Elements(sim_baseline_i)>N_Elements(sim_baseline_time)
+    IF n_default EQ 0 THEN n_default=n_baseline*n_time ELSE BEGIN
+        IF N_Elements(sim_baseline_time) EQ 0 THEN sim_baseline_time=Floor(Lindgen(n_default)/n_baseline)*512L 
+        
+    ENDELSE
+    n_mod=2.^(Ceil(Alog(n_tile)/Alog(2.))+1.)
+    IF N_Elements(sim_baseline_uu) EQ 0 THEN sim_baseline_uu=(Findgen(n_default)+1) mod n_mod 
+    IF N_Elements(sim_baseline_vv) EQ 0 THEN sim_baseline_vv=Float(Floor((Findgen(n_default)+1) / n_mod))
+    IF N_Elements(sim_baseline_ww) EQ 0 THEN sim_baseline_ww=Fltarr(n_default)
+    IF N_Elements(sim_baseline_i) EQ 0 THEN sim_baseline_i=1+(Lindgen(n_default) mod n_tile) + Floor(Lindgen(n_default)/n_tile)*512L 
+    IF N_Elements(sim_baseline_time) EQ 0 THEN sim_baseline_time=Fltarr(n_default)
 ENDELSE
 
 IF baseline_sim THEN BEGIN
