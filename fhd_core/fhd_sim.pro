@@ -28,21 +28,21 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   print,systime()
   print,'Output file_path:',file_path_fhd
   ext='.uvfits'
-;  fhd_dir=file_dirname(file_path_fhd)
-;  basename=file_basename(file_path_fhd)
-;  header_filepath=file_path_fhd+'_header.sav'
+  ;  fhd_dir=file_dirname(file_path_fhd)
+  ;  basename=file_basename(file_path_fhd)
+  ;  header_filepath=file_path_fhd+'_header.sav'
   flags_filepath=file_path_fhd+'_flags.sav'
   input_model_filepath = file_path_fhd + '_input_model.sav'
   coarse_input_model_filepath = file_path_fhd + '_input_model_coarse.sav'
   init_beam_filepath = file_path_fhd + '_initial_beam2_image.sav'
   gridded_beam_filepath = file_path_fhd + '_gridded_beam2_image.sav'
-;  vis_filepath=file_path_fhd+'_vis.sav'
+  ;  vis_filepath=file_path_fhd+'_vis.sav'
   obs_filepath=file_path_fhd+'_obs.sav'
   params_filepath=file_path_fhd+'_params.sav'
-;  hdr_filepath=file_path_fhd+'_hdr.sav'
-;  fhd_filepath=file_path_fhd+'_fhd.sav'
+  ;  hdr_filepath=file_path_fhd+'_hdr.sav'
+  ;  fhd_filepath=file_path_fhd+'_fhd.sav'
   autocorr_filepath=file_path_fhd+'_autos.sav'
-;  model_filepath=file_path_fhd+'_vis_model.sav'
+  ;  model_filepath=file_path_fhd+'_vis_model.sav'
   
   
   IF file_test(file_path_vis) EQ 0 THEN BEGIN
@@ -51,7 +51,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     return
   ENDIF
   uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
-    
+  
   obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
   n_pol=obs.n_pol
   n_freq=obs.n_freq
@@ -111,8 +111,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
         save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, freq_arr, /compress
         
-        time0 = systime(1)
-        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
+        time0 = systime(1)        
+        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)       
         time1 = systime(1)
         print, 'time for eor modelling: ' + number_formatter(time1-time0)
         if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
@@ -183,7 +183,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     time1=systime(0)
     print, 'model visibility timing(s):'+ number_formatter(time1-time0)
     
-    fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra 
+    fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
   endif
   
   vis_noise_calc,obs,vis_arr,flag_arr
@@ -194,8 +194,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   print,String(format='(A," tiles used and ",A," tiles flagged")',$
     Strn(n_tile_use),Strn(n_tile_cut))
     
-  fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra 
-  fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra 
+  fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+  fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
   fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
   
   IF obs.n_vis EQ 0 THEN BEGIN
@@ -235,7 +235,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     mapfn_recalculate=0
     preserve_visibilities=1
     FOR pol_i=0,n_pol-1 DO BEGIN
-      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd,$
+      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
         timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
         mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
         model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
