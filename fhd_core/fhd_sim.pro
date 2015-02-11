@@ -58,6 +58,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   ;Read in or construct a new beam model. Also sets up the structure PSF
   print,'Calculating beam model'
+  
   psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=0,_Extra=extra)
   IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
   
@@ -111,8 +112,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
         save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, freq_arr, /compress
         
-        time0 = systime(1)        
-        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)       
+        time0 = systime(1)
+        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)   
         time1 = systime(1)
         print, 'time for eor modelling: ' + number_formatter(time1-time0)
         if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
@@ -184,7 +185,21 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     print, 'model visibility timing(s):'+ number_formatter(time1-time0)
     
     fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-  endif
+  endif else begin
+    ;If the full code is not recalculated, and if model visibilities exist, they should be extracted. Otherwise, break cleanly. Make sure that
+    ;visibilities, if read in, are not resaved.
+    print, 'Model visibilities are to be read in from '+file_dirname(file_path_fhd)+'/vis_data/'
+    if file_test(file_dirname(file_path_fhd)+'/vis_data/' + file_basename(file_path_fhd) + '_vis_model_XX.sav') $
+      and file_test(file_dirname(file_path_fhd)+'/vis_data/' + file_basename(file_path_fhd) + '_vis_model_YY.sav') then begin
+      undefine, save_visibilities
+      vis_model_ptr = Ptrarr(n_pol,/allocate)
+      vis_model_ptr[0]=getvar_savefile(file_dirname(file_path_fhd)+'/vis_data/' + file_basename(file_path_fhd) + '_vis_model_XX.sav','vis_model_ptr')
+      vis_model_ptr[1]=getvar_savefile(file_dirname(file_path_fhd)+'/vis_data/' + file_basename(file_path_fhd) + '_vis_model_YY.sav','vis_model_ptr')
+    endif else begin
+      print, 'No model visibilities found in '+file_dirname(file_path_fhd)+'/vis_data. Please set recalculate_all=1'
+      return
+    endelse
+  endelse
   
   vis_noise_calc,obs,vis_arr,flag_arr
   tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
@@ -264,7 +279,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   IF Keyword_Set(snapshot_healpix_export) THEN begin
     IF ~Keyword_Set(n_avg) THEN n_avg=1
     healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
-      vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
+      vis_model_arr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
       
