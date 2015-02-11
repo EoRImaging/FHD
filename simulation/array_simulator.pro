@@ -1,5 +1,5 @@
 PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error,$
-    instrument=instrument,file_path_vis,cleanup=cleanup,recalculate_all=recalculate_all,$
+    instrument=instrument,cleanup=cleanup,recalculate_all=recalculate_all,$
     n_pol=n_pol,silent=silent,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
     eor_sim=eor_sim,include_catalog_sources = include_catalog_sources, source_list=source_list,$
@@ -17,7 +17,6 @@ IF N_Elements(silent) EQ 0 THEN silent=0
   
 fhd_save_io,status_str,file_path_fhd=file_path_fhd
   
-print,'Simulating: ',file_path_vis
 print,systime()
 print,'Output file_path:',file_path_fhd
 
@@ -62,5 +61,5 @@ IF ~silent THEN obs_status,obs
 
 ;Construct model visibilities. Start by building a model u-v-f cube
 
-
+stop
 END

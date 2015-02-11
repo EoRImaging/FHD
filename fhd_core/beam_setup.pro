@@ -94,7 +94,7 @@ complex_flag_arr=intarr(n_pol,nfreq_bin)
 beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
 ant_A_list=tile_A[0:nbaselines-1]
 ant_B_list=tile_B[0:nbaselines-1]
-baseline_mod=2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list))
+baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
 bi_list=ant_B_list+ant_A_list*baseline_mod
 bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
