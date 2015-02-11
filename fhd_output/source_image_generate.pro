@@ -1,4 +1,4 @@
-FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolution,threshold=threshold,conserve_flux=conserve_flux,$
+FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolution,threshold=threshold,conserve_flux=conserve_flux,frequency=frequency,$
     dimension=dimension,elements=elements,restored_beam_width=restored_beam_width,ring_radius=ring_radius,n_sources=n_sources,_Extra=extra
 IF Keyword_Set(obs) THEN BEGIN
     dimension=obs.dimension
@@ -10,6 +10,12 @@ IF N_Elements(pol_i) EQ 0 THEN pol_i=4 ;pol_i corresponds to 0-3: xx, yy, xy, yx
 IF Keyword_Set(n_sources) THEN ns=n_sources>(size(source_array,/dimension))[0] ELSE ns=(size(source_array,/dimension))[0]
 IF N_Elements(resolution) EQ 0 THEN resolution=8. ELSE resolution=Float(resolution)
 IF N_Elements(threshold) EQ 0 THEN threshold=1E-4
+IF Keyword_Set(frequency) THEN BEGIN
+    freq_ref=Median(source_array.freq)
+    freq_ratio=Abs(Alog10(freq_ref/frequency)) ;it often happens that one is in Hz and the other in MHz. Assuming no one will ever want to extrapolate more than two orders of magnitude, correct any huge mismatch
+    IF freq_ratio GT 2 THEN freq_scale=10.^(Round(Alog10(freq_ref/frequency)/3.)*3.) ELSE freq_scale=1.
+    frequency_use=frequency*freq_scale
+ENDIF
 
 icomp=Complex(0,1)
 x_vals=meshgrid(dimension,elements,1)-dimension/2.
@@ -46,6 +52,7 @@ ENDELSE
 sx=source_array[0:ns-1].x
 sy=source_array[0:ns-1].y
 flux=source_array[0:ns-1].flux.(pol_i)
+IF Keyword_Set(frequency_use) THEN flux*=(frequency_use/source_array.freq)^source_array.alpha
 x_offset=Round((Ceil(sx)-sx)*resolution) mod resolution    
 y_offset=Round((Ceil(sy)-sy)*resolution) mod resolution
 xcen0=Round(sx+x_offset/resolution) ;do this after offset, in case it has rounded to the next grid point
@@ -67,9 +74,11 @@ FOR si=0L,ns-1L DO BEGIN
         xmin1=Floor(xcen1-box_dim/2.) & xmax1=xmin1+box_dim-1
         ymin1=Floor(ycen1-box_dim/2.) & ymax1=ymin1+box_dim-1
         ci1=where((xmin1 GE 0) AND (ymin1 GE 0) AND (xmax1 LE dimension-1) AND (ymax1 LE elements-1),nc)
+        flux_comp=comp_arr.flux.(pol_i)
+        IF Keyword_Set(frequency_use) THEN flux_comp*=(frequency_use/comp_arr.freq)^comp_arr.alpha
         FOR ci=0L,nc-1 DO BEGIN
             source_image[xmin1[ci1[ci]]:xmax1[ci1[ci]],ymin1[ci1[ci]]:ymax1[ci1[ci]]]+=$
-                comp_arr[ci1[ci]].flux.(pol_i)*(*beam_useR_arr[x_offset1[ci1[ci]],y_offset1[ci1[ci]]])
+                flux_comp[ci1[ci]]*(*beam_useR_arr[x_offset1[ci1[ci]],y_offset1[ci1[ci]]])
         ENDFOR
     ENDIF ELSE BEGIN
         source_image[xmin[si1[si]]:xmax[si1[si]],ymin[si1[si]]:ymax[si1[si]]]+=$
