@@ -33,7 +33,7 @@ ENDIF ELSE BEGIN
     IF N_Elements(default_uu) EQ 0 THEN default_uu=((Findgen(n_default)+1) mod n_mod)/freq_use 
     IF N_Elements(default_vv) EQ 0 THEN default_vv=(Float(Floor((Findgen(n_default)+1) / n_mod)))/freq_use
     IF N_Elements(default_ww) EQ 0 THEN default_ww=Fltarr(n_default)
-    IF N_Elements(default_i) EQ 0 THEN default_i=1+(Lindgen(n_default) mod n_tile) + Floor(Lindgen(n_default)/n_tile)*512L 
+    IF N_Elements(default_i) EQ 0 THEN default_i=1+(Lindgen(n_default) mod n_tile) + Floor(1+Lindgen(n_default)/n_tile)*512L 
     IF N_Elements(default_time) EQ 0 THEN default_time=Floor(Lindgen(n_default)/n_baseline)
 ENDELSE
 
