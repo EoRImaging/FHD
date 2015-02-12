@@ -44,6 +44,7 @@ ENDIF
 array_simulator_init,obs,params,error=error,instrument=instrument,_Extra=extra
 n_pol=obs.n_pol
 n_freq=obs.n_freq
+jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0)
 
 ;Read in or construct a new beam model. Also sets up the structure PSF
 IF ~silent THEN print,'Calculating beam model'
@@ -63,7 +64,7 @@ vis_flag_update,flag_arr,obs,psf,params
 ;print informational messages
 IF ~silent THEN obs_status,obs
 
-vis_arr=vis_simulate(obs,status_str,psf,params,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+vis_arr=vis_simulate(obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all,$
     eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $

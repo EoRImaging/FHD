@@ -54,15 +54,14 @@ uv_mask_use[*,elements/2+psf.dim:*]=0.
 
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-bin_offset=(*obs.baseline_info).bin_offset
 frequency_array=(*obs.baseline_info).freq
 
 ;kx_arr=params.uu/kbinsize
 ;ky_arr=params.vv/kbinsize
 ;baseline_i=params.baseline_arr
-nbaselines=bin_offset[1]
-n_samples=N_Elements(bin_offset)
-n_freq=N_Elements(frequency_array)
+nbaselines=obs.nbaselines
+n_samples=obs.n_time
+n_freq=obs.n_freq
 n_freq_bin=N_Elements(freq_bin_i)
 IF N_Elements(vis_model_ptr) LT n_pol THEN vis_model_ptr=intarr(n_pol)
 

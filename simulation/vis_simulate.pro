@@ -1,4 +1,4 @@
-FUNCTION vis_simulate,obs,status_str,psf,params,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all,$
     eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
@@ -25,8 +25,9 @@ if keyword_set(recalculate_all) then begin
       if n_elements(source_list) gt 0 then source_list = [source_list, catalog_source_list] else source_list = catalog_source_list
     endif
     
-    if n_elements(source_list) gt 0 then begin
-      source_model_uv_arr=source_dft_model(obs,0,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
+    n_sources=N_Elements(source_list)
+    if n_sources gt 0 then begin
+      source_model_uv_arr=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
     endif
     
@@ -85,7 +86,7 @@ if keyword_set(recalculate_all) then begin
     if n_elements(source_model_uv_arr) gt 0 then begin
       if n_elements(model_uvf_arr) gt 0 then begin
         FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*source_model_uv_arr[pol_i]
-      endif else model_uvf_arr = source_model_uv_arr
+      endif else model_uvf_arr = Pointer_copy(source_model_uv_arr)
       undefine_fhd, source_model_uv_arr
     endif
     
