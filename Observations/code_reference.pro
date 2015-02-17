@@ -16,11 +16,11 @@ IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',cou
 
 IF N_Elements(set_iter) GT 0 THEN iter=set_iter
 IF Keyword_Set(use_hash) THEN BEGIN
-    dir_list=file_search(data_directory,'fhd*'+path_sep(),/Test_directory,count=n_directories)
+    dir_list=file_search(data_directory,'fhd_*'+path_sep(),/Test_directory,count=n_directories)
     
-    hash_match=Strarr(n_directories)
-    FOR di=0,n_directories-1 DO hash_match[di]=Strpos(dir_list[di],use_hash)
-    match_i=where(hash_match GE 0,n_match)
+    hash_match=Strpos(file_basename(dir_list),use_hash)
+    false_match=Strpos(file_basename(dir_list),'minus')
+    match_i=where((hash_match GE 0) AND (false_match EQ -1),n_match)
     CASE n_match OF
         0: BEGIN print,"Hash"+use_hash+" not found! Returning." & RETURN & END
         1: version=file_basename(dir_list[match_i])
