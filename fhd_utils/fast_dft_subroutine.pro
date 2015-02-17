@@ -1,19 +1,11 @@
-FUNCTION fast_dft_subroutine,dft_kernel=dft_kernel,kernel_size=kernel_size,dimension=dimension,elements=elements,$
-    over_resolution=over_resolution,resolution=resolution
+FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel=dft_kernel,kernel_size=kernel_size,$
+    dimension=dimension,elements=elements,over_resolution=over_resolution,resolution=resolution
 
 IF N_Elements(dft_kernel) EQ 0 THEN dft_kernel='sinc' ELSE dft_kernel=StrLowCase(dft_kernel)
-
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-;IF N_Elements(restored_beam_width) EQ 0 THEN restored_beam_width=1. ;width of gaussian to use to restore sources
-;IF N_Elements(pol_i) EQ 0 THEN pol_i=4 ;pol_i corresponds to 0-3: xx, yy, xy, yx in apparent brightness; 4-7: I, Q, U, V in sky brightness
-IF Keyword_Set(n_sources) THEN ns=n_sources>(size(source_array,/dimension))[0] ELSE ns=(size(source_array,/dimension))[0]
 IF N_Elements(resolution) EQ 0 THEN resolution=8. ELSE resolution=Float(resolution)
-IF Keyword_Set(frequency) THEN BEGIN
-    freq_ref=Median(source_array.freq)
-    freq_ratio=Abs(Alog10(freq_ref/frequency)) ;it often happens that one is in Hz and the other in MHz. Assuming no one will ever want to extrapolate more than two orders of magnitude, correct any huge mismatch
-    IF freq_ratio GT 2 THEN freq_scale=10.^(Round(Alog10(freq_ref/frequency)/3.)*3.) ELSE freq_scale=1.
-    frequency_use=frequency*freq_scale
-ENDIF
+
+ns=N_Elements(x_vec)
 
 icomp=Complex(0,1)
 x_vals=meshgrid(dimension,elements,1)-dimension/2.

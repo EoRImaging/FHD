@@ -1,5 +1,5 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
-    conserve_memory=conserve_memory,dft_approximation=dft_approximation,_Extra=extra
+    conserve_memory=conserve_memory,dft_approximation=dft_approximation,frequency=frequency,_Extra=extra
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
 dimension=obs.dimension
 elements=obs.elements
@@ -23,6 +23,20 @@ ENDIF
 ; If you want extended sources, inflate the source list before calling this program
 source_array_use=Stokes_cnv(source_array,jones,/inverse,/no_extend,_Extra=extra) 
 
+IF Keyword_Set(frequency) THEN BEGIN
+    freq_ref=Median(source_array.freq)
+    freq_ratio=Abs(Alog10(freq_ref/frequency)) ;it often happens that one is in Hz and the other in MHz. Assuming no one will ever want to extrapolate more than two orders of magnitude, correct any huge mismatch
+    IF freq_ratio GT 2 THEN freq_scale=10.^(Round(Alog10(freq_ref/frequency)/3.)*3.) ELSE freq_scale=1.
+    frequency_use=frequency*freq_scale
+    
+    alpha_i=where(source_array.alpha,n_alpha) ;find sources with non-zero spectral indices
+    FOR a_i=0L,n_alpha-1 DO BEGIN
+        flux_scale=(frequency_use/freq_ref)^source_array[alpha_i[a_i]].alpha
+        FOR pol_i=0,n_pol-1 DO source_array_use.flux.(pol_i)*=flux_scale
+    ENDFOR
+ENDIF
+
+
 IF Keyword_Set(dft_approximation) THEN BEGIN
 ;only use approximation if it will actually be faster than the DFT
     IF dft_approximation GT 1 THEN over_resolution=dft_approximation ELSE over_resolution=4
@@ -40,7 +54,7 @@ IF Keyword_Set(over_resolution) THEN BEGIN
     flux_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
 
-    model_uv_new=fast_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr,$
+    model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,degpix=degpix,flux_arr=flux_arr,$
         conserve_memory=conserve_memory,over_resolution=over_resolution,_Extra=extra)
 
     *model_uv_full[pol_i]+=*model_uv_new[pol_i]
