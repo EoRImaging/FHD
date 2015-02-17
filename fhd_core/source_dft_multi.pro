@@ -30,30 +30,20 @@ IF Keyword_Set(dft_approximation) THEN BEGIN
         THEN over_resolution=0 
 ENDIF
 IF Keyword_Set(over_resolution) THEN BEGIN
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*over_resolution,kbin=obs.kpix)
-        dimension_out=obs_out.dimension
-        elements_out=obs_out.elements
-        astr_out=obs_out.astr
-        
-        source_arr_out=source_array_use
-        ad2xy,source_array_use.ra,source_array_use.dec,astr_out,sx,sy
-        source_arr_out.x=sx & source_arr_out.y=sy
-        
-        extend_test=where(Ptr_valid(source_array_use.extend),n_extend)
-        IF n_extend GT 0 THEN BEGIN
-            FOR ext_i=0L,n_extend-1 DO BEGIN
-                comp_arr_out=*source_array_use[extend_test[ext_i]].extend
-                ad2xy,comp_arr_out.ra,comp_arr_out.dec,astr_out,cx,cy
-                comp_arr_out.x=cx & comp_arr_out.y=cy
-                source_arr_out[extend_test[ext_i]].extend=Ptr_new(comp_arr_out)
-            ENDFOR
-        ENDIF
-        model_img=source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=32,dimension=dimension_out,restored_beam_width=0.5,/conserve_flux,_Extra=extra)
-        model_uv=fft_shift(FFT(fft_shift(model_img),/inverse))
-        model_uv=model_uv[dimension_out/2-dimension/2:dimension_out/2+dimension/2-1,elements_out/2-elements/2:elements_out/2+elements/2-1];*over_resolution^2.
-        *model_uv_full[pol_i]+=model_uv
-    ENDFOR
+    obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*over_resolution,kbin=obs.kpix) ;this will calculate a new astr structure
+    dimension_out=obs_out.dimension
+    elements_out=obs_out.elements
+    astr_out=obs_out.astr
+    ad2xy,source_array_use.ra,source_array_use.dec,astr_out,x_vec,y_vec
+    obs_out=0 ;don't use undefine_fhd,obs_out because that would undefine pointers still used by the obs structure
+    
+    flux_arr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
+
+    model_uv_new=fast_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr,$
+        conserve_memory=conserve_memory,over_resolution=over_resolution,_Extra=extra)
+
+    *model_uv_full[pol_i]+=*model_uv_new[pol_i]
 ENDIF ELSE BEGIN
     flux_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
