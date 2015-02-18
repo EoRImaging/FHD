@@ -35,13 +35,15 @@ zero_test=where(y_valsR EQ 0,n_zero) & IF n_zero GT 0 THEN kernel_over_y[zero_te
 kernel_over=kernel_over_x*kernel_over_y
 
 kernel_arr=Ptrarr(resolution,resolution,/allocate)
-IF Keyword_Set(conserve_flux) THEN BEGIN
-    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-        *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/Total(kernel_over[xvals_i+i,yvals_i+j])
-ENDIF ELSE BEGIN
-    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-        *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/Max(kernel_over[xvals_i+i,yvals_i+j])
-ENDELSE
+FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/over_resolution^2.
+
+;IF Keyword_Set(conserve_flux) THEN BEGIN
+;    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
+;        *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j];/Total(kernel_over[xvals_i+i,yvals_i+j])
+;ENDIF ELSE BEGIN
+;    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
+;        *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j];/Max(kernel_over[xvals_i+i,yvals_i+j])
+;ENDELSE
 
 x_offset=Round((Ceil(x_vec)-x_vec)*resolution) mod resolution    
 y_offset=Round((Ceil(y_vec)-y_vec)*resolution) mod resolution
