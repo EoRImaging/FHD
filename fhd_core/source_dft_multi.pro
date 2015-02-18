@@ -36,6 +36,8 @@ IF Keyword_Set(frequency) THEN BEGIN
     ENDFOR
 ENDIF
 
+flux_arr=Ptrarr(n_pol)
+FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
 
 IF Keyword_Set(dft_approximation) THEN BEGIN
 ;only use approximation if it will actually be faster than the DFT
@@ -44,24 +46,14 @@ IF Keyword_Set(dft_approximation) THEN BEGIN
         THEN over_resolution=0 
 ENDIF
 IF Keyword_Set(over_resolution) THEN BEGIN
-;    obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*over_resolution,kbin=obs.kpix) ;this will calculate a new astr structure
-;    dimension_out=obs_out.dimension
-;    elements_out=obs_out.elements
-;    astr_out=obs_out.astr
-;    ad2xy,source_array_use.ra,source_array_use.dec,astr_out,x_vec,y_vec
-;    obs_out=0 ;don't use undefine_fhd,obs_out because that would undefine pointers still used by the obs structure
-    
-    flux_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
 
     model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,degpix=degpix,flux_arr=flux_arr,$
         conserve_memory=conserve_memory,over_resolution=over_resolution,_Extra=extra)
 
-    *model_uv_full[pol_i]+=*model_uv_new[pol_i]
+    FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
+    Ptr_free,model_uv_new,flux_arr
 ENDIF ELSE BEGIN
-    flux_arr=Ptrarr(n_pol)
-    FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
-    
+
     model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux_arr,conserve_memory=conserve_memory)
     FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
     Ptr_free,model_uv_vals,flux_arr

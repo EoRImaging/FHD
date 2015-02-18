@@ -1,5 +1,5 @@
 FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel=dft_kernel,kernel_size=kernel_size,$
-    dimension=dimension,elements=elements,over_resolution=over_resolution,resolution=resolution
+    dimension=dimension,elements=elements,over_resolution=over_resolution,resolution=resolution,conserve_flux=conserve_flux
 
 IF N_Elements(dft_kernel) EQ 0 THEN dft_kernel='sinc' ELSE dft_kernel=StrLowCase(dft_kernel)
 IF N_Elements(elements) EQ 0 THEN elements=dimension
@@ -34,18 +34,13 @@ zero_test=where(y_valsR EQ 0,n_zero) & IF n_zero GT 0 THEN kernel_over_y[zero_te
 
 kernel_over=kernel_over_x*kernel_over_y
 
-
-beam_useR=Exp(-Abs(((x_valsR)/(restored_beam_width*resolution))^2.+((y_valsR)/(restored_beam_width*resolution))^2.)/2.)
-;beam_useR/=Total(beam_useR)/resolution^2. ;make sure it is normalized
-;beam_useR/=Max(beam_useR) ;make sure it is normalized to 1
-
-beam_useR_arr=Ptrarr(resolution,resolution,/allocate)
+kernel_arr=Ptrarr(resolution,resolution,/allocate)
 IF Keyword_Set(conserve_flux) THEN BEGIN
     FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-        *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Total(beam_useR[xvals_i+i,yvals_i+j])
+        *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/Total(kernel_over[xvals_i+i,yvals_i+j])
 ENDIF ELSE BEGIN
     FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-        *beam_useR_arr[i,j]=beam_useR[xvals_i+i,yvals_i+j]/Max(beam_useR[xvals_i+i,yvals_i+j])
+        *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/Max(kernel_over[xvals_i+i,yvals_i+j])
 ENDELSE
 
 x_offset=Round((Ceil(x_vec)-x_vec)*resolution) mod resolution    
@@ -58,9 +53,9 @@ ymin=Floor(ycen0-box_dim/2.) & ymax=ymin+box_dim-1
 si1=where((xmin GE 0) AND (ymin GE 0) AND (xmax LE dimension-1) AND (ymax LE elements-1),ns)
 model_img=fltarr(dimension,elements)
 FOR si=0L,ns-1L DO BEGIN
-    model_img[xmin[si1[si]]:xmax[si1[si]],ymin[si1[si]]:ymax[si1[si]]]+=amp_vec[si1[si]]*(*beam_useR_arr[x_offset[si1[si]],y_offset[si1[si]]])
+    model_img[xmin[si1[si]]:xmax[si1[si]],ymin[si1[si]]:ymax[si1[si]]]+=amp_vec[si1[si]]*(*kernel_arr[x_offset[si1[si]],y_offset[si1[si]]])
 ENDFOR
-Ptr_free,beam_useR_arr
+Ptr_free,kernel_arr
 
 RETURN,model_img
 END

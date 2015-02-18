@@ -25,7 +25,7 @@ IF Min(Ptr_valid(model_uv_full[0:n_pol-1])) EQ 0 THEN BEGIN
 ENDIF
 FOR pol_i=0,n_pol-1 DO BEGIN
     model_img=fast_dft_subroutine(x_vec_over,y_vec_over,*flux_arr_use[pol_i],resolution=32,dimension=dimension_over,$
-        dft_kernel=dft_kernel,over_resolution=over_resolution,_Extra=extra)
+        dft_kernel=dft_kernel,over_resolution=over_resolution,/conserve_flux,_Extra=extra)
     model_uv=fft_shift(FFT(fft_shift(model_img),/inverse)) ; normalization ??!!??!!
     model_uv=model_uv[dimension_over/2-dimension/2:dimension_over/2+dimension/2-1,elements_over/2-elements/2:elements_over/2+elements/2-1];*over_resolution^2.
     *model_uv_full[pol_i]+=model_uv
