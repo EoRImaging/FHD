@@ -1,4 +1,4 @@
-FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux,$
+FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,flux=flux,$
     conserve_memory=conserve_memory
 icomp=Complex(0,1)
 fft_norm=1.

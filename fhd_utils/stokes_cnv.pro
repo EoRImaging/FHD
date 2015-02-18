@@ -25,17 +25,25 @@ IF size(jones,/type) EQ 10 THEN BEGIN
     dimension=(*jones).dimension
     elements=(*jones).elements
 ENDIF ELSE BEGIN
-    IF N_Elements(jones) EQ 0 THEN BEGIN
-        p_map=Ptrarr(4,4,/allocate)
-        FOR j=0,3 DO FOR i=0,3 DO *p_map[i,j]=Replicate(((i EQ j) ? 1.:0.),n_pix)
-        p_corr=p_map
-        p_free=1
-    ENDIF ELSE BEGIN
+    IF Keyword_Set(jones) THEN BEGIN
         inds=jones.inds
         p_map=jones.Jmat
         p_corr=jones.Jinv
         dimension=jones.dimension
         elements=jones.elements
+    ENDIF ELSE BEGIN
+        IF size(image_arr,/type) EQ 8 THEN BEGIN
+            dimension=obs.dimension
+            elements=obs.elements
+        ENDIF ELSE BEGIN
+            dimension=(Size(*image_arr[0],/dimension))[0]
+            elements=(Size(*image_arr[0],/dimension))[1]
+        ENDELSE
+        n_pix=dimension*elements
+        p_map=Ptrarr(4,4,/allocate)
+        FOR j=0,3 DO FOR i=0,3 DO *p_map[i,j]=Replicate(((i EQ j) ? 1.:0.),n_pix)
+        p_corr=p_map
+        p_free=1
     ENDELSE
 ENDELSE
 n_pix=N_Elements(inds)

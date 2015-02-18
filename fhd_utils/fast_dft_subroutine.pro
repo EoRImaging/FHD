@@ -3,22 +3,13 @@ FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel=dft_kernel,kernel_si
 
 IF N_Elements(dft_kernel) EQ 0 THEN dft_kernel='sinc' ELSE dft_kernel=StrLowCase(dft_kernel)
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF N_Elements(resolution) EQ 0 THEN resolution=8. ELSE resolution=Float(resolution)
-IF ~Keyword_Set(over_resolution) THEN over_resolution=4. ;also prevents case of over_resolution=0 which will error
+IF N_Elements(resolution) EQ 0 THEN resolution=32. ELSE resolution=Float(resolution)
+IF ~Keyword_Set(over_resolution) THEN over_resolution=1. ;also prevents case of over_resolution=0 which will error
 IF ~Keyword_Set(kernel_size) THEN kernel_size=8. ELSE kernel_size=Ceil(kernel_size/2.)*2.
 
 ns=N_Elements(x_vec)
 
-
-
-;icomp=Complex(0,1)
-;x_vals=meshgrid(dimension,elements,1)-dimension/2.
-;y_vals=meshgrid(dimension,elements,2)-elements/2.
-;
-;beam_use=Exp(-Abs(((x_vals)/restored_beam_width)^2.+((y_vals)/restored_beam_width)^2.)/2.)
-;beam_use/=Max(beam_use) ;make sure it is normalized to 1
-;cut=reform(beam_use[*,elements/2.])
-;cut_endpoints=minmax(where(cut GE threshold))
+res_total=resolution*over_resolution
 box_dim=kernel_size*over_resolution
 box_dimR=box_dim*resolution
 
@@ -27,15 +18,16 @@ y_valsR=meshgrid(box_dimR,box_dimR,2)-box_dimR/2.
 xvals_i=meshgrid(box_dim,box_dim,1)*resolution
 yvals_i=meshgrid(box_dim,box_dim,2)*resolution
 
-kernel_over_x=Sin(!Pi*x_valsR/(resolution*over_resolution))*weight_invert(!Pi*x_valsR/(resolution*over_resolution))
+kernel_over_x=Sin(!Pi*x_valsR/res_total)*weight_invert(!Pi*x_valsR/res_total)
 zero_test=where(x_valsR EQ 0,n_zero) & IF n_zero GT 0 THEN kernel_over_x[zero_test]=1. 
-kernel_over_y=Sin(!Pi*y_valsR/(resolution*over_resolution))*weight_invert(!Pi*y_valsR/(resolution*over_resolution))
+kernel_over_y=Sin(!Pi*y_valsR/res_total)*weight_invert(!Pi*y_valsR/res_total)
 zero_test=where(y_valsR EQ 0,n_zero) & IF n_zero GT 0 THEN kernel_over_y[zero_test]=1. 
 
 kernel_over=kernel_over_x*kernel_over_y
+kernel_over*=Sqrt(Abs(kernel_over)) ;semi-questionable attempt to make the function fall off faster, but preserve negatives and zero crossing locations
 
 kernel_arr=Ptrarr(resolution,resolution,/allocate)
-FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/over_resolution^2.
+FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/Total(kernel_over[xvals_i+i,yvals_i+j])
 
 ;IF Keyword_Set(conserve_flux) THEN BEGIN
 ;    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
