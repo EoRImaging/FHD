@@ -24,7 +24,7 @@ kernel_over_y=Sin(!Pi*y_valsR/res_total)*weight_invert(!Pi*y_valsR/res_total)
 zero_test=where(y_valsR EQ 0,n_zero) & IF n_zero GT 0 THEN kernel_over_y[zero_test]=1. 
 
 kernel_over=kernel_over_x*kernel_over_y
-kernel_over*=Sqrt(Abs(kernel_over)) ;semi-questionable attempt to make the function fall off faster, but preserve negatives and zero crossing locations
+;kernel_over*=Sqrt(Abs(kernel_over)) ;semi-questionable attempt to make the function fall off faster, but preserve negatives and zero crossing locations
 
 kernel_arr=Ptrarr(resolution,resolution,/allocate)
 FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/Total(kernel_over[xvals_i+i,yvals_i+j])
