@@ -23,15 +23,14 @@ IF Keyword_Set(use_hash) THEN BEGIN
     match_i=where((hash_match GE 0) AND (false_match EQ -1),n_match)
     CASE n_match OF
         0: BEGIN print,"Hash"+use_hash+" not found! Returning." & RETURN & END
-        1: version=file_basename(dir_list[match_i])
-        ELSE: IF N_Elements(iter) GT 0 THEN version=file_basename(dir_list[match_i[iter<(n_match-1)]]) $
-            ELSE version=file_basename(dir_list[Max(match_i)])
+        1: version_use=file_basename(dir_list[match_i])
+        ELSE: IF N_Elements(iter) GT 0 THEN version_use=file_basename(dir_list[match_i[iter<(n_match-1)]]) $
+            ELSE version_use=file_basename(dir_list[Max(match_i)])
     ENDCASE
-    iter=0
-    IF Strpos(version,'fhd_') EQ 0 THEN version=strmid(version,4)
-ENDIF
+    IF N_Elements(iter) EQ 0 THEN iter=0
+    IF Strpos(version_use,'fhd_') EQ 0 THEN version_use=strmid(version_use,4)
+ENDIF ELSE version_use=version+(Keyword_Set(iter) ? '_run'+Strn(iter):'')
 
-version_use=version+(Keyword_Set(iter) ? '_run'+Strn(iter):'')
 IF N_Elements(iter) EQ 0 THEN BEGIN
     test_dir=filepath('',root=data_directory,sub='fhd_'+version_use)
     iter=0
@@ -134,7 +133,7 @@ general_obs,_Extra=extra
 code_reference_wrapper,file_dirname(fhd_file_list[0]),/png,_Extra=extra
 
 IF Keyword_Set(reference_hash) THEN BEGIN
-    hash_diff=Strmid(version,Strpos(version,'-g')+2,7)
+    hash_diff=Strmid(version_use,Strpos(version_use,'-g')+2,7)
     code_reference_diff,hash_ref=reference_hash,hash_diff=hash_diff,iter_ref=iter_ref,iter_diff=iter,_Extra=cmd_args
 ENDIF
 
