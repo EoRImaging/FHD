@@ -4,7 +4,7 @@ FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel=dft_kernel,kernel_si
 IF N_Elements(dft_kernel) EQ 0 THEN dft_kernel='sinc' ELSE dft_kernel=StrLowCase(dft_kernel)
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF N_Elements(resolution) EQ 0 THEN resolution=32. ELSE resolution=Float(resolution)
-IF ~Keyword_Set(over_resolution) THEN over_resolution=1. ;also prevents case of over_resolution=0 which will error
+over_resolution=1. ;also prevents case of over_resolution=0 which will error
 IF ~Keyword_Set(kernel_size) THEN kernel_size=8. ELSE kernel_size=Ceil(kernel_size/2.)*2.
 
 ns=N_Elements(x_vec)
