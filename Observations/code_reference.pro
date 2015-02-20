@@ -1,4 +1,4 @@
-PRO code_reference,set_iter=set_iter,recalculate_all=recalculate_all,use_hash=use_hash,reference_hash=reference_hash,iter_ref=iter_ref,_Extra=extra
+PRO code_reference,set_iter=set_iter,recalculate_all=recalculate_all,use_hash=use_hash,reference_hash=reference_hash,iter_ref=iter_ref,skip_ps=skip_ps,_Extra=extra
 except=!except
 ;NOTE: to go back to an earlier commit HASH123 for testing, use git reset --hard HASH123 
 ;NOTE: requires the Power Spectrum (PS) repository to work (https://github.com/miguelfmorales/PS)
@@ -130,7 +130,7 @@ IF Tag_exist(extra,'comment') THEN BEGIN
 ENDIF
 general_obs,_Extra=extra
 
-code_reference_wrapper,file_dirname(fhd_file_list[0]),/png,_Extra=extra
+IF ~Keyword_Set(skip_ps) THEN code_reference_wrapper,file_dirname(fhd_file_list[0]),/png,_Extra=extra
 
 IF Keyword_Set(reference_hash) THEN BEGIN
     hash_diff=Strmid(version_use,Strpos(version_use,'-g')+2,7)
