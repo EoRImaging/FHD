@@ -53,7 +53,7 @@ ENDIF
 IF Keyword_Set(over_resolution) THEN BEGIN
 
     model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,$
-        conserve_memory=conserve_memory,over_resolution=over_resolution,_Extra=extra)
+        conserve_memory=conserve_memory,_Extra=extra)
 
     FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
     Ptr_free,model_uv_new,flux_arr
