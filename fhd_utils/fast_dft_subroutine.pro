@@ -17,6 +17,7 @@ box_dimR=box_dim*resolution
 box_ext_lenR=kernel_extend_length*resolution
 box_ext_widthR=kernel_extend_width*resolution
 
+;calculate central NxN box 
 x_valsR=meshgrid(box_dimR,box_dimR,1)-box_dimR/2.
 y_valsR=meshgrid(box_dimR,box_dimR,2)-box_dimR/2.
 xvals_i=meshgrid(box_dim,box_dim,1)*resolution
@@ -33,6 +34,7 @@ kernel_norm=(resolution^2.)/Total(kernel_over)
 kernel_arr=Ptrarr(resolution,resolution,/allocate)
 FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/Total(kernel_over[xvals_i+i,yvals_i+j])
 
+;calculate N^2 x width box (cross arm in the x-direction)
 x_vals_extR=meshgrid(box_ext_lenR,box_ext_widthR,1)-box_ext_lenR/2.
 y_vals_extR=meshgrid(box_ext_lenR,box_ext_widthR,2)-box_ext_widthR/2.
 xvals_ext_i=meshgrid(kernel_extend_length,kernel_extend_width,1)*resolution
@@ -44,15 +46,27 @@ kernel_ext_over_y=Sin(!Pi*y_vals_extR/res_total)*weight_invert(!Pi*y_vals_extR/r
 zero_ext_test=where(y_vals_extR EQ 0,n_ext_zero) & IF n_ext_zero GT 0 THEN kernel_ext_over_y[zero_ext_test]=1. 
 
 kernel_ext_over=kernel_ext_over_x*kernel_ext_over_y
-
 kernel_ext_over[where(Abs(x_vals_extR) LE box_dimR/2.)]=0.
 
 kernel_ext_X_arr=Ptrarr(resolution,resolution,/allocate)
+FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_ext_X_arr[i,j]=kernel_ext_over[xvals_ext_i+i,yvals_ext_i+j]*kernel_norm
+
+;calculate width x N^2 box (cross arm in the y-direction)
+x_vals_extR=meshgrid(box_ext_widthR,box_ext_lenR,1)-box_ext_widthR/2.
+y_vals_extR=meshgrid(box_ext_widthR,box_ext_lenR,2)-box_ext_lenR/2.
+xvals_ext_i=meshgrid(kernel_extend_width,kernel_extend_length,1)*resolution
+yvals_ext_i=meshgrid(kernel_extend_width,kernel_extend_length,2)*resolution
+
+kernel_ext_over_x=Sin(!Pi*x_vals_extR/res_total)*weight_invert(!Pi*x_vals_extR/res_total)
+zero_ext_test=where(x_vals_extR EQ 0,n_ext_zero) & IF n_ext_zero GT 0 THEN kernel_ext_over_x[zero_ext_test]=1. 
+kernel_ext_over_y=Sin(!Pi*y_vals_extR/res_total)*weight_invert(!Pi*y_vals_extR/res_total)
+zero_ext_test=where(y_vals_extR EQ 0,n_ext_zero) & IF n_ext_zero GT 0 THEN kernel_ext_over_y[zero_ext_test]=1. 
+
+kernel_ext_over=kernel_ext_over_x*kernel_ext_over_y
+kernel_ext_over[where(Abs(y_vals_extR) LE box_dimR/2.)]=0.
+
 kernel_ext_Y_arr=Ptrarr(resolution,resolution,/allocate)
-FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO BEGIN
-    *kernel_ext_X_arr[i,j]=kernel_ext_over[xvals_ext_i+i,yvals_ext_i+j]*kernel_norm
-    *kernel_ext_Y_arr[i,j]=Transpose(*kernel_ext_X_arr[i,j])
-ENDFOR
+FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_ext_Y_arr[i,j]=kernel_ext_over[xvals_ext_i+i,yvals_ext_i+j]*kernel_norm
 
 ;IF Keyword_Set(conserve_flux) THEN BEGIN
 ;    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
@@ -90,7 +104,7 @@ FOR si=0L,ns-1L DO BEGIN
     ENDELSE
     
 ENDFOR
-Ptr_free,kernel_arr
+Ptr_free,kernel_arr,kernel_ext_X_arr,kernel_ext_Y_arr
 
 RETURN,model_img
 END
