@@ -29,10 +29,7 @@ kernel_over_y=Sin(!Pi*y_valsR/res_total)*weight_invert(!Pi*y_valsR/res_total)
 zero_test=where(y_valsR EQ 0,n_zero) & IF n_zero GT 0 THEN kernel_over_y[zero_test]=1. 
 
 kernel_over=kernel_over_x*kernel_over_y
-kernel_norm=(resolution^2.)/Total(kernel_over)
-
-kernel_arr=Ptrarr(resolution,resolution,/allocate)
-FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]/Total(kernel_over[xvals_i+i,yvals_i+j])
+;NOTE: slice up kernel later, to allow properly calculating the normalization
 
 ;calculate N^2 x width box (cross arm in the x-direction)
 x_vals_extR=meshgrid(box_ext_lenR,box_ext_widthR,1)-box_ext_lenR/2.
@@ -47,6 +44,13 @@ zero_ext_test=where(y_vals_extR EQ 0,n_ext_zero) & IF n_ext_zero GT 0 THEN kerne
 
 kernel_ext_over=kernel_ext_over_x*kernel_ext_over_y
 kernel_ext_over[where(Abs(x_vals_extR) LE box_dimR/2.)]=0.
+
+;Now calculate normalization 
+kernel_norm=(resolution^2.)/(Total(kernel_over)+2.*Total(kernel_ext_over))
+
+kernel_arr=Ptrarr(resolution,resolution,/allocate)
+FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]*kernel_norm
+
 
 kernel_ext_X_arr=Ptrarr(resolution,resolution,/allocate)
 FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_ext_X_arr[i,j]=kernel_ext_over[xvals_ext_i+i,yvals_ext_i+j]*kernel_norm
