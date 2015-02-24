@@ -582,6 +582,10 @@ case version of
    'apb_look_for_variable_1':begin
         snapshot_healpix_export=0
    end
+   'apb_look_for_variable_2':begin
+        split_ps_export=0
+        n_avg=2
+   end
 
    ; Abraham's versions
 

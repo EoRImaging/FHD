@@ -163,7 +163,7 @@ undefine_fhd,cal_base
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
+    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,_Extra=extra)
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
         cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
         cal=vis_cal_combine(cal_polyfit,cal_bandpass)

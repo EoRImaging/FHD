@@ -1,4 +1,4 @@
-FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,bandpass_directory=bandpass_directory
+FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,bandpass_directory=bandpass_directory,_Extra=extra
 ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.  
 
 ;Extract needed elements from the input structures

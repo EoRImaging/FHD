@@ -1,5 +1,5 @@
 FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,weights=weights,variance=variance,$
-    timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
+    timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,uniform_filter=uniform_filter,$
     GPU_enable=GPU_enable,complex_flag=complex_flag,double=double,fi_use=fi_use,bi_use=bi_use,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
@@ -75,6 +75,7 @@ beam_arr=*psf.beam_ptr
 
 weights_flag=Keyword_Set(weights)
 variance_flag=Keyword_Set(variance)
+uniform_flag=Keyword_Set(uniform_filter)
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize
 
@@ -92,7 +93,7 @@ uniform_filter=Fltarr(dimension,elements)
 IF Keyword_Set(grid_uniform) THEN BEGIN
     mapfn_recalculate=0 ;mapfn is incompatible with uniformly gridded images!
     uniform_flag=1
-ENDIF ELSE uniform_flag=0
+ENDIF
 
 IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_flag=1
@@ -333,7 +334,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         var_box=matrix_multiply(psf_weight/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
-    IF uniform_flag THEN uniform_filter[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=n_vis_single
+    IF uniform_flag THEN uniform_filter[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=bin_n[bin_i[bi]]
     
     IF verbose THEN BEGIN
         t6_0=Systime(1)
@@ -374,7 +375,7 @@ IF map_flag THEN BEGIN
 ENDIF
 t7=Systime(1)-t7_0
 
-IF uniform_flag THEN BEGIN
+IF Keyword_Set(grid_uniform) THEN BEGIN
     filter_use=weight_invert(uniform_filter,1.) 
     wts_i=where(filter_use,n_wts)
     IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)
@@ -398,6 +399,10 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
     IF model_flag THEN BEGIN
         model_conj=Shift(Reverse(reverse(Conj(model_return),1),2),1,1)
         model_return=(model_return+model_conj)/2.
+    ENDIF
+    IF uniform_flag THEN BEGIN
+        uniform_filter_mirror=Shift(Reverse(reverse(uniform_filter,1),2),1,1)
+        uniform_filter=(uniform_filter+uniform_filter_mirror)/2.
     ENDIF
 ENDIF
 

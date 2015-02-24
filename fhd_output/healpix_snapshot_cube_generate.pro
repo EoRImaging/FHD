@@ -66,13 +66,18 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   IF N_Elements(flag_arr) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
     ELSE flag_arr_use=Pointer_copy(flag_arr)
-  flags_use=Ptrarr(n_pol,/allocate)
   
+  vis_flag_update,flag_arr_use,obs_out,psf_out,params,_Extra=extra
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
   IF N_Elements(*vis_arr[0]) EQ 0 THEN BEGIN
     IF ~Keyword_Set(silent) THEN print,"Restoring saved visibilities (this may take a while)"
     FOR pol_i=0,n_pol-1 DO BEGIN
-        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra
+        fhd_save_io,status_str,vis_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,path_use=path_use,_Extra=extra
+        IF status_str.vis_ptr[pol_i] EQ 0 THEN BEGIN
+            error=1
+            print,"Error: file not found!: "+path_use
+            RETURN
+        ENDIF
         vis_arr[pol_i]=vis_ptr
     ENDFOR
     IF ~Keyword_Set(silent) THEN print,"...Done"
@@ -116,22 +121,23 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   obs_out_ref=obs_out
   obs_in_ref=obs_in
   FOR iter=0,n_iter-1 DO BEGIN
-    IF Ptr_valid(bi_use[iter]) THEN BEGIN
-        FOR pol_i=0,n_pol-1 DO BEGIN
-          flag_arr1=fltarr(size(*flag_arr_use[pol_i],/dimension))
-          flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
-          *flags_use[pol_i]=Temporary(flag_arr1)
-        ENDFOR
-    ENDIF ELSE flags_use=Pointer_copy(flag_arr_use)
+;    IF Ptr_valid(bi_use[iter]) THEN BEGIN
+;        flags_use=Ptrarr(n_pol,/allocate)
+;        FOR pol_i=0,n_pol-1 DO BEGIN
+;          flag_arr1=fltarr(size(*flag_arr_use[pol_i],/dimension))
+;          flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
+;          *flags_use[pol_i]=Temporary(flag_arr1)
+;        ENDFOR
+;    ENDIF ELSE flags_use=Pointer_copy(flag_arr_use)
     obs=obs_out_ref ;will have some values over-written!
     obs_in=obs_in_ref
     psf=psf_out
     
-    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,flags_use,obs_out=obs,psf_out=psf,/rephase_weights,$
+    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,flag_arr_use,obs_out=obs,psf_out=psf,/rephase_weights,$
       weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
       file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_arr,$
-      save_uvf=save_uvf, uvf_name=uvf_name[iter])
-    Ptr_free,flags_use
+      save_uvf=save_uvf, uvf_name=uvf_name[iter],bi_use=*bi_use[iter])
+;    Ptr_free,flags_use
     t_split+=t_split1
     IF dirty_flag THEN BEGIN
       dirty_arr1=residual_arr1

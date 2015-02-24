@@ -46,9 +46,9 @@ IF N_Elements(iter) EQ 0 THEN BEGIN
     ENDWHILE
 ENDIF
 fhd_file_list=fhd_path_setup(vis_file_list,version=version_use,_Extra=extra)
-undefine_fhd,branch,di,iter,match_i,n_match,hash_match,dir_list,test_dir
+undefine_fhd,branch,di,match_i,n_match,hash_match,dir_list,test_dir
 
-healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
+healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version_use,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_FHDaug23deconvolve_fornax_and_VLA_pic.sav',root=rootdir('FHD'),subdir='catalog_data')
 
@@ -94,6 +94,10 @@ no_restrict_cal_sources=1
 cal_mode_fit=1
 cal_cable_reflection_fit=150
 restrict_hpx_inds=1
+output_residual_histogram=1
+show_beam_contour=1
+contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
+contour_color='blue'
 
 kbinsize=0.5
 psf_resolution=32
@@ -114,12 +118,20 @@ n_pol=2
 max_cal_iter=100.
 restore_vis_savefile=1
 export_images=1
+plot_k0_power=1
 
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
+IF Tag_exist(extra,'comment') THEN BEGIN
+    log_file=filepath('code_reference_log.txt',root=data_directory)
+    append=0
+    IF file_test(log_file) EQ 0 THEN header=['Commit','Date','Comment'] ELSE append=1
+    log_comment=[version_use,Systime(),extra.comment]
+    Textfast,log_comment,header,/write,append=append,file_path=log_file
+ENDIF
 general_obs,_Extra=extra
 
-code_reference_wrapper,file_dirname(fhd_file_list[0]),/png
+code_reference_wrapper,file_dirname(fhd_file_list[0]),/png,_Extra=extra
 
 IF Keyword_Set(reference_hash) THEN BEGIN
     hash_diff=Strmid(version,Strpos(version,'-g')+2,7)

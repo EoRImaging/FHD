@@ -64,6 +64,7 @@ n_pol=2
 restore_vis_savefile=1
 firstpass=1
 max_cal_iter=100L
+beam_model=2
 
 cmd_args=extra
 extra=var_bundle()
