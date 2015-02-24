@@ -106,6 +106,7 @@ beam_model_version=2
 dipole_mutual_coupling_factor=1
 calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
+log_store=1 ;store output log to a file 
 
 ;defaults not set in firstpass:
 mark_zenith=1
