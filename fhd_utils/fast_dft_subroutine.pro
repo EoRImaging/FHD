@@ -1,8 +1,8 @@
 FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,kernel_threshold=kernel_threshold,$
-    dimension=dimension,elements=elements,resolution=resolution
+    dimension=dimension,elements=elements,dft_approximation_resolution=dft_approximation_resolution
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF N_Elements(resolution) EQ 0 THEN resolution=100. ELSE resolution=Float(resolution)
+IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=16. ELSE resolution=Float(dft_approximation_resolution)
 IF N_Elements(kernel_threshold) EQ 0 THEN kernel_threshold=0.001
 
 xv_test=Abs(meshgrid(dimension,elements,1)-dimension/2.)
@@ -60,8 +60,8 @@ ENDELSE
 model_img_use=fltarr(dimension_use,elements_use)
 FOR si=0L,ns-1L DO BEGIN
     model_img_use[xcen0[si1[si]]+xv_k,ycen0[si1[si]]+yv_k]+=amp_vec[si1[si]]*(*kernel_arr[x_offset[si1[si]],y_offset[si1[si]]])
-    
 ENDFOR
+
 IF Keyword_Set(mod_flag) THEN BEGIN
     model_img=Fltarr(dimension,elements)
     x_low0=xv_test[0]>0
