@@ -1,114 +1,72 @@
-FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel=dft_kernel,kernel_size=kernel_size,$
-    dimension=dimension,elements=elements,resolution=resolution,conserve_flux=conserve_flux
+FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,kernel_threshold=kernel_threshold,$
+    dimension=dimension,elements=elements,resolution=resolution
 
-IF N_Elements(dft_kernel) EQ 0 THEN dft_kernel='sinc' ELSE dft_kernel=StrLowCase(dft_kernel)
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF N_Elements(resolution) EQ 0 THEN resolution=32. ELSE resolution=Float(resolution)
-;over_resolution=1. ;also prevents case of over_resolution=0 which will error
-IF ~Keyword_Set(kernel_size) THEN kernel_size=16. ELSE kernel_size=Ceil(kernel_size/2.)*2.
-kernel_extend_length=(kernel_size^2.)<dimension<elements
-kernel_extend_width=6.<kernel_size
+IF N_Elements(resolution) EQ 0 THEN resolution=100. ELSE resolution=Float(resolution)
+IF N_Elements(kernel_threshold) EQ 0 THEN kernel_threshold=0.001
 
-ns=N_Elements(x_vec)
+xv_test=Abs(meshgrid(dimension,elements,1)-dimension/2.)
+yv_test=Abs(meshgrid(dimension,elements,2)-elements/2.)
 
-res_total=resolution
-box_dim=kernel_size
-box_dimR=box_dim*resolution
-box_ext_lenR=kernel_extend_length*resolution
-box_ext_widthR=kernel_extend_width*resolution
+kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
+kernel_i=where(kernel_test GE kernel_threshold,n_k)
 
-;calculate central NxN box 
-x_valsR=meshgrid(box_dimR,box_dimR,1)-box_dimR/2.
-y_valsR=meshgrid(box_dimR,box_dimR,2)-box_dimR/2.
-xvals_i=meshgrid(box_dim,box_dim,1)*resolution
-yvals_i=meshgrid(box_dim,box_dim,2)*resolution
+xv_k=(kernel_i mod dimension)-dimension/2.
+yv_k=Floor(kernel_i/dimension)-elements/2.
 
-kernel_over_x=Sin(!Pi*x_valsR/res_total)*weight_invert(!Pi*x_valsR/res_total)
-zero_test=where(x_valsR EQ 0,n_zero) & IF n_zero GT 0 THEN kernel_over_x[zero_test]=1. 
-kernel_over_y=Sin(!Pi*y_valsR/res_total)*weight_invert(!Pi*y_valsR/res_total)
-zero_test=where(y_valsR EQ 0,n_zero) & IF n_zero GT 0 THEN kernel_over_y[zero_test]=1. 
-
-kernel_over=kernel_over_x*kernel_over_y
-;NOTE: slice up kernel later, to allow properly calculating the normalization
-
-;calculate N^2 x width box (cross arm in the x-direction)
-x_vals_extR=meshgrid(box_ext_lenR,box_ext_widthR,1)-box_ext_lenR/2.
-y_vals_extR=meshgrid(box_ext_lenR,box_ext_widthR,2)-box_ext_widthR/2.
-xvals_ext_i=meshgrid(kernel_extend_length,kernel_extend_width,1)*resolution
-yvals_ext_i=meshgrid(kernel_extend_length,kernel_extend_width,2)*resolution
-
-kernel_ext_over_x=Sin(!Pi*x_vals_extR/res_total)*weight_invert(!Pi*x_vals_extR/res_total)
-zero_ext_test=where(x_vals_extR EQ 0,n_ext_zero) & IF n_ext_zero GT 0 THEN kernel_ext_over_x[zero_ext_test]=1. 
-kernel_ext_over_y=Sin(!Pi*y_vals_extR/res_total)*weight_invert(!Pi*y_vals_extR/res_total)
-zero_ext_test=where(y_vals_extR EQ 0,n_ext_zero) & IF n_ext_zero GT 0 THEN kernel_ext_over_y[zero_ext_test]=1. 
-
-kernel_ext_over=kernel_ext_over_x*kernel_ext_over_y
-kernel_ext_over[where(Abs(x_vals_extR) LE box_dimR/2.)]=0.
-
-;Now calculate normalization 
-kernel_norm=(resolution^2.)/(Total(kernel_over)+2.*Total(kernel_ext_over))
-
-kernel_arr=Ptrarr(resolution,resolution,/allocate)
-FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j]*kernel_norm
-
-
-kernel_ext_X_arr=Ptrarr(resolution,resolution,/allocate)
-FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_ext_X_arr[i,j]=kernel_ext_over[xvals_ext_i+i,yvals_ext_i+j]*kernel_norm
-
-;calculate width x N^2 box (cross arm in the y-direction)
-x_vals_extR=meshgrid(box_ext_widthR,box_ext_lenR,1)-box_ext_widthR/2.
-y_vals_extR=meshgrid(box_ext_widthR,box_ext_lenR,2)-box_ext_lenR/2.
-xvals_ext_i=meshgrid(kernel_extend_width,kernel_extend_length,1)*resolution
-yvals_ext_i=meshgrid(kernel_extend_width,kernel_extend_length,2)*resolution
-
-kernel_ext_over_x=Sin(!Pi*x_vals_extR/res_total)*weight_invert(!Pi*x_vals_extR/res_total)
-zero_ext_test=where(x_vals_extR EQ 0,n_ext_zero) & IF n_ext_zero GT 0 THEN kernel_ext_over_x[zero_ext_test]=1. 
-kernel_ext_over_y=Sin(!Pi*y_vals_extR/res_total)*weight_invert(!Pi*y_vals_extR/res_total)
-zero_ext_test=where(y_vals_extR EQ 0,n_ext_zero) & IF n_ext_zero GT 0 THEN kernel_ext_over_y[zero_ext_test]=1. 
-
-kernel_ext_over=kernel_ext_over_x*kernel_ext_over_y
-kernel_ext_over[where(Abs(y_vals_extR) LE box_dimR/2.)]=0.
-
-kernel_ext_Y_arr=Ptrarr(resolution,resolution,/allocate)
-FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO *kernel_ext_Y_arr[i,j]=kernel_ext_over[xvals_ext_i+i,yvals_ext_i+j]*kernel_norm
-
-;IF Keyword_Set(conserve_flux) THEN BEGIN
-;    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-;        *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j];/Total(kernel_over[xvals_i+i,yvals_i+j])
-;ENDIF ELSE BEGIN
-;    FOR i=0,resolution-1 DO FOR j=0,resolution-1 DO $
-;        *kernel_arr[i,j]=kernel_over[xvals_i+i,yvals_i+j];/Max(kernel_over[xvals_i+i,yvals_i+j])
-;ENDELSE
+kernel_arr=Ptrarr(resolution,resolution)
+kernel_norm=0.
+FOR i=0.,resolution-1 DO BEGIN
+    IF i EQ 0 THEN BEGIN
+        kernel_x=Sin(!DPi*(xv_k+i/resolution))/((!DPi*(xv_k+i/resolution))>1.)
+        kernel_x[where(xv_k EQ 0)]=1.
+    ENDIF ELSE kernel_x=Sin(!DPi*(xv_k+i/resolution))/(!DPi*(xv_k+i/resolution))
+    FOR j=0.,resolution-1 DO BEGIN
+        IF j EQ 0 THEN BEGIN
+            kernel_y=Sin(!DPi*(yv_k+j/resolution))/((!DPi*(yv_k+j/resolution))>1.)
+            kernel_y[where(yv_k EQ 0)]=1.
+        ENDIF ELSE kernel_y=Sin(!DPi*(yv_k+j/resolution))/(!DPi*(yv_k+j/resolution))
+        kernel_single=kernel_x*kernel_y
+        kernel_norm+=Total(kernel_single)
+        kernel_arr[i,j]=Ptr_new(Float(kernel_single))
+    ENDFOR
+ENDFOR
+kernel_norm/=resolution^2.
+FOR i=0.,resolution-1 DO FOR j=0.,resolution-1 DO *kernel_arr[i,j]*=kernel_norm 
 
 x_offset=Round((Ceil(x_vec)-x_vec)*resolution) mod resolution    
 y_offset=Round((Ceil(y_vec)-y_vec)*resolution) mod resolution
 xcen0=Round(x_vec+x_offset/resolution) ;do this after offset, in case it has rounded to the next grid point
 ycen0=Round(y_vec+y_offset/resolution)
-xmin=Floor(xcen0-box_dim/2.) & xmax=xmin+box_dim-1
-ymin=Floor(ycen0-box_dim/2.) & ymax=ymin+box_dim-1
 
-xmin_X_ext=Floor(xcen0-kernel_extend_length/2.) & xmax_X_ext=xmin_X_ext+kernel_extend_length-1
-ymin_X_ext=Floor(ycen0-kernel_extend_width/2.) & ymax_X_ext=ymin_X_ext+kernel_extend_width-1
-xmin_Y_ext=Floor(xcen0-kernel_extend_width/2.) & xmax_Y_ext=xmin_Y_ext+kernel_extend_width-1
-ymin_Y_ext=Floor(ycen0-kernel_extend_length/2.) & ymax_Y_ext=ymin_Y_ext+kernel_extend_length-1
+si1=where((xcen0 GE 0) AND (ycen0 GE 0) AND (xcen0 LE dimension-1) AND (ycen0 LE elements-1),ns)
 
-si1=where((xmin GE 0) AND (ymin GE 0) AND (xmax LE dimension-1) AND (ymax LE elements-1),ns)
+;test if any gridding kernels would extend beyond image boudaries
+xv_test=Minmax(xcen0[si1])+Minmax(xv_k)
+yv_test=Minmax(ycen0[si1])+Minmax(yv_k)
 
-si1_unmod=where((xmin_X_ext[si1]<ymin_Y_ext[si1] GE 0) AND (xmax_X_ext[si1] LT dimension) AND (ymax_Y_ext[si1] LT elements),n_unmod)
-mod_flag=intarr(ns)+1 & IF n_unmod GT 0 THEN mod_flag[si1_unmod]=0
+IF xv_test[0] LT 0 OR xv_test[1] GT dimension-1 OR yv_test[0] LT 0 OR yv_test[1] GT elements-1 THEN BEGIN
+    mod_flag=1
+    dimension_use=xv_test[1]-xv_test[0]
+    elements_use=yv_test[1]-yv_test[0]
+    xcen0-=xv_test[0]
+    ycen0-=yv_test[0]
+ENDIF ELSE BEGIN
+    mod_flag=0 
+    dimension_use=dimension
+    elements_use=elements
+ENDELSE
 
-model_img=fltarr(dimension,elements)
+model_img_use=fltarr(dimension_use,elements_use)
 FOR si=0L,ns-1L DO BEGIN
-    model_img[xmin[si1[si]]:xmax[si1[si]],ymin[si1[si]]:ymax[si1[si]]]+=amp_vec[si1[si]]*(*kernel_arr[x_offset[si1[si]],y_offset[si1[si]]])
-    IF mod_flag[si] THEN BEGIN
-        
-    ENDIF ELSE BEGIN
-        model_img[xmin_X_ext[si1[si]]:xmax_X_ext[si1[si]],ymin_X_ext[si1[si]]:ymax_X_ext[si1[si]]]+=amp_vec[si1[si]]*(*kernel_ext_X_arr[x_offset[si1[si]],y_offset[si1[si]]])
-        model_img[xmin_Y_ext[si1[si]]:xmax_Y_ext[si1[si]],ymin_Y_ext[si1[si]]:ymax_Y_ext[si1[si]]]+=amp_vec[si1[si]]*(*kernel_ext_Y_arr[x_offset[si1[si]],y_offset[si1[si]]])
-    ENDELSE
+    model_img_use[xcen0[si1[si]]+xv_k,ycen0[si1[si]]+yv_k]+=amp_vec[si1[si]]*(*kernel_arr[x_offset[si1[si]],y_offset[si1[si]]])
     
 ENDFOR
-Ptr_free,kernel_arr,kernel_ext_X_arr,kernel_ext_Y_arr
+IF Keyword_Set(mod_flag) THEN BEGIN
+    model_img=Fltarr(dimension,elements)
+;    model_img[xv_test[0]>0:xv_test[1]<(dimension-1),yv_test[0]>0:yv_test[1]<(elements-1)]=model_img_use[Abs(xv_test[0]<0):
+ENDIF ELSE model_img=model_img_use
+Ptr_free,kernel_arr
 
 RETURN,model_img
 END
