@@ -92,8 +92,8 @@ IF Keyword_Set(mod_flag) THEN BEGIN
     model_img=Fltarr(dimension,elements)
     x_low0=xv_test[0]>0
     y_low0=yv_test[0]>0
-    x_high0=(x_low0+dimension_use-1)<(dimension-1)
-    y_high0=(y_low0+elements_use-1)<(elements-1)
+    x_high0=(xv_test[0]+dimension_use-1)<(dimension-1)
+    y_high0=(yv_test[0]+elements_use-1)<(elements-1)
     x_low1=-xv_test[0]>0
     y_low1=-yv_test[0]>0
     x_high1=x_high0-x_low0+x_low1
