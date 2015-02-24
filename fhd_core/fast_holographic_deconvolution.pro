@@ -354,7 +354,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t2_0
     source_dft_multi,obs,jones,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,$
-        dft_kernel_threshold=dft_threshold,dft_approximation_resolution=dft_resolution,_Extra=extra
+        dft_kernel_threshold=dft_threshold,dft_approximation_resolution=dft_resolution,return_kernel=return_kernel,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -419,8 +419,9 @@ fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
 fhd_params.info=Ptr_new(info_struct)
 t3_0=Systime(1)
-model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,$
+model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
     dft_kernel_threshold=dft_threshold,dft_approximation_resolution=dft_resolution,_Extra=extra)
+IF size(return_kernel,/type) EQ 10 THEN Ptr_free,return_kernel
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 IF Keyword_Set(subtract_sidelobe_catalog) THEN  FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
 t4_0=Systime(1)
