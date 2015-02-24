@@ -2,7 +2,8 @@ FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel_threshold=dft_kernel
     elements=elements,dft_approximation_resolution=dft_approximation_resolution,conserve_memory=conserve_memory
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=16. ELSE resolution=Float(dft_approximation_resolution)
+IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=16. ELSE resolution=Float(Round(dft_approximation_resolution))
+IF resolution LE 1 THEN resolution=16.
 IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=0.001
 
 xv_test=Abs(meshgrid(dimension,elements,1)-dimension/2.)
@@ -11,12 +12,15 @@ yv_test=Abs(meshgrid(dimension,elements,2)-elements/2.)
 kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
 kernel_i=where(kernel_test GE dft_kernel_threshold,n_k)
 
-IF Keyword_Set(conserve_memory) THEN WHILE n_k*resolution^2. GT 1E8 DO BEGIN
-    resolution=Float(Round(resolution/2.))
-    dft_kernel_threshold*=2.
-    kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
-    kernel_i=where(kernel_test GE dft_kernel_threshold,n_k)
-ENDWHILE
+IF Keyword_Set(conserve_memory) THEN BEGIN
+    IF conserve_memory GE 1E7 THEN mem_threshold=conserve_memory ELSE mem_threshold=1E8
+    WHILE n_k*resolution^2. GT mem_threshold DO BEGIN
+        resolution=Float(Round(resolution/2.))
+        dft_kernel_threshold*=2.
+        kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
+        kernel_i=where(kernel_test GE dft_kernel_threshold,n_k)
+    ENDWHILE
+ENDIF
 
 xv_k=(kernel_i mod dimension)-dimension/2.
 yv_k=Floor(kernel_i/dimension)-elements/2.
