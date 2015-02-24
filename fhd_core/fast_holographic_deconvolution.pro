@@ -36,6 +36,7 @@ beam_threshold=fhd_params.beam_threshold
 add_threshold=fhd_params.add_threshold
 dft_resolution=fhd_params.dft_resolution
 dft_threshold=fhd_params.dft_threshold
+return_kernel=1
 max_add_sources=fhd_params.max_add_sources
 ;local_max_radius=fhd_params.local_max_radius
 pol_use=fhd_params.pol_use

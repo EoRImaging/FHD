@@ -25,10 +25,15 @@ ENDIF
 xv_k=(kernel_i mod dimension)-dimension/2.
 yv_k=Floor(kernel_i/dimension)-elements/2.
 
-IF Keyword_Set(return_kernel) THEN IF Min(Ptr_valid(return_kernel)) EQ 1 THEN BEGIN
-    kernel_arr=return_kernel
-    kernel_free=0
-ENDIF ELSE BEGIN
+kernel_recalc=1
+IF Keyword_Set(return_kernel) THEN BEGIN
+    IF Min(Ptr_valid(return_kernel)) EQ 1 THEN BEGIN
+        kernel_arr=return_kernel
+        kernel_free=0
+        kernel_recalc=0
+    ENDIF
+ENDIF   
+IF Keyword_Set(kernel_recalc) THEN BEGIN
     kernel_arr=Ptrarr(resolution,resolution)
     kernel_norm=0.
     FOR i=0.,resolution-1 DO BEGIN
@@ -53,7 +58,7 @@ ENDIF ELSE BEGIN
         return_kernel=kernel_arr
         kernel_free=0
     ENDIF ELSE kernel_free=1
-ENDELSE
+ENDIF
 
 x_offset=Round((Ceil(x_vec)-x_vec)*resolution) mod resolution    
 y_offset=Round((Ceil(y_vec)-y_vec)*resolution) mod resolution
