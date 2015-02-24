@@ -7,7 +7,7 @@ FUNCTION fhd_init,obs,cal,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_use=f
     beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,$
     reject_pol_sources=reject_pol_sources,filter_background=filter_background,$
     galaxy_model_fit=galaxy_model_fit,transfer_mapfn=transfer_mapfn,subtract_sidelobe_catalog=subtract_sidelobe_catalog,$
-    joint_deconvolution_list=joint_deconvolution_list
+    joint_deconvolution_list=joint_deconvolution_list,dft_approximation_resolution=dft_approximation_resolution,dft_kernel_threshold=dft_kernel_threshold
 
 
 IF N_Elements(obs) EQ 0 THEN BEGIN
@@ -30,6 +30,9 @@ IF N_Elements(sigma_cut) EQ 0 THEN sigma_cut=2.
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05 ;0.05 is really as far down as you should go with our current beam models!
 IF N_Elements(max_sources) EQ 0 THEN max_sources=5000.
 IF N_Elements(gain_factor) EQ 0 THEN gain_factor=.15
+IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=0.001
+IF N_Elements(dft_approximation_resolution) EQ 0 THEN dft_approximation_resolution=32. ;explicitly set to 0 to use analytic DFT.
+IF dft_approximation_resolution EQ 1 THEN dft_approximation_resolution=32. ELSE dft_approximation_resolution=Float(Round(dft_approximation_resolution))
 ;IF N_Elements(mapfn_interval) EQ 0 THEN mapfn_interval=0 ;maximum number of iterations before applying the mapping function. 
 ;IF N_Elements(mapfn_threshold) EQ 0 THEN mapfn_threshold=0.86;(1-gain_factor)*1.01 ;factor of 1.01 is to ensure that a fit to the same component has had the mapping function run first
 IF N_Elements(add_threshold) EQ 0 THEN add_threshold=(1.-gain_factor*1.1)>0.5 ;also fit additional components brighter than this threshold
@@ -61,7 +64,8 @@ convergence=0.
 info=Ptr_new()
 
 fhd={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
-    gain_factor:gain_factor,add_threshold:add_threshold,max_add_sources:max_add_sources,independent_fit:independent_fit,$
+    gain_factor:gain_factor,add_threshold:add_threshold,max_add_sources:max_add_sources,$
+    dft_resolution:dft_approximation_resolution,dft_threshold:dft_kernel_threshold,independent_fit:independent_fit,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,smooth_width:smooth_width,$
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
     cal_subtract:calibration_image_subtract,galaxy_subtract:galaxy_model_fit,sidelobe_subtract:sidelobe_subtract,$

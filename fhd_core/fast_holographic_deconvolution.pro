@@ -34,6 +34,8 @@ max_sources=fhd_params.max_sources
 check_iter=fhd_params.check_iter
 beam_threshold=fhd_params.beam_threshold
 add_threshold=fhd_params.add_threshold
+dft_resolution=fhd.dft_resolution
+dft_threshold=fhd.dft_threshold
 max_add_sources=fhd_params.max_add_sources
 ;local_max_radius=fhd_params.local_max_radius
 pol_use=fhd_params.pol_use
@@ -351,7 +353,8 @@ FOR iter=i0,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    source_dft_multi,obs,jones,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,_Extra=extra
+    source_dft_multi,obs,jones,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,$
+        dft_kernel_threshold=dft_threshold,dft_approximation_resolution=dft_resolution,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -416,7 +419,8 @@ fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
 fhd_params.info=Ptr_new(info_struct)
 t3_0=Systime(1)
-model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
+model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,$
+    dft_kernel_threshold=dft_threshold,dft_approximation_resolution=dft_resolution,_Extra=extra)
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 IF Keyword_Set(subtract_sidelobe_catalog) THEN  FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
 t4_0=Systime(1)
