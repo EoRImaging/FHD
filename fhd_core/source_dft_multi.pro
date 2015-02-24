@@ -1,6 +1,6 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
-    conserve_memory=conserve_memory,dft_approximation_resolution=dft_approximation_resolution,frequency=frequency,$
-    dimension=dimension,elements=elements,n_pol=n_pol,_Extra=extra
+    conserve_memory=conserve_memory,dft_approximation_resolution=dft_approximation_resolution,dft_kernel_threshold=dft_kernel_threshold,$
+    frequency=frequency,dimension=dimension,elements=elements,n_pol=n_pol,_Extra=extra
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
 IF Keyword_Set(obs) THEN BEGIN
     dimension=obs.dimension
@@ -53,7 +53,7 @@ FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
 IF Keyword_Set(dft_approximation_resolution) THEN BEGIN
 
     model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,$
-        conserve_memory=conserve_memory,dft_approximation_resolution=dft_approximation_resolution,_Extra=extra)
+        conserve_memory=conserve_memory,dft_approximation_resolution=dft_approximation_resolution,dft_kernel_threshold=dft_kernel_threshold)
 
     FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
     Ptr_free,model_uv_new,flux_arr

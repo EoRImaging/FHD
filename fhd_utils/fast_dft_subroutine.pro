@@ -1,5 +1,5 @@
-FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel_threshold=dft_kernel_threshold,$
-    dimension=dimension,elements=elements,dft_approximation_resolution=dft_approximation_resolution
+FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel_threshold=dft_kernel_threshold,dimension=dimension,$
+    elements=elements,dft_approximation_resolution=dft_approximation_resolution,conserve_memory=conserve_memory
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=16. ELSE resolution=Float(dft_approximation_resolution)
@@ -10,6 +10,13 @@ yv_test=Abs(meshgrid(dimension,elements,2)-elements/2.)
 
 kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
 kernel_i=where(kernel_test GE dft_kernel_threshold,n_k)
+
+IF Keyword_Set(conserve_memory) THEN WHILE n_k*resolution^2. GT 1E8 DO BEGIN
+    resolution=Float(Round(resolution/2.))
+    dft_kernel_threshold*=2.
+    kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
+    kernel_i=where(kernel_test GE dft_kernel_threshold,n_k)
+ENDWHILE
 
 xv_k=(kernel_i mod dimension)-dimension/2.
 yv_k=Floor(kernel_i/dimension)-elements/2.
