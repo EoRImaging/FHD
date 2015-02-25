@@ -2,9 +2,9 @@ FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel_threshold=dft_kernel
     elements=elements,dft_approximation_resolution=dft_approximation_resolution,conserve_memory=conserve_memory,return_kernel=return_kernel
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=16. ELSE resolution=Float(Round(dft_approximation_resolution))
-IF resolution LE 1 THEN resolution=16.
-IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=0.001
+IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=32. ELSE resolution=Float(Round(dft_approximation_resolution))
+IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=2./(!Pi*dimension) ;value of kernel_test along either axis at the edge of the image. 
+IF resolution LE 1 THEN resolution=32.
 
 xv_test=Abs(meshgrid(dimension,elements,1)-dimension/2.)
 yv_test=Abs(meshgrid(dimension,elements,2)-elements/2.)

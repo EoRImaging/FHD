@@ -30,7 +30,7 @@ IF N_Elements(sigma_cut) EQ 0 THEN sigma_cut=2.
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05 ;0.05 is really as far down as you should go with our current beam models!
 IF N_Elements(max_sources) EQ 0 THEN max_sources=5000.
 IF N_Elements(gain_factor) EQ 0 THEN gain_factor=.15
-IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=0.001
+IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=2./(!Pi*dimension) ;value of kernel_test along either axis at the edge of the image. 
 IF N_Elements(dft_approximation_resolution) EQ 0 THEN dft_approximation_resolution=32. ;explicitly set to 0 to use analytic DFT.
 IF dft_approximation_resolution EQ 1 THEN dft_approximation_resolution=32. ELSE dft_approximation_resolution=Float(Round(dft_approximation_resolution))
 ;IF N_Elements(mapfn_interval) EQ 0 THEN mapfn_interval=0 ;maximum number of iterations before applying the mapping function. 
