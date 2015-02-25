@@ -47,12 +47,10 @@ IF Keyword_Set(kernel_recalc) THEN BEGIN
                 kernel_y[where(yv_k EQ 0)]=1.
             ENDIF ELSE kernel_y=Sin(!DPi*(yv_k+j/resolution))/(!DPi*(yv_k+j/resolution))
             kernel_single=kernel_x*kernel_y
-            kernel_norm+=Total(kernel_single)
-            kernel_arr[i,j]=Ptr_new(Float(kernel_single))
+            IF i EQ 0 AND j EQ 0 THEN kernel_norm=Total(kernel_single,/double)
+            kernel_arr[i,j]=Ptr_new(Float(kernel_single/kernel_norm))
         ENDFOR
     ENDFOR
-    kernel_norm/=resolution^2.
-    FOR i=0.,resolution-1 DO FOR j=0.,resolution-1 DO *kernel_arr[i,j]*=kernel_norm 
     
     IF Keyword_Set(return_kernel) THEN BEGIN
         return_kernel=kernel_arr
