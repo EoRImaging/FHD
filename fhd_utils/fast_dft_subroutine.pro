@@ -15,8 +15,8 @@ kernel_i=where(kernel_test GE dft_kernel_threshold,n_k)
 IF Keyword_Set(conserve_memory) THEN BEGIN
     IF conserve_memory GE 1E7 THEN mem_threshold=conserve_memory ELSE mem_threshold=1E8
     WHILE n_k*resolution^2. GT mem_threshold DO BEGIN
-        resolution=Float(Round(resolution/2.))
-        dft_kernel_threshold*=2.
+        resolution=Float(Round(resolution/Sqrt(2.)))
+        dft_kernel_threshold*=Sqrt(2.)
         kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
         kernel_i=where(kernel_test GE dft_kernel_threshold,n_k)
     ENDWHILE
