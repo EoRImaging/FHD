@@ -1,6 +1,6 @@
 FUNCTION vis_flag_basic,flag_ptr,obs,params,instrument=instrument,mask_mirror_indices=mask_mirror_indices,$
     freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,no_frequency_flagging=no_frequency_flagging,$
-    unflag_all=unflag_all,vis_ptr=vis_ptr,channel_edge_flag_width=channel_edge_flag_width,_Extra=extra
+    unflag_all=unflag_all,vis_ptr=vis_ptr,channel_edge_flag_width=channel_edge_flag_width,coplanar_baseline_threshold=coplanar_baseline_threshold,_Extra=extra
 
 IF tag_exist(obs,'instrument') THEN instrument=obs.instrument
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
@@ -110,6 +110,19 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     tile_use*=tile_use1
     
 ENDFOR
+
+IF Keyword_Set(coplanar_baseline_threshold) AND Keyword_Set(params) THEN BEGIN
+    ww=params.ww
+    ww-=Median(ww)
+    ww=Abs(ww)#freq_arr
+    
+    w_flag_i=where(ww GT coplanar_baseline_threshold,n_w_flag)
+    IF n_w_flag GT 0 THEN BEGIN
+        FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[w_flag_i]=0
+    ENDIF
+    ww=0
+ENDIF
+
 IF Keyword_Set(no_frequency_flagging) THEN BEGIN
     ;if pre-processing has flagged frequencies, need to unflag them if the data are nonzero (but DON'T unflag tiles that should be flagged)
     freq_cut_i=where(freq_use EQ 0,nf_cut)

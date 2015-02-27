@@ -1,5 +1,6 @@
 FUNCTION healpix_cnv_generate,obs,status_str,file_path_fhd=file_path_fhd,nside=nside,mask=mask,hpx_radius=hpx_radius,$
-    restore_last=restore_last,silent=silent,pointer_return=pointer_return,no_save=no_save,restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
+    restore_last=restore_last,silent=silent,pointer_return=pointer_return,no_save=no_save,$
+    restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
 
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
     IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
@@ -17,7 +18,18 @@ t00=Systime(1)
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
-IF N_Elements(hpx_radius) EQ 0 THEN radius=obs.degpix*(dimension>elements)/4. ELSE radius=hpx_radius
+
+IF N_Elements(hpx_radius) EQ 0 THEN BEGIN
+    IF Keyword_Set(mask) THEN BEGIN
+        xv_arr=meshgrid(dimension,elements,1)
+        yv_arr=meshgrid(dimension,elements,2)
+        xy2ad,xv_arr,yv_arr,astr,ra_arr,dec_arr
+        ang_arr=angle_difference(dec_arr,ra_arr,obs.obsdec,obs.obsra,/degree)
+        ang_i=where((mask GT 0) AND Finite(ang_arr),n_ang_use)
+        IF n_ang_use GT 0 THEN radius=Max(ang_arr[ang_i])
+    ENDIF ELSE radius=obs.degpix*(dimension>elements)/4. 
+ENDIF ELSE radius=hpx_radius
+
 ;all angles in DEGREES
 ;uses RING index scheme
 
@@ -43,6 +55,8 @@ IF ~Keyword_Set(nside) THEN BEGIN
 ;    nside*=2.
 ENDIF
 npix=nside2npix(nside)
+pixel_area_cnv=(1./(obs.degpix*!DtoR)^2.)*(4.*!Pi/npix) ; (old pixel/steradian)*(steradian/new pixel)
+pixel_area_cnv=1. ;turn this off for now
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
     pix2vec_ring,nside,hpx_inds,pix_coords
@@ -125,7 +139,7 @@ FOR i=0L,n_img_use-1L DO BEGIN
         sa0[bin_i[bi]:bin_i[bi+1]-1]=(1.-x_frac[inds1])*(1.-y_frac[inds1])
         ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
-    *sa[i]=sa0
+    *sa[i]=sa0*pixel_area_cnv
     *ija[i]=ija0
         
 ENDFOR

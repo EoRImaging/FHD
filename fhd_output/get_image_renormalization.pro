@@ -15,6 +15,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
 renorm_factor=mean(normalization_arr[0:n_pol-1])
+
+;pix_area=beam_width_calculate(obs,min_restored_beam_width=0,/area)
+;renorm_factor/=pix_area
 RETURN,renorm_factor
 
 end

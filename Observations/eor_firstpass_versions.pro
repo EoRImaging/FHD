@@ -10,14 +10,16 @@ heap_gc
 compile_opt strictarr
 args = Command_Line_Args(count=nargs)
 obs_id = args[0]
+;obs_id = '1061316296'
 output_directory = args[1]
+;output_directory = '/nfs/eor-00/h1/nbarry/'
 version = args[2]
+;version = 'default'
 cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
 recalculate_all=0
-export_image=1
 cleanup=0
 ps_export=0
 split_ps_export=1
@@ -30,7 +32,6 @@ vis_baseline_hist=1
 silent=0
 save_visibilities=1
 calibration_visibilities_subtract=0
-return_cal_visibilities=1
 snapshot_healpix_export=1
 n_avg=2
 ps_kbinsize=0.5
@@ -41,7 +42,7 @@ uvfits_version=4
 uvfits_subversion=1
 
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=2048
 max_sources=20000
@@ -65,11 +66,23 @@ kbinsize=0.5
 psf_resolution=100
 
 ; some new defaults (possibly temporary)
-beam_model_version=0
-dipole_mutual_coupling_factor=0
+beam_model_version=2
+dipole_mutual_coupling_factor=1
 calibration_flag_iterate = 0
 
 no_calibration_frequency_flagging=1
+
+; even newer defaults
+export_images=1
+;cal_cable_reflection_correct=150
+cal_cable_reflection_mode_fit=150
+model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+model_visibilities=0
+return_cal_visibilities=1
+allow_sidelobe_cal_sources=1
+allow_sidelobe_model_sources=1
+
+beam_offset_time=56 ; make this a default. But it won't compound with setting it directly in a version so I think it's ok.
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
@@ -323,9 +336,10 @@ case version of
 
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
+
    'pac_test_fhd':begin
       deconvolve=1 
-      return_decon_visibilities=1
+      return_decon_visibilities=0
       max_sources=30000.
       pad_uv_image=1.
       gain_factor=.2
@@ -339,6 +353,75 @@ case version of
       filter_background=0
    end
 
+  ;catalog based on pac_test_fhd run using all 93 observations, fdet>.9
+   'pac_test_catalog_3': begin
+      calibration_catalog_file_path=filepath('patti_v3.0b.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end     
+  
+
+   ;catalog based on first 75 obsids
+   'pac_test_catalog_3_5': begin
+      calibration_catalog_file_path=filepath('patti_v3.5.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+  
+   ;shallow clean >.5Jy sources
+   'pac_test_catalog_3_7': begin
+      calibration_catalog_file_path=filepath('patti_v3.7.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+
+  'pac_test_catalog_3': begin
+      calibration_catalog_file_path=filepath('patti_v3.0b.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end     
+
+   'pac_test_catalog_3_1': begin
+      calibration_catalog_file_path=filepath('patti_v3.1.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end  
+
+   'pac_test_catalog_3_2': begin
+      calibration_catalog_file_path=filepath('patti_v3.2.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+
+
+   'pac_test_catalog_3_4': begin
+      calibration_catalog_file_path=filepath('patti_v3.4.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+
+   'pac_test_catalog_3_5': begin
+      calibration_catalog_file_path=filepath('patti_v3.5.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+  
+   ;FHD zenith, beam 1a
+   'pac_zenith_beam_1a': begin
+      beam_model_version=1
+      dipole_mutual_coupling_factor=0
+   end   
+
+   ;FHD zenith, beam 1b
+   'pac_zenith_beam_1a': begin
+      beam_model_version=1
+      dipole_mutual_coupling_factor=1
+   end 
+
+   ;FHD zenith, beam 2a
+   'pac_zenith_beam_1a': begin
+      beam_model_version=2
+      dipole_mutual_coupling_factor=0
+   end 
+
+   ;FHD zenith, beam 2b
+   'pac_zenith_beam_1a': begin
+      beam_model_version=2
+      dipole_mutual_coupling_factor=1
+   end 
+
+   ;;; Aaron's versions!!! Only Aaron may edit this section!!!
+   'aew_mwacs_plus_ben_fornax_and_vla_pic_ultralow_sept5':begin
+      calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+      deconvolve=0
+      FoV=120.
+      dimension=4096
+      tile_flag_list=[77,18,89,113,114,115,116,117,118,119,120]
+   end
 
    ;;; Abraham's versions!!! Only Abraham may edit this section!!!
    'arn_mwacs_plus_ben_fornax_and_vla_pic':begin
@@ -361,16 +444,24 @@ case version of
    'apb_sidelobe_subtract_3':begin
       allow_sidelobe_cal_sources=1
    end
+   'apb_test_reflect_coefficients_1':begin
+      cal_cable_reflection_correct=150
+   end
+   'apb_test_reflect_coefficients_2':begin
+      cal_cable_reflection_correct=150
+   end      
    'apb_test_max_cal_iter':begin
       max_cal_iter=100
    end
    'apb_test_diffuse_subtract_1':begin
-      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_8/Healpix/diffuse_model.sav'
+      diffuse_model='/nfs/mwa-09/r1/djc/EoR2013/Aug23/old/fhd_apb_std_Nov2014/Healpix/diffuse_model_1.sav'
       model_visibilities=1
-      calibration_visibilities_subtract=1
-      return_cal_visibilities=0
-      snapshot_healpix_export=0
-      image_filter_fn='filter_uv_natural'
+      calibration_visibilities_subtract=0
+      return_cal_visibilities=1
+      snapshot_healpix_export=1
+      export_images=1
+	image_filter_fn='filter_uv_natural'
+	undefine,model_catalog_file_path
    end
    'apb_cal_sidelobes_N':begin
       calibration_catalog_file_path=filepath('MRC_calibration_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -385,9 +476,116 @@ case version of
    'apb_cal_sidelobes_W':begin
       snapshot_healpix_export=0
    end
-   ;'apb_make_diffuse_model':begin
-      
-   
+   'apb_test_reflect_coefficients_3':begin
+                                ; don't actually set
+                                ; anything. I changed the
+                                ; expression for bandwidth in the mode
+                                ; fitting code.
+   end
+   'apb_test_reflect_coefficients_4':begin
+      cal_cable_reflection_correct=150
+   end
+   'apb_test_reflect_coefficients_5':begin
+      cal_cable_reflection_correct=0
+      cal_cable_reflection_mode_fit=150
+   end
+   'apb_test_delicate':begin
+      calibration_catalog_file_path=filepath('foo.sav',root=rootdir('FHD'),subdir='catalog_data')
+      delicate_calibration_catalog=1
+   end
+   'apb_std_Nov2014':begin
+	export_images=1
+   end
+   'apb_test_beam_1B':begin
+	; set the beam
+	beam_model_version=1
+	dipole_mutual_coupling_factor=1
+	; turn fits back on
+	export_images=1
+   end
+   'apb_test_beam_2B':begin
+	; set the beam
+	beam_model_version=2
+	dipole_mutual_coupling_factor=1
+	; turn fits back on
+	export_images=1
+   end
+   'apb_test_beam_1A':begin
+	; set the beam
+	beam_model_version=1
+	dipole_mutual_coupling_factor=0
+	; turn fits back on
+	export_images=1
+     end
+   'apb_test_beam_2A':begin
+	; set the beam
+	beam_model_version=2
+	dipole_mutual_coupling_factor=0
+	; turn fits back on
+	export_images=1
+   end
+   'apb_std_Nov2014b':begin
+        image_filter_fn='filter_uv_natural'
+	export_images=1
+   end
+   'apb_compare_rts_catalog':begin
+	model_catalog_file_path=filepath('RTS_catalog2.sav',root=rootdir('FHD'),subdir='catalog_data')
+	model_visibilities=1
+	return_cal_visibilities=0
+	allow_sidelobe_model_sources=1
+     end
+   'apb_std_Dec2014b':begin
+      beam_offset_time=56
+   end
+   'apb_test_diffuse_subtract_94':begin
+      diffuse_model=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      calibration_visibilities_subtract=0
+      return_cal_visibilities=1
+      snapshot_healpix_export=1
+      export_images=1
+      image_filter_fn='filter_uv_natural'
+      undefine,model_catalog_file_path
+      beam_offset_time=56
+   end
+   'apb_test_diffuse_subtract_94_tapered':begin
+      diffuse_model=filepath('EoR0_diffuse_model_94_tapered.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      calibration_visibilities_subtract=0
+      return_cal_visibilities=1
+      snapshot_healpix_export=1
+      export_images=1
+      image_filter_fn='filter_uv_natural'
+      undefine,model_catalog_file_path
+      beam_offset_time=56
+   end
+   'apb_test_beam_model_timing':begin
+      nfreq_avg=1
+   end
+   'apb_transfer_rts_cal_1':begin
+      transfer_calibration='/nfs/eor-00/h1/beards/rts_cal/cal_rts.sav'
+   end
+   'apb_std_Dec2014b':begin
+	production=1
+   end
+   'apb_EoR0_high_sem1_1':begin
+	production=1
+	diffuse_model=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+        model_visibilities=1
+        calibration_visibilities_subtract=0
+        return_cal_visibilities=1
+	undefine,model_catalog_file_path
+   end
+   'apb_find_moon':begin
+      snapshot_healpix_export=0
+   end
+   'apb_look_for_variable_1':begin
+        snapshot_healpix_export=0
+   end
+   'apb_look_for_variable_2':begin
+        split_ps_export=0
+        n_avg=2
+   end
 
    ; Abraham's versions
 
@@ -428,7 +626,77 @@ case version of
       calibration_flag_iterate=0
    end
 
-   ; Patti's versions
+   'nb_database_test':begin
+      production=1
+   end
+
+   'nb_cable_cal_ps':begin
+   end
+   
+   'nb_cable_cal_pointing_ps':begin
+   end
+
+   ;;; Patti's versions!!! Only Patti may edit this section!!!
+   
+   ; My default full deconvolution parameters
+   'pac_full_fhd':begin
+      deconvolve=1 
+      return_decon_visibilities=1
+      max_sources=30000.
+      pad_uv_image=1.
+      gain_factor=.2
+      uvfits_version=4
+      uvfits_subversion=0
+      time_cut=[2,-2]
+      vis_freq_average=2
+      snapshot_healpix_export=0
+      dimension=3072
+      FoV=80.
+      filter_background=0
+      decon_filter='filter_uv_uniform'
+   end
+ 
+   ;shallow clean >.5Jy sources
+   'pac_shallow_clean': begin
+      calibration_catalog_file_path=filepath('patti_v3.7.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+
+
+   ;Standard MWACS for comparison
+   'pac_standard_cat': begin
+      calibration_catalog_file_path=filepath('standard_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+   
+   ; NOTE combined_cat.sav here is called combined_cat2.sav in the settings
+   ;Updated MWACS with FHD positions where well matched and fluxes where confident
+   'pac_combined_cat2': begin
+      calibration_catalog_file_path=filepath('combined_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
+
+   ; NOTE this combined_cat.sav is true to the catalog in catalog_data
+   ;Updated combined cat with NVSS and SUMSS  positions where well matched
+   'pac_combined_cat_2': begin
+      calibration_catalog_file_path=filepath('combined_cat_2.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+
+
+   ;sidelobe deconvolution test
+   'pac_sidelobes': begin
+      calibration_catalog_file_path=filepath('testmaster_cat.sav',root=rootdir('FHD'),subdir='catalog_data/pattis_tests/')
+      deconvolve=1 
+      return_decon_visibilities=0
+      max_sources=30000.
+      pad_uv_image=1.
+      gain_factor=.2
+      time_cut=[2,-2]
+      vis_freq_average=2
+      snapshot_healpix_export=0
+      dimension=3072
+      FoV=80.
+      filter_background=0
+      decon_filter='filter_uv_uniform'
+   end  
+
 
    else: print,'Default parameters'
 endcase

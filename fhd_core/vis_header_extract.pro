@@ -1,4 +1,4 @@
-FUNCTION vis_header_extract,header,header2=header2, params=params
+FUNCTION vis_header_extract,header,header2=header2, params=params,lon=lon,lat=lat,alt=alt
 compile_opt idl2,strictarrsubs  
 
 pol_dim=2
@@ -12,12 +12,13 @@ naxis=sxpar(header,'naxis') ;6
 n_grp_params=sxpar(header,'pcount') ;5
 nbaselines=sxpar(header,'gcount') ;variable, based on length of observation
 n_complex=sxpar(header,'naxis2') ;3 columns are amplitude, phase (degrees), weights
-n_polarizations=sxpar(header,'naxis3') ;4 columns are xx, yy, xy, yx
-n_frequencies=sxpar(header,'naxis4') ;768
+n_pol=sxpar(header,'naxis3') ;4 columns are xx, yy, xy, yx
+n_freq=sxpar(header,'naxis4') ;768
 freq_ref=sxpar(header,'crval4') ;1.5424E8
-freq_width=sxpar(header,'cdelt4') ;40000 
-freq_ref_i=sxpar(header,'crpix4') ;368
+freq_res=sxpar(header,'cdelt4') ;40000 
+freq_ref_i=sxpar(header,'crpix4') -1;368-1 (Remember, FITS indices start from 1, IDL indices start from 0)
 date_obs=sxpar(header,'date-obs')
+frequency_array=(findgen(n_freq)-(freq_ref_i-1))*freq_res+freq_ref 
 
 n_fields=sxpar(header,'tfields') ;12
 
@@ -57,12 +58,16 @@ ENDIF ELSE BEGIN
   obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
 ENDELSE
 
-baseline_i=(where(Strmatch(param_list,'BASELINE'),found_baseline))[0]
-uu_i=(where(Strmatch(param_list,'UU'),found_uu))[0]
-vv_i=(where(Strmatch(param_list,'VV'),found_vv))[0]
-ww_i=(where(Strmatch(param_list,'WW'),found_ww))[0]
-baseline_i=(where(Strmatch(param_list,'BASELINE'),found_baseline))[0]
-date_i=Max(where(Strmatch(param_list,'DATE'),found_date))
+IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, from Tingay et al. 2013)
+IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
+IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
+
+baseline_i=(where(Strmatch(param_list,'BASELINE', /fold_case),found_baseline))[0]
+uu_i=(where(Strmatch(param_list,'UU', /fold_case),found_uu))[0]
+vv_i=(where(Strmatch(param_list,'VV', /fold_case),found_vv))[0]
+ww_i=(where(Strmatch(param_list,'WW', /fold_case),found_ww))[0]
+date_i=Max(where(Strmatch(param_list,'DATE', /fold_case),found_date))
+
 Jdate_extract=sxpar(header,String(format='("PZERO",I1)',date_i+1),count=found_jd0)
 IF Keyword_Set(found_jd0) THEN IF Jdate_extract GT 2.4E6 THEN Jdate0=Jdate_extract
 
@@ -79,11 +84,12 @@ tile_nums=where(hist_AB,n_tile)
 ;tile_A=Long(Floor(baseline_arr/256)) ;tile numbers start from 1
 ;n_tile=n_elements(uniq(tile_A[sort(tile_A)]))
 
-grp_row_size=n_complex*n_polarizations*n_frequencies*nbaselines
+grp_row_size=n_complex*n_pol*n_freq*nbaselines
 
-struct={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
-    freq_ref:freq_ref,freq_width:freq_width,freq_ref_i:freq_ref_i,obsra:obsra,obsdec:obsdec,date:date_obs,$
-    uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:Jdate0,$
-    pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
-RETURN,struct
+hdr=fhd_struct_init_hdr(n_grp_params=n_grp_params,nbaselines=nbaselines,n_tile=n_tile,n_pol=n_pol,n_freq=n_freq,$
+    freq_res=freq_res,freq_arr=frequency_array,lon=lon,lat=lat,alt=alt,obsra=obsra,obsdec=obsdec,$
+    uu_i=uu_i,vv_i=vv_i,ww_i=ww_i,baseline_i=baseline_i,date_i=date_i,jd0=Jdate0,date_obs=date_obs,$
+    pol_dim=pol_dim,freq_dim=freq_dim,real_index=real_index,imaginary_index=imaginary_index,flag_index=flag_index)
+
+RETURN,hdr
 END

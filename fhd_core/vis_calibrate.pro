@@ -76,7 +76,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
 ;        ENDIF ELSE cal=cal_bandpass
 ;    ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
 ;    vis_cal=vis_calibration_apply(vis_ptr,cal)
-;    cal_res=vis_cal_subtract(cal_base,cal,/abs)
+;    cal_res=vis_cal_subtract(cal_base,cal)
 ;    
 ;    IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
 ;    
@@ -143,33 +143,34 @@ ENDIF
 IF N_Elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=0
 IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) $
     OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
-IF N_Elements(calibration_flag_iterate) EQ 0 THEN $
-    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
+IF N_Elements(calibration_flag_iterate) EQ 0 THEN calibration_flag_iterate=0
+;    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 
 t2=0
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 FOR iter=0,calibration_flag_iterate DO BEGIN
     t2_a=Systime(1)
     IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
-    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,flag_ptr,obs,params,cal_base,$
+    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,flag_ptr,obs,params,cal,$
         preserve_visibilities=preserve_flag,_Extra=extra)
     t3_a=Systime(1)
     t2+=t3_a-t2_a
     
-    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,_Extra=extra
+    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
+    IF n_tile_cut EQ 0 THEN BREAK
 ENDFOR
 undefine_fhd,cal_base
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
+    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,_Extra=extra)
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
         cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
         cal=vis_cal_combine(cal_polyfit,cal_bandpass)
     ENDIF ELSE cal=cal_bandpass
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
 vis_cal=vis_calibration_apply(vis_ptr,cal)
-cal_res=vis_cal_subtract(cal_base,cal,/abs)
+cal_res=vis_cal_subtract(cal_base,cal)
 cal.gain_residual=cal_res.gain
 undefine_fhd,cal_base
 
@@ -189,6 +190,25 @@ IF ~Keyword_Set(return_cal_visibilities) THEN undefine_fhd,vis_model_arr
     image_path=filepath(basename,root=dirpath,sub='output_images')
     plot_cals,cal,obs,cal_res=cal_res,file_path_base=image_path,_Extra=extra
 ;ENDIF
+
+cal_gain_avg=Fltarr(nc_pol)
+cal_res_avg=Fltarr(nc_pol)
+cal_res_restrict=Fltarr(nc_pol)
+cal_res_stddev=Fltarr(nc_pol)
+FOR pol_i=0,nc_pol-1 DO BEGIN
+    tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use)
+    freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use)
+    IF n_tile_use EQ 0 OR n_freq_use EQ 0 THEN CONTINUE
+    cal_gain_avg[pol_i]=Mean(Abs(*cal.gain[pol_i]))
+    cal_res_avg[pol_i]=Mean(Abs(*cal_res.gain[pol_i]))
+    resistant_mean,Abs(*cal_res.gain[pol_i]),2,res_mean
+    cal_res_restrict[pol_i]=res_mean
+    cal_res_stddev[pol_i]=Stddev(Abs(*cal_res.gain[pol_i]))
+ENDFOR
+IF Tag_exist(cal,'Mean_gain') THEN cal.mean_gain=cal_gain_avg
+IF Tag_exist(cal,'Mean_gain_residual') THEN cal.mean_gain_residual=cal_res_avg
+IF Tag_exist(cal,'Mean_gain_restrict') THEN cal.mean_gain_restrict=cal_res_restrict
+IF Tag_exist(cal,'Stddev_gain_residual') THEN cal.stddev_gain_residual=cal_res_stddev
 
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0

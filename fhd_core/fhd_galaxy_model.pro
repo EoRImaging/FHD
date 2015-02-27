@@ -36,7 +36,7 @@ freq_arr_use=freq_arr[freq_use[fb_use]]/1E6
 fb_hist=histogram(f_bin[freq_use],min=0,bin=1)
 nf_arr=fb_hist[f_bin[freq_use[fb_use]]]
 
-model_arr=globalskymodel_read(obs,freq_arr_use,/haslam_filtered,_Extra=extra) ;maps should be in Kelvin
+model_arr=globalskymodel_read(obs,freq_arr_use,/haslam_filtered,_Extra=extra) ;maps are read in Kelvin, and converted to Jy/pixel
 
 IF N_Elements(model_arr) GT 1 THEN BEGIN
     model=fltarr(dimension,elements)
@@ -44,28 +44,21 @@ IF N_Elements(model_arr) GT 1 THEN BEGIN
     model/=Total(nf_arr)
 ENDIF ELSE model=*model_arr[0]
 Ptr_free,model_arr
-c_light=299792458.
-kb=1.38065E-3 ;actually 1.38065*10^-23 / 10^-26 (10^-26 from definition of Jy) 
-conv_to_Jy=2.*kb*d_freq*(obs.freq_center/c_light)^2.
-model*=conv_to_Jy
+;unit conversion now handled earlier in globalskymodel_read.pro
+;c_light=299792458.
+;kb=1.38065E3 ;actually 1.38065*10^-23 / 10^-26 (10^-26 from definition of Jy) 
+;conv_to_Jy_per_sr=2.*kb*(obs.freq_center/c_light)^2.
+;conv_to_Jy_per_pixel=conv_to_Jy_per_sr*4.*!Pi/
+;model*=conv_to_Jy_per_sr
 
 edge_match,model
 valid_i=where(Finite(ra_arr),n_valid)
 Jdate=obs.Jd0
-;
-;beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
-;beam_area=2.*!Pi*beam_width^2. ;area under a 2D gaussian with sigma_x=sigma_y=beam_width
-;print,'beam area used in galaxy model: ',beam_area
 
-Eq2Hor,ra_arr[valid_i],dec_arr[valid_i],Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
-alt_arr=fltarr(dimension,elements) & alt_arr[valid_i]=alt_arr1
-horizon_proj=Sin(alt_arr*!DtoR) ;pixel area relative to center
-pix_area_inv=horizon_proj/(obs.degpix*!DtoR)^2.
-antialias_filter=Sqrt(Hanning(dimension,elements))
-antialias_filter/=Mean(antialias_filter[valid_i])
+;antialias_filter=Sqrt(Hanning(dimension,elements))
+;antialias_filter/=Mean(antialias_filter[valid_i])
 model_use=model
-;model_use*=pix_area_inv
-IF Keyword_Set(antialias) THEN model_use*=antialias_filter
+;IF Keyword_Set(antialias) THEN model_use*=antialias_filter
 gal_model_img=model_use
 
 gal_model_stks=Ptrarr(4,/allocate)

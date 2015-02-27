@@ -1,13 +1,11 @@
 FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n_tile=n_tile,$
-    zenra=zenra,zendec=zendec,obsra=obsra,obsdec=obsdec,phasera=phasera,phasedec=phasedec,$
+    zenra_in=zenra_in,zendec_in=zendec_in,obsra_in=obsra_in,obsdec_in=obsdec_in,phasera_in=phasera_in,phasedec_in=phasedec_in,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
-    meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,zenith_ra=zenith_ra,zenith_dec=zenith_dec,_Extra=extra
+    meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,$
+    cotter_precess_fix=cotter_precess_fix,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
-IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees
-IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees
-IF N_Elements(alt) EQ 0 THEN alt=377.83 & alt=Float(alt);altitude (meters)
 metafits_ext='.metafits'
 metafits_dir=file_dirname(file_path_vis)
 metafits_name=file_basename(file_path_vis,'.sav',/fold_case)
@@ -18,6 +16,15 @@ metafits_path=metafits_dir+path_sep()+metafits_name+metafits_ext
 time=params.time
 b0i=Uniq(time)
 jdate=double(hdr.jd0)+time[b0i]
+IF Tag_exist(hdr,'lat') THEN BEGIN
+    lat=hdr.lat
+    lon=hdr.lon
+    alt=hdr.alt
+ENDIF ELSE BEGIN
+    IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, from Tingay et al. 2013)
+    IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
+    IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
+ENDELSE
 
 IF N_Elements(dimension) EQ 0 THEN dimension=1024.
 IF N_Elements(elements) EQ 0 THEN elements=dimension
@@ -59,7 +66,7 @@ IF file_test(metafits_path) THEN BEGIN
     epoch_fraction=(epoch-epoch_year)*1000./365.24218967
     epoch=epoch_year+epoch_fraction    
     
-    hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate
+    hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate    
     
     beamformer_delays=sxpar(meta_hdr,'DELAYS')
     beamformer_delays=Ptr_new(Float(Strsplit(beamformer_delays,',',/extract)))
@@ -85,7 +92,10 @@ ENDIF ELSE BEGIN
     tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(tile_flag0)
     date_obs=hdr.date
     JD0=date_string_to_julian(date_obs)
-    epoch=date_conv(hdr.date)/1000.
+    epoch=date_conv(date_obs,'REAL')/1000.
+    epoch_year=Floor(epoch)
+    epoch_fraction=(epoch-epoch_year)*1000./365.24218967
+    epoch=epoch_year+epoch_fraction   
     
     IF ~Keyword_Set(time_offset) THEN time_offset=0d
     time_offset/=(24.*3600.)
@@ -98,23 +108,16 @@ ENDIF ELSE BEGIN
     IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec
 ;    Precess,obsra,obsdec,2000.,epoch
 
-    IF Keyword_Set(zenra) THEN BEGIN
-        IF Keyword_Set(precess) THEN BEGIN
-            IF N_Elements(zendec) EQ 0 THEN zendec=lat
-            Precess,zenra,zendec,epoch,2000.
-        ENDIF ELSE BEGIN
-            IF N_Elements(zendec) EQ 0 THEN BEGIN
-                zendec=lat
-                zenra0=zenra
-                Precess,zenra0,zendec,epoch,2000. ;slight error, since zenra0 is NOT in J2000, but assume the effect on zendec is small
-            ENDIF
-        ENDELSE
-    ENDIF ELSE zenpos2,JD0,zenra,zendec, lat=lat, lng=lon,/degree,/J2000
+    hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate
     beamformer_delays=Ptr_new()
 ENDELSE
 
-IF Keyword_Set(zenith_ra) THEN zenra=zenith_ra
-IF Keyword_Set(zenith_dec) THEN zendec=zenith_dec
+IF N_Elements(zenra_in) EQ 1 THEN zenra=zenra_in
+IF N_Elements(zendec_in) EQ 1 THEN zendec=zendec_in
+IF N_Elements(obsra_in) EQ 1 THEN obsra=obsra_in
+IF N_Elements(obsdec_in) EQ 1 THEN obsdec=obsdec_in
+IF N_Elements(phasedec_in) EQ 1 THEN phasedec=phasedec_in
+IF N_Elements(phasedec_in) EQ 1 THEN phasedec=zendec_in
 
 orig_phasera=phasera
 orig_phasedec=phasedec

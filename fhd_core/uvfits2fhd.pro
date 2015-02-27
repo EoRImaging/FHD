@@ -13,8 +13,6 @@
 ;    filename - uvfits filename, omitting the .uvfits extension. 
 ;       If the data is already calibrated, it should end with _cal.uvfits instead of just .uvfits
 ;    
-;    beam_recalculate - if set, generates a new beam model
-;    
 ;    mapfn_recalculate - if not set to 0, will generate Holographic Mapping Functions for each polarization
 ;    
 ;    dimension - desired dimension in pixels of the final images
@@ -30,7 +28,7 @@
 ; :Author: isullivan 2012
 ;-
 PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
-    beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
@@ -39,9 +37,8 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
-    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
-    model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
-    reorder_visibilities=reorder_visibilities,transfer_flags=transfer_flags,_Extra=extra
+    generate_vis_savefile=generate_vis_savefile,model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
+    transfer_flags=transfer_flags,flag_calibration=flag_calibration, production=production,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -56,12 +53,11 @@ print,'Output file_path:',file_path_fhd
 
 log_filepath=file_path_fhd+'_log.txt'
 IF Keyword_Set(!Journal) THEN journal
-IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
 
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
-    beam_recalculate=beam_recalculate,mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
-    healpix_recalculate=healpix_recalculate,$
+    transfer_flags=transfer_flags,healpix_recalculate=healpix_recalculate,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
@@ -70,68 +66,23 @@ data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup
 IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
-    IF Keyword_Set(restore_vis_savefile) THEN BEGIN
-        IF file_test(file_path_vis_sav) EQ 0 THEN BEGIN
-            error=1
-            RETURN
-        ENDIF
-        RESTORE,file_path_vis_sav
-    ENDIF ELSE BEGIN
-        IF file_test(file_path_vis) EQ 0 THEN BEGIN
-            print,"File: "+file_path_vis+" not found! Returning"
-            error=1
-            RETURN
-        ENDIF
-        
-        data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
-        hdr=vis_header_extract(data_header0, params = data_struct.params)    
-        IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
-        params=vis_param_extract(data_struct.params,hdr)
-        IF n_pol LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol-1,*]) ELSE data_array=Temporary(data_struct.array) 
-        data_struct=0. ;free memory
-        
-        pol_dim=hdr.pol_dim
-        freq_dim=hdr.freq_dim
-        real_index=hdr.real_index
-        imaginary_index=hdr.imaginary_index
-        flag_index=hdr.flag_index
-        vis_arr=Ptrarr(n_pol,/allocate)
-        flag_arr=Ptrarr(n_pol,/allocate)
-        n_freq0=hdr.n_freq
-        nbaselines0=hdr.nbaselines
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*],n_freq0,nbaselines0),Reform(data_array[imaginary_index,pol_i,*,*],n_freq0,nbaselines0))
-            *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*],n_freq0,nbaselines0)
-        ENDFOR
-        ;free memory
-        data_array=0 
-        flag_arr0=0
-        
-        IF Keyword_Set(reorder_visibilities) THEN vis_reorder,hdr,params,vis_arr,flag_arr
-        
-        ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
-        IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
-            IF Keyword_Set(vis_time_average) THEN print,"Averaging visibilities in time by a factor of: "+Strtrim(Strn(vis_time_average),2)
-            IF Keyword_Set(vis_freq_average) THEN print,"Averaging visibilities in frequency by a factor of: "+Strtrim(Strn(vis_freq_average),2)
-            vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
-            IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
-        ENDIF
-        
-        IF Keyword_Set(generate_vis_savefile) THEN BEGIN
-            SAVE,vis_arr,flag_arr,hdr,params,filename=file_path_vis_sav
-            timing=Systime(1)-t0
-            IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
-            RETURN
-        ENDIF
-    ENDELSE    
     
+    uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
+    IF Keyword_Set(generate_vis_savefile) THEN BEGIN
+        IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
+        SAVE,vis_arr,flag_arr,hdr,params,filename=file_path_vis_sav
+        timing=Systime(1)-t0
+        IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
+        RETURN
+    ENDIF
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
     n_pol=obs.n_pol
     n_freq=obs.n_freq
-        
+    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end 
+       
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
-    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata' ;write preliminary settings file for debugging, in case later steps crash
 ;    IF ~Keyword_Set(silent) THEN BEGIN
@@ -139,6 +90,17 @@ IF data_flag LE 0 THEN BEGIN
 ;        FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
 ;    ENDIF
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
+    
+    IF Keyword_Set(transfer_flags) THEN BEGIN
+        flag_visibilities=0 ;
+        transfer_flag_data,flag_arr,obs,status_str,params,file_path_fhd=file_path_fhd,$
+            transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,$
+            flag_calibration=flag_calibration,_Extra=extra
+        IF Keyword_Set(error) THEN BEGIN
+            print,"Error occured while attempting to transfer flags. Returning."
+            RETURN
+        ENDIF
+    ENDIF
     
     flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
@@ -164,7 +126,8 @@ IF data_flag LE 0 THEN BEGIN
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
-             calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,_Extra=extra)
+             calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,$
+             flag_calibration=flag_calibration,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         IF Keyword_Set(error) THEN BEGIN
             print,"Error occured during calibration. Returning."
@@ -173,22 +136,13 @@ IF data_flag LE 0 THEN BEGIN
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     ENDIF
-        
-    IF Keyword_Set(transfer_mapfn) THEN transfer_flags=transfer_mapfn
-    IF Keyword_Set(transfer_flags) THEN BEGIN
-        transfer_flag_data,flag_arr,obs,params,file_path_fhd=file_path_fhd,transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,_Extra=extra
-        IF Keyword_Set(error) THEN BEGIN
-            print,"Error occured while attempting to transfer flags. Returning."
-            RETURN
-        ENDIF
-    ENDIF ELSE BEGIN
-        IF Keyword_Set(flag_visibilities) THEN BEGIN
-            print,'Flagging anomalous data'
-            vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-        ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
-            fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-    ENDELSE
+    
+    IF Keyword_Set(flag_visibilities) THEN BEGIN
+        print,'Flagging anomalous data'
+        vis_flag,vis_arr,flag_arr,obs,psf,params,_Extra=extra
+        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+    ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
+        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF Keyword_Set(model_visibilities) THEN BEGIN
         IF Keyword_Set(model_catalog_file_path) THEN BEGIN
@@ -222,6 +176,7 @@ IF data_flag LE 0 THEN BEGIN
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
+    undefine_fhd,antenna
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
@@ -261,10 +216,13 @@ IF data_flag LE 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             IF Keyword_Set(model_flag) THEN model_return=1
             IF Keyword_Set(snapshot_healpix_export) THEN preserve_visibilities=1 ELSE preserve_visibilities=0
+            IF Keyword_Set(preserve_visibilities) THEN return_mapfn=0 ELSE return_mapfn=mapfn_recalculate
+            IF Keyword_Set(mapfn_recalculate) AND Keyword_Set(save_visibilities) THEN preserve_vis_grid=0 ELSE preserve_vis_grid=preserve_visibilities
+            IF pol_i EQ 0 THEN uniform_filter=1 ELSE uniform_filter=0
             grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
-                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
+                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,uniform_filter=uniform_filter,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
-                model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
+                model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_vis_grid,_Extra=extra)
             IF Keyword_Set(error) THEN BEGIN
                 print,"Error occured during gridding. Returning."
                 IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
@@ -273,6 +231,7 @@ IF data_flag LE 0 THEN BEGIN
             t_grid[pol_i]=t_grid0
             fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
             fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
+            IF pol_i EQ 0 THEN fhd_save_io,status_str,uniform_filter,var='vis_count',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 
             IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
             *image_uv_arr[pol_i]=Temporary(grid_uv)
@@ -323,6 +282,19 @@ ENDIF
 ;optionally export frequency-splt Healpix cubes
 IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,$
     vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
+
+;Optionally fill the fhd table on the mwa_qc database located on eor-00 under the mwa username. See the python script 
+;for more information about possible queries.
+IF Keyword_Set(production) THEN BEGIN
+  ;Set up paths and keywords for the database filler, including the complete tag
+  IF ~Keyword_Set(error) THEN complete='1'
+  descr_file_path=file_path_fhd+'_settings.txt'
+  descr_file_path=filepath(file_basename(descr_file_path),root=file_dirname(descr_file_path),sub="metadata")
+
+  ;Spawn a child process to run the database filler, located in MWA_Tools
+  SPAWN, 'fhd_database_filler.py -s ' + descr_file_path + ' -o ' + obs.obsname + ' -c ' + obs.code_version + $
+      ' -p ' + file_path_fhd + ' -m ' + complete
+ENDIF
 
 undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_arr
 undefine_fhd,obs,cal,jones,psf,antenna,fhd_params

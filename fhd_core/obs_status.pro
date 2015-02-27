@@ -11,12 +11,24 @@ freq_use=obs_info.freq_use
 bw_start=Min(freq_arr[where(freq_use)])
 bw_end=Max(freq_arr[where(freq_use)])
 bandwidth=Round((bw_end-bw_start)/1E5)/10.
+freq_range_log=Alog10(obs.freq_center)
+CASE Floor(freq_range_log/3) OF
+    0: BEGIN f_mod=0 & f_name='Hz' & END
+    1: BEGIN f_mod=3 & f_name='kHz' & END
+    2: BEGIN f_mod=6 & f_name='MHz' & END
+    3: BEGIN f_mod=9 & f_name='GHz' & END
+    4: BEGIN f_mod=12 & f_name='THz' & END
+    ELSE: BEGIN f_mod=0 & f_name='Hz' & ENDELSE
+ENDCASE
+bw_start/=10.^f_mod
+bw_end/=10.^f_mod
+f_digit=Ceil(Abs(Alog10(bw_start))>Abs(Alog10(bw_end)))+4
 
 print,String(format='("Image size used: ",A," pixels")',Strn(dimension))
 print,String(format='("Image resolution used: ",A," degrees/pixel")',Strn(degpix))
-print,String(format='("Approx. beam area: ",A," pixels")',Strn((!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)))
+print,String(format='("Approx. beam area: ",A," pixels")',Strn(beam_width_calculate(obs)))
 print,String(format='("Field of view used: ",A," degrees")',Strn(fov))
-print,String(format='("Frequency range: ",A,"-",A," MHz")',Strn(Round((bw_start)/1E5)/10.),Strn(Round((bw_end)/1E5)/10.))
+print,String(format='("Frequency range: ",A,"-",A," ",A)',Strn(bw_start,length=f_digit),Strn(bw_end,length=f_digit),f_name)
 print,String(format='("UV resolution used: ",A," wavelengths/pixel")',Strn(kbinsize))
 print,String(format='("UV image size used: ",A," wavelengths")',Strn(k_span))
 print,String(format='("Min baseline: ",A," wavelengths")',Strn(obs.min_baseline))

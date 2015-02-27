@@ -1,5 +1,5 @@
 PRO Drift_x16,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    channel=channel,_Extra=extra
+    channel_select=channel_select,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -9,18 +9,19 @@ IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(export_images) EQ 0 THEN export_images=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=0
-IF N_Elements(channel) EQ 0 THEN channel=121
+IF N_Elements(channel_select) EQ 0 THEN channel_select=121
 IF N_Elements(version) EQ 0 THEN version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-IF channel LE 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift']) $
-    ELSE data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift',Strn(Floor(channel))])
+IF channel_select LE 0 THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift']) $
+    ELSE data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','Drift',Strn(Floor(channel_select))])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('MRC_full_radio_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
 
+;instrument='mwa32t' ;broken, since it would need separate beam generation files
 combine_obs=0
 dimension=1024.
 max_sources=10000.
@@ -43,18 +44,19 @@ calibration_polyfit=0.
 no_restrict_cal_sources=1
 no_rephase=Keyword_Set(data_version)
 calibrate_visibilities=1
+max_cal_iter=100L
 save_visibilities=0
+mark_zenith=1
+psf_resolution=32.
+beam_diff_image=1
+beam_residual_threshold=0.1
+output_residual_histogram=1
+show_beam_contour=1
+contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
+contour_color='blue'
 
 cmd_args=extra
-general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    image_filter_fn=image_filter_fn,data_directory=data_directory,$
-    vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
-    dimension=dimension,max_sources=max_sources,pad_uv_image=pad_uv_image,precess=precess,$
-    FoV=FoV,no_ps=no_ps,min_baseline=min_baseline,nfreq_avg=nfreq_avg,$
-    no_fits=no_fits,no_rephase=no_rephase,calibration_catalog_file_path=calibration_catalog_file_path,$
-    gain_factor=gain_factor,smooth_width=smooth_width,min_cal_baseline=min_cal_baseline,silent=silent,$
-    combine_obs=combine_obs,calibrate_visibilities=calibrate_visibilities,$
-    ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,split_ps=split_ps,bandpass_calibrate=bandpass_calibrate,calibration_polyfit=calibration_polyfit,$
-    no_restrict_cal_sources=no_restrict_cal_sources,save_visibilities=save_visibilities,cmd_args=cmd_args,_Extra=extra
+extra=var_bundle()
+general_obs,_Extra=extra
 !except=except
 END

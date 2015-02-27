@@ -105,10 +105,13 @@
 ;end
 
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
-    calib_freq_func=calib_freq_func,_Extra=extra
+    calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,_Extra=extra
     
   IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
   reference_tile=cal.ref_antenna
+  min_baseline=obs.min_baseline
+  max_baseline=obs.max_baseline
+  dimension=obs.dimension
   min_cal_baseline=cal.min_cal_baseline
   max_cal_baseline=cal.max_cal_baseline
   min_cal_solutions=cal.min_solns ;minimum number of calibration equations needed to solve for the gain of one baseline
@@ -128,6 +131,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   freq_arr=cal.freq
   bin_offset=cal.bin_offset
   n_baselines=obs.nbaselines
+  IF Tag_exist(cal,'phase_iter') THEN phase_fit_iter=cal.phase_iter ELSE phase_fit_iter=Floor(max_cal_iter/4.)<4
   
   kbinsize=obs.kpix
   
@@ -135,6 +139,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   FOR pol_i=0,n_pol-1 DO cal_return.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
   
   FOR pol_i=0,n_pol-1 DO BEGIN
+    convergence=Fltarr(n_freq,n_tile)
     gain_arr=*cal.gain[pol_i]
     
     IF Keyword_Set(time_average) THEN BEGIN
@@ -155,7 +160,10 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       ky_arr=cal.vv[0:n_baselines-1]/kbinsize
       kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
       dist_arr=(freq_arr#kr_arr)*kbinsize
-      flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
+      IF Keyword_Set(calibration_weights) THEN BEGIN
+        baseline_weights=(1.-((((Sqrt(2.)*min_cal_baseline-dist_arr)>0)/min_cal_baseline+((dist_arr-max_cal_baseline)>0)/min_cal_baseline)>0)^2.)
+        flag_dist_cut=where((dist_arr LT min_baseline) OR (dist_arr GT max_baseline<(kbinsize*dimension/2.)),n_dist_cut)
+      ENDIF ELSE flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
     ENDIF ELSE BEGIN
       flag_use=0>*flag_ptr_use[pol_i]<1
       IF Keyword_Set(preserve_visibilities) THEN vis_model=*vis_model_ptr[pol_i] $
@@ -202,6 +210,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
     nan_i=where(Finite(vis_avg,/nan),n_nan)
     IF n_nan GT 0 THEN vis_model[nan_i]=(vis_avg[nan_i]=0)
     
+    conv_test=fltarr(n_freq_use,max_cal_iter)
 ;    if not keyword_set(calib_freq_func) then begin
       FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
@@ -212,6 +221,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
         vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)]
         vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]
         weight2=Reform(weight[fi,baseline_use]) & weight2=[weight2,weight2]
+        IF Keyword_Set(calibration_weights) THEN BEGIN baseline_wts2=Reform(baseline_weights[fi,baseline_use]) & baseline_wts2=[baseline_wts2,baseline_wts2] & ENDIF 
         
         b_i_use=where(weight2 GT 0,n_baseline_use2)
         weight2=weight2[b_i_use]
@@ -229,34 +239,41 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
           IF n1 GT 1 THEN *A_ind_arr[tile_i]=Reform(inds,1,n1) ELSE *A_ind_arr[tile_i]=-1
           n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
         ENDFOR
-        phase_fit_iter=Floor(max_cal_iter/4.)<4
         
         gain_new=Complexarr(n_tile_use)
-        conv_test=fltarr(max_cal_iter)
         FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
           vis_use=vis_data2
           
           vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
-          FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN $
-            gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2)
+          IF Keyword_Set(calibration_weights) THEN BEGIN
+              FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN BEGIN
+                xmat=vis_model_matrix[*A_ind_arr[tile_i]]
+                xmat_dag=conj(xmat)*baseline_wts2
+                gain_new[tile_i]=1./(matrix_multiply(xmat_dag,xmat,/btranspose))*matrix_multiply(xmat_dag,vis_use[*A_ind_arr[tile_i]],/btrans)
+              ENDIF
+          ENDIF ELSE BEGIN
+              FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN $
+                gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2)
+          ENDELSE
             
+          gain_old=gain_curr
           IF Total(Abs(gain_new)) EQ 0 THEN BEGIN
             gain_curr=gain_new
             BREAK
           ENDIF
-          IF phase_fit_iter-i GT 0 THEN gain_new*=weight_invert(Abs(gain_new)) ;fit only phase at first
+          IF phase_fit_iter-i GT 0 THEN gain_new*=Abs(gain_old)*weight_invert(Abs(gain_new)) ;fit only phase at first
 ;          IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
 ;            gain_new*=Mean(Abs(gain_new[where(gain_new)]))*weight_invert(Abs(gain_new)) ;then fit only average amplitude
-          gain_old=gain_curr
           gain_curr=(gain_new+gain_old)/2.
           dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
           diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
           IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
           IF nan_test(gain_curr) GT 0 THEN gain_curr[where(Finite(gain_curr,/nan))]=gain_old[where(Finite(gain_curr,/nan))]
           gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
-          conv_test[i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
-          IF i GT phase_fit_iter THEN IF conv_test[i] LE conv_thresh THEN BREAK
+          conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
+          IF i GT phase_fit_iter THEN IF conv_test[fii,i] LE conv_thresh THEN BREAK
         ENDFOR
+        convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
         Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr
       ENDFOR
@@ -548,6 +565,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       
     ENDIF
     *cal_return.gain[pol_i]=gain_arr
+    cal_return.convergence[pol_i]=Ptr_new(convergence)
   ENDFOR
   
   vis_count_i=where(*flag_ptr_use[0],n_vis_cal)

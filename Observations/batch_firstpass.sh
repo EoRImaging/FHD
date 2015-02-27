@@ -21,7 +21,7 @@ unset outdir
 unset version
 
 #Parse flags for inputs
-while getopts ":f:s:e:o:v:p:w:n:m:" option
+while getopts ":f:s:e:o:v:p:w:n:m:t:" option
 do
    case $option in
 	f) obs_file_name="$OPTARG";;	#text file of observation id's
@@ -34,6 +34,7 @@ do
 	w) wallclock_time=$OPTARG;;	#Time for execution in grid engine
 	n) nslots=$OPTARG;;		#Number of slots for grid engine
 	m) mem=$OPTARG;;		#Memory per core for grid engine
+	t) thresh=$OPTARG;;		#Wedge threshold to use to determine whether or not to run
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), "
 	    echo "-v (version input for FHD), -p (priority in grid engine), -w (wallclock time in grid engine), -n (number of slots to use),"
 	    echo "and -m (memory per core for grid engine)." 
@@ -81,7 +82,10 @@ fi
 if [ -z ${mem} ]; then
     mem=4G
 fi
-
+if [ -z ${thresh} ]; then
+    # if thresh is not set, set it to -1 which will cause it to not check for a window power
+    thresh=-1
+fi
 
 echo Setting priority = $priority
 
@@ -146,7 +150,11 @@ FHDpath=$(idl -e 'print,rootdir("fhd")') ### NOTE this only works if idlstartup 
 
 nobs=${#good_obs_list[@]}
 
-qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v nslots=$nslots,outdir=$outdir,version=$version -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh ${good_obs_list[@]}
+message=$(qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v nslots=$nslots,outdir=$outdir,version=$version,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots ${FHDpath}Observations/eor_firstpass_job.sh ${good_obs_list[@]})
+message=($message)
+id=`echo ${message[2]} | cut -f1 -d"."`
+
+qsub -hold_jid $id -l h_vmem=1G,h_stack=512k,h_rt=00:05:00 -V -v nslots=$nslots,outdir=$outdir,version=$version,FHDpath=$FHDpath,mem=$mem,wallclock_time=${wallclock_time},priority=$priority,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -pe chost 1 ${FHDpath}Observations/batch_check.sh ${good_obs_list[@]}
 
 echo "Done"
 

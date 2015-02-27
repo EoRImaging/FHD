@@ -55,7 +55,8 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 astr=obs.astr
-beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
+beam_width=beam_width_calculate(obs,min_restored_beam_width=1.,/FWHM)
+;beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
 local_max_radius=beam_width*2.
 box_radius=Ceil(local_max_radius)
 xvals=meshgrid(dimension,elements,1)-dimension/2
@@ -262,7 +263,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     converge_check[i2]=Stddev(source_find_image[where(beam_mask)],/nan)
     converge_check2[i2]=Stddev(source_find_image[where(beam_mask)],/nan)
     print,"Convergence after subtracting input source model:",Strn(converge_check[i2])
-ENDIF ELSE comp_arr=source_comp_init(n_sources=max_sources,alpha=alpha,freq=obs.freq_center)
+ENDIF ELSE comp_arr=source_comp_init(n_sources=max_sources,alpha=alpha,freq=obs.freq_center,gain_factor=gain_use)
 
 IF ~Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
@@ -272,6 +273,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     IF Keyword_Set(recalc_flag) THEN BEGIN
         t1_0=Systime(1)
         FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
+        undefine_fhd,model_stokes_arr
         model_stokes_arr=stokes_cnv(model_holo_arr,jones,beam_arr=beam_base,/square,_Extra=extra)
         model_image_composite=*model_stokes_arr[0]
         IF n_pol GT 1 THEN model_image_composite_Q=*model_stokes_arr[1]
@@ -356,7 +358,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
-    t4+=Systime(1)-t4_0    
+    t4+=Systime(1)-t4_0
     
     IF si+1 GE max_sources THEN BEGIN
         i2+=1                                        

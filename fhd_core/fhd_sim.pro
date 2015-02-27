@@ -22,69 +22,44 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
   IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
   
-  fhd_save_io,status_str_placeholder,file_path_fhd=file_path_fhd,/no_save
+  fhd_save_io,status_str,file_path_fhd=file_path_fhd
   
   print,'Simulating: ',file_path_vis
   print,systime()
   print,'Output file_path:',file_path_fhd
   ext='.uvfits'
-  fhd_dir=file_dirname(file_path_fhd)
-  basename=file_basename(file_path_fhd)
-  header_filepath=file_path_fhd+'_header.sav'
+  ;  fhd_dir=file_dirname(file_path_fhd)
+  ;  basename=file_basename(file_path_fhd)
+  ;  header_filepath=file_path_fhd+'_header.sav'
   flags_filepath=file_path_fhd+'_flags.sav'
   input_model_filepath = file_path_fhd + '_input_model.sav'
   coarse_input_model_filepath = file_path_fhd + '_input_model_coarse.sav'
   init_beam_filepath = file_path_fhd + '_initial_beam2_image.sav'
   gridded_beam_filepath = file_path_fhd + '_gridded_beam2_image.sav'
-  vis_filepath=file_path_fhd+'_vis.sav'
+  ;  vis_filepath=file_path_fhd+'_vis.sav'
   obs_filepath=file_path_fhd+'_obs.sav'
   params_filepath=file_path_fhd+'_params.sav'
-  hdr_filepath=file_path_fhd+'_hdr.sav'
-  fhd_filepath=file_path_fhd+'_fhd.sav'
+  ;  hdr_filepath=file_path_fhd+'_hdr.sav'
+  ;  fhd_filepath=file_path_fhd+'_fhd.sav'
   autocorr_filepath=file_path_fhd+'_autos.sav'
-  model_filepath=file_path_fhd+'_vis_model.sav'
+  ;  model_filepath=file_path_fhd+'_vis_model.sav'
   
-  pol_names=['xx','yy','xy','yx','I','Q','U','V']
-  
-  IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE n_pol1=1
-  
-  vis_file_list=file_search(file_path_fhd+'_vis*',count=vis_file_flag)
   
   IF file_test(file_path_vis) EQ 0 THEN BEGIN
     print,"File: "+file_path_vis+" not found! Returning"
     error=1
     return
   ENDIF
-  
-  data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
-  hdr=vis_header_extract(data_header0, params = data_struct.params)
-  params=vis_param_extract(data_struct.params,hdr)
-  data_array=Temporary(data_struct.array[*,0:n_pol-1,*])
-  data_struct=0. ;free memory
+  uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
   
   obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
-  pol_dim=hdr.pol_dim
-  freq_dim=hdr.freq_dim
-  real_index=hdr.real_index
-  imaginary_index=hdr.imaginary_index
-  flag_index=hdr.flag_index
   n_pol=obs.n_pol
   n_freq=obs.n_freq
   
-  
-  vis_arr=Ptrarr(n_pol,/allocate)
-  flag_arr=Ptrarr(n_pol,/allocate)
-  FOR pol_i=0,n_pol-1 DO BEGIN
-    *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))
-    *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*])
-  ENDFOR
-  ;free memory
-  data_array=0
-  flag_arr0=0
-  
   ;Read in or construct a new beam model. Also sets up the structure PSF
   print,'Calculating beam model'
-  psf=beam_setup(obs,file_path_fhd=file_path_fhd,restore_last=(Keyword_Set(beam_recalculate) ? 0:1),silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+  
+  psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=0,_Extra=extra)
   IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
   
   flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
@@ -138,7 +113,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
         save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, freq_arr, /compress
         
         time0 = systime(1)
-        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
+        eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)   
         time1 = systime(1)
         print, 'time for eor modelling: ' + number_formatter(time1-time0)
         if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
@@ -197,7 +172,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
       
       if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
       
-      this_model_ptr=vis_source_model(0,obs,status_str_placeholder,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+      this_model_ptr=vis_source_model(0,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
         timing=model_timing,silent=silent,error=error,_Extra=extra)
       print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
       
@@ -209,53 +184,102 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     time1=systime(0)
     print, 'model visibility timing(s):'+ number_formatter(time1-time0)
     
-    SAVE,flag_arr,filename=flags_filepath,/compress
+    fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+  endif else begin
+    ;If the full code is not recalculated, and if model visibilities exist, they should be extracted. Otherwise, break cleanly. Make sure that
+    ;visibilities, if read in, are not resaved.
+    print, 'Model visibilities are to be read in from '+file_dirname(file_path_fhd)+'/vis_data/'
+    if file_test(file_dirname(file_path_fhd)+'/vis_data/' + file_basename(file_path_fhd) + '_vis_model_XX.sav') $
+      and file_test(file_dirname(file_path_fhd)+'/vis_data/' + file_basename(file_path_fhd) + '_vis_model_YY.sav') then begin
+      undefine, save_visibilities
+      vis_model_ptr = Ptrarr(n_pol,/allocate)
+      vis_model_ptr[0]=getvar_savefile(file_dirname(file_path_fhd)+'/vis_data/' + file_basename(file_path_fhd) + '_vis_model_XX.sav','vis_model_ptr')
+      vis_model_ptr[1]=getvar_savefile(file_dirname(file_path_fhd)+'/vis_data/' + file_basename(file_path_fhd) + '_vis_model_YY.sav','vis_model_ptr')
+    endif else begin
+      print, 'No model visibilities found in '+file_dirname(file_path_fhd)+'/vis_data. Please set recalculate_all=1'
+      return
+    endelse
+  endelse
+  
+  vis_noise_calc,obs,vis_arr,flag_arr
+  tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
+  freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
+  print,String(format='(A," frequency channels used and ",A," channels flagged")',$
+    Strn(n_freq_use),Strn(n_freq_cut))
+  print,String(format='(A," tiles used and ",A," tiles flagged")',$
+    Strn(n_tile_use),Strn(n_tile_cut))
     
-    vis_noise_calc,obs,vis_arr,flag_arr
-    tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
-    freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
-    print,String(format='(A," frequency channels used and ",A," channels flagged")',$
-      Strn(n_freq_use),Strn(n_freq_cut))
-    print,String(format='(A," tiles used and ",A," tiles flagged")',$
-      Strn(n_tile_use),Strn(n_tile_cut))
-      
-    SAVE,obs,filename=obs_filepath,/compress
-    SAVE,params,filename=params_filepath,/compress
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
-    
-    IF obs.n_vis EQ 0 THEN BEGIN
-      print,"All data flagged! Returning." 
-      error=1
-      RETURN
-    ENDIF
-    
-    autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
-    auto_corr=Ptrarr(n_pol)
-    IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
-      auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
-      auto_corr[pol_i]=Ptr_new(auto_vals)
-    ENDFOR
-    SAVE,auto_corr,obs,filename=autocorr_filepath,/compress
-    
-    IF Keyword_Set(save_visibilities) THEN BEGIN
-      t_save0=Systime(1)
-      vis_export,obs,status_str_placeholder,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
-      vis_export,obs,status_str_placeholder,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
-      t_save=Systime(1)-t_save0
-      IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
-    ENDIF
-  endif
+  fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+  fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+  fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
+  
+  IF obs.n_vis EQ 0 THEN BEGIN
+    print,"All data flagged! Returning."
+    error=1
+    RETURN
+  ENDIF
+  
+  autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
+  auto_corr=Ptrarr(n_pol)
+  IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
+    auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
+    auto_corr[pol_i]=Ptr_new(auto_vals)
+  ENDFOR
+  fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd,obs=obs,_Extra=extra
+  
+  IF Keyword_Set(save_visibilities) THEN BEGIN
+    t_save0=Systime(1)
+    vis_export,obs,status_str,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+    vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
+    t_save=Systime(1)-t_save0
+    IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
+  ENDIF
   
   t_grid=fltarr(n_pol)
   t_mapfn_gen=fltarr(n_pol)
   
-  IF N_Elements(obs) EQ 0 THEN IF file_test(obs_filepath) THEN obs=getvar_savefile(obs_filepath,'obs')
+  IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+  
+  ;Grid the visibilities
+  IF Keyword_Set(grid_recalculate) THEN BEGIN
+    print,'Gridding visibilities'
+    image_uv_arr=Ptrarr(n_pol,/allocate)
+    weights_arr=Ptrarr(n_pol,/allocate)
+    
+    weights_grid=1
+    mapfn_recalculate=0
+    preserve_visibilities=1
+    FOR pol_i=0,n_pol-1 DO BEGIN
+      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
+        timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
+        mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
+        model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
+      t_grid[pol_i]=t_grid0
+      ;            SAVE,dirty_UV,weights_grid,filename=file_path_fhd+'_uv_'+pol_names[pol_i]+'.sav',/compress
+      *image_uv_arr[pol_i]=Temporary(dirty_UV)
+      
+      IF N_Elements(weights_grid) GT 0 THEN BEGIN
+        *weights_arr[pol_i]=Temporary(weights_grid)
+        weights_grid=1
+      ENDIF
+    ENDFOR
+    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;over-write saved obs structure now that nf_vis has been calculated
+    print,'Gridding time:',t_grid
+    
+    ;Generate fits data files and images
+    IF Keyword_Set(export_images) THEN BEGIN
+    
+      fhd_quickview,obs,status_str,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+        model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+    ENDIF
+    
+  ENDIF
   
   ;optionally export frequency-split Healpix cubes
   IF Keyword_Set(snapshot_healpix_export) THEN begin
     IF ~Keyword_Set(n_avg) THEN n_avg=1
-    healpix_snapshot_cube_generate,obs,status_str_placeholder,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
-      vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
+    healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
+      vis_model_arr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
       
@@ -274,7 +298,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     ptr_free,beam_arr
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
   endif
-  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,status_str_placeholder
+  undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,status_str
   undefine_fhd,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out,flag_arr
   
   timing=Systime(1)-t0

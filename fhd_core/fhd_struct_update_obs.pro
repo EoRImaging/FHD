@@ -8,7 +8,7 @@ IF N_Elements(spectral_index) EQ 0 THEN spectral_index=obs.alpha
 IF N_Elements(n_pol) EQ 0 THEN n_pol=obs.n_pol
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline=obs.max_baseline
 IF N_Elements(min_baseline) EQ 0 THEN min_baseline=obs.min_baseline
-git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long'
+git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
 IF Tag_exist(obs,'healpix') THEN BEGIN
@@ -39,6 +39,8 @@ max_baseline=max_baseline<(k_span/sqrt(2.))
 IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ELSE dimension=Float(dimension);dimension of the image in pixels; dimension = x direction
 IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
 degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
+k_span=Sqrt(dimension*elements/2.)
+max_baseline=max_baseline<(k_span/sqrt(2.))
 
 struct=obs
 struct.dimension=Float(dimension)

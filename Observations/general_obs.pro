@@ -1,11 +1,11 @@
 PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
+    healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
     grid_recalculate=grid_recalculate,snapshot_recalculate=snapshot_recalculate,deconvolve=deconvolve,$
     image_filter_fn=image_filter_fn,data_directory=data_directory,output_directory=output_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag_visibilities=flag_visibilities,$
-    transfer_mapfn=transfer_mapfn,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
+    transfer_mapfn=transfer_mapfn,transfer_flags=transfer_flags,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
     calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
     snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,$
     firstpass=firstpass,return_cal_visibilities=return_cal_visibilities,cmd_args=cmd_args,silent=silent,_Extra=extra
@@ -19,7 +19,7 @@ IF N_Elements(error_method) EQ 0 THEN error_method=0
 ON_ERROR,error_method
 
 IF ~Keyword_Set(silent) THEN BEGIN
-    git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long'
+    git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
     print,"Using FHD version: "+code_version
 ENDIF
 ;Set which procedures are to be run
@@ -58,7 +58,6 @@ n_files=N_Elements(vis_file_list)
 
 ;Set which files to restore or recalculate (if the file is not found and needed, it will be recalculated
 IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
-IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
@@ -78,9 +77,18 @@ IF Keyword_Set(recalculate_all) AND (N_Elements(deconvolve) EQ 0) THEN deconvolv
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 IF size(transfer_mapfn,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_mapfn[0],3,/reverse)) EQ '.txt' THEN $
     transfer_mapfn=string_list_read(transfer_mapfn,data_directory=data_directory)
+    
+;NOTE: IF transfer_mapfn is ever supplied as an array, all later calls to uvfits2fhd will need to be updated
+    
 IF N_Elements(transfer_calibration) EQ 0 THEN transfer_calibration=0
 IF size(transfer_calibration,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_calibration[0],3,/reverse)) EQ '.txt' THEN $
     transfer_calibration=string_list_read(transfer_calibration,data_directory=data_directory)
+CASE 1 OF
+    Keyword_Set(transfer_mapfn):transfer_file=transfer_mapfn
+    Keyword_Set(transfer_flags):transfer_file=transfer_flags
+    Keyword_Set(transfer_calibration):transfer_file=transfer_calibration
+    ELSE:transfer_file=''
+ENDCASE
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
 
 ;Set up gridding and deconvolution parameters
@@ -95,25 +103,44 @@ IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q
 ;dimension=1024.
 
 ;Set up output image parameters
-IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=2. ;grid output images at a higher resolution if set (ignored for quickview images)
+IF N_Elements(pad_uv_image) EQ 0 THEN pad_uv_image=1. ;grid output images at a higher resolution if set (ignored for quickview images)
 IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
 IF N_Elements(start_fi) EQ 0 THEN start_fi=0
-fi=start_fi
+fi=Long(start_fi)
 IF N_Elements(end_fi) GT 0 THEN n_files=end_fi+1 ;changed to allow end_fi and update to both be specified
+
+IF ~Keyword_Set(update_file_list) THEN BEGIN
+    n_files-=start_fi
+    fi_arr=lindgen(n_files)+start_fi
+    fi=0L
+    start_fi=0
+    
+    IF N_Elements(skip_fi) GT 0 THEN BEGIN
+        fi_cut=lonarr(n_files)
+        fi_cut[skip_fi]=1
+        fi_uncut=where(fi_cut NE 1,n_files)
+        fi_arr=fi_arr[fi_uncut]
+    ENDIF
+    vis_file_list=vis_file_list[fi_arr]
+    fhd_file_list=fhd_file_list[fi_arr]
+    IF size(transfer_file,/type) EQ 7 THEN BEGIN
+        fi_init=where(file_basename(fhd_file_list) EQ file_basename(transfer_file[0]),$
+            n_fi_init,complement=fi_remainder,ncomplement=n_fi_remainder)
+        CASE 1 OF
+            (n_fi_init NE 1):fi_order=lindgen(n_files) ;do nothing
+            (n_fi_remainder EQ 0):fi_order=lindgen(n_files) ;do nothing
+            ELSE: fi_order=[fi_init,fi_remainder]
+        ENDCASE
+        vis_file_list=vis_file_list[fi_order]
+        fhd_file_list=fhd_file_list[fi_order]
+    ENDIF
+ENDIF
 WHILE fi LT n_files DO BEGIN
     IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(n_files-start_fi)))
-    IF N_Elements(skip_fi) GT 0 THEN BEGIN
-        IF max(skip_fi EQ fi) GT 0 THEN BEGIN
-            fi+=1
-            CONTINUE
-        ENDIF
-    ENDIF
-;    IF (recalculate_all EQ 0) AND Keyword_Set(cleanup) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
-;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
     undefine_fhd,status_str
     uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
-        independent_fit=independent_fit,beam_recalculate=beam_recalculate,transfer_mapfn=transfer_mapfn,$
+        independent_fit=independent_fit,transfer_mapfn=transfer_mapfn,transfer_flags=transfer_flags,$
         mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid_recalculate=grid_recalculate,$
         silent=silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
@@ -123,7 +150,7 @@ WHILE fi LT n_files DO BEGIN
         healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,return_cal_visibilities=return_cal_visibilities,$
         snapshot_healpix_export=snapshot_healpix_export,snapshot_recalculate=snapshot_recalculate,$
         split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
-    
+    IF ~Keyword_Set(error) THEN IF Tag_exist(status_str,'complete') THEN status_str.complete=1
     fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
     IF N_Elements(status_arr) EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
     IF Keyword_Set(error) THEN BEGIN
@@ -150,19 +177,18 @@ vis_file_list=vis_file_list[fi_use]
 fhd_file_list=fhd_file_list[fi_use]
 IF Keyword_Set(simultaneous) THEN BEGIN
     IF Total(simultaneous) GT 1 THEN N_simultaneous=simultaneous
-    fhd_multi_wrap,fhd_file_list,N_simultaneous=N_simultaneous,n_pol=n_pol,$
+    fhd_multi_wrap,fhd_file_list,status_arr,N_simultaneous=N_simultaneous,n_pol=n_pol,$
         independent_fit=independent_fit,silent=silent,max_sources=max_sources,catalog_file_path=catalog_file_path,$
         export_images=export_images,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
         gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
-        uvfits2fhd,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
-            beam_recalculate=0,transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
+        uvfits2fhd,vis_file_list[fi],status_arr[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
+            transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             silent=silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
-        fhd_save_io,status_str,file_path_fhd=fhd_file_list[fi],/text
-        IF fi EQ 0 THEN status_arr=status_str ELSE status_arr=[status_arr,status_str]
+        fhd_save_io,status_arr[fi],file_path_fhd=fhd_file_list[fi],/text
     ENDFOR
 ENDIF
 

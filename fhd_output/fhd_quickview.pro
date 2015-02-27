@@ -6,7 +6,8 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
     use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,$
-    beam_diff_image=beam_diff_image,show_beam_contour=show_beam_contour,_Extra=extra
+    beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,$
+    image_mask_horizon=image_mask_horizon,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -22,6 +23,7 @@ IF file_test(output_dir) EQ 0 THEN file_mkdir,output_dir
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=0.025
+IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
@@ -89,14 +91,19 @@ ENDIF ELSE filter_name=''
 IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
-restored_beam_width=(!RaDeg/(obs_out.MAX_BASELINE/obs_out.KPIX)/obs_out.degpix)/(2.*Sqrt(2.*Alog(2.)))
-restored_beam_width=restored_beam_width>0.75
+restored_beam_width=beam_width_calculate(obs_out,min_restored_beam_width=0.75)
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
 
-jones_out=fhd_struct_init_jones(obs_out,status_str,jones,file_path_fhd=file_path_fhd,/update)
+horizon_mask=fltarr(dimension,elements)+1.
+;IF Keyword_Set(image_mask_horizon) THEN BEGIN
+    xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr_out,ra_arr,dec_arr
+    horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
+    IF n_horizon_mask GT 0 THEN horizon_mask[horizon_test]=0
+;ENDIF
+
 beam_mask=fltarr(dimension,elements)+1
 beam_avg=fltarr(dimension,elements)
 beam_base_out=Ptrarr(n_pol,/allocate)
@@ -106,7 +113,7 @@ IF N_Elements(beam_arr) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=beam_image(psf,obs,pol_i=pol_i,square=0)
 ENDIF
 FOR pol_i=0,n_pol-1 DO BEGIN
-    *beam_base_out[pol_i]=Rebin(*beam_arr[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
+    *beam_base_out[pol_i]=Rebin(*beam_arr[pol_i],dimension,elements)*horizon_mask ;should be fine even if pad_uv_image is not set
     *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],1e-3)
     IF pol_i GT 1 THEN CONTINUE
     beam_mask_test=*beam_base_out[pol_i]
@@ -121,6 +128,7 @@ ENDFOR
 beam_avg/=(n_pol<2)
 beam_avg=Sqrt(beam_avg>0)*beam_mask
 beam_i=where(beam_mask)
+jones_out=fhd_struct_init_jones(obs_out,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
 
 IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1
@@ -220,6 +228,12 @@ ENDIF
 mkhdr,fits_header,*instr_dirty_arr[0]
 putast, fits_header, astr_out;, cd_type=1
 
+fits_header_Jy=fits_header
+sxaddpar,fits_header_Jy,'BUNIT','Jy/beam'
+
+fits_header_apparent=fits_header
+sxaddpar,fits_header_apparent,'BUNIT','Jy/beam (apparent)'
+
 x_inc=beam_i mod dimension
 y_inc=Floor(beam_i/dimension)
 IF N_Elements(zoom_radius) GT 0 THEN BEGIN
@@ -233,7 +247,6 @@ astr_out2=astr_out
 astr_out2.crpix-=zoom_low
 astr_out2.naxis=[zoom_high-zoom_low+1,zoom_high-zoom_low+1]
 
-
 beam_contour_arr=Ptrarr(n_pol)
 beam_contour_arr2=Ptrarr(n_pol)
 beam_contour_stokes=Ptr_new()
@@ -245,45 +258,46 @@ IF Keyword_Set(show_beam_contour) THEN BEGIN
     beam_contour_stokes=Ptr_new(beam_avg[zoom_low:zoom_high,zoom_low:zoom_high])
 ENDIF 
 
-;IF Keyword_Set(beam_diff_image) AND Keyword_Set(source_flag) THEN BEGIN
-;    source_res_arr=source_residual_image(obs_out,source_arr_out,instr_residual_arr,beam_arr=beam_base_out,$
-;        jones=jones_out,source_residual_radius=100.,source_residual_flux_threshold=1.,beam_power=2,_Extra=extra)
-;    source_res_stks=stokes_cnv(source_res_arr,jones_out,_Extra=extra)
-;    beam_diff_low_use=0
-;    beam_diff_high_use=0
-;    FOR pol_i=0,n_pol-1 DO beam_diff_low_use=beam_diff_low_use<((Median((*source_res_arr[pol_i])[beam_i])-3.*Stddev((*source_res_arr[pol_i])[beam_i]))>Min((*source_res_arr[pol_i])[beam_i]))
-;    FOR pol_i=0,n_pol-1 DO beam_diff_high_use=beam_diff_high_use>((Median((*source_res_arr[pol_i])[beam_i])+3.*Stddev((*source_res_arr[pol_i])[beam_i]))<Max((*source_res_arr[pol_i])[beam_i]))
-;    IF N_Elements(beam_diff_low) GT 0 THEN beam_diff_low_use=beam_diff_low
-;    IF N_Elements(beam_diff_high) GT 0 THEN beam_diff_high_use=beam_diff_high
-;    
-;    mark_thick=1.
-;    mark_length=6.
-;    IF Keyword_Set(mark_zenith) AND (Floor(obs_out.zenx) GT mark_length) AND (Floor(obs_out.zenx) LT dimension-mark_length) $
-;        AND (Floor(obs_out.zeny) GT mark_length) AND (Floor(obs_out.zeny) LT elements-mark_length) THEN BEGIN 
-;        mark_image=fltarr(dimension,elements)
-;        mark_amp=beam_diff_low_use
-;        mark_image[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
-;        mark_image[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
-;        mark_image=mark_image[zoom_low:zoom_high,zoom_low:zoom_high]
-;    ENDIF
-;    FOR pol_i=0,n_pol-1 DO BEGIN
-;        IF ~Keyword_Set(no_png) THEN BEGIN
-;            Imagefast,(*source_res_arr[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i],$
-;                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
-;                low=beam_diff_low_use,high=beam_diff_high_use,title=title_fhd,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
-;            Imagefast,(*source_res_stks[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i+4],$
-;                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
-;                low=beam_diff_low_use*2.,high=beam_diff_high_use*2.,title=title_fhd,astr=astr_out2,_Extra=extra
-;        ENDIF
-;        IF ~Keyword_Set(no_fits) THEN FitsFast,*source_res_arr[pol_i],fits_header,/write,file_path=output_path+'_Beam_diff_'+pol_names[pol_i]
-;    ENDFOR
-;ENDIF
+IF Keyword_Set(beam_diff_image) AND Keyword_Set(source_flag) THEN BEGIN
+    source_res_arr=source_residual_image(obs_out,source_arr_out,instr_residual_arr,beam_arr=beam_base_out,$
+        jones=jones_out,source_residual_flux_threshold=1.,beam_power=2,_Extra=extra)
+    source_res_stks=stokes_cnv(source_res_arr,jones_out,_Extra=extra)
+    beam_diff_low_use=0
+    beam_diff_high_use=0
+    FOR pol_i=0,n_pol-1 DO beam_diff_low_use=beam_diff_low_use<((Median((*source_res_arr[pol_i])[beam_i])-3.*Stddev((*source_res_arr[pol_i])[beam_i]))>Min((*source_res_arr[pol_i])[beam_i]))
+    FOR pol_i=0,n_pol-1 DO beam_diff_high_use=beam_diff_high_use>((Median((*source_res_arr[pol_i])[beam_i])+3.*Stddev((*source_res_arr[pol_i])[beam_i]))<Max((*source_res_arr[pol_i])[beam_i]))
+    IF N_Elements(beam_diff_low) GT 0 THEN beam_diff_low_use=beam_diff_low
+    IF N_Elements(beam_diff_high) GT 0 THEN beam_diff_high_use=beam_diff_high
+    
+    mark_thick=1.
+    mark_length=6.
+    IF Keyword_Set(mark_zenith) AND (Floor(obs_out.zenx) GT mark_length) AND (Floor(obs_out.zenx) LT dimension-mark_length) $
+        AND (Floor(obs_out.zeny) GT mark_length) AND (Floor(obs_out.zeny) LT elements-mark_length) THEN BEGIN 
+        mark_image=fltarr(dimension,elements)
+        mark_amp=beam_diff_low_use
+        mark_image[Floor(obs_out.zenx)-mark_length:Floor(obs_out.zenx)+mark_length,Floor(obs_out.zeny)-mark_thick:Floor(obs_out.zeny)+mark_thick]=mark_amp
+        mark_image[Floor(obs_out.zenx)-mark_thick:Floor(obs_out.zenx)+mark_thick,Floor(obs_out.zeny)-mark_length:Floor(obs_out.zeny)+mark_length]=mark_amp
+        mark_image=mark_image[zoom_low:zoom_high,zoom_low:zoom_high]
+    ENDIF ELSE mark_image=0.
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        IF ~Keyword_Set(no_png) THEN BEGIN
+            Imagefast,(*source_res_arr[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
+                low=beam_diff_low_use,high=beam_diff_high_use,title=title_fhd,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
+            Imagefast,(*source_res_stks[pol_i])[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+'_Beam_diff_'+pol_names[pol_i+4],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
+                low=beam_diff_low_use*2.,high=beam_diff_high_use*2.,title=title_fhd,astr=astr_out2,_Extra=extra
+        ENDIF
+        IF ~Keyword_Set(no_fits) THEN FitsFast,*source_res_arr[pol_i],fits_header,/write,file_path=output_path+'_Beam_diff_'+pol_names[pol_i]
+    ENDFOR
+ENDIF
 
 IF (residual_flag EQ 0) AND (model_flag EQ 0) THEN res_name='_Dirty_' ELSE res_name='_Residual_'
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_residual=*instr_residual_arr[pol_i]*(*beam_correction_out[pol_i])
     instr_dirty=*instr_dirty_arr[pol_i]*(*beam_correction_out[pol_i])
+    IF model_flag THEN instr_model=*instr_model_arr[pol_i]*(*beam_correction_out[pol_i])
     stokes_residual=(*stokes_residual_arr[pol_i])*beam_mask
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]
@@ -321,15 +335,20 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         IF weights_flag THEN Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
             low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
-        IF model_flag THEN Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
-            /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
-            title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
+        IF model_flag THEN BEGIN
+            Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
+                title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
+            Imagefast,instr_model[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Model_'+pol_names[pol_i],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
+                title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
+        ENDIF
         Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
             title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
         Imagefast,beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100.+mark_image,file_path=image_path+'_Beam_'+pol_names[pol_i],/log,$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,show_grid=show_grid,$
-            low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),$
+            low=min(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100)>0,high=max(beam_use[zoom_low:zoom_high,zoom_low:zoom_high]*100),$
             title=title_fhd,/invert,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
         Imagefast,stokes_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i+4],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low_use,high=stokes_high_use,$
@@ -348,12 +367,15 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
     ENDIF
     IF ~Keyword_Set(no_fits) THEN BEGIN
-        FitsFast,stokes_residual,fits_header,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i+4]
-        IF model_flag THEN FitsFast,instr_dirty,fits_header,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
-        FitsFast,instr_residual,fits_header,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
+        FitsFast,stokes_residual,fits_header_Jy,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i+4]
+        IF model_flag THEN BEGIN
+            FitsFast,instr_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
+            FitsFast,instr_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i]
+        ENDIF
+        FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
         IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
-        IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
+        IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
     ENDIF
     
     IF pol_i EQ 0 THEN log_source=1 ELSE log_source=0
@@ -361,10 +383,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN restored_name='_Restored_rings_' ELSE restored_name='_Restored_'
         IF ~Keyword_Set(no_fits) THEN BEGIN
-    ;        FitsFast,instr_source,fits_header,/write,file_path=output_path+filter_name+'_Sources_'+pol_names[pol_i]
-            FitsFast,instr_residual+instr_source,fits_header,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i]
-    ;        FitsFast,stokes_source,fits_header,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
-            FitsFast,stokes_residual+stokes_source,fits_header,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i+4]
+    ;        FitsFast,instr_source,fits_header_apparent,/write,file_path=output_path+filter_name+'_Sources_'+pol_names[pol_i]
+            FitsFast,instr_residual+instr_source,fits_header_apparent,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i]
+    ;        FitsFast,stokes_source,fits_header_Jy,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
+            FitsFast,stokes_residual+stokes_source,fits_header_Jy,/write,file_path=output_path+filter_name+restored_name+pol_names[pol_i+4]
         ENDIF
         IF ~Keyword_Set(no_png) THEN BEGIN
             instrS_high=Max(instr_restored[beam_i])
@@ -401,14 +423,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
     ENDIF
 ENDFOR
-residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,/center,$
-    file_path_base=image_path+filter_name,_Extra=extra
+IF Keyword_Set(output_residual_histogram) THEN $
+    residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,$
+        /center,file_path_base=image_path+filter_name,_Extra=extra
 
 undefine_fhd,beam_contour_arr,beam_contour_arr2,beam_correction_out,beam_base_out
 undefine_fhd,instr_residual_arr,instr_dirty_arr,instr_sources,instr_rings
 undefine_fhd,stokes_residual_arr,stokes_sources,stokes_rings
 undefine_fhd,gal_model_img
 undefine_fhd,obs_out
+
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Image output timing (quickview): ',timing
 END

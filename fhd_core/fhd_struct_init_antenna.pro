@@ -1,6 +1,7 @@
 FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,$
-    psf_image_resolution=psf_image_resolution,timing=timing,_Extra=extra
+    psf_image_resolution=psf_image_resolution,timing=timing,$
+    psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
@@ -19,6 +20,7 @@ zendec=obs.zendec
 ;phasera=obs.phasera
 ;phasedec=obs.phasedec
 Jdate=obs.Jd0
+IF Keyword_Set(beam_offset_time) THEN Jdate_use=Jdate+beam_offset_time/24./3600. ELSE Jdate_use=Jdate
 frequency_array=(*obs.baseline_info).freq
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
@@ -40,7 +42,7 @@ astr=obs.astr
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32? ;super-resolution factor
 IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
-Eq2Hor,obsra,obsdec,Jdate,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+Eq2Hor,obsra,obsdec,Jdate_use,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
 obsalt=Float(obsalt)
 obsaz=Float(obsaz)
 obsza=90.-obsalt
@@ -63,6 +65,12 @@ antenna=Call_function(tile_init_fn,obs,antenna_str,_Extra=extra) ;mwa_beam_setup
 psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR))  
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
+IF Keyword_Set(psf_max_dim) THEN BEGIN
+    psf_max_dim=Ceil(psf_max_dim/2.)*2 ;dimension MUST be even
+    IF psf_max_dim LT psf_dim THEN print,'Warning! PSF dim cut to '+Strn(psf_max_dim)+', fit dim was '+Strn(psf_dim)
+    psf_dim=psf_dim<psf_max_dim
+ENDIF
+
 psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
 psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
 psf_superres_dim=psf_dim*psf_resolution
@@ -78,9 +86,9 @@ valid_i=where(Finite(ra_arr),n_valid)
 ra_use=ra_arr[valid_i]
 dec_use=dec_arr[valid_i]
 
-;NOTE: Eq2Hor REQUIRES Jdate to have the same number of elements as RA and Dec for precession!!
-;;NOTE: The NEW Eq2Hor REQUIRES Jdate to be a scalar! They created a new bug when they fixed the old one
-Eq2Hor,ra_use,dec_use,Jdate,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1
+;NOTE: Eq2Hor REQUIRES Jdate_use to have the same number of elements as RA and Dec for precession!!
+;;NOTE: The NEW Eq2Hor REQUIRES Jdate_use to be a scalar! They created a new bug when they fixed the old one
+Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
 za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 

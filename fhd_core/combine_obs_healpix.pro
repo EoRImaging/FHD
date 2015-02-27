@@ -41,8 +41,9 @@ IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
     fit_inds_flag=0
 ENDIF ELSE BEGIN
     fit_inds_flag=1
-    RESTORE,file_list_use[0]+'_obs.sav'
-    IF size(restrict_hpx_inds,/type) NE 7 THEN restrict_hpx_inds_path=observation_healpix_inds_select(obs) ELSE restrict_hpx_inds_path=restrict_hpx_inds
+    fhd_save_io,status_arr_use[0],obs,file_path_fhd=file_list_use[0],var='obs',/restore
+    IF Keyword_Set(restrict_hpx_inds) THEN $
+        IF size(restrict_hpx_inds,/type) NE 7 THEN restrict_hpx_inds_path=observation_healpix_inds_select(obs) ELSE restrict_hpx_inds_path=restrict_hpx_inds
     IF size(restrict_hpx_inds_path,/type) EQ 7 THEN BEGIN 
         file_path_use=restrict_hpx_inds_path
         IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=Rootdir('fhd'),subdir='Observations')
@@ -63,7 +64,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     fhd_save_io,status_arr_use[obs_i],obs,file_path_fhd=file_path_fhd,var='obs',/restore
     IF obs_i EQ 0 THEN obs_arr=[obs] ELSE obs_arr=[obs_arr,obs]
     
-    beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix);*(2.*Sqrt(2.*Alog(2.)))
+    beam_width=beam_width_calculate(obs)
 ;    beam_area=2.*!Pi*(beam_width*obs.degpix)^2. 
     beam_area=(beam_width*obs.degpix)^2.
     pix_sky=4.*!Pi*!RaDeg^2./beam_area
@@ -144,6 +145,9 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         beam_mask*=mask0
     ENDFOR
     
+    IF status_str.jones THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd $
+        ELSE jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
+    IF source_flag THEN source_array=Stokes_Cnv(source_array,jones,obs,/inverse)
     instr_model_arr=Ptrarr(n_pol)
     instr_dirty_arr=Ptrarr(n_pol)
     instr_sources=Ptrarr(n_pol)
@@ -194,25 +198,29 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         ENDIF ELSE BEGIN
             hist_min=Min(hpx_inds)<Min(hpx_inds1)
             hist_max=Max(hpx_inds)>Max(hpx_inds1)
-            hist0=histogram((hpx_inds),min=hist_min,max=hist_max,/binsize,reverse_ind=ri0)
-            hist1=histogram((hpx_inds1),min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
+            hist0=histogram(hpx_inds,min=hist_min,max=hist_max,/binsize,reverse_ind=ri0)
+            hist1=histogram(hpx_inds1,min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
             hist=hist0+hist1
-            hpx_inds_i=where((hist),n_hpx)
-            hist0=hist0[hpx_inds_i]
-            hist1=hist1[hpx_inds_i]
-            ind_use0=where((hist0),n_hpx0)
-            ind_use1=where((hist1),n_hpx1)
+            hpx_inds_i=where(hist,n_hpx) ;reduce all sky healpix indices to sparse format
+;            hist0=hist0[hpx_inds_i]
+;            hist1=hist1[hpx_inds_i]
+            ind_use0=where(hist0[hpx_inds_i],n_hpx0) ;determine existing healpix sparse format pixels in combined sparse format
+            ind_use1=where(hist1[hpx_inds_i],n_hpx1) ;determine new healpix sparse format pixels in combined sparse format
             
             IF n_hpx0 EQ n_hpx THEN reform_flag=0 ELSE BEGIN
                 reform_flag=1
-                ind_order0=Sort(ri0[ri0[hpx_inds_i[ind_use0]]])
+                ind_use0b=ri0[ri0[hpx_inds_i[ind_use0]]]
+                ind_order0=Sort(ind_use0b) ;determine ordering needed to convert monotonic increasing sparse indices to actual ordering of healpix pixels (in case of RA=0 branch cut)
                 ind_map0=ind_use0[ind_order0] 
-                ri0=0               
+;                ri0=0               
             ENDELSE
-            ind_order1=Sort(ri1[ri1[hpx_inds_i[ind_use1]]])
-            ri1=0
-            ind_map1=ind_use1[(ind_order1)]
-            hpx_inds=(hpx_inds_i)+hist_min
+            ind_use1b=ri1[ri1[hpx_inds_i[ind_use1]]]
+            ind_order1=Sort(ind_use1b)
+            ind_map1=ind_use1[ind_order1]
+;            ind_order1=Sort(Sort(ri1[ri1[hpx_inds_i[ind_use1]]])) ;determine ordering needed to convert monotonic increasing sparse indices to actual ordering of healpix pixels (in case of RA=0 branch cut)
+;;            ri1=0
+;            ind_map1=ind_use1[ind_order1]
+            hpx_inds=hpx_inds_i+hist_min
         ENDELSE
     ENDIF ELSE BEGIN
     ;This option is not debugged!
@@ -239,6 +247,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         ENDIF
         IF ~Ptr_valid(weights_hpx[pol_i]) THEN weights_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
         IF reform_flag THEN BEGIN
+            ;if reform_flag is set, that means that the latest observation has added new healpix pixels, so the old collection of pixels needs to be expanded 
             instr_dirty_hpx0=Fltarr(n_hpx)
             instr_dirty_hpx0[ind_map0]=(*instr_dirty_hpx[pol_i])
             *instr_dirty_hpx[pol_i]=(instr_dirty_hpx0)
@@ -263,13 +272,13 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             weights_hpx0[ind_map0]=(*weights_hpx[pol_i])
             *weights_hpx[pol_i]=(weights_hpx0)
         ENDIF 
+        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*beam_base2[pol_i],hpx_cnv)
         (*instr_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_dirty_arr[pol_i],hpx_cnv)
         IF model_flag THEN (*instr_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_model_arr[pol_i],hpx_cnv)
         IF source_flag THEN BEGIN
             IF Keyword_Set(ring_radius) THEN (*instr_rings_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_rings[pol_i],hpx_cnv)
             (*instr_sources_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_sources[pol_i],hpx_cnv)
         ENDIF
-        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*beam_base2[pol_i],hpx_cnv)
     ENDFOR
     IF N_Elements(n_obs_hpx) EQ 0 THEN n_obs_hpx=intarr(n_hpx)
     IF reform_flag THEN BEGIN
@@ -279,7 +288,9 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     ENDIF
     n_obs_hpx[ind_map1]+=1
     
-    undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv,beam_base2,beam_base
+    ri0=0
+    ri1=0
+    undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv,beam_base2,beam_base,jones
 ENDFOR
 
 SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,instr_dirty_hpx,instr_model_hpx,weights_hpx,$

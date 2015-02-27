@@ -68,7 +68,7 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
             beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
-            beam_base+=Real_part(beam_base_single*Conj(beam_base_single))>0
+            beam_base+=Real_part(beam_base_single*Conj(beam_base_single));>0
             n_bin_use+=1.*freq_norm[fi]
         ENDFOR
     ENDIF ELSE BEGIN
@@ -91,9 +91,9 @@ IF Keyword_Set(square) THEN BEGIN
             beam_base_uv1[xl:xh,yl:yh]=beam_single
             beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)            
             beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
-            neg_inds=where(real_part(beam_base_single) LT 0,n_neg)
-            IF n_neg GT 0 THEN beam_base_single[neg_inds]=0.
-            beam_base+=nf_bin*Real_part(beam_base_single*Conj(beam_base_single))>0
+;            neg_inds=where(real_part(beam_base_single) LT 0,n_neg)
+;            IF n_neg GT 0 THEN beam_base_single[neg_inds]=0.
+            beam_base+=nf_bin*Real_part(beam_base_single*Conj(beam_base_single));>0
             n_bin_use+=nf_bin*freq_norm[fbin]
             
         ENDFOR

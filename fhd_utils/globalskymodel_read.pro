@@ -21,7 +21,7 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     
     npix=N_Elements(Temperature) ;should equal 12.*512^2.
     nside=npix2nside(npix)
-    pix_area=4.*!Pi/npix
+;    pix_area=4.*!Pi/npix
     
     radec_i=where(Finite(ra_arr))
     ra_use=ra_arr[radec_i]
@@ -68,33 +68,36 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     Temperature[Ceil(xv_hpx),Floor(yv_hpx)]+=(1-x_frac)*y_frac*hpx_vals
     Temperature[Ceil(xv_hpx),Ceil(yv_hpx)]+=(1-x_frac)*(1-y_frac)*hpx_vals
     Temperature*=weight_invert(weights_img)
-    Temperature=Temperature*(model_freq/mean(frequency))^spectral_index
+    Temperature=Temperature*(model_freq/mean(frequency))^spectral_index ;scale temperature to correct frequency
+    
+    ;convert from Kelvin to Jy/pixel
+    Jy_per_pixel=convert_kelvin_jansky(Temperature,nside=nside,frequency=frequency*1E6)
     
     mask=fltarr(dimension,elements)
     mask[radec_i]=1
-    interp_i=where((Temperature EQ 0) AND (mask GT 0),n_interp)
+    interp_i=where((Jy_per_pixel EQ 0) AND (mask GT 0),n_interp)
     IF n_interp GT 0 THEN BEGIN
         fraction_int=n_interp/Total(mask)
         min_valid=4.
         min_width=Ceil(2.*Sqrt(min_valid/(!Pi*fraction_int)))>3.
-        Temp_int=Temperature
-        Temp_int[interp_i]=!Values.F_NAN
-        Temp_filtered=Median(Temp_int,min_width,/even)
-        i_nan=where(Finite(Temp_filtered,/nan),n_nan)
+        Brightness_int=Jy_per_pixel
+        Brightness_int[interp_i]=!Values.F_NAN
+        Brightness_filtered=Median(Brightness_int,min_width,/even)
+        i_nan=where(Finite(Brightness_filtered,/nan),n_nan)
         iter=0
         WHILE n_nan GT 0 DO BEGIN
             IF iter GT 5 THEN BREAK
             nan_x=i_nan mod dimension
             nan_y=Floor(i_nan/dimension)
             width_use=Ceil(min_width*(1.+iter)/2.)
-            FOR i=0L,n_nan-1 DO Temp_filtered[i_nan[i]]=Median(Temp_filtered[(nan_x[i]-width_use)>0:(nan_x[i]+width_use)<(dimension-1),(nan_y[i]-width_use)>0:(nan_y[i]+width_use)<(elements-1)],/even)
-            i_nan=where(Finite(Temp_filtered,/nan),n_nan)
+            FOR i=0L,n_nan-1 DO Brightness_filtered[i_nan[i]]=Median(Brightness_filtered[(nan_x[i]-width_use)>0:(nan_x[i]+width_use)<(dimension-1),(nan_y[i]-width_use)>0:(nan_y[i]+width_use)<(elements-1)],/even)
+            i_nan=where(Finite(Brightness_filtered,/nan),n_nan)
             iter+=1
         ENDWHILE
-        IF n_nan GT 0 THEN Temp_filtered[i_nan]=0.
-        Temperature[interp_i]=Temp_filtered[interp_i]
+        IF n_nan GT 0 THEN Brightness_filtered[i_nan]=0.
+        Jy_per_pixel[interp_i]=Brightness_filtered[interp_i]
     ENDIF
-    RETURN,Ptr_new(Temperature)
+    RETURN,Ptr_new(Jy_per_pixel)
     
 ENDIF ELSE BEGIN
     print,"Using unfiltered Global Sky Model"
