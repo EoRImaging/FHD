@@ -97,6 +97,20 @@ IF Keyword_Set(mod_flag) THEN BEGIN
     x_high1=x_high0-x_low0+x_low1
     y_high1=y_high0-y_low0+y_low1
     model_img[x_low0:x_high0,y_low0:y_high0]=model_img_use[x_low1:x_high1,y_low1:y_high1]
+    
+    ;add in aliasing!
+    IF x_low1 GT 0 THEN BEGIN
+        model_img[dimension-x_low1:dimension-1,y_low0:y_high0]=model_img_use[0:x_low1-1,y_low1:y_high1]
+    ENDIF
+    IF y_low1 GT 0 THEN BEGIN
+        model_img[x_low0:x_high0,elements-y_low1:elements-1]=model_img_use[x_low1:x_high1,0:y_low1-1]
+    ENDIF
+    IF x_high1 LT dimension_use-1 THEN BEGIN
+        model_img[0:dimension_use-x_high1-2,y_low0:y_high0]=model_img_use[x_high1+1:dimension_use-1,y_low1:y_high1]
+    ENDIF
+    IF y_high1 LT elements_use-1 THEN BEGIN
+        model_img[x_low0:x_high0,0:elements_use-y_high1-2]=model_img_use[x_low1:x_high1,y_high1+1:elements_use-1]
+    ENDIF
 ENDIF ELSE model_img=model_img_use
 IF Keyword_Set(kernel_free) THEN Ptr_free,kernel_arr
 
