@@ -4,8 +4,8 @@ FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel_threshold=dft_kernel
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=32. ELSE resolution=Float(Round(dft_approximation_resolution))
 IF resolution LE 1 THEN resolution=32.
-dimension_kernel=dimension;*2.
-elements_kernel=elements;*2.
+dimension_kernel=dimension*2.
+elements_kernel=elements*2.
 IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=2./(!Pi*dimension_kernel) ;value of kernel_test along either axis at the edge of the image. 
 
 
@@ -15,6 +15,9 @@ yv_test=Abs(meshgrid(dimension_kernel,elements_kernel,2)-elements_kernel/2.)
 kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
 kernel_test_shift=Shift(kernel_test,-1,-1) ;the peak of the kernel may be offset by up to one pixel
 kernel_i=where((kernel_test>kernel_test_shift) GE dft_kernel_threshold,n_k)
+kernel_mask=intarr(dimension_kernel,elements_kernel) & kernel_mask[kernel_i]=1
+kernel_mask=dilate(kernel_mask,intarr(7,7)+1)
+kernel_i=where(kernel_mask,n_k)
 
 IF Keyword_Set(conserve_memory) THEN BEGIN
     IF conserve_memory GE 1E7 THEN mem_threshold=conserve_memory ELSE mem_threshold=1E8
@@ -29,43 +32,48 @@ ENDIF
 xv_k=(kernel_i mod dimension_kernel)-dimension_kernel/2.
 yv_k=Floor(kernel_i/dimension_kernel)-elements_kernel/2.
 
-kernel_recalc=1
-IF Keyword_Set(return_kernel) THEN BEGIN
-    IF Min(Ptr_valid(return_kernel)) EQ 1 THEN BEGIN
-        kernel_arr=return_kernel
-        kernel_free=0
-        kernel_recalc=0
-    ENDIF
-ENDIF   
-IF Keyword_Set(kernel_recalc) THEN BEGIN
-    kernel_arr=Ptrarr(resolution,resolution)
-;    kernel_norm=0.
-    FOR i=0.,resolution-1 DO BEGIN
-        IF i EQ 0 THEN BEGIN
-            kernel_x=Dblarr(n_k);Sin(Double(!Pi*(xv_k+i/resolution)))/Double((!Pi*(xv_k+i/resolution))>1.)
-            kernel_x[where(xv_k EQ 0)]=1.
-        ENDIF ELSE kernel_x=Sin((!DPi*(xv_k+i/resolution)))/(!DPi*(xv_k+i/resolution))
-        FOR j=0.,resolution-1 DO BEGIN
-            IF j EQ 0 THEN BEGIN
-                kernel_y=Dblarr(n_k);Sin(Double(!Pi*(yv_k+j/resolution)))/Double((!Pi*(yv_k+j/resolution))>1.)
-                kernel_y[where(yv_k EQ 0)]=1.
-            ENDIF ELSE kernel_y=Sin((!DPi*(yv_k+j/resolution)))/(!DPi*(yv_k+j/resolution))
-            kernel_single=kernel_x*kernel_y
-            kernel_norm=Total(kernel_single,/double)
-            kernel_arr[i,j]=Ptr_new(kernel_single/kernel_norm)
-        ENDFOR
-    ENDFOR
-    
-    IF Keyword_Set(return_kernel) THEN BEGIN
-        return_kernel=kernel_arr
-        kernel_free=0
-    ENDIF ELSE kernel_free=1
-ENDIF
+;kernel_recalc=1
+;IF Keyword_Set(return_kernel) THEN BEGIN
+;    IF Min(Ptr_valid(return_kernel)) EQ 1 THEN BEGIN
+;        kernel_arr=return_kernel
+;        kernel_free=0
+;        kernel_recalc=0
+;    ENDIF
+;ENDIF   
+;IF Keyword_Set(kernel_recalc) THEN BEGIN
+;    kernel_arr=Ptrarr(resolution,resolution)
+;;    kernel_norm=0.
+;    FOR i=0.,resolution-1 DO BEGIN
+;        IF i EQ 0 THEN BEGIN
+;            kernel_x=Dblarr(n_k);Sin(Double(!Pi*(xv_k+i/resolution)))/Double((!Pi*(xv_k+i/resolution))>1.)
+;            kernel_x[where(xv_k EQ 0)]=1.
+;        ENDIF ELSE kernel_x=Sin((!DPi*(xv_k+i/resolution)))/(!DPi*(xv_k+i/resolution))
+;        FOR j=0.,resolution-1 DO BEGIN
+;            IF j EQ 0 THEN BEGIN
+;                kernel_y=Dblarr(n_k);Sin(Double(!Pi*(yv_k+j/resolution)))/Double((!Pi*(yv_k+j/resolution))>1.)
+;                kernel_y[where(yv_k EQ 0)]=1.
+;            ENDIF ELSE kernel_y=Sin((!DPi*(yv_k+j/resolution)))/(!DPi*(yv_k+j/resolution))
+;            kernel_single=kernel_x*kernel_y
+;            kernel_norm=Total(kernel_single,/double)
+;;            kernel_single*=kernel_convol[kernel_i]
+;            kernel_arr[i,j]=Ptr_new(kernel_single/kernel_norm)
+;        ENDFOR
+;    ENDFOR
+;    
+;    IF Keyword_Set(return_kernel) THEN BEGIN
+;        return_kernel=kernel_arr
+;        kernel_free=0
+;    ENDIF ELSE kernel_free=1
+;ENDIF
 
-x_offset=Round((Ceil(x_vec)-x_vec)*resolution) mod resolution    
-y_offset=Round((Ceil(y_vec)-y_vec)*resolution) mod resolution
+;x_offset=Round((Ceil(x_vec)-x_vec)*resolution) mod resolution    
+;y_offset=Round((Ceil(y_vec)-y_vec)*resolution) mod resolution
+x_offset=0.
+y_offset=0.
 xcen0=Round(x_vec+x_offset/resolution) ;do this after offset, in case it has rounded to the next grid point
 ycen0=Round(y_vec+y_offset/resolution)
+dx_arr=x_vec-xcen0
+dy_arr=y_vec-ycen0
 
 si1=where((xcen0 GE 0) AND (ycen0 GE 0) AND (xcen0 LE dimension-1) AND (ycen0 LE elements-1),ns)
 
@@ -87,7 +95,18 @@ ENDELSE
 
 model_img_use=Dblarr(dimension_use,elements_use)
 FOR si=0L,ns-1L DO BEGIN
-    model_img_use[xcen0[si1[si]]+xv_k,ycen0[si1[si]]+yv_k]+=amp_vec[si1[si]]*(*kernel_arr[x_offset[si1[si]],y_offset[si1[si]]])
+    IF dx_arr[si] EQ 0 THEN BEGIN
+        kernel_x=Dblarr(n_k)
+        kernel_x[where(xv_k EQ 0)]=1.
+    ENDIF ELSE kernel_x=Sin((!DPi*(xv_k-dx_arr[si])))/(!DPi*(xv_k-dx_arr[si]))
+    IF dy_arr[si] EQ 0 THEN BEGIN
+        kernel_y=Dblarr(n_k)
+        kernel_y[where(yv_k EQ 0)]=1.
+    ENDIF ELSE kernel_y=Sin((!DPi*(yv_k-dy_arr[si])))/(!DPi*(yv_k-dy_arr[si]))
+    kernel_single=kernel_x*kernel_y
+    kernel_norm=Total(kernel_single,/double)
+    model_img_use[xcen0[si1[si]]+xv_k,ycen0[si1[si]]+yv_k]+=amp_vec[si1[si]]*kernel_single/kernel_norm
+;    model_img_use[xcen0[si1[si]]+xv_k,ycen0[si1[si]]+yv_k]+=amp_vec[si1[si]]*(*kernel_arr[x_offset[si1[si]],y_offset[si1[si]]])
 ENDFOR
 
 IF Keyword_Set(mod_flag) THEN BEGIN
@@ -116,7 +135,7 @@ IF Keyword_Set(mod_flag) THEN BEGIN
         model_img[x_low0:x_high0,0:elements_use-y_high1-2]+=model_img_use[x_low1:x_high1,y_high1+1:elements_use-1]
     ENDIF
 ENDIF ELSE model_img=model_img_use
-IF Keyword_Set(kernel_free) THEN Ptr_free,kernel_arr
+;IF Keyword_Set(kernel_free) THEN Ptr_free,kernel_arr
 
 RETURN,model_img
 END
