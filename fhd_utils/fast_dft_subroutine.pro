@@ -3,14 +3,18 @@ FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel_threshold=dft_kernel
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=32. ELSE resolution=Float(Round(dft_approximation_resolution))
-IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=2./(!Pi*dimension) ;value of kernel_test along either axis at the edge of the image. 
 IF resolution LE 1 THEN resolution=32.
+dimension_kernel=dimension;*2.
+elements_kernel=elements;*2.
+IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=2./(!Pi*dimension_kernel) ;value of kernel_test along either axis at the edge of the image. 
 
-xv_test=Abs(meshgrid(dimension,elements,1)-dimension/2.)
-yv_test=Abs(meshgrid(dimension,elements,2)-elements/2.)
+
+xv_test=Abs(meshgrid(dimension_kernel,elements_kernel,1)-dimension_kernel/2.)
+yv_test=Abs(meshgrid(dimension_kernel,elements_kernel,2)-elements_kernel/2.)
 
 kernel_test=1./(((!Pi*xv_test)>1.)*((!Pi*yv_test)>1.)) 
-kernel_i=where(kernel_test GE dft_kernel_threshold,n_k)
+kernel_test_shift=Shift(kernel_test,-1,-1) ;the peak of the kernel may be offset by up to one pixel
+kernel_i=where((kernel_test>kernel_test_shift) GE dft_kernel_threshold,n_k)
 
 IF Keyword_Set(conserve_memory) THEN BEGIN
     IF conserve_memory GE 1E7 THEN mem_threshold=conserve_memory ELSE mem_threshold=1E8
@@ -22,8 +26,8 @@ IF Keyword_Set(conserve_memory) THEN BEGIN
     ENDWHILE
 ENDIF
 
-xv_k=(kernel_i mod dimension)-dimension/2.
-yv_k=Floor(kernel_i/dimension)-elements/2.
+xv_k=(kernel_i mod dimension_kernel)-dimension_kernel/2.
+yv_k=Floor(kernel_i/dimension_kernel)-elements_kernel/2.
 
 kernel_recalc=1
 IF Keyword_Set(return_kernel) THEN BEGIN
@@ -38,17 +42,17 @@ IF Keyword_Set(kernel_recalc) THEN BEGIN
 ;    kernel_norm=0.
     FOR i=0.,resolution-1 DO BEGIN
         IF i EQ 0 THEN BEGIN
-            kernel_x=Sin(!DPi*(xv_k+i/resolution))/((!DPi*(xv_k+i/resolution))>1.)
+            kernel_x=Dblarr(n_k);Sin(Double(!Pi*(xv_k+i/resolution)))/Double((!Pi*(xv_k+i/resolution))>1.)
             kernel_x[where(xv_k EQ 0)]=1.
-        ENDIF ELSE kernel_x=Sin(!DPi*(xv_k+i/resolution))/(!DPi*(xv_k+i/resolution))
+        ENDIF ELSE kernel_x=Sin((!DPi*(xv_k+i/resolution)))/(!DPi*(xv_k+i/resolution))
         FOR j=0.,resolution-1 DO BEGIN
             IF j EQ 0 THEN BEGIN
-                kernel_y=Sin(!DPi*(yv_k+j/resolution))/((!DPi*(yv_k+j/resolution))>1.)
+                kernel_y=Dblarr(n_k);Sin(Double(!Pi*(yv_k+j/resolution)))/Double((!Pi*(yv_k+j/resolution))>1.)
                 kernel_y[where(yv_k EQ 0)]=1.
-            ENDIF ELSE kernel_y=Sin(!DPi*(yv_k+j/resolution))/(!DPi*(yv_k+j/resolution))
+            ENDIF ELSE kernel_y=Sin((!DPi*(yv_k+j/resolution)))/(!DPi*(yv_k+j/resolution))
             kernel_single=kernel_x*kernel_y
             kernel_norm=Total(kernel_single,/double)
-            kernel_arr[i,j]=Ptr_new(Float(kernel_single/kernel_norm))
+            kernel_arr[i,j]=Ptr_new(kernel_single/kernel_norm)
         ENDFOR
     ENDFOR
     
@@ -81,7 +85,7 @@ ENDIF ELSE BEGIN
     elements_use=elements
 ENDELSE
 
-model_img_use=fltarr(dimension_use,elements_use)
+model_img_use=Dblarr(dimension_use,elements_use)
 FOR si=0L,ns-1L DO BEGIN
     model_img_use[xcen0[si1[si]]+xv_k,ycen0[si1[si]]+yv_k]+=amp_vec[si1[si]]*(*kernel_arr[x_offset[si1[si]],y_offset[si1[si]]])
 ENDFOR
@@ -97,6 +101,20 @@ IF Keyword_Set(mod_flag) THEN BEGIN
     x_high1=x_high0-x_low0+x_low1
     y_high1=y_high0-y_low0+y_low1
     model_img[x_low0:x_high0,y_low0:y_high0]=model_img_use[x_low1:x_high1,y_low1:y_high1]
+    
+    ;add in aliasing!
+    IF x_low1 GT 0 THEN BEGIN
+        model_img[dimension-x_low1:dimension-1,y_low0:y_high0]+=model_img_use[0:x_low1-1,y_low1:y_high1]
+    ENDIF
+    IF y_low1 GT 0 THEN BEGIN
+        model_img[x_low0:x_high0,elements-y_low1:elements-1]+=model_img_use[x_low1:x_high1,0:y_low1-1]
+    ENDIF
+    IF x_high1 LT dimension_use-1 THEN BEGIN
+        model_img[0:dimension_use-x_high1-2,y_low0:y_high0]+=model_img_use[x_high1+1:dimension_use-1,y_low1:y_high1]
+    ENDIF
+    IF y_high1 LT elements_use-1 THEN BEGIN
+        model_img[x_low0:x_high0,0:elements_use-y_high1-2]+=model_img_use[x_low1:x_high1,y_high1+1:elements_use-1]
+    ENDIF
 ENDIF ELSE model_img=model_img_use
 IF Keyword_Set(kernel_free) THEN Ptr_free,kernel_arr
 
