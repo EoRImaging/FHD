@@ -240,7 +240,12 @@ ENDIF ELSE BEGIN
         phase=Atan(gain_use,/phase)
         amp2=fltarr(nf_use,nt_use)
         FOR tile_i=0,nt_use-1 DO amp2[*,tile_i]=(Median(amp[*,tile_i]) EQ 0) ? 0:(amp[*,tile_i]/Median(amp[*,tile_i]))
-        bandpass_single=Median(amp2,dimension=2)
+        bandpass_single=Fltarr(nf_use)
+        FOR f_i=0L,nf_use-1 DO BEGIN
+            resistant_mean,amp2[f_i,*],2,res_mean
+            bandpass_single[f_i]=res_mean
+        ENDFOR
+;        bandpass_single=Median(amp2,dimension=2)
         bandpass_arr[pol_i+1,freq_use]=bandpass_single
         gain2=Complexarr(size(gain,/dimension))
         FOR tile_i=0,n_tile-1 DO gain2[freq_use,tile_i]=bandpass_single
