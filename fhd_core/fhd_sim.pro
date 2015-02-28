@@ -58,6 +58,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   ;Read in or construct a new beam model. Also sets up the structure PSF
   print,'Calculating beam model'
+  
   psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=0,_Extra=extra)
   IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
   
@@ -265,7 +266,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   IF Keyword_Set(snapshot_healpix_export) THEN begin
     IF ~Keyword_Set(n_avg) THEN n_avg=1
     healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
-      vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
+      vis_model_arr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
       

@@ -62,11 +62,12 @@ IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, fro
 IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
 IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
 
-baseline_i=(where(Strmatch(param_list,'BASELINE'),found_baseline))[0]
-uu_i=(where(Strmatch(param_list,'UU'),found_uu))[0]
-vv_i=(where(Strmatch(param_list,'VV'),found_vv))[0]
-ww_i=(where(Strmatch(param_list,'WW'),found_ww))[0]
-date_i=Max(where(Strmatch(param_list,'DATE'),found_date))
+baseline_i=(where(Strmatch(param_list,'BASELINE', /fold_case),found_baseline))[0]
+uu_i=(where(Strmatch(param_list,'UU', /fold_case),found_uu))[0]
+vv_i=(where(Strmatch(param_list,'VV', /fold_case),found_vv))[0]
+ww_i=(where(Strmatch(param_list,'WW', /fold_case),found_ww))[0]
+date_i=Max(where(Strmatch(param_list,'DATE', /fold_case),found_date))
+
 Jdate_extract=sxpar(header,String(format='("PZERO",I1)',date_i+1),count=found_jd0)
 IF Keyword_Set(found_jd0) THEN IF Jdate_extract GT 2.4E6 THEN Jdate0=Jdate_extract
 
