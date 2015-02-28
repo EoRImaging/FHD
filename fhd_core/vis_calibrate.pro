@@ -169,7 +169,7 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
             cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=1,_Extra=extra)
             cal_poly_sub=vis_cal_divide(cal_base,cal_polyfit)
             cal_bandpass2=vis_cal_bandpass(cal_poly_sub,obs,file_path_fhd=file_path_fhd,_Extra=extra)
-            cal_remainder2=vis_cal_divide(cal_base,cal_bandpass)
+            cal_remainder2=vis_cal_divide(cal_base,cal_bandpass2)
             cal_polyfit2=vis_cal_polyfit(cal_remainder2,obs,degree=calibration_polyfit,_Extra=extra)
             cal=vis_cal_combine(cal_polyfit2,cal_bandpass2)
         ENDIF ELSE BEGIN
