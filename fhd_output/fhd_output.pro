@@ -98,6 +98,19 @@ sxaddpar,fits_header_Jy,'BUNIT','Jy/beam'
 
 fits_header_apparent=fits_header
 sxaddpar,fits_header_apparent,'BUNIT','Jy/beam (apparent)'
+
+mkhdr,fits_header_uv,Abs(*weights_arr[0])
+sxaddpar,fits_header_uv,'CD1_1',obs.kpix,'Wavelengths / Pixel'
+sxaddpar,fits_header_uv,'CD2_1',0.,'Wavelengths / Pixel'
+sxaddpar,fits_header_uv,'CD1_2',0.,'Wavelengths / Pixel'
+sxaddpar,fits_header_uv,'CD2_2',obs.kpix,'Wavelengths / Pixel'
+sxaddpar,fits_header_uv,'CRPIX1',dimension/2+1,'Reference Pixel in X'
+sxaddpar,fits_header_uv,'CRPIX2',elements/2+1,'Reference Pixel in Y'
+sxaddpar,fits_header_uv,'CRVAL1',0.,'Wavelengths (u)'
+sxaddpar,fits_header_uv,'CRVAL2',0.,'Wavelengths (v)'
+sxaddpar,fits_header_uv,'MJD-OBS',astr_out.MJDOBS,'Modified Julian day of observation'
+sxaddpar,fits_header_uv,'DATE-OBS',astr_out.DATEOBS,'Date of observation'
+
 t1a=Systime(1)
 t0+=t1a-t0a
 
@@ -392,7 +405,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FitsFast,instr_source,fits_header_apparent,/write,file_path=output_path_fg+'_Sources_'+pol_names[pol_i]
         FitsFast,instr_restored,fits_header_apparent,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
-        FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
+        FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header_uv,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
         
         FitsFast,*stokes_images[pol_i],fits_header_Jy,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i+4]
         FitsFast,*stokes_sources[pol_i],fits_header_Jy,/write,file_path=output_path+'_Sources_'+pol_names[pol_i+4]
