@@ -234,6 +234,18 @@ sxaddpar,fits_header_Jy,'BUNIT','Jy/beam'
 fits_header_apparent=fits_header
 sxaddpar,fits_header_apparent,'BUNIT','Jy/beam (apparent)'
 
+mkhdr,fits_header_uv,Abs(*weights_arr[0])
+sxaddpar,fits_header_uv,'CD1_1',obs.kpix,'Wavelengths / Pixel'
+sxaddpar,fits_header_uv,'CD2_1',0.,'Wavelengths / Pixel'
+sxaddpar,fits_header_uv,'CD1_2',0.,'Wavelengths / Pixel'
+sxaddpar,fits_header_uv,'CD2_2',obs.kpix,'Wavelengths / Pixel'
+sxaddpar,fits_header_uv,'CRPIX1',dimension/2+1,'Reference Pixel in X'
+sxaddpar,fits_header_uv,'CRPIX2',elements/2+1,'Reference Pixel in Y'
+sxaddpar,fits_header_uv,'CRVAL1',0.,'Wavelengths (u)'
+sxaddpar,fits_header_uv,'CRVAL2',0.,'Wavelengths (v)'
+sxaddpar,fits_header_uv,'MJD-OBS',astr_out.MJDOBS,'Modified Julian day of observation'
+sxaddpar,fits_header_uv,'DATE-OBS',astr_out.DATEOBS,'Date of observation'
+
 x_inc=beam_i mod dimension
 y_inc=Floor(beam_i/dimension)
 IF N_Elements(zoom_radius) GT 0 THEN BEGIN
@@ -374,7 +386,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
         FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
-        IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
+        IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header_uv,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
         IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
     ENDIF
     
