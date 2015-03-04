@@ -132,14 +132,36 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     if n_elements(axkeywords) ne 0 then axkeywords = create_struct(axkeywords, 'ylog', 1, 'ytickformat', 'exponent') $
   else axkeywords = create_struct('ylog', 1, 'ytickformat', 'exponent')
   
-  plot_pos = [.15,.15,.8,.92]
-  cb_pos = [.92, .15,.95,.92]
+  
+  
+  ;; Work out plot & colorbar positions
+  ;; in units of plot area (incl. margins)
+  if n_elements(cb_size_in) eq 0 then cb_size = 0.025 else cb_size = cb_size_in
+  if n_elements(margin_in) lt 4 then begin
+    margin = [0.2, 0.2, 0.02, 0.1]
+   endif else margin = margin_in
+  
+  if n_elements(cb_margin_in) lt 2 then begin
+    cb_margin = [0.2, 0.02]
+  ;; if units_str ne '' then begin
+  ;;    cb_margin = [0.2, 0.02]
+  ;; endif else begin
+  ;;    ;; no label on colorbar in this case
+  ;;    cb_margin = [0.1, 0.02]
+  ;; endelse
+  endif else cb_margin = cb_margin_in
+  
+  plot_pos = [margin[0], margin[1], (1-cb_margin[1]-cb_size-cb_margin[0]-margin[2]), (1-margin[3])]
+  cb_pos = [(1-cb_margin[1]-cb_size), margin[1], (1-cb_margin[1]), (1-margin[3])]
   
   plot_len = [plot_pos[2]-plot_pos[0], plot_pos[3] - plot_pos[1]]
   if min(plot_len) le 0 then stop
   
   plot_aspect = (plot_pos[3] - plot_pos[1]) / (plot_pos[2] - plot_pos[0])
-  
+
+;  plot_pos = [.15,.15,.8,.92]
+;  cb_pos = [.92, .15,.95,.92]
+    
   if n_elements(xvals) gt 0 and n_elements(yvals) gt 0 then begin
     xlength = xrange[1] - xrange[0]
     ylength = yrange[1]-yrange[0]
