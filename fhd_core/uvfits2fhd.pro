@@ -193,6 +193,7 @@ IF data_flag LE 0 THEN BEGIN
     ENDFOR
     fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd,obs=obs,_Extra=extra
     
+    IF Keyword_Set(return_decon_visibilities) THEN save_visibilities=1
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
         vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
@@ -207,7 +208,7 @@ IF data_flag LE 0 THEN BEGIN
     ;Grid the visibilities
     IF Keyword_Set(grid_recalculate) THEN BEGIN
         print,'Gridding visibilities'
-        IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol,/allocate)
+        IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol)
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
         
@@ -233,7 +234,7 @@ IF data_flag LE 0 THEN BEGIN
             fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
             IF pol_i EQ 0 THEN fhd_save_io,status_str,uniform_filter,var='vis_count',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 
-            IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
+            IF Keyword_Set(deconvolve) THEN IF Keyword_Set(return_mapfn) THEN map_fn_arr[pol_i]=Ptr_new(return_mapfn,/no_copy)
             *image_uv_arr[pol_i]=Temporary(grid_uv)
             IF Keyword_Set(model_flag) THEN BEGIN
                 fhd_save_io,status_str,model_return,var='grid_uv_model',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
