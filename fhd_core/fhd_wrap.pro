@@ -65,7 +65,7 @@ IF Keyword_Set(transfer_mapfn) THEN print,String(format='("Transferring mapfn fr
 
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+    IF Ptr_valid(map_fn_arr[pol_i]) EQ 0 THEN BEGIN
 ;        fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,/restore,transfer=transfer_mapfn,obs=obs,_Extra=extra
         ;IMPORTANT: this approach of restoring the map_fn uses the least memory
         fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
