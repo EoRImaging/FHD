@@ -48,7 +48,7 @@ jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0
 
 ;Read in or construct a new beam model. Also sets up the structure PSF
 IF ~silent THEN print,'Calculating beam model'
-psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=0,_Extra=extra)
+psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=0,_Extra=extra)
 IF Keyword_Set(t_beam) THEN IF ~silent THEN print,'Beam modeling time: ',t_beam
 
 flag_arr=Ptrarr(n_pol,/allocate)
