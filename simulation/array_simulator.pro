@@ -41,7 +41,7 @@ IF metadata_test THEN BEGIN
 ENDIF
 
 ;set up the obs and params structure. Will generate arbitary array layout if supplied
-array_simulator_init,obs,params,error=error,instrument=instrument,_Extra=extra
+array_simulator_init,obs,params,error=error,instrument=instrument,n_pol=n_pol,_Extra=extra
 n_pol=obs.n_pol
 n_freq=obs.n_freq
 jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0)
