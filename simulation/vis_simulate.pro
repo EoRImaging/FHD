@@ -100,7 +100,7 @@ if keyword_set(recalculate_all) then begin
     IF ~Keyword_Set(no_save) THEN save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
     undefine, model_uvf
     
-    vis_dimension=N_Elements(params)
+    vis_dimension=N_Elements(params.uu)
     
     vis_model_arr = Ptrarr(n_pol,/allocate)
     for pol_i=0,n_pol-1 do *vis_model_arr[pol_i]=Complexarr(n_freq,vis_dimension)
