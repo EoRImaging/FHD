@@ -66,7 +66,7 @@ if keyword_set(recalculate_all) then begin
         time0 = systime(1)        
         eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)       
         time1 = systime(1)
-        print, 'time for eor modelling: ' + number_formatter(time1-time0)
+        print, 'time for eor modelling (min): ' + number_formatter((time1-time0)/60.)
         if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
         else model_uvf_cube = temporary(eor_uvf_cube)
       endif
