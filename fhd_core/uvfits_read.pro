@@ -7,6 +7,7 @@ IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav
 IF Keyword_Set(restore_vis_savefile) THEN BEGIN
     IF file_test(file_path_vis_sav) EQ 0 THEN BEGIN
         error=1
+        print,"File: "+file_path_vis_sav+" not found! Returning"
         RETURN
     ENDIF
     t_readfits=Systime(1)
