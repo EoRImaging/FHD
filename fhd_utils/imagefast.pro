@@ -303,7 +303,7 @@ IF Keyword_Set(show_grid) THEN BEGIN
 ENDIF  
 
 IF Keyword_Set(contour_image) THEN BEGIN
-    IF Ptr_valid(contour_image) THEN contour_image_use=*contour_image ELSE contour_image_use=contour_image
+    IF Ptr_valid(contour_image[0]) THEN contour_image_use=*contour_image[0] ELSE contour_image_use=contour_image
     CASE reverse_image OF
         0:contour_image_use=contour_image_use
         1:contour_image_use=Reverse(contour_image_use,1)
