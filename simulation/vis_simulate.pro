@@ -140,5 +140,5 @@ ENDIF ELSE BEGIN
         vis_model_arr[pol_i]=vis_model_ptr
     ENDFOR 
 ENDELSE
-RETURN,vis_model_ptr
+RETURN,vis_model_arr
 END
