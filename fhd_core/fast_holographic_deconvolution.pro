@@ -34,7 +34,6 @@ max_sources=fhd_params.max_sources
 check_iter=fhd_params.check_iter
 beam_threshold=fhd_params.beam_threshold
 add_threshold=fhd_params.add_threshold
-dft_resolution=fhd_params.dft_resolution
 dft_threshold=fhd_params.dft_threshold
 return_kernel=1
 max_add_sources=fhd_params.max_add_sources
@@ -355,7 +354,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t2_0
     source_dft_multi,obs,jones,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,$
-        dft_kernel_threshold=dft_threshold,dft_approximation_resolution=dft_resolution,return_kernel=return_kernel,_Extra=extra
+        dft_threshold=dft_threshold,return_kernel=return_kernel,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -421,7 +420,7 @@ info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detecti
 fhd_params.info=Ptr_new(info_struct)
 t3_0=Systime(1)
 model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
-    dft_kernel_threshold=dft_threshold,dft_approximation_resolution=dft_resolution,_Extra=extra)
+    dft_threshold=dft_threshold,_Extra=extra)
 IF size(return_kernel,/type) EQ 10 THEN Ptr_free,return_kernel
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 IF Keyword_Set(subtract_sidelobe_catalog) THEN  FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]

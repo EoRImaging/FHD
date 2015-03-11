@@ -1,12 +1,14 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
-    conserve_memory=conserve_memory,dft_approximation_resolution=dft_approximation_resolution,dft_kernel_threshold=dft_kernel_threshold,$
-    frequency=frequency,dimension=dimension,elements=elements,n_pol=n_pol,return_kernel=return_kernel,_Extra=extra
+    conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,$
+    dimension=dimension,elements=elements,n_pol=n_pol,_Extra=extra
 
 IF Keyword_Set(obs) THEN BEGIN
+    IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=obs.dft_threshold
     dimension=obs.dimension
     elements=obs.elements
     n_pol=obs.n_pol
 ENDIF ELSE BEGIN
+    IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=0.
     IF N_Elements(elements) EQ 0 THEN elements=dimension
     IF N_Elements(n_pol) EQ 0 THEN n_pol=1
 ENDELSE
@@ -50,10 +52,10 @@ FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
 ;    IF (resolution_use)*(dimension*elements) GT Float(N_Elements(x_vec))*Float(N_Elements(uv_i_use)) $
 ;        THEN resolution_use=0 
 ;ENDIF
-IF Keyword_Set(dft_approximation_resolution) THEN BEGIN
+IF Keyword_Set(dft_threshold) THEN BEGIN
     IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
     model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-        conserve_memory=conserve_memory,dft_approximation_resolution=dft_approximation_resolution,dft_kernel_threshold=dft_kernel_threshold)
+        conserve_memory=conserve_memory,dft_threshold=dft_threshold)
 
     FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
     Ptr_free,model_uv_new,flux_arr
