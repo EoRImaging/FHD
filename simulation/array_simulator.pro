@@ -170,5 +170,5 @@ timing=Systime(1)-t0
 print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
 print,''
 !except=except
-stop
+
 END
