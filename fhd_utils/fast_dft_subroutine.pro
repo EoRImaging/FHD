@@ -1,13 +1,13 @@
-FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,conserve_memory=conserve_memory,$
-    dft_approximation_threshold=dft_approximation_threshold,return_kernel=return_kernel
+FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,$
+    conserve_memory=conserve_memory,dft_threshold=dft_threshold,return_kernel=return_kernel
 
 t0_a=Systime(1)
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 
 dimension_kernel=dimension;2
 elements_kernel=elements;*2
-IF N_Elements(dft_approximation_threshold) EQ 0 THEN threshold=1./(!Pi*dimension_kernel) $ ;value of kernel_test along either axis at the edge of the image. 
-    ELSE threshold=dft_approximation_threshold
+IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=1./(!Pi*dimension_kernel)  ;value of kernel_test along either axis at the edge of the image. 
+
 t1_a=Systime(1)
 xv_test=meshgrid(dimension_kernel,elements_kernel,1)-dimension_kernel/2.
 yv_test=meshgrid(dimension_kernel,elements_kernel,2)-elements_kernel/2.
@@ -18,7 +18,7 @@ kernel_test=1./((Abs(!Pi*xv_test)>1.)*(Abs(!Pi*yv_test)>1.))$
            +1./((Abs(!Pi*xv_test)>1.)*(Abs(!Pi*(yv_test+dimension_kernel))))$
            +1./((Abs(!Pi*xv_test)>1.)*(Abs(!Pi*(yv_test-dimension_kernel))))
 kernel_test_shift=Shift(kernel_test,-1,-1) ;the peak of the kernel may be offset by up to one pixel
-kernel_i=where((kernel_test>kernel_test_shift) GE dft_kernel_threshold,n_k)
+kernel_i=where((kernel_test>kernel_test_shift) GE dft_threshold,n_k)
 kernel_mask=intarr(dimension_kernel,elements_kernel) & kernel_mask[kernel_i]=1
 
 xv_k=Long((kernel_i mod dimension_kernel)-dimension_kernel/2)

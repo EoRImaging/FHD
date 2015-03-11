@@ -17,7 +17,7 @@ PRO fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,file_path_fhd=file_p
     map_fn_arr=map_fn_arr,GPU_enable=GPU_enable,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     calibration_image_subtract=calibration_image_subtract,model_uv_arr=model_uv_arr,$
     vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,flag_arr=flag_arr,log_store=log_store,$
-    dft_approximation_threshold=dft_approximation_threshold,_Extra=extra
+    dft_threshold=dft_threshold,_Extra=extra
 
 ;snapshot data must have been gridded previously, and the Holo map fns generated
 ;reads and deconvolves simultaneously on multiple polarizations, time intervals, and frequencies
@@ -38,7 +38,7 @@ IF size(cal,/type) NE 8 THEN $
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 fhd_params=fhd_init(obs,cal,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,file_path_fhd=file_path_fhd,$
-    dft_approximation_threshold=dft_approximation_threshold,_Extra=extra)
+    dft_threshold=dft_threshold,_Extra=extra)
 
 n_pol=fhd_params.npol
 
