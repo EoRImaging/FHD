@@ -3,7 +3,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     n_pol=n_pol,silent=silent,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
     eor_sim=eor_sim,include_catalog_sources = include_catalog_sources, source_list=source_list,$
-    catalog_file_path=catalog_file_path,_Extra=extra
+    catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
     
 compile_opt idl2,strictarrsubs
 except=!except
@@ -170,5 +170,5 @@ timing=Systime(1)-t0
 print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
 print,''
 !except=except
-stop
+
 END
