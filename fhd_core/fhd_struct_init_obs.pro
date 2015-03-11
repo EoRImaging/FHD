@@ -120,6 +120,7 @@ tile_flag_i=where(tile_use1 EQ 0,n_flag)
 IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
 IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=0. 
+IF dft_threshold EQ 1 THEN dft_threshold=1./((2.*!Pi)^2.*dimension)
 IF N_Elements(nside) EQ 0 THEN nside=0
 IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=restrict_hpx_inds
 IF N_Elements(n_hpx) EQ 0 THEN n_hpx=0

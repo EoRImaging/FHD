@@ -33,7 +33,7 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
-    calibration_catalog_file_path=calibration_catalog_file_path,$
+    calibration_catalog_file_path=calibration_catalog_file_path,dft_threshold=dft_threshold,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
@@ -75,7 +75,7 @@ IF data_flag LE 0 THEN BEGIN
         IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
         RETURN
     ENDIF
-    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
+    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra)
     n_pol=obs.n_pol
     n_freq=obs.n_freq
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end 

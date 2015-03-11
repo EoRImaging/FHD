@@ -6,7 +6,7 @@ IF N_Elements(elements) EQ 0 THEN elements=dimension
 
 dimension_kernel=dimension;2
 elements_kernel=elements;*2
-IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=1./(!Pi*dimension_kernel)  ;value of kernel_test along either axis at the edge of the image. 
+IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=1./((2.*!Pi)^2.*dimension)  ;1/2 value of kernel_test along either axis and one bin to either side at the edge of the image. 
 
 t1_a=Systime(1)
 xv_test=meshgrid(dimension_kernel,elements_kernel,1)-dimension_kernel/2.
