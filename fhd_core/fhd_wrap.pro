@@ -16,8 +16,7 @@ PRO fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,file_path_fhd=file_p
     data_directory=data_directory,filename=filename,version=version,silent=silent,transfer_mapfn=transfer_mapfn,$
     map_fn_arr=map_fn_arr,GPU_enable=GPU_enable,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     calibration_image_subtract=calibration_image_subtract,model_uv_arr=model_uv_arr,$
-    vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,flag_arr=flag_arr,log_store=log_store,$
-    dft_threshold=dft_threshold,_Extra=extra
+    vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,flag_arr=flag_arr,log_store=log_store,_Extra=extra
 
 ;snapshot data must have been gridded previously, and the Holo map fns generated
 ;reads and deconvolves simultaneously on multiple polarizations, time intervals, and frequencies
@@ -37,8 +36,7 @@ IF size(cal,/type) NE 8 THEN $
 
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
-fhd_params=fhd_init(obs,cal,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,file_path_fhd=file_path_fhd,$
-    dft_threshold=dft_threshold,_Extra=extra)
+fhd_params=fhd_init(obs,cal,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,file_path_fhd=file_path_fhd,_Extra=extra)
 
 n_pol=fhd_params.npol
 
@@ -116,7 +114,7 @@ IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_arr) THEN BEGIN
         ;could generate model visibilities from just the source list (allows sources to be pruned), or from the final uv model (don't have to redo the DFT) 
         vis_model_arr=vis_source_model(source_array,obs,status_str,psf,params,flag_arr,$
-            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd,dft_approximation_resolution=fhd_params.dft_resolution,dft_kernel_threshold=fhd_params.dft_threshold)   
+            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)   
 ;        vis_model_arr=vis_source_model(source_array,obs,psf,params,model_uv_arr=model_uv_arr,$
 ;            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)      
     ENDIF

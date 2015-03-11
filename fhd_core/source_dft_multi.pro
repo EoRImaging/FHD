@@ -1,12 +1,14 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
-    conserve_memory=conserve_memory,dft_threshold=dft_threshold,$
-    frequency=frequency,dimension=dimension,elements=elements,n_pol=n_pol,return_kernel=return_kernel,_Extra=extra
+    conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,$
+    dimension=dimension,elements=elements,n_pol=n_pol,_Extra=extra
 
 IF Keyword_Set(obs) THEN BEGIN
+    IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=obs.dft_threshold
     dimension=obs.dimension
     elements=obs.elements
     n_pol=obs.n_pol
 ENDIF ELSE BEGIN
+    IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=0.
     IF N_Elements(elements) EQ 0 THEN elements=dimension
     IF N_Elements(n_pol) EQ 0 THEN n_pol=1
 ENDELSE
