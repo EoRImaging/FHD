@@ -1,14 +1,13 @@
-FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dft_kernel_threshold=dft_kernel_threshold,dimension=dimension,$
-    elements=elements,dft_approximation_resolution=dft_approximation_resolution,conserve_memory=conserve_memory,return_kernel=return_kernel
+FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,conserve_memory=conserve_memory,$
+    dft_approximation_threshold=dft_approximation_threshold,return_kernel=return_kernel
 
 t0_a=Systime(1)
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF N_Elements(dft_approximation_resolution) EQ 0 THEN resolution=32. ELSE resolution=Float(Round(dft_approximation_resolution))
-IF resolution LE 1 THEN resolution=32.
+
 dimension_kernel=dimension;2
 elements_kernel=elements;*2
-IF N_Elements(dft_kernel_threshold) EQ 0 THEN dft_kernel_threshold=2./(!Pi*dimension_kernel) ;value of kernel_test along either axis at the edge of the image. 
-
+IF N_Elements(dft_approximation_threshold) EQ 0 THEN threshold=1./(!Pi*dimension_kernel) $ ;value of kernel_test along either axis at the edge of the image. 
+    ELSE threshold=dft_approximation_threshold
 t1_a=Systime(1)
 xv_test=meshgrid(dimension_kernel,elements_kernel,1)-dimension_kernel/2.
 yv_test=meshgrid(dimension_kernel,elements_kernel,2)-elements_kernel/2.
@@ -25,10 +24,8 @@ kernel_mask=intarr(dimension_kernel,elements_kernel) & kernel_mask[kernel_i]=1
 xv_k=Long((kernel_i mod dimension_kernel)-dimension_kernel/2)
 yv_k=Long(Floor(kernel_i/dimension_kernel)-elements_kernel/2)
 
-x_offset=0.
-y_offset=0.
-xcen0=Long(Round(x_vec+x_offset/resolution)) ;do this after offset, in case it has rounded to the next grid point
-ycen0=Long(Round(y_vec+y_offset/resolution))
+xcen0=Long(Floor(x_vec))
+ycen0=Long(Floor(y_vec))
 
 si1=where((xcen0 GE 0) AND (ycen0 GE 0) AND (xcen0 LE dimension-1) AND (ycen0 LE elements-1),ns)
 dx_arr=x_vec-xcen0
