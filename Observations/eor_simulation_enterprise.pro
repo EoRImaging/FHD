@@ -116,6 +116,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       export_images=export_images,dimension=dimension, image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
       complex=complex_beam,double=double_precison_beam,$
       save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,FoV=FoV,no_ps=no_ps,nfreq_avg=nfreq_avg,$
+      snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export, $
       n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
       
       
