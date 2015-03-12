@@ -1,6 +1,6 @@
-PRO source_dft_multi,obs,jones,source_array,model_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
+PRO source_dft_multi,obs,jones,source_array,model_uv_full,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
     conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,$
-    dimension=dimension,elements=elements,n_pol=n_pol,_Extra=extra
+    dimension=dimension,elements=elements,n_pol=n_pol,grid_spectral=grid_spectral,_Extra=extra
 
 IF Keyword_Set(obs) THEN BEGIN
     IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=obs.dft_threshold
