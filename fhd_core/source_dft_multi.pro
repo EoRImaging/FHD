@@ -43,8 +43,14 @@ IF Keyword_Set(frequency) THEN BEGIN
     ENDFOR
 ENDIF
 
-flux_arr=Ptrarr(n_pol)
-FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
+IF Keyword_Set(grid_spectral) THEN BEGIN
+    flux_arr=Ptrarr(n_pol*2)
+    FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
+    FOR pol_i=0,n_pol-1 DO flux_arr[n_pol+pol_i]=Ptr_new(source_array_use.flux.(pol_i)*source_array.alpha)
+ENDIF ELSE BEGIN
+    flux_arr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
+ENDELSE
 
 IF Keyword_Set(dft_threshold) THEN BEGIN
     IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
