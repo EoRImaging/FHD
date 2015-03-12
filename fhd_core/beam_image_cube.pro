@@ -45,7 +45,7 @@ FOR p_i=0,n_pol-1 DO FOR fb_i=0L,n_freq_use-1 DO BEGIN
     f_i_i=bri[bri[bin_use[fb_i]]:bri[bin_use[fb_i]+1]-1]
     f_i=freq_i_use[f_i_i[0]]
     beam_single=beam_image(psf,obs,pol_i=pol_i,freq_i=f_i,square=square)
-    FOR b_i=0,bin_n[fb_i]-1 DO beam_arr[pol_i,f_i_i[b_i]]=Ptr_new(beam_single)
+    FOR b_i=0,bin_n[fb_i]-1 DO beam_arr[p_i,f_i_i[b_i]]=Ptr_new(beam_single)
     b_i=obs.obsx+obs.obsy*dimension
     beam_i=region_grow(beam_single,b_i,thresh=[beam_threshold^(Keyword_Set(square)+1.),max(beam_single)])
     beam_mask1=fltarr(dimension,elements)
