@@ -146,6 +146,6 @@ ENDIF ELSE model_img=model_img_use
 t4=Systime(1)-t4_a
 t0=Systime(1)-t0_a
 
-;print,t0,t1,t2,t3,t4
+print,t0,t1,t2,t3,t4
 RETURN,model_img
 END

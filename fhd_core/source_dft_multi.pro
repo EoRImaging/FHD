@@ -46,17 +46,10 @@ ENDIF
 flux_arr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
 
-;IF Keyword_Set(dft_approximation_resolution) THEN BEGIN
-;;only use approximation if it will actually be faster than the DFT
-;    IF dft_approximation_resolution GT 1 THEN resolution_use=dft_approximation ELSE resolution_use=32.
-;    IF (resolution_use)*(dimension*elements) GT Float(N_Elements(x_vec))*Float(N_Elements(uv_i_use)) $
-;        THEN resolution_use=0 
-;ENDIF
 IF Keyword_Set(dft_threshold) THEN BEGIN
     IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
     model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
         conserve_memory=conserve_memory,dft_threshold=dft_threshold)
-
     FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
     Ptr_free,model_uv_new,flux_arr
 ENDIF ELSE BEGIN
