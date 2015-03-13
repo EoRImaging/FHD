@@ -139,7 +139,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   if n_elements(cb_size_in) eq 0 then cb_size = 0.025 else cb_size = cb_size_in
   if n_elements(margin_in) lt 4 then begin
     margin = [0.2, 0.2, 0.02, 0.1]
-   endif else margin = margin_in
+  endif else margin = margin_in
   
   if n_elements(cb_margin_in) lt 2 then begin
     cb_margin = [0.2, 0.02]
@@ -158,15 +158,17 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   if min(plot_len) le 0 then stop
   
   plot_aspect = (plot_pos[3] - plot_pos[1]) / (plot_pos[2] - plot_pos[0])
-
-;  plot_pos = [.15,.15,.8,.92]
-;  cb_pos = [.92, .15,.95,.92]
-    
-  if n_elements(xvals) gt 0 and n_elements(yvals) gt 0 then begin
-    xlength = xrange[1] - xrange[0]
-    ylength = yrange[1]-yrange[0]
-    data_aspect = float(ylength / xlength)
-  endif else data_aspect=1
+  
+  ;  plot_pos = [.15,.15,.8,.92]
+  ;  cb_pos = [.92, .15,.95,.92]
+  
+  if n_elements(data_aspect) eq 0 then begin
+    if n_elements(xvals) gt 0 and n_elements(yvals) gt 0 then begin
+      xlength = xrange[1] - xrange[0]
+      ylength = yrange[1]-yrange[0]
+      data_aspect = float(ylength / xlength)
+    endif else data_aspect=1
+  endif
   
   aspect_ratio =  data_aspect /plot_aspect
   if aspect_ratio gt 1 then begin
