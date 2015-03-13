@@ -166,7 +166,13 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     if n_elements(xvals) gt 0 and n_elements(yvals) gt 0 then begin
       xlength = xrange[1] - xrange[0]
       ylength = yrange[1]-yrange[0]
-      data_aspect = float(ylength / xlength)
+      data_aspect = ylength / float(xlength)
+      max_data_aspect = 3.
+      if data_aspect gt max_data_aspect or data_aspect lt 1./max_data_aspect then begin
+        print, 'Calculated data_aspect exceeds reasonable plotting aspect ratios, limiting to reasonable values. (data_aspect can also be set as a keyword)'
+        if data_aspect gt max_data_aspect then data_aspect = max_data_aspect
+        if data_aspect lt 1./max_data_aspect then data_aspect = 1./max_data_aspect
+      endif
     endif else data_aspect=1
   endif
   
@@ -179,8 +185,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     x_factor = 1./aspect_ratio
   endelse
   
-  max_ysize = 1000
-  max_xsize = 1200
+  screen_size = get_screen_size()
+  max_xsize = screen_size[0]
+  max_ysize = screen_size[1]
   base_size = 600
   
   if n_elements(multi_pos) eq 4 then begin
@@ -308,8 +315,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     
     no_erase = 1
   endif else begin
-    xsize = round(base_size * x_factor)
-    ysize = round(base_size * y_factor)
+    base_size_use = base_size
+    xsize = round(base_size_use * x_factor)
+    ysize = round(base_size_use * y_factor)
     
     if keyword_set(pub) then begin
       ps_aspect = y_factor / x_factor
@@ -336,9 +344,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
         
     endif else begin
       while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
-        base_size = base_size - 100
-        xsize = round(base_size * x_factor)
-        ysize = round(base_size * y_factor)
+        if base_size_use gt 100 then base_size_use = base_size_use - 100 else base_size_use = base_size_use * .75
+        xsize = round(base_size_use * x_factor)
+        ysize = round(base_size_use * y_factor)
       endwhile
       
       
