@@ -80,13 +80,13 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
     dirty_uv_arr=Ptrarr(n_pol,nf,/allocate)
     weights_uv_arr=Ptrarr(n_pol,nf,/allocate)
     variance_uv_arr=Ptrarr(n_pol,nf,/allocate)
-    model_uv_arr=Ptrarr(n_pol,nf,/allocate)
+    IF Keyword_Set(model_flag) THEN model_uv_arr=Ptrarr(n_pol,nf,/allocate)
   endif
   
   dirty_arr=Ptrarr(n_pol,nf,/allocate)
   weights_arr=Ptrarr(n_pol,nf,/allocate)
   variance_arr=Ptrarr(n_pol,nf,/allocate)
-  model_arr=Ptrarr(n_pol,nf,/allocate)
+  IF Keyword_Set(model_flag) THEN model_arr=Ptrarr(n_pol,nf,/allocate)
   vis_n_arr=Fltarr(n_pol,nf)
   
   IF Keyword_Set(rephase_weights) THEN rephase_use=phase_shift_uv_image(obs_out,/to_orig_phase) ELSE rephase_use=1.

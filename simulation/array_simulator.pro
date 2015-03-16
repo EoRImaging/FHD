@@ -161,6 +161,7 @@ IF Keyword_Set(snapshot_healpix_export) THEN begin
         beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])*nf_vis[freq_i]
     endfor
     ptr_free,beam_arr
+    gridded_beam_filepath = file_path_fhd + '_gridded_beam2_image.sav'
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
 endif
 undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,status_str
