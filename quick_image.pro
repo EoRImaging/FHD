@@ -374,7 +374,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     font = -1
     if n_elements(charsize_in) eq 0 then begin
       if n_elements(multi_pos) gt 0 then begin
-        charsize = 1.7d * (multi_size[0]/float(base_size))
+        charsize = 1.7d * (multi_size[0]/float(base_size_use))
       endif else charsize = 2
     endif else charsize = charsize_in
     
