@@ -1,8 +1,9 @@
 pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, yrange = yrange, data_aspect=data_aspect, $
     log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
     note = note, charsize = charsize_in, xlog = xlog, ylog = ylog, window_num = window_num, $
-    multi_pos = multi_pos, start_multi_params = start_multi_params, alphabackgroundimage = alphabackgroundimage, $
-    missing_value = missing_value, noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf
+    multi_pos = multi_pos, start_multi_params = start_multi_params, no_ps_close = no_ps_close, $
+    alphabackgroundimage = alphabackgroundimage, missing_value = missing_value, $
+    noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf
     
   if n_elements(window_num) eq 0 then window_num = 1
   
@@ -400,7 +401,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   
   
   if keyword_set(pub) then begin
-    if n_elements(multi_pos) eq 0 then cgps_close, png = png, pdf = pdf, delete_ps = delete_ps, density=600
+    if n_elements(multi_pos) eq 0 and not keyword_set(no_ps_close) then cgps_close, png = png, pdf = pdf, delete_ps = delete_ps, density=600
     if n_elements(make_win) gt 0 then if make_win eq 1 then wdelete, window_num
   endif
   
