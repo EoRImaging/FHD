@@ -3,7 +3,7 @@ FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
     meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,$
-    cotter_precess_fix=cotter_precess_fix,_Extra=extra
+    cotter_precess_fix=cotter_precess_fix,force_rephase_to_zenith=force_rephase_to_zenith,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
 metafits_ext='.metafits'
@@ -129,9 +129,15 @@ ENDIF
 ;IF Abs(obsra-zenra) LT degpix THEN zenra=obsra
 ;IF Abs(obsdec-zendec) LT degpix THEN zendec=obsdec
 
+IF Keyword_Set(force_rephase_to_zenith) THEN rephase_to_zenith=1
 IF Keyword_Set(rephase_to_zenith) THEN BEGIN
-    phasera=obsra
-    phasedec=obsdec
+    IF Keyword_Set(force_rephase_to_zenith) THEN BEGIN
+        phasera=zenra
+        phasedec=zendec
+    ENDIF ELSE BEGIN
+        phasera=obsra
+        phasedec=obsdec
+    ENDELSE
     obsra=zenra
     obsdec=zendec
 ENDIF
