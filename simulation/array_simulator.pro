@@ -37,7 +37,7 @@ IF metadata_test THEN BEGIN
 ;        vis_arr[pol_i]=vis_ptr
 ;    ENDFOR
 ;    IF ~silent THEN print,"...Done"
-    RETURN
+;    RETURN
 ENDIF
 
 ;set up the obs and params structure. Will generate arbitary array layout if supplied
