@@ -3,7 +3,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
     rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
-    snapshot_recalculate=snapshot_recalculate,obs_out=obs_out,psf_out=psf_out,_Extra=extra
+    obs_out=obs_out,psf_out=psf_out,_Extra=extra
     
   t0=Systime(1)
   
@@ -17,11 +17,13 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   n_pol=obs_in.n_pol
   n_freq=obs_in.n_freq
   
-;  IF not Keyword_Set(snapshot_recalculate) THEN BEGIN ;Now set in fhd_setup through status_str
-    IF Keyword_Set(split_ps_export) THEN cube_test=Min(status_str.hpx_even[0:n_pol-1])<Min(status_str.hpx_odd[0:n_pol-1]) $
-        ELSE cube_test=Min(status_str.healpix_cube[0:n_pol-1])
-    IF cube_test GT 0 THEN RETURN
-;  ENDIF
+  ;whether cubes are recalculated is now set in fhd_setup (or array_simulator) through status_str
+  IF Keyword_Set(split_ps_export) THEN cube_test=Min(status_str.hpx_even[0:n_pol-1])<Min(status_str.hpx_odd[0:n_pol-1]) $
+    ELSE cube_test=Min(status_str.healpix_cube[0:n_pol-1])
+  IF cube_test GT 0 THEN BEGIN
+    print,'HEALPix cubes not recalculated'
+    RETURN
+  ENDIF
   
   IF N_Elements(psf_in) EQ 0 THEN fhd_save_io,status_str,psf_in,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
   IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
