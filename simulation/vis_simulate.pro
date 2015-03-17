@@ -20,6 +20,7 @@ IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
   
 ;Construct model visibilities. Start by building a model u-v-f cube
 if keyword_set(recalculate_all) then begin
+    fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset,no_save=no_save
     if keyword_set(include_catalog_sources) then begin
       catalog_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_file_path,_Extra=extra)
       if n_elements(source_list) gt 0 then source_list = [source_list, catalog_source_list] else source_list = catalog_source_list

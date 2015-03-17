@@ -3,7 +3,8 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     n_pol=n_pol,silent=silent,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
     eor_sim=eor_sim,include_catalog_sources = include_catalog_sources, source_list=source_list,$
-    catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export,_Extra=extra
+    catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export,$
+    snapshot_recalculate=snapshot_recalculate,_Extra=extra
     
 compile_opt idl2,strictarrsubs
 except=!except
@@ -144,7 +145,8 @@ ENDIF
 ;optionally export frequency-split Healpix cubes
 IF Keyword_Set(snapshot_healpix_export) THEN begin
     IF ~Keyword_Set(n_avg) THEN n_avg=1
-    healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
+    IF Keyword_Set(snapshot_recalculate) THEN status_str.healpix_cube=(status_str.hpx_even=(status_str.hpx_odd=0))
+    healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,/restrict_hpx_inds,$
         vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
         save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
     
