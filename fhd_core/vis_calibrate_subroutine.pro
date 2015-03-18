@@ -112,6 +112,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   min_baseline=obs.min_baseline
   max_baseline=obs.max_baseline
   dimension=obs.dimension
+  elements=obs.elements
   min_cal_baseline=cal.min_cal_baseline
   max_cal_baseline=cal.max_cal_baseline
   min_cal_solutions=cal.min_solns ;minimum number of calibration equations needed to solve for the gain of one baseline
