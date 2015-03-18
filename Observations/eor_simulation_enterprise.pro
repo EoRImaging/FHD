@@ -108,7 +108,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
     array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, $
       sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
       cleanup=cleanup,recalculate_all=recalculate_all, beam_recalculate=beam_recalculate, /silent, $
-      n_pol=n_pol,tile_flag_list=tile_flag_list,$
+      n_pol=n_pol,tile_flag_list=tile_flag_list, no_rephase = no_rephase,$
       eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, $
       delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
       include_catalog_sources = include_catalog_sources, source_list=source_list,$
