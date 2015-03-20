@@ -1,6 +1,6 @@
 FUNCTION uvfits_params_simulate,hdr,params_in,sim_baseline_uu=sim_baseline_uu,sim_baseline_vv=sim_baseline_vv,$
     sim_baseline_ww=sim_baseline_ww,sim_baseline_i=sim_baseline_i,sim_baseline_time=sim_baseline_time,$
-    sim_tile_locations_x=sim_tile_locations_x,sim_tile_locations_y=sim_tile_locations_y,sim_tile_i=sim_tile_i,_Extra=extra
+    sim_tile_locations_x=sim_tile_locations_x,sim_tile_locations_y=sim_tile_locations_y,sim_tile_i=sim_tile_i,n_time=n_time,_Extra=extra
 
 ;    params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time}
 
