@@ -1,4 +1,4 @@
-FUNCTION pixel_area,obs
+FUNCTION pixel_area,obs,relative=relative
 
 dimension=obs.dimension
 elements=obs.elements
@@ -46,8 +46,8 @@ FOR i=0,2 DO BEGIN
     area_map+=(pix_vec_A[*,*,A_i]*pix_vec_B[*,*,B_i]-pix_vec_A[*,*,B_i]*pix_vec_B[*,*,A_i])^2.
 ENDFOR
 area_map=Sqrt(area_map)
+IF Keyword_Set(relative) THEN area_map/=(obs.degpix*!DtoR)^2.
 
-area_map=1
 ;area0=Abs(Product(astr.cdelt))
 ;
 ;i_use=where(Finite(ra_vals),n_use)

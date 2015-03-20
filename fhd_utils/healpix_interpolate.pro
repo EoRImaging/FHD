@@ -110,5 +110,10 @@ ENDIF ELSE BEGIN
     ENDFOR
 ENDELSE
 
+pixel_area_factor=pixel_area(obs,/relative)
+IF Ptr_flag THEN BEGIN
+    FOR p_i=0L,N_Elements(map_interp) DO *map_interp[p_i]*=weight_invert(pixel_area_factor)
+ENDIF ELSE map_interp*=weight_invert(pixel_area_factor)
+
 RETURN,map_interp
 END

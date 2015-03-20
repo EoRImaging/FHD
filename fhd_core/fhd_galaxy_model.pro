@@ -54,7 +54,8 @@ Ptr_free,model_arr
 edge_match,model
 valid_i=where(Finite(ra_arr),n_valid)
 Jdate=obs.Jd0
-
+pixel_area_factor=pixel_area(obs,/relative)
+model*=weight_invert(pixel_area_factor)
 ;antialias_filter=Sqrt(Hanning(dimension,elements))
 ;antialias_filter/=Mean(antialias_filter[valid_i])
 model_use=model
