@@ -1,4 +1,4 @@
-PRO code_reference_diff,hash_ref=hash_ref,hash_diff=hash_diff,iter_ref=iter_ref,iter_diff=iter_diff,_Extra=extra
+PRO code_reference_diff,hash_ref=hash_ref,hash_diff=hash_diff,iter_ref=iter_ref,iter_diff=iter_diff,ratio_data_range=ratio_data_range,_Extra=extra
 
 all_type_pol = 1
 png=1
@@ -118,6 +118,14 @@ ps_difference_plots, folder_names,obs_info, cube_types, pols, spec_window_types 
     plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
     note = note, kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, data_range = data_range, data_min_abs = data_min_abs, $
     quiet = quiet, png = png, eps = eps, pdf = pdf
-    
+
+if n_elements(ratio_data_range) eq 0 then ratio_data_range = [1e-3, 1e1]
+
+ps_ratio_plots, folder_names, obs_info, $
+    plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
+    note = note, spec_window_types = spec_window_types, data_range = ratio_data_range, $
+    kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, diff_ratio = diff_ratio, diff_range = diff_range, $
+    plot_wedge_line = plot_wedge_line, quiet = quiet, png = png, eps = eps, pdf = pdf, window_num = window_num
+
 file_delete,save_path,/quiet,/recursive
 END

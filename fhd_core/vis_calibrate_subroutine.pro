@@ -112,6 +112,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   min_baseline=obs.min_baseline
   max_baseline=obs.max_baseline
   dimension=obs.dimension
+  elements=obs.elements
   min_cal_baseline=cal.min_cal_baseline
   max_cal_baseline=cal.max_cal_baseline
   min_cal_solutions=cal.min_solns ;minimum number of calibration equations needed to solve for the gain of one baseline
@@ -159,11 +160,15 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       kx_arr=cal.uu[0:n_baselines-1]/kbinsize ;ignore slight variation with time
       ky_arr=cal.vv[0:n_baselines-1]/kbinsize
       kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
-      dist_arr=(freq_arr#kr_arr)*kbinsize
+      dist_arr=(freq_arr#Temporary(kr_arr))*kbinsize
+      xcen=freq_arr#Abs(kx_arr)
+      ycen=freq_arr#Abs(ky_arr)
+      flag_dist_cut=where((dist_arr LT min_baseline) OR (Temporary(xcen) GT dimension/2.) OR (Temporary(ycen) GT elements/2.),n_dist_cut)
       IF Keyword_Set(calibration_weights) THEN BEGIN
-        baseline_weights=(1.-((((Sqrt(2.)*min_cal_baseline-dist_arr)>0)/min_cal_baseline+((dist_arr-max_cal_baseline)>0)/min_cal_baseline)>0)^2.)
-        flag_dist_cut=where((dist_arr LT min_baseline) OR (dist_arr GT max_baseline<(kbinsize*dimension/2.)),n_dist_cut)
-      ENDIF ELSE flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
+        IF min_cal_baseline GT min_baseline THEN taper_min=((Sqrt(2.)*min_cal_baseline-dist_arr)/min_cal_baseline)>0. ELSE taper_min=0. 
+        IF max_cal_baseline LT max_baseline THEN taper_max=((dist_arr-max_cal_baseline)/min_cal_baseline)>0. ELSE taper_max=0.
+        baseline_weights=(1.-(taper_min+taper_max)^2.)>0.
+      ENDIF
     ENDIF ELSE BEGIN
       flag_use=0>*flag_ptr_use[pol_i]<1
       IF Keyword_Set(preserve_visibilities) THEN vis_model=*vis_model_ptr[pol_i] $
@@ -175,9 +180,17 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       kx_arr=cal.uu/kbinsize
       ky_arr=cal.vv/kbinsize
       kr_arr=Sqrt(kx_arr^2.+ky_arr^2.)
-      dist_arr=(freq_arr#kr_arr)*kbinsize
-      flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (dist_arr GT max_cal_baseline),n_dist_cut)
+      dist_arr=(freq_arr#Temporary(kr_arr))*kbinsize
+      xcen=freq_arr#Abs(Temporary(kx_arr))
+      ycen=freq_arr#Abs(Temporary(ky_arr))
+      IF Keyword_Set(calibration_weights) THEN BEGIN
+        IF min_cal_baseline GT min_baseline THEN taper_min=((Sqrt(2.)*min_cal_baseline-dist_arr)/min_cal_baseline)>0. ELSE taper_min=0. 
+        IF max_cal_baseline LT max_baseline THEN taper_max=((dist_arr-max_cal_baseline)/min_cal_baseline)>0. ELSE taper_max=0.
+        baseline_weights=(1.-(taper_min+taper_max)^2.)>0.
+      ENDIF
+      flag_dist_cut=where((Temporary(dist_arr) LT min_baseline) OR (Temporary(xcen) GT dimension/2.) OR (Temporary(ycen) GT elements/2.),n_dist_cut)
     ENDELSE
+    kx_arr=(ky_arr=(dist_arr=0))
     
     IF n_dist_cut GT 0 THEN weight[flag_dist_cut]=0.
     vis_avg*=weight_invert(weight)

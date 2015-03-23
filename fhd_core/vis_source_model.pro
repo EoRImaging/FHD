@@ -54,15 +54,14 @@ uv_mask_use[*,elements/2+psf.dim:*]=0.
 
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-bin_offset=(*obs.baseline_info).bin_offset
 frequency_array=(*obs.baseline_info).freq
 
 ;kx_arr=params.uu/kbinsize
 ;ky_arr=params.vv/kbinsize
 ;baseline_i=params.baseline_arr
-nbaselines=bin_offset[1]
-n_samples=N_Elements(bin_offset)
-n_freq=N_Elements(frequency_array)
+nbaselines=obs.nbaselines
+n_samples=obs.n_time
+n_freq=obs.n_freq
 n_freq_bin=N_Elements(freq_bin_i)
 IF N_Elements(vis_model_ptr) LT n_pol THEN vis_model_ptr=intarr(n_pol)
 
@@ -94,6 +93,7 @@ IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_retu
 IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask_use
 
 IF Keyword_Set(diffuse_filepath) THEN BEGIN
+    IF file_test(diffuse_filepath) EQ 0 THEN diffuse_filepath=(file_search(diffuse_filepath+'*'))[0]
     IF Keyword_Set(calibration_flag) THEN print,"Reading diffuse model file for calibration: "+diffuse_filepath $
         ELSE print,"Reading diffuse model file for model subtraction: "+diffuse_filepath
     diffuse_model_uv=fhd_diffuse_model(obs,jones,/uv_return,model_filepath=diffuse_filepath,_Extra=extra)

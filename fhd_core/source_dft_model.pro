@@ -1,7 +1,6 @@
 FUNCTION source_dft_model,obs,jones,source_list,t_model=t_model,sigma_threshold=sigma_threshold,$
-    no_extend=no_extend,unpolarized=unpolarized,uv_mask=uv_mask,conserve_memory=conserve_memory,polarization_map=polarization_map,_Extra=extra
+    no_extend=no_extend,unpolarized=unpolarized,uv_mask=uv_mask,polarization_map=polarization_map,_Extra=extra
 t_model0=Systime(1)
-IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
 n_pol=obs.n_pol
 dimension=obs.dimension
 elements=obs.elements
@@ -32,8 +31,7 @@ IF Keyword_Set(unpolarized) THEN BEGIN
     src_arr_use.flux.Q=0.
     src_arr_use.flux.V=0.
 ENDIF
-source_dft_multi,obs,jones,src_arr_use,model_uv_arr,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
-    conserve_memory=conserve_memory,_Extra=extra
+source_dft_multi,obs,jones,src_arr_use,model_uv_arr,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,_Extra=extra
 
 undefine_fhd,src_arr_use
 t_model=Systime(1)-t_model0

@@ -1,4 +1,4 @@
-FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,degpix=degpix,flux=flux,$
+FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,flux=flux,$
     conserve_memory=conserve_memory
 icomp=Complex(0,1)
 fft_norm=1.
@@ -7,9 +7,9 @@ IF conserve_memory GT 1E6 THEN mem_thresh=conserve_memory ELSE mem_thresh=1E8
 ;IF Keyword_Set(degpix) THEN fft_norm=(degpix*!DtoR)^2. ELSE fft_norm=1.
 
 IF N_Elements(xvals) EQ 0 THEN BEGIN
-    IF N_Elements(elements) EQ 0 THEN elements=dimension
-    xvals=meshgrid(dimension,elements,1)-dimension/2
-    yvals=meshgrid(dimension,elements,2)-elements/2
+    IF N_Elements(elements) EQ 0 THEN elements=Float(dimension)
+    xvals=Reform(meshgrid(dimension,elements,1)-dimension/2,dimension*elements)
+    yvals=Reform(meshgrid(dimension,elements,2)-elements/2,dimension*elements)
 ENDIF
 IF N_Elements(flux) EQ 0 THEN flux=fltarr(size(x_loc,/dimension)>1)+1.
 

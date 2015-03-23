@@ -1,4 +1,5 @@
-FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,bandpass_directory=bandpass_directory,_Extra=extra
+FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
+    bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,_Extra=extra
 ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.  
 
 ;Extract needed elements from the input structures
@@ -10,6 +11,12 @@ IF N_Elements(obs) GT 0 THEN freq_use=where((*obs.baseline_info).freq_use) ELSE 
 freq_arr=cal.freq
 IF N_Elements(obs) GT 0 THEN tile_use=where((*obs.baseline_info).tile_use) ELSE tile_use=lindgen(n_tile)
 
+IF Keyword_Set(calibration_bandpass_cable_exclude) THEN BEGIN
+    mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=rootdir('FHD'),subdir='instrument_config')
+    textfast,data_array,/read,file_path=mode_filepath,first_line=1
+    cable_len=Reform(data_array[2,*])
+    FOR cable_i=0,N_Elements(calibration_bandpass_cable_exclude)-1 DO tile_use=tile_use[where(cable_len[tile_use] NE calibration_bandpass_cable_exclude[cable_i])]
+ENDIF
 ;Find element numbers for loops later
 nf_use=N_Elements(freq_use)
 nt_use=N_Elements(tile_use)
@@ -233,7 +240,12 @@ ENDIF ELSE BEGIN
         phase=Atan(gain_use,/phase)
         amp2=fltarr(nf_use,nt_use)
         FOR tile_i=0,nt_use-1 DO amp2[*,tile_i]=(Median(amp[*,tile_i]) EQ 0) ? 0:(amp[*,tile_i]/Median(amp[*,tile_i]))
-        bandpass_single=Median(amp2,dimension=2)
+        bandpass_single=Fltarr(nf_use)
+        FOR f_i=0L,nf_use-1 DO BEGIN
+            resistant_mean,amp2[f_i,*],2,res_mean
+            bandpass_single[f_i]=res_mean
+        ENDFOR
+;        bandpass_single=Median(amp2,dimension=2)
         bandpass_arr[pol_i+1,freq_use]=bandpass_single
         gain2=Complexarr(size(gain,/dimension))
         FOR tile_i=0,n_tile-1 DO gain2[freq_use,tile_i]=bandpass_single
