@@ -2,7 +2,14 @@ FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
     cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,cal_cable_reflection_correct=cal_cable_reflection_correct,_Extra=extra
 
-IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
+IF N_Elements(degree) EQ 0 THEN degree=2 ELSE BEGIN
+    IF degree LE 0 THEN BEGIN
+        amp_free_fit=1
+    ENDIF ELSE BEGIN
+        amp_free_fit=0
+        degree=Round(degree)>1
+    ENDELSE
+ENDELSE
 IF N_Elements(phase_degree) EQ 0 THEN phase_degree=1.
 IF Keyword_Set(cal_cable_reflection_fit) OR Keyword_Set(cal_cable_reflection_correct) THEN cal.mode_fit=1.
 cal_mode_fit=cal.mode_fit
@@ -54,8 +61,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         gain=reform(gain_amp[freq_use,tile_i])
         fit_params=poly_fit(freq_use,gain,degree)
         cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
-        gain_fit=fltarr(n_freq)
-        FOR di=0L,degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
+        
+        IF Keyword_Set(amp_free_fit) THEN BEGIN
+            gain_fit=Reform(gain_amp[*,tile_i])
+        ENDIF ELSE BEGIN
+            gain_fit=fltarr(n_freq)
+            FOR di=0L,degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
+        ENDELSE
         
         gain_residual[pol_i,tile_i]=Ptr_new(Reform(gain_amp[*,tile_i])-gain_fit)
         
