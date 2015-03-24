@@ -1,4 +1,4 @@
-FUNCTION source_dft_cube
+FUNCTION source_dft_cube,obs,psf
 
 
 
