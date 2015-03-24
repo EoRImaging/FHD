@@ -635,6 +635,32 @@ case version of
    
    'nb_cable_cal_pointing_ps':begin
    end
+   
+   'nb_cable_cal_min_cal_5lambda':begin
+     min_cal_baseline=5.
+     cable_bandpass_fit=1
+   end
+   
+   'nb_cable_cal_min_cal_5lambda_with_diffuse':begin
+     min_cal_baseline=5.
+     cable_bandpass_fit=1
+     diffuse_calibrate=filepath('EoR0_polarized_diffuse.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+   
+   'nb_no_cable_cal_min_cal_5lambda_with_diffuse':begin
+     min_cal_baseline=5.
+     diffuse_calibrate=filepath('EoR0_polarized_diffuse.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+
+   'nb_local_min_flag_test':begin
+     initial_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_no_cable_cal_std/calibration/1061312640_cal.sav'
+   end
+   
+   'nb_devel_test_Mar2015':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+   end
+   
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
