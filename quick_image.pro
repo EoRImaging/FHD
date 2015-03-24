@@ -4,7 +4,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     multi_pos = multi_pos, start_multi_params = start_multi_params, no_ps_close = no_ps_close, $
     alphabackgroundimage = alphabackgroundimage, missing_value = missing_value, $
     noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf
-    
+      
   if n_elements(window_num) eq 0 then window_num = 1
   
   if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) or keyword_set(pdf) then pub = 1 else pub = 0
@@ -69,20 +69,21 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     return
   endif
   
+  image_use = image
   ;; precaution in case a slice is passed in but it still appears > 2d (ie shallow dimension)
-  image = reform(image)
-  if n_elements(size(image, /dim)) ne 2 then begin
+  image_use = reform(image_use)
+  if n_elements(size(image_use, /dim)) ne 2 then begin
     print, 'image must be 2 dimensional'
     return
   endif
   
-  if max(abs(imaginary(image))) gt 0 then begin
+  if max(abs(imaginary(image_use))) gt 0 then begin
     print, 'image is complex, showing real part'
-    image = real_part(image)
+    image_use = real_part(image_use)
   endif
   
   if keyword_set(missing_value) then begin
-    good_locs = where(image ne missing_value, count_good, complement = wh_missing, ncomplement = count_missing)
+    good_locs = where(image_use ne missing_value, count_good, complement = wh_missing, ncomplement = count_missing)
     erase = 1
   endif
   
@@ -90,14 +91,14 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   
   if keyword_set(log) then begin
   
-    log_color_calc, image, plot_image, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
+    log_color_calc, image_use, plot_image, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
       color_profile = color_profile, log_cut_val = log_cut_val, oob_low = oob_low, $
       missing_value = missing_value, missing_color = missing_color
       
       
   endif else begin
     if n_elements(data_range) eq 0 then $
-      if keyword_set(missing_value) then data_range = minmax(image[good_locs]) else data_range = minmax(image)
+      if keyword_set(missing_value) then data_range = minmax(image_use[good_locs]) else data_range = minmax(image_use)
       
     if abs(data_range[0] - data_range[1]) lt 1e-15 and data_range[0] ne 0 then data_range = minmax([data_range[0], 0])
     
@@ -113,11 +114,11 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     n_colors = color_range[1] - color_range[0] + 1
     data_n_colors = data_color_range[1] - data_color_range[0] + 1
     
-    plot_image = (image-data_range[0])*(data_n_colors-1)/(data_range[1]-data_range[0]) + data_color_range[0]
+    plot_image = (image_use-data_range[0])*(data_n_colors-1)/(data_range[1]-data_range[0]) + data_color_range[0]
     
-    wh_low = where(image lt data_range[0], count_low)
+    wh_low = where(image_use lt data_range[0], count_low)
     if count_low gt 0 then plot_image[wh_low] = data_color_range[0]
-    wh_high = where(image gt data_range[1], count_high)
+    wh_high = where(image_use gt data_range[1], count_high)
     if count_high gt 0 then plot_image[wh_high] = data_color_range[1]
     
     if n_elements(missing_value) ne 0 then if count_missing gt 0 then plot_image[wh_missing] = missing_color
