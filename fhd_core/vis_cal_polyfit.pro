@@ -5,6 +5,7 @@ FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE BEGIN
     IF degree LE 0 THEN BEGIN
         amp_free_fit=1
+        degree=Round(abs(degree))>1
     ENDIF ELSE BEGIN
         amp_free_fit=0
         degree=Round(degree)>1
