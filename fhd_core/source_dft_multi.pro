@@ -25,7 +25,8 @@ y_vec=source_array.y
 ; If you want extended sources, inflate the source list before calling this program
 source_array_use=Stokes_cnv(source_array,jones,/inverse,/no_extend,_Extra=extra) 
 
-IF Keyword_Set(frequency) THEN BEGIN
+frequency=obs.freq_center
+;IF Keyword_Set(frequency) THEN BEGIN
     freq_ref=Median(source_array.freq)
     freq_ratio=Abs(Alog10(freq_ref/frequency)) ;it often happens that one is in Hz and the other in MHz. Assuming no one will ever want to extrapolate more than two orders of magnitude, correct any huge mismatch
     IF freq_ratio GT 2 THEN freq_scale=10.^(Round(Alog10(freq_ref/frequency)/3.)*3.) ELSE freq_scale=1.
@@ -36,28 +37,42 @@ IF Keyword_Set(frequency) THEN BEGIN
         flux_scale=(frequency_use/freq_ref)^source_array[alpha_i[a_i]].alpha
         FOR pol_i=0,n_pol-1 DO source_array_use.flux.(pol_i)*=flux_scale
     ENDFOR
-ENDIF
+;ENDIF
+
+flux_arr=Ptrarr(n_pol)
+FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
 
 IF Tag_exist(obs,'degrid_info') THEN IF Ptr_valid(obs.degrid_info) THEN BEGIN
     freq_arr=(*obs.degrid_info).freq
     freq_bin_i=(*obs.degrid_info).bin_i
     nfreq_bin=N_Elements(freq_arr)
     
-    IF Max(Ptr_valid(model_uv_full)) EQ 0 THEN BEGIN
-        model_uv_full=Ptrarr(n_pol,nfreq_bin,/allocate)
-        FOR pol_i=0,n_pol-1 DO FOR f_i=0L,nfreq_bin-1 DO *model_uv_full[pol_i,f_i]=Complexarr(dimension,elements)
-    ENDIF
-    IF Keyword_Set(dft_threshold) THEN BEGIN
-        IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
-        model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-            conserve_memory=conserve_memory,dft_threshold=dft_threshold)
-        FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
-        Ptr_free,model_uv_new,flux_arr
+    IF N_Elements(spectral_taylor_expand) EQ 0 THEN spectral_taylor_expand=1
+    IF spectral_taylor_expand GE 1 THEN BEGIN
+        alpha_arr=source_array.alpha
+        FOR s_i=1.,spectral_taylor_expand DO flux_arr=[flux_arr,Ptr_new(alpha_arr^s_i)]
+        
+        IF Max(Ptr_valid(model_uv_full)) EQ 0 THEN BEGIN
+            model_uv_full=Ptrarr(n_pol,nfreq_bin,/allocate)
+            FOR pol_i=0,n_pol-1 DO FOR f_i=0L,nfreq_bin-1 DO *model_uv_full[pol_i,f_i]=Complexarr(dimension,elements)
+        ENDIF
+        IF Keyword_Set(dft_threshold) THEN BEGIN
+            IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
+            model_image_arr=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
+                conserve_memory=conserve_memory,dft_threshold=dft_threshold,/no_fft)
+            spectral_index_arr=model_image_arr[n_pol:*]
+            
+            
+            FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
+            Ptr_free,model_uv_new,flux_arr
+        ENDIF ELSE BEGIN
+            IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
+            model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory)
+            FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
+            Ptr_free,model_uv_vals,flux_arr
+        ENDELSE
     ENDIF ELSE BEGIN
-        IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
-        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory)
-        FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
-        Ptr_free,model_uv_vals,flux_arr
+    
     ENDELSE
 ENDIF ELSE BEGIN
     IF Max(Ptr_valid(model_uv_full)) EQ 0 THEN BEGIN
