@@ -17,16 +17,7 @@ IF Keyword_Set(sigma_threshold) THEN BEGIN
     IF n_use GT 0 THEN src_arr=src_arr[ston_use]
 ENDIF
 
-extend_i=where(Ptr_valid(src_arr.extend),n_ext,complement=point_i,ncomp=n_point)
-IF Keyword_Set(no_extend) THEN n_ext=0
-
-IF n_ext GT 0 THEN BEGIN
-    IF n_point GT 0 THEN src_arr_use=[src_arr[point_i],*(src_arr[extend_i[0]].extend)] $
-        ELSE src_arr_use=*(src_arr[extend_i[0]].extend)
-    FOR ext_i=1L,n_ext-1 DO src_arr_use=[src_arr_use,*(src_arr[extend_i[ext_i]].extend)]
-ENDIF ELSE src_arr_use=src_arr
-
-src_arr_use.extend=Ptr_new()
+src_arr_use=source_list_expand(src_arr,no_extend=no_extend)
 IF Keyword_Set(unpolarized) THEN BEGIN
     src_arr_use.flux.Q=0.
     src_arr_use.flux.V=0.
