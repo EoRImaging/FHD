@@ -1,6 +1,6 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
     conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,$
-    dimension=dimension,elements=elements,n_pol=n_pol,spectral_taylor_expand=spectral_taylor_expand,_Extra=extra
+    dimension=dimension,elements=elements,n_pol=n_pol,spectral_taylor_expand=spectral_taylor_expand,no_cube=no_cube,_Extra=extra
 
 IF Keyword_Set(obs) THEN BEGIN
     IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=obs.dft_threshold
@@ -39,7 +39,10 @@ frequency=obs.freq_center
     ENDFOR
 ;ENDIF
 
-IF Tag_exist(obs,'degrid_info') THEN IF Ptr_valid(obs.degrid_info) THEN BEGIN
+
+IF Tag_exist(obs,'degrid_info') THEN IF Ptr_valid(obs.degrid_info) THEN degrid_cube=1
+IF Keyword_Set(no_cube) THEN degrid_cube=0
+IF Keyword_Set(degrid_cube) THEN BEGIN
 ;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg 
     freq_arr=(*obs.degrid_info).freq
 ;    freq_bin_i=(*obs.degrid_info).bin_i
