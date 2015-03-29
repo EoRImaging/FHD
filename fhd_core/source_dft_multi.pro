@@ -49,36 +49,39 @@ IF Tag_exist(obs,'degrid_info') THEN IF Ptr_valid(obs.degrid_info) THEN BEGIN
     IF spectral_taylor_expand GE 1 THEN BEGIN
         alpha_arr=source_array.alpha
         
-        flux_arr=Ptrarr(n_pol)
-        FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
-        FOR s_i=1.,spectral_taylor_expand DO flux_arr=[flux_arr,Ptr_new(alpha_arr^s_i)]
+        flux_arr=Ptrarr(n_pol,spectral_taylor_expand+1)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            flux_arr[pol_i,0]=Ptr_new(source_array_use.flux.(pol_i))
+            FOR s_i=1.,spectral_taylor_expand DO flux_arr[pol_i,s_i]=Ptr_new(source_array_use.flux.(pol_i)*alpha_arr^s_i)
+        ENDFOR
         
         IF Keyword_Set(dft_threshold) THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
             model_image_arr=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
                 conserve_memory=conserve_memory,dft_threshold=dft_threshold,/no_fft)
-            spectral_index_arr=model_image_arr[n_pol:*]
-            image_ref=model_image_arr[0:n_pol-1]
             
             Ptr_free,flux_arr
         ENDIF ELSE BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory)
-            model_image_arr=Ptrarr(n_pol+spectral_taylor_expand)
-            FOR i=0,(n_pol+spectral_taylor_expand)-1 DO BEGIN
-                single_uv=Complexarr(dimension,elements)
-                single_uv[uv_i_use]=*model_uv_vals[i]
-                single_img=fft_shift(FFT(fft_shift(Temporary(single_uv)))) 
-                model_image_arr[i]=Ptr_new(single_img,/no_copy)
+            model_image_arr=Ptrarr(n_pol,spectral_taylor_expand+1)
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                FOR s_i=0,spectral_taylor_expand DO BEGIN ;no "-1" for second loop!
+                    single_uv=Complexarr(dimension,elements)
+                    single_uv[uv_i_use]=*model_uv_vals[i]
+                    single_img=fft_shift(FFT(fft_shift(Temporary(single_uv)))) 
+                    model_image_arr[pol_i,s_i]=Ptr_new(single_img,/no_copy)
+                ENDFOR
             ENDFOR
-            spectral_index_arr=model_image_arr[n_pol:*]
-            image_ref=model_image_arr[0:n_pol-1]
             
             Ptr_free,model_uv_vals,flux_arr
         ENDELSE
+        spectral_index_arr=model_image_arr[*,1:*]
+        image_ref=model_image_arr[*,0]
+        
         model_uv_cube=Ptrarr(n_pol,nfreq_bin)
         FOR pol_i=0,n_pol-1 DO model_uv_cube[pol_i,*]=$
-            source_dft_cube(*image_ref[pol_i],spectral_index_powers_arr=spectral_index_arr,freq_arr=freq_arr,freq_ref=frequency)
+            source_dft_cube(*image_ref[pol_i],spectral_index_powers_arr=spectral_index_arr[pol_i,*],freq_arr=freq_arr,freq_ref=frequency)
         
     ENDIF ELSE BEGIN ;else: do not use a taylor series expansion, and calculate the dft at every frequency (computationally expensive!)        
         flux_arr=Ptrarr(n_pol,nfreq_bin)
