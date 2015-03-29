@@ -1,4 +1,5 @@
 FUNCTION deriv_coefficients,n
+;computes an array of coefficients resulting in taking the n-th derivative of a function of the form x^a (a must not be a positive integer less than n)
 
 coeff=Fltarr(n)
 
