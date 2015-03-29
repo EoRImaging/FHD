@@ -40,6 +40,7 @@ frequency=obs.freq_center
 ;ENDIF
 
 IF Tag_exist(obs,'degrid_info') THEN IF Ptr_valid(obs.degrid_info) THEN BEGIN
+;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg 
     freq_arr=(*obs.degrid_info).freq
 ;    freq_bin_i=(*obs.degrid_info).bin_i
     nfreq_bin=N_Elements(freq_arr)

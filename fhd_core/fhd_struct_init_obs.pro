@@ -70,7 +70,7 @@ freq_center=Median(frequency_array)
 ;Set up gridding and degridding parameters. 
 IF Keyword_Set(degrid_nfreq_avg) THEN BEGIN
     grid_spectral_flag=1
-    IF degrid_nfreq_avg EQ 1 THEN degrid_bin_i=freq_bin_i ELSE BEGIN
+    IF degrid_nfreq_avg LT 0 THEN degrid_bin_i=freq_bin_i ELSE BEGIN
         IF degrid_nfreq_avg LT 1E5 THEN freq_bin=degrid_nfreq_avg*freq_res  ELSE freq_bin=degrid_nfreq_avg;Hz
         freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
         nfreq_bin=N_Elements(freq_hist)
@@ -86,7 +86,7 @@ ENDELSE
 grid_spectral_flag=0
 IF Keyword_Set(grid_nfreq_avg) THEN BEGIN
     grid_spectral_flag=1
-    IF grid_nfreq_avg EQ 1 THEN grid_bin_i=freq_bin_i ELSE BEGIN
+    IF grid_nfreq_avg LT 0 THEN grid_bin_i=freq_bin_i ELSE BEGIN
         IF grid_nfreq_avg LT 1E5 THEN freq_bin=grid_nfreq_avg*freq_res  ELSE freq_bin=grid_nfreq_avg;Hz
         freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
         nfreq_bin=N_Elements(freq_hist)
