@@ -1,7 +1,8 @@
 FUNCTION vis_source_model,source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
     timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,beam_arr=beam_arr,$
     fill_model_vis=fill_model_vis,use_pointing_center=use_pointing_center,vis_model_ptr=vis_model_ptr,$
-    galaxy_model=galaxy_model,calibration_flag=calibration_flag,diffuse_calibrate=diffuse_calibrate,diffuse_model=diffuse_model,_Extra=extra
+    galaxy_model=galaxy_model,calibration_flag=calibration_flag,diffuse_calibrate=diffuse_calibrate,$
+    diffuse_model=diffuse_model,no_cube=no_cube,_Extra=extra
 
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
@@ -13,6 +14,9 @@ IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_
 IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(flag_ptr) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+
+IF Tag_exist(obs,'degrid_info') THEN IF Ptr_valid(obs.degrid_info) THEN degrid_cube=1
+IF Keyword_Set(no_cube) THEN degrid_cube=0
 
 galaxy_flag=0
 IF Keyword_Set(calibration_flag) THEN BEGIN
@@ -74,32 +78,42 @@ ENDIF
 
 
 IF Min(Ptr_valid(model_uv_arr)) EQ 0 THEN BEGIN
-    model_uv_arr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(dimension,elements)
+    IF Keyword_Set(degrid_cube) THEN BEGIN
+        nfreq_bin=N_Elements((*obs.degrid_info).freq)
+        model_uv_arr=Ptrarr(n_pol,nfreq_bin,/allocate)
+        FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO *model_uv_arr[pol_i,f_i]=Complexarr(dimension,elements)
+    ENDIF ELSE BEGIN
+        nfreq_bin=1
+        model_uv_arr=Ptrarr(n_pol,/allocate)
+        FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(dimension,elements)
+    ENDELSE
 ENDIF
 
 IF n_sources GT 1 THEN BEGIN ;test that there are actual sources in the source list
     ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
     ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
     source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 
-    model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask_use,_Extra=extra)
-    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr1[pol_i]
+    model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,$
+        uv_mask=uv_mask_use,no_cube=no_cube,_Extra=extra)
+    FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO *model_uv_arr[pol_i,f_i]+=*model_uv_arr1[pol_i,f_i]*uv_mask_use ;should work even if no f_i dimension (trailing zeroes ignored)
     undefine_fhd,model_uv_arr1
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF
 
 
-IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,_Extra=extra)
-IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i]*uv_mask_use
+IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,no_cube=no_cube,_Extra=extra)
+IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO $
+    *model_uv_arr[pol_i,f_i]+=*gal_model_uv[pol_i,f_i]*uv_mask_use
 
 IF Keyword_Set(diffuse_filepath) THEN BEGIN
     IF file_test(diffuse_filepath) EQ 0 THEN diffuse_filepath=(file_search(diffuse_filepath+'*'))[0]
     IF Keyword_Set(calibration_flag) THEN print,"Reading diffuse model file for calibration: "+diffuse_filepath $
         ELSE print,"Reading diffuse model file for model subtraction: "+diffuse_filepath
-    diffuse_model_uv=fhd_diffuse_model(obs,jones,/uv_return,model_filepath=diffuse_filepath,_Extra=extra)
+    diffuse_model_uv=fhd_diffuse_model(obs,jones,/uv_return,model_filepath=diffuse_filepath,no_cube=no_cube,_Extra=extra)
     IF Max(Ptr_valid(diffuse_model_uv)) EQ 0 THEN print,"Error reading or building diffuse model. Null pointer returned!"
 ENDIF
-IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask_use
+IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO $
+    *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask_use
 
 vis_arr=Ptrarr(n_pol)
 
@@ -113,11 +127,19 @@ IF min(valid_test) EQ 0 THEN BEGIN
 ENDIF
 
 t_degrid=Fltarr(n_pol)
-FOR pol_i=0,n_pol-1 DO BEGIN
-    vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,$
-        timing=t_degrid0,polarization=pol_i,fill_model_vis=fill_model_vis,vis_input_ptr=vis_model_ptr[pol_i])
-    t_degrid[pol_i]=t_degrid0
-ENDFOR
+IF Keyword_Set(degrid_cube) THEN BEGIN
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        vis_arr[pol_i]=visibility_degrid(model_uv_arr[pol_i,*],flag_ptr[pol_i],obs,psf,params,silent=silent,$
+            timing=t_degrid0,polarization=pol_i,fill_model_vis=fill_model_vis,vis_input_ptr=vis_model_ptr[pol_i])
+        t_degrid[pol_i]=t_degrid0
+    ENDFOR
+ENDIF ELSE BEGIN
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,$
+            timing=t_degrid0,polarization=pol_i,fill_model_vis=fill_model_vis,vis_input_ptr=vis_model_ptr[pol_i])
+        t_degrid[pol_i]=t_degrid0
+    ENDFOR
+ENDELSE
 IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid)
 
 timing=Systime(1)-t0
