@@ -51,6 +51,7 @@ IF Keyword_Set(degrid_cube) THEN BEGIN
     IF N_Elements(spectral_taylor_expand) EQ 0 THEN spectral_taylor_expand=1
     
     IF spectral_taylor_expand GE 1 THEN BEGIN
+        print,"Gridding source model cube using taylor expansion of order: "+Strn(spectral_taylor_expand)
         alpha_arr=source_array.alpha
         
         flux_arr=Ptrarr(n_pol,spectral_taylor_expand+1)
@@ -88,6 +89,7 @@ IF Keyword_Set(degrid_cube) THEN BEGIN
             source_dft_cube(*image_ref[pol_i],spectral_index_powers_arr=spectral_index_arr[pol_i,*],freq_arr=freq_arr,freq_ref=frequency)
         
     ENDIF ELSE BEGIN ;else: do not use a taylor series expansion, and calculate the dft at every frequency (computationally expensive!)        
+        print,"Gridding source model cube with each frequency slice calculated separately"
         flux_arr=Ptrarr(n_pol,nfreq_bin)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR freq_i=0,nfreq_bin-1 DO BEGIN
@@ -119,6 +121,7 @@ IF Keyword_Set(degrid_cube) THEN BEGIN
     model_uv_full=model_uv_cube 
 ENDIF ELSE BEGIN
 ;in this case, grid one continuum image for each polarization (no frequency dimension)
+    print,"Gridding source model as single continuum image"
     flux_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
     IF Max(Ptr_valid(model_uv_full)) EQ 0 THEN BEGIN
