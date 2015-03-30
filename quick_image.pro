@@ -4,7 +4,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     multi_pos = multi_pos, start_multi_params = start_multi_params, no_ps_close = no_ps_close, $
     alphabackgroundimage = alphabackgroundimage, missing_value = missing_value, $
     noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf
-      
+    
   if n_elements(window_num) eq 0 then window_num = 1
   
   if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) or keyword_set(pdf) then pub = 1 else pub = 0
@@ -289,6 +289,8 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
       
       multi_pos_use = multi_pos[*,0]
     endif else multi_pos_use = multi_pos
+    
+    base_size_use = mean(round([!d.x_size*multi_xlen/x_factor, !d.y_size*multi_ylen/y_factor]))
     
     multi_aspect = multi_size[1]/float(multi_size[0])
     
