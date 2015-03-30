@@ -77,13 +77,20 @@ IF Keyword_Set(cable_bandpass_fit) THEN BEGIN
              ;amp2 is a temporary variable used in place of the amp array for an added layer of safety
              amp2=fltarr(nf_use,nt_use_cable)
         
-             ;This is the normalization loop for each tile. If the median of gain amplitudes over all frequencies is nonzero, then divide
-             ;the gain amplitudes by that number, otherwise make the gain amplitudes zero. It is unclear at this point in time whether the 
-             ;median is better/worse than a resistant mean with a 2sigma cut. 
-             FOR tile_i=0,nt_use_cable-1 DO amp2[*,tile_i]=(Median(amp[*,tile_i]) EQ 0) ? 0:(amp[*,tile_i]/Median(amp[*,tile_i]))
+             ;This is the normalization loop for each tile. If the mean of gain amplitudes over all frequencies is nonzero, then divide
+             ;the gain amplitudes by that number, otherwise make the gain amplitudes zero. 
+             FOR tile_i=0,nt_use_cable-1 DO BEGIN
+                resistant_mean,amp[*,tile_i],2,res_mean
+                IF res_mean NE 0 THEN amp2[*,tile_i]=amp[*,tile_i]/res_mean ELSE amp2[*,tile_i]=0.
+             ENDFOR
              
-             ;This finds the normalized gain amplitude median per frequency over all tiles, which is the final bandpass per cable group. 
-             bandpass_single=Median(amp2,dimension=2)
+             ;This finds the normalized gain amplitude mean per frequency over all tiles, which is the final bandpass per cable group. 
+             
+             bandpass_single=Fltarr(nf_use)
+             FOR f_i=0L,nf_use-1 DO BEGIN
+                resistant_mean,amp2[f_i,*],2,res_mean
+                bandpass_single[f_i]=res_mean
+             ENDFOR
              
              ;Want iterative to start at 1 (to not overwrite freq) and store final bandpass per cable group.
              bandpass_col_count = bandpass_col_count+1
@@ -239,7 +246,11 @@ ENDIF ELSE BEGIN
         amp=Abs(gain_use)
         phase=Atan(gain_use,/phase)
         amp2=fltarr(nf_use,nt_use)
-        FOR tile_i=0,nt_use-1 DO amp2[*,tile_i]=(Median(amp[*,tile_i]) EQ 0) ? 0:(amp[*,tile_i]/Median(amp[*,tile_i]))
+        
+        FOR tile_i=0,nt_use-1 DO BEGIN
+            resistant_mean,amp2[*,tile_i],2,res_mean
+            IF res_mean NE 0 THEN amp2[*,tile_i]=amp[*,tile_i]/res_mean ELSE amp2[*,tile_i]=0.
+        ENDFOR
         bandpass_single=Fltarr(nf_use)
         FOR f_i=0L,nf_use-1 DO BEGIN
             resistant_mean,amp2[f_i,*],2,res_mean
