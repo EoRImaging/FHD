@@ -72,7 +72,7 @@ IF Keyword_Set(degrid_cube) THEN BEGIN
             FOR pol_i=0,n_pol-1 DO BEGIN
                 FOR s_i=0,spectral_taylor_expand DO BEGIN ;no "-1" for second loop!
                     single_uv=Complexarr(dimension,elements)
-                    single_uv[uv_i_use]=*model_uv_vals[i]
+                    single_uv[uv_i_use]=*model_uv_vals[pol_i,s_i]
                     single_img=fft_shift(FFT(fft_shift(Temporary(single_uv)))) 
                     model_image_arr[pol_i,s_i]=Ptr_new(single_img,/no_copy)
                 ENDFOR
@@ -116,7 +116,7 @@ IF Keyword_Set(degrid_cube) THEN BEGIN
         FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO *model_uv_cube[pol_i,freq_i]+=*model_uv_full[pol_i]
         Ptr_free,model_uv_full
     ENDIF
-    model_uv_full=mode_uv_cube 
+    model_uv_full=model_uv_cube 
 ENDIF ELSE BEGIN
 ;in this case, grid one continuum image for each polarization (no frequency dimension)
     flux_arr=Ptrarr(n_pol)
