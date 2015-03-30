@@ -80,8 +80,8 @@ ENDIF
 IF Min(Ptr_valid(model_uv_arr)) EQ 0 THEN BEGIN
     IF Keyword_Set(degrid_cube) THEN BEGIN
         nfreq_bin=(*obs.degrid_info).n_freq
-        model_uv_arr=Ptrarr(n_pol,nfreq_bin,/allocate)
-        FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO *model_uv_arr[pol_i,f_i]=Complexarr(dimension,elements)
+;        model_uv_arr=Ptrarr(n_pol,nfreq_bin,/allocate)
+;        FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO *model_uv_arr[pol_i,f_i]=Complexarr(dimension,elements)
     ENDIF ELSE BEGIN
         nfreq_bin=1
         model_uv_arr=Ptrarr(n_pol,/allocate)
@@ -95,16 +95,23 @@ IF n_sources GT 1 THEN BEGIN ;test that there are actual sources in the source l
     source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 
     model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,$
         uv_mask=uv_mask_use,no_cube=no_cube,_Extra=extra)
-    FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO *model_uv_arr[pol_i,f_i]+=*model_uv_arr1[pol_i,f_i];*uv_mask_use ;should work even if no f_i dimension (trailing zeroes ignored)
-    undefine_fhd,model_uv_arr1
+    IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN BEGIN
+        FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO $
+            *model_uv_arr[pol_i,f_i]+=Temporary(*model_uv_arr1[pol_i,f_i]);*uv_mask_use ;should work even if no f_i dimension (trailing zeroes ignored)
+        undefine_fhd,model_uv_arr1
+    ENDIF ELSE model_uv_arr=Temporary(model_uv_arr1)
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF
 
 
 IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,no_cube=no_cube,_Extra=extra)
-IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO $
-    *model_uv_arr[pol_i,f_i]+=*gal_model_uv[pol_i,f_i];*uv_mask_use
-
+IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN BEGIN
+    IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN BEGIN
+        FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO $
+            *model_uv_arr[pol_i,f_i]+=Temporary(*gal_model_uv[pol_i,f_i]);*uv_mask_use
+        undefine_fhd,gal_model_uv
+    ENDIF ELSE model_uv_arr=Temporary(gal_model_uv)
+ENDIF
 IF Keyword_Set(diffuse_filepath) THEN BEGIN
     IF file_test(diffuse_filepath) EQ 0 THEN diffuse_filepath=(file_search(diffuse_filepath+'*'))[0]
     IF Keyword_Set(calibration_flag) THEN print,"Reading diffuse model file for calibration: "+diffuse_filepath $
