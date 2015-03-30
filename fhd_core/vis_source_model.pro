@@ -95,7 +95,7 @@ IF n_sources GT 1 THEN BEGIN ;test that there are actual sources in the source l
     source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 
     model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,$
         uv_mask=uv_mask_use,no_cube=no_cube,_Extra=extra)
-    FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO *model_uv_arr[pol_i,f_i]+=*model_uv_arr1[pol_i,f_i]*uv_mask_use ;should work even if no f_i dimension (trailing zeroes ignored)
+    FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO *model_uv_arr[pol_i,f_i]+=*model_uv_arr1[pol_i,f_i];*uv_mask_use ;should work even if no f_i dimension (trailing zeroes ignored)
     undefine_fhd,model_uv_arr1
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF
@@ -103,7 +103,7 @@ ENDIF
 
 IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,antialias=1,/uv_return,no_cube=no_cube,_Extra=extra)
 IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO $
-    *model_uv_arr[pol_i,f_i]+=*gal_model_uv[pol_i,f_i]*uv_mask_use
+    *model_uv_arr[pol_i,f_i]+=*gal_model_uv[pol_i,f_i];*uv_mask_use
 
 IF Keyword_Set(diffuse_filepath) THEN BEGIN
     IF file_test(diffuse_filepath) EQ 0 THEN diffuse_filepath=(file_search(diffuse_filepath+'*'))[0]
@@ -113,12 +113,12 @@ IF Keyword_Set(diffuse_filepath) THEN BEGIN
     IF Max(Ptr_valid(diffuse_model_uv)) EQ 0 THEN print,"Error reading or building diffuse model. Null pointer returned!"
 ENDIF
 IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO $
-    *model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i]*uv_mask_use
+    *model_uv_arr[pol_i,f_i]+=*diffuse_model_uv[pol_i,f_i];*uv_mask_use
 
 vis_arr=Ptrarr(n_pol)
 
-valid_test=fltarr(n_pol)
-FOR pol_i=0,n_pol-1 DO valid_test[pol_i]=Total(Abs(*model_uv_arr[pol_i]))
+valid_test=fltarr(n_pol,nfreq_bin)
+FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO valid_test[pol_i,f_i]=Total(Abs(*model_uv_arr[pol_i,f_i]))
 IF min(valid_test) EQ 0 THEN BEGIN
     error=1
     print,"ERROR: Invalid calibration model."
