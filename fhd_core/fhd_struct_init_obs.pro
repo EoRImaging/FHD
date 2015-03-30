@@ -4,7 +4,8 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
     dft_threshold=dft_threshold,psf_dim=psf_dim,nside=nside,restrict_hpx_inds=restrict_hpx_inds,$
-    n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,_Extra=extra
+    n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,$
+    degrid_nfreq_avg=degrid_nfreq_avg,grid_nfreq_avg=grid_nfreq_avg,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
