@@ -78,8 +78,9 @@ IF Keyword_Set(degrid_nfreq_avg) THEN BEGIN
         degrid_bin_i=fltarr(n_freq)
         FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN degrid_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
     ENDELSE
+    degrid_freq_arr=Fltarr(nfreq_bin)
     FOR f_i=0L,nfreq_bin-1 DO degrid_freq_arr[f_i]=Mean(frequency_array[where(degrid_bin_i EQ f_i)])
-    degrid_info=Ptr_new({freq:degrid_freq_arr,bin_i:degrid_bin_i})
+    degrid_info=Ptr_new({n_freq:nfreq_bin,freq:degrid_freq_arr,bin_i:degrid_bin_i})
 ENDIF ELSE BEGIN
     degrid_info=Ptr_new()
 ENDELSE
@@ -94,8 +95,9 @@ IF Keyword_Set(grid_nfreq_avg) THEN BEGIN
         grid_bin_i=fltarr(n_freq)
         FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN grid_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
     ENDELSE
+    grid_freq_arr=Fltarr(nfreq_bin)
     FOR f_i=0L,nfreq_bin-1 DO grid_freq_arr[f_i]=Mean(frequency_array[where(grid_bin_i EQ f_i)])
-    grid_info=Ptr_new({freq:grid_freq_arr,bin_i:grid_bin_i})
+    grid_info=Ptr_new({n_freq:nfreq_bin,freq:grid_freq_arr,bin_i:grid_bin_i})
 ENDIF ELSE BEGIN
     grid_info=Ptr_new()
 ENDELSE

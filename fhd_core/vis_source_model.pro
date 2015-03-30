@@ -79,7 +79,7 @@ ENDIF
 
 IF Min(Ptr_valid(model_uv_arr)) EQ 0 THEN BEGIN
     IF Keyword_Set(degrid_cube) THEN BEGIN
-        nfreq_bin=N_Elements((*obs.degrid_info).freq)
+        nfreq_bin=(*obs.degrid_info).n_freq
         model_uv_arr=Ptrarr(n_pol,nfreq_bin,/allocate)
         FOR pol_i=0,n_pol-1 DO FOR f_i=0,nfreq_bin-1 DO *model_uv_arr[pol_i,f_i]=Complexarr(dimension,elements)
     ENDIF ELSE BEGIN

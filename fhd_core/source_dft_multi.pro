@@ -46,7 +46,7 @@ IF Keyword_Set(degrid_cube) THEN BEGIN
 ;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg 
     freq_arr=(*obs.degrid_info).freq
 ;    freq_bin_i=(*obs.degrid_info).bin_i
-    nfreq_bin=N_Elements(freq_arr)
+    nfreq_bin=(*obs.degrid_info).n_freq
     
     IF N_Elements(spectral_taylor_expand) EQ 0 THEN spectral_taylor_expand=1
     
