@@ -51,7 +51,7 @@ degpix=obs.degpix
 
 FoV=!RaDeg/obs.kpix
 freq_arr=psf.freq
-freq_use=Mean(freq_arr)/1E6
+freq_use=obs.freq_center
 n_pol=obs.n_pol
 
 ra0=astr.crval[0]
