@@ -98,19 +98,30 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       simulate_baselines = 1
       
       nsample = round(ps_kspan^2. * sim_baseline_density, /L64)
-      sim_baseline_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
-      sim_baseline_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
+      sim_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
+      sim_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
       
       ;; convert to light travel time (ie m/c or wavelenghts/freq) -- use f=150MHz for lowest frequency
       f_use = 150e6
-      sim_baseline_uu = sim_baseline_uu / f_use
-      sim_baseline_vv = sim_baseline_vv / f_use
+      sim_uu = sim_uu / f_use
+      sim_vv = sim_vv / f_use
       
-      n_time = 2
+      max_n_baseline = 16000
+      n_time = 2*ceil(nsample/float(max_n_baseline))
+      n_per_time = floor(nsample/(n_time/2.))
+      if n_per_time*n_time ne nsample then begin
+        nsample = n_per_time*n_time/2.
+        sim_uu = sim_uu[0:nsample-1]
+        sim_vv = sim_vv[0:nsample-1]
+      endif
+      sim_uu = reform(sim_uu, n_per_time, 1, n_time/2)
+      sim_vv = reform(sim_vv, n_per_time, 1, n_time/2)
       
-      sim_baseline_uu = [sim_baseline_uu, sim_baseline_uu]
-      sim_baseline_vv = [sim_baseline_vv, sim_baseline_vv]
-      sim_baseline_time = [intarr(nsample), intarr(nsample)+1]
+      sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
+      sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
+      
+      sim_baseline_time = [intarr(n_per_time), intarr(n_per_time)+1]
+      if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
     endif
     
     array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, $
