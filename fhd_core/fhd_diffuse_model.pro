@@ -1,4 +1,5 @@
-FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,uv_return=uv_return,diffuse_units_kelvin=diffuse_units_kelvin,_Extra=extra
+FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,uv_return=uv_return,$
+    spectral_model_uv_arr=spectral_model_uv_arr,diffuse_units_kelvin=diffuse_units_kelvin,_Extra=extra
 
 dimension=obs.dimension
 elements=obs.elements

@@ -1,5 +1,5 @@
 FUNCTION fast_dft,x_vec,y_vec,dimension=dimension,elements=elements,degpix=degpix,flux_arr=flux_arr,$
-    dft_threshold=dft_threshold,conserve_memory=conserve_memory,return_kernel=return_kernel,_Extra=extra
+    dft_threshold=dft_threshold,conserve_memory=conserve_memory,return_kernel=return_kernel,no_fft=no_fft,_Extra=extra
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 
@@ -15,12 +15,14 @@ ENDELSE
 
 IF N_Elements(model_uv_full) LT n_pol THEN model_uv_full=Ptrarr(n_pol)
 IF Min(Ptr_valid(model_uv_full[0:n_pol-1])) EQ 0 THEN BEGIN
-    FOR pol_i=0,n_pol-1 DO model_uv_full[pol_i]=Ptr_new(Complexarr(dimension,elements))
+    IF Keyword_Set(no_fft) THEN init_array=Fltarr(dimension,elements) ELSE init_array=Complexarr(dimension,elements)
+    FOR pol_i=0,n_pol-1 DO model_uv_full[pol_i]=Ptr_new(init_array)
 ENDIF
 model_img=fast_dft_subroutine(x_vec,y_vec,flux_arr_use,dft_threshold=dft_threshold,$
     dimension=dimension,elements=elements,conserve_memory=conserve_memory,return_kernel=return_kernel)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    model_uv=fft_shift(FFT(fft_shift(*model_img[pol_i]),/inverse)) ; normalization ??!!??!!
+    IF Keyword_Set(no_fft) THEN model_uv=*model_img[pol_i] ELSE $
+        model_uv=fft_shift(FFT(fft_shift(*model_img[pol_i]),/inverse)) ;normalization seems okay
     *model_uv_full[pol_i]+=model_uv
 ENDFOR
 
