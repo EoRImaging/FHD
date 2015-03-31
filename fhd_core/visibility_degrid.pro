@@ -1,12 +1,13 @@
 FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
     complex=complex,double=double,fill_model_vis=fill_model_vis,$
-    vis_input_ptr=vis_input_ptr,_Extra=extra
+    vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 t0=Systime(1)
 heap_gc
 
 pol_names=obs.pol_names
 complex=psf.complex_flag
+n_spectral=obs.degrid_spectral_terms
 
 ;extract information from the structures
 dimension=Float(obs.dimension)
@@ -21,6 +22,7 @@ freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=psf.n_freq
 bin_offset=(*obs.baseline_info).bin_offset
 frequency_array=(*obs.baseline_info).freq
+freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
 
 psf_dim=psf.dim
 psf_resolution=psf.resolution
@@ -110,7 +112,7 @@ psf_dim3=psf_dim*psf_dim
 ;pdim=size(psf_base,/dimension)
 ;psf_base_dag=Ptrarr(pdim,/allocate)
 ;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
-
+prefactor=deriv_coefficients(n_spectral,/divide_factorial)
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
@@ -175,7 +177,15 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
+    IF Keyword_Set(n_spectral) THEN BEGIN
+        vis_box=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
+        freq_term_arr=Rebin(freq_delta[freq_i],psf_dim3*vis_n,/sample)
+        FOR s_i=0,n_spectral-1 DO BEGIN
+            box_arr=prefactor[s_i]*Reform((*spectral_model_uv_arr[s_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
+            box_matrix*=freq_term_arr
+            vis_box+=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
+        ENDFOR
+    ENDIF ELSE vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     IF ind_remap_flag THEN vis_box=vis_box[ind_remap]
