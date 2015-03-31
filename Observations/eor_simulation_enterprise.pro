@@ -106,7 +106,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       sim_uu = sim_uu / f_use
       sim_vv = sim_vv / f_use
       
-      max_n_baseline = 16000
+      max_n_baseline = 8000
       n_time = 2*ceil(nsample/float(max_n_baseline))
       n_per_time = floor(nsample/(n_time/2.))
       if n_per_time*n_time ne nsample then begin
