@@ -248,7 +248,7 @@ ENDIF ELSE BEGIN
         amp2=fltarr(nf_use,nt_use)
         
         FOR tile_i=0,nt_use-1 DO BEGIN
-            resistant_mean,amp2[*,tile_i],2,res_mean
+            resistant_mean,amp[*,tile_i],2,res_mean
             IF res_mean NE 0 THEN amp2[*,tile_i]=amp[*,tile_i]/res_mean ELSE amp2[*,tile_i]=0.
         ENDFOR
         bandpass_single=Fltarr(nf_use)
