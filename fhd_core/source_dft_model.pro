@@ -1,5 +1,5 @@
 FUNCTION source_dft_model,obs,jones,source_list,t_model=t_model,sigma_threshold=sigma_threshold,$
-    no_extend=no_extend,unpolarized=unpolarized,uv_mask=uv_mask,polarization_map=polarization_map,no_cube=no_cube,_Extra=extra
+    no_extend=no_extend,unpolarized=unpolarized,uv_mask=uv_mask,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 t_model0=Systime(1)
 n_pol=obs.n_pol
 dimension=obs.dimension
@@ -22,7 +22,7 @@ IF Keyword_Set(unpolarized) THEN BEGIN
     src_arr_use.flux.Q=0.
     src_arr_use.flux.V=0.
 ENDIF
-source_dft_multi,obs,jones,src_arr_use,model_uv_arr,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,no_cube=no_cube,_Extra=extra
+source_dft_multi,obs,jones,src_arr_use,model_uv_arr,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 
 undefine_fhd,src_arr_use
 t_model=Systime(1)-t_model0

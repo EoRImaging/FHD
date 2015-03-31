@@ -5,7 +5,8 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
     dft_threshold=dft_threshold,psf_dim=psf_dim,nside=nside,restrict_hpx_inds=restrict_hpx_inds,$
     n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,$
-    degrid_nfreq_avg=degrid_nfreq_avg,grid_nfreq_avg=grid_nfreq_avg,_Extra=extra
+    degrid_spectral_terms=degrid_spectral_terms,grid_spectral_terms=grid_spectral_terms,$
+    grid_nfreq_avg=grid_nfreq_avg,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
@@ -68,26 +69,7 @@ freq_bin_i=fltarr(n_freq)
 FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
 freq_center=Median(frequency_array)
 
-;Set up gridding and degridding parameters. 
-IF Keyword_Set(degrid_nfreq_avg) THEN BEGIN
-    grid_spectral_flag=1
-    IF degrid_nfreq_avg LT 0 THEN degrid_bin_i=freq_bin_i ELSE BEGIN
-        IF degrid_nfreq_avg LT 1E5 THEN freq_bin=degrid_nfreq_avg*freq_res  ELSE freq_bin=degrid_nfreq_avg;Hz
-        freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
-        nfreq_bin=N_Elements(freq_hist)
-        degrid_bin_i=fltarr(n_freq)
-        FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN degrid_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
-    ENDELSE
-    degrid_freq_arr=Fltarr(nfreq_bin)
-    FOR f_i=0L,nfreq_bin-1 DO degrid_freq_arr[f_i]=Mean(frequency_array[where(degrid_bin_i EQ f_i)])
-    degrid_info=Ptr_new({n_freq:nfreq_bin,freq:degrid_freq_arr,bin_i:degrid_bin_i})
-ENDIF ELSE BEGIN
-    degrid_info=Ptr_new()
-ENDELSE
-
-grid_spectral_flag=0
 IF Keyword_Set(grid_nfreq_avg) THEN BEGIN
-    grid_spectral_flag=1
     IF grid_nfreq_avg LT 0 THEN grid_bin_i=freq_bin_i ELSE BEGIN
         IF grid_nfreq_avg LT 1E5 THEN freq_bin=grid_nfreq_avg*freq_res  ELSE freq_bin=grid_nfreq_avg;Hz
         freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
@@ -155,6 +137,8 @@ ENDFOR
 tile_flag_i=where(tile_use1 EQ 0,n_flag)
 IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
+IF N_Elements(degrid_spectral_terms) EQ 0 THEN degrid_spectral_terms=0 ELSE degrid_spectral_terms=Fix(degrid_spectral_terms)
+IF N_Elements(grid_spectral_terms) EQ 0 THEN grid_spectral_terms=0 ELSE grid_spectral_terms=Fix(grid_spectral_terms)
 IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=0. 
 IF dft_threshold EQ 1 THEN dft_threshold=1./((2.*!Pi)^2.*dimension)
 IF N_Elements(nside) EQ 0 THEN nside=0
@@ -175,6 +159,7 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),beam_integral:Ptrarr(4),pol_names:pol_names,$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),freq_res:Float(freq_res),time_res:Float(time_res),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
-    residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,degrid_info:degrid_info,grid_info:grid_info,healpix:healpix}    
+    residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,$
+    degrid_spectral_terms:degrid_spectral_terms,grid_spectral_terms:grid_spectral_terms,grid_info:grid_info,healpix:healpix}    
 RETURN,struct
 END
