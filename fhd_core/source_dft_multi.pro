@@ -41,11 +41,7 @@ ENDFOR
 
 
 IF Keyword_Set(n_spectral) THEN BEGIN
-;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg 
-    freq_arr=(*obs.degrid_info).freq
-;    freq_bin_i=(*obs.degrid_info).bin_i
-    nfreq_bin=(*obs.degrid_info).n_freq
-    
+;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg
     print,"Gridding source model cube using taylor expansion of order: "+Strn(n_spectral)
     alpha_arr=source_array.alpha
     
@@ -115,12 +111,12 @@ IF Keyword_Set(n_spectral) THEN BEGIN
 ;        ENDELSE
 ;    ENDELSE
     
-    IF Max(Ptr_valid(model_uv_full)) GT 0 THEN BEGIN
-        ;still need some sort of test in case model_uv_full is already a cube!
-        FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO *model_uv_cube[pol_i,freq_i]+=*model_uv_full[pol_i]
-        Ptr_free,model_uv_full
-    ENDIF
-    model_uv_full=model_uv_cube 
+;    IF Max(Ptr_valid(model_uv_full)) GT 0 THEN BEGIN
+;        ;still need some sort of test in case model_uv_full is already a cube!
+;        FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO *model_uv_cube[pol_i,freq_i]+=*model_uv_full[pol_i]
+;        Ptr_free,model_uv_full
+;    ENDIF
+;    model_uv_full=model_uv_cube 
 ENDIF ELSE BEGIN
 ;in this case, grid one continuum image for each polarization (no frequency dimension)
     print,"Gridding source model as single continuum image"
