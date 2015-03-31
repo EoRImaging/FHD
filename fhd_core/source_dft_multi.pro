@@ -53,20 +53,19 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     
     IF Keyword_Set(dft_threshold) THEN BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
-        model_image_arr=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-            conserve_memory=conserve_memory,dft_threshold=dft_threshold,/no_fft)
+        model_uv_arr=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
+            conserve_memory=conserve_memory,dft_threshold=dft_threshold)
         
         Ptr_free,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory)
-        model_image_arr=Ptrarr(n_pol,n_spectral+1)
+        model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR s_i=0,n_spectral DO BEGIN ;no "-1" for second loop!
                 single_uv=Complexarr(dimension,elements)
-                single_uv[uv_i_use]=*model_uv_vals[pol_i,s_i]
-                single_img=fft_shift(FFT(fft_shift(Temporary(single_uv)))) 
-                model_image_arr[pol_i,s_i]=Ptr_new(single_img,/no_copy)
+                single_uv[uv_i_use]=*model_uv_vals[pol_i,s_i] 
+                model_uv_arr[pol_i,s_i]=Ptr_new(single_uv,/no_copy)
             ENDFOR
         ENDFOR
         
@@ -74,48 +73,13 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     ENDELSE
     
     IF Max(Ptr_valid(model_uv_full)) GT 0 THEN BEGIN
-        FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=Temporary(*model_image_arr[pol_i,0])
-    ENDIF ELSE model_uv_full=model_image_arr[*,0]
+        FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=Temporary(*model_uv_arr[pol_i,0])
+    ENDIF ELSE model_uv_full=model_uv_arr[*,0]
     IF Max(Ptr_valid(spectral_model_uv_arr)) GT 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO $
-            *spectral_model_uv_arr[pol_i,s_i]+=Temporary(*model_image_arr[pol_i,s_i+1])
-    ENDIF ELSE spectral_model_uv_arr=model_image_arr[*,1:*]
+            *spectral_model_uv_arr[pol_i,s_i]+=Temporary(*model_uv_arr[pol_i,s_i+1])
+    ENDIF ELSE spectral_model_uv_arr=model_uv_arr[*,1:*]
     
-;    model_uv_cube=Ptrarr(n_pol,nfreq_bin)
-;    FOR pol_i=0,n_pol-1 DO model_uv_cube[pol_i,*]=$
-;        source_dft_cube(*image_ref[pol_i],spectral_index_powers_arr=spectral_index_arr[pol_i,*],freq_arr=freq_arr,freq_ref=frequency)
-        
-;    ENDIF ELSE BEGIN ;else: do not use a taylor series expansion, and calculate the dft at every frequency (computationally expensive!)        
-;        print,"Gridding source model cube with each frequency slice calculated separately"
-;        flux_arr=Ptrarr(n_pol,nfreq_bin)
-;        FOR pol_i=0,n_pol-1 DO BEGIN
-;            FOR freq_i=0,nfreq_bin-1 DO BEGIN
-;                flux_arr[pol_i,freq_i]=Ptr_new(source_array_use.flux.(pol_i)*(freq_arr[freq_i]/frequency)^alpha_arr)
-;            ENDFOR
-;        ENDFOR
-;        IF Keyword_Set(dft_threshold) THEN BEGIN
-;            IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
-;            model_uv_cube=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-;                conserve_memory=conserve_memory,dft_threshold=dft_threshold)
-;            Ptr_free,flux_arr
-;        ENDIF ELSE BEGIN
-;            IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
-;            model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory)
-;            model_uv_cube=Ptrarr(n_pol,nfreq_bin)
-;            FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO BEGIN
-;                model_uv_cube[pol_i,freq_i]=Ptr_new(complexarr(dimension,elements))
-;                (*model_uv_cube[pol_i,freq_i])[uv_i_use]=*model_uv_vals[pol_i,freq_i]
-;            ENDFOR
-;            Ptr_free,model_uv_vals,flux_arr
-;        ENDELSE
-;    ENDELSE
-    
-;    IF Max(Ptr_valid(model_uv_full)) GT 0 THEN BEGIN
-;        ;still need some sort of test in case model_uv_full is already a cube!
-;        FOR pol_i=0,n_pol-1 DO FOR freq_i=0,nfreq_bin-1 DO *model_uv_cube[pol_i,freq_i]+=*model_uv_full[pol_i]
-;        Ptr_free,model_uv_full
-;    ENDIF
-;    model_uv_full=model_uv_cube 
 ENDIF ELSE BEGIN
 ;in this case, grid one continuum image for each polarization (no frequency dimension)
     print,"Gridding source model as single continuum image"
