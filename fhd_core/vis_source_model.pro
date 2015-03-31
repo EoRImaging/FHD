@@ -80,7 +80,7 @@ IF Min(Ptr_valid(model_uv_arr)) EQ 0 THEN BEGIN
     model_uv_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(dimension,elements)
 ENDIF
-IF Min(Ptr_valid(spectral_model_uv_arr)) EQ 0 THEN BEGIN
+IF (Min(Ptr_valid(spectral_model_uv_arr)) EQ 0) AND (n_spectral GT 0) THEN BEGIN
     spectral_model_uv_arr=Ptrarr(n_pol,n_spectral,/allocate)
     FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO *spectral_model_uv_arr[pol_i,s_i]=Complexarr(dimension,elements)
 ENDIF
