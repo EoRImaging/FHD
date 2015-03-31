@@ -144,7 +144,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xyf_ui=Uniq(xyf_i)
     n_xyf_bin=N_Elements(xyf_ui)
     
-    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF (vis_n GT 1.1*n_xyf_bin) AND (not Keyword_Set(n_spectral)) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         ind_remap_flag=1
         inds=inds[xyf_si]
         freq_i=freq_i[xyf_si]
@@ -179,7 +179,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t3+=t4_0-t3_0
     IF Keyword_Set(n_spectral) THEN BEGIN
         vis_box=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
-        freq_term_arr=Rebin(freq_delta[freq_i],psf_dim3*vis_n,/sample)
+        freq_term_arr=Rebin(transpose(freq_delta[freq_i]),psf_dim3,vis_n,/sample)
         FOR s_i=0,n_spectral-1 DO BEGIN
             box_arr=prefactor[s_i]*Reform((*spectral_model_uv_arr[s_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
             box_matrix*=freq_term_arr

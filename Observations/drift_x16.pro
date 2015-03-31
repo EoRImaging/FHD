@@ -19,14 +19,15 @@ vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('MRC_full_radio_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+;calibration_catalog_file_path=filepath('MRC_full_radio_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 ;instrument='mwa32t' ;broken, since it would need separate beam generation files
 combine_obs=0
 dimension=1024.
 max_sources=10000.
 pad_uv_image=2.
-precess=1 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
+precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 IF dimension GT 2048 THEN pad_uv_image=1.
 no_ps=1 ;don't save postscript copy of images
 gain_factor=0.2

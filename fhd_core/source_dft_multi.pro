@@ -72,7 +72,6 @@ IF Keyword_Set(n_spectral) THEN BEGIN
         
         Ptr_free,model_uv_vals,flux_arr
     ENDELSE
-    spectral_model_uv_arr=model_image_arr[*,1:*]
     
     IF Max(Ptr_valid(model_uv_full)) GT 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=Temporary(*model_image_arr[pol_i,0])
