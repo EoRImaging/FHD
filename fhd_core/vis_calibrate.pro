@@ -181,7 +181,7 @@ ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 cal_res=vis_cal_subtract(cal_base,cal)
 cal.gain_residual=cal_res.gain
-undefine_fhd,cal_base
+;undefine_fhd,cal_base
 
 IF Keyword_Set(vis_baseline_hist) THEN $
     vis_baseline_hist,obs,params,vis_arr=vis_cal,vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd
