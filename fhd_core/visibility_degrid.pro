@@ -112,8 +112,12 @@ psf_dim3=psf_dim*psf_dim
 ;pdim=size(psf_base,/dimension)
 ;psf_base_dag=Ptrarr(pdim,/allocate)
 ;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
-prefactor=Ptrarr(n_spectral)
-FOR s_i=0,n_spectral-1 DO prefactor[s_i]=Ptr_new(deriv_coefficients(s_i+1,/divide_factorial))
+IF Keyword_Set(n_spectral) THEN BEGIN
+    prefactor=Ptrarr(n_spectral)
+    FOR s_i=0,n_spectral-1 DO prefactor[s_i]=Ptr_new(deriv_coefficients(s_i+1,/divide_factorial))
+    box_arr_ptr=Ptrarr(n_spectral)
+ENDIF
+
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
@@ -181,7 +185,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     IF Keyword_Set(n_spectral) THEN BEGIN
         vis_box=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
         freq_term_arr=Rebin(transpose(freq_delta[freq_i]),psf_dim3,vis_n,/sample)
-        box_arr_ptr=Ptrarr(n_spectral)
         FOR s_i=0,n_spectral-1 DO BEGIN
             ;s_i loop is over terms of the Taylor expansion, starting from the lowest-order term
             prefactor_use=*prefactor[s_i]
@@ -192,7 +195,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
                 ;s_i_i loop is over powers of the model x alpha^n, n=s_i_i+1
                 degree=n_spectral
                 box_arr=prefactor_use[s_i_i]*(*box_arr_ptr[s_i_i])
-                vis_box+=matrix_multiply(box_matrix_use,Temporary(box_arr),/atranspose)
+                vis_box+=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
             ENDFOR
         ENDFOR
         ptr_free,box_arr_ptr
