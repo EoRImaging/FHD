@@ -40,7 +40,7 @@ psf_dim2=2*psf_dim
 group_arr=reform(psf.id[polarization,freq_bin_i,*])
 beam_arr=*psf.beam_ptr
 
-vis_dimension=Float(nbaselines*n_samples)
+vis_dimension=nbaselines*n_samples
 IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
     ELSE visibility_array=Complexarr(n_freq,vis_dimension) 
 
@@ -112,7 +112,8 @@ psf_dim3=psf_dim*psf_dim
 ;pdim=size(psf_base,/dimension)
 ;psf_base_dag=Ptrarr(pdim,/allocate)
 ;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
-prefactor=deriv_coefficients(n_spectral,/divide_factorial)
+prefactor=Ptrarr(n_spectral)
+FOR s_i=0,n_spectral-1 DO prefactor[s_i]=Ptr_new(deriv_coefficients(s_i+1,/divide_factorial))
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
@@ -180,11 +181,21 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     IF Keyword_Set(n_spectral) THEN BEGIN
         vis_box=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
         freq_term_arr=Rebin(transpose(freq_delta[freq_i]),psf_dim3,vis_n,/sample)
+        box_arr_ptr=Ptrarr(n_spectral)
         FOR s_i=0,n_spectral-1 DO BEGIN
-            box_arr=prefactor[s_i]*Reform((*spectral_model_uv_arr[s_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
+            ;s_i loop is over terms of the Taylor expansion, starting from the lowest-order term
+            prefactor_use=*prefactor[s_i]
             box_matrix*=freq_term_arr
-            vis_box+=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
+            box_arr_ptr[s_i]=Ptr_new(Reform((*spectral_model_uv_arr[s_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3))
+            
+            FOR s_i_i=0,s_i DO BEGIN
+                ;s_i_i loop is over powers of the model x alpha^n, n=s_i_i+1
+                degree=n_spectral
+                box_arr=prefactor_use[s_i_i]*(*box_arr_ptr[s_i_i])
+                vis_box+=matrix_multiply(box_matrix_use,Temporary(box_arr),/atranspose)
+            ENDFOR
         ENDFOR
+        ptr_free,box_arr_ptr
     ENDIF ELSE vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
     t5_0=Systime(1)
     t4+=t5_0-t4_0
