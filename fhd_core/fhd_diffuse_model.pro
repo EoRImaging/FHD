@@ -1,5 +1,5 @@
 FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,uv_return=uv_return,$
-    spectral_model_uv_arr=spectral_model_uv_arr,diffuse_units_kelvin=diffuse_units_kelvin,_Extra=extra
+    spectral_model_uv_arr=spectral_model_uv_arr,diffuse_units_kelvin=diffuse_units_kelvin,diffuse_spectral_index=diffuse_spectral_index,_Extra=extra
 
 dimension=obs.dimension
 elements=obs.elements
@@ -35,6 +35,11 @@ var_name_inds=where((StrLowCase(var_names) NE 'hpx_inds') AND (StrLowCase(var_na
 var_names=var_names[var_name_inds]
 var_name_use=var_names[(where(StrLowCase(var_names) EQ 'model_arr',n_match))[0]>0] ;will pick 'model_arr' if present, or the first variable that is not 'hpx_inds' or 'nside'
 model_hpx_arr=getvar_savefile(model_filepath,var_name_use)
+
+model_spectra_i=where(StrLowCase(var_names) EQ 'model_spectral_arr',n_match)
+IF n_match GE 1 THEN diffuse_spectral_index=getvar_savefile(model_filepath,var_names[model_spectra_i])
+
+
 
 model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=diffuse_units_kelvin)
 IF size(model_stokes_arr,/type) EQ 10 THEN BEGIN
