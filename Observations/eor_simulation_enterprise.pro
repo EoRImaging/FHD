@@ -1,11 +1,12 @@
 PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, $
+    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, use_saved_uvf = use_saved_uvf, $
     sim_baseline_density = sim_baseline_density, $
     flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
     silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
     snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
+    
   except=!except
   !except=0
   heap_gc
@@ -124,6 +125,13 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
     endif
     
+    if n_elements(use_saved_uvf) eq 0 then use_saved_uvf = 1
+    if keyword_set(use_saved_uvf) then begin
+      eor_uvf_cube_file = '/data4/MWA/FHD_Aug23/bjh_arrsim_model_uvf/'
+      if keyword_set(flat_sigma) then eor_uvf_cube_file = eor_uvf_cube_file + 'flat_input_model.sav' else stop
+      if keyword_set(no_distrib) or keyword_set(delta_power) then stop
+    endif
+    
     array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, $
       sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
       simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, $
@@ -138,7 +146,8 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       complex=complex_beam,double=double_precison_beam,$
       save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,FoV=FoV,no_ps=no_ps,nfreq_avg=nfreq_avg,$
       snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export, $
-      n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
+      n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,save_uvf=save_uvf,save_imagecube=save_imagecube,$
+      eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
       
       
       

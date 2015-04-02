@@ -4,7 +4,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
     eor_sim=eor_sim,include_catalog_sources = include_catalog_sources, source_list=source_list,$
     catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export,$
-    snapshot_recalculate=snapshot_recalculate,_Extra=extra
+    snapshot_recalculate=snapshot_recalculate,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
     
 compile_opt idl2,strictarrsubs
 except=!except
@@ -69,7 +69,7 @@ vis_arr=vis_simulate(obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd
     recalculate_all=recalculate_all,$
     include_eor=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
-    model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,_Extra=extra)
+    model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra)
 
 vis_noise_calc,obs,vis_arr,flag_arr
 tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
