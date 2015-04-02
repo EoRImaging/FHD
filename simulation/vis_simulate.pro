@@ -97,7 +97,12 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
                   eor_gen = 1
                 endif else begin
                   print, 'restoring cube from ' + eor_uvf_cube_file
+                  time0 = systime(1)
                   eor_uvf_cube = getvar_savefile(eor_uvf_cube_file, varnames[wh_eor[0]])
+                  time1 = systime(1)
+                  print, 'time for eor restore (min): ' + number_formatter((time1-time0)/60.)
+                  if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
+                  else model_uvf_cube = temporary(eor_uvf_cube)
                 endelse
                 
               endif else begin
@@ -111,7 +116,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
             eor_gen = 1
           endelse
         endif else eor_gen = 1
-
+        
         if eor_gen ne 0 then begin
           print, 'Generating model EoR cube'
           uv_locs = findgen(101)*4.-200.
@@ -125,7 +130,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
           if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
           else model_uvf_cube = temporary(eor_uvf_cube)
         endif
-      endif else model_uvf_cube = temporary(eor_uvf_cube)
+      endif
       
       ;; model cube assumed to be Stokes I
       switch n_pol of
