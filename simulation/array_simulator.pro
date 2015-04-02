@@ -4,7 +4,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
     eor_sim=eor_sim,include_catalog_sources = include_catalog_sources, source_list=source_list,$
     catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export,$
-    snapshot_recalculate=snapshot_recalculate,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
+    snapshot_recalculate=snapshot_recalculate,grid_recalculate=grid_recalculate,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
     
 compile_opt idl2,strictarrsubs
 except=!except
