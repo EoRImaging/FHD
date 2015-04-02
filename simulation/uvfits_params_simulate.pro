@@ -14,7 +14,11 @@ tile_sim=(N_Elements(sim_tile_locations_x)+N_Elements(sim_tile_locations_y)) GT 
 baseline_sim=(N_Elements(sim_baseline_uu)+N_Elements(sim_baseline_vv)+$
               N_Elements(sim_baseline_ww)+N_Elements(sim_baseline_time)) GT 0
 IF tile_sim THEN baseline_sim=0
-params_in_flag=Keyword_Set(params_in)
+IF baseline_sim THEN BEGIN
+  n_baseline=Max([n_baseline,N_Elements(sim_baseline_uu),N_Elements(sim_baseline_vv),$
+      N_Elements(sim_baseline_ww),N_Elements(sim_baseline_time)])
+  IF n_baseline GT hdr.nbaselines THEN params_in_flag=0 ELSE params_in_flag=Keyword_Set(params_in) 
+ENDIF ELSE params_in_flag=Keyword_Set(params_in)
 
 IF params_in_flag THEN BEGIN
     default_uu=params_in.uu
