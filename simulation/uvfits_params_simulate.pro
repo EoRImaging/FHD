@@ -17,12 +17,12 @@ IF tile_sim THEN baseline_sim=0
 IF baseline_sim THEN BEGIN
   n_baseline=Max([n_baseline,N_Elements(sim_baseline_uu),N_Elements(sim_baseline_vv),$
       N_Elements(sim_baseline_ww),N_Elements(sim_baseline_time)])
-  IF n_baseline GT hdr.nbaselines THEN BEGIN
+;  IF n_baseline GT hdr.nbaselines THEN BEGIN
     params_in_flag=0 
     n_tile_check=Ceil((1.+Sqrt(1+8.*n_baseline/n_time))/2.)
     n_tile=n_tile_check
     hdr.n_tile=n_tile_check
-  ENDIF ELSE params_in_flag=Keyword_Set(params_in) 
+;  ENDIF ELSE params_in_flag=Keyword_Set(params_in) 
 ENDIF ELSE params_in_flag=Keyword_Set(params_in)
 
 IF params_in_flag THEN BEGIN
