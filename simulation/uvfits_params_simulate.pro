@@ -19,7 +19,7 @@ IF baseline_sim THEN BEGIN
       N_Elements(sim_baseline_ww),N_Elements(sim_baseline_time)])
   IF n_baseline GT hdr.nbaselines THEN BEGIN
     params_in_flag=0 
-    n_tile_check=Ceil((1.+Sqrt(1+4.*n_baseline))/2.)
+    n_tile_check=Ceil((1.+Sqrt(1+8.*n_baseline))/2.)
     n_tile=n_tile_check
     hdr.n_tile=n_tile_check
   ENDIF ELSE params_in_flag=Keyword_Set(params_in) 
