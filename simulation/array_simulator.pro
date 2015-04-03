@@ -64,6 +64,10 @@ flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start
 vis_flag_update,flag_arr,obs,psf,params
 ;print informational messages
 IF ~silent THEN obs_status,obs
+;save and output settings here for debugging, though they should be re-saved later in case things change
+fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
 
 vis_arr=vis_simulate(obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all,$
