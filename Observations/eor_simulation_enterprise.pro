@@ -1,10 +1,12 @@
 PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, $
+    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, use_saved_uvf = use_saved_uvf, $
+    sim_baseline_density = sim_baseline_density, $
     flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
     silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
     snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
+    
   except=!except
   !except=0
   heap_gc
@@ -67,6 +69,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
   include_catalog_sources = 0
   save_uvf=1
   save_imagecube=1
+  unflag_all = 1
   
   ;; stuff from general_obs not in eor_firstpass
   ;Set up paths
@@ -91,18 +94,62 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
         CONTINUE
       ENDIF
     ENDIF
-    ;    IF (recalculate_all EQ 0) AND Keyword_Set(cleanup) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
-    ;    IF Keyword_Set(force_no_data) THEN BEGIN IF N_Elements(fi_use) GT 0 THEN fi_use=[fi_use,fi] ELSE fi_use=fi & fi+=1 & CONTINUE & ENDIF
-    fhd_sim,vis_file_list[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
-      beam_recalculate=beam_recalculate, /silent,max_sources=max_sources, no_rephase = no_rephase, $
-      eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
-      include_catalog_sources = include_catalog_sources, catalog_file_path=catalog_file_path,source_list=source_list, $
-      model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,$
-      export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-      complex=complex_beam,double=double_precison_beam,precess=precess,error=error,weights_grid=weights_grid,$
+    
+    if keyword_set(sim_baseline_density) then begin
+      ;; set up baseline distribution
+      simulate_baselines = 1
+      
+      nsample = round(ps_kspan^2. * sim_baseline_density, /L64)
+      sim_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
+      sim_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
+      
+      ;; convert to light travel time (ie m/c or wavelenghts/freq) -- use f=150MHz for lowest frequency
+      f_use = 150e6
+      sim_uu = sim_uu / f_use
+      sim_vv = sim_vv / f_use
+      
+      max_n_baseline = 8000
+      n_time = 2*ceil(nsample/float(max_n_baseline))
+      n_per_time = floor(nsample/(n_time/2.))
+      if n_per_time*n_time ne nsample then begin
+        nsample = n_per_time*n_time/2.
+        sim_uu = sim_uu[0:nsample-1]
+        sim_vv = sim_vv[0:nsample-1]
+      endif
+      sim_uu = reform(sim_uu, n_per_time, 1, n_time/2)
+      sim_vv = reform(sim_vv, n_per_time, 1, n_time/2)
+      
+      sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
+      sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
+      
+      sim_baseline_time = [intarr(n_per_time), intarr(n_per_time)+1]
+      if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
+    endif
+    
+    if n_elements(use_saved_uvf) eq 0 then use_saved_uvf = 1
+    if keyword_set(use_saved_uvf) then begin
+      eor_uvf_cube_file = '/data4/MWA/FHD_Aug23/bjh_arrsim_model_uvf/'
+      if keyword_set(flat_sigma) then eor_uvf_cube_file = eor_uvf_cube_file + 'flat_input_model.sav' else stop
+      if keyword_set(no_distrib) or keyword_set(delta_power) then stop
+    endif
+    
+    array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
+      sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
+      simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, $
+      n_time = n_time, sim_baseline_time=sim_baseline_time, $
+      cleanup=cleanup,recalculate_all=recalculate_all, beam_recalculate=beam_recalculate, /silent, $
+      n_pol=n_pol,tile_flag_list=tile_flag_list, no_rephase = no_rephase,$
+      eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+      delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
+      include_catalog_sources = include_catalog_sources, source_list=source_list,$
+      catalog_file_path=catalog_file_path, $
+      export_images=export_images,dimension=dimension, image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
+      complex=complex_beam,double=double_precison_beam,$
       save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,FoV=FoV,no_ps=no_ps,nfreq_avg=nfreq_avg,$
       snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export, $
-      n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
+      n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,save_uvf=save_uvf,save_imagecube=save_imagecube,$
+      eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
+      
       
       
     IF Keyword_Set(error) THEN BEGIN

@@ -1,6 +1,6 @@
 PRO array_simulator_init,obs,params,error=error,sim_from_uvfits_filepath=sim_from_uvfits_filepath,$
     sim_from_fhd_filepath=sim_from_fhd_filepath,simulate_header=simulate_header,simulate_baselines=simulate_baselines,$
-    instrument=instrument,_Extra=extra
+    instrument=instrument,n_pol=n_pol,_Extra=extra
 
 CASE 1 OF
     Keyword_Set(sim_from_fhd_filepath): BEGIN
@@ -23,7 +23,7 @@ CASE 1 OF
 ENDCASE
 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
-IF Keyword_Set(simulate_header) OR ~Keyword_Set(hdr_in) THEN hdr=uvfits_header_simulate(hdr_in,_Extra=extra) $
+IF Keyword_Set(simulate_header) OR ~Keyword_Set(hdr_in) THEN hdr=uvfits_header_simulate(hdr_in,n_pol=n_pol,_Extra=extra) $
     ELSE hdr=hdr_in
 
 IF Keyword_Set(simulate_baselines) OR ~Keyword_Set(params_in) THEN params=uvfits_params_simulate(hdr,params_in,_Extra=extra) $

@@ -69,17 +69,12 @@ FOR pix=0L,n_pix-1 DO BEGIN
     ;Jmat converts [pp,qq,pq,qp] -> [xx,yy,xy,yx]
     ;Jinv converts [xx, yy, xy, yx] -> [pp, qq, pq, qp]
     ;Note: Stokes [I, Q, U, V] = (1./2.)*[(pp+qq), (pp-qq), ?(pq+qp)?, ?(pq-qp)?]
-    
+
     Jmat=[[J11[pix]^2.,J12[pix]^2.,J11[pix]*J12[pix],J12[pix]*J11[pix]],$
-        [J21[pix]^2.,J22[pix]^2.,J21[pix]*J22[pix],J22[pix]*J21[pix]],$
-        [J11[pix]*J21[pix],J12[pix]*J22[pix],J11[pix]*J22[pix],J12[pix]*J21[pix]],$
-        [J21[pix]*J11[pix],J22[pix]*J12[pix],J21[pix]*J12[pix],J22[pix]*J11[pix]]]
+             [J21[pix]^2.,J22[pix]^2.,J21[pix]*J22[pix],J22[pix]*J21[pix]],$
+             [J11[pix]*J21[pix],J12[pix]*J22[pix],J11[pix]*J22[pix],J12[pix]*J21[pix]],$
+             [J21[pix]*J11[pix],J22[pix]*J12[pix],J21[pix]*J12[pix],J22[pix]*J11[pix]]]
     Jinv=Invert(Jmat)
-;    Jinv=[[J11[pix]^2.,J12[pix]^2.,J11[pix]*J12[pix],J12[pix]*J11[pix]],$
-;        [J21[pix]^2.,J22[pix]^2.,J21[pix]*J22[pix],J22[pix]*J21[pix]],$
-;        [J11[pix]*J21[pix],J12[pix]*J22[pix],J11[pix]*J22[pix],J12[pix]*J21[pix]],$
-;        [J21[pix]*J11[pix],J22[pix]*J12[pix],J21[pix]*J12[pix],J22[pix]*J11[pix]]]
-;    Jmat=Invert(Jinv)
     
     FOR i=0,3 DO FOR j=0,3 DO (*p_map[i,j])[pix]=Jmat[i,j]
     FOR i=0,3 DO FOR j=0,3 DO (*p_corr[i,j])[pix]=Jinv[i,j]

@@ -1,4 +1,4 @@
-PRO code_reference,set_iter=set_iter,recalculate_all=recalculate_all,use_hash=use_hash,reference_hash=reference_hash,iter_ref=iter_ref,_Extra=extra
+PRO code_reference,set_iter=set_iter,recalculate_all=recalculate_all,use_hash=use_hash,reference_hash=reference_hash,iter_ref=iter_ref,skip_ps=skip_ps,_Extra=extra
 except=!except
 ;NOTE: to go back to an earlier commit HASH123 for testing, use git reset --hard HASH123 
 ;NOTE: requires the Power Spectrum (PS) repository to work (https://github.com/miguelfmorales/PS)
@@ -16,22 +16,21 @@ IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',cou
 
 IF N_Elements(set_iter) GT 0 THEN iter=set_iter
 IF Keyword_Set(use_hash) THEN BEGIN
-    dir_list=file_search(data_directory,'fhd*'+path_sep(),/Test_directory,count=n_directories)
+    dir_list=file_search(data_directory,'fhd_*'+path_sep(),/Test_directory,count=n_directories)
     
-    hash_match=Strarr(n_directories)
-    FOR di=0,n_directories-1 DO hash_match[di]=Strpos(dir_list[di],use_hash)
-    match_i=where(hash_match GE 0,n_match)
+    hash_match=Strpos(file_basename(dir_list),use_hash)
+    false_match=Strpos(file_basename(dir_list),'minus')
+    match_i=where((hash_match GE 0) AND (false_match EQ -1),n_match)
     CASE n_match OF
         0: BEGIN print,"Hash"+use_hash+" not found! Returning." & RETURN & END
-        1: version=file_basename(dir_list[match_i])
-        ELSE: IF N_Elements(iter) GT 0 THEN version=file_basename(dir_list[match_i[iter<(n_match-1)]]) $
-            ELSE version=file_basename(dir_list[Max(match_i)])
+        1: version_use=file_basename(dir_list[match_i])
+        ELSE: IF N_Elements(iter) GT 0 THEN version_use=file_basename(dir_list[match_i[iter<(n_match-1)]]) $
+            ELSE version_use=file_basename(dir_list[Max(match_i)])
     ENDCASE
-    iter=0
-    IF Strpos(version,'fhd_') EQ 0 THEN version=strmid(version,4)
-ENDIF
+    IF N_Elements(iter) EQ 0 THEN iter=0
+    IF Strpos(version_use,'fhd_') EQ 0 THEN version_use=strmid(version_use,4)
+ENDIF ELSE version_use=version+(Keyword_Set(iter) ? '_run'+Strn(iter):'')
 
-version_use=version+(Keyword_Set(iter) ? '_run'+Strn(iter):'')
 IF N_Elements(iter) EQ 0 THEN BEGIN
     test_dir=filepath('',root=data_directory,sub='fhd_'+version_use)
     iter=0
@@ -50,7 +49,7 @@ undefine_fhd,branch,di,match_i,n_match,hash_match,dir_list,test_dir
 
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version_use,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_FHDaug23deconvolve_fornax_and_VLA_pic.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 firstpass=1
 
@@ -92,7 +91,7 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 cal_mode_fit=1
-cal_cable_reflection_fit=150
+cal_cable_reflection_correct=150
 restrict_hpx_inds=1
 output_residual_histogram=1
 show_beam_contour=1
@@ -107,6 +106,7 @@ beam_model_version=2
 dipole_mutual_coupling_factor=1
 calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
+log_store=1 ;store output log to a file 
 
 ;defaults not set in firstpass:
 mark_zenith=1
@@ -119,6 +119,8 @@ max_cal_iter=100.
 restore_vis_savefile=1
 export_images=1
 plot_k0_power=1
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_calibrate') THEN IF extra.diffuse_calibrate EQ 1 THEN extra=structure_update(extra,diffuse_calibrate='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_model') THEN IF extra.diffuse_model EQ 1 THEN extra=structure_update(extra,diffuse_model='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
 
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
@@ -131,10 +133,10 @@ IF Tag_exist(extra,'comment') THEN BEGIN
 ENDIF
 general_obs,_Extra=extra
 
-code_reference_wrapper,file_dirname(fhd_file_list[0]),/png,_Extra=extra
+IF ~Keyword_Set(skip_ps) THEN code_reference_wrapper,file_dirname(fhd_file_list[0]),/png,_Extra=extra
 
 IF Keyword_Set(reference_hash) THEN BEGIN
-    hash_diff=Strmid(version,Strpos(version,'-g')+2,7)
+    hash_diff=Strmid(version_use,Strpos(version_use,'-g')+2,7)
     code_reference_diff,hash_ref=reference_hash,hash_diff=hash_diff,iter_ref=iter_ref,iter_diff=iter,_Extra=cmd_args
 ENDIF
 

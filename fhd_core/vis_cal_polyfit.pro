@@ -3,7 +3,7 @@ FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
     cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,cal_cable_reflection_correct=cal_cable_reflection_correct,_Extra=extra
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE degree=Round(degree)>1
-IF N_Elements(phase_degree) EQ 0 THEN phase_degree=degree-1.
+IF N_Elements(phase_degree) EQ 0 THEN phase_degree=1.
 IF Keyword_Set(cal_cable_reflection_fit) OR Keyword_Set(cal_cable_reflection_correct) THEN cal.mode_fit=1.
 cal_mode_fit=cal.mode_fit
 

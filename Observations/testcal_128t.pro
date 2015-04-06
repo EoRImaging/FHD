@@ -11,14 +11,14 @@ ps_export=0
 version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-IF N_Elements(data_version) EQ 0 THEN data_version='3'
+IF N_Elements(data_version) EQ 0 THEN data_version='4'
 data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+data_version])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_commissioning_source_list_add_FHDaug23deconvolve_fornax_and_VLA_pic.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('mwa_EOR0_source_list_v0.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('eor01_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
@@ -46,7 +46,7 @@ bandpass_calibrate=1
 calibration_polyfit=2.
 save_vis=0
 cal_mode_fit=1
-cal_cable_reflection_fit=150.
+cal_cable_reflection_correct=150.
 recalculate_all=0
 no_restrict_cal_sources=1
 no_rephase=1

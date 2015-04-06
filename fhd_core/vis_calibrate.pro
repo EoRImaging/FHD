@@ -4,7 +4,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag
     debug=debug,gain_arr_ptr=gain_arr_ptr,calibration_flag_iterate=calibration_flag_iterate,$
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
-    flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,_Extra=extra
+    flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,calibration_bandpass_iterate=calibration_bandpass_iterate,_Extra=extra
 t0_0=Systime(1)
 error=0
 timing=-1
@@ -163,10 +163,19 @@ undefine_fhd,cal_base
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,_Extra=extra)
-    IF Keyword_Set(calibration_polyfit) THEN BEGIN
-        cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
-        cal=vis_cal_combine(cal_polyfit,cal_bandpass)
+    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
+    IF Keyword_Set(calibration_polyfit) THEN BEGIN        
+        IF Keyword_Set(calibration_bandpass_iterate) THEN BEGIN
+            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=1,_Extra=extra)
+            cal_poly_sub=vis_cal_divide(cal_base,cal_polyfit)
+            cal_bandpass2=vis_cal_bandpass(cal_poly_sub,obs,file_path_fhd=file_path_fhd,_Extra=extra)
+            cal_remainder2=vis_cal_divide(cal_base,cal_bandpass2)
+            cal_polyfit2=vis_cal_polyfit(cal_remainder2,obs,degree=calibration_polyfit,_Extra=extra)
+            cal=vis_cal_combine(cal_polyfit2,cal_bandpass2)
+        ENDIF ELSE BEGIN
+            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
+            cal=vis_cal_combine(cal_polyfit,cal_bandpass)
+        ENDELSE
     ENDIF ELSE cal=cal_bandpass
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
 vis_cal=vis_calibration_apply(vis_ptr,cal)

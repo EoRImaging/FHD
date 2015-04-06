@@ -3,7 +3,8 @@ FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
     meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,$
-    cotter_precess_fix=cotter_precess_fix,force_rephase_to_zenith=force_rephase_to_zenith,_Extra=extra
+    cotter_precess_fix=cotter_precess_fix,force_rephase_to_zenith=force_rephase_to_zenith,$
+    override_target_phasera=override_target_phasera,override_target_phasedec=override_target_phasedec,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
 metafits_ext='.metafits'
@@ -118,9 +119,8 @@ IF N_Elements(obsra_in) EQ 1 THEN obsra=obsra_in
 IF N_Elements(obsdec_in) EQ 1 THEN obsdec=obsdec_in
 IF N_Elements(phasedec_in) EQ 1 THEN phasedec=phasedec_in
 IF N_Elements(phasedec_in) EQ 1 THEN phasedec=zendec_in
-
-orig_phasera=phasera
-orig_phasedec=phasedec
+IF N_Elements(override_target_phasera) EQ 0 THEN orig_phasera=phasera ELSE orig_phasera=override_target_phasera
+IF N_Elements(override_target_phasedec) EQ 0 THEN orig_phasedec=phasedec ELSE orig_phasedec=override_target_phasedec
 IF Keyword_Set(no_rephase) THEN BEGIN
     phasera=obsra
     phasedec=obsdec

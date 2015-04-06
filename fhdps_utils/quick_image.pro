@@ -1,9 +1,10 @@
-pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, yrange = yrange, $
+pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, yrange = yrange, data_aspect=data_aspect, $
     log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
     note = note, charsize = charsize_in, xlog = xlog, ylog = ylog, window_num = window_num, $
-    multi_pos = multi_pos, start_multi_params = start_multi_params, alphabackgroundimage = alphabackgroundimage, $
-    missing_value = missing_value, noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf
-    
+    multi_pos = multi_pos, start_multi_params = start_multi_params, no_ps_close = no_ps_close, $
+    alphabackgroundimage = alphabackgroundimage, missing_value = missing_value, $
+    noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf
+      
   if n_elements(window_num) eq 0 then window_num = 1
   
   if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) or keyword_set(pdf) then pub = 1 else pub = 0
@@ -68,20 +69,21 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     return
   endif
   
+  image_use = image
   ;; precaution in case a slice is passed in but it still appears > 2d (ie shallow dimension)
-  image = reform(image)
-  if n_elements(size(image, /dim)) ne 2 then begin
+  image_use = reform(image_use)
+  if n_elements(size(image_use, /dim)) ne 2 then begin
     print, 'image must be 2 dimensional'
     return
   endif
   
-  if max(abs(imaginary(image))) gt 0 then begin
+  if max(abs(imaginary(image_use))) gt 0 then begin
     print, 'image is complex, showing real part'
-    image = real_part(image)
+    image_use = real_part(image_use)
   endif
   
   if keyword_set(missing_value) then begin
-    good_locs = where(image ne missing_value, count_good, complement = wh_missing, ncomplement = count_missing)
+    good_locs = where(image_use ne missing_value, count_good, complement = wh_missing, ncomplement = count_missing)
     erase = 1
   endif
   
@@ -89,14 +91,14 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   
   if keyword_set(log) then begin
   
-    log_color_calc, image, plot_image, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
+    log_color_calc, image_use, plot_image, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
       color_profile = color_profile, log_cut_val = log_cut_val, oob_low = oob_low, $
       missing_value = missing_value, missing_color = missing_color
       
       
   endif else begin
     if n_elements(data_range) eq 0 then $
-      if keyword_set(missing_value) then data_range = minmax(image[good_locs]) else data_range = minmax(image)
+      if keyword_set(missing_value) then data_range = minmax(image_use[good_locs]) else data_range = minmax(image_use)
       
     if abs(data_range[0] - data_range[1]) lt 1e-15 and data_range[0] ne 0 then data_range = minmax([data_range[0], 0])
     
@@ -112,11 +114,11 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     n_colors = color_range[1] - color_range[0] + 1
     data_n_colors = data_color_range[1] - data_color_range[0] + 1
     
-    plot_image = (image-data_range[0])*(data_n_colors-1)/(data_range[1]-data_range[0]) + data_color_range[0]
+    plot_image = (image_use-data_range[0])*(data_n_colors-1)/(data_range[1]-data_range[0]) + data_color_range[0]
     
-    wh_low = where(image lt data_range[0], count_low)
+    wh_low = where(image_use lt data_range[0], count_low)
     if count_low gt 0 then plot_image[wh_low] = data_color_range[0]
-    wh_high = where(image gt data_range[1], count_high)
+    wh_high = where(image_use gt data_range[1], count_high)
     if count_high gt 0 then plot_image[wh_high] = data_color_range[1]
     
     if n_elements(missing_value) ne 0 then if count_missing gt 0 then plot_image[wh_missing] = missing_color
@@ -139,7 +141,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   if n_elements(cb_size_in) eq 0 then cb_size = 0.025 else cb_size = cb_size_in
   if n_elements(margin_in) lt 4 then begin
     margin = [0.2, 0.2, 0.02, 0.1]
-   endif else margin = margin_in
+  endif else margin = margin_in
   
   if n_elements(cb_margin_in) lt 2 then begin
     cb_margin = [0.2, 0.02]
@@ -158,15 +160,23 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   if min(plot_len) le 0 then stop
   
   plot_aspect = (plot_pos[3] - plot_pos[1]) / (plot_pos[2] - plot_pos[0])
-
-;  plot_pos = [.15,.15,.8,.92]
-;  cb_pos = [.92, .15,.95,.92]
-    
-  if n_elements(xvals) gt 0 and n_elements(yvals) gt 0 then begin
-    xlength = xrange[1] - xrange[0]
-    ylength = yrange[1]-yrange[0]
-    data_aspect = float(ylength / xlength)
-  endif else data_aspect=1
+  
+  ;  plot_pos = [.15,.15,.8,.92]
+  ;  cb_pos = [.92, .15,.95,.92]
+  
+  if n_elements(data_aspect) eq 0 then begin
+    if n_elements(xvals) gt 0 and n_elements(yvals) gt 0 then begin
+      xlength = xrange[1] - xrange[0]
+      ylength = yrange[1]-yrange[0]
+      data_aspect = ylength / float(xlength)
+      max_data_aspect = 3.
+      if data_aspect gt max_data_aspect or data_aspect lt 1./max_data_aspect then begin
+        print, 'Calculated data_aspect exceeds reasonable plotting aspect ratios, limiting to reasonable values. (data_aspect can also be set as a keyword)'
+        if data_aspect gt max_data_aspect then data_aspect = max_data_aspect
+        if data_aspect lt 1./max_data_aspect then data_aspect = 1./max_data_aspect
+      endif
+    endif else data_aspect=1
+  endif
   
   aspect_ratio =  data_aspect /plot_aspect
   if aspect_ratio gt 1 then begin
@@ -177,8 +187,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     x_factor = 1./aspect_ratio
   endelse
   
-  max_ysize = 1000
-  max_xsize = 1200
+  screen_size = get_screen_size()
+  max_xsize = screen_size[0]
+  max_ysize = screen_size[1]
   base_size = 600
   
   if n_elements(multi_pos) eq 4 then begin
@@ -306,8 +317,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     
     no_erase = 1
   endif else begin
-    xsize = round(base_size * x_factor)
-    ysize = round(base_size * y_factor)
+    base_size_use = base_size
+    xsize = round(base_size_use * x_factor)
+    ysize = round(base_size_use * y_factor)
     
     if keyword_set(pub) then begin
       ps_aspect = y_factor / x_factor
@@ -334,9 +346,9 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
         
     endif else begin
       while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
-        base_size = base_size - 100
-        xsize = round(base_size * x_factor)
-        ysize = round(base_size * y_factor)
+        if base_size_use gt 100 then base_size_use = base_size_use - 100 else base_size_use = base_size_use * .75
+        xsize = round(base_size_use * x_factor)
+        ysize = round(base_size_use * y_factor)
       endwhile
       
       
@@ -364,7 +376,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
     font = -1
     if n_elements(charsize_in) eq 0 then begin
       if n_elements(multi_pos) gt 0 then begin
-        charsize = 1.7d * (multi_size[0]/float(base_size))
+        charsize = 1.7d * (multi_size[0]/float(base_size_use))
       endif else charsize = 2
     endif else charsize = charsize_in
     
@@ -390,7 +402,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, xrange = xrange, 
   
   
   if keyword_set(pub) then begin
-    if n_elements(multi_pos) eq 0 then cgps_close, png = png, pdf = pdf, delete_ps = delete_ps, density=600
+    if n_elements(multi_pos) eq 0 and not keyword_set(no_ps_close) then cgps_close, png = png, pdf = pdf, delete_ps = delete_ps, density=600
     if n_elements(make_win) gt 0 then if make_win eq 1 then wdelete, window_num
   endif
   

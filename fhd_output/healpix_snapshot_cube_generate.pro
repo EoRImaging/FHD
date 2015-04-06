@@ -3,7 +3,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
     rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
-    snapshot_recalculate=snapshot_recalculate,obs_out=obs_out,psf_out=psf_out,_Extra=extra
+    obs_out=obs_out,psf_out=psf_out,_Extra=extra
     
   t0=Systime(1)
   
@@ -17,11 +17,13 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   n_pol=obs_in.n_pol
   n_freq=obs_in.n_freq
   
-;  IF not Keyword_Set(snapshot_recalculate) THEN BEGIN ;Now set in fhd_setup through status_str
-    IF Keyword_Set(split_ps_export) THEN cube_test=Min(status_str.hpx_even[0:n_pol-1])<Min(status_str.hpx_odd[0:n_pol-1]) $
-        ELSE cube_test=Min(status_str.healpix_cube[0:n_pol-1])
-    IF cube_test GT 0 THEN RETURN
-;  ENDIF
+  ;whether cubes are recalculated is now set in fhd_setup (or array_simulator) through status_str
+  IF Keyword_Set(split_ps_export) THEN cube_test=Min(status_str.hpx_even[0:n_pol-1])<Min(status_str.hpx_odd[0:n_pol-1]) $
+    ELSE cube_test=Min(status_str.healpix_cube[0:n_pol-1])
+  IF cube_test GT 0 THEN BEGIN
+    print,'HEALPix cubes not recalculated'
+    RETURN
+  ENDIF
   
   IF N_Elements(psf_in) EQ 0 THEN fhd_save_io,status_str,psf_in,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
   IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
@@ -141,13 +143,14 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     t_split+=t_split1
     IF dirty_flag THEN BEGIN
       dirty_arr1=residual_arr1
-      residual_arr1=Ptrarr(size(residual_arr1,/dimension),/allocate)
-    ENDIF
+;      residual_arr1=Ptrarr(size(residual_arr1,/dimension),/allocate)
+      residual_flag=0
+    ENDIF ELSE residual_flag=1
     nf_vis=obs.nf_vis
     nf_vis_use=Lonarr(n_freq_use)
     FOR freq_i=0L,n_freq_use-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
     
-    residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+    IF residual_flag THEN residual_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
     model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
     dirty_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
     weights_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
@@ -159,8 +162,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
           *weights_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv)
           *variance_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv)
-          IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
-          *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv)
+;          IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
+          IF residual_flag THEN *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv)
           IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv)
           IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv)
           *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv)
@@ -171,8 +174,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
           *weights_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*weights_arr1[pol_i,freq_i]),hpx_cnv)
           *variance_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*variance_arr1[pol_i,freq_i]),hpx_cnv)
-          IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
-          *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*residual_arr1[pol_i,freq_i]),hpx_cnv)
+;          IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
+          IF residual_flag THEN *residual_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*residual_arr1[pol_i,freq_i]),hpx_cnv)
           IF dirty_flag THEN *dirty_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*dirty_arr1[pol_i,freq_i]),hpx_cnv)
           IF model_flag THEN *model_hpx_arr[pol_i,freq_i]=healpix_cnv_apply(Temporary(*model_arr1[pol_i,freq_i]),hpx_cnv)
           *beam_hpx_arr[pol_i,freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv)
@@ -193,8 +196,10 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
           FOR fi=0L,n_freq_use-1 DO model_cube[n_hpx*fi]=Temporary(*model_hpx_arr[pol_i,fi])
         ENDIF
         
-        res_cube=fltarr(n_hpx,n_freq_use)
-        FOR fi=0L,n_freq_use-1 DO res_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[pol_i,fi])
+        IF residual_flag THEN BEGIN
+            res_cube=fltarr(n_hpx,n_freq_use)
+            FOR fi=0L,n_freq_use-1 DO res_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[pol_i,fi])
+        ENDIF
         
         weights_cube=fltarr(n_hpx,n_freq_use)
         FOR fi=0L,n_freq_use-1 DO weights_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[pol_i,fi])
@@ -214,7 +219,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force,_Extra=extra 
         dirty_cube=(model_cube=(res_cube=(weights_cube=(variance_cube=(beam_squared_cube=0)))))
     ENDFOR
-    undefine_fhd,dirty_hpx_arr,model_hpx_arr,residual_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr
+    undefine_fhd,dirty_hpx_arr,model_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr,residual_hpx_arr
 ENDFOR
 obs_out=obs ;for return
 Ptr_free,flag_arr_use
