@@ -86,7 +86,7 @@ ENDELSE
 
 ;256 tile upper limit is hard-coded in CASA format
 ;these tile numbers have been verified to be correct
-IF not Keyword_Set(antenna_mod_index) THEN antenna_mod_index=256L 
+IF not Keyword_Set(antenna_mod_index) THEN antenna_mod_index=Long(2^Floor(Alog(min(params.baseline_arr))/Alog(2.)))
 ;antenna_mod_index=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
 tile_A=Long(Floor(params.baseline_arr/antenna_mod_index)) ;tile numbers start from 1
 tile_B=Long(Fix(params.baseline_arr mod antenna_mod_index))

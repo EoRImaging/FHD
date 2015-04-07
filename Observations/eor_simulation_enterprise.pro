@@ -69,6 +69,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
   include_catalog_sources = 0
   save_uvf=1
   save_imagecube=1
+  unflag_all = 1
   
   ;; stuff from general_obs not in eor_firstpass
   ;Set up paths
@@ -132,7 +133,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       if keyword_set(no_distrib) or keyword_set(delta_power) then stop
     endif
     
-    array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, $
+    array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
       sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
       simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, $
       n_time = n_time, sim_baseline_time=sim_baseline_time, $
