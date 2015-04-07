@@ -60,6 +60,9 @@ show_beam_contour=1
 contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
 contour_color='blue'
 
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_calibrate') THEN IF extra.diffuse_calibrate EQ 1 THEN extra=structure_update(extra,diffuse_calibrate='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_model') THEN IF extra.diffuse_model EQ 1 THEN extra=structure_update(extra,diffuse_model='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
+
 n_pol=2
 restore_vis_savefile=(data_version EQ '3')
 firstpass=1
