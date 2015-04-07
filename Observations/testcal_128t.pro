@@ -61,7 +61,7 @@ contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
 contour_color='blue'
 
 n_pol=2
-restore_vis_savefile=1
+restore_vis_savefile=(data_version EQ '3')
 firstpass=1
 max_cal_iter=100L
 beam_model=2

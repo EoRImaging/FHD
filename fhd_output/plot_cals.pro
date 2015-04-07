@@ -76,8 +76,8 @@ IF Keyword_Set(res_gain_arr) THEN BEGIN
         gains1_res=gains1_res[freq_i_use,*]
         gains1_orig=gains1_res+gains1
         gains1_res_abs=Abs(gains1_orig)-Abs(gains1)
-        max_amp = mean(abs([gains0_res_abs,gains1_res_abs])) + 2*stddev(abs([gains0_res_abs,gains1_res_abs]))
-    ENDIF ELSE max_amp = mean(abs(gains0_res_abs)) + 2*stddev(abs(gains0_res_abs))
+        max_amp = mean(abs([gains0_res_abs,gains1_res_abs])) + 3*stddev(abs([gains0_res_abs,gains1_res_abs]))
+    ENDIF ELSE max_amp = mean(abs(gains0_res_abs)) + 3*stddev(abs(gains0_res_abs))
     
     ;plot amplitude residuals
     IF max_amp GT 0 THEN BEGIN
