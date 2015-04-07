@@ -40,11 +40,11 @@ IF params_in_flag THEN BEGIN
 ENDIF ELSE BEGIN
     n_default=N_Elements(sim_baseline_uu)>N_Elements(sim_baseline_vv)>N_Elements(sim_baseline_ww)>N_Elements(sim_baseline_i)>N_Elements(sim_baseline_time)
     IF n_default EQ 0 THEN n_default=n_baseline*n_time 
-    n_mod=Long(2.^(Ceil(Alog(n_tile)/Alog(2.))+1.))
+    n_mod=Long(2.^(Ceil(Alog(n_tile+1)/Alog(2.))))
     IF N_Elements(default_uu) EQ 0 THEN default_uu=((Findgen(n_default)+1) mod n_mod)/freq_use 
     IF N_Elements(default_vv) EQ 0 THEN default_vv=(Float(Floor((Findgen(n_default)+1) / n_mod)))/freq_use
     IF N_Elements(default_ww) EQ 0 THEN default_ww=Fltarr(n_default)
-    IF N_Elements(default_i) EQ 0 THEN default_i=1+(Lindgen(n_default) mod n_tile) + (1+(Floor(Lindgen(n_default)/n_tile) mod n_tile))*n_mod
+    IF N_Elements(default_i) EQ 0 THEN default_i=1+(Lindgen(n_default) mod n_tile) + (1+(Floor(Lindgen(n_default)/n_mod) mod n_tile))*n_mod
     IF N_Elements(default_time) EQ 0 THEN default_time=Floor(Lindgen(n_default)/n_baseline)
 ENDELSE
 
