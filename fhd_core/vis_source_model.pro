@@ -2,7 +2,7 @@ FUNCTION vis_source_model,source_list,obs,status_str,psf,params,flag_ptr,cal,jon
     timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,beam_arr=beam_arr,$
     fill_model_vis=fill_model_vis,use_pointing_center=use_pointing_center,vis_model_ptr=vis_model_ptr,$
     galaxy_model=galaxy_model,calibration_flag=calibration_flag,diffuse_calibrate=diffuse_calibrate,$
-    diffuse_model=diffuse_model,_Extra=extra
+    diffuse_model=diffuse_model,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0

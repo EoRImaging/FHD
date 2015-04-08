@@ -4,7 +4,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag
     debug=debug,gain_arr_ptr=gain_arr_ptr,calibration_flag_iterate=calibration_flag_iterate,$
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
-    flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,calibration_bandpass_iterate=calibration_bandpass_iterate,_Extra=extra
+    flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,calibration_bandpass_iterate=calibration_bandpass_iterate,$
+    calibration_auto_initialize=calibration_auto_initialize,_Extra=extra
 t0_0=Systime(1)
 error=0
 timing=-1
@@ -86,11 +87,18 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     RETURN,vis_cal
 ENDIF
 
+vis_model_arr=vis_source_model(cal.source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,$
+    timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)    
+t1=Systime(1)-t0_0
+
+IF Keyword_Set(calibration_auto_initialize) THEN initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,$
+    model_uv_arr=model_uv_arr,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
+
 ;IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
 CASE size(initial_calibration,/type) OF
     0:;do nothing if undefined
     
-    7:BEGIN
+    7:BEGIN ;type code 7 is string
         file_path_use=initial_calibration
         IF StrLowCase(Strmid(file_path_use,2,3,/reverse_offset)) NE 'sav' THEN file_path_use+='.sav'
         IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=file_dirname(file_path_fhd))
@@ -100,14 +108,10 @@ CASE size(initial_calibration,/type) OF
             print,'Using initial calibration solution from '+initial_calibration
         ENDIF else print, 'Initial calibration file not found'
     END
-    8:cal.gain=initial_calibration.gain
-    10:cal.gain=initial_calibration
+    8:cal.gain=initial_calibration.gain ;type code 8 is structure
+    10:cal.gain=initial_calibration ;type code 10 is pointer
     ELSE:IF Keyword_Set(initial_calibration) THEN initial_calibration=file_path_fhd+'_cal' ;if set to a numeric type, assume this calibration solution will be wanted for future iterations
 ENDCASE
-
-vis_model_arr=vis_source_model(cal.source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,$
-    timing=model_timing,silent=silent,error=error,/calibration_flag,_Extra=extra)    
-t1=Systime(1)-t0_0
 
 IF Keyword_Set(error) THEN BEGIN
     timing=Systime(1)-t0_0

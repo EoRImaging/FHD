@@ -20,7 +20,7 @@ IF N_Elements(n_vis_cal) EQ 0 THEN n_vis_cal=obs.n_vis
 IF N_Elements(n_pol) EQ 0 THEN n_pol=obs.n_pol<2 ; since only x and y pols, not xx, yy, xy, yx
 IF N_Elements(n_freq) EQ 0 THEN n_freq=obs.n_freq
 IF N_Elements(n_tile) EQ 0 THEN n_tile=obs.n_tile
-IF N_Elements(n_time) EQ 0 THEN n_time=N_Elements(bin_offset)
+IF N_Elements(n_time) EQ 0 THEN n_time=obs.n_time
 IF N_Elements(n_cal_src) EQ 0 THEN n_cal_src=-1
 IF N_Elements(source_list) EQ 0 THEN source_list=source_comp_init(n_sources=n_cal_src,freq=obs.freq_center)
 IF N_Elements(galaxy_cal) EQ 0 THEN galaxy_cal=0
