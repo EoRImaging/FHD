@@ -18,7 +18,7 @@
 PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
-    beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,$
+    beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,no_condense_sources=no_condense_sources,$
     scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
 ;calibration_model_subtract is passed through the fhd_params structure
 compile_opt idl2,strictarrsubs  
@@ -419,8 +419,15 @@ fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
 fhd_params.info=Ptr_new(info_struct)
 t3_0=Systime(1)
-model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
-    dft_threshold=dft_threshold,_Extra=extra)
+IF Keyword_Set(no_condense_sources) THEN BEGIN
+    comp_i=where(comp_arr.id GE 0)
+    comp_arr_use=comp_arr[comp_i]
+    model_uv_full=source_dft_model(obs,jones,comp_arr_use,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
+        dft_threshold=dft_threshold,_Extra=extra) 
+ENDIF ELSE BEGIN
+    model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
+        dft_threshold=dft_threshold,_Extra=extra)
+ENDELSE
 IF size(return_kernel,/type) EQ 10 THEN Ptr_free,return_kernel
 IF Keyword_Set(galaxy_model_fit) THEN FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
 IF Keyword_Set(subtract_sidelobe_catalog) THEN  FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
