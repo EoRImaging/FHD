@@ -529,6 +529,8 @@ case version of
 	no_condense_sources=1
 	max_sources=100000.
 	gain_factor=0.1
+	snapshot_healpix_export=0
+	deconvolve=1
     end
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
