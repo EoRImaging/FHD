@@ -1,4 +1,4 @@
-FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,$
+FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,silent=silent,$
     conserve_memory=conserve_memory,dft_threshold=dft_threshold,return_kernel=return_kernel
 
 t0_a=Systime(1)
@@ -146,6 +146,6 @@ ENDIF ELSE model_img=model_img_use
 t4=Systime(1)-t4_a
 t0=Systime(1)-t0_a
 
-print,t0,t1,t2,t3,t4
+IF not Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4
 RETURN,model_img
 END

@@ -1,5 +1,5 @@
 FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,flux=flux,$
-    conserve_memory=conserve_memory
+    silent=silent,conserve_memory=conserve_memory
 icomp=Complex(0,1)
 fft_norm=1.
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1

@@ -10,6 +10,8 @@ pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
+frequency=obs.freq_center
+alpha_use=obs.alpha ;spectral index used for the subtracted component
 
 n_pol=fhd_params.npol
 dimension=obs.dimension
@@ -107,7 +109,7 @@ WHILE n_sources EQ 0 DO BEGIN
     ;IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     
     IF max_add_sources EQ 0 THEN BEGIN
-        source_list=source_comp_init(n_sources=0)
+        source_list=source_comp_init(n_sources=0,frequency=frequency,alpha=alpha_use)
         n_sources=0
         RETURN,source_list
     ENDIF
@@ -117,7 +119,7 @@ WHILE n_sources EQ 0 DO BEGIN
         n_sources=max_add_sources
     ENDIF
     n_mask=0
-    comp_arr=source_comp_init(n_sources=n_sources)
+    comp_arr=source_comp_init(n_sources=n_sources,frequency=frequency,alpha=alpha_use)
     
     ;fit flux here, and fill comp_arr for each pol
     flux_arr=fltarr(4)
@@ -189,7 +191,7 @@ WHILE n_sources EQ 0 DO BEGIN
 ENDWHILE
 
 source_mask=source_mask1
-IF n_sources EQ 0 THEN RETURN,source_comp_init(n_sources=0)
+IF n_sources EQ 0 THEN RETURN,source_comp_init(n_sources=0,frequency=frequency,alpha=alpha_use)
 
 source_list=stokes_cnv(comp_arr[0:n_sources-1],jones,beam_arr=beam_arr,/inverse,_Extra=extra)
 

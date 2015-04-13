@@ -1,5 +1,5 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
-    conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,$
+    conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,silent=silent,$
     dimension=dimension,elements=elements,n_pol=n_pol,spectral_model_uv_arr=spectral_model_uv_arr,n_spectral=n_spectral,_Extra=extra
 
 IF Keyword_Set(obs) THEN BEGIN
@@ -26,9 +26,10 @@ y_vec=source_array.y
 ;set /no_extend since extended sources will not be read. 
 ; If you want extended sources, inflate the source list before calling this program
 source_array_use=Stokes_cnv(source_array,jones,/inverse,/no_extend,_Extra=extra) 
+n_source=N_Elements(source_array)
 
 frequency=obs.freq_center
-freq_ref=Median(source_array.freq)
+freq_ref=Mean(source_array.freq)
 freq_ratio=Abs(Alog10(freq_ref/frequency)) ;it often happens that one is in Hz and the other in MHz. Assuming no one will ever want to extrapolate more than two orders of magnitude, correct any huge mismatch
 IF freq_ratio GT 2 THEN freq_scale=10.^(Round(Alog10(freq_ref/frequency)/3.)*3.) ELSE freq_scale=1.
 frequency_use=frequency*freq_scale
@@ -42,7 +43,7 @@ ENDFOR
 
 IF Keyword_Set(n_spectral) THEN BEGIN
 ;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg
-    print,"Gridding source model cube using taylor expansion of order: "+Strn(n_spectral)
+    IF not Keyword_Set(silent) THEN print,"Gridding source model cube using taylor expansion of order: "+Strn(n_spectral)
     alpha_arr=source_array.alpha
     
     flux_arr=Ptrarr(n_pol,n_spectral+1)
@@ -82,7 +83,7 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     
 ENDIF ELSE BEGIN
 ;in this case, grid one continuum image for each polarization (no frequency dimension)
-    print,"Gridding source model as single continuum image"
+    IF not Keyword_Set(silent) THEN print,"Gridding source model as single continuum image"
     flux_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO flux_arr[pol_i]=Ptr_new(source_array_use.flux.(pol_i))
     IF Max(Ptr_valid(model_uv_full)) EQ 0 THEN BEGIN
@@ -92,12 +93,13 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(dft_threshold) THEN BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
         model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-            conserve_memory=conserve_memory,dft_threshold=dft_threshold)
+            silent=silent,conserve_memory=conserve_memory,dft_threshold=dft_threshold)
         FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
         Ptr_free,model_uv_new,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
-        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory)
+        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,$
+            silent=silent,flux=flux_arr,conserve_memory=conserve_memory)
         FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
         Ptr_free,model_uv_vals,flux_arr
     ENDELSE

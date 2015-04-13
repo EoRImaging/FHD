@@ -354,7 +354,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     t3_0=Systime(1)
     t2+=t3_0-t2_0
     source_dft_multi,obs,jones,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,$
-        dft_threshold=dft_threshold,return_kernel=return_kernel,_Extra=extra
+        /silent,dft_threshold=dft_threshold,return_kernel=return_kernel,_Extra=extra
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
