@@ -26,7 +26,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *model_uv_full[pol_i]+=model_uv
 ENDFOR
 
-IF Keyword_Set(mem_free) THEN Ptr_free,flux_arr_use
-Ptr_free,model_img
+IF Keyword_Set(mem_free) THEN undefine_fhd,flux_arr_use
+undefine_fhd,model_img
 RETURN,model_uv_full
 END

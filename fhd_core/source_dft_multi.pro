@@ -95,13 +95,13 @@ ENDIF ELSE BEGIN
         model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
             silent=silent,conserve_memory=conserve_memory,dft_threshold=dft_threshold)
         FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
-        Ptr_free,model_uv_new,flux_arr
+        undefine_fhd,model_uv_new,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,$
             silent=silent,flux=flux_arr,conserve_memory=conserve_memory)
         FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
-        Ptr_free,model_uv_vals,flux_arr
+        undefine_fhd,model_uv_vals,flux_arr
     ENDELSE
 ENDELSE
 END

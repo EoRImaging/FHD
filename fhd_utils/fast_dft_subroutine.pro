@@ -141,6 +141,7 @@ IF Keyword_Set(mod_flag) THEN BEGIN
         IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[x_low0:x_high0,0:elements_use-y_high1-2]=(*model_img_use[p_i])[x_low1:x_high1,y_high1+1:elements_use-1] $
             ELSE model_img[x_low0:x_high0,0:elements_use-y_high1-2]+=model_img_use[x_low1:x_high1,y_high1+1:elements_use-1]
     ENDIF
+    undefine_fhd,model_img_use
 ENDIF ELSE model_img=model_img_use
 
 t4=Systime(1)-t4_a
