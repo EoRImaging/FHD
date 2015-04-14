@@ -141,11 +141,11 @@ WHILE n_sources EQ 0 DO BEGIN
             gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width*(2.*Sqrt(2.*Alog(2.))),/keepcenter,/silent $
             ELSE xcen=(ycen=-1)
         flux_interp_flag=extended_flag[src_i]
-        IF Abs(sx-xcen) GT 1 THEN BEGIN
+        IF Abs(sx-xcen) GT 0.5 THEN BEGIN
             xcen=sx
             flux_interp_flag=1
         ENDIF
-        IF Abs(sy-ycen) GT 1 THEN BEGIN
+        IF Abs(sy-ycen) GT 0.5 THEN BEGIN
             ycen=sy
             flux_interp_flag=1
         ENDIF
@@ -166,8 +166,8 @@ WHILE n_sources EQ 0 DO BEGIN
         ycen0=ycen-sy0+box_radius
         xy2ad,xcen,ycen,astr,ra,dec
         
-        IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>source_box[xcen0,ycen0] $
-            ELSE flux_use=source_box[xcen0,ycen0]
+        IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>image_I_flux[sx,sy] $
+            ELSE flux_use=image_I_flux[sx,sy]
         IF flux_use LE 0 THEN BEGIN
             n_mask+=Total(source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
             source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]=0
