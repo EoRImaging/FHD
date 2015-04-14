@@ -213,6 +213,7 @@ renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_b
 for pol_i=0,n_pol-1 do begin
   *dirty_images[pol_i]*=renorm_factor
   *res_uv_arr[pol_i]*=renorm_factor
+  *model_images[pol_i]*=renorm_factor
   *instr_images[pol_i]*=renorm_factor
 endfor
 
@@ -376,7 +377,6 @@ output_path_fg=output_path+filter_name;+gal_name
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_residual=*instr_images[pol_i]*(*beam_correction_out[pol_i])
-    instr_res_phase=Atan(*res_uv_arr[pol_i],/phase)
     instr_dirty=*dirty_images[pol_i]*(*beam_correction_out[pol_i])
     instr_model=*model_images[pol_i]*(*beam_correction_out[pol_i])
     instr_source=*instr_sources[pol_i]
@@ -401,7 +401,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FitsFast,instr_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
         FitsFast,instr_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i]
         FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i]
-;        FitsFast,instr_res_phase,fits_header,/write,file_path=output_path_fg+'_ResidualPhase_'+pol_names[pol_i]
         FitsFast,instr_source,fits_header_apparent,/write,file_path=output_path_fg+'_Sources_'+pol_names[pol_i]
         FitsFast,instr_restored,fits_header_apparent,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
@@ -423,8 +422,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
             low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),title=title_fhd,_Extra=extra
-    ;    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
-    ;        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
         
         mark_image=0
         mark_thick=1.
