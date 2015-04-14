@@ -408,13 +408,13 @@ noise_map=fhd_params.convergence*beam_corr_avg
 ;noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si]
-source_array=Components2Sources(comp_arr,obs,radius=beam_width>1.5,noise_map=noise_map,$
-    reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
 fhd_params.n_iter=iter
 fhd_params.n_components=si+1
 fhd_params.detection_threshold=detection_threshold
 source_n_arr=source_n_arr[0:iter-1]
 detection_threshold_arr=detection_threshold_arr[0:iter-1]
+source_array=Components2Sources(comp_arr,obs,detection_threshold=detection_threshold,radius=beam_width>1.5,noise_map=noise_map,$
+    reject_sigma_threshold=sigma_threshold,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
 fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
 fhd_params.info=Ptr_new(info_struct)
