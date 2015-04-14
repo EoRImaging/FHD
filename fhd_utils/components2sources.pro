@@ -46,7 +46,7 @@ FOR gi=0L,ng-1 DO BEGIN
         IF nm0 GT 0 THEN source_arr[gi].ston=Total(flux_I)/nm0 ELSE source_arr[gi].ston=0.
     ENDIF ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
-    
+    source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)
     
     dist_test=Sqrt((source_arr[gi].x-comp_arr[si_g].x)^2.+(source_arr[gi].y-comp_arr[si_g].y)^2.)
     IF Stddev(dist_test) GE radius/4. THEN BEGIN
