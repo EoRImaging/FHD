@@ -140,7 +140,7 @@ WHILE n_sources EQ 0 DO BEGIN
         IF add_dist[src_i] GE local_max_radius THEN BEGIN
             gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width*(2.*Sqrt(2.*Alog(2.))),/keepcenter,/silent 
         ENDIF ELSE BEGIN
-            IF extended_flag EQ 0 THEN CONTINUE ;if NOT marked as an extended source, skip if too close to a brighter source
+            IF extended_flag[src_i] EQ 0 THEN CONTINUE ;if NOT marked as an extended source, skip if too close to a brighter source
             xcen=(ycen=-1)
         ENDELSE
         flux_interp_flag=extended_flag[src_i]
