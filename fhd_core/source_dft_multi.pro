@@ -37,7 +37,7 @@ frequency_use=frequency*freq_scale
 alpha_i=where(source_array.alpha,n_alpha) ;find sources with non-zero spectral indices
 FOR a_i=0L,n_alpha-1 DO BEGIN
     flux_scale=(frequency_use/freq_ref)^source_array[alpha_i[a_i]].alpha
-    FOR pol_i=0,n_pol-1 DO source_array_use.flux.(pol_i)*=flux_scale
+    FOR pol_i=0,n_pol-1 DO source_array_use[alpha_i[a_i]].flux.(pol_i)*=flux_scale
 ENDFOR
 
 
