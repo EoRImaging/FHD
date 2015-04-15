@@ -7,7 +7,7 @@ astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
 n_pol=obs.n_pol
-IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.1 
+IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.5
 
 n_sources=(size(comp_arr,/dimension))[0]
 
@@ -83,10 +83,7 @@ ENDFOR
 ;source_mask=fltarr(dimension,elements) & source_mask[source_mask_i]=1
 
 source_pix_i=Round(cx)+dimension*Round(cy)
-pix_hist=histogram(source_pix_i,min=0,/binsize,reverse_ind=pri)
-pix_i_use=where(pix_hist,n_pix)
-group_id=Lonarr(n_sources)-1
-FOR pix_i=0L,n_pix-1 DO group_id[pri[pri[pix_i]]:pri[pri[pix_i+1]-1]]=candidate_map[pix_i_use[pix_i]]
+group_id=candidate_map[source_pix_i]
 ng=c_i0
 ;gi_use=where(group_id GE 0,n_comp_use)
 IF ng LE 0 THEN RETURN,source_comp_init(n_sources=0)
@@ -141,12 +138,30 @@ debug_point=1
 
 source_arr=source_comp_init(n_sources=ng)
 FOR gi=0L,ng-1 DO BEGIN
+    IF hgroup[gi] EQ 0 THEN CONTINUE
     si_g=gri[gri[gi]:gri[gi+1]-1]; guaranteed at least one source per group
     
     flux_I=(comp_arr[si_g].flux.I)>0.
     IF Total(flux_I) LE 0 THEN CONTINUE
+    
+    n_cut=1
+    iter=0
     sx=Total(comp_arr[si_g].x*flux_I)/Total(flux_I)
     sy=Total(comp_arr[si_g].y*flux_I)/Total(flux_I)
+    WHILE n_cut GT 0 DO BEGIN
+        iter+=1
+        IF iter GT 5 THEN BREAK
+        dist_vals=(sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.
+        dist_test=Sqrt(Total(flux_I*dist_vals/Total(flux_I)))
+        dist_vals=Sqrt(dist_vals)
+        dist_cut=where(dist_vals GT (5*dist_test)>1.,n_cut,complement=dist_use_i,ncomplement=n_dist_use)
+        IF n_dist_use LE 2 THEN BREAK
+        flux_I=flux_I[dist_use_i]
+        si_g=si_g[dist_use_i]
+        sx=Total(comp_arr[si_g].x*flux_I)/Total(flux_I)
+        sy=Total(comp_arr[si_g].y*flux_I)/Total(flux_I)
+    ENDWHILE
+    
     xy2ad,sx,sy,astr,sra,sdec
     source_arr[gi].x=sx ;flux_I is guaranteed to be non-zero from above
     source_arr[gi].y=sy ;flux_I is guaranteed to be non-zero from above
@@ -160,11 +175,11 @@ FOR gi=0L,ng-1 DO BEGIN
         IF nm0 GT 0 THEN source_arr[gi].ston=Total(flux_I)/nm0 ELSE source_arr[gi].ston=0.
     ENDIF ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
-    source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)
+    source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)    
     
-    dist_test=Sqrt(Total(flux_I*((source_arr[gi].x-comp_arr[si_g].x)^2.+(source_arr[gi].y-comp_arr[si_g].y)^2.))/Total(flux_I))
-    
-    IF dist_test GE extend_threshold THEN BEGIN
+;    dist_vals=(sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.
+;    dist_test=Sqrt(Total(flux_I*dist_vals/Total(flux_I)))
+    IF Stddev(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.)) GE extend_threshold THEN BEGIN
         (source_arr[gi].extend)=Ptr_new(comp_arr[si_g])
     ENDIF
 ;    source_arr[gi].extend=0 ;need to add some way to handle extended sources!
