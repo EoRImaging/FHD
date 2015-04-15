@@ -1,5 +1,5 @@
 FUNCTION Components2Sources,comp_arr,obs,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,extend_allow=extend_allow,$
-    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array
+    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array,extend_threshold=extend_threshold
 compile_opt idl2,strictarrsubs  
 
 IF N_Elements(radius) EQ 0 THEN radius=1.
@@ -7,6 +7,7 @@ astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
 n_pol=obs.n_pol
+IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.1 
 
 n_sources=(size(comp_arr,/dimension))[0]
 
@@ -53,6 +54,7 @@ source_candidate_x=source_candidate_i mod dimension & source_candidate_x-=zoom_x
 source_candidate_y=Floor(source_candidate_i/dimension) & source_candidate_y-=zoom_y[0]
 zoom_dim=zoom_x[1]-zoom_x[0]+1
 source_candidate_i2=source_candidate_x+source_candidate_y*zoom_dim
+c_i0=0L
 FOR c_i=0L,n_candidates-1 DO BEGIN
     t0a=Systime(1)
     influence_i=Region_grow(intensity_zoom,source_candidate_i2[c_i],threshold=[gain_min,1.])
@@ -70,8 +72,9 @@ FOR c_i=0L,n_candidates-1 DO BEGIN
     t4a=Systime(1)
     t3+=t4a-t3a
     IF n_primary EQ 0 THEN CONTINUE
-    candidate_map[influence_i[primary_i]]=c_i
+    candidate_map[influence_i[primary_i]]=c_i0
     influence_map[influence_i[primary_i]]=single_influence[primary_i]
+    c_i0+=1
     t5+=Systime(1)-t4a
 ENDFOR
 
@@ -83,7 +86,12 @@ source_pix_i=Round(cx)+dimension*Round(cy)
 pix_hist=histogram(source_pix_i,min=0,/binsize,reverse_ind=pri)
 pix_i_use=where(pix_hist,n_pix)
 group_id=Lonarr(n_sources)-1
-
+FOR pix_i=0L,n_pix-1 DO group_id[pri[pri[pix_i]]:pri[pri[pix_i+1]-1]]=candidate_map[pix_i_use[pix_i]]
+ng=c_i0
+;gi_use=where(group_id GE 0,n_comp_use)
+IF ng LE 0 THEN RETURN,source_comp_init(n_sources=0)
+hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
+group_inds=where(hgroup)
 
 debug_point=1
 ;group_id=fltarr(n_sources)-1
@@ -154,8 +162,9 @@ FOR gi=0L,ng-1 DO BEGIN
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
     source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)
     
-    dist_test=Sqrt((source_arr[gi].x-comp_arr[si_g].x)^2.+(source_arr[gi].y-comp_arr[si_g].y)^2.)
-    IF Stddev(dist_test) GE radius/4. THEN BEGIN
+    dist_test=Sqrt(Total(flux_I*((source_arr[gi].x-comp_arr[si_g].x)^2.+(source_arr[gi].y-comp_arr[si_g].y)^2.))/Total(flux_I))
+    
+    IF dist_test GE extend_threshold THEN BEGIN
         (source_arr[gi].extend)=Ptr_new(comp_arr[si_g])
     ENDIF
 ;    source_arr[gi].extend=0 ;need to add some way to handle extended sources!
@@ -179,7 +188,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     flux_frac_arr=Fltarr(ns)+1.
     FOR i=0L,n_id_use-1 DO BEGIN
         id_i=id_use[i]
-        
+        ;What was this supposed to do???
     ENDFOR
 ;    product(
     flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi[source_arr.id]
