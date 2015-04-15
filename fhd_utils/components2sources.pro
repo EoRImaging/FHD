@@ -37,15 +37,42 @@ gain_min=Min(gain_array[where(gain_array GT 0)])
 xvals=meshgrid(dimension,elements,1)
 yvals=meshgrid(dimension,elements,2)
 candidate_vals=source_image[source_candidate_i]
+t0=0.
+t1=0.
+t2=0.
+t3=0.
+t4=0.
+t5=0.
+influence_inds=Region_grow(component_intensity,source_candidate_i,threshold=[gain_min,1.])
+ind_map=lindgen(dimension,elements)
+zoom_x=Minmax(influence_inds mod dimension)
+zoom_y=Minmax(Floor(influence_inds/dimension))
+ind_map=ind_map[zoom_x[0]:zoom_x[1],zoom_y[0]:zoom_y[1]]
+intensity_zoom=component_intensity[zoom_x[0]:zoom_x[1],zoom_y[0]:zoom_y[1]]
+source_candidate_x=source_candidate_i mod dimension & source_candidate_x-=zoom_x[0] 
+source_candidate_y=Floor(source_candidate_i/dimension) & source_candidate_y-=zoom_y[0]
+zoom_dim=zoom_x[1]-zoom_x[0]+1
+source_candidate_i2=source_candidate_x+source_candidate_y*zoom_dim
 FOR c_i=0L,n_candidates-1 DO BEGIN
+    t0a=Systime(1)
+    influence_i=Region_grow(intensity_zoom,source_candidate_i2[c_i],threshold=[gain_min,1.])
+    influence_i=ind_map[influence_i]
+    t1a=Systime(1)
+    t0+=t1a-t0a
     c_i_i=source_candidate_i[c_i]
-    influence_i=Region_grow(component_intensity,c_i_i,threshold=[gain_min,1.])
-    dist_arr=((xvals[c_i_i]-xvals[influence_i])^2.+(yvals[c_i_i]-yvals[influence_i])^2.)/gauss_width^2. ;NOTE: not taking square root here
+    dist_arr=sqrt((xvals[c_i_i]-xvals[influence_i])^2.+(yvals[c_i_i]-yvals[influence_i])^2.)/gauss_width
+    t2a=Systime(1)
+    t1+=t2a-t1a
     single_influence=candidate_vals[c_i]*Exp(-dist_arr)
+    t3a=Systime(1)
+    t2+=t3a-t2a
     primary_i=where(single_influence GT influence_map[influence_i],n_primary)
+    t4a=Systime(1)
+    t3+=t4a-t3a
     IF n_primary EQ 0 THEN CONTINUE
     candidate_map[influence_i[primary_i]]=c_i
     influence_map[influence_i[primary_i]]=single_influence[primary_i]
+    t5+=Systime(1)-t4a
 ENDFOR
 
 ;group source components by their associated source candidate. Components without a source candidate will not be included
