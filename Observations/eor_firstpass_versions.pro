@@ -506,12 +506,32 @@ case version of
 	deconvolve=1
      end
 
-;   'arn_baseminXX_basemaxXX_cal0':begin
-;	calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
-;	min_cal_baseline = 
-;	max_cal_baseline = 
-;	deconvolve = 0
- ;   end
+   'arn_caltest_basemin50_basemax500':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=50
+        max_cal_baseline=500
+        deconvolve=1
+     end
+
+   'arn_caltest_basemin50_basemax300':begin
+        calibration_catalog_file_pith=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=50
+        max_cal_baseline=300
+        deconvolve=1
+     end
+
+   'arn_eor1_deconvtest':begin
+	calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+	dimension=3072.
+	FoV=80.
+	no_condense_sources=1
+	max_sources=100000.
+	gain_factor=0.1
+	snapshot_healpix_export=0
+	deconvolve=1
+    end
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
