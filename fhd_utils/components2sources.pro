@@ -1,5 +1,6 @@
 FUNCTION Components2Sources,comp_arr,obs,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,extend_allow=extend_allow,$
-    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array,extend_threshold=extend_threshold
+    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array,$
+    reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold
 compile_opt idl2,strictarrsubs  
 
 IF N_Elements(radius) EQ 0 THEN radius=1.
@@ -11,18 +12,19 @@ IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.5
 
 n_sources=(size(comp_arr,/dimension))[0]
 
-gauss_width=1.
+gauss_sigma=beam_width_calculate(obs)
+gauss_width=beam_width_calculate(obs,/fwhm)
 comp_i_use=where(comp_arr.flux.I GT 0,n_comp_use)
 IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=Min(comp_arr[comp_i_use].flux.I)/2.
 source_image=Fltarr(dimension,elements)
 FOR pol_i=0,(n_pol<2)-1 DO source_image+=$
-    source_image_generate(comp_arr,obs,pol_i=pol_i,restored_beam_width=gauss_width,resolution=16,threshold=1E-2)
+    source_image_generate(comp_arr,obs,pol_i=pol_i,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)
 IF n_pol EQ 1 THEN source_image*=2.
 cx=comp_arr.x
 cy=comp_arr.y
 weight_arr=source_comp_init(xvals=cx,yvals=cy,flux=1.)
 weight_arr=weight_arr[comp_i_use]
-component_intensity=source_image_generate(weight_arr,obs,pol_i=4,restored_beam_width=gauss_width,resolution=16,threshold=1E-2)
+component_intensity=source_image_generate(weight_arr,obs,pol_i=4,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)
 undefine_fhd,weight_arr ;make sure this isn't a memory leak
 component_intensity=1.-(1.-gain_array)^component_intensity
 source_intensity_threshold=0.5
@@ -65,7 +67,7 @@ FOR c_i=0L,n_candidates-1 DO BEGIN
     dist_arr=sqrt((xvals[c_i_i]-xvals[influence_i])^2.+(yvals[c_i_i]-yvals[influence_i])^2.)/gauss_width
     t2a=Systime(1)
     t1+=t2a-t1a
-    single_influence=candidate_vals[c_i]*Exp(-dist_arr)/(dist_arr+1)
+    single_influence=candidate_vals[c_i]*Exp(-dist_arr);/(dist_arr+1)
     t3a=Systime(1)
     t2+=t3a-t2a
     primary_i=where(single_influence GT influence_map[influence_i],n_primary)
@@ -113,28 +115,43 @@ debug_point=1
 cx_arr=source_candidate_i mod dimension
 cy_arr=Floor(source_candidate_i/dimension)
 source_arr=source_comp_init(n_sources=ng)
+sub_pad=2 ;don't change this. Padding is required around the sub_image for region_grow to work properly
+sub_expand=1. ;over-resolution factor to test component outliers. The larger sub_expand is, the smaller a gap is required between components to mark them as outliers
 FOR gi=0L,ng-1 DO BEGIN
 ;    IF hgroup[gi] EQ 0 THEN CONTINUE
-    si_g=gri[gri[group_inds[gi]]:gri[group_inds[gi]+1]-1]; guaranteed at least one source per group
+    gi_in=group_inds[gi]
+    si_g=gri[gri[gi_in]:gri[gi_in+1]-1]; guaranteed at least one source per group
     
-    gcntrd,source_image,cx_arr[gi],cy_arr[gi],xcen,ycen,gauss_width,/keepcenter,/silent
-    IF Abs(cx_arr[gi]-xcen) GT 1 THEN xcen=cx_arr[gi]
-    IF Abs(cy_arr[gi]-ycen) GT 1 THEN ycen=cy_arr[gi]
-    x_offset=Min(comp_arr[si_g].x)
-    y_offset=Min(comp_arr[si_g].y)
-    sub_x=Round(2.*(comp_arr[si_g].x-x_offset))
-    sub_y=Round(2.*(comp_arr[si_g].y-y_offset))
-    IF Max(sub_x)>Max(sub_y) GE 1 THEN BEGIN
-        sub_image=intarr(Max(sub_x)+1,Max(sub_y)+1)-1
+    IF Keyword_Set(reject_outlier_components) THEN BEGIN
+        gcntrd,source_image,cx_arr[gi_in],cy_arr[gi_in],xcen,ycen,gauss_width,/keepcenter,/silent
+        IF Abs(cx_arr[gi_in]-xcen) GT 1 THEN xcen=cx_arr[gi_in]
+        IF Abs(cy_arr[gi_in]-ycen) GT 1 THEN ycen=cy_arr[gi_in]
+        x_offset=Min(comp_arr[si_g].x)
+        y_offset=Min(comp_arr[si_g].y)
+        sub_x=Round(sub_expand*(comp_arr[si_g].x-x_offset))+sub_pad
+        sub_y=Round(sub_expand*(comp_arr[si_g].y-y_offset))+sub_pad
+        n_sub=N_Elements(si_g)
+        xcen_sub=Round(sub_expand*(xcen-x_offset))+sub_pad
+        ycen_sub=Round(sub_expand*(ycen-y_offset))+sub_pad
+        sub_dim=(Max(sub_x)>(xcen_sub+1))+sub_pad 
+        sub_elem=(Max(sub_y)>(ycen_sub+1))+sub_pad
+        
+        sub_image=intarr(sub_dim,sub_elem)-1
         sub_image[sub_x,sub_y]=1
-        xcen_sub=Round(2.*(xcen-x_offset))
-        ycen_sub=Round(2.*(ycen-y_offset))
-        sub_i=sub_x+sub_y*(Max(sub_x)+1)
+        sub_image[xcen_sub-1:xcen_sub+1,ycen_sub-1:ycen_sub+1]=1
+        sub_i=sub_x+sub_y*sub_dim
         sub_hist=histogram(sub_i,min=0,/binsize,reverse_ind=ri_sub)
-        cen_sub_i=xcen_sub+ycen_sub*(Max(sub_x)+1)
+        cen_sub_i=xcen_sub+ycen_sub*sub_dim
         sub_i_use=Region_grow(sub_image,cen_sub_i,/all_neighbors,threshold=[0,1])
-        ;STILL NEED TO COMPILE! BUT, make sure to RETURN first!!
-        si_g=si_g[comp_i_sub]
+        sub_use_test=intarr(n_sub)
+        FOR si_i=0L,N_Elements(sub_i_use)-1 DO BEGIN
+            sub_i_i=sub_i_use[si_i]
+            IF sub_i_i GE N_Elements(sub_hist) THEN CONTINUE
+            IF sub_hist[sub_i_i] GT 0 THEN sub_use_test[ri_sub[ri_sub[sub_i_i]:ri_sub[sub_i_i+1]-1]]=1
+        ENDFOR
+        comp_i_sub=where(sub_use_test,n_sub_use)
+        
+        IF n_sub_use GT 0 THEN si_g=si_g[comp_i_sub]
     ENDIF
     
     flux_I=(comp_arr[si_g].flux.I)>0.
