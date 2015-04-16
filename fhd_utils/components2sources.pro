@@ -65,14 +65,14 @@ FOR c_i=0L,n_candidates-1 DO BEGIN
     dist_arr=sqrt((xvals[c_i_i]-xvals[influence_i])^2.+(yvals[c_i_i]-yvals[influence_i])^2.)/gauss_width
     t2a=Systime(1)
     t1+=t2a-t1a
-    single_influence=candidate_vals[c_i]*Exp(-dist_arr)
+    single_influence=candidate_vals[c_i]*Exp(-dist_arr)/(dist_arr+1)
     t3a=Systime(1)
     t2+=t3a-t2a
     primary_i=where(single_influence GT influence_map[influence_i],n_primary)
     t4a=Systime(1)
     t3+=t4a-t3a
     IF n_primary EQ 0 THEN CONTINUE
-    candidate_map[influence_i[primary_i]]=c_i0
+    candidate_map[influence_i[primary_i]]=c_i
     influence_map[influence_i[primary_i]]=single_influence[primary_i]
     c_i0+=1
     t5+=Systime(1)-t4a
@@ -84,11 +84,11 @@ ENDFOR
 
 source_pix_i=Round(cx)+dimension*Round(cy)
 group_id=candidate_map[source_pix_i]
-ng=c_i0
+
 ;gi_use=where(group_id GE 0,n_comp_use)
-IF ng LE 0 THEN RETURN,source_comp_init(n_sources=0)
+IF max(group_id) LE 0 THEN RETURN,source_comp_init(n_sources=0)
 hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
-group_inds=where(hgroup)
+group_inds=where(hgroup,ng)
 
 debug_point=1
 ;group_id=fltarr(n_sources)-1
@@ -110,57 +110,51 @@ debug_point=1
 ;hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
 ;group_inds=where(hgroup)
 
-;si_primary=gri[gri[group_inds]]
-;prim_x=source_array[si_primary].x
-;prim_y=source_array[si_primary].y
-;
-;source_map=lonarr(dimension,elements)
-;source_map[prim_x,prim_y]=lindgen(ng)+1
-;background_dist=morph_distance(source_map,neighbor=3)
-;extended_pix=where(background_dist GT (beam_width>1.),n_extend)
-;extended_flag=intarr(n_sources)
-;IF n_extend GT 0 THEN BEGIN
-;    src_inds=source_map[extended_pix]-1
-;    FOR ext_i=0L,n_extend-1 DO BEGIN
-;        src_i=src_inds[ext_i]
-;        IF extended_flag[src_i] NE 0 THEN CONTINUE ;skip sources already dealt with
-;        pix_i=region_grow(background_dist,extended_pix[ext_i],thresh=[1,dimension])
-;        add_i_use=source_map[pix_i]-1
-;        flux_vals=image_I_flux[additional_i[add_i_use]]
-;        ii_use=where(flux_vals GE Max(flux_vals)/2.,nii_use,complement=ii_unused,ncomplement=nii_unused)
-;        IF nii_use GT 3 THEN BEGIN
-;            extended_flag[add_i_use[ii_use]]=1.
-;            IF nii_unused GT 0 THEN extended_flag[add_i_use[ii_unused]]=-1.
-;        ENDIF ELSE extended_flag[add_i_use]=-1
-;    ENDFOR
-;ENDIF
-
-
+cx_arr=source_candidate_i mod dimension
+cy_arr=Floor(source_candidate_i/dimension)
 source_arr=source_comp_init(n_sources=ng)
 FOR gi=0L,ng-1 DO BEGIN
-    IF hgroup[gi] EQ 0 THEN CONTINUE
-    si_g=gri[gri[gi]:gri[gi+1]-1]; guaranteed at least one source per group
+;    IF hgroup[gi] EQ 0 THEN CONTINUE
+    si_g=gri[gri[group_inds[gi]]:gri[group_inds[gi]+1]-1]; guaranteed at least one source per group
+    
+    gcntrd,source_image,cx_arr[gi],cy_arr[gi],xcen,ycen,gauss_width,/keepcenter,/silent
+    IF Abs(cx_arr[gi]-xcen) GT 1 THEN xcen=cx_arr[gi]
+    IF Abs(cy_arr[gi]-ycen) GT 1 THEN ycen=cy_arr[gi]
+    x_offset=Min(comp_arr[si_g].x)
+    y_offset=Min(comp_arr[si_g].y)
+    sub_x=Round(2.*(comp_arr[si_g].x-x_offset))
+    sub_y=Round(2.*(comp_arr[si_g].y-y_offset))
+    IF Max(sub_x)>Max(sub_y) GE 1 THEN BEGIN
+        sub_image=intarr(Max(sub_x)+1,Max(sub_y)+1)-1
+        sub_image[sub_x,sub_y]=1
+        xcen_sub=Round(2.*(xcen-x_offset))
+        ycen_sub=Round(2.*(ycen-y_offset))
+        sub_i=sub_x+sub_y*(Max(sub_x)+1)
+        sub_hist=histogram(sub_i,min=0,/binsize,reverse_ind=ri_sub)
+        cen_sub_i=xcen_sub+ycen_sub*(Max(sub_x)+1)
+        sub_i_use=Region_grow(sub_image,cen_sub_i,/all_neighbors,threshold=[0,1])
+        ;STILL NEED TO COMPILE! BUT, make sure to RETURN first!!
+        si_g=si_g[comp_i_sub]
+    ENDIF
     
     flux_I=(comp_arr[si_g].flux.I)>0.
     IF Total(flux_I) LE 0 THEN CONTINUE
     
-    n_cut=1
-    iter=0
+;    n_cut=1
+;    iter=0
+;    WHILE n_cut GT 0 DO BEGIN
+;        iter+=1
+;        IF iter GT 5 THEN BREAK
+;        dist_vals=(xcen-comp_arr[si_g].x)^2.+(ycen-comp_arr[si_g].y)^2.
+;        dist_test=Sqrt(Total(flux_I*dist_vals/Total(flux_I)))
+;        dist_vals=Sqrt(dist_vals)
+;        dist_cut=where(dist_vals GT (5*dist_test)>extend_threshold,n_cut,complement=dist_use_i,ncomplement=n_dist_use)
+;        IF n_dist_use LE 2 THEN BREAK
+;        flux_I=flux_I[dist_use_i]
+;        si_g=si_g[dist_use_i]
+;    ENDWHILE
     sx=Total(comp_arr[si_g].x*flux_I)/Total(flux_I)
     sy=Total(comp_arr[si_g].y*flux_I)/Total(flux_I)
-    WHILE n_cut GT 0 DO BEGIN
-        iter+=1
-        IF iter GT 5 THEN BREAK
-        dist_vals=(sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.
-        dist_test=Sqrt(Total(flux_I*dist_vals/Total(flux_I)))
-        dist_vals=Sqrt(dist_vals)
-        dist_cut=where(dist_vals GT (5*dist_test)>1.,n_cut,complement=dist_use_i,ncomplement=n_dist_use)
-        IF n_dist_use LE 2 THEN BREAK
-        flux_I=flux_I[dist_use_i]
-        si_g=si_g[dist_use_i]
-        sx=Total(comp_arr[si_g].x*flux_I)/Total(flux_I)
-        sy=Total(comp_arr[si_g].y*flux_I)/Total(flux_I)
-    ENDWHILE
     
     xy2ad,sx,sy,astr,sra,sdec
     source_arr[gi].x=sx ;flux_I is guaranteed to be non-zero from above
@@ -182,7 +176,6 @@ FOR gi=0L,ng-1 DO BEGIN
     IF Stddev(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.)) GE extend_threshold THEN BEGIN
         (source_arr[gi].extend)=Ptr_new(comp_arr[si_g])
     ENDIF
-;    source_arr[gi].extend=0 ;need to add some way to handle extended sources!
 ENDFOR
 
 comp_arr_use=comp_arr
