@@ -522,8 +522,8 @@ case version of
         deconvolve=1
      end
 
-   'arn_eor1_deconvtest':begin
-	calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+   'arn_eor1_deconvtest_uniform':begin
+	model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
 	dimension=3072.
 	FoV=80.
 	no_condense_sources=1
@@ -531,6 +531,7 @@ case version of
 	gain_factor=0.1
 	snapshot_healpix_export=0
 	deconvolve=1
+	decon_filter='filter_uv_uniform'
     end
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
