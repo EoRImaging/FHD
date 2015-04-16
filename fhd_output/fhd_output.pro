@@ -7,7 +7,7 @@ PRO fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,v
     use_pointing_center=use_pointing_center,no_fits=no_fits,no_png=no_png,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_diff_image=beam_diff_image,$
     beam_output_threshold=beam_output_threshold,output_residual_histogram=output_residual_histogram,$
-   show_beam_contour=show_beam_contour, image_mask_horizon=image_mask_horizon,_Extra=extra
+   show_beam_contour=show_beam_contour, image_mask_horizon=image_mask_horizon,no_condense_sources=no_condense_sources,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 heap_gc
@@ -202,8 +202,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     *model_images[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,weights=*weights_arr[pol_i],$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_single,/antialias,_Extra=extra)
     *instr_images[pol_i]=*dirty_images[pol_i]-*model_images[pol_i]
-    *stokes_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i+4,resolution=16,$
-        dimension=dimension,restored_beam_width=restored_beam_width)
+    IF Keyword_Set(no_condense_sources) THEN BEGIN
+        *stokes_sources[pol_i]=source_image_generate(comp_arr_out,obs_out,pol_i=pol_i+4,resolution=16,$
+            dimension=dimension,restored_beam_width=restored_beam_width)
+    ENDIF ELSE BEGIN
+        *stokes_sources[pol_i]=source_image_generate(source_arr_out,obs_out,pol_i=pol_i+4,resolution=16,$
+            dimension=dimension,restored_beam_width=restored_beam_width)
+    ENDELSE
     filter_arr[pol_i]=filter_single
 ENDFOR
 
