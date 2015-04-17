@@ -438,6 +438,102 @@ case version of
         deconvolve=0
      end
 
+   'mwa_cal_ben_fornax_vla_pic':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+
+   'transfer_mean_oct24_eor0cal':begin
+	transfer_calibration='/nfs/mwa-09/r1/abrahamn/128T/eor1_fhd/low/eor0/fhd_mwa_cal/calibration/cal_avg.sav'
+	model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+	model_visibilities=1
+   end
+
+   'transfer_mean_oct24_eor1cal':begin
+	transfer_calibration='/nfs/mwa-09/r1/abrahamn/128T/eor1_fhd/low/eor1/fhd_mwa_cal_ben_fornax_vla_pic/calibration/cal_avg.sav'
+	model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+	model_visibilities=1
+   end
+
+   'transfer_mean_oct24_eor0cal_rescale':begin
+	transfer_calibration='/nfs/mwa-09/r1/abrahamn/128T/eor1_fhd/low/eor0/fhd_mwa_cal/calibration/cal_avg_times1.08.sav'
+        model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        model_visibilities=1
+    end
+
+   'mwa_cal_ben_fornax_vla_pic_rephaseeor1':begin
+	override_target_phasera=59.78
+	override_target_phasedec=-26.74
+	calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+
+   'transfer_mean_oct24_eor1cal_rephaseeor1':begin
+	override_target_phasera=59.78
+	override_target_phasedec=-26.74
+        transfer_calibration='/nfs/mwa-09/r1/abrahamn/128T/eor1_fhd/low/eor1/fhd_mwa_cal_ben_fornax_vla_pic/calibration/cal_avg.sav'
+        model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        model_visibilities=1
+    end
+
+   'arn_caltest_basemin50_basemax1500':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+	min_cal_baseline=50
+	max_cal_baseline=1500
+	deconvolve=1
+     end
+
+   'arn_caltest_basemin50_basemax1000':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=50
+        max_cal_baseline=1000
+	deconvolve=1
+     end
+
+   'arn_caltest_basemin100_basemax1500':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=100
+        max_cal_baseline=1500
+	deconvolve=1
+     end
+
+   'arn_caltest_basemin100_basemax1000':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=100
+        max_cal_baseline=1000
+	deconvolve=1
+     end
+
+   'arn_caltest_basemin50_basemax500':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=50
+        max_cal_baseline=500
+        deconvolve=1
+     end
+
+   'arn_caltest_basemin50_basemax300':begin
+        calibration_catalog_file_pith=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=50
+        max_cal_baseline=300
+        deconvolve=1
+     end
+
+   'arn_eor1_deconvtest_uniform':begin
+	model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+	dimension=3072.
+	FoV=80.
+	no_condense_sources=1
+	max_sources=100000.
+	gain_factor=0.1
+	snapshot_healpix_export=0
+	deconvolve=1
+	decon_filter='filter_uv_uniform'
+    end
+
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
    ; Adam's versions. only Adam can make versions here.

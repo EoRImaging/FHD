@@ -158,7 +158,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
     endif
     
     model_uvf = *model_uvf_arr[0]
-    IF ~Keyword_Set(no_save) THEN save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
+    IF ~Keyword_Set(no_save) and eor_gen eq 1 THEN save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
     undefine, model_uvf
     
     vis_dimension=N_Elements(params.uu)

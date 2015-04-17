@@ -15,9 +15,16 @@ baseline_sim=(N_Elements(sim_baseline_uu)+N_Elements(sim_baseline_vv)+$
               N_Elements(sim_baseline_ww)+N_Elements(sim_baseline_time)) GT 0
 IF tile_sim THEN baseline_sim=0
 IF baseline_sim THEN BEGIN
-  n_baseline=Max([n_baseline,N_Elements(sim_baseline_uu),N_Elements(sim_baseline_vv),$
+  n_baseline=Max([N_Elements(sim_baseline_uu),N_Elements(sim_baseline_vv),$
       N_Elements(sim_baseline_ww),N_Elements(sim_baseline_time)])
-  IF n_baseline GT hdr.nbaselines THEN params_in_flag=0 ELSE params_in_flag=Keyword_Set(params_in) 
+;  IF n_baseline GT hdr.nbaselines THEN BEGIN
+    n_baseline/=n_time
+    params_in_flag=0 
+    n_tile_check=Ceil((-1.+Sqrt(1+8.*n_baseline))/2.) ;solution to n_baselines=n_tile*(n_tile-1)/2 + n_tile
+    n_tile=n_tile_check
+    hdr.n_tile=n_tile_check
+    hdr.nbaselines=n_baseline
+;  ENDIF ELSE params_in_flag=Keyword_Set(params_in) 
 ENDIF ELSE params_in_flag=Keyword_Set(params_in)
 
 IF params_in_flag THEN BEGIN
@@ -33,11 +40,21 @@ IF params_in_flag THEN BEGIN
 ENDIF ELSE BEGIN
     n_default=N_Elements(sim_baseline_uu)>N_Elements(sim_baseline_vv)>N_Elements(sim_baseline_ww)>N_Elements(sim_baseline_i)>N_Elements(sim_baseline_time)
     IF n_default EQ 0 THEN n_default=n_baseline*n_time 
-    n_mod=2.^(Ceil(Alog(n_tile)/Alog(2.))+1.)
+    n_mod=Long(2.^(Ceil(Alog(n_tile+1)/Alog(2.))))
     IF N_Elements(default_uu) EQ 0 THEN default_uu=((Findgen(n_default)+1) mod n_mod)/freq_use 
     IF N_Elements(default_vv) EQ 0 THEN default_vv=(Float(Floor((Findgen(n_default)+1) / n_mod)))/freq_use
     IF N_Elements(default_ww) EQ 0 THEN default_ww=Fltarr(n_default)
-    IF N_Elements(default_i) EQ 0 THEN default_i=1+(Lindgen(n_default) mod n_tile) + Floor(1+Lindgen(n_default)/n_tile)*512L 
+    IF N_Elements(default_i) EQ 0 THEN BEGIN
+        default_i_single=Lonarr(n_default/n_time)
+        ii=0L
+        FOR a_i=1,n_tile DO FOR b_i=a_i,n_tile DO BEGIN
+            IF ii GE n_default/n_time THEN CONTINUE
+            default_i_single[ii]=b_i+a_i*n_mod
+            ii+=1L
+        ENDFOR
+        default_i=default_i_single
+        FOR t_i=1,n_time-1 DO default_i=[default_i,default_i_single]
+    ENDIF
     IF N_Elements(default_time) EQ 0 THEN default_time=Floor(Lindgen(n_default)/n_baseline)
 ENDELSE
 
