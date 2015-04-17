@@ -54,13 +54,13 @@ n_sources=0
 max_iter=5
 iter=0
 WHILE n_sources EQ 0 DO BEGIN
-    source_find_image*=source_mask1
-    source_flux=Max(source_find_image*source_mask0,source_i)
-    flux_ref1=source_find_image[source_i]*add_threshold
-    flux_ref2=source_find_image[source_i]*0.5
+    source_find_image_use=source_find_image*source_mask1
+    source_flux=Max(source_find_image_use*source_mask0,source_i)
+    flux_ref1=source_find_image_use[source_i]*add_threshold
+    flux_ref2=source_find_image_use[source_i]*0.5
     
-    additional_i1=where(source_find_image GE flux_ref1,n_sources1)
-    additional_i2=where((source_find_image GE 5.*converge_check) AND (source_find_image GE flux_ref2),n_sources2)
+    additional_i1=where(source_find_image_use GE flux_ref1,n_sources1)
+    additional_i2=where((source_find_image_use GE 5.*converge_check) AND (source_find_image_use GE flux_ref2),n_sources2)
     IF n_sources1 GT n_sources2 THEN BEGIN
         additional_i=additional_i1
         detection_threshold=flux_ref1
@@ -74,7 +74,7 @@ WHILE n_sources EQ 0 DO BEGIN
     ;output={n_sources1:n_sources1,n_sources2:n_sources2,source_find_image:source_find_image,beam_mask:beam_mask,source_mask:source_mask,converge_check:converge_check}
     ;save,output,filename=fhd.joint_obs+'_test_output.sav'
     
-    additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
+    additional_i=additional_i[reverse(Sort(source_find_image_use[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod dimension
     add_y=Float(Floor(additional_i/dimension))
     add_dist=fltarr(n_sources)+dimension
@@ -140,15 +140,29 @@ WHILE n_sources EQ 0 DO BEGIN
         IF add_dist[src_i] GE local_max_radius THEN BEGIN
             gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width*(2.*Sqrt(2.*Alog(2.))),/keepcenter,/silent 
         ENDIF ELSE BEGIN
-            IF extended_flag[src_i] EQ 0 THEN CONTINUE ;if NOT marked as an extended source, skip if too close to a brighter source
+            IF extended_flag[src_i] EQ 0 THEN BEGIN
+            ;if NOT marked as an extended source, skip if too close to a brighter source
+                source_mask1[sx,sy]=0
+                CONTINUE 
+            ENDIF
             xcen=(ycen=-1)
         ENDELSE
         flux_interp_flag=extended_flag[src_i]
         IF Abs(sx-xcen) GT 0.5 THEN BEGIN
+            IF extended_flag[src_i] EQ 0 THEN BEGIN
+                ;if NOT marked as an extended source, skip if centroiding failed for either pol
+                source_mask1[sx,sy]=0
+                CONTINUE 
+            ENDIF
             xcen=sx
             flux_interp_flag=1
         ENDIF
         IF Abs(sy-ycen) GT 0.5 THEN BEGIN
+            IF extended_flag[src_i] EQ 0 THEN BEGIN
+                ;if NOT marked as an extended source, skip if centroiding failed for either pol
+                source_mask1[sx,sy]=0
+                CONTINUE 
+            ENDIF
             ycen=sy
             flux_interp_flag=1
         ENDIF
@@ -189,11 +203,11 @@ WHILE n_sources EQ 0 DO BEGIN
         comp_arr[si].dec=dec
         comp_arr[si].flux.I=flux_use*gain_factor_use;/beam_area
         comp_arr[si].gain=gain_factor_use
-        IF Keyword_Set(independent_fit) AND (N_Elements(image_Q_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.Q=$
+        IF Keyword_Set(independent_fit) AND (N_Elements(image_Q_flux) EQ N_Elements(source_find_image_use)) THEN comp_arr[si].flux.Q=$
             Interpolate(image_Q_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
-        IF (N_Elements(image_U_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.U=$
+        IF (N_Elements(image_U_flux) EQ N_Elements(source_find_image_use)) THEN comp_arr[si].flux.U=$
             Interpolate(image_U_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
-        IF Keyword_Set(independent_fit) AND (N_Elements(image_V_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.V=$
+        IF Keyword_Set(independent_fit) AND (N_Elements(image_V_flux) EQ N_Elements(source_find_image_use)) THEN comp_arr[si].flux.V=$
             Interpolate(image_V_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
         si_use[src_i]=si
         si+=1
