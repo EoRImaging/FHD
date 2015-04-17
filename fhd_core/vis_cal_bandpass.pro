@@ -67,7 +67,7 @@ IF Keyword_Set(cable_bandpass_fit) THEN BEGIN
              gain=*gain_arr_ptr[pol_i] ;n_freq x n_tile element complex array
              
              ;gain2 is a temporary variable used in place of the gain array for an added layer of safety
-             IF cable_i EQ 0 THEN gain2=Complexarr(size(gain,/dimension))
+             IF cable_i EQ 0 AND pol_i EQ 0 THEN gain2=Complexarr(n_pol,(size(gain))[1],(size(gain))[2])
              
              ;Only use gains from unflagged tiles and frequencies, and calculate the amplitude and phase
              gain_use=extract_subarray(gain,freq_use,tile_use_cable)
@@ -98,23 +98,25 @@ IF Keyword_Set(cable_bandpass_fit) THEN BEGIN
              
              ;Fill temporary variable gain2, set equal to final bandpass per cable group for each tile that will use that bandpass.
              ;As cables are looped through, gain2 will fill up with the correct bandpass per tile.
-             FOR tile_i=0,N_elements(tile_use_cable)-1 DO gain2[freq_use,tile_use_cable[tile_i]]=bandpass_single   
+             FOR tile_i=0,N_elements(tile_use_cable)-1 DO gain2[pol_i,freq_use,tile_use_cable[tile_i]]=bandpass_single   
             
              ;Execute last bit at the end of the cable loop
              IF cable_i EQ 5 THEN BEGIN
-                 gain3=gain
+                 ;Set gain3 to the input gains (safe from overwrite if referencing the orig gain pointer)
+                 gain3=*gain_arr_ptr[pol_i]
                  
-                 ;Set what will be passed back as the output gain as the final bandpass per cable type
-                 *gain_arr_ptr2[pol_i]=gain2
+                 ;Set what will be passed back as the output gain as the final bandpass per cable type.  
+                 gain2_input = reform(gain2[pol_i,*,*])
+                 *gain_arr_ptr2[pol_i]=gain2_input
                  
                  ;Set what will be passed back as the residual as the input gain divided by the final bandpass per cable type.
-                 FOR tile_i=0,n_tile-1 DO gain3[freq_use,tile_i]/=gain2[freq_use,tile_i]
+                 FOR tile_i=0,n_tile-1 DO gain3[freq_use,tile_i]/=gain2_input[freq_use,tile_i]
                  *gain_arr_ptr3[pol_i]=gain3
              ENDIF
         ENDFOR ;end pol for
         undefine, tile_use_cable, nt_use_cable, gain_use, amp, phase, amp2, bandpass_single
     ENDFOR ; end cable for
-    
+
     ;Return the final bandpass per cable type as the cal_bandpass.gain. Return the residual (input gain/global bp) as cal_remainder.gain.
     cal_bandpass=cal
     cal_bandpass.gain=gain_arr_ptr2
@@ -264,6 +266,7 @@ ENDIF ELSE BEGIN
         gain3=gain
         FOR tile_i=0,n_tile-1 DO gain3[freq_use,tile_i]/=bandpass_single
         *gain_arr_ptr3[pol_i]=gain3
+
     ENDFOR
     cal_bandpass=cal
     cal_bandpass.gain=gain_arr_ptr2
