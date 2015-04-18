@@ -7,15 +7,15 @@ heap_gc
 ; using firstpass.
 
 ; parse command line args
-compile_opt strictarr
-args = Command_Line_Args(count=nargs)
-obs_id = args[0]
-;obs_id = '1061316296'
-output_directory = args[1]
-;output_directory = '/nfs/eor-00/h1/nbarry/'
-version = args[2]
-;version = 'default'
-cmd_args={version:version}
+;compile_opt strictarr
+;args = Command_Line_Args(count=nargs)
+;obs_id = args[0]
+obs_id = '1061316296'
+;output_directory = args[1]
+output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+;version = args[2]
+version = 'nb_autocal'
+;cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
@@ -460,6 +460,80 @@ case version of
         model_visibilities=1
     end
 
+   'mwa_cal_ben_fornax_vla_pic_rephaseeor1':begin
+	override_target_phasera=59.78
+	override_target_phasedec=-26.74
+	calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+
+   'transfer_mean_oct24_eor1cal_rephaseeor1':begin
+	override_target_phasera=59.78
+	override_target_phasedec=-26.74
+        transfer_calibration='/nfs/mwa-09/r1/abrahamn/128T/eor1_fhd/low/eor1/fhd_mwa_cal_ben_fornax_vla_pic/calibration/cal_avg.sav'
+        model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        model_visibilities=1
+    end
+
+   'arn_caltest_basemin50_basemax1500':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+	min_cal_baseline=50
+	max_cal_baseline=1500
+	deconvolve=1
+     end
+
+   'arn_caltest_basemin50_basemax1000':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=50
+        max_cal_baseline=1000
+	deconvolve=1
+     end
+
+   'arn_caltest_basemin100_basemax1500':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=100
+        max_cal_baseline=1500
+	deconvolve=1
+     end
+
+   'arn_caltest_basemin100_basemax1000':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=100
+        max_cal_baseline=1000
+	deconvolve=1
+     end
+
+   'arn_caltest_basemin50_basemax500':begin
+        calibration_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=50
+        max_cal_baseline=500
+        deconvolve=1
+     end
+
+   'arn_caltest_basemin50_basemax300':begin
+        calibration_catalog_file_pith=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+        snapshot_healpix_export=0
+        min_cal_baseline=50
+        max_cal_baseline=300
+        deconvolve=1
+     end
+
+   'arn_eor1_deconvtest_uniform':begin
+	model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+	dimension=3072.
+	FoV=80.
+	no_condense_sources=1
+	max_sources=100000.
+	gain_factor=0.1
+	snapshot_healpix_export=0
+	deconvolve=1
+	decon_filter='filter_uv_uniform'
+    end
+
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
    ; Adam's versions. only Adam can make versions here.
@@ -681,6 +755,14 @@ case version of
    'nb_devel_test_Mar2015':begin
       diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
       cable_bandpass_fit=1
+   end
+   
+   'nb_cable_cal_pointing_gainrescor':begin
+      cable_bandpass_fit=1
+   end
+   
+   'nb_80kHz_std_Mar2015':begin
+      n_avg=1
    end
    
 
