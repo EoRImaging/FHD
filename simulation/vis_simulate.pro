@@ -190,7 +190,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
       undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
     endfor
     undefine_fhd, model_uvf_arr
-    time1=systime(0)
+    time1=systime(1)
     print, 'model visibility timing(s):'+ number_formatter(time1-time0)
     
     fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,no_save=no_save,_Extra=extra
