@@ -115,28 +115,55 @@ debug_point=1
 cx_arr=source_candidate_i mod dimension
 cy_arr=Floor(source_candidate_i/dimension)
 source_arr=source_comp_init(n_sources=ng)
-sub_pad=2 ;don't change this. Padding is required around the sub_image for region_grow to work properly
+sub_pad=5. ;don't change this. Padding is required around the sub_image for source_image_generate and then region_grow to work properly
 ;sub_expand=1. ;over-resolution factor to test component outliers. The larger sub_expand is, the smaller a gap is required between components to mark them as outliers
+
+test_xcen_in=Fltarr(ng)
+test_ycen_in=Fltarr(ng)
+test_xcen_out=Fltarr(ng)
+test_ycen_out=Fltarr(ng)
+test_ext=Fltarr(ng)
+simage_arr=Ptrarr(ng)
+
 FOR gi=0L,ng-1 DO BEGIN
 ;    IF hgroup[gi] EQ 0 THEN CONTINUE
     gi_in=group_inds[gi]
     si_g=gri[gri[gi_in]:gri[gi_in+1]-1]; guaranteed at least one source per group
     
-    x_offset=Floor(Min(comp_arr[si_g].x))-sub_pad
-    y_offset=Floor(Min(comp_arr[si_g].y))-sub_pad
-    sub_x=comp_arr[si_g].x-x_offset
-    sub_y=comp_arr[si_g].y-y_offset
-    comp_arr1=source_comp_init(xvals=sub_x,yvals=sub_y,flux=comp_arr[si_g].flux.I)
-    sub_dim=Max(Ceil(sub_x))+sub_pad
-    sub_elem=Max(Ceil(sub_y))+sub_pad
-    single_source_image=source_image_generate(comp_arr1,pol_i=4,dimension=sub_dim,elements=sub_elem,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)
-    gauss_img=gauss2Dfit(single_source_image,gauss_params,/tilt)
-    xcen_sub=gauss_params[4]
-    ycen_sub=gauss_params[5]
-    x_ext=gauss_params[2]*2.*Sqrt(2.*Alog(2.))/gauss_width
-    y_ext=gauss_params[3]*2.*Sqrt(2.*Alog(2.))/gauss_width
-    n_sub=N_Elements(si_g)
     IF Keyword_Set(reject_outlier_components) THEN BEGIN
+        x_offset=Floor(Min(comp_arr[si_g].x))-sub_pad
+        y_offset=Floor(Min(comp_arr[si_g].y))-sub_pad
+        sub_x=comp_arr[si_g].x-x_offset
+        sub_y=comp_arr[si_g].y-y_offset
+        comp_arr1=source_comp_init(xvals=sub_x,yvals=sub_y,flux=comp_arr[si_g].flux.I)
+        sub_dim=Max(Ceil(sub_x))+sub_pad
+        sub_elem=Max(Ceil(sub_y))+sub_pad
+        single_source_image=source_image_generate(comp_arr1,pol_i=4,dimension=sub_dim,elements=sub_elem,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)
+        gauss_img=gauss2Dfit_errchk(single_source_image,gauss_params,/tilt,status=fit_error)
+        IF fit_error GT 0 THEN BEGIN
+            gcntrd,single_source_image,cx_arr[gi_in]-x_offset,cy_arr[gi_in]-y_offset,xcen_sub,ycen_sub,gauss_width,/keepcenter,/silent
+            IF Abs(xcen_sub-gauss_params[4])>Abs(ycen_sub-gauss_params[5]) LT 0.1 THEN BEGIN
+                x_ext=(gauss_params[2]*2.*Sqrt(2.*Alog(2.))/gauss_width)>1.
+                y_ext=(gauss_params[3]*2.*Sqrt(2.*Alog(2.))/gauss_width)>1.
+                ext_factor=Sqrt(x_ext*y_ext)
+            ENDIF ELSE ext_factor=-99.
+        ENDIF ELSE BEGIN
+            xcen_sub=gauss_params[4]
+            ycen_sub=gauss_params[5]
+            x_ext=(gauss_params[2]*2.*Sqrt(2.*Alog(2.))/gauss_width)>1.
+            y_ext=(gauss_params[3]*2.*Sqrt(2.*Alog(2.))/gauss_width)>1.
+            ext_factor=Sqrt(x_ext*y_ext)
+        ENDELSE
+        
+        test_xcen_in[gi]=cx_arr[gi_in]-x_offset
+        test_ycen_in[gi]=cy_arr[gi_in]-y_offset
+        test_xcen_out[gi]=xcen_sub
+        test_ycen_out[gi]=ycen_sub
+        test_ext[gi]=ext_factor
+        simage_arr[gi]=Ptr_new(source_image[x_offset:x_offset+sub_dim-1,y_offset:y_offset+sub_elem-1])     
+        
+        sub_expand=(4./ext_factor^2.)>1.
+        n_sub=N_Elements(si_g)
 ;;        gcntrd,source_image,cx_arr[gi_in],cy_arr[gi_in],xcen,ycen,gauss_width,/keepcenter,/silent
 ;        IF Abs(cx_arr[gi_in]-xcen) GT 1 THEN xcen=cx_arr[gi_in]
 ;        IF Abs(cy_arr[gi_in]-ycen) GT 1 THEN ycen=cy_arr[gi_in]
@@ -149,6 +176,12 @@ FOR gi=0L,ng-1 DO BEGIN
 ;        sub_dim=(Max(sub_x)>(xcen_sub+1))+sub_pad 
 ;        sub_elem=(Max(sub_y)>(ycen_sub+1))+sub_pad
         
+        sub_dim=Ceil(sub_dim*sub_expand)
+        sub_elem=Ceil(sub_elem*sub_expand)
+        sub_x*=sub_expand
+        sub_y*=sub_expand
+        xcen_sub*=sub_expand
+        ycen_sub*=sub_expand
         sub_image=intarr(sub_dim,sub_elem)-1
         sub_image[Round(sub_x),Round(sub_y)]=1
         sub_image[xcen_sub-1:xcen_sub+1,ycen_sub-1:ycen_sub+1]=1
