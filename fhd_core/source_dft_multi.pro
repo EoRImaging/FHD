@@ -49,7 +49,7 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     flux_arr=Ptrarr(n_pol,n_spectral+1)
     FOR pol_i=0,n_pol-1 DO BEGIN
         flux_arr[pol_i,0]=Ptr_new(source_array_use.flux.(pol_i))
-        FOR s_i=1.,n_spectral DO flux_arr[pol_i,s_i]=Ptr_new(source_array_use.flux.(pol_i)*alpha_arr^s_i)
+        FOR s_i=1L,n_spectral DO flux_arr[pol_i,s_i]=Ptr_new(source_array_use.flux.(pol_i)*alpha_arr^s_i)
     ENDFOR
     
     IF Keyword_Set(dft_threshold) THEN BEGIN
@@ -63,7 +63,7 @@ IF Keyword_Set(n_spectral) THEN BEGIN
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory)
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         FOR pol_i=0,n_pol-1 DO BEGIN
-            FOR s_i=0,n_spectral DO BEGIN ;no "-1" for second loop!
+            FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
                 single_uv=Complexarr(dimension,elements)
                 single_uv[uv_i_use]=*model_uv_vals[pol_i,s_i] 
                 model_uv_arr[pol_i,s_i]=Ptr_new(single_uv,/no_copy)

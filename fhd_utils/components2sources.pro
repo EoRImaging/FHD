@@ -125,10 +125,13 @@ test_ycen_out=Fltarr(ng)
 test_ext=Fltarr(ng)
 ;simage_arr=Ptrarr(ng)
 
+gi_debug=-1
+
 FOR gi=0L,ng-1 DO BEGIN
 ;    IF hgroup[gi] EQ 0 THEN CONTINUE
     gi_in=group_inds[gi]
     si_g=gri[gri[gi_in]:gri[gi_in+1]-1]; guaranteed at least one source per group
+    IF gi EQ gi_debug THEN stop
     
     IF Keyword_Set(reject_outlier_components) THEN BEGIN
         x_offset=Floor(Min(comp_arr[si_g].x))-sub_pad
@@ -162,7 +165,7 @@ FOR gi=0L,ng-1 DO BEGIN
         test_ext[gi]=ext_factor
 ;        simage_arr[gi]=Ptr_new(source_image[x_offset:x_offset+sub_dim-1,y_offset:y_offset+sub_elem-1])     
         
-        sub_expand=(2./ext_factor^2.)>1.
+        sub_expand=(2./ext_factor^2.)>(1./gauss_width)
         n_sub=N_Elements(si_g)
 ;;        gcntrd,source_image,cx_arr[gi_in],cy_arr[gi_in],xcen,ycen,gauss_width,/keepcenter,/silent
 ;        IF Abs(cx_arr[gi_in]-xcen) GT 1 THEN xcen=cx_arr[gi_in]
@@ -176,18 +179,19 @@ FOR gi=0L,ng-1 DO BEGIN
 ;        sub_dim=(Max(sub_x)>(xcen_sub+1))+sub_pad 
 ;        sub_elem=(Max(sub_y)>(ycen_sub+1))+sub_pad
         
-        sub_dim=Ceil(sub_dim*sub_expand)
-        sub_elem=Ceil(sub_elem*sub_expand)
-        sub_x*=sub_expand
-        sub_y*=sub_expand
-        xcen_sub*=sub_expand
-        ycen_sub*=sub_expand
-        sub_image=intarr(sub_dim,sub_elem)-1
-        sub_image[Round(sub_x),Round(sub_y)]=1
-        sub_image[xcen_sub-1:xcen_sub+1,ycen_sub-1:ycen_sub+1]=1
-        sub_i=Round(sub_x)+Round(sub_y)*sub_dim
+        sub_dim2=Ceil(sub_dim*sub_expand)
+        sub_elem2=Ceil(sub_elem*sub_expand)
+        sub_x2=Round(sub_x*sub_expand)
+        sub_y2=Round(sub_y*sub_expand)
+        xcen_sub2=Round(xcen_sub*sub_expand)
+        ycen_sub2=Round(ycen_sub*sub_expand)
+        sub_image=intarr(sub_dim2,sub_elem2)-1
+        sub_image[sub_x2,sub_y2]=1
+;        sub_image[xcen_sub2-1:xcen_sub2+1,ycen_sub2-1:ycen_sub2+1]=1
+        sub_image[xcen_sub2,ycen_sub2]=1
+        sub_i=sub_x2+sub_y2*sub_dim2
         sub_hist=histogram(sub_i,min=0,/binsize,reverse_ind=ri_sub)
-        cen_sub_i=Round(xcen_sub)+Round(ycen_sub)*sub_dim
+        cen_sub_i=xcen_sub2+ycen_sub2*sub_dim2
         sub_i_use=Region_grow(sub_image,cen_sub_i,/all_neighbors,threshold=[0,1])
         sub_use_test=intarr(n_sub)
         FOR si_i=0L,N_Elements(sub_i_use)-1 DO BEGIN
@@ -236,7 +240,8 @@ FOR gi=0L,ng-1 DO BEGIN
     
 ;    dist_vals=(sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.
 ;    dist_test=Sqrt(Total(flux_I*dist_vals/Total(flux_I)))
-    IF Stddev(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.)) GE extend_threshold THEN BEGIN
+    extend_test=Mean(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.))
+    IF extend_test GE extend_threshold THEN BEGIN
         (source_arr[gi].extend)=Ptr_new(comp_arr[si_g])
     ENDIF
 ENDFOR

@@ -138,7 +138,7 @@ WHILE n_sources EQ 0 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
         IF add_dist[src_i] GE local_max_radius THEN BEGIN
-            gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width*(2.*Sqrt(2.*Alog(2.))),/keepcenter,/silent 
+            gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent 
         ENDIF ELSE BEGIN
             IF extended_flag[src_i] EQ 0 THEN BEGIN
             ;if NOT marked as an extended source, skip if too close to a brighter source
@@ -148,22 +148,22 @@ WHILE n_sources EQ 0 DO BEGIN
             xcen=(ycen=-1)
         ENDELSE
         flux_interp_flag=extended_flag[src_i]
-        IF Abs(sx-xcen) GT 0.5 THEN BEGIN
+        IF Abs(sx-xcen) GT beam_width THEN BEGIN
 ;            IF extended_flag[src_i] EQ 0 THEN BEGIN
 ;                ;if NOT marked as an extended source, skip if centroiding failed for either pol
 ;                source_mask1[sx,sy]=0
 ;                CONTINUE 
 ;            ENDIF
-            xcen=sx
+            IF xcen EQ -1 THEN xcen=sx
             flux_interp_flag=1
         ENDIF
-        IF Abs(sy-ycen) GT 0.5 THEN BEGIN
+        IF Abs(sy-ycen) GT beam_width THEN BEGIN
 ;            IF extended_flag[src_i] EQ 0 THEN BEGIN
 ;                ;if NOT marked as an extended source, skip if centroiding failed for either pol
 ;                source_mask1[sx,sy]=0
 ;                CONTINUE 
 ;            ENDIF
-            ycen=sy
+            IF ycen EQ -1 THEN ycen=sy
             flux_interp_flag=1
         ENDIF
 ;        IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
