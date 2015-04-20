@@ -1,5 +1,6 @@
 PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, use_saved_uvf = use_saved_uvf, $
+    beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, $
+    use_saved_uvf = use_saved_uvf, uvf_savefile = uvf_savefile, $
     sim_baseline_density = sim_baseline_density, $
     flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
@@ -128,9 +129,11 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
     
     if n_elements(use_saved_uvf) eq 0 then use_saved_uvf = 1
     if keyword_set(use_saved_uvf) then begin
-      eor_uvf_cube_file = '/data4/MWA/FHD_Aug23/bjh_arrsim_model_uvf/'
-      if keyword_set(flat_sigma) then eor_uvf_cube_file = eor_uvf_cube_file + 'flat_input_model.sav' else stop
-      if keyword_set(no_distrib) or keyword_set(delta_power) then stop
+      if n_elements(uvf_savefile) eq 0 then begin
+        eor_uvf_cube_file = '/data4/MWA/FHD_Aug23/bjh_arrsim_model_uvf/'
+        if keyword_set(flat_sigma) then eor_uvf_cube_file = eor_uvf_cube_file + 'flat_input_model.sav' else stop
+        if keyword_set(no_distrib) or keyword_set(delta_power) then stop
+      endif else eor_uvf_cube_file = uvf_savefile
     endif
     
     array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
