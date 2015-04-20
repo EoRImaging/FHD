@@ -149,20 +149,20 @@ WHILE n_sources EQ 0 DO BEGIN
         ENDELSE
         flux_interp_flag=extended_flag[src_i]
         IF Abs(sx-xcen) GT 0.5 THEN BEGIN
-            IF extended_flag[src_i] EQ 0 THEN BEGIN
-                ;if NOT marked as an extended source, skip if centroiding failed for either pol
-                source_mask1[sx,sy]=0
-                CONTINUE 
-            ENDIF
+;            IF extended_flag[src_i] EQ 0 THEN BEGIN
+;                ;if NOT marked as an extended source, skip if centroiding failed for either pol
+;                source_mask1[sx,sy]=0
+;                CONTINUE 
+;            ENDIF
             xcen=sx
             flux_interp_flag=1
         ENDIF
         IF Abs(sy-ycen) GT 0.5 THEN BEGIN
-            IF extended_flag[src_i] EQ 0 THEN BEGIN
-                ;if NOT marked as an extended source, skip if centroiding failed for either pol
-                source_mask1[sx,sy]=0
-                CONTINUE 
-            ENDIF
+;            IF extended_flag[src_i] EQ 0 THEN BEGIN
+;                ;if NOT marked as an extended source, skip if centroiding failed for either pol
+;                source_mask1[sx,sy]=0
+;                CONTINUE 
+;            ENDIF
             ycen=sy
             flux_interp_flag=1
         ENDIF

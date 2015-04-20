@@ -8,7 +8,7 @@ astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
 n_pol=obs.n_pol
-IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.5
+IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.2
 
 n_sources=(size(comp_arr,/dimension))[0]
 
@@ -123,7 +123,7 @@ test_ycen_in=Fltarr(ng)
 test_xcen_out=Fltarr(ng)
 test_ycen_out=Fltarr(ng)
 test_ext=Fltarr(ng)
-simage_arr=Ptrarr(ng)
+;simage_arr=Ptrarr(ng)
 
 FOR gi=0L,ng-1 DO BEGIN
 ;    IF hgroup[gi] EQ 0 THEN CONTINUE
@@ -160,9 +160,9 @@ FOR gi=0L,ng-1 DO BEGIN
         test_xcen_out[gi]=xcen_sub
         test_ycen_out[gi]=ycen_sub
         test_ext[gi]=ext_factor
-        simage_arr[gi]=Ptr_new(source_image[x_offset:x_offset+sub_dim-1,y_offset:y_offset+sub_elem-1])     
+;        simage_arr[gi]=Ptr_new(source_image[x_offset:x_offset+sub_dim-1,y_offset:y_offset+sub_elem-1])     
         
-        sub_expand=(4./ext_factor^2.)>1.
+        sub_expand=(2./ext_factor^2.)>1.
         n_sub=N_Elements(si_g)
 ;;        gcntrd,source_image,cx_arr[gi_in],cy_arr[gi_in],xcen,ycen,gauss_width,/keepcenter,/silent
 ;        IF Abs(cx_arr[gi_in]-xcen) GT 1 THEN xcen=cx_arr[gi_in]
