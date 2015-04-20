@@ -111,9 +111,9 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, real_sky = real_sky, flat
   if keyword_set(real_sky) then begin
     sky_signal = shift(fft(fft(shift(signal, [n_kx/2, n_ky/2, 0]), dimension=1), dimension=2), [-n_kx/2, -n_ky/2, 0])
     
-    temp = real_part(sky_signal)*sqrt(2.)
+    temp = real_part(temporary(sky_signal))*sqrt(2.)
     signal = shift(fft(fft(shift(temp, [n_kx/2, n_ky/2, 0]), dimension=1, /inverse), dimension=2, /inverse), [-n_kx/2, -n_ky/2, 0])
-    undefine, sky_signal, temp
+    undefine, temp
     
   endif
   
