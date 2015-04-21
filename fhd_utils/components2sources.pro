@@ -90,7 +90,7 @@ group_id=candidate_map[source_pix_i]
 ;gi_use=where(group_id GE 0,n_comp_use)
 IF max(group_id) LE 0 THEN RETURN,source_comp_init(n_sources=0)
 hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
-group_inds=where(hgroup,ng)
+group_inds=where(hgroup GT 1,ng)
 
 debug_point=1
 ;group_id=fltarr(n_sources)-1

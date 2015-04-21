@@ -288,10 +288,22 @@ FOR iter=i0,max_iter-1 DO BEGIN
         image_unfiltered=dirty_image_composite-model_image_composite
         IF Keyword_Set(filter_background) THEN BEGIN
             IF smooth_width GT 11 AND (dimension/smooth_width EQ Floor(dimension/smooth_width)) THEN BEGIN
-                image_smooth=Rebin(Rebin(image_unfiltered*beam_avg,dimension/smooth_width,elements/smooth_width),dimension,elements)*beam_corr_avg
-                image_filtered=(image_unfiltered-image_smooth)*beam_mask
-                model_smooth=Rebin(Rebin(model_image_composite*beam_avg,dimension/smooth_width,elements/smooth_width),dimension,elements)*beam_corr_avg
-                model_I_use=(model_image_composite-model_smooth)*beam_mask
+                image_rebin=Rebin(image_unfiltered*source_mask,dimension/smooth_width,elements/smooth_width)
+                mask_rebin=Rebin(source_mask,dimension/smooth_width,elements/smooth_width)
+                mask_i_use=where(mask_rebin)
+                filter_i=where(Abs(image_rebin[mask_i_use]-Mean(image_rebin[mask_i_use])) GT 5.*Stddev(image_rebin[mask_i_use]),n_filter)
+
+                model_rebin=Rebin(model_image_composite,dimension/smooth_width,elements/smooth_width)
+                IF n_filter GT 0 THEN BEGIN
+                    image_rebin2=Median(image_rebin,4,/even)
+                    image_rebin[mask_i_use[filter_i]]=image_rebin2[mask_i_use[filter_i]]
+                    model_rebin2=Median(model_rebin,4,/even)
+                    model_rebin[mask_i_use[filter_i]]=model_rebin2[mask_i_use[filter_i]]
+                ENDIF
+                image_smooth=Rebin(image_rebin,dimension,elements)
+                model_smooth=Rebin(model_rebin,dimension,elements)
+                image_filtered=(image_unfiltered-image_smooth)*source_mask
+                model_I_use=(model_image_composite-model_smooth)*source_mask
             ENDIF ELSE BEGIN
                 image_smooth=Median(image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
                 image_filtered=fltarr(dimension,elements)
@@ -323,7 +335,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     ENDIF ELSE t2_0=Systime(1)
     source_find_image=image_filtered*beam_avg*source_taper*beam_mask
     model_I_use=model_I_use*beam_avg*source_taper*beam_mask
-    image_use=image_filtered*beam_avg*beam_mask
+    image_use=image_unfiltered*beam_avg*beam_mask
    
     comp_arr1=fhd_source_detect(obs,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
         model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$

@@ -41,10 +41,10 @@ ENDIF ELSE BEGIN
         di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
 ENDELSE
 
-IF Keyword_Set(antialias) THEN BEGIN
-    alias_filter=Sqrt(Hanning(dimension,elements))
-    di_uv_use*=alias_filter
-ENDIF
+;IF Keyword_Set(antialias) THEN BEGIN
+;    alias_filter=Sqrt(Hanning(dimension,elements))
+;    di_uv_use*=alias_filter
+;ENDIF
 
 IF Keyword_Set(resize) THEN BEGIN
     dimension=dimension*resize

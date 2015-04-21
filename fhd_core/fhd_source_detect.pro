@@ -29,7 +29,15 @@ IF N_Elements(gain_array) EQ 1 THEN gain_array=replicate(gain_array[0],dimension
 converge_check=Stddev(source_find_image[where(beam_mask)],/nan)
 
 IF N_Elements(source_mask) EQ 0 THEN source_mask0=beam_mask ELSE source_mask0=source_mask
-source_mask1=beam_mask
+neg_i=where(source_find_image LE -Max(source_find_image),n_neg)
+IF n_neg GT 0 THEN BEGIN
+    source_neg=fltarr(dimension,elements)
+    source_neg[neg_i]=1.
+    source_neg=Smooth(source_neg,Ceil(beam_width*4.))*Ceil(beam_width*4.)^2
+    source_mask0[where(source_neg)]=0
+ENDIF
+
+source_mask1=beam_mask*source_mask0
 flux_offset=Mean(source_find_image[where(source_mask0)])
 source_find_image-=flux_offset
 
