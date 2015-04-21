@@ -26,7 +26,7 @@ IF dft_deconvolution_threshold EQ 1 THEN dft_deconvolution_threshold=1./(!Pi*dim
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF N_Elements(pol_use) EQ 0 THEN pol_use=indgen(n_pol)
 IF N_Elements(beam_max_threshold) EQ 0 THEN beam_max_threshold=1e-4 
-IF N_Elements(smooth_width) EQ 0 THEN smooth_width=Float(Ceil(beam_width*10.)) & smooth_width=smooth_width>5.
+IF N_Elements(smooth_width) EQ 0 THEN smooth_width=32.;Float(Ceil(beam_width*10.)) & smooth_width=smooth_width>5.
 IF N_Elements(local_max_radius) EQ 0 THEN local_max_radius=3.
 IF N_Elements(sigma_cut) EQ 0 THEN sigma_cut=2.
 ;IF N_Elements(baseline_threshold) EQ 0 THEN baseline_threshold=0.;50.
