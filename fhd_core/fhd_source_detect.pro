@@ -31,10 +31,11 @@ converge_check=Stddev(source_find_image[where(beam_mask)],/nan)
 IF N_Elements(source_mask) EQ 0 THEN source_mask0=beam_mask ELSE source_mask0=source_mask
 neg_i=where(source_find_image LE -Max(source_find_image),n_neg)
 IF n_neg GT 0 THEN BEGIN
-    source_neg=fltarr(dimension,elements)
-    source_neg[neg_i]=1.
-    source_neg=Smooth(source_neg,Ceil(beam_width*4.))*Ceil(beam_width*4.)^2
-    source_mask0[where(source_neg)]=0
+    debug_point=1
+;    source_neg=fltarr(dimension,elements)
+;    source_neg[neg_i]=1.
+;    source_neg=Smooth(source_neg,Ceil(beam_width*4.))*Ceil(beam_width*4.)^2
+;    source_mask0[where(source_neg)]=0
 ENDIF
 
 source_mask1=beam_mask*source_mask0
@@ -146,7 +147,9 @@ WHILE n_sources EQ 0 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
         IF add_dist[src_i] GE local_max_radius THEN BEGIN
-            gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width,/keepcenter,/silent 
+            ;FWHM here is used to set the size of the fitting box. Will not work right if the box is too small, even if that's the correct beam size
+            ;use the absolute value, since the real function is closest to Sin(x)/x  
+            gcntrd,Abs(image_I_flux),sx,sy,xcen,ycen,beam_width>2.,/keepcenter,/silent   
         ENDIF ELSE BEGIN
             IF extended_flag[src_i] EQ 0 THEN BEGIN
             ;if NOT marked as an extended source, skip if too close to a brighter source
