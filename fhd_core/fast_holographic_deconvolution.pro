@@ -197,10 +197,10 @@ t0=Systime(1)
 converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter>1))>2+1)
 converge_check2=Fltarr(max_iter>2+1)
 
-sm_xmin=(Min(xvals[where(beam_mask)])+dimension_fit/2.-smooth_width)>0
-sm_xmax=(Max(xvals[where(beam_mask)])+dimension_fit/2.+smooth_width)<(dimension_fit-1)
-sm_ymin=(Min(yvals[where(beam_mask)])+elements_fit/2.-smooth_width)>0
-sm_ymax=(Max(yvals[where(beam_mask)])+elements_fit/2.+smooth_width)<(elements_fit-1)
+sm_xmin=(Min(xvals_fit[where(beam_mask)])+dimension_fit/2.-smooth_width)>0
+sm_xmax=(Max(xvals_fit[where(beam_mask)])+dimension_fit/2.+smooth_width)<(dimension_fit-1)
+sm_ymin=(Min(yvals_fit[where(beam_mask)])+elements_fit/2.-smooth_width)>0
+sm_ymax=(Max(yvals_fit[where(beam_mask)])+elements_fit/2.+smooth_width)<(elements_fit-1)
 beam_avg_box=beam_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 
