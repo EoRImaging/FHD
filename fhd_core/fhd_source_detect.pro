@@ -12,7 +12,7 @@ reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
 frequency=obs.freq_center
 alpha_use=obs.alpha ;spectral index used for the subtracted component
-over_resolution=fhd.over_resolution
+over_resolution=fhd_params.over_resolution
 
 n_pol=fhd_params.npol
 dimension=obs.dimension
