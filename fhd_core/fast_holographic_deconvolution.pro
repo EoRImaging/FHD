@@ -88,7 +88,7 @@ alias_mask[dimension_fit/4:3.*dimension_fit/4.,elements_fit/4:3.*elements_fit/4.
 nbeam_avg=0
 FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     *beam_base[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,dimension=dimension,/square))
-    IF over_resolution GT 1 THEN *beam_base[pol_i]=Rebin(*beam_base[pol_i],dimension_out,elements_out)
+    IF over_resolution GT 1 THEN *beam_base[pol_i]=Rebin(*beam_base[pol_i],dimension_fit,elements_fit)
 ;    *beam_base[pol_i]=beam_image(psf,obs,pol_i=pol_i,dimension=dimension,/square)
     beam_mask0=fltarr(dimension_fit,elements_fit)
     
@@ -141,7 +141,7 @@ ENDFOR
 
 filter_arr=Ptrarr(n_pol,/allocate)
 gain_normalization = get_image_renormalization(obs_fit,psf=psf,params=params,weights_arr=weights_arr,$
-    beam_base=beam_base,filter_arr=filter_arr,image_filter_fn=decon_filter,degpix=degpix,/antialias)
+    beam_base=beam_base,filter_arr=filter_arr,image_filter_fn=decon_filter,pad_uv=over_resolution,degpix=degpix,/antialias)
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
 ;    filter_single=filter_arr[pol_i]
@@ -154,7 +154,8 @@ ENDFOR
 ;gain_array=source_taper*gain_use
 gain_array=replicate(gain_use,dimension_fit,elements_fit)
 
-dirty_stokes_arr=stokes_cnv(dirty_array,jones,beam_arr=beam_base,/square,_Extra=extra)
+jones_fit=fhd_struct_init_jones(obs_fit,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
+dirty_stokes_arr=stokes_cnv(dirty_array,jones_fit,beam_arr=beam_base,/square,_Extra=extra)
 dirty_image_composite=*dirty_stokes_arr[0]
 IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]
 IF n_pol GT 2 THEN BEGIN
@@ -262,7 +263,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
 ;        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
 ;        model_image_composite+=model_image
     ENDFOR
-    model_stokes_arr=stokes_cnv(model_holo_arr,jones,beam_arr=beam_base,/square,_Extra=extra)
+    model_stokes_arr=stokes_cnv(model_holo_arr,jones_fit,beam_arr=beam_base,/square,_Extra=extra)
     model_image_composite=*model_stokes_arr[0]
     
     image_filtered=dirty_image_composite-model_image_composite
@@ -285,7 +286,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
         t1_0=Systime(1)
         FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)
         undefine_fhd,model_stokes_arr
-        model_stokes_arr=stokes_cnv(model_holo_arr,jones,beam_arr=beam_base,/square,_Extra=extra)
+        model_stokes_arr=stokes_cnv(model_holo_arr,jones_fit,beam_arr=beam_base,/square,_Extra=extra)
         model_image_composite=*model_stokes_arr[0]
         IF n_pol GT 1 THEN model_image_composite_Q=*model_stokes_arr[1]
         IF n_pol GT 2 THEN model_image_composite_U=*model_stokes_arr[2]
@@ -346,7 +347,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
 ;    model_I_use=model_I_use*beam_avg*source_taper*beam_mask
     image_use=image_unfiltered*beam_avg*beam_mask
    
-    comp_arr1=fhd_source_detect(obs_fit,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+    comp_arr1=fhd_source_detect(obs_fit,fhd_params,jones_fit,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
         model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
         beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     
