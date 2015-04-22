@@ -12,6 +12,7 @@ reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
 frequency=obs.freq_center
 alpha_use=obs.alpha ;spectral index used for the subtracted component
+over_resolution=fhd.over_resolution
 
 n_pol=fhd_params.npol
 dimension=obs.dimension
@@ -148,7 +149,7 @@ WHILE n_sources EQ 0 DO BEGIN
         sy=sy_arr[src_i]
         IF add_dist[src_i] GE local_max_radius THEN BEGIN
             ;FWHM here is used to set the size of the fitting box. Will not work right if the box is too small, even if that's the correct beam size
-            gcntrd,(image_I_flux),sx,sy,xcen,ycen,beam_width>4.,/keepcenter,/silent   
+            gcntrd,(image_I_flux),sx,sy,xcen,ycen,beam_width>2.,/keepcenter,/silent   
         ENDIF ELSE BEGIN
             IF extended_flag[src_i] EQ 0 THEN BEGIN
             ;if NOT marked as an extended source, skip if too close to a brighter source
@@ -193,7 +194,7 @@ WHILE n_sources EQ 0 DO BEGIN
         ycen0=ycen-sy0+box_radius
         xy2ad,xcen,ycen,astr,ra,dec
         
-        IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)<image_I_flux[sx,sy] $
+        IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>image_I_flux[sx,sy] $
             ELSE flux_use=image_I_flux[sx,sy]
         IF flux_use LE 0 THEN BEGIN
             n_mask+=Total(source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
@@ -207,8 +208,8 @@ WHILE n_sources EQ 0 DO BEGIN
             gain_factor_use=(((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))*gain_normalization)>gain_factor_use
         ENDIF
         
-        comp_arr[si].x=xcen
-        comp_arr[si].y=ycen
+        comp_arr[si].x=xcen/over_resolution
+        comp_arr[si].y=ycen/over_resolution
         comp_arr[si].ra=ra
         comp_arr[si].dec=dec
         comp_arr[si].flux.I=flux_use*gain_factor_use;/beam_area
