@@ -16,18 +16,23 @@ gauss_sigma=beam_width_calculate(obs)
 gauss_width=beam_width_calculate(obs,/fwhm)
 comp_i_use=where(comp_arr.flux.I GT 0,n_comp_use)
 IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=Min(comp_arr[comp_i_use].flux.I)/2.
-source_image=Fltarr(dimension,elements)
-FOR pol_i=0,(n_pol<2)-1 DO source_image+=$
-    source_image_generate(comp_arr,obs,pol_i=pol_i,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)
-IF n_pol EQ 1 THEN source_image*=2.
+
+source_image=source_image_generate(comp_arr,obs,pol_i=4,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)
+
 cx=comp_arr.x
 cy=comp_arr.y
 weight_arr=source_comp_init(xvals=cx,yvals=cy,flux=1.)
 weight_arr=weight_arr[comp_i_use]
 component_intensity=source_image_generate(weight_arr,obs,pol_i=4,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)
 undefine_fhd,weight_arr ;make sure this isn't a memory leak
+CASE N_Elements(gain_array) OF
+    0: gain_min=(gain_array=0.15)
+    1: gain_min=gain_array
+    ELSE: gain_min=Min(gain_array[where(gain_array GT 0)]) 
+ENDCASE
 component_intensity=1.-(1.-gain_array)^component_intensity
-source_intensity_threshold=0.5
+
+source_intensity_threshold=(2.*gain_min)<0.5
 local_max_radius=Ceil(2.*radius)>2.
 max_image=max_filter(source_image,2.*local_max_radius+1.,/circle)
 source_candidate_i=where((source_image EQ max_image) AND (component_intensity GT source_intensity_threshold),n_candidates)
@@ -36,7 +41,6 @@ source_candidate_i=Reverse(source_candidate_i[Sort(source_image[source_candidate
 ;determine the extent of pixels that are associated with each source candidate
 influence_map=fltarr(dimension,elements)
 candidate_map=lonarr(dimension,elements)-1
-gain_min=Min(gain_array[where(gain_array GT 0)])
 xvals=meshgrid(dimension,elements,1)
 yvals=meshgrid(dimension,elements,2)
 candidate_vals=source_image[source_candidate_i]
@@ -48,13 +52,13 @@ t4=0.
 t5=0.
 influence_inds=Region_grow(component_intensity,source_candidate_i,threshold=[gain_min,1.])
 ind_map=lindgen(dimension,elements)
-zoom_x=Minmax(influence_inds mod dimension)
-zoom_y=Minmax(Floor(influence_inds/dimension))
+zoom_x=Minmax(Floor(influence_inds) mod dimension)+[-2,2]
+zoom_y=Minmax(Floor(influence_inds/dimension))+[-2,2]
 ind_map=ind_map[zoom_x[0]:zoom_x[1],zoom_y[0]:zoom_y[1]]
 intensity_zoom=component_intensity[zoom_x[0]:zoom_x[1],zoom_y[0]:zoom_y[1]]
 source_candidate_x=source_candidate_i mod dimension & source_candidate_x-=zoom_x[0] 
 source_candidate_y=Floor(source_candidate_i/dimension) & source_candidate_y-=zoom_y[0]
-zoom_dim=zoom_x[1]-zoom_x[0]+1
+zoom_dim=Long(zoom_x[1]-zoom_x[0]+1)
 source_candidate_i2=source_candidate_x+source_candidate_y*zoom_dim
 c_i0=0L
 FOR c_i=0L,n_candidates-1 DO BEGIN
@@ -144,7 +148,7 @@ FOR gi=0L,ng-1 DO BEGIN
         single_source_image=source_image_generate(comp_arr1,pol_i=4,dimension=sub_dim,elements=sub_elem,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)
         gauss_img=gauss2Dfit_errchk(single_source_image,gauss_params,/tilt,status=fit_error)
         IF fit_error GT 0 THEN BEGIN
-            gcntrd,single_source_image,cx_arr[gi_in]-x_offset,cy_arr[gi_in]-y_offset,xcen_sub,ycen_sub,gauss_width,/keepcenter,/silent
+            gcntrd,single_source_image,cx_arr[gi_in]-x_offset,cy_arr[gi_in]-y_offset,xcen_sub,ycen_sub,gauss_width,/silent
             IF Abs(xcen_sub-gauss_params[4])>Abs(ycen_sub-gauss_params[5]) LT 0.1 THEN BEGIN
                 x_ext=(gauss_params[2]*2.*Sqrt(2.*Alog(2.))/gauss_width)>1.
                 y_ext=(gauss_params[3]*2.*Sqrt(2.*Alog(2.))/gauss_width)>1.
