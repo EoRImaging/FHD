@@ -117,30 +117,28 @@ t0+=t1a-t0a
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
 IF Keyword_Set(model_recalculate) THEN BEGIN
     IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
-    IF Min(Ptr_valid(map_fn_arr)) EQ 0 THEN BEGIN
-        IF Keyword_Set(transfer_mapfn) THEN file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) $
-            ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
-        IF Min(file_test(file_path_mapfn+pol_names[0:n_pol-1]+'.sav')) EQ 0 THEN BEGIN
-            print,'No mapping function supplied, and .sav files not found! Model not recalculated'
-            print,file_path_mapfn+pol_names[0]+'.sav'
-            model_recalculate=0
-        ENDIF ELSE BEGIN
-            map_fn_arr=Ptrarr(n_pol,/allocate) ;NOTE: this approach appears to use the least memory overhead
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
-                restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-                *map_fn_arr[pol_i]=Temporary(map_fn)
-;                map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn',/pointer,verbose=~silent)
-            ENDFOR
-        ENDELSE
-    ENDIF
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        IF Ptr_valid(map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+            fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
+                transfer=transfer_mapfn,/no_save,path_use=path_use,obs=obs,_Extra=extra
+            IF file_test(path_use+'.sav') EQ 0 THEN BEGIN
+                print,'No mapping function supplied, and .sav files not found! Model not recalculated'
+                print,path_use+'.sav'
+                model_recalculate=0
+                pol_i=n_pol ;skip any remaining polarizations if even one is missing
+                CONTINUE
+            ENDIF
+            RESTORE,path_use+'.sav' ;map_fn
+            map_fn_arr[pol_i]=Ptr_new(map_fn,/no_copy)
+        ENDIF
+    ENDFOR
 ENDIF
 
 IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
     uv_mask=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
-    model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
+    model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR

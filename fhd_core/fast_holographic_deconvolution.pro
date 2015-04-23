@@ -206,8 +206,22 @@ beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
 
 image_filtered=dirty_image_composite
 IF Keyword_Set(filter_background) THEN BEGIN
-    image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-    image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+    IF smooth_width GT 11 AND (dimension/smooth_width EQ Floor(dimension/smooth_width)) THEN BEGIN
+        image_rebin=Rebin(image_filtered*source_mask,dimension/smooth_width,elements/smooth_width)
+        mask_rebin=Rebin(source_mask,dimension/smooth_width,elements/smooth_width)
+        mask_i_use=where(mask_rebin)
+        filter_i=where(Abs(image_rebin[mask_i_use]-Mean(image_rebin[mask_i_use])) GT 5.*Stddev(image_rebin[mask_i_use]),n_filter)
+
+        IF n_filter GT 0 THEN BEGIN
+            image_rebin2=Median(image_rebin,4,/even)
+            image_rebin[mask_i_use[filter_i]]=image_rebin2[mask_i_use[filter_i]]
+        ENDIF
+        image_smooth=Rebin(image_rebin,dimension_fit,elements_fit)
+        image_filtered=(image_filtered-image_smooth)*source_mask
+    ENDIF ELSE BEGIN
+        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
+        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
+    ENDELSE
 ENDIF
 source_find_image=image_filtered*beam_avg*beam_mask*source_taper
 converge_check[0]=Stddev(source_find_image[where(beam_mask)],/nan)
@@ -434,6 +448,17 @@ converge_check=converge_check[0:i2]
 ;condense clean components
 fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
 noise_map=fhd_params.convergence*beam_corr_avg
+IF over_resolution GT 1 THEN BEGIN
+    noise_map=Rebin(noise_map,dimension,elements)
+;    dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
+;    ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
+;    beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,no_condense_sources=no_condense_sources,$
+;    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *beam_base[pol_i]=Rebin(*beam_base[pol_i]
+        *beam_correction[pol_i]=Rebin(*beam_correction[pol_i]
+    ENDFOR
+ENDIF
 ;noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si]

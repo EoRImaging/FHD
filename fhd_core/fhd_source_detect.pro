@@ -118,15 +118,11 @@ WHILE n_sources EQ 0 DO BEGIN
     
     ;IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     
-    IF max_add_sources EQ 0 THEN BEGIN
-        source_list=source_comp_init(n_sources=0,frequency=frequency,alpha=alpha_use)
-        n_sources=0
-        RETURN,source_list
-    ENDIF
-    
-    IF n_sources GT max_add_sources THEN BEGIN
-        additional_i=additional_i[0:max_add_sources-1]
-        n_sources=max_add_sources
+    IF max_add_sources GT 0 THEN BEGIN
+        IF n_sources GT max_add_sources THEN BEGIN
+            additional_i=additional_i[0:max_add_sources-1]
+            n_sources=max_add_sources
+        ENDIF
     ENDIF
     n_mask=0
     comp_arr=source_comp_init(n_sources=n_sources,frequency=frequency,alpha=alpha_use)
