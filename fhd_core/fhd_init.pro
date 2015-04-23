@@ -15,14 +15,14 @@ IF N_Elements(obs) EQ 0 THEN BEGIN
     dimension=1024. 
     n_pol=4
     beam_width=1.
-    IF N_Elements(dft_deconvolution_threshold) EQ 0 THEN dft_deconvolution_threshold=1./(!Pi*dimension) ;explicitly set to 0 to use analytic DFT. ;1/2 value of kernel_test along either axis at the edge of the image. 
+    IF N_Elements(dft_deconvolution_threshold) EQ 0 THEN dft_deconvolution_threshold=1./((2.*!Pi)^2.*dimension) ;explicitly set to 0 to use analytic DFT. ;1/2 value of kernel_test along either axis at the edge of the image. 
 ENDIF ELSE BEGIN
     IF N_Elements(dft_deconvolution_threshold) EQ 0 THEN dft_deconvolution_threshold=obs.dft_threshold
     dimension=obs.dimension
     n_pol=obs.n_pol
     beam_width=beam_width_calculate(obs,/fwhm)/2.
 ENDELSE
-IF dft_deconvolution_threshold EQ 1 THEN dft_deconvolution_threshold=1./(!Pi*dimension) ELSE dft_deconvolution_threshold=Float(dft_deconvolution_threshold)
+IF dft_deconvolution_threshold EQ 1 THEN dft_deconvolution_threshold=1./((2.*!Pi)^2.*dimension) ELSE dft_deconvolution_threshold=Float(dft_deconvolution_threshold)
 
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF N_Elements(pol_use) EQ 0 THEN pol_use=indgen(n_pol)
@@ -49,7 +49,7 @@ IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
 IF N_Elements(joint_deconvolution_list) LE 1 THEN decon_mode='Single snapshot' ELSE decon_mode='HEALPix integrated'
 IF N_Elements(joint_deconvolution_list) EQ 0 THEN joint_obs=file_basename(file_path_fhd) ELSE joint_obs=file_basename(joint_deconvolution_list)
 IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_uniform'
-IF N_Elements(deconvolution_over_resolution) EQ 0 THEN over_resolution=1 ELSE over_resolution=deconvolution_over_resolution
+IF N_Elements(deconvolution_over_resolution) EQ 0 THEN over_resolution=2 ELSE over_resolution=deconvolution_over_resolution
 IF N_Elements(subtract_sidelobe_catalog) EQ 0 THEN sidelobe_subtract='' ELSE BEGIN
     IF size(restrict_hpx_inds,/type) EQ 7 THEN sidelobe_subtract=subtract_sidelobe_catalog ELSE BEGIN
         IF Keyword_Set(subtract_sidelobe_catalog) THEN IF N_Elements(cal) GT 0 THEN sidelobe_subtract=cal.catalog_name ELSE BEGIN
