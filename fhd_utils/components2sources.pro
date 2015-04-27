@@ -32,7 +32,7 @@ CASE N_Elements(gain_array) OF
 ENDCASE
 component_intensity=1.-(1.-gain_array)^component_intensity
 
-source_intensity_threshold=(2.*gain_min)<0.5
+source_intensity_threshold=gain_min<0.5
 local_max_radius=Ceil(2.*radius)>2.
 max_image=max_filter(source_image,2.*local_max_radius+1.,/circle)
 source_candidate_i=where((source_image EQ max_image) AND (component_intensity GT source_intensity_threshold),n_candidates)
@@ -64,6 +64,7 @@ c_i0=0L
 FOR c_i=0L,n_candidates-1 DO BEGIN
     t0a=Systime(1)
     influence_i=Region_grow(intensity_zoom,source_candidate_i2[c_i],threshold=[gain_min,1.])
+    IF min(influence_i) EQ -1 THEN CONTINUE
     influence_i=ind_map[influence_i]
     t1a=Systime(1)
     t0+=t1a-t0a
@@ -198,7 +199,9 @@ FOR gi=0L,ng-1 DO BEGIN
         cen_sub_i=xcen_sub2+ycen_sub2*sub_dim2
         sub_i_use=Region_grow(sub_image,cen_sub_i,/all_neighbors,threshold=[0,1])
         sub_use_test=intarr(n_sub)
-        FOR si_i=0L,N_Elements(sub_i_use)-1 DO BEGIN
+        n_sub_test=N_Elements(sub_i_use)
+        IF Max(sub_i_use) EQ -1 THEN n_sub_test=0
+        FOR si_i=0L,n_sub_test-1 DO BEGIN
             sub_i_i=sub_i_use[si_i]
             IF sub_i_i GE N_Elements(sub_hist) THEN CONTINUE
             IF sub_hist[sub_i_i] GT 0 THEN sub_use_test[ri_sub[ri_sub[sub_i_i]:ri_sub[sub_i_i+1]-1]]=1

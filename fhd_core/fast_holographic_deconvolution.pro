@@ -61,7 +61,7 @@ dimension=obs.dimension
 elements=obs.elements
 dimension_fit=obs_fit.dimension
 elements_fit=obs_fit.elements
-degpix=obs_fit.degpix
+degpix=obs.degpix
 astr=obs.astr
 beam_width=beam_width_calculate(obs_fit,min_restored_beam_width=1.,/FWHM)
 ;beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
@@ -77,7 +77,9 @@ yvals_fit=meshgrid(dimension_fit,elements_fit,2)-elements_fit/2
 ;IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last,/silent)
 nfreq_beam=psf.n_freq
 beam_base=Ptrarr(n_pol,/allocate)
+beam_base_fit=Ptrarr(n_pol,/allocate)
 beam_correction=Ptrarr(n_pol,/allocate)
+beam_correction_fit=Ptrarr(n_pol,/allocate)
 beam_i=Ptrarr(n_pol,/allocate)
 beam_mask=fltarr(dimension_fit,elements_fit)+1.; 
 source_mask=fltarr(dimension_fit,elements_fit)+1.
@@ -88,21 +90,22 @@ alias_mask[dimension_fit/4:3.*dimension_fit/4.,elements_fit/4:3.*elements_fit/4.
 nbeam_avg=0
 FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     *beam_base[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,dimension=dimension,/square))
-    IF over_resolution GT 1 THEN *beam_base[pol_i]=Rebin(*beam_base[pol_i],dimension_fit,elements_fit)
+    IF over_resolution GT 1 THEN *beam_base_fit[pol_i]=Rebin(*beam_base[pol_i],dimension_fit,elements_fit) ELSE *beam_base_fit[pol_i]=*beam_base[pol_i]
 ;    *beam_base[pol_i]=beam_image(psf,obs,pol_i=pol_i,dimension=dimension,/square)
     beam_mask0=fltarr(dimension_fit,elements_fit)
     
-    beam_mask_test=*beam_base[pol_i]
+    beam_mask_test=*beam_base_fit[pol_i]
 ;    *beam_i[pol_i]=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(beam_mask_test)])
     *beam_i[pol_i]=where(beam_mask_test GE beam_threshold)
     beam_mask0[*beam_i[pol_i]]=1.
     IF pol_i LE 1 THEN BEGIN
         nbeam_avg+=1
         beam_mask*=beam_mask0
-        beam_avg+=(*beam_base[pol_i])^2.
+        beam_avg+=(*beam_base_fit[pol_i])^2.
     ENDIF
     
     *beam_correction[pol_i]=weight_invert(*beam_base[pol_i],beam_max_threshold)
+    IF over_resolution GT 1 THEN *beam_correction_fit[pol_i]=Rebin(*beam_correction[pol_i],dimension_fit,elements_fit) ELSE *beam_correction_fit[pol_i]=*beam_correction[pol_i]
 ENDFOR
 beam_mask*=alias_mask
 beam_avg/=nbeam_avg
@@ -141,12 +144,12 @@ ENDFOR
 
 filter_arr=Ptrarr(n_pol,/allocate)
 gain_normalization = get_image_renormalization(obs,psf=psf,params=params,weights_arr=weights_arr,$
-    beam_base=beam_base,filter_arr=filter_arr,image_filter_fn=decon_filter,pad_uv=over_resolution,degpix=degpix,/antialias)
+    beam_base=beam_base,filter_arr=filter_arr,image_filter_fn=decon_filter,degpix=degpix,file_path_fhd=file_path_fhd,/antialias)
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
 ;    filter_single=filter_arr[pol_i]
     *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs_fit,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],pad_uv=over_resolution,/antialias,norm=gain_normalization);*(*beam_correction[pol_i])
+        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],pad_uv=over_resolution,/antialias,norm=gain_normalization);*(*beam_correction_fit[pol_i])
 ;    filter_arr[pol_i]=filter_single
 ENDFOR
 
@@ -155,7 +158,7 @@ ENDFOR
 gain_array=replicate(gain_use,dimension_fit,elements_fit)
 
 jones_fit=fhd_struct_init_jones(obs_fit,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
-dirty_stokes_arr=stokes_cnv(dirty_array,jones_fit,beam_arr=beam_base,/square,_Extra=extra)
+dirty_stokes_arr=stokes_cnv(dirty_array,jones_fit,beam_arr=beam_base_fit,/square,_Extra=extra)
 dirty_image_composite=*dirty_stokes_arr[0]
 IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]
 IF n_pol GT 2 THEN BEGIN
@@ -274,10 +277,10 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
 ;    model_image_composite=fltarr(dimension_fit,elements_fit)
     FOR pol_i=0,(n_pol<2)-1 DO BEGIN 
         *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],pad_uv=over_resolution,/antialias,norm=gain_normalization)
-;        model_image=(model_image_holo)*(*beam_correction[pol_i])^2.
+;        model_image=(model_image_holo)*(*beam_correction_fit[pol_i])^2.
 ;        model_image_composite+=model_image
     ENDFOR
-    model_stokes_arr=stokes_cnv(model_holo_arr,jones_fit,beam_arr=beam_base,/square,_Extra=extra)
+    model_stokes_arr=stokes_cnv(model_holo_arr,jones_fit,beam_arr=beam_base_fit,/square,_Extra=extra)
     model_image_composite=*model_stokes_arr[0]
     
     image_filtered=dirty_image_composite-model_image_composite
@@ -300,7 +303,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
         t1_0=Systime(1)
         FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],pad_uv=over_resolution,/antialias,norm=gain_normalization)
         undefine_fhd,model_stokes_arr
-        model_stokes_arr=stokes_cnv(model_holo_arr,jones_fit,beam_arr=beam_base,/square,_Extra=extra)
+        model_stokes_arr=stokes_cnv(model_holo_arr,jones_fit,beam_arr=beam_base_fit,/square,_Extra=extra)
         model_image_composite=*model_stokes_arr[0]
         IF n_pol GT 1 THEN model_image_composite_Q=*model_stokes_arr[1]
         IF n_pol GT 2 THEN model_image_composite_U=*model_stokes_arr[2]
@@ -448,17 +451,8 @@ converge_check=converge_check[0:i2]
 ;condense clean components
 fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
 noise_map=fhd_params.convergence*beam_corr_avg
-IF over_resolution GT 1 THEN BEGIN
-    noise_map=Rebin(noise_map,dimension,elements)
-;    dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
-;    ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
-;    beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,no_condense_sources=no_condense_sources,$
-;    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *beam_base[pol_i]=Rebin(*beam_base[pol_i]
-        *beam_correction[pol_i]=Rebin(*beam_correction[pol_i]
-    ENDFOR
-ENDIF
+IF over_resolution GT 1 THEN noise_map=Rebin(noise_map,dimension,elements)
+
 ;noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
 comp_arr=comp_arr[0:si]
@@ -491,6 +485,7 @@ FOR pol_i=0,n_pol-1 DO *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol
 
 t1_0=Systime(1)
 t4+=t1_0-t4_0    
+undefine_fhd,beam_correction_fit,beam_base_fit
 FOR pol_i=0,n_pol-1 DO *residual_array[pol_i]=$
     dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)*(*beam_correction[pol_i])
 t1+=Systime(1)-t1_0
