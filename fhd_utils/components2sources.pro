@@ -162,6 +162,12 @@ FOR gi=0L,ng-1 DO BEGIN
             y_ext=(gauss_params[3]*2.*Sqrt(2.*Alog(2.))/gauss_width)>1.
             ext_factor=Sqrt(x_ext*y_ext)
         ENDELSE
+        IF xcen_sub LE 0 OR xcen_sub GE sub_dim-1 OR ycen_sub LE 0 OR ycen_sub GE sub_elem THEN BEGIN
+            maxval=Max(comp_arr[si_g].flux.I,max_i)
+            xcen_sub=sub_x[max_i]
+            ycen_sub=sub_y[max_i]
+            ext_factor=-99.
+        ENDIF   
         
         test_xcen_in[gi]=cx_arr[gi_in]-x_offset
         test_ycen_in[gi]=cy_arr[gi_in]-y_offset

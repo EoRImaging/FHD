@@ -138,7 +138,9 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
     uv_mask=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
-    model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
+    IF Keyword_Set(no_condense_sources) THEN $
+        model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0) $
+        ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
