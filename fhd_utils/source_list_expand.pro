@@ -13,6 +13,12 @@ IF n_ext GT 0 THEN BEGIN
 ENDIF ELSE source_arr_out=source_arr
 
 Ptr_free,source_arr_out.extend
+cut_i=where(source_arr_out.flux.I EQ 0,n_cut,complement=i_use)
+IF n_cut GT 0 THEN BEGIN
+    source_cut=source_arr_out[cut_i]
+    undefine_fhd,source_cut
+    source_arr_out=source_arr_out[i_use]
+ENDIF
 
 RETURN,source_arr_out
 END
