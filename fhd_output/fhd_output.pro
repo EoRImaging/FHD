@@ -95,6 +95,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     beam_avg+=*beam_base_out[pol_i]
     beam_mask*=beam_mask0
 ENDFOR
+psf=0
+heap_gc
+beam_avg/=(n_pol<2)
+beam_i=where(beam_mask)
 
 IF Keyword_Set(model_recalculate) THEN BEGIN
     IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
@@ -123,8 +127,8 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     beam_width=beam_width_calculate(obs,/fwhm)
     comp_arr=comp_arr[0:fhd_params.n_components-1]
     source_array=Components2Sources(comp_arr,obs,detection_threshold=fhd_params.detection_threshold,$
-        radius=beam_width,gain_array=replicate(fhd_params.GAIN_FACTOR,dimension,elements),noise_map=noise_map,$
-        reject_sigma_threshold=1.,clean_bias_threshold=fhd_params.GAIN_FACTOR,/reject_outlier_components)
+        radius=beam_width,gain_array=fhd_params.GAIN_FACTOR,noise_map=noise_map,$
+        reject_sigma_threshold=1.,clean_bias_threshold=fhd_params.GAIN_FACTOR)
     IF Keyword_Set(no_condense_sources) THEN $
         model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0) $
         ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
@@ -176,11 +180,6 @@ sxaddpar,fits_header_uv,'CRVAL2',0.,'Wavelengths (v)'
 sxaddpar,fits_header_uv,'MJD-OBS',astr_out.MJDOBS,'Modified Julian day of observation'
 sxaddpar,fits_header_uv,'DATE-OBS',astr_out.DATEOBS,'Date of observation'
 
-
-psf=0
-heap_gc
-beam_avg/=(n_pol<2)
-beam_i=where(beam_mask)
 jones_out=fhd_struct_init_jones(obs_out,0,jones,file_path_fhd=file_path_fhd,/update,/no_save,mask=beam_mask)
 
 t3a=Systime(1)
