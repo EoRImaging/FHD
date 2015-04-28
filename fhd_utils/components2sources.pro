@@ -205,12 +205,14 @@ FOR gi=0L,ng-1 DO BEGIN
     source_arr[gi].id=gi
     comp_arr[si_g].id=gi
     IF Keyword_Set(noise_map) THEN BEGIN
-        nm0=noise_map[source_arr[gi].x,source_arr[gi].y] ;need some sort of error checking here first!!!
+        IF N_Elements(noise_map) EQ 1 THEN nm0=noise_map ELSE nm0=noise_map[source_arr[gi].x,source_arr[gi].y] ;need some sort of error checking here first!!!
         IF nm0 GT 0 THEN source_arr[gi].ston=Total(flux_I)/nm0 ELSE source_arr[gi].ston=0.
     ENDIF ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
     source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)    
-    IF Tag_exist(comp_arr,'flag') THEN source_arr[gi].flag=Max(comp_arr[si_g].flag)
+    IF N_Elements(gain_array) EQ 1 THEN gain_factor=gain_array ELSE gain_factor=gain_array[Floor(sx),Floor(sy)]
+    IF (1.-(1.-gain_factor)^N_Elements(si_g)) LT 0.5 THEN flag_min=1 ELSE flag_min=0 
+    IF Tag_exist(comp_arr,'flag') THEN source_arr[gi].flag=Max(comp_arr[si_g].flag)>flag_min
     
     extend_test=Mean(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.))
     IF extend_test GE extend_threshold THEN BEGIN
