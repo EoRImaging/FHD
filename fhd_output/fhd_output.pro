@@ -95,8 +95,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     beam_avg+=*beam_base_out[pol_i]
     beam_mask*=beam_mask0
 ENDFOR
-psf=0
-heap_gc
 beam_avg/=(n_pol<2)
 beam_i=where(beam_mask)
 
@@ -136,6 +134,7 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
 ENDIF
+heap_gc
 
 si_use=where(source_array.ston GE 0,ns_use)
 source_arr=source_array[si_use]

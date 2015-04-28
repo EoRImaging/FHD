@@ -173,7 +173,8 @@ ungroup_i=where(group_id LT 0,n_ungroup)
 IF ~Keyword_Set(reject_outlier_components) AND (n_ungroup GT 0) THEN BEGIN
     g0=Max(group_id)+1
     group_id_sub=group_source_components(obs,comp_arr[ungroup_i],radius=radius,gain_array=gain_array)
-    group_id[ungroup_i]=group_id_sub+g0
+    group_id_sub_i=where(group_id_sub GE 0,n_sub_use)
+    IF n_sub_use GT 0 THEN group_id[ungroup_i[group_id_sub_i]]=group_id_sub[group_id_sub_i]+g0
 ENDIF
 
 hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
@@ -222,7 +223,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     ns=N_Elements(source_arr)
     comp_gi=comp_arr_use.id
     hcomp_gi=histogram(comp_gi,min=0,/bin,reverse_ind=c_ri)
-    gain_factor=gain_array[source_arr.x,source_arr.y]
+    IF N_Elements(gain_array) EQ 1 THEN gain_factor=gain_array ELSE gain_factor=gain_array[source_arr.x,source_arr.y]
     gain_factor_arr=comp_arr_use.gain
     id_use=where(hcomp_gi,n_id_use)
     flux_frac_arr=Fltarr(ns)+1.
@@ -262,6 +263,6 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     comp_arr=comp_arr_use
 ENDIF
 
-
+print,String(format='(A," sources detected with maximum signal-to-noise of ",A)',Strn(N_Elements(source_arr)),Strn(max(source_arr.ston)))
 RETURN,source_arr
 END
