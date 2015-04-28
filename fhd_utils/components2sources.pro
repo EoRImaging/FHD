@@ -4,6 +4,7 @@ FUNCTION Components2Sources,comp_arr,obs,detection_threshold=detection_threshold
 compile_opt idl2,strictarrsubs  
 
 IF N_Elements(radius) EQ 0 THEN radius=1.
+IF N_Elements(reject_outlier_components) EQ 0 THEN reject_outlier_components=1
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
@@ -34,7 +35,7 @@ component_intensity=1.-(1.-gain_array)^component_intensity
 
 source_intensity_threshold=gain_min<0.5
 local_max_radius=Ceil(2.*radius)>2.
-max_image=max_filter(source_image,2.*local_max_radius+1.,/circle)
+max_image=max_filter(source_image,local_max_radius+1.,/circle)
 source_candidate_i=where((source_image EQ max_image) AND (component_intensity GT source_intensity_threshold),n_candidates)
 source_candidate_i=Reverse(source_candidate_i[Sort(source_image[source_candidate_i])]) ;order from brightest to faintest
 
