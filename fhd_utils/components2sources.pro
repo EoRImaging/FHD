@@ -170,11 +170,17 @@ hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
 group_inds=where(hgroup GT 1,ng)
 
 ungroup_i=where(group_id LT 0,n_ungroup)
-IF ~Keyword_Set(reject_outlier_components) AND (n_ungroup GT 0) THEN BEGIN
-    g0=Max(group_id)+1
-    group_id_sub=group_source_components(obs,comp_arr[ungroup_i],radius=radius,gain_array=gain_array)
-    group_id_sub_i=where(group_id_sub GE 0,n_sub_use)
-    IF n_sub_use GT 0 THEN group_id[ungroup_i[group_id_sub_i]]=group_id_sub[group_id_sub_i]+g0
+IF n_ungroup GT 0 THEN BEGIN
+    IF Tag_exist(comp_arr,'flag') THEN comp_arr[ungroup_i].flag=1
+    IF ~Keyword_Set(reject_outlier_components)THEN BEGIN
+        g0=Max(group_id)+1
+        group_id_sub=group_source_components(obs,comp_arr[ungroup_i],radius=radius,gain_array=gain_array)
+        group_id_sub_i=where(group_id_sub GE 0,n_sub_use)
+        IF n_sub_use GT 0 THEN BEGIN
+            group_id[ungroup_i[group_id_sub_i]]=group_id_sub[group_id_sub_i]+g0
+            IF Tag_exist(comp_arr,'flag') THEN comp_arr[ungroup_i[group_id_sub_i]].flag=2
+        ENDIF
+    ENDIF
 ENDIF
 
 hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
@@ -204,6 +210,7 @@ FOR gi=0L,ng-1 DO BEGIN
     ENDIF ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
     source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)    
+    IF Tag_exist(comp_arr,'flag') THEN source_arr[gi].flag=Max(comp_arr[si_g].flag)
     
     extend_test=Mean(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.))
     IF extend_test GE extend_threshold THEN BEGIN

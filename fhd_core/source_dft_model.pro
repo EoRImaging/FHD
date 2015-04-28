@@ -1,4 +1,4 @@
-FUNCTION source_dft_model,obs,jones,source_list,t_model=t_model,sigma_threshold=sigma_threshold,$
+FUNCTION source_dft_model,obs,jones,source_list,t_model=t_model,sigma_threshold=sigma_threshold,exclude_flagged_sources=exclude_flagged_sources,$
     no_extend=no_extend,unpolarized=unpolarized,uv_mask=uv_mask,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 t_model0=Systime(1)
 n_pol=obs.n_pol
@@ -16,7 +16,10 @@ IF Keyword_Set(sigma_threshold) THEN BEGIN
     ston_use=where(src_arr.ston GE sigma_threshold,n_use)
     IF n_use GT 0 THEN src_arr=src_arr[ston_use]
 ENDIF
-
+IF Keyword_Set(exclude_flagged_sources) THEN BEGIN
+    IF Tag_Exist(src_arr,'flag') THEN src_i=where(src_arr.flag EQ 0,n_src_use) 
+    IF Keyword_Set(n_src_use) THEN src_arr=src_arr[src_i]
+ENDIF 
 src_arr_use=source_list_expand(src_arr,no_extend=no_extend)
 IF Keyword_Set(unpolarized) THEN BEGIN
     src_arr_use.flux.Q=0.
