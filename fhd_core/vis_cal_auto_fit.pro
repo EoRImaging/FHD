@@ -1,5 +1,6 @@
 FUNCTION vis_cal_auto_fit,obs,cal,vis_arr=vis_arr,vis_model_arr=vis_model_arr
 
+print,"FITTING CALIBRATION SOLUTIONS USING AUTOCORRELATIONS!"
 dimension=obs.dimension
 elements=obs.elements
 n_pol=cal.n_pol ;do not use the cross-polarizations if they are present!
@@ -14,7 +15,6 @@ auto_corr_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,a
 n_tile_use=N_Elements(auto_tile_i)
 
 freq_i_use=where((*obs.baseline_info).freq_use)
-
 
 auto_gain=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
