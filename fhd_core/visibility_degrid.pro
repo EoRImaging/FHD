@@ -71,10 +71,10 @@ range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
-IF n_dist_flag GT 0 THEN BEGIN
-    xmin[flag_dist_i]=-1
-    ymin[flag_dist_i]=-1
-ENDIF
+;IF n_dist_flag GT 0 THEN BEGIN
+;    xmin[flag_dist_i]=-1
+;    ymin[flag_dist_i]=-1
+;ENDIF
 
 IF flag_switch THEN BEGIN
     flag_i=where(*flag_ptr LE 0,n_flag)

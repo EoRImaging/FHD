@@ -87,12 +87,13 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     RETURN,vis_cal
 ENDIF
 
-vis_model_arr=vis_source_model(cal.source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,$
+IF Keyword_Set(calibration_auto_initialize) THEN fill_model_vis=1
+vis_model_arr=vis_source_model(cal.source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
     timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)    
 t1=Systime(1)-t0_0
 
-IF Keyword_Set(calibration_auto_initialize) THEN initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,$
-    model_uv_arr=model_uv_arr,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
+IF Keyword_Set(calibration_auto_initialize) THEN $
+    initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr,_Extra=extra)
 
 ;IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
 CASE size(initial_calibration,/type) OF
