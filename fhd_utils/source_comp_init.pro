@@ -7,7 +7,7 @@ IF N_Elements(n_sources) EQ 0 THEN $
 flux_struct={flux,xx:0.,yy:0.,xy:0.,yx:0.,I:0.,Q:0.,U:0.,V:0.}
 ;flux order is 0-3: xx, yy, xy, yx in apparent brightness; 4-7: I, Q, U, V in sky brightness
 ;flag type codes are 0: no flag, 1: low confidence 2: sidelobe contamination
-struct_base={source_component,id:-1L,x:0.,y:0.,ra:0.,dec:0.,ston:0.,freq:100.,alpha:0.,gain:1.,flag:0,extend:Ptr_new(),flux:flux_struct}
+struct_base={id:-1L,x:0.,y:0.,ra:0.,dec:0.,ston:0.,freq:100.,alpha:0.,gain:1.,flag:0,extend:Ptr_new(),flux:flux_struct}
 source_comp_new=Replicate(struct_base,n_sources>1)
 
 IF Keyword_Set(xvals) THEN source_comp_new.x=xvals
