@@ -1,6 +1,6 @@
 PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,var_name=var_name,$
     text=text,restore=restore,obs=obs,reset=reset,force_set=force_set,no_save=no_save,path_use=path_use,$
-    transfer_filename=transfer_filename,sub_var_name=sub_var_name
+    transfer_filename=transfer_filename,sub_var_name=sub_var_name, compatibility_mode = compatibility_mode
 
 IF ~Keyword_Set(file_path_fhd) THEN BEGIN
     file_path_fhd=''
@@ -30,7 +30,7 @@ IF Keyword_Set(restore) THEN no_save=1
 IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,source_array:0,flag_arr:0,auto_corr:0,$
     vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),vis_count:0,$
     map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4),complete:0}
-IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str')
+IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str', compatibility_mode = compatibility_mode)
 status_use=status_str
 IF Keyword_Set(text) THEN BEGIN
     dir_use=file_dirname(status_path)
@@ -90,7 +90,7 @@ IF ~Keyword_Set(name_error) THEN BEGIN
 
     IF Keyword_Set(restore) THEN BEGIN
         IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name 
-        IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use)
+        IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use, compatibility_mode = compatibility_mode)
         RETURN
     ENDIF
     
