@@ -125,8 +125,8 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     comp_arr=comp_arr[0:fhd_params.n_components-1]
     source_array=Components2Sources(comp_arr,obs,fhd_params,noise_map=noise_map,_Extra=extra)
     IF Keyword_Set(no_condense_sources) THEN $
-        model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0) $
-        ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
+        model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0,_extra=extra) $
+        ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut,_extra=extra)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
     ENDFOR
