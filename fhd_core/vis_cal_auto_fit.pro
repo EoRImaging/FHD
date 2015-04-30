@@ -1,4 +1,4 @@
-FUNCTION vis_cal_auto_fit,obs,cal,vis_arr=vis_arr,vis_model_arr=vis_model_arr
+FUNCTION vis_cal_auto_fit,obs,cal,vis_auto=vis_auto,vis_model_auto=vis_model_auto,auto_tile_i=auto_tile_i
 
 print,"FITTING CALIBRATION SOLUTIONS USING AUTOCORRELATIONS!"
 dimension=obs.dimension
@@ -10,8 +10,6 @@ i_comp=Complex(0,1)
 
 frequency_array=(*obs.baseline_info).freq
 freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
-auto_corr=vis_extract_autocorr(obs,vis_arr = vis_arr,/time_average,auto_tile_i=auto_tile_i)
-auto_corr_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
 n_tile_use=N_Elements(auto_tile_i)
 
 freq_i_use=where((*obs.baseline_info).freq_use)
@@ -21,7 +19,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain_arr=Complexarr(n_freq,n_tile)+1.
     FOR freq_i=0L,n_freq-1 DO BEGIN
         FOR tile_i=0,n_tile_use-1 DO BEGIN
-            gain_single=Sqrt((*auto_corr[pol_i])[freq_i,tile_i]*weight_invert((*auto_corr_model[pol_i])[freq_i,tile_i]))
+            gain_single=Sqrt((*vis_auto[pol_i])[freq_i,tile_i]*weight_invert((*vis_model_auto[pol_i])[freq_i,tile_i]))
             gain_arr[freq_i,auto_tile_i[tile_i]]=gain_single
         ENDFOR
     ENDFOR

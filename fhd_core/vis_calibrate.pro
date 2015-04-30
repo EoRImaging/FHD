@@ -187,7 +187,7 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
         ENDELSE
     ENDIF ELSE cal=cal_bandpass
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
-IF Keyword_Set(calibration_auto_fit) THEN cal=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_auto_model=vis_auto_model,auto_tile_i=auto_tile_i)
+IF Keyword_Set(calibration_auto_fit) THEN cal=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 cal_res=vis_cal_subtract(cal_base,cal)
 cal.gain_residual=cal_res.gain
