@@ -1,8 +1,9 @@
-function getvar_savefile, savefile, varname, pointer_return=pointer_return, names = names, return_size = return_size, verbose = verbose
+function getvar_savefile, savefile, varname, pointer_return=pointer_return, names = names, return_size = return_size, verbose = verbose, compatibility_mode = compatibility_mode
   if file_test(savefile) eq 0 then begin
     print, 'getvar_savefile: file ' + string(savefile) + ' not found'
     return, 0
   endif
+  IF Keyword_Set(no_relaxed_restore) THEN relaxed=0 ELSE relaxed=1
   
   savefile_obj = obj_new('idl_savefile', savefile)
   if arg_present(names) then names = savefile_obj->names()
@@ -14,7 +15,7 @@ function getvar_savefile, savefile, varname, pointer_return=pointer_return, name
       
       return, size
     endif else begin
-      savefile_obj->Restore, varname
+      IF Keyword_Set(compatibility_mode) THEN RESTORE,savefile,/relaxed ELSE savefile_obj->Restore, varname
       obj_destroy, savefile_obj
       
       IF Keyword_Set(verbose) THEN print,"Restoring "+varname+" from file: "+file_basename(savefile,'.sav',/fold_case)
