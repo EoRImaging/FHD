@@ -147,7 +147,7 @@ ENDIF
 ;calibration loop
 IF N_Elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=0
 IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) $
-    OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
+    OR Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_auto_fit) THEN preserve_visibilities=1
 IF N_Elements(calibration_flag_iterate) EQ 0 THEN calibration_flag_iterate=0
 ;    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 

@@ -14,6 +14,7 @@ auto_corr_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,a
 n_tile_use=N_Elements(auto_tile_i)
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
+freq_i_use=where((*obs.baseline_info).freq_use)
 
 ;IF Keyword_Set(n_spectral) THEN BEGIN
 ;    prefactor=Ptrarr(n_spectral)
@@ -48,6 +49,20 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDFOR
     ENDFOR
     auto_gain[pol_i]=Ptr_new(gain_arr)
+ENDFOR
+
+cal_cross=getvar_savefile('D:\MWA\DATA3\128T\testcal4\fhd_firstpass_new\calibration\1061316296_cal.sav','cal')
+gain_cross=cal_cross.gain
+fit_slope=Fltarr(n_pol,n_tile)
+fit_offset=Fltarr(n_pol,n_tile)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    FOR tile_i=0L,n_tile-1 DO BEGIN
+        gain_auto_single=Abs((*auto_gain[pol_i])[freq_i_use,tile_i])
+        gain_cross_single=Abs((*gain_cross[pol_i])[freq_i_use,tile_i])
+        fit_single=linfit(gain_auto_single,gain_cross_single,yfit=gain_fit_single)
+        fit_slope[pol_i,tile_i]=fit_single[1]
+        fit_offset[pol_i,tile_i]=fit_single[0]
+    ENDFOR
 ENDFOR
 
 cal_init=cal
