@@ -1,21 +1,30 @@
-FUNCTION Components2Sources,comp_arr,obs,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,$
+FUNCTION Components2Sources,comp_arr,obs,fhd_params,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,$
     reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array,$
-    reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold
+    reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold,_Extra=extra
 compile_opt idl2,strictarrsubs  
 
-IF N_Elements(reject_outlier_components) EQ 0 THEN reject_outlier_components=0
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
 n_pol=obs.n_pol
-IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.2
 
+;Set up defaults
+IF Keyword_Set(fhd_params) THEN BEGIN
+    IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=fhd_params.detection_threshold
+    IF N_Elements(reject_sigma_threshold) EQ 0 THEN IF Keyword_Set(noise_map) THEN reject_sigma_threshold=fhd_params.sigma_cut ELSE reject_sigma_threshold=0  
+    
+ENDIF ELSE BEGIN
+    IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=Min(comp_arr[comp_i_use].flux.I)/2.
+    IF N_Elements(reject_sigma_threshold) EQ 0 THEN IF Keyword_Set(noise_map) THEN reject_sigma_threshold=2. ELSE reject_sigma_threshold=0  
+ENDELSE
+IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.2
+IF N_Elements(reject_outlier_components) EQ 0 THEN reject_outlier_components=0
 
 gauss_sigma=beam_width_calculate(obs)
 gauss_width=beam_width_calculate(obs,/fwhm)
+IF N_Elements(radius) EQ 0 THEN radius=gauss_width
 comp_i_use=where(comp_arr.flux.I GT 0,n_comp_use)
 IF n_comp_use EQ 0 THEN RETURN,source_comp_init(n_sources=0)
-IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=Min(comp_arr[comp_i_use].flux.I)/2.
 
 group_id=group_source_components(obs,comp_arr,radius=radius,gain_array=gain_array)
 ;source_image=source_image_generate(comp_arr,obs,pol_i=4,restored_beam_width=gauss_sigma,resolution=16,threshold=1E-2)

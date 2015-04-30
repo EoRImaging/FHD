@@ -122,11 +122,8 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     uv_mask=fltarr(dimension,elements)
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
     noise_map=fhd_params.convergence*rebin(weight_invert(beam_avg),dimension,elements)
-    beam_width=beam_width_calculate(obs,/fwhm)
     comp_arr=comp_arr[0:fhd_params.n_components-1]
-    source_array=Components2Sources(comp_arr,obs,detection_threshold=fhd_params.detection_threshold,$
-        radius=beam_width,gain_array=fhd_params.GAIN_FACTOR,noise_map=noise_map,$
-        reject_sigma_threshold=2.,clean_bias_threshold=0)
+    source_array=Components2Sources(comp_arr,obs,fhd_params,noise_map=noise_map,_Extra=extra)
     IF Keyword_Set(no_condense_sources) THEN $
         model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0) $
         ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)

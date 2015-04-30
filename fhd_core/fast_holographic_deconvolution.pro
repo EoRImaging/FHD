@@ -42,7 +42,7 @@ max_add_sources=fhd_params.max_add_sources
 pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
-sigma_threshold=2.
+sigma_threshold=fhd_params.sigma_cut
 calibration_model_subtract=fhd_params.cal_subtract
 filter_background=fhd_params.filter_background
 decon_filter=fhd_params.decon_filter
@@ -466,8 +466,8 @@ fhd_params.n_components=N_Elements(comp_arr)
 fhd_params.detection_threshold=detection_threshold
 source_n_arr=source_n_arr[0:iter-1]
 detection_threshold_arr=detection_threshold_arr[0:iter-1]
-source_array=Components2Sources(comp_arr,obs,detection_threshold=detection_threshold,radius=beam_width>1.5,noise_map=noise_map,$
-    reject_sigma_threshold=sigma_threshold/2.,gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
+source_array=Components2Sources(comp_arr,obs,fhd_params,radius=beam_width>1.5,noise_map=noise_map,$
+    gain_array=gain_array,clean_bias_threshold=gain_factor) ;;Note that gain_array=gain_factor*source_taper
 fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
 fhd_params.info=Ptr_new(info_struct)
