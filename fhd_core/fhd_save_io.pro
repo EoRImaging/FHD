@@ -1,6 +1,6 @@
 PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,var_name=var_name,$
     text=text,restore=restore,obs=obs,reset=reset,force_set=force_set,no_save=no_save,path_use=path_use,$
-    transfer_filename=transfer_filename,compatibility_mode=compatibility_mode,sub_var_name=sub_var_name
+    transfer_filename=transfer_filename,sub_var_name=sub_var_name
 
 IF ~Keyword_Set(file_path_fhd) THEN BEGIN
     file_path_fhd=''
@@ -70,23 +70,23 @@ CASE var_name OF ;listed in order typically generated
 ENDCASE
 
 var_name_use=var_name
-IF Keyword_Set(compatibility_mode) THEN BEGIN
-    subdir=''
-    status_path=filepath(base_name+'_status',root=base_path,subdir='')
-    CASE var_name OF
-        'fhd_params':var_name_use='fhd'
-        'weights_uv':path_add='_uv_'+pol_names[pol_i]
-        'healpix_cube': path_add='_cube'
-        'hpx_even': path_add='_even_cube'
-        'hpx_odd': path_add='_odd_cube'
-        ELSE:
-    ENDCASE
-ENDIF 
+;IF Keyword_Set(compatibility_mode) THEN BEGIN
+;    subdir=''
+;    status_path=filepath(base_name+'_status',root=base_path,subdir='')
+;    CASE var_name OF
+;        'fhd_params':var_name_use='fhd'
+;        'weights_uv':path_add='_uv_'+pol_names[pol_i]
+;        'healpix_cube': path_add='_cube'
+;        'hpx_even': path_add='_even_cube'
+;        'hpx_odd': path_add='_odd_cube'
+;        ELSE:
+;    ENDCASE
+;ENDIF 
 IF ~Keyword_Set(name_error) THEN BEGIN
     path_use=filepath(base_name+path_add,root=base_path,subdir=subdir)
     path_sav=path_use+'.sav'
-    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_sav) THEN $
-        fhd_save_io,status_str,pol_i=pol_i,var_name=var_name,/force_set
+;    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_sav) THEN $
+;        fhd_save_io,status_str,pol_i=pol_i,var_name=var_name,/force_set
 
     IF Keyword_Set(restore) THEN BEGIN
         IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name 
