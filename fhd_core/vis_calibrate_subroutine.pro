@@ -185,11 +185,11 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       xcen=freq_arr#Abs(Temporary(kx_arr))
       ycen=freq_arr#Abs(Temporary(ky_arr))
       IF Keyword_Set(calibration_weights) THEN BEGIN
+        flag_dist_cut=where((Temporary(dist_arr) LT min_baseline) OR (Temporary(xcen) GT dimension/2.) OR (Temporary(ycen) GT elements/2.),n_dist_cut)
         IF min_cal_baseline GT min_baseline THEN taper_min=((Sqrt(2.)*min_cal_baseline-dist_arr)/min_cal_baseline)>0. ELSE taper_min=0. 
         IF max_cal_baseline LT max_baseline THEN taper_max=((dist_arr-max_cal_baseline)/min_cal_baseline)>0. ELSE taper_max=0.
         baseline_weights=(1.-(taper_min+taper_max)^2.)>0.
-      ENDIF
-      flag_dist_cut=where((Temporary(dist_arr) LT min_baseline) OR (Temporary(xcen) GT dimension/2.) OR (Temporary(ycen) GT elements/2.),n_dist_cut)
+      ENDIF ELSE flag_dist_cut=where((Temporary(dist_arr) LT min_cal_baseline) OR (Temporary(xcen) GT dimension/2.) OR (Temporary(ycen) GT elements/2.),n_dist_cut)
     ENDELSE
     kx_arr=(ky_arr=(dist_arr=0))
     

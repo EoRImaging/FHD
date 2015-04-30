@@ -49,7 +49,7 @@ undefine_fhd,branch,di,match_i,n_match,hash_match,dir_list,test_dir
 
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version_use,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('master_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 firstpass=1
 
@@ -107,6 +107,7 @@ dipole_mutual_coupling_factor=1
 calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
 log_store=1 ;store output log to a file 
+time_cut=[-2,2]
 
 ;defaults not set in firstpass:
 mark_zenith=1

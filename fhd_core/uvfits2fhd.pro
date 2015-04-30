@@ -181,22 +181,15 @@ IF data_flag LE 0 THEN BEGIN
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
     undefine_fhd,antenna
+    auto_corr=vis_extract_autocorr(obs,status_str,vis_arr=vis_arr,file_path_fhd=file_path_fhd,_Extra=extra)
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
         error=1
         IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
         RETURN
-    ENDIF
-    
-    autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
-    auto_corr=Ptrarr(n_pol)
-    IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
-        auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
-        auto_corr[pol_i]=Ptr_new(auto_vals)
-    ENDFOR
-    fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd,obs=obs,_Extra=extra
-    
+    ENDIF    
+
     IF Keyword_Set(return_decon_visibilities) THEN save_visibilities=1
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)

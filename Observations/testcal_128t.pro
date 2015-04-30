@@ -11,7 +11,7 @@ ps_export=0
 version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-IF N_Elements(data_version) EQ 0 THEN data_version='4'
+IF N_Elements(data_version) EQ 0 THEN data_version='3'
 data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+data_version])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
@@ -26,9 +26,9 @@ calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=ro
 ;align=0
 combine_obs=0
 dimension=2048.
-max_sources=30000.
+max_sources=100000.
 pad_uv_image=1.
-IF dimension GT 2048 THEN pad_uv_image=1.
+IF dimension GE 2048 THEN pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 FoV=!Radeg*2.
 no_ps=1 ;don't save postscript copy of images
@@ -37,7 +37,7 @@ min_baseline=1.
 min_cal_baseline=50.
 no_fits=1
 silent=0
-smooth_width=11.
+smooth_width=32.
 nfreq_avg=4.
 ps_kbinsize=2.
 ps_kspan=600.
@@ -60,8 +60,11 @@ show_beam_contour=1
 contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
 contour_color='blue'
 
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_calibrate') THEN IF extra.diffuse_calibrate EQ 1 THEN extra=structure_update(extra,diffuse_calibrate='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_model') THEN IF extra.diffuse_model EQ 1 THEN extra=structure_update(extra,diffuse_model='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
+
 n_pol=2
-restore_vis_savefile=1
+restore_vis_savefile=(data_version EQ '3')
 firstpass=1
 max_cal_iter=100L
 beam_model=2

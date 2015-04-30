@@ -68,7 +68,72 @@ degpix=obs_out.degpix
 astr_out=obs_out.astr
 ;pix_area_cnv=pixel_area(astr_out,dimension=dimension)/degpix^2.
 
-si_use=where(source_array.ston GE fhd_params.sigma_cut,ns_use)
+t1a=Systime(1)
+t0+=t1a-t0a
+
+t2a=Systime(1)
+t1+=t2a-t1a
+
+beam_mask=fltarr(dimension,elements)+1
+IF Keyword_Set(image_mask_horizon) THEN BEGIN
+    xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr_out,ra_arr,dec_arr
+    horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
+    IF n_horizon_mask GT 0 THEN beam_mask[horizon_test]=0
+ENDIF
+
+beam_avg=fltarr(dimension,elements)
+beam_base_out=Ptrarr(n_pol,/allocate)
+beam_correction_out=Ptrarr(n_pol,/allocate)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    *beam_base_out[pol_i]=Rebin(*beam_base[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
+    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd_params.beam_threshold/10.)
+    IF pol_i GT 1 THEN CONTINUE
+    beam_mask_test=*beam_base_out[pol_i]
+    IF Keyword_Set(allow_sidelobe_image_output) THEN beam_i=where(beam_mask_test GE beam_output_threshold) ELSE $
+        beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_output_threshold,Max(beam_mask_test)])
+    beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
+    beam_avg+=*beam_base_out[pol_i]
+    beam_mask*=beam_mask0
+ENDFOR
+beam_avg/=(n_pol<2)
+beam_i=where(beam_mask)
+
+IF Keyword_Set(model_recalculate) THEN BEGIN
+    IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        IF Ptr_valid(map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+            fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
+                transfer=transfer_mapfn,/no_save,path_use=path_use,obs=obs,_Extra=extra
+            IF file_test(path_use+'.sav') EQ 0 THEN BEGIN
+                print,'No mapping function supplied, and .sav files not found! Model not recalculated'
+                print,path_use+'.sav'
+                model_recalculate=0
+                pol_i=n_pol ;skip any remaining polarizations if even one is missing
+                CONTINUE
+            ENDIF
+            RESTORE,path_use+'.sav' ;map_fn
+            map_fn_arr[pol_i]=Ptr_new(map_fn,/no_copy)
+        ENDIF
+    ENDFOR
+ENDIF
+
+IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
+    ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
+    uv_mask=fltarr(dimension,elements)
+    FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
+    noise_map=fhd_params.convergence*rebin(weight_invert(beam_avg),dimension,elements)
+    comp_arr=comp_arr[0:fhd_params.n_components-1]
+    source_array=Components2Sources(comp_arr,obs,fhd_params,noise_map=noise_map,_Extra=extra)
+    IF Keyword_Set(no_condense_sources) THEN $
+        model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0) $
+        ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+    ENDFOR
+ENDIF
+heap_gc
+
+si_use=where(source_array.ston GE 0,ns_use)
 source_arr=source_array[si_use]
 source_arr_out=source_arr
 comp_arr_out=comp_arr
@@ -111,68 +176,6 @@ sxaddpar,fits_header_uv,'CRVAL2',0.,'Wavelengths (v)'
 sxaddpar,fits_header_uv,'MJD-OBS',astr_out.MJDOBS,'Modified Julian day of observation'
 sxaddpar,fits_header_uv,'DATE-OBS',astr_out.DATEOBS,'Date of observation'
 
-t1a=Systime(1)
-t0+=t1a-t0a
-
-pol_names=['xx','yy','xy','yx','I','Q','U','V']
-IF Keyword_Set(model_recalculate) THEN BEGIN
-    IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
-    IF Min(Ptr_valid(map_fn_arr)) EQ 0 THEN BEGIN
-        IF Keyword_Set(transfer_mapfn) THEN file_path_mapfn=filepath(transfer_mapfn+'_mapfn_',root=file_dirname(file_path_fhd)) $
-            ELSE file_path_mapfn=file_path_fhd+'_mapfn_'
-        IF Min(file_test(file_path_mapfn+pol_names[0:n_pol-1]+'.sav')) EQ 0 THEN BEGIN
-            print,'No mapping function supplied, and .sav files not found! Model not recalculated'
-            print,file_path_mapfn+pol_names[0]+'.sav'
-            model_recalculate=0
-        ENDIF ELSE BEGIN
-            map_fn_arr=Ptrarr(n_pol,/allocate) ;NOTE: this approach appears to use the least memory overhead
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
-                restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-                *map_fn_arr[pol_i]=Temporary(map_fn)
-;                map_fn_arr[pol_i]=getvar_savefile(file_path_mapfn+pol_names[pol_i]+'.sav','map_fn',/pointer,verbose=~silent)
-            ENDFOR
-        ENDELSE
-    ENDIF
-ENDIF
-
-IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
-    ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
-    uv_mask=fltarr(dimension,elements)
-    FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
-    model_uv_full=source_dft_model(obs,source_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut)
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        *model_uv_holo[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
-    ENDFOR
-ENDIF
-t2a=Systime(1)
-t1+=t2a-t1a
-
-beam_mask=fltarr(dimension,elements)+1
-IF Keyword_Set(image_mask_horizon) THEN BEGIN
-    xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr_out,ra_arr,dec_arr
-    horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
-    IF n_horizon_mask GT 0 THEN beam_mask[horizon_test]=0
-ENDIF
-
-beam_avg=fltarr(dimension,elements)
-beam_base_out=Ptrarr(n_pol,/allocate)
-beam_correction_out=Ptrarr(n_pol,/allocate)
-FOR pol_i=0,n_pol-1 DO BEGIN
-    *beam_base_out[pol_i]=Rebin(*beam_base[pol_i],dimension,elements) ;should be fine even if pad_uv_image is not set
-    *beam_correction_out[pol_i]=weight_invert(*beam_base_out[pol_i],fhd_params.beam_threshold/10.)
-    IF pol_i GT 1 THEN CONTINUE
-    beam_mask_test=*beam_base_out[pol_i]
-    IF Keyword_Set(allow_sidelobe_image_output) THEN beam_i=where(beam_mask_test GE beam_output_threshold) ELSE $
-        beam_i=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_output_threshold,Max(beam_mask_test)])
-    beam_mask0=fltarr(dimension,elements) & beam_mask0[beam_i]=1.
-    beam_avg+=*beam_base_out[pol_i]
-    beam_mask*=beam_mask0
-ENDFOR
-psf=0
-heap_gc
-beam_avg/=(n_pol<2)
-beam_i=where(beam_mask)
 jones_out=fhd_struct_init_jones(obs_out,0,jones,file_path_fhd=file_path_fhd,/update,/no_save,mask=beam_mask)
 
 t3a=Systime(1)
@@ -218,6 +221,7 @@ renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_b
 for pol_i=0,n_pol-1 do begin
   *dirty_images[pol_i]*=renorm_factor
   *res_uv_arr[pol_i]*=renorm_factor
+  *model_images[pol_i]*=renorm_factor
   *instr_images[pol_i]*=renorm_factor
 endfor
 
@@ -381,7 +385,6 @@ output_path_fg=output_path+filter_name;+gal_name
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_residual=*instr_images[pol_i]*(*beam_correction_out[pol_i])
-    instr_res_phase=Atan(*res_uv_arr[pol_i],/phase)
     instr_dirty=*dirty_images[pol_i]*(*beam_correction_out[pol_i])
     instr_model=*model_images[pol_i]*(*beam_correction_out[pol_i])
     instr_source=*instr_sources[pol_i]
@@ -406,7 +409,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         FitsFast,instr_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
         FitsFast,instr_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i]
         FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path_fg+'_Residual_'+pol_names[pol_i]
-;        FitsFast,instr_res_phase,fits_header,/write,file_path=output_path_fg+'_ResidualPhase_'+pol_names[pol_i]
         FitsFast,instr_source,fits_header_apparent,/write,file_path=output_path_fg+'_Sources_'+pol_names[pol_i]
         FitsFast,instr_restored,fits_header_apparent,/write,file_path=output_path_fg+'_Restored_'+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
@@ -428,8 +430,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
             low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),title=title_fhd,_Extra=extra
-    ;    Imagefast,instr_res_phase,file_path=image_path_fg+'_ResidualPhase_'+pol_names[pol_i],$
-    ;        /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,_Extra=extra
         
         mark_image=0
         mark_thick=1.

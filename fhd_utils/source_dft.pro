@@ -1,5 +1,5 @@
 FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,flux=flux,$
-    conserve_memory=conserve_memory
+    silent=silent,conserve_memory=conserve_memory
 icomp=Complex(0,1)
 fft_norm=1.
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
@@ -31,7 +31,7 @@ element_check=Float(N_Elements(xvals))*Float(N_Elements(x_use))
 
 IF size(flux,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the same locations to be used for multiple sets of fluxes
     fbin_use=where(Ptr_valid(flux),n_fbin)
-    source_uv_vals=Ptrarr(N_Elements(flux))
+    source_uv_vals=Ptrarr(size(flux,/dimension))
     FOR fbin_i=0L,n_fbin-1 DO source_uv_vals[fbin_use[fbin_i]]=Ptr_new(Complexarr(size(xvals,/dimension)))
     IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
         memory_bins=Round(element_check/mem_thresh)
