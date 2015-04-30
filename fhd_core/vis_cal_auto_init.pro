@@ -1,4 +1,4 @@
-FUNCTION vis_cal_auto_init,obs,psf,cal,vis_arr=vis_arr,vis_model_arr=vis_model_arr,_Extra=extra
+FUNCTION vis_cal_auto_init,obs,psf,cal,vis_auto=vis_auto,vis_auto_model=vis_auto_model,auto_tile_i=auto_tile_i
 
 dimension=obs.dimension
 elements=obs.elements
@@ -9,8 +9,8 @@ psf_dim=psf.dim
 n_spectral=obs.degrid_spectral_terms
 frequency_array=(*obs.baseline_info).freq
 freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
-auto_corr=vis_extract_autocorr(obs,vis_arr = vis_arr,/time_average,auto_tile_i=auto_tile_i)
-auto_corr_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
+;vis_auto=vis_extract_autocorr(obs,vis_arr = vis_arr,/time_average,auto_tile_i=auto_tile_i)
+;vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
 n_tile_use=N_Elements(auto_tile_i)
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
@@ -44,7 +44,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain_arr=Complexarr(n_freq,n_tile)+1.
     FOR freq_i=0L,n_freq-1 DO BEGIN
         FOR tile_i=0,n_tile_use-1 DO BEGIN
-            gain_single=Sqrt((*auto_corr[pol_i])[freq_i,tile_i]*weight_invert((*auto_corr_model[pol_i])[freq_i,tile_i]))
+            gain_single=Sqrt((*vis_auto[pol_i])[freq_i,tile_i]*weight_invert((*vis_auto_model[pol_i])[freq_i,tile_i]))
             gain_arr[freq_i,auto_tile_i[tile_i]]=gain_single
         ENDFOR
     ENDFOR

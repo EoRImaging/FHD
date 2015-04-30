@@ -94,6 +94,10 @@ t1=Systime(1)-t0_0
 
 IF Keyword_Set(calibration_auto_initialize) THEN $
     initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr,_Extra=extra)
+IF Keyword_Set(calibration_auto_fit) THEN BEGIN
+    vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
+    vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
+ENDIF
 
 ;IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
 CASE size(initial_calibration,/type) OF
@@ -147,7 +151,7 @@ ENDIF
 ;calibration loop
 IF N_Elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=0
 IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) $
-    OR Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_auto_fit) THEN preserve_visibilities=1
+    OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
 IF N_Elements(calibration_flag_iterate) EQ 0 THEN calibration_flag_iterate=0
 ;    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 
@@ -183,7 +187,7 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
         ENDELSE
     ENDIF ELSE cal=cal_bandpass
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
-IF Keyword_Set(calibration_auto_fit) THEN cal=vis_cal_auto_fit(obs,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr)
+IF Keyword_Set(calibration_auto_fit) THEN cal=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_auto_model=vis_auto_model,auto_tile_i=auto_tile_i)
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 cal_res=vis_cal_subtract(cal_base,cal)
 cal.gain_residual=cal_res.gain
