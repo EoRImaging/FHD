@@ -13,6 +13,13 @@ freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
 n_tile_use=N_Elements(auto_tile_i)
 
 freq_i_use=where((*obs.baseline_info).freq_use)
+freq_i_flag=where((*obs.baseline_info).freq_use EQ 0, n_freq_flag)
+IF n_freq_flag GT 0 THEN BEGIN
+    freq_flag=intarr(n_freq)
+    freq_flag[freq_i_use]=1
+    FOR freq_i=0,n_freq_flag-1 DO freq_flag[(freq_i_flag[freq_i]-1)>0:(freq_i_flag[freq_i]+1)<(n_freq-1)]=0
+    freq_i_use2=where(freq_flag)
+ENDIF ELSE freq_i_use2=freq_i_use
 
 auto_gain=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
@@ -34,11 +41,11 @@ fit_gain=Pointer_copy(gain_cross)
 FOR pol_i=0,n_pol-1 DO BEGIN
     FOR tile_i_i=0L,n_tile_use-1 DO BEGIN
         tile_i=auto_tile_i[tile_i_i]
-        phase_cross_single=Atan((*gain_cross[pol_i])[freq_i_use,tile_i],/phase)
-        gain_auto_single=Abs((*auto_gain[pol_i])[freq_i_use,tile_i])
-        gain_cross_single=Abs((*gain_cross[pol_i])[freq_i_use,tile_i])
-        fit_single=linfit(gain_auto_single,gain_cross_single,yfit=gain_fit_single)
-        (*fit_gain[pol_i])[freq_i_use,tile_i]=gain_fit_single*Exp(i_comp*phase_cross_single)
+        phase_cross_single=Atan((*gain_cross[pol_i])[*,tile_i],/phase)
+        gain_auto_single=Abs((*auto_gain[pol_i])[*,tile_i])
+        gain_cross_single=Abs((*gain_cross[pol_i])[*,tile_i])
+        fit_single=linfit(gain_auto_single[freq_i_use2],gain_cross_single[freq_i_use2])
+        (*fit_gain[pol_i])[*,tile_i]=(gain_auto_single*fit_single[1]+fit_single[0])*Exp(i_comp*phase_cross_single)
         fit_slope[pol_i,tile_i]=fit_single[1]
         fit_offset[pol_i,tile_i]=fit_single[0]
     ENDFOR
