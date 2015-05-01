@@ -534,6 +534,20 @@ case version of
 	decon_filter='filter_uv_uniform'
     end
 
+    'arn_eor1_deconvtest_new':begin
+	deconvolve=1
+	snapshot_healpix_export=0
+	FoV=80.
+	dimension=3072.
+	model_catalog_file_path=filepath('mwa_calibration_source_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav',root=rootdir('FHD'),subdir='catalog_data')
+	decon_filter='filter_uv_uniform'
+
+	deconvolution_filter='filter_uv_uniform'
+	filter_background=1
+	smooth_width=32
+	max_sources=100000.
+    end
+
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
    ; Adam's versions. only Adam can make versions here.
