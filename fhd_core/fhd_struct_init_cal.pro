@@ -52,7 +52,7 @@ IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
 IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0.
 convergence=Ptrarr(2)
 mode_params=Ptrarr(n_pol,n_tile)
-auto_params=Ptr_new(2)
+auto_params=Ptrarr(2)
 auto_scale=Fltarr(2)
 
 cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,phase_iter:phase_fit_iter,$
