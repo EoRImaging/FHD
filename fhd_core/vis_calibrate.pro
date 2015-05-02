@@ -87,17 +87,17 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
     RETURN,vis_cal
 ENDIF
 
-IF Keyword_Set(calibration_auto_initialize) OR Keyword_Set(calibration_auto_fit) THEN fill_model_vis=1
+fill_model_vis=1
+;IF Keyword_Set(calibration_auto_initialize) OR Keyword_Set(calibration_auto_fit) OR Keyword_Set(return_cal_visibilities) THEN fill_model_vis=1
 vis_model_arr=vis_source_model(cal.source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
     timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)    
 t1=Systime(1)-t0_0
 
 IF Keyword_Set(calibration_auto_initialize) THEN $
     initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr,_Extra=extra)
-IF Keyword_Set(calibration_auto_fit) THEN BEGIN
-    vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
-    vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
-ENDIF
+   
+vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
+IF Keyword_Set(fill_model_vis) THEN vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
 
 ;IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
 CASE size(initial_calibration,/type) OF
@@ -187,9 +187,16 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
         ENDELSE
     ENDIF ELSE cal=cal_bandpass
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
-IF Keyword_Set(calibration_auto_fit) THEN cal=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
+IF Keyword_Set(vis_auto_model) THEN cal_auto=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
+IF Keyword_Set(calibration_auto_fit) THEN cal_res=vis_cal_subtract(cal_base,cal_auto) ELSE cal_res=vis_cal_subtract(cal_base,cal)
+basename=file_basename(file_path_fhd)
+dirpath=file_dirname(file_path_fhd)
+image_path=filepath(basename,root=dirpath,sub='output_images')
+;make sure to plot both, if autocorrelations are used for the calibration solution
+plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
+
+IF Keyword_Set(calibration_auto_fit) THEN cal=cal_auto
 vis_cal=vis_calibration_apply(vis_ptr,cal)
-cal_res=vis_cal_subtract(cal_base,cal)
 cal.gain_residual=cal_res.gain
 ;undefine_fhd,cal_base
 
@@ -202,13 +209,6 @@ IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
     IF tag_exist(obs,'residual') THEN obs.residual=1
 ENDIF
 IF ~Keyword_Set(return_cal_visibilities) THEN undefine_fhd,vis_model_arr
-
-;IF ~Keyword_Set(silent) THEN BEGIN
-    basename=file_basename(file_path_fhd)
-    dirpath=file_dirname(file_path_fhd)
-    image_path=filepath(basename,root=dirpath,sub='output_images')
-    plot_cals,cal,obs,cal_res=cal_res,file_path_base=image_path,_Extra=extra
-;ENDIF
 
 cal_gain_avg=Fltarr(nc_pol)
 cal_res_avg=Fltarr(nc_pol)

@@ -1,4 +1,4 @@
-pro plot_cals,cal,obs,cal_res=cal_res,vis_baseline_hist=vis_baseline_hist,file_path_base=file_path_base,no_ps=no_ps,$
+pro plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,vis_baseline_hist=vis_baseline_hist,file_path_base=file_path_base,no_ps=no_ps,$
     cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
 ; Make plot of the cal solutions, save to png
 ; cgPS_Open/cgPS_Close write .ps first, then converts to png. Supply .png
@@ -23,6 +23,7 @@ no_ps=1
 IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
 phase_filename=file_path_base+'_cal_phase'+ext_name
 amp_filename=file_path_base+'_cal_amp'+ext_name
+auto_filename=file_path_base+'_cal_autocorr'+ext_name
 res_filename=file_path_base+'_cal_residual'+ext_name
 res_real_im_filename0=file_path_base+'_cal_residual_'+pol_names[0]+ext_name
 res_real_im_filename1=file_path_base+'_cal_residual_'+pol_names[1]+ext_name
@@ -64,6 +65,13 @@ plot_cals_sub,freq,gains0,gains1,filename=phase_filename,/phase,tile_A=tile_A,ti
 ;plot fitted amplitude solutions
 plot_cals_sub,freq,gains0,gains1,filename=amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
     obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
+    
+IF Keyword_Set(cal_auto) THEN BEGIN
+    gains0_auto = (*cal_auto.gain[0])[freq_i_use,*] ; save on typing
+    IF n_pol GT 1 THEN gains1_auto = (*cal_auto.gain[1])[freq_i_use,*]
+    plot_cals_sub,freq,gains0_auto,gains1_auto,filename=auto_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+        obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
+ENDIF
 
 IF Keyword_Set(res_gain_arr) THEN BEGIN
     gains0_res=*res_gain_arr[0]
