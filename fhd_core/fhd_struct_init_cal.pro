@@ -52,9 +52,11 @@ IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
 IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0.
 convergence=Ptrarr(2)
 mode_params=Ptrarr(n_pol,n_tile)
+auto_params=Ptr_new(2)
+auto_scale=Fltarr(2)
 
 cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,phase_iter:phase_fit_iter,$
-    tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,gain_residual:gain_residual,$
+    tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,gain_residual:gain_residual,auto_scale:auto_scale,auto_params:auto_params,$
     galaxy_cal:galaxy_cal,min_cal_baseline:min_cal_baseline,max_cal_baseline:max_cal_baseline,n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,ref_antenna_name:ref_antenna_name,$
     conv_thresh:cal_convergence_threshold,convergence:convergence,polyfit:calibration_polyfit,amp_params:amp_params,phase_params:phase_params,$

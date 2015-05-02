@@ -1,6 +1,6 @@
 FUNCTION vis_cal_auto_fit,obs,cal,vis_auto=vis_auto,vis_model_auto=vis_model_auto,auto_tile_i=auto_tile_i
 
-print,"FITTING CALIBRATION SOLUTIONS USING AUTOCORRELATIONS!"
+;print,"FITTING CALIBRATION SOLUTIONS USING AUTOCORRELATIONS!"
 dimension=obs.dimension
 elements=obs.elements
 n_pol=cal.n_pol ;do not use the cross-polarizations if they are present!
@@ -11,6 +11,9 @@ i_comp=Complex(0,1)
 frequency_array=(*obs.baseline_info).freq
 freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
 n_tile_use=N_Elements(auto_tile_i)
+freq_bin_i=(*obs.baseline_info).fbin_i
+nfreq_bin=Max(freq_bin_i)+1
+;psf_dim=psf.dim
 
 freq_i_use=where((*obs.baseline_info).freq_use)
 
@@ -43,7 +46,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         fit_offset[pol_i,tile_i]=fit_single[0]
     ENDFOR
 ENDFOR
+IF n_pol EQ 1 THEN auto_scale=[Total(fit_slope,2)/n_tile_use,0.] ELSE auto_scale=Total(fit_slope,2)/n_tile_use 
+auto_params=Ptrarr(2)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    params=Fltarr(2,n_tile)
+    params[0,*]=fit_offset[pol_i,*]
+    params[1,*]=fit_slope[pol_i,*]
+    auto_params[pol_i]=Ptr_new(params)
+ENDFOR
 
+cal.auto_scale=auto_scale
+cal.auto_params=auto_params
 cal_fit=cal
 cal_fit.gain=fit_gain
 RETURN,cal_fit
