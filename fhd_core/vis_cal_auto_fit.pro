@@ -72,8 +72,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         fit_offset[pol_i,tile_i]=fit_single[0]
     ENDFOR
 ENDFOR
-IF n_pol EQ 1 THEN auto_scale=[Total(fit_slope,2)/n_tile_use,0.] ELSE auto_scale=Total(fit_slope,2)/n_tile_use 
-auto_params=Ptrarr(2)
+auto_scale=cal.auto_scale
+auto_scale[0:n_pol-1]=Total(fit_slope,2)/n_tile_use 
+auto_params=cal.auto_params
 FOR pol_i=0,n_pol-1 DO BEGIN
     params=Fltarr(2,n_tile)
     params[0,*]=fit_offset[pol_i,*]
