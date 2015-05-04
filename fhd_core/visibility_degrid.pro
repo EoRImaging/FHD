@@ -25,7 +25,7 @@ frequency_array=(*obs.baseline_info).freq
 freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
 
 psf_dim=psf.dim
-psf_resolution=psf.resolution
+psf_resolution=Long(psf.resolution)
 
 flag_switch=Ptr_valid(flag_ptr)
 kx_arr=params.uu/kbinsize
@@ -87,10 +87,10 @@ IF flag_switch THEN BEGIN
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
-bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
-bin_i=where(bin_n,n_bin_use);+bin_min
+bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0)) ;should miss any (xmin,ymin)=(-1,-1) from flags
+bin_i=Long(where(bin_n,n_bin_use));+bin_min
 
-ind_ref=indgen(max(bin_n))
+ind_ref=Lindgen(max(bin_n))
 
 CASE 1 OF
     Keyword_Set(complex) AND Keyword_Set(double): init_arr=Dcomplexarr(psf_dim2,psf_dim2)
@@ -107,7 +107,7 @@ t3=0
 t4=0
 t5=0
 image_uv_use=image_uv
-psf_dim3=psf_dim*psf_dim
+psf_dim3=Long(psf_dim*psf_dim)
 
 ;pdim=size(psf_base,/dimension)
 ;psf_base_dag=Ptrarr(pdim,/allocate)
@@ -149,12 +149,12 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xyf_ui=Uniq(xyf_i)
     n_xyf_bin=N_Elements(xyf_ui)
     
-    IF (vis_n GT 1.1*n_xyf_bin) AND (not Keyword_Set(n_spectral)) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF vis_n GT Ceil(1.1*n_xyf_bin) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         ind_remap_flag=1
         inds=inds[xyf_si]
-        freq_i=freq_i[xyf_si]
-        
         inds_use=xyf_si[xyf_ui]
+        
+        freq_i=freq_i[inds_use]
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
         fbin=fbin[inds_use]
@@ -166,7 +166,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             ind_remap=ind_ref[ri_xyf[0:n_elements(hist_inds_u)-1]-ri_xyf[0]]
         ENDELSE
         
-        vis_n=n_xyf_bin
+        vis_n=Long64(n_xyf_bin)
     ENDIF ELSE $
         ind_remap_flag=0
     
