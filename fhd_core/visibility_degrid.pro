@@ -152,7 +152,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     IF vis_n GT Ceil(1.1*n_xyf_bin) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         ind_remap_flag=1
         inds=inds[xyf_si]
-        inds_use=xyf_si[xyf_ui]
+        inds_use=[xyf_si[xyf_ui]]
         
         freq_i=freq_i[inds_use]
         x_off=x_off[inds_use] 
