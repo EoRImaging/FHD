@@ -1,12 +1,13 @@
 FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
     complex=complex,double=double,fill_model_vis=fill_model_vis,$
-    vis_input_ptr=vis_input_ptr,_Extra=extra
+    vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 t0=Systime(1)
 heap_gc
 
 pol_names=obs.pol_names
 complex=psf.complex_flag
+n_spectral=obs.degrid_spectral_terms
 
 ;extract information from the structures
 dimension=Float(obs.dimension)
@@ -21,6 +22,7 @@ freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=psf.n_freq
 bin_offset=(*obs.baseline_info).bin_offset
 frequency_array=(*obs.baseline_info).freq
+freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
 
 psf_dim=psf.dim
 psf_resolution=psf.resolution
@@ -38,7 +40,7 @@ psf_dim2=2*psf_dim
 group_arr=reform(psf.id[polarization,freq_bin_i,*])
 beam_arr=*psf.beam_ptr
 
-vis_dimension=Float(nbaselines*n_samples)
+vis_dimension=nbaselines*n_samples
 IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
     ELSE visibility_array=Complexarr(n_freq,vis_dimension) 
 
@@ -69,10 +71,10 @@ range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
-IF n_dist_flag GT 0 THEN BEGIN
-    xmin[flag_dist_i]=-1
-    ymin[flag_dist_i]=-1
-ENDIF
+;IF n_dist_flag GT 0 THEN BEGIN
+;    xmin[flag_dist_i]=-1
+;    ymin[flag_dist_i]=-1
+;ENDIF
 
 IF flag_switch THEN BEGIN
     flag_i=where(*flag_ptr LE 0,n_flag)
@@ -110,6 +112,11 @@ psf_dim3=psf_dim*psf_dim
 ;pdim=size(psf_base,/dimension)
 ;psf_base_dag=Ptrarr(pdim,/allocate)
 ;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
+IF Keyword_Set(n_spectral) THEN BEGIN
+    prefactor=Ptrarr(n_spectral)
+    FOR s_i=0,n_spectral-1 DO prefactor[s_i]=Ptr_new(deriv_coefficients(s_i+1,/divide_factorial))
+    box_arr_ptr=Ptrarr(n_spectral)
+ENDIF
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
@@ -142,7 +149,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xyf_ui=Uniq(xyf_i)
     n_xyf_bin=N_Elements(xyf_ui)
     
-    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF (vis_n GT 1.1*n_xyf_bin) AND (not Keyword_Set(n_spectral)) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         ind_remap_flag=1
         inds=inds[xyf_si]
         freq_i=freq_i[xyf_si]
@@ -175,7 +182,24 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     t4_0=Systime(1)
     t3+=t4_0-t3_0
-    vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
+    IF Keyword_Set(n_spectral) THEN BEGIN
+        vis_box=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
+        freq_term_arr=Rebin(transpose(freq_delta[freq_i]),psf_dim3,vis_n,/sample)
+        FOR s_i=0,n_spectral-1 DO BEGIN
+            ;s_i loop is over terms of the Taylor expansion, starting from the lowest-order term
+            prefactor_use=*prefactor[s_i]
+            box_matrix*=freq_term_arr
+            box_arr_ptr[s_i]=Ptr_new(Reform((*spectral_model_uv_arr[s_i])[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3))
+            
+            FOR s_i_i=0,s_i DO BEGIN
+                ;s_i_i loop is over powers of the model x alpha^n, n=s_i_i+1
+                degree=n_spectral
+                box_arr=prefactor_use[s_i_i]*(*box_arr_ptr[s_i_i])
+                vis_box+=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
+            ENDFOR
+        ENDFOR
+        ptr_free,box_arr_ptr
+    ENDIF ELSE vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
     t5_0=Systime(1)
     t4+=t5_0-t4_0
     IF ind_remap_flag THEN vis_box=vis_box[ind_remap]

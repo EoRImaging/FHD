@@ -1,8 +1,11 @@
 
 
-function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc
-
+function eor_sim, u_arr, v_arr, freq_arr, seed = seed, real_sky = real_sky, flat_sigma = flat_sigma, $
+    no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc
+    
   if n_elements(seed) eq 0 then seed = systime(1)
+  
+  if n_elements(real_sky) eq 0 then real_sky = 1
   
   delta_u = u_arr[1] - u_arr[0]
   delta_v = v_arr[1] - v_arr[0]
@@ -104,6 +107,15 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, flat_sigma = flat_sigma, 
   ;signal_phase = randomu(seed, n_kx, n_ky, n_kz) * 2. * !pi
   
   ;signal = temporary(signal_amp) * exp(complex(0,1) * temporary(signal_phase))
+  
+  if keyword_set(real_sky) then begin
+    sky_signal = shift(fft(fft(shift(signal, [n_kx/2, n_ky/2, 0]), dimension=1), dimension=2), [-n_kx/2, -n_ky/2, 0])
+    
+    temp = real_part(temporary(sky_signal))*sqrt(2.)
+    signal = shift(fft(fft(shift(temp, [n_kx/2, n_ky/2, 0]), dimension=1, /inverse), dimension=2, /inverse), [-n_kx/2, -n_ky/2, 0])
+    undefine, temp
+    
+  endif
   
   ;; shift it so that it's as expected when we take the fft
   signal = shift(temporary(signal), [0,0,n_kz/2])

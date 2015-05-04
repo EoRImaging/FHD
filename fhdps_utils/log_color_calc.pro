@@ -132,6 +132,8 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       if n_elements(min_abs) eq 0 then min_abs = min(abs(data[where(abs(data) gt 0)]))
       
       log_data_range = alog10([min_abs, max_abs])
+
+      if no_input_data_range eq 1 then data_range = [-1,1]*max_abs
       
       neg_color_range = [0, floor(data_n_colors/2)-1]
       zero_color = floor(data_n_colors/2)

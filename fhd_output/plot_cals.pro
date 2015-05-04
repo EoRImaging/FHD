@@ -1,4 +1,4 @@
-pro plot_cals,cal,obs,cal_res=cal_res,vis_baseline_hist=vis_baseline_hist,file_path_base=file_path_base,no_ps=no_ps,$
+pro plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,vis_baseline_hist=vis_baseline_hist,file_path_base=file_path_base,no_ps=no_ps,$
     cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
 ; Make plot of the cal solutions, save to png
 ; cgPS_Open/cgPS_Close write .ps first, then converts to png. Supply .png
@@ -23,6 +23,7 @@ no_ps=1
 IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
 phase_filename=file_path_base+'_cal_phase'+ext_name
 amp_filename=file_path_base+'_cal_amp'+ext_name
+auto_filename=file_path_base+'_cal_autocorr'+ext_name
 res_filename=file_path_base+'_cal_residual'+ext_name
 res_real_im_filename0=file_path_base+'_cal_residual_'+pol_names[0]+ext_name
 res_real_im_filename1=file_path_base+'_cal_residual_'+pol_names[1]+ext_name
@@ -63,7 +64,14 @@ plot_cals_sub,freq,gains0,gains1,filename=phase_filename,/phase,tile_A=tile_A,ti
 
 ;plot fitted amplitude solutions
 plot_cals_sub,freq,gains0,gains1,filename=amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-    obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+    obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
+    
+IF Keyword_Set(cal_auto) THEN BEGIN
+    gains0_auto = (*cal_auto.gain[0])[freq_i_use,*] ; save on typing
+    IF n_pol GT 1 THEN gains1_auto = (*cal_auto.gain[1])[freq_i_use,*]
+    plot_cals_sub,freq,gains0_auto,gains1_auto,filename=auto_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+        obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
+ENDIF
 
 IF Keyword_Set(res_gain_arr) THEN BEGIN
     gains0_res=*res_gain_arr[0]
@@ -76,19 +84,19 @@ IF Keyword_Set(res_gain_arr) THEN BEGIN
         gains1_res=gains1_res[freq_i_use,*]
         gains1_orig=gains1_res+gains1
         gains1_res_abs=Abs(gains1_orig)-Abs(gains1)
-        max_amp = mean(abs([gains0_res_abs,gains1_res_abs])) + 2*stddev(abs([gains0_res_abs,gains1_res_abs]))
-    ENDIF ELSE max_amp = mean(abs(gains0_res_abs)) + 2*stddev(abs(gains0_res_abs))
+        max_amp_res = mean(abs([gains0_res_abs,gains1_res_abs])) + 3*stddev(abs([gains0_res_abs,gains1_res_abs]))
+    ENDIF ELSE max_amp_res = mean(abs(gains0_res_abs)) + 3*stddev(abs(gains0_res_abs))
     
     ;plot amplitude residuals
-    IF max_amp GT 0 THEN BEGIN
-        plot_cals_sub,freq,gains0_res_abs,gains1_res_abs,filename=res_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
-        plot_cals_sub,freq,gains0_res,filename=res_real_im_filename0,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
-        IF n_pol GT 1 THEN plot_cals_sub,freq,gains1_res,filename=res_real_im_filename1,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+    IF max_amp_res GT 0 THEN BEGIN
         plot_cals_sub,freq,gains0_orig,gains1_orig,filename=orig_amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
+        plot_cals_sub,freq,gains0_res_abs,gains1_res_abs,filename=res_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
+        plot_cals_sub,freq,gains0_res,filename=res_real_im_filename0,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
+        IF n_pol GT 1 THEN plot_cals_sub,freq,gains1_res,filename=res_real_im_filename1,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
     ENDIF
 ENDIF
 

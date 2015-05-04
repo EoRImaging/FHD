@@ -2,7 +2,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
     file_path_fhd=file_path_fhd,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
-    obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, uvf_name=uvf_name,_Extra=extra
+    obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, uvf_name=uvf_name,bi_use=bi_use,_Extra=extra
   ext='.UVFITS'
   t0=Systime(1)
   
@@ -44,8 +44,10 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
   ENDIF ELSE model_flag=1
   
   IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(flag_arr) ELSE flag_arr_use=flag_arr
-  IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
-  bi_use=where(flag_test GT 0)
+  IF N_Elements(bi_use) EQ 0 THEN BEGIN
+      IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
+      bi_use=where(flag_test GT 0)
+  ENDIF
   
   IF N_Elements(n_avg) EQ 0 THEN BEGIN
     freq_bin_i2=(*obs.baseline_info).fbin_i
@@ -78,13 +80,13 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
     dirty_uv_arr=Ptrarr(n_pol,nf,/allocate)
     weights_uv_arr=Ptrarr(n_pol,nf,/allocate)
     variance_uv_arr=Ptrarr(n_pol,nf,/allocate)
-    model_uv_arr=Ptrarr(n_pol,nf,/allocate)
+    IF Keyword_Set(model_flag) THEN model_uv_arr=Ptrarr(n_pol,nf,/allocate)
   endif
   
   dirty_arr=Ptrarr(n_pol,nf,/allocate)
   weights_arr=Ptrarr(n_pol,nf,/allocate)
   variance_arr=Ptrarr(n_pol,nf,/allocate)
-  model_arr=Ptrarr(n_pol,nf,/allocate)
+  IF Keyword_Set(model_flag) THEN model_arr=Ptrarr(n_pol,nf,/allocate)
   vis_n_arr=Fltarr(n_pol,nf)
   
   IF Keyword_Set(rephase_weights) THEN rephase_use=phase_shift_uv_image(obs_out,/to_orig_phase) ELSE rephase_use=1.

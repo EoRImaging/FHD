@@ -17,7 +17,7 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO vis_flag,vis_arr,flag_ptr,obs,params,flag_nsigma=flag_nsigma,_Extra=extra
+PRO vis_flag,vis_arr,flag_ptr,obs,psf,params,flag_nsigma=flag_nsigma,flag_sparse_uv_coverage=flag_sparse_uv_coverage,_Extra=extra
 
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
@@ -139,6 +139,8 @@ FOR ti=0L,n_time_cut-1 DO BEGIN
     ti_cut=where(time_bin EQ time_cut[ti],n_ti_cut)
     IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,ti_cut]=0
 ENDFOR
+
+IF Keyword_Set(flag_sparse_uv_coverage) THEN sparse_uv_flag,obs,psf,params,flag_ptr,flag_sparse_uv_coverage=flag_sparse_uv_coverage
 
 obs.n_vis=N_Elements(where(*flag_ptr[0] GT 0))
 END

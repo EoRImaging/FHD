@@ -1,10 +1,10 @@
 FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,weights=weights,variance=variance,$
-    timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,$
+    timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,uniform_filter=uniform_filter,$
     GPU_enable=GPU_enable,complex_flag=complex_flag,double=double,fi_use=fi_use,bi_use=bi_use,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    error=error,grid_uniform=grid_uniform,_Extra=extra
+    error=error,grid_uniform=grid_uniform,grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -75,6 +75,7 @@ beam_arr=*psf.beam_ptr
 
 weights_flag=Keyword_Set(weights)
 variance_flag=Keyword_Set(variance)
+uniform_flag=Keyword_Set(uniform_filter)
 kx_arr=params.uu[bi_use]/kbinsize
 ky_arr=params.vv[bi_use]/kbinsize
 
@@ -92,7 +93,7 @@ uniform_filter=Fltarr(dimension,elements)
 IF Keyword_Set(grid_uniform) THEN BEGIN
     mapfn_recalculate=0 ;mapfn is incompatible with uniformly gridded images!
     uniform_flag=1
-ENDIF ELSE uniform_flag=0
+ENDIF
 
 IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_flag=1
@@ -188,6 +189,14 @@ CASE 1 OF
     ENDELSE
 ENDCASE
 arr_type=Size(init_arr,/type)
+IF Keyword_Set(grid_spectral) THEN BEGIN
+    spectral_A=Complexarr(dimension,elements)
+    spectral_B=Fltarr(dimension,elements)
+    spectral_D=Fltarr(dimension,elements)
+    IF model_flag THEN BEGIN
+        spectral_model_A=Complexarr(dimension,elements)
+    ENDIF
+ENDIF
 
 ;initialize ONLY those elements of the map_fn array that will receive data
 IF map_flag THEN BEGIN
@@ -210,6 +219,7 @@ t3=0
 t4=0
 t5=0
 t6=0
+tspec=0
 IF map_flag THEN BEGIN
     map_fn_inds=Ptrarr(psf_dim,psf_dim,/allocate)
     psf2_inds=indgen(psf_dim2,psf_dim2)
@@ -252,12 +262,13 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     xyf_i=xyf_i[xyf_si]
     xyf_ui=[Uniq(xyf_i)]
     n_xyf_bin=N_Elements(xyf_ui)
+;    IF Keyword_Set(grid_spectral) THEN n_xyf_bin=n_vis_single
     
     IF n_vis_single GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         rep_flag=1
         inds=inds[xyf_si]
-        freq_i=freq_i[xyf_si]
         inds_use=xyf_si[xyf_ui]
+        freq_i=freq_i[inds_use]
         
         x_off=x_off[inds_use] 
         y_off=y_off[inds_use]
@@ -313,6 +324,34 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t4_0=Systime(1)
         t3+=t4_0-t3_0   
     ENDIF
+    
+    IF Keyword_Set(grid_spectral) THEN BEGIN
+        tspec0=Systime(1)
+        ;slope = (sum(A) - N*sum(B)*sum(C)) / (sum(D) -N*sum(B)^2.)
+        ;sum(C) is ordinary gridded visibilities, so is not calculated here
+        term_A_box=matrix_multiply(freq_i*vis_box/n_vis,box_matrix_dag,/atranspose,/btranspose)
+        term_B_box=matrix_multiply(freq_i/n_vis,box_matrix_dag,/atranspose,/btranspose) 
+        term_D_box=matrix_multiply(freq_i^2./n_vis,box_matrix_dag,/atranspose,/btranspose) 
+        
+        spectral_A[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(term_A_box) 
+        spectral_B[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(term_B_box)
+        spectral_D[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(term_D_box)
+        IF model_flag THEN BEGIN
+            term_Am_box=matrix_multiply(freq_i*model_box/n_vis,box_matrix_dag,/atranspose,/btranspose)
+            spectral_model_A[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(term_Am_box)
+        ENDIF
+;        IF min(freq_i) LT max(freq_i) THEN BEGIN
+;            fit_vis_slope=Complex((linfit(freq_i,real_part(vis_box)))[1],(linfit(freq_i,imaginary(vis_box)))[1])
+;            fit_vis_box=matrix_multiply(replicate(fit_vis_slope/n_vis,n_vis_single),box_matrix_dag,/atranspose,/btranspose)
+;            spectral_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(fit_vis_box) 
+;            IF model_flag THEN BEGIN
+;                fit_model_slope=Complex((linfit(freq_i,real_part(model_box)))[1],(linfit(freq_i,imaginary(model_box)))[1])
+;                fit_model_box=matrix_multiply(replicate(fit_model_slope/n_vis,n_vis_single),box_matrix_dag,/atranspose,/btranspose)
+;                spectral_model_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(fit_model_box)
+;            ENDIF
+;        ENDIF
+        tspec+=Systime(1)-tspec0
+    ENDIF
     IF model_flag THEN BEGIN
         box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
         model_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
@@ -333,7 +372,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         var_box=matrix_multiply(psf_weight/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
-    IF uniform_flag THEN uniform_filter[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=n_vis_single
+    IF uniform_flag THEN uniform_filter[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=bin_n[bin_i[bi]]
     
     IF verbose THEN BEGIN
         t6_0=Systime(1)
@@ -374,7 +413,16 @@ IF map_flag THEN BEGIN
 ENDIF
 t7=Systime(1)-t7_0
 
-IF uniform_flag THEN BEGIN
+IF Keyword_Set(grid_spectral) THEN BEGIN
+    spectral_uv=(spectral_A-n_vis*spectral_B*image_uv)*weight_invert(spectral_D-spectral_B^2.)
+    IF model_flag THEN spectral_model_uv=(spectral_model_A-n_vis*spectral_B*model_return)*weight_invert(spectral_D-spectral_B^2.)
+    IF ~Keyword_Set(no_conjugate) THEN BEGIN
+        spectral_uv=(spectral_uv+Shift(Reverse(reverse(Conj(spectral_uv),1),2),1,1))/2.
+        IF model_flag THEN spectral_model_uv=(spectral_model_uv+Shift(Reverse(reverse(Conj(spectral_model_uv),1),2),1,1))/2.
+    ENDIF
+ENDIF
+
+IF Keyword_Set(grid_uniform) THEN BEGIN
     filter_use=weight_invert(uniform_filter,1.) 
     wts_i=where(filter_use,n_wts)
     IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)
@@ -399,9 +447,13 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
         model_conj=Shift(Reverse(reverse(Conj(model_return),1),2),1,1)
         model_return=(model_return+model_conj)/2.
     ENDIF
+    IF uniform_flag THEN BEGIN
+        uniform_filter_mirror=Shift(Reverse(reverse(uniform_filter,1),2),1,1)
+        uniform_filter=(uniform_filter+uniform_filter_mirror)/2.
+    ENDIF
 ENDIF
 
-IF verbose THEN print,t0,t1,t2,t3,t4,t5,t6,t7
+IF verbose THEN print,t0,t1,t2,t3,t4,t5,t6,t7,tspec
 timing=Systime(1)-t0_0
 RETURN,image_uv
 END

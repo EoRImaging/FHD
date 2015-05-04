@@ -10,6 +10,9 @@ pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
+frequency=obs.freq_center
+alpha_use=obs.alpha ;spectral index used for the subtracted component
+over_resolution=fhd_params.over_resolution
 
 n_pol=fhd_params.npol
 dimension=obs.dimension
@@ -27,7 +30,16 @@ IF N_Elements(gain_array) EQ 1 THEN gain_array=replicate(gain_array[0],dimension
 converge_check=Stddev(source_find_image[where(beam_mask)],/nan)
 
 IF N_Elements(source_mask) EQ 0 THEN source_mask0=beam_mask ELSE source_mask0=source_mask
-source_mask1=beam_mask
+neg_i=where(source_find_image LE -Max(source_find_image),n_neg)
+IF n_neg GT 0 THEN BEGIN
+    debug_point=1
+;    source_neg=fltarr(dimension,elements)
+;    source_neg[neg_i]=1.
+;    source_neg=Smooth(source_neg,Ceil(beam_width*4.))*Ceil(beam_width*4.)^2
+;    source_mask0[where(source_neg)]=0
+ENDIF
+
+source_mask1=beam_mask*source_mask0
 flux_offset=Mean(source_find_image[where(source_mask0)])
 source_find_image-=flux_offset
 
@@ -52,13 +64,13 @@ n_sources=0
 max_iter=5
 iter=0
 WHILE n_sources EQ 0 DO BEGIN
-    source_find_image*=source_mask1
-    source_flux=Max(source_find_image*source_mask0,source_i)
-    flux_ref1=source_find_image[source_i]*add_threshold
-    flux_ref2=source_find_image[source_i]*0.5
+    source_find_image_use=source_find_image*source_mask1
+    source_flux=Max(source_find_image_use*source_mask0,source_i)
+    flux_ref1=source_find_image_use[source_i]*add_threshold
+    flux_ref2=source_find_image_use[source_i]*0.5
     
-    additional_i1=where(source_find_image GE flux_ref1,n_sources1)
-    additional_i2=where((source_find_image GE 5.*converge_check) AND (source_find_image GE flux_ref2),n_sources2)
+    additional_i1=where(source_find_image_use GE flux_ref1,n_sources1)
+    additional_i2=where((source_find_image_use GE 5.*converge_check) AND (source_find_image_use GE flux_ref2),n_sources2)
     IF n_sources1 GT n_sources2 THEN BEGIN
         additional_i=additional_i1
         detection_threshold=flux_ref1
@@ -72,7 +84,7 @@ WHILE n_sources EQ 0 DO BEGIN
     ;output={n_sources1:n_sources1,n_sources2:n_sources2,source_find_image:source_find_image,beam_mask:beam_mask,source_mask:source_mask,converge_check:converge_check}
     ;save,output,filename=fhd.joint_obs+'_test_output.sav'
     
-    additional_i=additional_i[reverse(Sort(source_find_image[additional_i]))] ;order from brightest to faintest
+    additional_i=additional_i[reverse(Sort(source_find_image_use[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod dimension
     add_y=Float(Floor(additional_i/dimension))
     add_dist=fltarr(n_sources)+dimension
@@ -106,18 +118,14 @@ WHILE n_sources EQ 0 DO BEGIN
     
     ;IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
     
-    IF max_add_sources EQ 0 THEN BEGIN
-        source_list=source_comp_init(n_sources=0)
-        n_sources=0
-        RETURN,source_list
-    ENDIF
-    
-    IF n_sources GT max_add_sources THEN BEGIN
-        additional_i=additional_i[0:max_add_sources-1]
-        n_sources=max_add_sources
+    IF max_add_sources GT 0 THEN BEGIN
+        IF n_sources GT max_add_sources THEN BEGIN
+            additional_i=additional_i[0:max_add_sources-1]
+            n_sources=max_add_sources
+        ENDIF
     ENDIF
     n_mask=0
-    comp_arr=source_comp_init(n_sources=n_sources)
+    comp_arr=source_comp_init(n_sources=n_sources,frequency=frequency,alpha=alpha_use)
     
     ;fit flux here, and fill comp_arr for each pol
     flux_arr=fltarr(4)
@@ -135,17 +143,44 @@ WHILE n_sources EQ 0 DO BEGIN
     FOR src_i=0L,n_sources-1 DO BEGIN
         sx=sx_arr[src_i]
         sy=sy_arr[src_i]
-        IF add_dist[src_i] GE local_max_radius THEN $
-            gcntrd,image_I_flux,sx,sy,xcen,ycen,beam_width*(2.*Sqrt(2.*Alog(2.))),/keepcenter,/silent $
-            ELSE xcen=(ycen=-1)
-        IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
-    ;            n_mask+=Total(source_mask1[sx-1:sx+1,sy-1:sy+1])
-    ;            source_mask1[sx-1:sx+1,sy-1:sy+1]=0
-    ;            CONTINUE
-            xcen=sx
-            ycen=sy
-;            gain_mod=1./beam_width^2. ;divide by the area of the beam for diffuse sources
-        ENDIF ;ELSE gain_mod=1./beam_width^2.
+        IF add_dist[src_i] GE local_max_radius THEN BEGIN
+            ;FWHM here is used to set the size of the fitting box. Will not work right if the box is too small, even if that's the correct beam size
+            gcntrd,(image_I_flux),sx,sy,xcen,ycen,beam_width>2.,/keepcenter,/silent   
+        ENDIF ELSE BEGIN
+            IF extended_flag[src_i] EQ 0 THEN BEGIN
+            ;if NOT marked as an extended source, skip if too close to a brighter source
+                source_mask1[sx,sy]=0
+                CONTINUE 
+            ENDIF
+            xcen=(ycen=-1)
+        ENDELSE
+        flux_interp_flag=extended_flag[src_i]
+        IF Abs(sx-xcen) GT beam_width THEN BEGIN
+;            IF extended_flag[src_i] EQ 0 THEN BEGIN
+;                ;if NOT marked as an extended source, skip if centroiding failed for either pol
+;                source_mask1[sx,sy]=0
+;                CONTINUE 
+;            ENDIF
+            IF xcen EQ -1 THEN xcen=sx
+            flux_interp_flag=1
+        ENDIF
+        IF Abs(sy-ycen) GT beam_width THEN BEGIN
+;            IF extended_flag[src_i] EQ 0 THEN BEGIN
+;                ;if NOT marked as an extended source, skip if centroiding failed for either pol
+;                source_mask1[sx,sy]=0
+;                CONTINUE 
+;            ENDIF
+            IF ycen EQ -1 THEN ycen=sy
+            flux_interp_flag=1
+        ENDIF
+;        IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
+;    ;            n_mask+=Total(source_mask1[sx-1:sx+1,sy-1:sy+1])
+;    ;            source_mask1[sx-1:sx+1,sy-1:sy+1]=0
+;    ;            CONTINUE
+;            xcen=sx
+;            ycen=sy
+;;            gain_mod=1./beam_width^2. ;divide by the area of the beam for diffuse sources
+;        ENDIF ;ELSE gain_mod=1./beam_width^2.
         gain_mod=1.
         sx0=Floor(xcen)
         sy0=Floor(ycen)
@@ -154,8 +189,9 @@ WHILE n_sources EQ 0 DO BEGIN
         xcen0=xcen-sx0+box_radius
         ycen0=ycen-sy0+box_radius
         xy2ad,xcen,ycen,astr,ra,dec
-         
-        flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>source_box[xcen0,ycen0]
+        
+        IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>image_I_flux[sx,sy] $
+            ELSE flux_use=image_I_flux[sx,sy]
         IF flux_use LE 0 THEN BEGIN
             n_mask+=Total(source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
             source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]=0
@@ -168,17 +204,17 @@ WHILE n_sources EQ 0 DO BEGIN
             gain_factor_use=(((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))*gain_normalization)>gain_factor_use
         ENDIF
         
-        comp_arr[si].x=xcen
-        comp_arr[si].y=ycen
+        comp_arr[si].x=xcen/over_resolution
+        comp_arr[si].y=ycen/over_resolution
         comp_arr[si].ra=ra
         comp_arr[si].dec=dec
         comp_arr[si].flux.I=flux_use*gain_factor_use;/beam_area
         comp_arr[si].gain=gain_factor_use
-        IF Keyword_Set(independent_fit) AND (N_Elements(image_Q_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.Q=$
+        IF Keyword_Set(independent_fit) AND (N_Elements(image_Q_flux) EQ N_Elements(source_find_image_use)) THEN comp_arr[si].flux.Q=$
             Interpolate(image_Q_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
-        IF (N_Elements(image_U_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.U=$
+        IF (N_Elements(image_U_flux) EQ N_Elements(source_find_image_use)) THEN comp_arr[si].flux.U=$
             Interpolate(image_U_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
-        IF Keyword_Set(independent_fit) AND (N_Elements(image_V_flux) EQ N_Elements(source_find_image)) THEN comp_arr[si].flux.V=$
+        IF Keyword_Set(independent_fit) AND (N_Elements(image_V_flux) EQ N_Elements(source_find_image_use)) THEN comp_arr[si].flux.V=$
             Interpolate(image_V_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
         si_use[src_i]=si
         si+=1
@@ -189,7 +225,7 @@ WHILE n_sources EQ 0 DO BEGIN
 ENDWHILE
 
 source_mask=source_mask1
-IF n_sources EQ 0 THEN RETURN,source_comp_init(n_sources=0)
+IF n_sources EQ 0 THEN RETURN,source_comp_init(n_sources=0,frequency=frequency,alpha=alpha_use)
 
 source_list=stokes_cnv(comp_arr[0:n_sources-1],jones,beam_arr=beam_arr,/inverse,_Extra=extra)
 

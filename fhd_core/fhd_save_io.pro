@@ -1,6 +1,6 @@
 PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,var_name=var_name,$
     text=text,restore=restore,obs=obs,reset=reset,force_set=force_set,no_save=no_save,path_use=path_use,$
-    transfer_filename=transfer_filename,compatibility_mode=compatibility_mode,sub_var_name=sub_var_name
+    transfer_filename=transfer_filename,sub_var_name=sub_var_name, compatibility_mode = compatibility_mode
 
 IF ~Keyword_Set(file_path_fhd) THEN BEGIN
     file_path_fhd=''
@@ -28,9 +28,9 @@ ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
 IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,source_array:0,flag_arr:0,auto_corr:0,$
-    vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),$
+    vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),vis_count:0,$
     map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4),complete:0}
-IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str')
+IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str', compatibility_mode = compatibility_mode)
 status_use=status_str
 IF Keyword_Set(text) THEN BEGIN
     dir_use=file_dirname(status_path)
@@ -58,6 +58,7 @@ CASE var_name OF ;listed in order typically generated
     'grid_uv':BEGIN status_use.grid_uv[pol_i]=1 & path_add='_uv_'+pol_names[pol_i] & subdir='grid_data'& END
     'weights_uv':BEGIN status_use.weights_uv[pol_i]=1 & path_add='_uv_weights_'+pol_names[pol_i] & subdir='grid_data'& END
     'grid_uv_model':BEGIN status_use.grid_uv_model[pol_i]=1 & path_add='_uv_model_'+pol_names[pol_i] & subdir='grid_data'& END
+    'vis_count':BEGIN status_use.vis_count=1 & path_add='_vis_count' & subdir='grid_data'& END
     'map_fn':BEGIN status_use.map_fn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn'& END
     'fhd_params':BEGIN status_use.fhd_params=1 & path_add='_fhd_params' & subdir='deconvolution'& END
     'fhd':BEGIN status_use.fhd=1 & path_add='_fhd' & subdir='deconvolution' & END 
@@ -69,27 +70,27 @@ CASE var_name OF ;listed in order typically generated
 ENDCASE
 
 var_name_use=var_name
-IF Keyword_Set(compatibility_mode) THEN BEGIN
-    subdir=''
-    status_path=filepath(base_name+'_status',root=base_path,subdir='')
-    CASE var_name OF
-        'fhd_params':var_name_use='fhd'
-        'weights_uv':path_add='_uv_'+pol_names[pol_i]
-        'healpix_cube': path_add='_cube'
-        'hpx_even': path_add='_even_cube'
-        'hpx_odd': path_add='_odd_cube'
-        ELSE:
-    ENDCASE
-ENDIF 
+;IF Keyword_Set(compatibility_mode) THEN BEGIN
+;    subdir=''
+;    status_path=filepath(base_name+'_status',root=base_path,subdir='')
+;    CASE var_name OF
+;        'fhd_params':var_name_use='fhd'
+;        'weights_uv':path_add='_uv_'+pol_names[pol_i]
+;        'healpix_cube': path_add='_cube'
+;        'hpx_even': path_add='_even_cube'
+;        'hpx_odd': path_add='_odd_cube'
+;        ELSE:
+;    ENDCASE
+;ENDIF 
 IF ~Keyword_Set(name_error) THEN BEGIN
     path_use=filepath(base_name+path_add,root=base_path,subdir=subdir)
     path_sav=path_use+'.sav'
-    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_sav) THEN $
-        fhd_save_io,status_str,pol_i=pol_i,var_name=var_name,/force_set
+;    IF Keyword_Set(compatibility_mode) THEN IF file_test(path_sav) THEN $
+;        fhd_save_io,status_str,pol_i=pol_i,var_name=var_name,/force_set
 
     IF Keyword_Set(restore) THEN BEGIN
         IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name 
-        IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use)
+        IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use, compatibility_mode = compatibility_mode)
         RETURN
     ENDIF
     

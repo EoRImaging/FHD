@@ -46,24 +46,24 @@ IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_
 ;(only flux is independant, all locations are from Stokes I). 
 ;Otherwise they are fit to Stokes I and U only 
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
-    image_uv_arr=Ptrarr(n_pol,/allocate)
+    image_uv_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO BEGIN
         fhd_save_io,status_str,grid_uv,var='grid_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
-        *image_uv_arr[pol_i]=grid_uv
+        image_uv_arr[pol_i]=Ptr_new(grid_uv,/no_copy)
     ENDFOR
 ENDIF
 IF N_Elements(weights_arr) EQ 0 THEN BEGIN
-    weights_arr=Ptrarr(n_pol,/allocate)
+    weights_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO BEGIN
         fhd_save_io,status_str,weights_uv,var='weights_uv',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
-        *weights_arr[pol_i]=weights_uv
+        weights_arr[pol_i]=Ptr_new(weights_uv,/no_copy)
     ENDFOR
 ENDIF
 IF Keyword_Set(transfer_mapfn) THEN print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
 
-IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
+IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    IF N_Elements(*map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+    IF Ptr_valid(map_fn_arr[pol_i]) EQ 0 THEN BEGIN
 ;        fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,/restore,transfer=transfer_mapfn,obs=obs,_Extra=extra
         ;IMPORTANT: this approach of restoring the map_fn uses the least memory
         fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
@@ -71,16 +71,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         RESTORE,path_use+'.sav' ;map_fn
 ;        print,'Restoring: ' + file_path_mapfn+pol_names[pol_i]+'.sav'
 ;        restore,file_path_mapfn+pol_names[pol_i]+'.sav' ;map_fn
-        *map_fn_arr[pol_i]=Temporary(map_fn)
+        map_fn_arr[pol_i]=Ptr_new(map_fn,/no_copy)
     ENDIF
 ENDFOR
 IF Keyword_Set(calibration_image_subtract) THEN BEGIN
     IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
         IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
-            model_uv_arr=Ptrarr(n_pol,/allocate)
+            model_uv_arr=Ptrarr(n_pol)
             FOR pol_i=0,n_pol-1 DO BEGIN
                 fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
-                *model_uv_arr[pol_i]=grid_uv_model
+                model_uv_arr[pol_i]=Ptr_new(grid_uv_model,/no_copy)
             ENDFOR
         ENDIF
     ENDIF

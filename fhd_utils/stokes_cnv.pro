@@ -25,11 +25,26 @@ IF size(jones,/type) EQ 10 THEN BEGIN
     dimension=(*jones).dimension
     elements=(*jones).elements
 ENDIF ELSE BEGIN
-    inds=jones.inds
-    p_map=jones.Jmat
-    p_corr=jones.Jinv
-    dimension=jones.dimension
-    elements=jones.elements
+    IF Keyword_Set(jones) THEN BEGIN
+        inds=jones.inds
+        p_map=jones.Jmat
+        p_corr=jones.Jinv
+        dimension=jones.dimension
+        elements=jones.elements
+    ENDIF ELSE BEGIN
+        IF size(image_arr,/type) EQ 8 THEN BEGIN
+            dimension=obs.dimension
+            elements=obs.elements
+        ENDIF ELSE BEGIN
+            dimension=(Size(*image_arr[0],/dimension))[0]
+            elements=(Size(*image_arr[0],/dimension))[1]
+        ENDELSE
+        n_pix=dimension*elements
+        p_map=Ptrarr(4,4,/allocate)
+        FOR j=0,3 DO FOR i=0,3 DO *p_map[i,j]=Replicate(((i EQ j) ? 1.:0.),n_pix)
+        p_corr=p_map
+        p_free=1
+    ENDELSE
 ENDELSE
 n_pix=N_Elements(inds)
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
@@ -101,7 +116,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     ;if the beam model is supplied as a vector, assume it is already calculated for each component. Otherwise, assume it is a 2D array the same size as the image
     IF size(*beam_use[0],/n_dimension) GT 1 THEN FOR pol_i=0,n_pol-1 DO *beam_use[pol_i]=(*beam_use[pol_i])[sx,sy]
     
-    ;also convert extended source components. Set square=0 since the beam is already squared if that option is set
+    ;also convert extended source components.
     extend_i=where(Ptr_valid(source_list.extend),n_ext)
     IF Keyword_Set(no_extend) THEN n_ext=0
     FOR ext_i=0L,n_ext-1 DO *(source_list[extend_i[ext_i]].extend)=$

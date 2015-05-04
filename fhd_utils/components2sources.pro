@@ -1,38 +1,64 @@
-FUNCTION Components2Sources,comp_arr,obs,fhd,radius=radius,noise_map=noise_map,extend_allow=extend_allow,$
-    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array
+FUNCTION Components2Sources,comp_arr,obs,fhd_params,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,$
+    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array,$
+    reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold,_Extra=extra
 compile_opt idl2,strictarrsubs  
 
-IF N_Elements(radius) EQ 0 THEN radius=1.
 astr=obs.astr
+dimension=obs.dimension
+elements=obs.elements
+n_pol=obs.n_pol
 
-ns=(size(comp_arr,/dimension))[0]
-group_id=fltarr(ns)-1
-g_id=0
-FOR si=0L,ns-1 DO BEGIN 
-    IF group_id[si] GE 0 THEN CONTINUE ;skip sources already grouped
-    IF comp_arr[si].flux.I EQ 0 THEN CONTINUE
-    si_use=where(group_id EQ -1,n_use)  
-    dx=comp_arr[si].x-comp_arr[si_use].x
-    dy=comp_arr[si].y-comp_arr[si_use].y
-    dr=sqrt(dx^2.+dy^2.)
-    group_i=where(dr LT radius,n_group) ;guaranteed at least one since si is included in si_use
-    group_id[si_use[group_i]]=g_id
-    g_id+=1
-ENDFOR
+;Set up defaults
+IF Keyword_Set(fhd_params) THEN BEGIN
+    IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=fhd_params.detection_threshold
+    IF N_Elements(reject_sigma_threshold) EQ 0 THEN IF Keyword_Set(noise_map) THEN reject_sigma_threshold=fhd_params.sigma_cut ELSE reject_sigma_threshold=0  
+    
+ENDIF ELSE BEGIN
+    IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=Min(comp_arr[comp_i_use].flux.I)/2.
+    IF N_Elements(reject_sigma_threshold) EQ 0 THEN IF Keyword_Set(noise_map) THEN reject_sigma_threshold=2. ELSE reject_sigma_threshold=0  
+ENDELSE
+IF N_Elements(extend_threshold) EQ 0 THEN extend_threshold=0.2
+IF N_Elements(reject_outlier_components) EQ 0 THEN reject_outlier_components=0
 
-ng=max(group_id)
-IF ng LE 0 THEN RETURN,source_comp_init(n_sources=1)
+gauss_sigma=beam_width_calculate(obs)
+gauss_width=beam_width_calculate(obs,/fwhm)
+IF N_Elements(radius) EQ 0 THEN radius=gauss_width
+comp_i_use=where(comp_arr.flux.I GT 0,n_comp_use)
+IF n_comp_use EQ 0 THEN RETURN,source_comp_init(n_sources=0)
+
+group_id=group_source_components(obs,comp_arr,radius=radius,gain_array=gain_array)
+
+IF max(group_id) LE 0 THEN RETURN,source_comp_init(n_sources=0)
+hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
+group_inds=where(hgroup GT 1,ng)
+
+ungroup_i=where(group_id LT 0,n_ungroup)
+IF n_ungroup GT 0 THEN BEGIN
+    IF Tag_exist(comp_arr,'flag') THEN comp_arr[ungroup_i].flag=1
+    IF ~Keyword_Set(reject_outlier_components)THEN BEGIN
+        g0=Max(group_id)+1
+        group_id_sub=group_source_components(obs,comp_arr[ungroup_i],radius=radius,gain_array=gain_array)
+        group_id_sub_i=where(group_id_sub GE 0,n_sub_use)
+        IF n_sub_use GT 0 THEN BEGIN
+            group_id[ungroup_i[group_id_sub_i]]=group_id_sub[group_id_sub_i]+g0
+            IF Tag_exist(comp_arr,'flag') THEN comp_arr[ungroup_i[group_id_sub_i]].flag=2
+        ENDIF
+    ENDIF
+ENDIF
 
 hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
-
+group_inds=where(hgroup GT 1,ng)
 source_arr=source_comp_init(n_sources=ng)
 FOR gi=0L,ng-1 DO BEGIN
-    si_g=gri[gri[gi]:gri[gi+1]-1]; guaranteed at least one source per group
-    
+;    IF hgroup[gi] EQ 0 THEN CONTINUE
+    gi_in=group_inds[gi]
+    si_g=gri[gri[gi_in]:gri[gi_in+1]-1]; guaranteed at least one source per group
     flux_I=(comp_arr[si_g].flux.I)>0.
     IF Total(flux_I) LE 0 THEN CONTINUE
+    
     sx=Total(comp_arr[si_g].x*flux_I)/Total(flux_I)
     sy=Total(comp_arr[si_g].y*flux_I)/Total(flux_I)
+    
     xy2ad,sx,sy,astr,sra,sdec
     source_arr[gi].x=sx ;flux_I is guaranteed to be non-zero from above
     source_arr[gi].y=sy ;flux_I is guaranteed to be non-zero from above
@@ -42,17 +68,19 @@ FOR gi=0L,ng-1 DO BEGIN
     source_arr[gi].id=gi
     comp_arr[si_g].id=gi
     IF Keyword_Set(noise_map) THEN BEGIN
-        nm0=noise_map[source_arr[gi].x,source_arr[gi].y] ;need some sort of error checking here first!!!
+        IF N_Elements(noise_map) EQ 1 THEN nm0=noise_map ELSE nm0=noise_map[source_arr[gi].x,source_arr[gi].y] ;need some sort of error checking here first!!!
         IF nm0 GT 0 THEN source_arr[gi].ston=Total(flux_I)/nm0 ELSE source_arr[gi].ston=0.
     ENDIF ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
+    source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)    
+    IF N_Elements(gain_array) EQ 1 THEN gain_factor=gain_array ELSE gain_factor=gain_array[Floor(sx),Floor(sy)]
+    IF (1.-(1.-gain_factor)^N_Elements(si_g)) LT 0.5 THEN flag_min=1 ELSE flag_min=0 
+    IF Tag_exist(comp_arr,'flag') THEN source_arr[gi].flag=Max(comp_arr[si_g].flag)>flag_min
     
-    
-    dist_test=Sqrt((source_arr[gi].x-comp_arr[si_g].x)^2.+(source_arr[gi].y-comp_arr[si_g].y)^2.)
-    IF Stddev(dist_test) GE radius/4. THEN BEGIN
+    extend_test=Mean(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.))
+    IF extend_test GE extend_threshold THEN BEGIN
         (source_arr[gi].extend)=Ptr_new(comp_arr[si_g])
     ENDIF
-;    source_arr[gi].extend=0 ;need to add some way to handle extended sources!
 ENDFOR
 
 comp_arr_use=comp_arr
@@ -67,13 +95,13 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     ns=N_Elements(source_arr)
     comp_gi=comp_arr_use.id
     hcomp_gi=histogram(comp_gi,min=0,/bin,reverse_ind=c_ri)
-    gain_factor=gain_array[source_arr.x,source_arr.y]
+    IF N_Elements(gain_array) EQ 1 THEN gain_factor=gain_array ELSE gain_factor=gain_array[source_arr.x,source_arr.y]
     gain_factor_arr=comp_arr_use.gain
     id_use=where(hcomp_gi,n_id_use)
     flux_frac_arr=Fltarr(ns)+1.
     FOR i=0L,n_id_use-1 DO BEGIN
         id_i=id_use[i]
-        
+        ;What was this supposed to do???
     ENDFOR
 ;    product(
     flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi[source_arr.id]
@@ -107,6 +135,6 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     comp_arr=comp_arr_use
 ENDIF
 
-
+print,String(format='(A," sources detected with maximum signal-to-noise of ",A)',Strn(N_Elements(source_arr)),Strn(max(source_arr.ston)))
 RETURN,source_arr
 END

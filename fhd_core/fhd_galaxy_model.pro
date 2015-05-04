@@ -1,5 +1,6 @@
 FUNCTION fhd_galaxy_model,obs,jones,file_path_fhd=file_path_fhd,restore=restore,antialias=antialias,$
-    gal_model_img=gal_model_img,gal_model_uv=gal_model_uv,uv_return=uv_return,_Extra=extra
+    gal_model_img=gal_model_img,gal_model_uv=gal_model_uv,uv_return=uv_return,$
+    spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 
 IF Keyword_Set(file_path_fhd) THEN file_path_galmodel=file_path_fhd+'_GalaxyModel.sav' ELSE file_path_galmodel=''
 IF Keyword_Set(restore) AND file_test(file_path_galmodel) THEN BEGIN
@@ -54,7 +55,8 @@ Ptr_free,model_arr
 edge_match,model
 valid_i=where(Finite(ra_arr),n_valid)
 Jdate=obs.Jd0
-
+pixel_area_factor=pixel_area(obs,/relative)
+model*=weight_invert(pixel_area_factor)
 ;antialias_filter=Sqrt(Hanning(dimension,elements))
 ;antialias_filter/=Mean(antialias_filter[valid_i])
 model_use=model

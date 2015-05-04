@@ -2,12 +2,14 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
-    beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,_Extra=extra
+    beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
 
 antenna_flag=Arg_present(antenna)
+IF N_Elements(save_antenna_model) EQ 0 THEN save_antenna_model=0
+IF Keyword_Set(no_save) THEN save_antenna_model=0
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF Keyword_Set(restore_last) THEN BEGIN
     fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
@@ -92,7 +94,7 @@ complex_flag_arr=intarr(n_pol,nfreq_bin)
 beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
 ant_A_list=tile_A[0:nbaselines-1]
 ant_B_list=tile_B[0:nbaselines-1]
-baseline_mod=2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list))
+baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
 bi_list=ant_B_list+ant_A_list*baseline_mod
 bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
@@ -183,7 +185,7 @@ psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i
     n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr)
     
 fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
-fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=no_save
+fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
 IF not antenna_flag THEN undefine_fhd,antenna
 timing=Systime(1)-t00
 RETURN,psf

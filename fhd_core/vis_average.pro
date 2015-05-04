@@ -18,14 +18,20 @@ bin_offset=fltarr(n_time0) & bin_offset[1:*]=total(bin_width[0:n_time0-2],/cumul
 n_baselines=bin_width[0]
 
 ;hdr={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
-;    freq_ref:freq_ref,freq_width:freq_width,freq_ref_i:freq_ref_i,obsra:obsra,obsdec:obsdec,date:date_obs,$
+;    freq_res:freq_res,freq_arr:frequency_array,obsra:obsra,obsdec:obsdec,date:date_obs,$
 ;    uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:Jdate0,$
 ;    pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
 IF Keyword_Set(vis_freq_average) THEN BEGIN
-    hdr.n_freq=Floor(hdr.n_freq/vis_freq_average)
-    hdr.freq_width=hdr.freq_width*vis_freq_average
-    hdr.freq_ref_i=Floor(hdr.freq_ref_i/vis_freq_average)
-    n_freq=hdr.n_freq
+    n_freq=Floor(hdr.n_freq/vis_freq_average)
+    hdr.n_freq=n_freq
+    hdr.freq_res=hdr.freq_res*vis_freq_average
+    freq_arr=hdr.freq_arr
+    freq_arr=Fltarr(n_freq)
+    FOR fi=0L,n_freq-1 DO freq_arr[fi]=Mean(hdr.freq_arr[fi*vis_freq_average:(fi+1)*vis_freq_average-1])
+    hdr=structure_update(hdr,freq_arr=freq_arr)
+    
+;    hdr.freq_ref_i=Floor(hdr.freq_ref_i/vis_freq_average)
+    
     FOR pol_i=0,n_pol-1 DO BEGIN
         vis_old=Temporary(*vis_arr[pol_i])
         flag_old=Temporary(*flag_arr[pol_i])>0

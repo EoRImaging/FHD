@@ -33,13 +33,12 @@ PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=clea
     healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
-    calibration_catalog_file_path=calibration_catalog_file_path,$
+    calibration_catalog_file_path=calibration_catalog_file_path,dft_threshold=dft_threshold,$
     calibration_image_subtract=calibration_image_subtract,calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities,snapshot_healpix_export=snapshot_healpix_export,cmd_args=cmd_args,log_store=log_store,$
-    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,restore_vis_savefile=restore_vis_savefile,generate_vis_savefile=generate_vis_savefile,$
-    model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
-    reorder_visibilities=reorder_visibilities,transfer_flags=transfer_flags,flag_calibration=flag_calibration, production=production,_Extra=extra
+    generate_vis_savefile=generate_vis_savefile,model_visibilities=model_visibilities,model_catalog_file_path=model_catalog_file_path,$
+    transfer_flags=transfer_flags,flag_calibration=flag_calibration, production=production,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -54,7 +53,6 @@ print,'Output file_path:',file_path_fhd
 
 log_filepath=file_path_fhd+'_log.txt'
 IF Keyword_Set(!Journal) THEN journal
-IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
 
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
@@ -68,68 +66,20 @@ data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup
 IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
-    IF Keyword_Set(restore_vis_savefile) THEN BEGIN
-        IF file_test(file_path_vis_sav) EQ 0 THEN BEGIN
-            error=1
-            RETURN
-        ENDIF
-        t_readfits=Systime(1)
-        RESTORE,file_path_vis_sav
-        t_readfits=Systime(1)-t_readfits
-        print,"Time restoring visibility save file: "+Strn(t_readfits)
-    ENDIF ELSE BEGIN
-        IF file_test(file_path_vis) EQ 0 THEN BEGIN
-            print,"File: "+file_path_vis+" not found! Returning"
-            error=1
-            RETURN
-        ENDIF
-        
-        t_readfits=Systime(1)
-        data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
-        hdr=vis_header_extract(data_header0, params = data_struct.params)    
-        IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
-        params=vis_param_extract(data_struct.params,hdr)
-        t_readfits=Systime(1)-t_readfits
-        print,"Time reading UVFITS files and extracting header: "+Strn(t_readfits)
-        IF n_pol LT hdr.n_pol THEN data_array=Temporary(data_struct.array[*,0:n_pol-1,*]) ELSE data_array=Temporary(data_struct.array) 
-        data_struct=0. ;free memory
-        
-        pol_dim=hdr.pol_dim
-        freq_dim=hdr.freq_dim
-        real_index=hdr.real_index
-        imaginary_index=hdr.imaginary_index
-        flag_index=hdr.flag_index
-        vis_arr=Ptrarr(n_pol,/allocate)
-        flag_arr=Ptrarr(n_pol,/allocate)
-        n_freq0=hdr.n_freq
-        nbaselines0=hdr.nbaselines
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*],n_freq0,nbaselines0),Reform(data_array[imaginary_index,pol_i,*,*],n_freq0,nbaselines0))
-            *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*],n_freq0,nbaselines0)
-        ENDFOR
-        ;free memory
-        data_array=0 
-        flag_arr0=0
-        
-        IF Keyword_Set(reorder_visibilities) THEN vis_reorder,hdr,params,vis_arr,flag_arr
-        
-        ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
-        IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
-            IF Keyword_Set(vis_time_average) THEN print,"Averaging visibilities in time by a factor of: "+Strtrim(Strn(vis_time_average),2)
-            IF Keyword_Set(vis_freq_average) THEN print,"Averaging visibilities in frequency by a factor of: "+Strtrim(Strn(vis_freq_average),2)
-            vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
-            IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
-        ENDIF
-        
-        IF Keyword_Set(generate_vis_savefile) THEN BEGIN
-            SAVE,vis_arr,flag_arr,hdr,params,filename=file_path_vis_sav
-            timing=Systime(1)-t0
-            IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
-            RETURN
-        ENDIF
-    ENDELSE    
     
-    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
+    uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,error=error,_Extra=extra
+    IF Keyword_Set(error) THEN BEGIN
+        print,"Error occured while reading uvfits data. Returning."
+        RETURN
+    ENDIF
+    IF Keyword_Set(generate_vis_savefile) THEN BEGIN
+        IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
+        SAVE,vis_arr,flag_arr,hdr,params,filename=file_path_vis_sav
+        timing=Systime(1)-t0
+        IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
+        RETURN
+    ENDIF
+    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra)
     n_pol=obs.n_pol
     n_freq=obs.n_freq
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end 
@@ -193,7 +143,7 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(flag_visibilities) THEN BEGIN
         print,'Flagging anomalous data'
-        vis_flag,vis_arr,flag_arr,obs,params,_Extra=extra
+        vis_flag,vis_arr,flag_arr,obs,psf,params,_Extra=extra
         fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
         fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
@@ -231,22 +181,16 @@ IF data_flag LE 0 THEN BEGIN
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
     undefine_fhd,antenna
+    auto_corr=vis_extract_autocorr(obs,status_str,vis_arr=vis_arr,file_path_fhd=file_path_fhd,_Extra=extra)
     
     IF obs.n_vis EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
         error=1
         IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
         RETURN
-    ENDIF
-    
-    autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
-    auto_corr=Ptrarr(n_pol)
-    IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
-        auto_vals=(*vis_arr[pol_i])[*,autocorr_i]
-        auto_corr[pol_i]=Ptr_new(auto_vals)
-    ENDFOR
-    fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd,obs=obs,_Extra=extra
-    
+    ENDIF    
+
+    IF Keyword_Set(return_decon_visibilities) THEN save_visibilities=1
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
         vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
@@ -261,7 +205,7 @@ IF data_flag LE 0 THEN BEGIN
     ;Grid the visibilities
     IF Keyword_Set(grid_recalculate) THEN BEGIN
         print,'Gridding visibilities'
-        IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol,/allocate)
+        IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol)
         image_uv_arr=Ptrarr(n_pol,/allocate)
         weights_arr=Ptrarr(n_pol,/allocate)
         
@@ -272,8 +216,9 @@ IF data_flag LE 0 THEN BEGIN
             IF Keyword_Set(snapshot_healpix_export) THEN preserve_visibilities=1 ELSE preserve_visibilities=0
             IF Keyword_Set(preserve_visibilities) THEN return_mapfn=0 ELSE return_mapfn=mapfn_recalculate
             IF Keyword_Set(mapfn_recalculate) AND Keyword_Set(save_visibilities) THEN preserve_vis_grid=0 ELSE preserve_vis_grid=preserve_visibilities
+            IF pol_i EQ 0 THEN uniform_filter=1 ELSE uniform_filter=0
             grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
-                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
+                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,uniform_filter=uniform_filter,$
                 mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
                 model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_vis_grid,_Extra=extra)
             IF Keyword_Set(error) THEN BEGIN
@@ -284,8 +229,9 @@ IF data_flag LE 0 THEN BEGIN
             t_grid[pol_i]=t_grid0
             fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
             fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
+            IF pol_i EQ 0 THEN fhd_save_io,status_str,uniform_filter,var='vis_count',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 
-            IF Keyword_Set(deconvolve) THEN IF mapfn_recalculate THEN *map_fn_arr[pol_i]=Temporary(return_mapfn)
+            IF Keyword_Set(deconvolve) THEN IF Keyword_Set(return_mapfn) THEN map_fn_arr[pol_i]=Ptr_new(return_mapfn,/no_copy)
             *image_uv_arr[pol_i]=Temporary(grid_uv)
             IF Keyword_Set(model_flag) THEN BEGIN
                 fhd_save_io,status_str,model_return,var='grid_uv_model',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra

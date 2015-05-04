@@ -1,5 +1,5 @@
 PRO plot_cals_sub,freq_arr,gains_A,gains_B,filename=filename,phase=phase,real_vs_imaginary=real_vs_imaginary,$
-    tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+    tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,yrange=yrange,$
     obsname=obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
 
 cgPS_Open,filename,scale_factor=2,/quiet,/nomatch
@@ -21,23 +21,23 @@ IF Keyword_Set(phase) THEN BEGIN
     ytickname=['-!9p!X','0','!9p!X']
     yrange=[-1.5*!pi,1.5*!pi]
 ENDIF ELSE BEGIN
-    IF n_pol GT 1 THEN max_amp = mean(abs([gains_A[tile_use_i],gains_B[tile_use_i]])) + 5*stddev(abs([gains_A[tile_use_i],gains_B[tile_use_i]])) $
-        ELSE max_amp = Mean(abs(gains_A[tile_use_i])) + 5*stddev(abs(gains_A[tile_use_i]))
-    amp_range=Floor(Alog10(max_amp))
-    IF amp_range LT 0 THEN amp_digits=1. ELSE amp_digits=2.
-    amp_test=max_amp/10.^(amp_range-amp_digits)
-    max_amp=Round(amp_test)*10.^(amp_range-amp_digits)
-     
-    yrange=[0,max_amp]
-    ytickv=[0,max_amp/2,max_amp]
-    IF (gain_type LE 5) OR Keyword_Set(real_vs_imaginary) THEN BEGIN
-        min_amp=Min(Real_part(gains_A[tile_use_i])<Imaginary(gains_A[tile_use_i]))
-        IF n_pol GT 1 THEN min_amp=min_amp<Min(Real_part(gains_B[tile_use_i])<Imaginary(gains_B[tile_use_i]))
-        IF min_amp LT 0 THEN BEGIN
-            yrange=[-max_amp,max_amp]
-            ytickv=[-max_amp,0,max_amp]
-        ENDIF
-    ENDIF 
+    IF N_Elements(yrange) NE 2 THEN BEGIN
+        yrange=Minmax(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]]))
+        
+        IF (gain_type LE 5) OR Keyword_Set(real_vs_imaginary) THEN BEGIN
+            IF n_pol GT 1 THEN max_amp = mean(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]])) + 5*stddev(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]])) $
+                ELSE max_amp = Mean(abs(gains_A[*,tile_use_i])) + 5*stddev(abs(gains_A[*,tile_use_i]))
+            amp_range=Floor(Alog10(max_amp))
+            IF amp_range LT 0 THEN amp_digits=1. ELSE amp_digits=2.
+            amp_test=max_amp/10.^(amp_range-amp_digits)
+            max_amp=Round(amp_test)*10.^(amp_range-amp_digits)
+            min_amp=Min(Real_part(gains_A[*,tile_use_i])<Imaginary(gains_A[*,tile_use_i]))
+            IF n_pol GT 1 THEN min_amp=min_amp<Min(Real_part(gains_B[*,tile_use_i])<Imaginary(gains_B[*,tile_use_i]))
+            IF min_amp LT 0 THEN yrange=[-max_amp,max_amp] 
+
+        ENDIF 
+    ENDIF
+    ytickv=[Min(yrange),Mean(yrange),Max(yrange)]
 ENDELSE
 
 FOR tile_i=0L,n_tiles-1 DO BEGIN

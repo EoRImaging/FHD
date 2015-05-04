@@ -105,6 +105,7 @@ CASE beam_model_version OF
         interp_res=obs.degpix
         angle_slice_i0=Uniq(phi_arr)
         n_ang_slice=N_Elements(angle_slice_i0)
+        n_zen_slice=angle_slice_i0[0]+1
         az_ang_in=phi_arr[angle_slice_i0]
         zen_ang_in=theta_arr[0:angle_slice_i0[0]]
         zen_ang_out=Findgen(Ceil(90./interp_res)+1)*interp_res
@@ -119,11 +120,8 @@ CASE beam_model_version OF
         az_ang_inst=Atan(yvals_instrument[pix_use],xvals_instrument[pix_use])*!Radeg+180.
         
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO BEGIN
-            Jmat_use=*Jmat_interp[p_i,p_j,freq_i]
-            Jmat_single1=Complexarr(n_zen_ang,n_ang_slice)
-            FOR a_i=0L,n_ang_slice-1 DO Jmat_single1[*,a_i]+=Interpol(Jmat_use[where(phi_arr EQ phi_arr[angle_slice_i0[a_i]])],zen_ang_in,zen_ang_out)
-            Jmat_single=Complexarr(n_zen_ang,n_az_ang)
-            FOR a_i=0L,n_zen_ang-1 DO Jmat_single[a_i,*]=Interpol(Jmat_single1[a_i,*],az_ang_in,az_ang_out)
+            Jmat_use=Reform(*Jmat_interp[p_i,p_j,freq_i],n_zen_slice,n_ang_slice)
+            Expand,Jmat_use,n_zen_ang,n_az_ang,Jmat_single
             (*Jones_matrix[p_i,p_j,freq_i])[pix_use]=Interpolate(Jmat_single,zen_ang_inst/interp_res,az_ang_inst/interp_res,cubic=-0.5)
             debug_point=1
         ENDFOR

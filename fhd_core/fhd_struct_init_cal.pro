@@ -20,7 +20,7 @@ IF N_Elements(n_vis_cal) EQ 0 THEN n_vis_cal=obs.n_vis
 IF N_Elements(n_pol) EQ 0 THEN n_pol=obs.n_pol<2 ; since only x and y pols, not xx, yy, xy, yx
 IF N_Elements(n_freq) EQ 0 THEN n_freq=obs.n_freq
 IF N_Elements(n_tile) EQ 0 THEN n_tile=obs.n_tile
-IF N_Elements(n_time) EQ 0 THEN n_time=N_Elements(bin_offset)
+IF N_Elements(n_time) EQ 0 THEN n_time=obs.n_time
 IF N_Elements(n_cal_src) EQ 0 THEN n_cal_src=-1
 IF N_Elements(source_list) EQ 0 THEN source_list=source_comp_init(n_sources=n_cal_src,freq=obs.freq_center)
 IF N_Elements(galaxy_cal) EQ 0 THEN galaxy_cal=0
@@ -52,9 +52,11 @@ IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
 IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0.
 convergence=Ptrarr(2)
 mode_params=Ptrarr(n_pol,n_tile)
+auto_params=Ptrarr(2)
+auto_scale=Fltarr(2)
 
 cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,phase_iter:phase_fit_iter,$
-    tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,gain_residual:gain_residual,$
+    tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,gain_residual:gain_residual,auto_scale:auto_scale,auto_params:auto_params,$
     galaxy_cal:galaxy_cal,min_cal_baseline:min_cal_baseline,max_cal_baseline:max_cal_baseline,n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,ref_antenna_name:ref_antenna_name,$
     conv_thresh:cal_convergence_threshold,convergence:convergence,polyfit:calibration_polyfit,amp_params:amp_params,phase_params:phase_params,$
