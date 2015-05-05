@@ -57,7 +57,7 @@ ENDIF
 npix=nside2npix(nside)
 ;pixel_area_cnv=(1./(obs.degpix*!DtoR)^2.)*(4.*!Pi/npix) ; (old pixel/steradian)*(steradian/new pixel)
 
-IF Keyword_Set(divide_pixel_area) THEN
+IF Keyword_Set(divide_pixel_area) THEN BEGIN
     pixel_area_cnv=weight_invert(pixel_area(obs,/relative))
 ENDIF ELSE pixel_area_cnv=1. ;turn this off for now
 
