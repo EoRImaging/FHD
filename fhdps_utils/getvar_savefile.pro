@@ -3,7 +3,6 @@ function getvar_savefile, savefile, varname, pointer_return=pointer_return, name
     print, 'getvar_savefile: file ' + string(savefile) + ' not found'
     return, 0
   endif
-  IF Keyword_Set(no_relaxed_restore) THEN relaxed=0 ELSE relaxed=1
   
   savefile_obj = obj_new('idl_savefile', savefile)
   if arg_present(names) then names = savefile_obj->names()
