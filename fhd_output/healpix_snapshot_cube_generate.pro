@@ -57,8 +57,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask,/square,beam_threshold=beam_threshold)
   
-  hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,$
-    mask=beam_mask,restore_last=0,/no_save,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds)
+  hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,restore_last=0,/no_save,$
+    mask=beam_mask,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds,_Extra=extra)
   IF Keyword_Set(restrict_hpx_inds) THEN nside=nside_use
   hpx_inds=hpx_cnv.inds
   n_hpx=N_Elements(hpx_inds)
