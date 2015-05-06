@@ -118,6 +118,7 @@ IF n_use GT 0 THEN BEGIN
             ad2xy,extend_list.ra,extend_list.dec,astr,x_arr,y_arr
             extend_list.x=x_arr
             extend_list.y=y_arr
+            extend_list.alpha=ex_spectral_index
             FOR i=0,7 DO extend_list.flux.(i)=extend_list.flux.(i)*(freq_use/catalog.freq)^ex_spectral_index
 ;            FOR pol_i=0,(n_pol<2)-1 DO extend_list.flux.(pol_i)=extend_list.flux.I*(*beam_list[pol_i])[extend_i[ext_i]]
             *source_list[extend_i[ext_i]].extend=extend_list
