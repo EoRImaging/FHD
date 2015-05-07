@@ -59,12 +59,12 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     IF Keyword_Set(dft_threshold) THEN BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
         model_uv_arr=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-            conserve_memory=conserve_memory,dft_threshold=dft_threshold)
+            silent=silent,conserve_memory=conserve_memory,dft_threshold=dft_threshold)
         
         Ptr_free,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
-        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory)
+        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory,silent=silent)
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
