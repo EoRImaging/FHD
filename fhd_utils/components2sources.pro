@@ -1,6 +1,6 @@
 FUNCTION Components2Sources,comp_arr,obs,fhd_params,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,$
     reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array,$
-    reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold,_Extra=extra
+    reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold,regrid_extended_sources=regrid_extended_sources,_Extra=extra
 compile_opt idl2,strictarrsubs  
 
 astr=obs.astr
@@ -26,9 +26,20 @@ IF N_Elements(radius) EQ 0 THEN radius=gauss_width
 comp_i_use=where(comp_arr.flux.I GT 0,n_comp_use)
 IF n_comp_use EQ 0 THEN RETURN,source_comp_init(n_sources=0)
 
+IF Keyword_Set(regrid_extended_sources) THEN BEGIN
+    nside_obs=obs.healpix.nside
+    pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(astr.cdelt))
+    Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2)))
+    nside=nside_obs>nside_chk
+    hpx_cnv=healpix_cnv_generate(obs,/no_save,/divide_pixel_area,nside=nside,/pointer_return)
+ENDIF
+
 group_id=group_source_components(obs,comp_arr,radius=radius,gain_array=gain_array)
 
-IF max(group_id) LE 0 THEN RETURN,source_comp_init(n_sources=0)
+IF max(group_id) LE 0 THEN BEGIN
+    IF Keyword_Set(hpx_cnv) THEN undefine_fhd,hpx_cnv
+    RETURN,source_comp_init(n_sources=0)
+ENDIF
 hgroup=histogram(group_id,binsize=1,min=0,reverse_ind=gri)
 group_inds=where(hgroup GT 1,ng)
 
@@ -79,9 +90,12 @@ FOR gi=0L,ng-1 DO BEGIN
     
     extend_test=Mean(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.))
     IF extend_test GE extend_threshold THEN BEGIN
-        (source_arr[gi].extend)=Ptr_new(comp_arr[si_g])
+        IF Keyword_Set(regrid_extended_sources) THEN source_arr[gi].extend=Ptr_new(source_array_regrid(comp_arr[si_g],obs,hpx_cnv=hpx_cnv,source_peak=source_arr[gi],_Extra=extra)) $
+            ELSE source_arr[gi].extend=Ptr_new(comp_arr[si_g])
     ENDIF
 ENDFOR
+
+IF Keyword_Set(hpx_cnv) THEN undefine_fhd,hpx_cnv
 
 comp_arr_use=comp_arr
 IF Keyword_Set(reject_sigma_threshold) THEN BEGIN

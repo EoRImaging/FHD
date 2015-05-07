@@ -2,6 +2,7 @@ FUNCTION healpix_cnv_generate,obs,status_str,file_path_fhd=file_path_fhd,nside=n
     restore_last=restore_last,silent=silent,pointer_return=pointer_return,no_save=no_save,$
     restrict_hpx_inds=restrict_hpx_inds,divide_pixel_area=divide_pixel_area,_Extra=extra
 
+IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
     IF ~Keyword_Set(silent) THEN print,file_path_fhd+'_hpxcnv'+'.sav' +' Not found. Recalculating.' 
     restore_last=0
