@@ -7,15 +7,15 @@ heap_gc
 ; using firstpass.
 
 ; parse command line args
-;compile_opt strictarr
-;args = Command_Line_Args(count=nargs)
-;obs_id = args[0]
-obs_id = '1061316296'
-;output_directory = args[1]
-output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+compile_opt strictarr
+args = Command_Line_Args(count=nargs)
+obs_id = args[0]
+;obs_id = '1061316296'
+output_directory = args[1]
+;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 version = args[2]
 ;version = 'nb_autocal'
-;cmd_args={version:version}
+;;cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
