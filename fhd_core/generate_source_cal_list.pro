@@ -4,7 +4,7 @@ FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_
     allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,beam_arr=beam_arr,model_visibilities=model_visibilities,$
     max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,delicate_calibration_catalog=delicate_calibration_catalog,$
     no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
-    allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,_Extra=extra
+    allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,flatten_spectrum=flatten_spectrum,_Extra=extra
 
 UPNAME=StrUpCase(catalog_path)
 psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
@@ -128,5 +128,10 @@ ENDIF ELSE RETURN,source_comp_init(n_sources=0,freq=obs.freq_center)
 
 IF Keyword_Set(max_sources) THEN IF N_Elements(source_list) GT max_sources $
     THEN source_list=source_list[0:max_sources-1]
+
+IF Keyword_Set(flatten_spectrum) THEN BEGIN
+    alpha_avg=Total(source_list.alpha*(source_list.flux.I>0))/Total(source_list.flux.I>0)
+    obs.alpha=alpha_avg
+ENDIF
 RETURN,source_list
 END
