@@ -1,5 +1,6 @@
 FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,uv_return=uv_return,$
-    spectral_model_arr=spectral_model_arr,diffuse_units_kelvin=diffuse_units_kelvin,diffuse_spectral_index=diffuse_spectral_index,_Extra=extra
+    spectral_model_arr=spectral_model_arr,diffuse_units_kelvin=diffuse_units_kelvin,$
+    diffuse_spectral_index=diffuse_spectral_index,flatten_spectrum=flatten_spectrum,_Extra=extra
 
 dimension=obs.dimension
 elements=obs.elements
@@ -9,6 +10,7 @@ n_pol=obs.n_pol
 n_spectral=obs.degrid_spectral_terms
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
 radec_i=where(Finite(ra_arr))
+IF Keyword_Set(flatten_spectrum) THEN alpha_corr=obs.alpha ELSE alpha_corr=0.
 
 ;freq_use=where((*obs.baseline_info).freq_use,nf_use)
 ;f_bin=(*obs.baseline_info).fbin_i
@@ -70,6 +72,7 @@ Ptr_free,model_stokes_arr
 IF (size(diffuse_spectral_index,/type) GE 1) AND (size(diffuse_spectral_index,/type) LE 5) THEN BEGIN 
     ;if a scalar, assume a single spectral index will be used for the diffuse model
     spectral_model_arr=Ptrarr(n_pol,n_spectral)
+    diffuse_spectral_index-=alpha_corr
     FOR pol_i=0,n_pol-1 DO BEGIN
         FOR s_i=0,n_spectral-1 DO BEGIN
             IF Keyword_Set(uv_return) THEN $

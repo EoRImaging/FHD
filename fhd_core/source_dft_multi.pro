@@ -1,18 +1,22 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
     conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,silent=silent,$
-    dimension=dimension,elements=elements,n_pol=n_pol,spectral_model_uv_arr=spectral_model_uv_arr,n_spectral=n_spectral,_Extra=extra
+    dimension=dimension,elements=elements,n_pol=n_pol,spectral_model_uv_arr=spectral_model_uv_arr,$
+    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,_Extra=extra
 
+alpha_corr=0.
 IF Keyword_Set(obs) THEN BEGIN
     IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=obs.dft_threshold
     dimension=obs.dimension
     elements=obs.elements
     n_pol=obs.n_pol
     IF N_Elements(n_spectral) EQ 0 THEN n_spectral=obs.degrid_spectral_terms
+    IF Keyword_Set(flatten_spectrum) THEN alpha_corr=obs.alpha
 ENDIF ELSE BEGIN
     IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=0.
     IF N_Elements(elements) EQ 0 THEN elements=dimension
     IF N_Elements(n_pol) EQ 0 THEN n_pol=1
     IF N_Elements(n_spectral) EQ 0 THEN n_spectral=0
+    IF Keyword_Set(flatten_spectrum) THEN print,"WARNING: obs structure not present in source_dft_multi, but flatten_spectrum was set"
 ENDELSE
 
 IF N_Elements(uv_i_use) EQ 0 THEN uv_i_use=Lindgen(dimension*elements)
@@ -44,7 +48,7 @@ ENDFOR
 IF Keyword_Set(n_spectral) THEN BEGIN
 ;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg
     IF not Keyword_Set(silent) THEN print,"Gridding source model cube using taylor expansion of order: "+Strn(n_spectral)
-    alpha_arr=source_array.alpha
+    alpha_arr=source_array.alpha-alpha_corr
     
     flux_arr=Ptrarr(n_pol,n_spectral+1)
     FOR pol_i=0,n_pol-1 DO BEGIN
