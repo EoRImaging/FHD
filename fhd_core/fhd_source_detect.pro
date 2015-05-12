@@ -21,8 +21,8 @@ degpix=obs.degpix
 astr=obs.astr
 beam_width=beam_width_calculate(obs,/fwhm)
 beam_area=beam_width_calculate(obs,/area)
-local_max_radius=beam_width*2.
-box_radius=Ceil(local_max_radius)
+local_max_radius=beam_width;*2.
+box_radius=Ceil(local_max_radius*2.)
 
 IF N_Elements(beam_mask) EQ 0 THEN beam_mask=Fltarr(dimension,elements)+1.
 IF N_Elements(image_I_flux) EQ 0 THEN image_I_flux=source_find_image
@@ -130,8 +130,8 @@ WHILE n_sources EQ 0 DO BEGIN
     ;fit flux here, and fill comp_arr for each pol
     flux_arr=fltarr(4)
     fit_threshold=-2.*converge_check
-    source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
-    source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
+;    source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
+;    source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
     ;source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
     ;source_fit_fn_ref=Total(source_fit_fn)/2.
     
@@ -189,12 +189,13 @@ WHILE n_sources EQ 0 DO BEGIN
         xcen0=xcen-sx0+box_radius
         ycen0=ycen-sy0+box_radius
         xy2ad,xcen,ycen,astr,ra,dec
+        flux_min=Min(source_box[box_radius-local_max_radius:box_radius+local_max_radius,box_radius-local_max_radius:box_radius+local_max_radius])<0
         
         IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>image_I_flux[sx,sy] $
             ELSE flux_use=image_I_flux[sx,sy]
-        IF flux_use LE 0 THEN BEGIN
-            n_mask+=Total(source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius])
-            source_mask1[sx-box_radius:sx+box_radius,sy-box_radius:sy+box_radius]=0
+        IF flux_use LT -flux_min THEN BEGIN
+            n_mask+=Total(source_mask1[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius])
+            source_mask1[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]=0
             CONTINUE
         ENDIF
         
