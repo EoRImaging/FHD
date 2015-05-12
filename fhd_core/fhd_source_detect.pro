@@ -21,8 +21,10 @@ degpix=obs.degpix
 astr=obs.astr
 beam_width=beam_width_calculate(obs,/fwhm)
 beam_area=beam_width_calculate(obs,/area)
-local_max_radius=beam_width;*2.
+local_max_radius=beam_width>1.;*2.
 box_radius=Ceil(local_max_radius*2.)
+xvals=meshgrid(dimension,elements,1)
+yvals=meshgrid(dimension,elements,2)
 
 IF N_Elements(beam_mask) EQ 0 THEN beam_mask=Fltarr(dimension,elements)+1.
 IF N_Elements(image_I_flux) EQ 0 THEN image_I_flux=source_find_image
@@ -65,12 +67,12 @@ max_iter=5
 iter=0
 WHILE n_sources EQ 0 DO BEGIN
     source_find_image_use=source_find_image*source_mask1
-    source_flux=Max(source_find_image_use*source_mask0,source_i)
+    source_flux=Max(source_find_image_use,source_i)
     flux_ref1=source_find_image_use[source_i]*add_threshold
-    flux_ref2=source_find_image_use[source_i]*0.5
+    flux_ref2=(source_find_image_use[source_i]*0.5)>(100.*converge_check)
     
     additional_i1=where(source_find_image_use GE flux_ref1,n_sources1)
-    additional_i2=where((source_find_image_use GE 5.*converge_check) AND (source_find_image_use GE flux_ref2),n_sources2)
+    additional_i2=where(source_find_image_use GE flux_ref2,n_sources2)
     IF n_sources1 GT n_sources2 THEN BEGIN
         additional_i=additional_i1
         detection_threshold=flux_ref1
@@ -93,7 +95,7 @@ WHILE n_sources EQ 0 DO BEGIN
     source_map=lonarr(dimension,elements)
     source_map[add_x,add_y]=lindgen(n_sources)+1
     background_dist=morph_distance(source_map,neighbor=3)
-    extended_pix=where(background_dist GT (beam_width>1.),n_extend)
+    extended_pix=where(background_dist GT local_max_radius,n_extend)
     extended_flag=fltarr(n_sources)
     IF n_extend GT 0 THEN BEGIN
         src_inds=source_map[extended_pix]-1
@@ -184,7 +186,12 @@ WHILE n_sources EQ 0 DO BEGIN
         gain_mod=1.
         sx0=Floor(xcen)
         sy0=Floor(ycen)
-        IF source_mask1[sx0,sy0] EQ 0 THEN CONTINUE
+        IF source_mask1[sx0,sy0] EQ 0 THEN BEGIN
+            n_mask+=source_mask1[sx,sy]
+            source_mask1[sx,sy]=0
+            source_mask[sx,sy]=0
+            CONTINUE
+        ENDIF
         source_box=image_I_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius]
         xcen0=xcen-sx0+box_radius
         ycen0=ycen-sy0+box_radius
@@ -194,8 +201,10 @@ WHILE n_sources EQ 0 DO BEGIN
         IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>image_I_flux[sx,sy] $
             ELSE flux_use=image_I_flux[sx,sy]
         IF flux_use LT -flux_min THEN BEGIN
-            n_mask+=Total(source_mask1[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius])
-            source_mask1[sx-local_max_radius:sx+local_max_radius,sy-local_max_radius:sy+local_max_radius]=0
+            mask_i=where(Sqrt((xvals-xcen)^2.+(yvals-ycen)^2.) LE local_max_radius+1)
+            n_mask+=Total(source_mask[mask_i])
+            source_mask[mask_i]=0
+            source_mask1[mask_i]=0
             CONTINUE
         ENDIF
         
@@ -225,7 +234,7 @@ WHILE n_sources EQ 0 DO BEGIN
     IF iter GE max_iter THEN BREAK
 ENDWHILE
 
-source_mask=source_mask1
+;source_mask=source_mask1
 IF n_sources EQ 0 THEN RETURN,source_comp_init(n_sources=0,frequency=frequency,alpha=alpha_use)
 
 source_list=stokes_cnv(comp_arr[0:n_sources-1],jones,beam_arr=beam_arr,/inverse,_Extra=extra)

@@ -16,12 +16,13 @@ IF N_Elements(obs) EQ 0 THEN BEGIN
     beam_width=1.
     IF N_Elements(dft_deconvolution_threshold) EQ 0 THEN dft_deconvolution_threshold=1. 
 ENDIF ELSE BEGIN
-    IF N_Elements(dft_deconvolution_threshold) EQ 0 THEN dft_deconvolution_threshold=obs.dft_threshold
+    IF N_Elements(dft_deconvolution_threshold) EQ 0 THEN $
+        IF Keyword_Set(obs.dft_threshold) THEN dft_deconvolution_threshold=obs.dft_threshold ELSE dft_deconvolution_threshold=1. 
     dimension=obs.dimension
     n_pol=obs.n_pol
     beam_width=beam_width_calculate(obs,/fwhm)/2.
 ENDELSE
-IF dft_deconvolution_threshold EQ 1 THEN dft_deconvolution_threshold=1./((2.*!Pi)^2.*dimension) $ ;explicitly set to 0 to use analytic DFT. ;1/2 value of kernel_test along either axis at the edge of the image.
+IF dft_deconvolution_threshold GE 1 THEN dft_deconvolution_threshold=1./((2.*!Pi)^2.*dimension) $ ;explicitly set to 0 to use analytic DFT. ;1/2 value of kernel_test along either axis at the edge of the image.
     ELSE dft_deconvolution_threshold=Float(dft_deconvolution_threshold)
 
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
