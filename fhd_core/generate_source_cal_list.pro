@@ -4,7 +4,8 @@ FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_
     allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,beam_arr=beam_arr,model_visibilities=model_visibilities,$
     max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,delicate_calibration_catalog=delicate_calibration_catalog,$
     no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
-    allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,flatten_spectrum=flatten_spectrum,_Extra=extra
+    allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,$
+    preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra
 
 UPNAME=StrUpCase(catalog_path)
 psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
@@ -68,6 +69,14 @@ ENDIF ELSE BEGIN
     fft_alias_range=dimension/4.
     IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.2
 ENDELSE
+
+IF N_Elements(spectral_index) GT 1 AND (not Keyword_Set(preserve_zero_spectral_indices)) THEN BEGIN
+    zero_i=where(spectral_index EQ 0,n_zero,complement=nonzero_i,ncomplement=n_nonzero)
+    IF n_zero GT 0 THEN BEGIN
+        IF n_nonzero GT 5 THEN Resistant_mean,spectral_index[nonzero_i],2,alpha_mean ELSE alpha_mean=-0.8
+        spectral_index[zero_i]=alpha_mean
+    ENDIF
+ENDIF
 
 IF n_use GT 0 THEN BEGIN
     catalog=catalog[i_use]
