@@ -1,6 +1,7 @@
 FUNCTION Components2Sources,comp_arr,obs,fhd_params,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,$
     reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array,$
-    reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold,regrid_extended_sources=regrid_extended_sources,_Extra=extra
+    reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold,regrid_extended_sources=regrid_extended_sources,$
+    source_mask=source_mask,_Extra=extra
 compile_opt idl2,strictarrsubs  
 
 astr=obs.astr
@@ -128,6 +129,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     
     IF clean_bias_threshold LT 0 THEN RETURN,source_arr ; return trimmed source array if threshold is specified as negative, but don't correct any fluxes
     
+    IF N_Elements(source_mask) NE dimension*elements THEN source_mask=replicate(1.,dimension,elements)
 ;    extend_box_radius=3.*gauss_width
     FOR si = 0L,n_use-1L DO BEGIN
         gi=source_arr[si].id
@@ -140,7 +142,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             ext_gain=ext_comp & ext_gain.flux.I=ext_gain.gain/Mean(ext_gain.gain)
             ext_n_img=source_image_generate(ext_gain,obs,pol=4,/conserve,threshold=Mean(ext_gain.gain))
             flux_frac_ext=1.-(1.-Mean(ext_gain.gain))^ext_n_img
-            pix_i=where(flux_frac_ext GE Abs(clean_bias_threshold),n_pix)
+            pix_i=where(flux_frac_ext*source_mask GE Abs(clean_bias_threshold),n_pix)
             IF n_pix EQ 0 THEN CONTINUE
             sx=Float(pix_i mod dimension)
             sy=Float(Floor(pix_i/dimension))
@@ -152,7 +154,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             FOR pol_i=0,7 DO BEGIN
                 IF source_arr[si].flux.(pol_i) EQ 0 THEN CONTINUE
                 ext_img=source_image_generate(ext_comp,obs,pol=pol_i,/conserve)
-                ext_img*=(1.-flux_frac_ext)/gauss_area
+                ext_img*=source_mask*(1.-flux_frac_ext)/gauss_area
                 ext_comp_new[ci:*].flux.(pol_i)=ext_img[pix_i]
                 source_arr[si].flux.(pol_i)+=Total(ext_img[pix_i])
             ENDFOR
@@ -167,6 +169,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             sx=source_arr[si].x & sy=source_arr[si].y
             sra=source_arr[si].ra & sdec=source_arr[si].dec
             salpha=source_arr[si].alpha & sfreq=source_arr[si].freq
+            IF source_mask[sx,sy] EQ 0 THEN CONTINUE
             comp_arr_use=source_comp_init(comp_arr_use,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi) ;this will append a new component to the end of comp_arr_use
             ci=N_Elements(comp_arr_use)-1
             FOR pol_i=0,7 DO BEGIN
