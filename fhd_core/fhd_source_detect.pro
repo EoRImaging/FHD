@@ -1,7 +1,7 @@
 FUNCTION fhd_source_detect,obs,fhd_params,jones,source_find_image,image_I_flux=image_I_flux,image_Q_flux=image_Q_flux,$
     image_U_flux=image_U_flux,image_V_flux=image_V_flux,beam_arr=beam_arr,beam_corr_avg=beam_corr_avg,$
     beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,detection_threshold=detection_threshold,$
-    model_I_image=model_I_image,_Extra=extra
+    model_I_image=model_I_image,negative_ratio=negative_ratio,_Extra=extra
 ;NOTE: if supplied, model_I_image should be in the same units and weighting scheme as source_find_image
 
 add_threshold=fhd_params.add_threshold
@@ -13,6 +13,7 @@ sigma_threshold=2.
 frequency=obs.freq_center
 alpha_use=obs.alpha ;spectral index used for the subtracted component
 over_resolution=fhd_params.over_resolution
+;IF N_Elements(negative_ratio) NE 1 THEN negative_ratio=2./!Pi ;relative strength of first negative sidelobe compared to the strength of the peak. Defaut is taken from the Sin(x)/x function
 
 n_pol=fhd_params.npol
 dimension=obs.dimension
@@ -61,7 +62,8 @@ source_find_image-=flux_offset
 ;       should put some cap on the absolute number of them ; This is max_add_sources
 ;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
 
-
+circle_i=where(Sqrt((xvals-dimension/2)^2.+(yvals-elements/2)^2.) LE local_max_radius*sqrt(2.))
+circle_i-=Long(dimension*(1.+elements)/2)
 n_sources=0
 max_iter=5
 iter=0
@@ -200,8 +202,8 @@ WHILE n_sources EQ 0 DO BEGIN
         
         IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>image_I_flux[sx,sy] $
             ELSE flux_use=image_I_flux[sx,sy]
-        IF flux_use LT -flux_min THEN BEGIN
-            mask_i=where(Sqrt((xvals-xcen)^2.+(yvals-ycen)^2.) LE local_max_radius+1)
+        IF flux_use LE -flux_min THEN BEGIN
+            mask_i=sx0+sy0*dimension+circle_i
             n_mask+=Total(source_mask[mask_i])
             source_mask[mask_i]=0
             source_mask1[mask_i]=0

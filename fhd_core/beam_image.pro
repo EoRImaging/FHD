@@ -60,14 +60,14 @@ IF Keyword_Set(square) THEN BEGIN
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*beam_arr[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=Reform(*(*beam_arr[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]],psf_dim,psf_dim)
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
-            beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
-            beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
+;            beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)
+            beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse));/2.
             beam_base+=Real_part(beam_base_single*Conj(beam_base_single));>0
             n_bin_use+=1.*freq_norm[fi]
         ENDFOR
@@ -83,14 +83,14 @@ IF Keyword_Set(square) THEN BEGIN
             nf_bin=Float(Total(freq_bin_use EQ fbin))
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=Reform(*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]],psf_dim,psf_dim)
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             IF Keyword_Set(abs) THEN beam_single=Abs(beam_single)
             beam_base_uv1=Complexarr(dimension,elements)
             beam_base_uv1[xl:xh,yl:yh]=beam_single
-            beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)            
-            beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))/2.
+;            beam_base_uv1+=Shift(Reverse(reverse(Conj(beam_base_uv1),1),2),1,1)            
+            beam_base_single=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse));/2.
 ;            neg_inds=where(real_part(beam_base_single) LT 0,n_neg)
 ;            IF n_neg GT 0 THEN beam_base_single[neg_inds]=0.
             beam_base+=nf_bin*Real_part(beam_base_single*Conj(beam_base_single));>0
@@ -105,7 +105,7 @@ ENDIF ELSE BEGIN
         FOR fi=0,n_freq_bin-1 DO BEGIN
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*beam_arr[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=Reform(*(*beam_arr[pol_i,fi,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]],psf_dim,psf_dim)
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             beam_base_uv+=beam_single
@@ -122,7 +122,7 @@ ENDIF ELSE BEGIN
             fbin=freq_bin_i[fi]
             beam_single=Complexarr(psf_dim,psf_dim)
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]]
+                beam_single+=Reform(*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]],psf_dim,psf_dim)
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             beam_base_uv+=beam_single
