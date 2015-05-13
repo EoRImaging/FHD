@@ -38,7 +38,10 @@ ENDIF ELSE BEGIN
     IF n_match GT 0 THEN tags_combined[match_i[match_i_i]]=tags_update[match_i_i]
     
     tags_i=indgen(n_use)
-    IF n_unmatch GT 0 THEN tags_i[nt_in:nt_in+n_unmatch-1]=unmatch_i_i
+    IF n_unmatch GT 0 THEN BEGIN
+        tags_i[nt_in:nt_in+n_unmatch-1]=unmatch_i_i
+        tags_combined[nt_in:nt_in+n_unmatch-1]=tags_update[unmatch_i_i]
+    ENDIF
     
     ;work out ahead of time which of the two structures (str_in or extra) will be used for each final tag 
     tags_switch=intarr(n_use)+1
