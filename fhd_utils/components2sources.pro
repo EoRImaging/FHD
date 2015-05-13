@@ -22,6 +22,7 @@ IF N_Elements(reject_outlier_components) EQ 0 THEN reject_outlier_components=0
 
 gauss_sigma=beam_width_calculate(obs)
 gauss_width=beam_width_calculate(obs,/fwhm)
+gauss_area=beam_width_calculate(obs,/area)
 IF N_Elements(radius) EQ 0 THEN radius=gauss_width
 comp_i_use=where(comp_arr.flux.I GT 0,n_comp_use)
 IF n_comp_use EQ 0 THEN RETURN,source_comp_init(n_sources=0)
@@ -127,12 +128,41 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     
     IF clean_bias_threshold LT 0 THEN RETURN,source_arr ; return trimmed source array if threshold is specified as negative, but don't correct any fluxes
     
+;    extend_box_radius=3.*gauss_width
     FOR si = 0L,n_use-1L DO BEGIN
         gi=source_arr[si].id
         ncomp=hcomp_gi[gi]
         
         IF Ptr_valid(source_arr[si].extend) THEN BEGIN
             ;still need to handle extended sources properly!
+            ext_comp=*(source_arr[si].extend)
+            
+            ext_gain=ext_comp & ext_gain.flux.I=ext_gain.gain/Mean(ext_gain.gain)
+            ext_n_img=source_image_generate(ext_gain,obs,pol=4,/conserve,threshold=Mean(ext_gain.gain))
+            flux_frac_ext=1.-(1.-Mean(ext_gain.gain))^ext_n_img
+            pix_i=where(flux_frac_ext GE Abs(clean_bias_threshold),n_pix)
+            IF n_pix EQ 0 THEN CONTINUE
+            sx=Float(pix_i mod dimension)
+            sy=Float(Floor(pix_i/dimension))
+            xy2ad,sx,sy,astr,sra,sdec
+            salpha=Replicate(source_arr[si].alpha,n_pix)
+            sfreq=Replicate(source_arr[si].freq,n_pix)
+            ci=N_Elements(ext_comp)
+            ext_comp_new=source_comp_init(ext_comp,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi) ;this will append a new component to the end of comp_arr_use
+            FOR pol_i=0,7 DO BEGIN
+                IF source_arr[si].flux.(pol_i) EQ 0 THEN CONTINUE
+                ext_img=source_image_generate(ext_comp,obs,pol=pol_i,/conserve)
+                ext_img*=(1.-flux_frac_ext)/gauss_area
+                ext_comp_new[ci:*].flux.(pol_i)=ext_img[pix_i]
+                source_arr[si].flux.(pol_i)+=Total(ext_img[pix_i])
+            ENDFOR
+            *(source_arr[si].extend)=ext_comp_new
+;            x0=Min(ext_comp.x)-extend_box_radius
+;            y0=Min(ext_comp.y)-extend_box_radius
+;            x_ext=ext_comp.x-x0
+;            y_ext=ext_comp.y-y0
+;            dim_ext=Ceil(Max(ext_comp.x)-Min(ext_comp.x)+2*extend_box_radius
+;            elem_ext=Ceil(Max(ext_comp.y)-Min(ext_comp.y)+2*extend_box_radius
         ENDIF ELSE BEGIN
             sx=source_arr[si].x & sy=source_arr[si].y
             sra=source_arr[si].ra & sdec=source_arr[si].dec
