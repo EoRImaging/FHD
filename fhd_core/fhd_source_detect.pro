@@ -89,10 +89,10 @@ WHILE n_sources EQ 0 DO BEGIN
     ;save,output,filename=fhd.joint_obs+'_test_output.sav'
     
     additional_i=additional_i[reverse(Sort(source_find_image_use[additional_i]))] ;order from brightest to faintest
-    add_x=additional_i mod dimension
-    add_y=Float(Floor(additional_i/dimension))
+    add_x=additional_i mod Long(dimension)
+    add_y=Long(Floor(additional_i/dimension))
     add_dist=fltarr(n_sources)+dimension
-    FOR addi=1,n_sources-1 DO add_dist[addi]=Min(Sqrt((add_x[addi]-add_x[0:addi-1])^2+(add_y[addi]-add_y[0:addi-1])^2.))
+    FOR addi=1,n_sources-1 DO add_dist[addi]=Min(Sqrt(Float(add_x[addi]-add_x[0:addi-1])^2+Float(add_y[addi]-add_y[0:addi-1])^2.))
         
     source_map=lonarr(dimension,elements)
     source_map[add_x,add_y]=lindgen(n_sources)+1
@@ -140,7 +140,7 @@ WHILE n_sources EQ 0 DO BEGIN
     ;source_fit_fn_ref=Total(source_fit_fn)/2.
     
     si_use=Lonarr(n_sources)-1
-    sx_arr=additional_i mod dimension
+    sx_arr=additional_i mod Long(dimension)
     sy_arr=Float(Floor(additional_i/dimension))
     
     si=0L
@@ -186,8 +186,8 @@ WHILE n_sources EQ 0 DO BEGIN
 ;;            gain_mod=1./beam_width^2. ;divide by the area of the beam for diffuse sources
 ;        ENDIF ;ELSE gain_mod=1./beam_width^2.
         gain_mod=1.
-        sx0=Floor(xcen)
-        sy0=Floor(ycen)
+        sx0=Long(Floor(xcen))
+        sy0=Long(Floor(ycen))
         IF source_mask1[sx0,sy0] EQ 0 THEN BEGIN
             n_mask+=source_mask1[sx,sy]
             source_mask1[sx,sy]=0
@@ -203,7 +203,7 @@ WHILE n_sources EQ 0 DO BEGIN
         IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>image_I_flux[sx,sy] $
             ELSE flux_use=image_I_flux[sx,sy]
         IF flux_use LE -flux_min THEN BEGIN
-            mask_i=sx0+sy0*dimension+circle_i
+            mask_i=sx0+sy0*Long(dimension)+circle_i
             n_mask+=Total(source_mask[mask_i])
             source_mask[mask_i]=0
             source_mask1[mask_i]=0
