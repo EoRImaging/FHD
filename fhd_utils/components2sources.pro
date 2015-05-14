@@ -131,7 +131,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     
     comp_weight=comp_arr_use
     comp_weight.flux.I=comp_arr_use.gain
-    weight_img=source_image_generate(comp_weight,obs,pol=4,/conserve,threshold=Mean(gain_factor_arr)
+    weight_img=source_image_generate(comp_weight,obs,pol=4,/conserve,threshold=Mean(gain_factor_arr))
     undefine_fhd,comp_weight
     IF N_Elements(source_mask) NE dimension*elements THEN source_mask=replicate(1.,dimension,elements)
 ;    extend_box_radius=3.*gauss_width
