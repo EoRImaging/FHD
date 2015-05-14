@@ -129,6 +129,10 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     
     IF clean_bias_threshold LT 0 THEN RETURN,source_arr ; return trimmed source array if threshold is specified as negative, but don't correct any fluxes
     
+    comp_weight=comp_arr_use
+    comp_weight.flux.I=comp_arr_use.gain
+    weight_img=source_image_generate(comp_weight,obs,pol=4,/conserve,threshold=Mean(gain_factor_arr)
+    undefine_fhd,comp_weight
     IF N_Elements(source_mask) NE dimension*elements THEN source_mask=replicate(1.,dimension,elements)
 ;    extend_box_radius=3.*gauss_width
     FOR si = 0L,n_use-1L DO BEGIN
@@ -139,9 +143,10 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             ;still need to handle extended sources properly!
             ext_comp=*(source_arr[si].extend)
             
-            ext_gain=ext_comp & ext_gain.flux.I=ext_gain.gain/Mean(ext_gain.gain)
-            ext_n_img=source_image_generate(ext_gain,obs,pol=4,/conserve,threshold=Mean(ext_gain.gain))
-            flux_frac_ext=1.-(1.-Mean(ext_gain.gain))^ext_n_img
+;            ext_gain=ext_comp & ext_gain.flux.I=ext_gain.gain/Mean(ext_gain.gain)
+;            ext_n_img=source_image_generate(ext_gain,obs,pol=4,/conserve,threshold=Mean(ext_gain.gain))
+            ext_n_img=weight_img/Mean(ext_comp.gain)
+            flux_frac_ext=1.-(1.-Mean(ext_comp.gain))^ext_n_img
             pix_i=where(flux_frac_ext*source_mask GE Abs(clean_bias_threshold),n_pix)
             IF n_pix EQ 0 THEN CONTINUE
             sx=Float(pix_i mod dimension)

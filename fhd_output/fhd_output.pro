@@ -52,7 +52,7 @@ ENDIF ELSE filter_name=''
 
 ; *_fhd.sav contains:
 ;residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,normalization_arr,weights_arr,$
-;    beam_base,beam_correction,ra_arr,dec_arr,astr
+;    source_mask=source_mask,beam_base,beam_correction,ra_arr,dec_arr,astr
 fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,path_use=path_use,/no_save,_Extra=extra
 restore,path_use+'.sav'
 
@@ -123,7 +123,7 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*model_uv_full[pol_i])]=1
     noise_map=fhd_params.convergence*rebin(weight_invert(beam_avg),dimension,elements)
     comp_arr=comp_arr[0:fhd_params.n_components-1]
-    source_array=Components2Sources(comp_arr,obs,fhd_params,noise_map=noise_map,_Extra=extra)
+    source_array=Components2Sources(comp_arr,obs,fhd_params,noise_map=noise_map,source_mask=source_mask,_Extra=extra)
     IF Keyword_Set(no_condense_sources) THEN $
         model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0,_extra=extra) $
         ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut,_extra=extra)

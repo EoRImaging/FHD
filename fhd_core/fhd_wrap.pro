@@ -92,14 +92,14 @@ fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,model_uv_arr=model_uv_arr,$
-    file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,_Extra=extra
+    source_mask=source_mask,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,_Extra=extra
 
 fhd_save_io,status_str,fhd_params,var='fhd_params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,psf=psf,sub_dir='metadata' ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
 ;compression reduces the file size by 50%, but takes 5-30 seconds longer
 fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra ;call first to obtain the correct path. Will NOT update status structure yet
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,comp_arr,model_uv_full,model_uv_holo,weights_arr,$
-    beam_base,beam_correction,astr,filename=fhd_sav_filepath+'.sav',/compress
+    source_mask=source_mask,beam_base,beam_correction,astr,filename=fhd_sav_filepath+'.sav',/compress
 fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,/force,_Extra=extra ;call a second time to update the status structure now that the file has actually been written
 
 ;save and export deconvolved source list
