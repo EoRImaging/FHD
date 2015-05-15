@@ -19,7 +19,7 @@ PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,no_condense_sources=no_condense_sources,$
-    scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
+    source_mask=source_mask,scale_gain=scale_gain,model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
 ;calibration_model_subtract is passed through the fhd_params structure
 compile_opt idl2,strictarrsubs  
 
