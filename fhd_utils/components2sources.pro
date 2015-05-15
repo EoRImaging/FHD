@@ -143,11 +143,11 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             ;still need to handle extended sources properly!
             ext_comp=*(source_arr[si].extend)
             
-;            ext_gain=ext_comp & ext_gain.flux.I=ext_gain.gain/Mean(ext_gain.gain)
-;            ext_n_img=source_image_generate(ext_gain,obs,pol=4,/conserve,threshold=Mean(ext_gain.gain))
+            ext_gain=ext_comp & ext_gain.flux.I=ext_gain.gain/Mean(ext_gain.gain)
+            ext_n_single=source_image_generate(ext_gain,obs,pol=4,/conserve,threshold=Mean(ext_gain.gain))
             ext_n_img=weight_img/Mean(ext_comp.gain)
             flux_frac_ext=1.-(1.-Mean(ext_comp.gain))^ext_n_img
-            pix_i=where(flux_frac_ext*source_mask GE Abs(clean_bias_threshold),n_pix)
+            pix_i=where((flux_frac_ext*source_mask GE Abs(clean_bias_threshold)) AND (ext_n_single GE 1./gauss_area),n_pix)
             IF n_pix EQ 0 THEN CONTINUE
             sx=Float(pix_i mod dimension)
             sy=Float(Floor(pix_i/dimension))
