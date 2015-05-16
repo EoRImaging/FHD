@@ -364,7 +364,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
 ;    model_I_use=model_I_use*beam_avg*source_taper*source_mask
     image_use=image_unfiltered*beam_avg*beam_mask*source_mask
    
-    comp_arr1=fhd_source_detect(obs_fit,fhd_params,jones_fit,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+    comp_arr1=fhd_source_detect(obs_fit,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
         model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
         beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     
