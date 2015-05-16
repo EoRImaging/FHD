@@ -131,7 +131,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     
     comp_weight=comp_arr_use
     comp_weight.flux.I=comp_arr_use.gain
-    weight_img=source_image_generate(comp_weight,obs,pol=4,/conserve,threshold=Mean(gain_factor_arr))
+    weight_img=source_image_generate(comp_weight,dimension=obs.dimension,restored_beam_width=gauss_sigma,pol=4,threshold=Mean(gain_factor_arr))
     undefine_fhd,comp_weight
     IF N_Elements(source_mask) NE dimension*elements THEN source_mask=replicate(1.,dimension,elements)
 ;    extend_box_radius=3.*gauss_width
@@ -144,7 +144,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             ext_comp=*(source_arr[si].extend)
             
             ext_gain=ext_comp & ext_gain.flux.I=ext_gain.gain/Mean(ext_gain.gain)
-            ext_n_single=source_image_generate(ext_gain,obs,pol=4,/conserve,threshold=Mean(ext_gain.gain))
+            ext_n_single=source_image_generate(ext_gain,obs,dimension=obs.dimension,restored_beam_width=gauss_sigma,pol=4,threshold=Mean(ext_gain.gain))
             ext_n_img=weight_img/Mean(ext_comp.gain)
             flux_frac_ext=1.-(1.-Mean(ext_comp.gain))^ext_n_img
             pix_i=where((flux_frac_ext*source_mask GE Abs(clean_bias_threshold)) AND (ext_n_single GE 1./gauss_area),n_pix)
@@ -158,7 +158,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             ext_comp_new=source_comp_init(ext_comp,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi) ;this will append a new component to the end of comp_arr_use
             FOR pol_i=0,7 DO BEGIN
                 IF source_arr[si].flux.(pol_i) EQ 0 THEN CONTINUE
-                ext_img=source_image_generate(ext_comp,obs,pol=pol_i,/conserve)
+                ext_img=source_image_generate(ext_comp,obs,pol=pol_i,dimension=obs.dimension,restored_beam_width=gauss_sigma)
                 ext_img*=source_mask*(1.-flux_frac_ext)/gauss_area
                 ext_comp_new[ci:*].flux.(pol_i)=ext_img[pix_i]
                 source_arr[si].flux.(pol_i)+=Total(ext_img[pix_i])
@@ -178,8 +178,8 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             comp_arr_use=source_comp_init(comp_arr_use,xv=sx,yv=sy,ra=sra,dec=sdec,freq=sfreq,alpha=salpha,id=gi) ;this will append a new component to the end of comp_arr_use
             ci=N_Elements(comp_arr_use)-1
             FOR pol_i=0,7 DO BEGIN
-                comp_arr_use[ci].flux.(pol_i)=source_arr[si].flux.(pol_i)*(1.-flux_frac_arr[si])
-                source_arr[si].flux.(pol_i)+=comp_arr_use[ci].flux.(pol_i)
+                comp_arr_use[ci].flux.(pol_i)=source_arr[si].flux.(pol_i)*(1.-flux_frac_arr[si])/gauss_area
+                source_arr[si].flux.(pol_i)+=comp_arr_use[ci].flux.(pol_i)/gauss_area
             ENDFOR
         ENDELSE
         
