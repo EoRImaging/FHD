@@ -120,7 +120,7 @@ IF n_nan GT 0 THEN horizon_mask[nan_i]=0
 ra_use=ra_arr[horizon_i]
 dec_use=dec_arr[horizon_i]
 Eq2Hor,ra_use,dec_use,obs.Jd0,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
-IF Tag_exist(fhd_params,horizon_threshold) THEN horizon_threshold=fhd_params.horizon_threshold ELSE horizon_threshold=10. ;degrees above the horizon to exclude
+IF Tag_exist(fhd_params,'horizon_threshold') THEN horizon_threshold=fhd_params.horizon_threshold ELSE horizon_threshold=10. ;degrees above the horizon to exclude
 horizon_cut=where(alt_arr1 LT horizon_threshold,n_hor_cut)
 IF n_hor_cut GT 0 THEN horizon_mask[horizon_i[horizon_cut]]=0
 beam_mask*=rebin(horizon_mask,dimension_fit,elements_fit,/sample)
