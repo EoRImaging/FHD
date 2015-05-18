@@ -103,6 +103,7 @@ comp_arr_use=comp_arr
 IF Keyword_Set(reject_sigma_threshold) THEN BEGIN
     IF N_Elements(noise_map) EQ 0 THEN si_use=where(source_arr.flux.I GE reject_sigma_threshold,n_use) $
         ELSE si_use=where(source_arr.ston GE reject_sigma_threshold,n_use)
+    IF n_use EQ 0 THEN RETURN,source_arr
     source_arr=source_arr[si_use]
 ENDIF
 
