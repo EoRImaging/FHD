@@ -7,7 +7,7 @@ FUNCTION fhd_init,obs,cal,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_use=f
     reject_pol_sources=reject_pol_sources,filter_background=filter_background,$
     galaxy_model_fit=galaxy_model_fit,transfer_mapfn=transfer_mapfn,subtract_sidelobe_catalog=subtract_sidelobe_catalog,$
     joint_deconvolution_list=joint_deconvolution_list,dft_deconvolution_threshold=dft_deconvolution_threshold,$
-    deconvolution_over_resolution=deconvolution_over_resolution
+    deconvolution_over_resolution=deconvolution_over_resolution,deconvolution_horizon_threshold=deconvolution_horizon_threshold
 
 
 IF N_Elements(obs) EQ 0 THEN BEGIN
@@ -48,6 +48,7 @@ IF N_Elements(joint_deconvolution_list) LE 1 THEN decon_mode='Single snapshot' E
 IF N_Elements(joint_deconvolution_list) EQ 0 THEN joint_obs=file_basename(file_path_fhd) ELSE joint_obs=file_basename(joint_deconvolution_list)
 IF N_Elements(deconvolution_filter) EQ 0 THEN deconvolution_filter='filter_uv_uniform'
 IF N_Elements(deconvolution_over_resolution) EQ 0 THEN over_resolution=2 ELSE over_resolution=deconvolution_over_resolution
+IF N_Elements(deconvolution_horizon_threshold) EQ 0 THEN deconvolution_horizon_threshold=10. ;degrees above the horizon to exclude from deconvolution
 IF N_Elements(subtract_sidelobe_catalog) EQ 0 THEN sidelobe_subtract='' ELSE BEGIN
     IF size(restrict_hpx_inds,/type) EQ 7 THEN sidelobe_subtract=subtract_sidelobe_catalog ELSE BEGIN
         IF Keyword_Set(subtract_sidelobe_catalog) THEN IF N_Elements(cal) GT 0 THEN sidelobe_subtract=cal.catalog_name ELSE BEGIN
@@ -66,7 +67,7 @@ info=Ptr_new()
 fhd={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
     gain_factor:gain_factor,add_threshold:add_threshold,max_add_sources:max_add_sources,$
     over_resolution:over_resolution,dft_threshold:dft_deconvolution_threshold,independent_fit:independent_fit,$
-    reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,smooth_width:smooth_width,$
+    reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,horizon_threshold:deconvolution_horizon_threshold,smooth_width:smooth_width,$
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
     cal_subtract:calibration_image_subtract,galaxy_subtract:galaxy_model_fit,sidelobe_subtract:sidelobe_subtract,$
     filter_background:filter_background,decon_filter:deconvolution_filter,decon_mode:decon_mode,$
