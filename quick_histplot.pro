@@ -1,5 +1,5 @@
 pro quick_histplot, data, binsize = binsize, logdata = logdata, loghist = loghist, min = min_val, max = max_val, range = range, $
-    ytitle = ytitle, _REF_EXTRA=extra
+    ytitle = ytitle, hist_out = hist, hist_locs = locs, _REF_EXTRA=extra
     
     
   if n_elements(range) gt 1 then begin
