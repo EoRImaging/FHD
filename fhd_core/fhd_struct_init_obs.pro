@@ -86,10 +86,14 @@ ENDELSE
 
 ;256 tile upper limit is hard-coded in CASA format
 ;these tile numbers have been verified to be correct
-IF not Keyword_Set(antenna_mod_index) THEN antenna_mod_index=Long(2^Floor(Alog(min(params.baseline_arr))/Alog(2.)))
-;antenna_mod_index=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
-tile_A=Long(Floor(params.baseline_arr/antenna_mod_index)) ;tile numbers start from 1
-tile_B=Long(Fix(params.baseline_arr mod antenna_mod_index))
+IF not Keyword_Set(antenna_mod_index) THEN BEGIN
+    antenna_mod_index_use=Long(2^Floor(Alog(min(params.baseline_arr))/Alog(2.))) 
+    tile_B_test=min(params.baseline_arr) mod antenna_mod_index_use
+    IF tile_B_test GT 1 THEN antenna_mod_index_use/=Long(2^Floor(Alog(tile_B_test)/Alog(2.))) 
+ENDIF ELSE antenna_mod_index_use=antenna_mod_index 
+;antenna_mod_index_use=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
+tile_A=Long(Floor(params.baseline_arr/antenna_mod_index_use)) ;tile numbers start from 1
+tile_B=Long(Fix(params.baseline_arr mod antenna_mod_index_use))
 IF (max(tile_A)>max(tile_B)) NE n_tile THEN BEGIN
     print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
     n_tile=max(tile_A)>max(tile_B)
