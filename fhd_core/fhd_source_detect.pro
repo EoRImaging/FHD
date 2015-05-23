@@ -92,7 +92,7 @@ WHILE n_sources EQ 0 DO BEGIN
     add_x=additional_i mod Long(dimension)
     add_y=Long(Floor(additional_i/dimension))
     add_dist=fltarr(n_sources)+dimension
-    FOR addi=1,n_sources-1 DO add_dist[addi]=Min(Sqrt(Float(add_x[addi]-add_x[0:addi-1])^2+Float(add_y[addi]-add_y[0:addi-1])^2.))
+    FOR addi=1L,n_sources-1 DO add_dist[addi]=Min(Sqrt(Float(add_x[addi]-add_x[0:addi-1])^2+Float(add_y[addi]-add_y[0:addi-1])^2.))
         
     source_map=lonarr(dimension,elements)
     source_map[add_x,add_y]=lindgen(n_sources)+1
