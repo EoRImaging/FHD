@@ -25,7 +25,7 @@ FOR i=0L,entries-1 DO BEGIN
     
     FOR pol_i=0,(obs.n_pol<2)-1 DO BEGIN
         pol_match=Strmatch(pol_names[i],ant_pol_names[pol_i],/fold_case)
-        IF pol_match EQ -1 THEN CONTINUE
+        IF pol_match EQ 0 THEN CONTINUE
         
         CASE dipole_flag[i] OF
             'DEAD':(*((antenna[tile_i].gain)[pol_i]))[*,dipole_i]=0.
