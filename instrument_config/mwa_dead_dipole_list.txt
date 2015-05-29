@@ -1,54 +1,54 @@
-Tile	Dip	X pol	Y pol	Pol		Comment							
-13	A	0	1	Y	2	lower	gain?						
-18	K	1	1	XY	2	lower	"gain,"	different	shape				
-18	O	1	1	XY	2	lower	"gain,"	different	shape				
-22	M	1	0	X	2	lower	"gain,"	different	shape				
-22	M	0	1	Y	1	Flatline							
-23	E	0	1	Y	1	Almost	flatline						
-26	P	0	1	Y	2	lower	"gain,"	different	shape				
-32	-	1	1	digital		garbage							
-34	C	0	1	Y		different	shape						
-43	N	1	0	X	2	lower	"gain,"	different	shape				
-44	C	0	1	Y	1	Flatline							
-44	J	1	1	XY	2	lower	"gain,"	different	shape				
-56	M	1	0	X	2	lower	"gain,"	different	shape				
-61	B	1	0	X	2	lower	"gain,"	different	shape				
-61	B	0	1	Y	1	Flatline							
-61	H	1	0	X	1	Flatline							
-65	H	1	1	XY	2	lower	"gain,"	different	shape				
-68	M	1	0	X	2	lower	"gain,"	different	shape				
-68	O	1	1	XY	2	lower	"gain,"	different	shape				
-75	A	1	0	X	1	Flatline							
-83	I	0	1	Y	2	lower	"gain,"	different	shape				
-85	-	1	1	powered		off							
-87	J	0	1	Y	1	Flatline							
-88	P	1	0	X	1	Flatline							
-92	A	1	0	X	2	lower	"gain,"	different	shape				
-93	F	0	1	Y	2	lower	"gain,"	different	shape				
-95	D	1	0	X		slightly	lower	gain					
-97	I	1	0	X	1	Flatline							
-107	I	1	0	X	2	lower	"gain,"	different	shape				
-111	-	1	0	bad	1	"cable,"	all	X	dipoles	"flatline,"	Y	all	fine.
-113	F	1	0	X	1	Flatline							
-114	L	1	0	X	2	lower	"gain,"	different	shape				
-115	-	1	1	no		data	(system	thinks	power	is	off)		
-116	-	1	1	no		data	(system	thinks	power	is	off)		
-121	N	1	0	X		slightly	different	shape					
-122	A	0	1	Y	2	lower	"gain,"	different	shape				
-126	I	0	1	Y	1	Almost	Flatline						
-127	P	0	1	Y		slightly	different	shape					
-128	B	1	0	X	2	lower	"gain,"	different	shape				
-128	B	0	1	Y	1	Almost	Flatline						
-128	L	1	0	X	2	lower	"gain,"	different	shape				
-128	P	1	1	XY		Very	wierd	shape					
-132	G	1	1	XY	2	lower	"gain,"	different	shape				
-135	P	0	1	Y	2	lower	"gain,"	different	shape				
-138	M	1	0	X	1	Flatline							
-141	H	1	0	X		Very	wierd	shape					
-143	E	0	1	Y	1	Almost	Flatline						
-151	O	1	1	XY		Very	wierd	shape					
-155	P	1	0	X	2	lower	"gain,"	different	shape				
-156	M	0	1	Y	1	Almost	Flatline						
-157	P	1	0	X	1	Almost	Flatline						
-164	E	0	1	Y	1	Flatline							
-167	M	1	0	X		different	shape						
+Tile	Dip	Pol	Comment								
+13	A	Y	low	lower	gain?						
+18	K	XY	low	lower	"gain,"	different	shape				
+18	O	XY	low	lower	"gain,"	different	shape				
+22	M	X	low	lower	"gain,"	different	shape				
+22	M	Y	dead	Flatline							
+23	E	Y	dead	Almost	flatline						
+26	P	Y	low	lower	"gain,"	different	shape				
+32	-	digital	garbage								
+34	C	Y	different	shape							
+43	N	X	low	lower	"gain,"	different	shape				
+44	C	Y	dead	Flatline							
+44	J	XY	low	lower	"gain,"	different	shape				
+56	M	X	low	lower	"gain,"	different	shape				
+61	B	X	low	lower	"gain,"	different	shape				
+61	B	Y	dead	Flatline							
+61	H	X	dead	Flatline							
+65	H	XY	low	lower	"gain,"	different	shape				
+68	M	X	low	lower	"gain,"	different	shape				
+68	O	XY	low	lower	"gain,"	different	shape				
+75	A	X	dead	Flatline							
+83	I	Y	low	lower	"gain,"	different	shape				
+85	-	powered	off								
+87	J	Y	dead	Flatline							
+88	P	X	dead	Flatline							
+92	A	X	low	lower	"gain,"	different	shape				
+93	F	Y	low	lower	"gain,"	different	shape				
+95	D	X	slightly	lower	gain						
+97	I	X	dead	Flatline							
+107	I	X	low	lower	"gain,"	different	shape				
+111	-	bad	dead	"cable,"	all	X	dipoles	"flatline,"	Y	all	fine.
+113	F	X	dead	Flatline							
+114	L	X	low	lower	"gain,"	different	shape				
+115	-	no	data	(system	thinks	power	is	off)			
+116	-	no	data	(system	thinks	power	is	off)			
+121	N	X	slightly	different	shape						
+122	A	Y	low	lower	"gain,"	different	shape				
+126	I	Y	dead	Almost	Flatline						
+127	P	Y	slightly	different	shape						
+128	B	X	low	lower	"gain,"	different	shape				
+128	B	Y	dead	Almost	Flatline						
+128	L	X	low	lower	"gain,"	different	shape				
+128	P	XY	Very	wierd	shape						
+132	G	XY	low	lower	"gain,"	different	shape				
+135	P	Y	low	lower	"gain,"	different	shape				
+138	M	X	dead	Flatline							
+141	H	X	Very	wierd	shape						
+143	E	Y	dead	Almost	Flatline						
+151	O	XY	Very	wierd	shape						
+155	P	X	low	lower	"gain,"	different	shape				
+156	M	Y	dead	Almost	Flatline						
+157	P	X	dead	Almost	Flatline						
+164	E	Y	dead	Flatline							
+167	M	X	different	shape							
