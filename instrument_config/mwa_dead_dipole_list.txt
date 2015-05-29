@@ -1,0 +1,54 @@
+Tile	Dip	X pol	Y pol	Pol		Comment							
+13	A	0	1	Y	2	lower	gain?						
+18	K	1	1	XY	2	lower	"gain,"	different	shape				
+18	O	1	1	XY	2	lower	"gain,"	different	shape				
+22	M	1	0	X	2	lower	"gain,"	different	shape				
+22	M	0	1	Y	1	Flatline							
+23	E	0	1	Y	1	Almost	flatline						
+26	P	0	1	Y	2	lower	"gain,"	different	shape				
+32	-	1	1	digital		garbage							
+34	C	0	1	Y		different	shape						
+43	N	1	0	X	2	lower	"gain,"	different	shape				
+44	C	0	1	Y	1	Flatline							
+44	J	1	1	XY	2	lower	"gain,"	different	shape				
+56	M	1	0	X	2	lower	"gain,"	different	shape				
+61	B	1	0	X	2	lower	"gain,"	different	shape				
+61	B	0	1	Y	1	Flatline							
+61	H	1	0	X	1	Flatline							
+65	H	1	1	XY	2	lower	"gain,"	different	shape				
+68	M	1	0	X	2	lower	"gain,"	different	shape				
+68	O	1	1	XY	2	lower	"gain,"	different	shape				
+75	A	1	0	X	1	Flatline							
+83	I	0	1	Y	2	lower	"gain,"	different	shape				
+85	-	1	1	powered		off							
+87	J	0	1	Y	1	Flatline							
+88	P	1	0	X	1	Flatline							
+92	A	1	0	X	2	lower	"gain,"	different	shape				
+93	F	0	1	Y	2	lower	"gain,"	different	shape				
+95	D	1	0	X		slightly	lower	gain					
+97	I	1	0	X	1	Flatline							
+107	I	1	0	X	2	lower	"gain,"	different	shape				
+111	-	1	0	bad	1	"cable,"	all	X	dipoles	"flatline,"	Y	all	fine.
+113	F	1	0	X	1	Flatline							
+114	L	1	0	X	2	lower	"gain,"	different	shape				
+115	-	1	1	no		data	(system	thinks	power	is	off)		
+116	-	1	1	no		data	(system	thinks	power	is	off)		
+121	N	1	0	X		slightly	different	shape					
+122	A	0	1	Y	2	lower	"gain,"	different	shape				
+126	I	0	1	Y	1	Almost	Flatline						
+127	P	0	1	Y		slightly	different	shape					
+128	B	1	0	X	2	lower	"gain,"	different	shape				
+128	B	0	1	Y	1	Almost	Flatline						
+128	L	1	0	X	2	lower	"gain,"	different	shape				
+128	P	1	1	XY		Very	wierd	shape					
+132	G	1	1	XY	2	lower	"gain,"	different	shape				
+135	P	0	1	Y	2	lower	"gain,"	different	shape				
+138	M	1	0	X	1	Flatline							
+141	H	1	0	X		Very	wierd	shape					
+143	E	0	1	Y	1	Almost	Flatline						
+151	O	1	1	XY		Very	wierd	shape					
+155	P	1	0	X	2	lower	"gain,"	different	shape				
+156	M	0	1	Y	1	Almost	Flatline						
+157	P	1	0	X	1	Almost	Flatline						
+164	E	0	1	Y	1	Flatline							
+167	M	1	0	X		different	shape						
