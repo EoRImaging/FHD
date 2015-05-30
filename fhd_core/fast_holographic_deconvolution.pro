@@ -133,7 +133,6 @@ model_arr=Ptrarr(n_pol,/allocate)
 normalization_arr=fltarr(n_pol) ;factor to normalize holo_mapfn_apply
 model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
-IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
 pol_names=obs.pol_names
 
@@ -147,7 +146,7 @@ source_uv_mask2=fltarr(dimension,elements)
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
-    weights_single_conj=Conj(Shift(Reverse(Reverse(weights_single,1),2),1,1))
+    weights_single_conj=conjugate_mirror(weights_single)
     source_uv_mask[where(*image_uv_arr[pol_i])]=1.
     source_uv_mask2[where(weights_single)]=1
     weights_single=(weights_single+weights_single_conj)/2.
@@ -274,7 +273,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     i2+=1
     max_sources+=n_cal_src
     
-    comp_arr=source_comp_init(n_sources=max_sources,alpha=alpha,freq=obs.freq_center)
+    comp_arr=source_comp_init(n_sources=max_sources,alpha=obs.alpha,freq=obs.freq_center)
     cal_sources=cal.source_list
     IF calibration_model_subtract LT 1 THEN BEGIN
         FOR tag_i=0,n_tags(cal_sources.flux)-1 DO cal_sources.flux.(tag_i)*=(0.>calibration_model_subtract<1.)
@@ -304,7 +303,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     converge_check[i2]=Stddev(source_find_image[where(beam_mask)],/nan)
     converge_check2[i2]=Stddev(source_find_image[where(beam_mask)],/nan)
     print,"Convergence after subtracting input source model:",Strn(converge_check[i2])
-ENDIF ELSE comp_arr=source_comp_init(n_sources=max_sources,alpha=alpha,freq=obs.freq_center,gain_factor=gain_use)
+ENDIF ELSE comp_arr=source_comp_init(n_sources=max_sources,alpha=obs.alpha,freq=obs.freq_center,gain_factor=gain_use)
 
 IF ~Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
