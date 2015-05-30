@@ -1,5 +1,5 @@
 FUNCTION mwa_beam_setup_init,obs,antenna_str,antenna_size=antenna_size,dead_dipole_list=dead_dipole_list,$
-    dipole_mutual_coupling_factor=dipole_mutual_coupling_factor,antenna_spacing=antenna_spacing
+    dipole_mutual_coupling_factor=dipole_mutual_coupling_factor,antenna_spacing=antenna_spacing,flag_dead_dipoles=flag_dead_dipoles
 ;indices of gain_arr correspond to these antenna locations
 ;         N
 ;    1   2   3  4
@@ -60,7 +60,7 @@ antenna_str.height=antenna_height
 antenna_str.delays=delay_settings
 antenna=replicate(antenna_str,n_tiles)
 FOR t_i=0L,n_tiles-1 DO antenna[t_i].gain=Pointer_copy(gain_arr)
-mwa_dead_dipole_list_read,obs,antenna
+IF Keyword_Set(flag_dead_dipoles) THEN mwa_dead_dipole_list_read,obs,antenna
 
 IF Keyword_Set(dead_dipole_list) THEN BEGIN
 ;Format is 3xN array, column 0: Tile number (names, not index), 1: polarization (0:x, 1:y), 2: dipole number
