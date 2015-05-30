@@ -34,6 +34,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDFOR
     ENDFOR
     gain_arr*=auto_scale[pol_i]/Mean(gain_arr)
+    IF nan_test(gain_arr) THEN gain_arr[where(Finite(gain_1rr,/nan))]=1.
+    zero_i=where(gain_arr LE 0,n_zero)
+    IF n_zero GT 0 THEN gain_arr[zero_i]=1.
     auto_gain[pol_i]=Ptr_new(gain_arr)
 ENDFOR
 
