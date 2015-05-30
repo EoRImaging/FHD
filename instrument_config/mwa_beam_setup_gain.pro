@@ -20,7 +20,7 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
     WHILE n_ungrouped GT 0 DO BEGIN
         ref_i=ungrouped_i[0]
         antenna[ref_i].group_id[pol_i]=gi
-        FOR ug_i=1L,n_ungrouped-1 DO IF Total(*antenna[ungrouped_i[ug_i]].gain[pol_i] - *antenna[ref_i].gain[pol_i]) EQ 0 THEN antenna[ungrouped_i[ug_i]].group_id[pol_i]=gi 
+        FOR ug_i=1L,n_ungrouped-1 DO IF Total(Abs(*antenna[ungrouped_i[ug_i]].gain[pol_i] - *antenna[ref_i].gain[pol_i])) EQ 0 THEN antenna[ungrouped_i[ug_i]].group_id[pol_i]=gi 
         ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
         gi+=1
     ENDWHILE
