@@ -340,16 +340,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             term_Am_box=matrix_multiply(freq_i*model_box/n_vis,box_matrix_dag,/atranspose,/btranspose)
             spectral_model_A[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(term_Am_box)
         ENDIF
-;        IF min(freq_i) LT max(freq_i) THEN BEGIN
-;            fit_vis_slope=Complex((linfit(freq_i,real_part(vis_box)))[1],(linfit(freq_i,imaginary(vis_box)))[1])
-;            fit_vis_box=matrix_multiply(replicate(fit_vis_slope/n_vis,n_vis_single),box_matrix_dag,/atranspose,/btranspose)
-;            spectral_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(fit_vis_box) 
-;            IF model_flag THEN BEGIN
-;                fit_model_slope=Complex((linfit(freq_i,real_part(model_box)))[1],(linfit(freq_i,imaginary(model_box)))[1])
-;                fit_model_box=matrix_multiply(replicate(fit_model_slope/n_vis,n_vis_single),box_matrix_dag,/atranspose,/btranspose)
-;                spectral_model_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(fit_model_box)
-;            ENDIF
-;        ENDIF
         tspec+=Systime(1)-tspec0
     ENDIF
     IF model_flag THEN BEGIN
