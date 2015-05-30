@@ -10,7 +10,6 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
-IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
 git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
@@ -143,6 +142,7 @@ IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
 IF N_Elements(degrid_spectral_terms) EQ 0 THEN degrid_spectral_terms=0 ELSE degrid_spectral_terms=Fix(degrid_spectral_terms)
 IF N_Elements(grid_spectral_terms) EQ 0 THEN grid_spectral_terms=0 ELSE grid_spectral_terms=Fix(grid_spectral_terms)
+IF N_Elements(spectral_index) EQ 0 THEN IF Keyword_Set(degrid_spectral_terms) THEN spectral_index=0. ELSE spectral_index=-0.8 
 IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=0. 
 IF dft_threshold EQ 1 THEN dft_threshold=1./((2.*!Pi)^2.*dimension)
 IF N_Elements(nside) EQ 0 THEN nside=0

@@ -87,10 +87,8 @@ IF n_use GT 0 THEN BEGIN
     ad2xy,source_list.ra,source_list.dec,astr,x_arr,y_arr
     source_list.x=x_arr
     source_list.y=y_arr
-;    IF N_Elements(calibration_spectral_index) EQ 0 THEN calibration_spectral_index=catalog.alpha
     FOR i=0,7 DO source_list.flux.(i)=catalog.flux.(i)*(freq_use/catalog.freq)^spectral_index
     source_list.alpha=spectral_index
-;    source_list.StoN=catalog.StoN
     
     IF N_Elements(beam_arr) LT (n_pol<2) THEN BEGIN 
         beam_arr=Ptrarr(n_pol<2)
@@ -141,6 +139,7 @@ IF Keyword_Set(max_sources) THEN IF N_Elements(source_list) GT max_sources $
 IF Keyword_Set(flatten_spectrum) THEN BEGIN
     alpha_avg=Total(source_list.alpha*(source_list.flux.I>0))/Total(source_list.flux.I>0)
     obs.alpha=alpha_avg
+    source_list.alpha-=alpha_avg
 ENDIF
 RETURN,source_list
 END
