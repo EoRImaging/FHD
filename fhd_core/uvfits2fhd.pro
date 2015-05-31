@@ -195,9 +195,6 @@ IF data_flag LE 0 THEN BEGIN
         t_save=Systime(1)-t_save0
         IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
     ENDIF
-        
-    t_grid=fltarr(n_pol)
-    t_mapfn_gen=fltarr(n_pol)
     
     ;Grid the visibilities
     IF Keyword_Set(grid_recalculate) THEN BEGIN
