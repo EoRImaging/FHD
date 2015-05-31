@@ -2,9 +2,9 @@ FUNCTION visibility_grid_wrap,vis_arr,flag_arr,obs,status_str,psf,params,file_pa
     deconvolve=deconvolve,model_flag=model_flag,snapshot_healpix_export=snapshot_healpix_export,mapfn_recalculate=mapfn_recalculate,$
     save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,_Extra=extra
     
+n_pol=obs.n_pol
 t_grid=fltarr(n_pol)
 t_mapfn_gen=fltarr(n_pol)
-n_pol=obs.n_pol
 print,'Gridding visibilities'
 IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol)
 image_uv_arr=Ptrarr(n_pol,/allocate)
