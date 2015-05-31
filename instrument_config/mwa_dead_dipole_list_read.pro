@@ -29,7 +29,7 @@ FOR i=0L,entries-1 DO BEGIN
         
         CASE dipole_flag[i] OF
             'DEAD':(*((antenna[tile_i].gain)[pol_i]))[*,dipole_i]=0.
-            'LOW':(*((antenna[tile_i].gain)[pol_i]))[*,dipole_i]=0.5
+;            'LOW':(*((antenna[tile_i].gain)[pol_i]))[*,dipole_i]=0.5
             ELSE:
         ENDCASE
         bp=1
