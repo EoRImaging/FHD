@@ -88,8 +88,6 @@ IF data_flag LE 0 THEN BEGIN
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata' ;write preliminary settings file for debugging, in case later steps crash
-    
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
     
     IF Keyword_Set(transfer_flags) THEN BEGIN
@@ -107,8 +105,17 @@ IF data_flag LE 0 THEN BEGIN
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
     vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     
+    IF Keyword_Set(calibrate_visibilities) THEN BEGIN
+        IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
+        IF ~Keyword_Set(calibration_source_list) THEN $
+            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)        
+        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,$
+            catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
+    ENDIF
+    
     ;print informational messages
     obs_status,obs
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'  ;write preliminary settings file for debugging, in case later steps crash
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
         calibrate_visibilities=1
@@ -117,11 +124,6 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
-        IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
-        IF ~Keyword_Set(calibration_source_list) THEN $
-            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)
-        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,$
-            catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
