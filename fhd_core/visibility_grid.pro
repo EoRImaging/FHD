@@ -426,7 +426,7 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
     image_uv=(image_uv+conjugate_mirror(image_uv))/2.
     IF weights_flag THEN weights=(weights+conjugate_mirror(weights))/2.        
     IF variance_flag THEN variance=(variance+conjugate_mirror(variance))/4. ;2?
-    IF model_flag THEN model_return=(model_return+conjugate_mirror(model))/2.
+    IF model_flag THEN model_return=(model_return+conjugate_mirror(model_return))/2.
     IF uniform_flag THEN uniform_filter=(uniform_filter+conjugate_mirror(uniform_filter))/2.
 ENDIF
 
