@@ -44,26 +44,29 @@ dec_use=dec_arr[inds_use]
 xv=xvals[inds_use]
 yv=yvals[inds_use]
 
-IF Keyword_Set(debug_jones_obs) THEN hour_angle=obs.obsra - ra_use ELSE hour_angle=obs.zenra - ra_use
+;IF Keyword_Set(debug_jones_obs) THEN hour_angle=obs.obsra - ra_use ELSE hour_angle=obs.zenra - ra_use
+hour_angle=obs.obsra - ra_use
 h_neg = where(hour_angle LT 0, N_neg)
 IF N_neg GT 0 THEN hour_angle[h_neg] = hour_angle[h_neg] + 360.
 hour_angle = hour_angle mod 360.
 
-lat=obs.lat*!DtoR
+;IF Keyword_Set(debug_jones_obs) THEN phi=obs.obsdec*!DtoR ELSE phi=obs.zendec*!DtoR
+phi=obs.obsdec*!DtoR
+;lat=obs.lat*!DtoR
 dec=dec_use*!DtoR
 ha=hour_angle*!DtoR
 ;calculate the elements of the dipole projection matrix J ((J11, J12), (J21,J22))
 ;From Ord S.M. et al "Interferometric Imaging with the 32 Element Murchison Wide-Field Array" PASP 122 (2010)
-IF Keyword_Set(debug_jones_obs) THEN phi=obs.obsdec*!DtoR ELSE phi=obs.zendec*!DtoR
-J11=Cos(phi)*Cos(dec)+Sin(phi)*Sin(dec)*Cos(ha)
-J12=-Sin(phi)*Sin(ha)
-J21=Sin(dec)*Sin(ha)
-J22=Cos(ha)
+;J11=Cos(phi)*Cos(dec)+Sin(phi)*Sin(dec)*Cos(ha)
+;J12=-Sin(phi)*Sin(ha)
+;J21=Sin(dec)*Sin(ha)
+;J22=Cos(ha)
 
-;J21=Cos(obs.obsdec)*Cos(dec)+Sin(obs.obsdec)*Sin(dec)*Cos(ha)
-;J22=-Sin(obs.obsdec)*Sin(ha)
-;J11=Sin(dec)*Sin(ha)
-;J12=Cos(ha)
+;NOTE!! RTS convention uses X for N-S dipoles, and Y for E-W, which is opposite everything else. So, we have to re-order the Jones matrix elements
+J21=Cos(phi)*Cos(dec)+Sin(phi)*Sin(dec)*Cos(ha)
+J22=-Sin(phi)*Sin(ha)
+J11=Sin(dec)*Sin(ha)
+J12=Cos(ha)
 
 p_map=Ptrarr(4,4,/allocate)
 p_corr=Ptrarr(4,4,/allocate)
