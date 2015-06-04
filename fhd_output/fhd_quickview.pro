@@ -7,7 +7,7 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights
     use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,$
     beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,$
-    image_mask_horizon=image_mask_horizon,_Extra=extra
+    image_mask_horizon=image_mask_horizon,write_healpix_fits=write_healpix_fits,nside=nside,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -129,6 +129,13 @@ beam_avg/=(n_pol<2)
 beam_avg=Sqrt(beam_avg>0)*beam_mask
 beam_i=where(beam_mask)
 jones_out=fhd_struct_init_jones(obs_out,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
+
+IF Keyword_Set(write_healpix_fits) THEN BEGIN
+    FoV_use=!RaDeg/obs_out.kpix
+    hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside,restore_last=0,/no_save,$
+        mask=beam_mask,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds,_Extra=extra)
+    ring2nest, nside, hpx_cnv.inds, hpx_inds_nest ;external programs are much happier reading in Healpix fits files with the nested pixel ordering
+ENDIF
 
 IF N_Elements(source_array) GT 0 THEN BEGIN
     source_flag=1
@@ -421,6 +428,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
         ENDIF
     ENDIF
+    
+    IF Keyword_Set(write_healpix_fits) THEN BEGIN
+        write_fits_cut4,file_path_weights+'.fits',hpx_inds_nest,stokes_weights,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+    ENDIF
+    
     IF Keyword_Set(gridline_image_show) THEN BEGIN
         IF pol_i EQ 0 THEN BEGIN
             Imagefast,fltarr(zoom_high-zoom_low+1,zoom_high-zoom_low+1),file_path=image_path+filter_name+'_Grid',$
