@@ -905,6 +905,14 @@ case version of
       production=1
       ;no long tiles used in calculating saved bp
    end
+   'nb_devel_June2015':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      production=1
+      ;no long tiles used in calculating saved bp
+   end   
+   
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
