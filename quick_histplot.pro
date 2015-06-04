@@ -7,6 +7,12 @@ pro quick_histplot, data, binsize = binsize, logdata = logdata, loghist = loghis
     max_val = max(range)
   endif
   
+  if max(abs(imaginary(data))) gt 0 then begin
+    print, 'data is complex, using real part'
+    data = real_part(data)
+  endif
+  
+  
   if keyword_set(logdata) then begin
     if max(data) le 0 then begin
       print, "logdata cannot be set because data is all 0 or negative"
