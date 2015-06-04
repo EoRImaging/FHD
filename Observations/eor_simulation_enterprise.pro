@@ -2,7 +2,8 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, $
     use_saved_uvf = use_saved_uvf, uvf_savefile = uvf_savefile, $
     sim_baseline_density = sim_baseline_density, $
-    flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
+    flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
+    delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
     silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
@@ -143,7 +144,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       cleanup=cleanup,recalculate_all=recalculate_all, beam_recalculate=beam_recalculate, /silent, $
       n_pol=n_pol,tile_flag_list=tile_flag_list, no_rephase = no_rephase,$
       eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, $
-      delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
+      delta_power = delta_power, delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
       include_catalog_sources = include_catalog_sources, source_list=source_list,$
       catalog_file_path=catalog_file_path, $
       export_images=export_images,dimension=dimension, image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$

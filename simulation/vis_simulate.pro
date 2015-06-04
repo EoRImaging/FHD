@@ -1,6 +1,7 @@
 FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all,$
-    include_eor=include_eor, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
+    include_eor=include_eor, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
+    delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
     
@@ -98,7 +99,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
                 endif else begin
                   print, 'restoring cube from ' + eor_uvf_cube_file
                   time0 = systime(1)
-                  eor_uvf_cube = getvar_savefile(eor_uvf_cube_file, varnames[wh_eor[0]])
+                  eor_uvf_cube = getvar_savefile(eor_uvf_cube_file, varnames[wh_eor[0]])*2. ;; factor of 2 because of division by 2 before saving
                   time1 = systime(1)
                   print, 'time for eor restore (min): ' + number_formatter((time1-time0)/60.)
                   if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
@@ -120,11 +121,14 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
         if eor_gen ne 0 then begin
           print, 'Generating model EoR cube'
           uv_locs = findgen(101)*4.-200.
-          eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
-          IF ~Keyword_Set(no_save) THEN save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, freq_arr, /compress
-          
+          eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+            delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky)
+          IF ~Keyword_Set(no_save) THEN save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, $
+            freq_arr, /compress
+            
           time0 = systime(1)
-          eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc)
+          eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+            delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky)
           time1 = systime(1)
           print, 'time for eor modelling (min): ' + number_formatter((time1-time0)/60.)
           if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $

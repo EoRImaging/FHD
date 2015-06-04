@@ -71,7 +71,8 @@ fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
 
 vis_arr=vis_simulate(obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all,$
-    include_eor=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
+    include_eor=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
+    delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra)
 
