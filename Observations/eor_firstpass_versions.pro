@@ -15,7 +15,7 @@ output_directory = args[1]
 ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 version = args[2]
 ;version = 'nb_autocal'
-;;cmd_args={version:version}
+cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
@@ -780,6 +780,132 @@ case version of
       n_avg=1
    end
    
+   'nb_std_May2015':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+   end
+   'nb_no_long_tiles':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      tile_flag_list=[78,79,87,88,95,96,97,98,104,112,113,122,123,124]
+   end
+   'nb_pointing_May2015':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_autogainsonly_May2015':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      ;cable_bandpass_fit=1
+      undefine,export_images
+      calibration_auto_fit=1
+   end   
+   'nb_autogainsonly_Aug27_May2015':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      ;cable_bandpass_fit=1
+      undefine,export_images
+      calibration_auto_fit=1
+   end  
+   'nb_missingobs_Aug27_May2015':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      undefine,export_images
+      ;calibration_auto_fit=1
+   end 
+   'nb_poly_saved_run':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_v2':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly=1
+      ;no long tiles used in calculating saved bp, poly over pointing, modefit by obs
+   end
+   'nb_poly_saved_run_v2_plusmodesplit':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly_split=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_v2_plusmodeunsplit':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly_unsplit=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_v2_minustwo':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly_unsplit=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_v2_onemode':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly_unsplit=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_v2_messy':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly_unsplit=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_inputfromautos_scaled':begin 
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly_unsplit=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_autoinput_scalebypoly':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_poly_unsplit=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_auto_scalebypoly_quad':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_phasetransfer_quad=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_polysplit_onemode':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_polysplit_onemode=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_nodig_quad_polyscaled':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_nodig_quad_polyscaled=1
+      production=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_poly_saved_run_onequad_polyscaled_90150':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_nodig_quad_polyscaled=1
+      production=1
+      ;no long tiles used in calculating saved bp
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
