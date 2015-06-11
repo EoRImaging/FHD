@@ -1,7 +1,7 @@
 pro eor_firstpass_versions
 except=!except
 !except=0
-heap_gc
+heap_gc 
 
 ; wrapper to contain all the parameters for various runs we might do
 ; using firstpass.
