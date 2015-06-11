@@ -546,6 +546,7 @@ case version of
 	filter_background=1
 	smooth_width=32
 	max_sources=100000.
+	gain_factor=0.1
     end
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
