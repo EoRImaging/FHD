@@ -69,6 +69,7 @@ restore_vis_savefile=(data_version EQ '3')
 firstpass=1
 max_cal_iter=100L
 beam_model=2
+dft_threshold=1
 
 cmd_args=extra
 extra=var_bundle()

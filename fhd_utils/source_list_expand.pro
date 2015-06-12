@@ -9,6 +9,7 @@ IF n_ext GT 0 THEN BEGIN
 
     IF n_point GT 0 THEN source_arr_out=[source_arr[point_i],*(source_arr[extend_i[0]].extend)] $
         ELSE source_arr_out=*(source_arr[extend_i[0]].extend)
+    source_arr_out[extend_i].extend=Pointer_copy(source_arr[extend_i].extend)
     FOR ext_i=1L,n_ext-1 DO source_arr_out=[source_arr_out,*(source_arr[extend_i[ext_i]].extend)]
 ENDIF ELSE source_arr_out=source_arr
 
