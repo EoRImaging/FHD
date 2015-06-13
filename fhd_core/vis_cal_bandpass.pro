@@ -27,10 +27,7 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
   gain_arr_ptr3=Ptrarr(n_pol,/allocate)
   
   IF Keyword_Set(cable_bandpass_fit) THEN BEGIN
-    ;n_freq x 13 array. columns are frequency, 90m xx, 90m yy, 150m xx, 150m yy, 230m xx, 230m yy, 320m xx, 320m yy, 400m xx, 400m yy, 524m xx, 524m yy
-    bandpass_arr=Fltarr((n_pol)*6+1,n_freq)
-    bandpass_arr[0,*]=freq_arr
-    bandpass_col_count=0
+
     
     ;Using preexisting file to extract information about which tiles have which cable length
     mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=rootdir('FHD'),subdir='instrument_config')
@@ -57,6 +54,11 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
       ;reinstate the saved solution into the proper format for replacing bandpass_single later
       textfast,bandpass_saved_sol,/read,file=filename ;columns are: freq_arr_input, cable90xx, cable90yy, cable150xx, cable150yy, cable230xx, cable230yy, cable320xx, cable320yy, cable400xx, cable400yy, cable524xx, cable524yy
     endif
+    
+    ;n_freq x 13 array. columns are frequency, 90m xx, 90m yy, 150m xx, 150m yy, 230m xx, 230m yy, 320m xx, 320m yy, 400m xx, 400m yy, 524m xx, 524m yy
+    bandpass_arr=Fltarr((n_pol)*n_cable+1,n_freq)
+    bandpass_arr[0,*]=freq_arr
+    bandpass_col_count=0
     
     ;Main gain calculation loop
     FOR cable_i=0,n_cable-1 DO BEGIN
@@ -131,61 +133,6 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     cal_remainder=cal
     cal_remainder.gain=gain_arr_ptr3
     
-    ;Begin plotting
-    
-    ;This is where regular plots of each cable group's bandpass per xx and yy are plotted.
-;    IF Keyword_Set(file_path_fhd) THEN BEGIN
-;      basename=file_basename(file_path_fhd)
-;      dirpath=file_dirname(file_path_fhd)
-;      ;        image_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_cable_cal_v2/output_images/'
-;      image_path=filepath(basename,root=dirpath,sub='output_images')
-;      IF file_test(file_dirname(image_path),/directory) EQ 0 THEN file_mkdir,file_dirname(image_path)
-;      ;        export_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_cable_cal_v2/calibration/'
-;      export_path=filepath(basename,root=dirpath,sub='calibration')
-;      IF file_test(file_dirname(export_path),/directory) EQ 0 THEN file_mkdir,file_dirname(export_path)
-;      Textfast,bandpass_arr,/write,file_path=export_path+obs.obsname+'_bandpass'
-;      
-;      freq=freq_arr/1E6
-;      xtickv=[ceil(min(freq)/10)*10,floor(max(freq)/10)*10]
-;      xtickname=strtrim(round(xtickv),2)
-;      xrange=[min(freq)-(max(freq)-min(freq))/8,max(freq)+(max(freq)-min(freq))/8]
-;      
-;      yrange=[min(bandpass_arr[1:(n_pol*6),freq_use]),max(bandpass_arr[1:(n_pol*6),freq_use])]
-;      
-;      ytickv=[yrange[0],mean(yrange),yrange[1]]
-;      axiscolor='black'
-;      
-;      cgPS_Open,image_path+obs.obsname+'_bandpass_xx.png',/quiet,/nomatch
-;      cgplot,freq[freq_use],bandpass_arr[1,freq_use],color='blue',title=obs.obsname + ' xx',xtitle='Frequency [MHz]',ytitle='Gain',$
-;        yrange=yrange,xrange=xrange,/noerase,axiscolor=axiscolor,psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[3,freq_use],color='red',psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[5,freq_use],color='green',psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[7,freq_use],color='purple',psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[9,freq_use],color='yellow',psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[11,freq_use],color='black',psym=2,symsize=0.2
-;      cgLegend, Title=['90m cables ('+ Strtrim(String(N_elements(tile_use_90)),1) +')','150m cables ('+ Strtrim(String(N_elements(tile_use_150)),1) +')', $
-;        '230m cables ('+ Strtrim(String(N_elements(tile_use_230)),1) +')', '320m cables ('+ Strtrim(String(N_elements(tile_use_320)),1) +')', $
-;        '400m cables ('+ Strtrim(String(N_elements(tile_use_400)),1) +')','524m cables ('+ Strtrim(String(N_elements(tile_use_524)),1) +')'], $
-;        Color=['blue','red','green','purple','yellow','black'],Psym=[2,2,2,2,2,2], $
-;        Length=0.0,Location=[0.55,0.85]
-;      cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
-;      
-;      cgPS_Open,image_path+obs.obsname+'_bandpass_yy.png',/quiet,/nomatch
-;      cgplot,freq[freq_use],bandpass_arr[2,freq_use],color='blue',title=obs.obsname + ' yy',xtitle='Frequency [MHz]',ytitle='Gain',$
-;        yrange=yrange,xrange=xrange,/noerase,axiscolor=axiscolor,psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[4,freq_use],color='red',psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[6,freq_use],color='green',psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[8,freq_use],color='purple',psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[10,freq_use],color='yellow',psym=2,symsize=0.2
-;      cgoplot,freq[freq_use],bandpass_arr[12,freq_use],color='black',psym=2,symsize=0.2
-;      cgLegend, Title=['90m cables ('+ Strtrim(String(N_elements(tile_use_90)),1) +')','150m cables ('+ Strtrim(String(N_elements(tile_use_150)),1) +')', $
-;        '230m cables ('+ Strtrim(String(N_elements(tile_use_230)),1) +')', '320m cables ('+ Strtrim(String(N_elements(tile_use_320)),1) +')', $
-;        '400m cables ('+ Strtrim(String(N_elements(tile_use_400)),1) +')','524m cables ('+ Strtrim(String(N_elements(tile_use_524)),1) +')'], $
-;        Color=['blue','red','green','purple','yellow','black'],Psym=[2,2,2,2,2,2], $
-;        Length=0.0,Location=[0.55,0.85]
-;      cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
-;    ENDIF    
-    
   ENDIF ELSE BEGIN
     bandpass_arr=Fltarr(n_pol+1,n_freq)
     bandpass_arr[0,*]=freq_arr
@@ -220,28 +167,6 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     cal_remainder=cal
     cal_remainder.gain=gain_arr_ptr3
     
-;    IF Keyword_Set(file_path_fhd) THEN BEGIN
-;      basename=file_basename(file_path_fhd)
-;      dirpath=file_dirname(file_path_fhd)
-;      image_path=filepath(basename,root=dirpath,sub='output_images')
-;      IF file_test(file_dirname(image_path),/directory) EQ 0 THEN file_mkdir,file_dirname(image_path)
-;      export_path=filepath(basename,root=dirpath,sub='calibration')
-;      IF file_test(file_dirname(export_path),/directory) EQ 0 THEN file_mkdir,file_dirname(export_path)
-;      Textfast,bandpass_arr,/write,file_path=export_path+'_bandpass'
-;      
-;      freq=freq_arr/1E6
-;      xtickv=[ceil(min(freq)/10)*10,floor(max(freq)/10)*10]
-;      xtickname=strtrim(round(xtickv),2)
-;      xrange=[min(freq)-(max(freq)-min(freq))/8,max(freq)+(max(freq)-min(freq))/8]
-;      yrange=[min(bandpass_arr[1:n_pol,freq_use]),max(bandpass_arr[1:n_pol,freq_use])]
-;      ytickv=[yrange[0],mean(yrange),yrange[1]]
-;      axiscolor='black'
-;      cgPS_Open,image_path+'_bandpass.png',/quiet,/nomatch
-;      cgplot,freq[freq_use],bandpass_arr[1,freq_use],color='blue',title=obs.obsname,xtitle='Frequency [MHz]',ytitle='Gain',$
-;        yrange=yrange,xrange=xrange,/noerase,axiscolor=axiscolor,psym=2,symsize=0.2
-;      IF n_pol GT 1 THEN cgoplot,freq[freq_use],bandpass_arr[2,freq_use],color='red',psym=2,symsize=0.2
-;      cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
-;    ENDIF
   ENDELSE
   
   IF Keyword_Set(file_path_fhd) THEN bandpass_plots,obs,bandpass_arr,file_path_fhd=file_path_fhd,$
