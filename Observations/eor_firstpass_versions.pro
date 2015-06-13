@@ -979,6 +979,15 @@ case version of
       saved_run_bp=1
       production=1
    end 
+   
+   'rlb_master_nodiffuse_june2015': begin
+      model_visibilities=0
+      diffuse_model=0
+      firstpass=1
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      production=1
+   end
 
    else: print,'Default parameters'
 endcase
