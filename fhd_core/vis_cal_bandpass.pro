@@ -103,7 +103,7 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
         If keyword_set(saved_run_bp) then bandpass_single=bandpass_saved_sol[1+(cable_i*2)+(pol_i),freq_use]
         
         ;Want iterative to start at 1 (to not overwrite freq) and store final bandpass per cable group.
-        bandpass_col_count = bandpass_col_count+1
+        bandpass_col_count += 1
         bandpass_arr[bandpass_col_count,freq_use]=bandpass_single
         
         ;Fill temporary variable gain2, set equal to final bandpass per cable group for each tile that will use that bandpass.
