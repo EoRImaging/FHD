@@ -906,12 +906,13 @@ case version of
       production=1
       ;no long tiles used in calculating saved bp
    end
-   'nb_poly_saved_run_onequad_polyscaled_90150_v3':begin ;remade
+   'nb_poly_saved_run_onequad_polyscaled_90150_v4':begin ;remade
       diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
       cable_bandpass_fit=1
       saved_run_bp=1
       saved_run_nodig_quad_polyscaled=1
       production=1
+      tile_flag_list=[17] ;I can't seem to fit this one. Tile inde 17, tile nme 32
       ;no long tiles used in calculating saved bp
    end
 
