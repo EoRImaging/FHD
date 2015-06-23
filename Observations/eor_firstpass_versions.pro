@@ -548,6 +548,10 @@ case version of
 	max_sources=100000.
 	gain_factor=0.1
     end
+  
+    'arn_patti_new_catalog':begin
+	model_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
+    end
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
