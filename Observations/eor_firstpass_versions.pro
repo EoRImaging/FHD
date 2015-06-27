@@ -548,7 +548,12 @@ case version of
 	max_sources=100000.
 	gain_factor=0.1
     end
-  
+ 
+    'arn_export_uncal_vis':begin
+	snapshot_healpix_export=0
+	calibrate_visibilities=0
+    end
+ 
     'arn_patti_new_catalog':begin
 	model_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
     end
