@@ -558,6 +558,11 @@ case version of
 	model_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
     end
 
+    'arn_new_cube_defaults':begin
+	cable_bandpass_fit=1
+	saved_run_bp=1
+     end
+
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
    ; Adam's versions. only Adam can make versions here.
