@@ -62,6 +62,10 @@ IF file_test(metafits_path) THEN BEGIN
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
     date_obs=sxpar(meta_hdr,'DATE-OBS')
     JD0=date_conv(date_obs,'JULIAN')
+    IF Keyword_Set(time_offset) THEN BEGIN
+        time_offset/=(24.*3600.)
+        JD0+=time_offset
+    ENDIF
     epoch=date_conv(date_obs,'REAL')/1000.
     epoch_year=Floor(epoch)
     epoch_fraction=(epoch-epoch_year)*1000./365.24218967
