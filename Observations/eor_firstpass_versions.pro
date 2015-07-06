@@ -1046,20 +1046,24 @@ case version of
    ;Khang's Stuff:
 
    'kn_sideLobeCalibration_july2015': begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      production=1
-      allow_sidelobe_cal_sources=1
-      allow_sidelobe_model_sources=0
-      ;no long tiles used in calculating saved bp
-      
-      ;Maybe needs these to? Ask Ian
-      model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-      model_visibilities=1
-      return_cal_visibilities=0
-      allow_sidelobe_cal_sources=0
-      allow_sidelobe_model_sources=1
+   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+   cable_bandpass_fit=1
+   saved_run_bp=1
+   production=1
+   allow_sidelobe_cal_sources=1
+   allow_sidelobe_model_sources=0
+   ;no long tiles used in calculating saved bp
+   
+   model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+   model_visibilities=1
+   return_cal_visibilities=0
+   
+   beam_threshold=0.01
+   beam_cal_threshold=0.01
+   beam_model_threshold=0.01
+   beam_output_threshold=0.01
+   diffuse_model=diffuse_calibrate
+   recalculate_all=1
    end 
 
 
