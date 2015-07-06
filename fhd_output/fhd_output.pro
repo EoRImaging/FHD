@@ -6,7 +6,7 @@ PRO fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,v
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
     use_pointing_center=use_pointing_center,no_fits=no_fits,no_png=no_png,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_diff_image=beam_diff_image,$
-    beam_output_threshold=beam_output_threshold,output_residual_histogram=output_residual_histogram,$
+    beam_output_threshold=beam_output_threshold,beam_threshold=beam_threshold,output_residual_histogram=output_residual_histogram,$
    show_beam_contour=show_beam_contour, image_mask_horizon=image_mask_horizon,no_condense_sources=no_condense_sources,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
@@ -61,7 +61,8 @@ dimension_uv=obs.dimension
 IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
     ELSE obs_out=obs
 
-IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=fhd_params.beam_threshold
+IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=fhd_params.beam_threshold
+IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=beam_threshold/2.
 dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
