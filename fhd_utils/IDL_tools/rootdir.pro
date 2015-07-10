@@ -12,6 +12,8 @@ sub_strings=strsplit(StrLOWcase(!Path),path_sep()+idlpath_sep,/extract)
 sub_strings_i=strsplit(StrLOWcase(!Path),path_sep()+idlpath_sep)
 match_i=where(sub_strings EQ project_name,n_match)
 IF n_match EQ 0 THEN BEGIN
+    print,'No match found in IDL !PATH to : "'+project_name+'". Returning empty string'
+    RETURN,""
     ;handle errors here
 ENDIF
 final_pos=sub_strings_i[match_i]+len
@@ -28,4 +30,3 @@ RootDirectory=dir_arr[dir_i]
 IF file_test(Rootdirectory) EQ 0 THEN print,String(format='(A," : folder not found")',Rootdirectory)
 RETURN,RootDirectory
 END
-

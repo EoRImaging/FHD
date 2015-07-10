@@ -1067,8 +1067,19 @@ case version of
    end 
 
 
+   'kn_nb_devel_July2015':begin
+   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+   cable_bandpass_fit=1
+   saved_run_bp=1
+   production=1
+   flag_dead_dipoles=1
+   ;no long tiles used in calculating saved bp
+   recalculate_all=1
 
-   else: print,'Default parameters'
+   end
+
+
+
 endcase
    
 SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
