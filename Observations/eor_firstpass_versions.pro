@@ -1068,12 +1068,12 @@ case version of
 
 
    'kn_nb_devel_July2015':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      production=1
-      flag_dead_dipoles=1
-      ;no long tiles used in calculating saved bp
+   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+   cable_bandpass_fit=1
+   saved_run_bp=1
+   production=1
+   flag_dead_dipoles=1
+   ;no long tiles used in calculating saved bp
 
    else: print,'Default parameters'
    end
