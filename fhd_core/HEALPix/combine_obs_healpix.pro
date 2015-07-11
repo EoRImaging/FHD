@@ -1,8 +1,6 @@
-PRO combine_obs_healpix,file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,instr_dirty_hpx=instr_dirty_hpx,$
-    instr_model_hpx=instr_model_hpx,weights_hpx=weights_hpx,instr_sources_hpx=instr_sources_hpx,$
-    instr_rings_hpx=instr_rings_hpx,instr_catalog_hpx=instr_catalog_hpx,$
-    nside=nside,restore_last=restore_last,output_path=output_path,$
-    beam_threshold=beam_threshold,image_filter_fn=image_filter_fn,silent=silent,$
+PRO combine_obs_healpix,file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,stokes_dirty_hpx=stokes_dirty_hpx,$
+    stokes_model_hpx=stokes_model_hpx,weights_hpx=weights_hpx,stokes_sources_hpx=stokes_sources_hpx,$
+    nside=nside,restore_last=restore_last,output_path=output_path,beam_threshold=beam_threshold,image_filter_fn=image_filter_fn,silent=silent,$
     catalog_file_path=catalog_file_path,restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
 
 except=!except
@@ -79,11 +77,9 @@ n_pol=Min(obs_arr.n_pol)
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 IF ~Keyword_Set(silent) THEN print,'Creating HEALPix maps using nside='+Strn(nside)
 
-instr_model_hpx=Ptrarr(n_pol)
-instr_dirty_hpx=Ptrarr(n_pol)
-instr_sources_hpx=Ptrarr(n_pol)
-instr_rings_hpx=Ptrarr(n_pol)
-instr_catalog_hpx=Ptrarr(n_pol)
+stokes_model_hpx=Ptrarr(n_pol)
+stokes_dirty_hpx=Ptrarr(n_pol)
+stokes_sources_hpx=Ptrarr(n_pol)
 weights_hpx=Ptrarr(n_pol)
 
 FOR obs_i=0L,n_obs-1 DO BEGIN
@@ -159,26 +155,27 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             image_filter_fn=image_filter_fn,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra))
         IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
             image_filter_fn=image_filter_fn,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra))
-        IF source_flag THEN BEGIN
-            IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_array,obs,pol_i=pol_i,resolution=16.,$
-                dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra)*(*beam_base[pol_i]))
-            instr_sources[pol_i]=Ptr_new(source_image_generate(source_array,obs,pol_i=pol_i,resolution=16.,$
-                dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)*(*beam_base[pol_i]))
-        ENDIF
+        IF source_flag THEN instr_sources[pol_i]=Ptr_new(source_image_generate(source_array,obs,pol_i=pol_i,resolution=16.,$
+            dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)*(*beam_base[pol_i]))
     ENDFOR
+    
+    stokes_dirty=stokes_cnv(instr_dirty_arr,jones,obs,beam_arr=beam_base,/square)
+    IF model_flag THEN stokes_model=stokes_cnv(instr_model_arr,jones,obs,beam_arr=beam_base,/square)
+    IF source_flag THEN stokes_sources=stokes_cnv(instr_sources,jones,obs,beam_arr=beam_base,/square)
+    stokes_weights=stokes_cnv(beam_base2,jones,obs)
+    stokes_weights=*stokes_weights[0]
     
     ; renormalize based on weights
     renorm_factor = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_base,filter_arr=filter_arr,$
         image_filter_fn=image_filter_fn,degpix=degpix,/antialias)
+    undefine_fhd,instr_dirty_arr,instr_model_arr,instr_sources,beam_base,beam_base2,filter_arr,jones
+    
+    ;multiply by stokes_weights so that observations can be added weighted by their variance. 
+    ;We will divide by the sum of the variances at the end to make this a variance-weighted average
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *instr_dirty_arr[pol_i]*=renorm_factor*n_vis_rel
-        IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor*n_vis_rel 
-        IF source_flag THEN BEGIN
-             IF Keyword_Set(ring_radius) THEN *instr_rings[pol_i]*=n_vis_rel
-             *instr_sources[pol_i]*=n_vis_rel
-        ENDIF
-        *beam_base[pol_i]*=n_vis_rel
-        *beam_base2[pol_i]*=n_vis_rel
+        *stokes_dirty[pol_i]*=renorm_factor*stokes_weights
+        IF model_flag THEN *stokes_model[pol_i]*=renorm_factor*stokes_weights 
+        IF source_flag THEN *stokes_sources[pol_i]*=stokes_weights
     ENDFOR
     
     hpx_cnv=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside,$
@@ -239,46 +236,35 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     
     FOR pol_i=0,n_pol-1 DO BEGIN
-        IF ~Ptr_valid(instr_dirty_hpx[pol_i]) THEN instr_dirty_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
-        IF model_flag THEN IF ~Ptr_valid(instr_model_hpx[pol_i]) THEN instr_model_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
-        IF source_flag THEN BEGIN
-            IF Keyword_Set(ring_radius) THEN IF ~Ptr_valid(instr_rings_hpx[pol_i]) THEN instr_rings_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
-            IF ~Ptr_valid(instr_sources_hpx[pol_i]) THEN instr_sources_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
-        ENDIF
+        IF ~Ptr_valid(stokes_dirty_hpx[pol_i]) THEN stokes_dirty_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
+        IF model_flag THEN IF ~Ptr_valid(stokes_model_hpx[pol_i]) THEN stokes_model_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
+        IF source_flag THEN IF ~Ptr_valid(stokes_sources_hpx[pol_i]) THEN stokes_sources_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
         IF ~Ptr_valid(weights_hpx[pol_i]) THEN weights_hpx[pol_i]=Ptr_new(Fltarr(n_hpx))
         IF reform_flag THEN BEGIN
             ;if reform_flag is set, that means that the latest observation has added new healpix pixels, so the old collection of pixels needs to be expanded 
-            instr_dirty_hpx0=Fltarr(n_hpx)
-            instr_dirty_hpx0[ind_map0]=(*instr_dirty_hpx[pol_i])
-            *instr_dirty_hpx[pol_i]=(instr_dirty_hpx0)
+            stokes_dirty_hpx0=Fltarr(n_hpx)
+            stokes_dirty_hpx0[ind_map0]=(*stokes_dirty_hpx[pol_i])
+            *stokes_dirty_hpx[pol_i]=(stokes_dirty_hpx0)
             
             IF model_flag THEN BEGIN
-                instr_model_hpx0=Fltarr(n_hpx)
-                instr_model_hpx0[ind_map0]=(*instr_model_hpx[pol_i])
-                *instr_model_hpx[pol_i]=(instr_model_hpx0)
+                stokes_model_hpx0=Fltarr(n_hpx)
+                stokes_model_hpx0[ind_map0]=(*stokes_model_hpx[pol_i])
+                *stokes_model_hpx[pol_i]=(stokes_model_hpx0)
             ENDIF
             
             IF source_flag THEN BEGIN
-                IF Keyword_Set(ring_radius) THEN BEGIN 
-                    instr_rings_hpx0=Fltarr(n_hpx)
-                    instr_rings_hpx0[ind_map0]=(*instr_rings_hpx[pol_i])
-                    *instr_rings_hpx[pol_i]=(instr_rings_hpx0)
-                ENDIF
-                instr_sources_hpx0=Fltarr(n_hpx)
-                instr_sources_hpx0[ind_map0]=(*instr_sources_hpx[pol_i])
-                *instr_sources_hpx[pol_i]=(instr_sources_hpx0)
+                stokes_sources_hpx0=Fltarr(n_hpx)
+                stokes_sources_hpx0[ind_map0]=(*stokes_sources_hpx[pol_i])
+                *stokes_sources_hpx[pol_i]=(stokes_sources_hpx0)
             ENDIF
             weights_hpx0=Fltarr(n_hpx)
             weights_hpx0[ind_map0]=(*weights_hpx[pol_i])
             *weights_hpx[pol_i]=(weights_hpx0)
         ENDIF 
-        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*beam_base2[pol_i],hpx_cnv)
-        (*instr_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_dirty_arr[pol_i],hpx_cnv)
-        IF model_flag THEN (*instr_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_model_arr[pol_i],hpx_cnv)
-        IF source_flag THEN BEGIN
-            IF Keyword_Set(ring_radius) THEN (*instr_rings_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_rings[pol_i],hpx_cnv)
-            (*instr_sources_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*instr_sources[pol_i],hpx_cnv)
-        ENDIF
+        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(stokes_weights,hpx_cnv)*n_vis_rel
+        (*stokes_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_dirty[pol_i],hpx_cnv)*n_vis_rel
+        IF model_flag THEN (*stokes_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_model[pol_i],hpx_cnv)*n_vis_rel
+        IF source_flag THEN (*stokes_sources_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_sources[pol_i],hpx_cnv)*n_vis_rel
     ENDFOR
     IF N_Elements(n_obs_hpx) EQ 0 THEN n_obs_hpx=intarr(n_hpx)
     IF reform_flag THEN BEGIN
@@ -288,11 +274,16 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     ENDIF
     n_obs_hpx[ind_map1]+=1
     
-    ri0=0
-    ri1=0
-    undefine_fhd,instr_model_arr,instr_dirty_arr,instr_sources,instr_rings,filter_arr,hpx_cnv,beam_base2,beam_base,jones
+    undefine_fhd,hpx_cnv,stokes_weights,ri0,ri1
 ENDFOR
 
-SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,instr_dirty_hpx,instr_model_hpx,weights_hpx,$
-    instr_sources_hpx,instr_rings_hpx,instr_catalog_hpx,filename=save_path,/compress
+;divide by the sum of the weights, to bring images back to true sky frame
+FOR pol_i=0,n_pol-1 DO BEGIN
+    *stokes_dirty_hpx[pol_i]*=weight_invert(*weights_hpx[pol_i])
+    IF model_flag THEN *stokes_model_hpx[pol_i]*=weight_invert(*weights_hpx[pol_i])
+    IF source_flag THEN *stokes_sources_hpx[pol_i]*=weight_invert(*weights_hpx[pol_i])
+ENDFOR
+
+SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,stokes_dirty_hpx,stokes_model_hpx,weights_hpx,$
+    stokes_sources_hpx,stokes_catalog_hpx,filename=save_path,/compress
 END
