@@ -33,8 +33,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             gain_arr[freq_i,auto_tile_i[tile_i]]=gain_single
         ENDFOR
     ENDFOR
-    gain_arr*=auto_scale[pol_i]/Mean(gain_arr)
-    IF nan_test(gain_arr) THEN gain_arr[where(Finite(gain_1rr,/nan))]=1.
+    gain_arr*=auto_scale[pol_i]*weight_invert(Mean(gain_arr))
+    IF nan_test(gain_arr) THEN gain_arr[where(Finite(gain_arr,/nan))]=1.
     zero_i=where(gain_arr LE 0,n_zero)
     IF n_zero GT 0 THEN gain_arr[zero_i]=1.
     auto_gain[pol_i]=Ptr_new(gain_arr)
