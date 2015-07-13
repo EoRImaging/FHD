@@ -560,8 +560,12 @@ case version of
 
     'arn_new_cube_defaults':begin
 	cable_bandpass_fit=1
-	saved_run_bp=1
      end
+
+    'arn_cable_bandpass_fit_and_patti_eor0low_cat':begin
+	cable_bandpass_fit
+	model_catalog_file_path=filepath('arn_eor0_low_cat_patti_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+    end
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
