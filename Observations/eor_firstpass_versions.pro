@@ -1063,7 +1063,7 @@ case version of
    beam_model_threshold=0.01
    beam_output_threshold=0.01
    diffuse_model=diffuse_calibrate
-   recalculate_all=1
+   ;recalculate_all=1
    end 
 
 
