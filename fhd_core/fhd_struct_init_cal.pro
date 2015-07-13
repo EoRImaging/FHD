@@ -4,7 +4,7 @@ FUNCTION fhd_struct_init_cal,obs,params,gain_arr_ptr=gain_arr_ptr,n_pol=n_pol,n_
     cal_time_average=cal_time_average,ref_antenna=ref_antenna,cal_convergence_threshold=cal_convergence_threshold,max_cal_iter=max_cal_iter,$
     calibration_origin=calibration_origin,catalog_path=catalog_path,calibration_polyfit=calibration_polyfit,bandpass_calibrate=bandpass_calibrate,$
     cal_mode_fit=cal_mode_fit,file_path_fhd=file_path_fhd,transfer_calibration=transfer_calibration,$
-    cal_gain_init=cal_gain_init,phase_fit_iter=phase_fit_iter,_Extra=extra
+    calibration_auto_initialize=calibration_auto_initialize,cal_gain_init=cal_gain_init,phase_fit_iter=phase_fit_iter,_Extra=extra
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd
 IF N_Elements(params) EQ 0 THEN fhd_save_io,0,params,var='params',/restore,file_path_fhd=file_path_fhd
@@ -23,6 +23,7 @@ IF N_Elements(n_tile) EQ 0 THEN n_tile=obs.n_tile
 IF N_Elements(n_time) EQ 0 THEN n_time=obs.n_time
 IF N_Elements(n_cal_src) EQ 0 THEN n_cal_src=-1
 IF N_Elements(source_list) EQ 0 THEN source_list=source_comp_init(n_sources=n_cal_src,freq=obs.freq_center)
+IF N_Elements(calibration_auto_initialize) EQ 0 THEN auto_initialize=1 ELSE auto_initialize=calibration_auto_initialize
 IF N_Elements(galaxy_cal) EQ 0 THEN galaxy_cal=0
 IF N_Elements(min_cal_baseline) EQ 0 THEN min_cal_baseline=obs.min_baseline ELSE min_cal_baseline=min_cal_baseline>obs.min_baseline
 IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline ELSE max_cal_baseline=max_cal_baseline<obs.max_baseline
@@ -32,7 +33,7 @@ IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=100L
 IF N_Elements(phase_fit_iter) EQ 0 THEN phase_fit_iter=Long((Floor(max_cal_iter/4.)<Floor(Sqrt(max_cal_iter)))>4) ELSE phase_fit_iter=Long(phase_fit_iter)
 IF N_Elements(ref_antenna) EQ 0 THEN ref_antenna=1L
 ref_antenna_name=(*obs.baseline_info).tile_names[ref_antenna]
-IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-6
+IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-7
 IF N_Elements(calibration_origin) EQ 0 THEN $
     IF Tag_exist(obs,'obsname') THEN calibration_origin=obs.obsname ELSE calibration_origin=''
 IF N_Elements(catalog_path) EQ 0 THEN catalog_path_use='' ELSE catalog_path_use=file_basename(catalog_path,'.sav',/fold_case)
@@ -55,7 +56,7 @@ mode_params=Ptrarr(n_pol,n_tile)
 auto_params=Ptrarr(2)
 auto_scale=Fltarr(2)
 
-cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,max_iter:max_cal_iter,phase_iter:phase_fit_iter,$
+cal_struct={n_pol:n_pol,n_freq:n_freq,n_tile:n_tile,n_time:n_time,uu:u_loc,vv:v_loc,source_list:source_list,auto_initialize:auto_initialize,max_iter:max_cal_iter,phase_iter:phase_fit_iter,$
     tile_A:tile_A,tile_B:tile_B,tile_names:tile_names,bin_offset:bin_offset,freq:freq,gain:gain_arr_ptr,gain_residual:gain_residual,auto_scale:auto_scale,auto_params:auto_params,$
     galaxy_cal:galaxy_cal,min_cal_baseline:min_cal_baseline,max_cal_baseline:max_cal_baseline,n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average,min_solns:min_cal_solutions,ref_antenna:ref_antenna,ref_antenna_name:ref_antenna_name,$

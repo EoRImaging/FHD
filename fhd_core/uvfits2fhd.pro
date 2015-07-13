@@ -5,7 +5,7 @@
 ;    It will read the uvfits file, grid the data, generate the holographic mapping functions, 
 ;    and run Fast Holographic Deconvolution
 ;
-;
+; Test line!
 ;
 ; :Keywords:
 ;    data_directory - working directory
@@ -88,12 +88,7 @@ IF data_flag LE 0 THEN BEGIN
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata' ;write preliminary settings file for debugging, in case later steps crash
-;    IF ~Keyword_Set(silent) THEN BEGIN
-;        beam_arr=Ptrarr(n_pol,/allocate)
-;        FOR pol_i=0,n_pol-1 DO *beam_arr[pol_i]=sqrt(beam_image(psf,obs,pol_i=pol_i,/square)>0.)
-;    ENDIF
-    jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
+    jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
     
     IF Keyword_Set(transfer_flags) THEN BEGIN
         flag_visibilities=0 ;
@@ -110,8 +105,17 @@ IF data_flag LE 0 THEN BEGIN
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
     vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
     
+    IF Keyword_Set(calibrate_visibilities) THEN BEGIN
+        IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
+        IF ~Keyword_Set(calibration_source_list) THEN $
+            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)        
+        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,$
+            catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
+    ENDIF
+    
     ;print informational messages
     obs_status,obs
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'  ;write preliminary settings file for debugging, in case later steps crash
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
         calibrate_visibilities=1
@@ -120,11 +124,6 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
-        IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
-        IF ~Keyword_Set(calibration_source_list) THEN $
-            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)
-        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,$
-            catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
@@ -162,7 +161,7 @@ IF data_flag LE 0 THEN BEGIN
             ELSE model_uv_arr=Pointer_copy(model_uv_arr2) 
         undefine_fhd,model_uv_arr2
     ENDIF ELSE IF Keyword_Set(calibrate_visibilities) THEN source_array=cal.source_list
-    IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but signal that it is not to be used
+    IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but not be used
     model_flag=min(Ptr_valid(vis_model_arr))
     
     IF Keyword_Set(error) THEN BEGIN
@@ -198,52 +197,12 @@ IF data_flag LE 0 THEN BEGIN
         t_save=Systime(1)-t_save0
         IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
     ENDIF
-        
-    t_grid=fltarr(n_pol)
-    t_mapfn_gen=fltarr(n_pol)
     
     ;Grid the visibilities
     IF Keyword_Set(grid_recalculate) THEN BEGIN
-        print,'Gridding visibilities'
-        IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol)
-        image_uv_arr=Ptrarr(n_pol,/allocate)
-        weights_arr=Ptrarr(n_pol,/allocate)
-        
-        IF Keyword_Set(model_flag) THEN model_uv_holo=Ptrarr(n_pol,/allocate)
-        IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
-        FOR pol_i=0,n_pol-1 DO BEGIN
-            IF Keyword_Set(model_flag) THEN model_return=1
-            IF Keyword_Set(snapshot_healpix_export) THEN preserve_visibilities=1 ELSE preserve_visibilities=0
-            IF Keyword_Set(preserve_visibilities) THEN return_mapfn=0 ELSE return_mapfn=mapfn_recalculate
-            IF Keyword_Set(mapfn_recalculate) AND Keyword_Set(save_visibilities) THEN preserve_vis_grid=0 ELSE preserve_vis_grid=preserve_visibilities
-            IF pol_i EQ 0 THEN uniform_filter=1 ELSE uniform_filter=0
-            grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
-                timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,uniform_filter=uniform_filter,$
-                mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
-                model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_vis_grid,_Extra=extra)
-            IF Keyword_Set(error) THEN BEGIN
-                print,"Error occured during gridding. Returning."
-                IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
-                RETURN
-            ENDIF
-            t_grid[pol_i]=t_grid0
-            fhd_save_io,status_str,grid_uv,var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
-            fhd_save_io,status_str,weights_grid,var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
-            IF pol_i EQ 0 THEN fhd_save_io,status_str,uniform_filter,var='vis_count',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-
-            IF Keyword_Set(deconvolve) THEN IF Keyword_Set(return_mapfn) THEN map_fn_arr[pol_i]=Ptr_new(return_mapfn,/no_copy)
-            *image_uv_arr[pol_i]=Temporary(grid_uv)
-            IF Keyword_Set(model_flag) THEN BEGIN
-                fhd_save_io,status_str,model_return,var='grid_uv_model',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
-                *model_uv_holo[pol_i]=Temporary(model_return)
-            ENDIF
-            IF N_Elements(weights_grid) GT 0 THEN BEGIN
-                *weights_arr[pol_i]=Temporary(weights_grid)
-                weights_grid=1
-            ENDIF
-        ENDFOR
-        fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;need to save here to enter nf_vis
-        IF ~Keyword_Set(silent) THEN print,'Gridding time:',t_grid
+        image_uv_arr=visibility_grid_wrap(vis_arr,flag_arr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
+            deconvolve=deconvolve,model_flag=model_flag,snapshot_healpix_export=snapshot_healpix_export,mapfn_recalculate=mapfn_recalculate,$
+            save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,_Extra=extra)
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE

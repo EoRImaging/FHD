@@ -1,4 +1,4 @@
-PRO testcal_128T,_Extra=extra
+PRO testcal_128T,data_version=data_version,_Extra=extra
 except=!except
 !except=0 
 heap_gc
@@ -11,7 +11,7 @@ ps_export=0
 version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-IF N_Elements(data_version) EQ 0 THEN data_version='3'
+IF N_Elements(data_version) EQ 0 THEN data_version='4'
 data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+data_version])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
@@ -69,6 +69,7 @@ restore_vis_savefile=(data_version EQ '3')
 firstpass=1
 max_cal_iter=100L
 beam_model=2
+dft_threshold=1
 
 cmd_args=extra
 extra=var_bundle()

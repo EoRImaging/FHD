@@ -340,16 +340,6 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             term_Am_box=matrix_multiply(freq_i*model_box/n_vis,box_matrix_dag,/atranspose,/btranspose)
             spectral_model_A[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(term_Am_box)
         ENDIF
-;        IF min(freq_i) LT max(freq_i) THEN BEGIN
-;            fit_vis_slope=Complex((linfit(freq_i,real_part(vis_box)))[1],(linfit(freq_i,imaginary(vis_box)))[1])
-;            fit_vis_box=matrix_multiply(replicate(fit_vis_slope/n_vis,n_vis_single),box_matrix_dag,/atranspose,/btranspose)
-;            spectral_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(fit_vis_box) 
-;            IF model_flag THEN BEGIN
-;                fit_model_slope=Complex((linfit(freq_i,real_part(model_box)))[1],(linfit(freq_i,imaginary(model_box)))[1])
-;                fit_model_box=matrix_multiply(replicate(fit_model_slope/n_vis,n_vis_single),box_matrix_dag,/atranspose,/btranspose)
-;                spectral_model_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(fit_model_box)
-;            ENDIF
-;        ENDIF
         tspec+=Systime(1)-tspec0
     ENDIF
     IF model_flag THEN BEGIN
@@ -417,8 +407,8 @@ IF Keyword_Set(grid_spectral) THEN BEGIN
     spectral_uv=(spectral_A-n_vis*spectral_B*image_uv)*weight_invert(spectral_D-spectral_B^2.)
     IF model_flag THEN spectral_model_uv=(spectral_model_A-n_vis*spectral_B*model_return)*weight_invert(spectral_D-spectral_B^2.)
     IF ~Keyword_Set(no_conjugate) THEN BEGIN
-        spectral_uv=(spectral_uv+Shift(Reverse(reverse(Conj(spectral_uv),1),2),1,1))/2.
-        IF model_flag THEN spectral_model_uv=(spectral_model_uv+Shift(Reverse(reverse(Conj(spectral_model_uv),1),2),1,1))/2.
+        spectral_uv=(spectral_uv+conjugate_mirror(spectral_uv))/2.
+        IF model_flag THEN spectral_model_uv=(spectral_model_uv+conjugate_mirror(spectral_model_uv))/2.
     ENDIF
 ENDIF
 
@@ -433,24 +423,11 @@ IF Keyword_Set(grid_uniform) THEN BEGIN
 ENDIF
 
 IF ~Keyword_Set(no_conjugate) THEN BEGIN
-    image_uv_conj=Shift(Reverse(reverse(Conj(image_uv),1),2),1,1)
-    image_uv=(image_uv+image_uv_conj)/2.
-    IF weights_flag THEN BEGIN
-        weights_conj=Shift(Reverse(reverse(Conj(weights),1),2),1,1)
-        weights=(weights+weights_conj)/2.
-    ENDIF
-    IF variance_flag THEN BEGIN
-        variance_mirror=Shift(Reverse(reverse(variance,1),2),1,1)
-        variance=(variance+variance_mirror)/4. ;2?
-    ENDIF
-    IF model_flag THEN BEGIN
-        model_conj=Shift(Reverse(reverse(Conj(model_return),1),2),1,1)
-        model_return=(model_return+model_conj)/2.
-    ENDIF
-    IF uniform_flag THEN BEGIN
-        uniform_filter_mirror=Shift(Reverse(reverse(uniform_filter,1),2),1,1)
-        uniform_filter=(uniform_filter+uniform_filter_mirror)/2.
-    ENDIF
+    image_uv=(image_uv+conjugate_mirror(image_uv))/2.
+    IF weights_flag THEN weights=(weights+conjugate_mirror(weights))/2.        
+    IF variance_flag THEN variance=(variance+conjugate_mirror(variance))/4. ;2?
+    IF model_flag THEN model_return=(model_return+conjugate_mirror(model_return))/2.
+    IF uniform_flag THEN uniform_filter=(uniform_filter+conjugate_mirror(uniform_filter))/2.
 ENDIF
 
 IF verbose THEN print,t0,t1,t2,t3,t4,t5,t6,t7,tspec

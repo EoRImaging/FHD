@@ -1,7 +1,7 @@
 pro eor_firstpass_versions
 except=!except
 !except=0
-heap_gc
+heap_gc 
 
 ; wrapper to contain all the parameters for various runs we might do
 ; using firstpass.
@@ -548,6 +548,20 @@ case version of
 	max_sources=100000.
 	gain_factor=0.1
     end
+ 
+    'arn_export_uncal_vis':begin
+	snapshot_healpix_export=0
+	calibrate_visibilities=0
+    end
+ 
+    'arn_patti_new_catalog':begin
+	model_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
+    end
+
+    'arn_new_cube_defaults':begin
+	cable_bandpass_fit=1
+	saved_run_bp=1
+     end
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
@@ -906,6 +920,23 @@ case version of
       production=1
       ;no long tiles used in calculating saved bp
    end
+   'nb_devel_June2015':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      production=1
+      ;no long tiles used in calculating saved bp
+   end   
+   
+   'nb_poly_saved_run_onequad_polyscaled_90150_v4':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_nodig_quad_polyscaled=1
+      production=1
+      tile_flag_list=[17] ;I can't seem to fit this one. Tile inde 17, tile nme 32
+      ;no long tiles used in calculating saved bp
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
@@ -968,6 +999,27 @@ case version of
       decon_filter='filter_uv_uniform'
    end  
 
+   ;Ruby's stuff
+   
+   'rlb_devel_nodiffuse_june2015': begin
+      model_visibilities=0
+      diffuse_model=0
+      firstpass=1
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      production=1
+   end
+   
+   'rlb_master_nodiffuse_june2015': begin
+      model_visibilities=0
+      diffuse_model=0
+      firstpass=1
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      production=1
+   end
+   
+
 
    ;Ruby's Stuff:
    
@@ -996,7 +1048,45 @@ case version of
       tile_flag_list = [151, 152, 153, 154, 155, 156, 157, 158]
    end
 
-   else: print,'Default parameters'
+
+
+   ;Khang's Stuff:
+
+   'kn_sideLobeCalibration_july2015': begin
+   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+   cable_bandpass_fit=1
+   saved_run_bp=1
+   production=1
+   allow_sidelobe_cal_sources=1
+   allow_sidelobe_model_sources=0
+   ;no long tiles used in calculating saved bp
+   
+   model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+   model_visibilities=1
+   return_cal_visibilities=0
+   
+   beam_threshold=0.01
+   beam_cal_threshold=0.01
+   beam_model_threshold=0.01
+   beam_output_threshold=0.01
+   diffuse_model=diffuse_calibrate
+   ;recalculate_all=1
+   end 
+
+
+   'kn_nb_devel_July2015':begin
+   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+   cable_bandpass_fit=1
+   saved_run_bp=1
+   production=1
+   flag_dead_dipoles=1
+   ;no long tiles used in calculating saved bp
+   recalculate_all=1
+
+   end
+
+
+
 endcase
    
 SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $

@@ -5,7 +5,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,calibration_bandpass_iterate=calibration_bandpass_iterate,$
-    calibration_auto_initialize=calibration_auto_initialize,calibration_auto_fit=calibration_auto_fit,_Extra=extra
+    calibration_auto_fit=calibration_auto_fit,_Extra=extra
 t0_0=Systime(1)
 error=0
 timing=-1
@@ -88,12 +88,13 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
 ENDIF
 
 fill_model_vis=1
-;IF Keyword_Set(calibration_auto_initialize) OR Keyword_Set(calibration_auto_fit) OR Keyword_Set(return_cal_visibilities) THEN fill_model_vis=1
-vis_model_arr=vis_source_model(cal.source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
+source_list=cal.source_list
+source_list.extend=Pointer_copy(cal.source_list.extend)
+vis_model_arr=vis_source_model(source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
     timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)    
 t1=Systime(1)-t0_0
 
-IF Keyword_Set(calibration_auto_initialize) THEN $
+IF Keyword_Set(cal.auto_initialize) THEN $
     initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr,_Extra=extra)
    
 vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
@@ -230,6 +231,7 @@ IF Tag_exist(cal,'Mean_gain') THEN cal.mean_gain=cal_gain_avg
 IF Tag_exist(cal,'Mean_gain_residual') THEN cal.mean_gain_residual=cal_res_avg
 IF Tag_exist(cal,'Mean_gain_restrict') THEN cal.mean_gain_restrict=cal_res_restrict
 IF Tag_exist(cal,'Stddev_gain_residual') THEN cal.stddev_gain_residual=cal_res_stddev
+cal.source_list=source_list
 
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0

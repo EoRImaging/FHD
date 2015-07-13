@@ -69,6 +69,7 @@ IF Keyword_Set(rotate_pol) THEN BEGIN
     ;this is meant as a debugging tool!
     FOR i=0,1 DO BEGIN
         p_map[*,i]=jones.Jmat[*,1-i]
+        p_map[*,i+2]=jones.Jmat[*,3-i]
         p_corr[i,*]=jones.Jinv[1-i,*]
         p_corr[i+2,*]=jones.Jinv[3-i,*]
     ENDFOR
