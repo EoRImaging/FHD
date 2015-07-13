@@ -988,6 +988,13 @@ case version of
       saved_run_bp=1
       production=1
    end
+   
+   'rlb_flag_rec15': begin
+      diffuse_calibrate = filepath('EoR0_diffuse_model_94.sav', root = rootdir('FHD'), subdir = 'catalog_data')
+      cable_bandpass_fit = 1
+      saved_run_bp = 1
+      tile_flag_list = [151, 152, 153, 154, 155, 156, 157, 158]
+   end
 
    else: print,'Default parameters'
 endcase
