@@ -574,7 +574,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       ;any gains with NANs -> all tiles for that freq will have NANs
       freq_nan_i=nan_i mod n_freq
       freq_nan_i=freq_nan_i[Uniq(freq_nan_i,Sort(freq_nan_i))]
-      FOR pol_i2=0,n_pol-1 DO (*flag_ptr_use[pol_i2])[freq_nan_i,*]=0
+      (*flag_ptr_use[pol_i])[freq_nan_i,*]=0
       gain_arr[nan_i]=0.
       
     ENDIF

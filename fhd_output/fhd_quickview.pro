@@ -5,7 +5,7 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
     instr_low=instr_low,instr_high=instr_high,stokes_low=stokes_low,stokes_high=stokes_high,$
     use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
-    allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,$
+    allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,beam_threshold=beam_threshold,$
     beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,$
     image_mask_horizon=image_mask_horizon,write_healpix_fits=write_healpix_fits,nside=nside,_Extra=extra
 t0=Systime(1)
@@ -22,7 +22,8 @@ IF file_test(image_dir) EQ 0 THEN file_mkdir,image_dir
 IF file_test(output_dir) EQ 0 THEN file_mkdir,output_dir
 IF Keyword_Set(show_obsname) OR (N_Elements(show_obsname) EQ 0) THEN title_fhd=basename
 IF N_Elements(show_grid) EQ 0 THEN show_grid=1
-IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=0.025
+IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
+IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=beam_threshold/2.
 IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
 
 grid_spacing=10.
