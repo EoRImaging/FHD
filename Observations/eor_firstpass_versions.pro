@@ -84,6 +84,11 @@ allow_sidelobe_model_sources=1
 
 beam_offset_time=56 ; make this a default. But it won't compound with setting it directly in a version so I think it's ok.
 
+;New defaults - July2015
+diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+cable_bandpass_fit=1
+saved_run_bp=1
+
 case version of
    'apb_test_restrict_hpx_inds_1': begin
       restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'       ; now graduated to a default
