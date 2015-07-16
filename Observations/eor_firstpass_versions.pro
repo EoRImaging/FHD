@@ -1095,6 +1095,9 @@ case version of
       ;production=1
       ;no long tiles used in calculating saved bp
    end 
+   'nb_catalog_July2015':begin 
+      calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end   
    
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
