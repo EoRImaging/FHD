@@ -98,7 +98,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       endif else begin
       
         count_neg = 0
-
+        
         if count_zero gt 0 then begin
           min_pos_color = 1
           zero_color=0
@@ -107,7 +107,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
           if log_cut_val gt min_pos then log_data_range = [log_cut_val-data_n_colors/(log_data_range[1]-log_data_range[0]), alog10(data_range[1])]
           
         endif else min_pos_color=0
-                
+        
         data_log = alog10(data)
         wh_under = where(data lt 10^double(log_cut_val), count_under)
         if count_under gt 0 then data_log[wh_under] = log_data_range[0]
@@ -132,7 +132,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       if n_elements(min_abs) eq 0 then min_abs = min(abs(data[where(abs(data) gt 0)]))
       
       log_data_range = alog10([min_abs, max_abs])
-
+      
       if no_input_data_range eq 1 then data_range = [-1,1]*max_abs
       
       neg_color_range = [0, floor(data_n_colors/2)-1]
@@ -166,13 +166,20 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       else log_data_range[0] = alog10(data_range[0])
       log_data_range[1] = alog10(max(abs(data_range)))
       
+      wh_zero = where(data eq 0, count_zero)
+      if count_zero gt 0 then begin
+        min_pos_color = 1
+        zero_color=0
+        zero_val = log_data_range[0]
+                
+      endif else min_pos_color=0
+      
       data_log = alog10(abs_data)
-      wh_zero = where(data eq 0, count)
-      if count ne 0 then data_log[wh_zero] = log_data_range[0]
+      if count_zero gt 0 then data_log[wh_zero] = zero_val
       
       abs_data = 0
       
-      data_log_norm = (data_log-log_data_range[0])*data_n_colors/(log_data_range[1]-log_data_range[0]) + data_color_range[0]
+      data_log_norm = (data_log-log_data_range[0])*(data_n_colors-min_pos_color-1)/(log_data_range[1]-log_data_range[0]) + data_color_range[0] + min_pos_color
       cgloadct, 25, /brewer, /reverse, clip = [0, 235]
       
     end
