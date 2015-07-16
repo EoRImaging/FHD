@@ -1097,6 +1097,8 @@ case version of
    end 
    'nb_catalog_July2015':begin 
       calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
+      saved_run_bp=0
+      recalculate_all=1
    end   
    
    ;;; Patti's versions!!! Only Patti may edit this section!!!
