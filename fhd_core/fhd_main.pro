@@ -109,7 +109,8 @@ IF data_flag LE 0 THEN BEGIN
         IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
         IF ~Keyword_Set(calibration_source_list) THEN $
             calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)        
-        cal=fhd_struct_init_cal(obs,params,source_list=calibration_source_list,$
+        skymodel=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,_Extra=extra)
+        cal=fhd_struct_init_cal(obs,params,skymodel,source_list=calibration_source_list,$
             catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
     ENDIF
     
@@ -155,12 +156,16 @@ IF data_flag LE 0 THEN BEGIN
                 source_array=source_list_append(obs,model_source_list,cal.source_list)
             ENDIF ELSE source_array=model_source_list
         ENDIF ELSE IF N_Elements(model_source_list) GT 0 THEN source_array=model_source_list 
+        skymodel=fhd_struct_init_skymodel(obs,source_list=model_source_list,catalog_path=model_catalog_file_path,return_cal=return_cal_visibilities,_Extra=extra)
         vis_model_arr=vis_source_model(model_source_list,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr2,$
             timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
         IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr2[pol_i] $
             ELSE model_uv_arr=Pointer_copy(model_uv_arr2) 
         undefine_fhd,model_uv_arr2
-    ENDIF ELSE IF Keyword_Set(calibrate_visibilities) THEN source_array=cal.source_list
+    ENDIF ELSE BEGIN
+        IF Keyword_Set(calibrate_visibilities) THEN source_array=cal.source_list    
+    ENDELSE
+    
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but not be used
     model_flag=min(Ptr_valid(vis_model_arr))
     
