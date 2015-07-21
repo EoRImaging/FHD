@@ -109,6 +109,7 @@ calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
 log_store=1 ;store output log to a file 
 time_cut=[-2,2]
+dft_threshold=1
 
 ;defaults not set in firstpass:
 mark_zenith=1
