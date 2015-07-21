@@ -48,7 +48,7 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
         ti_start=0
         ti_end=(Ceil(Abs(time_cut[ti])/time_res)-1)<(n_time-1)
     ENDELSE
-    time_use[ti_start:ti_end]=0
+    IF ti_end GE ti_start THEN time_use[ti_start:ti_end]=0
 ENDFOR
 
 IF Tag_exist(hdr,'freq_arr') THEN BEGIN
