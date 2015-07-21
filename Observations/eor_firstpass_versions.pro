@@ -84,6 +84,11 @@ allow_sidelobe_model_sources=1
 
 beam_offset_time=56 ; make this a default. But it won't compound with setting it directly in a version so I think it's ok.
 
+;New defaults - July2015
+diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+cable_bandpass_fit=1
+saved_run_bp=1
+
 case version of
    'apb_test_restrict_hpx_inds_1': begin
       restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'       ; now graduated to a default
@@ -560,8 +565,14 @@ case version of
 
     'arn_new_cube_defaults':begin
 	cable_bandpass_fit=1
-	saved_run_bp=1
      end
+
+    'arn_cable_bandpass_fit_and_patti_eor0low_cat':begin
+	cable_bandpass_fit=1
+	return_cal_visibilities=1
+	model_visibilities=0
+	mcalibration_catalog_file_path=filepath('arn_eor0_low_cat_patti_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+    end
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
@@ -928,16 +939,168 @@ case version of
       ;no long tiles used in calculating saved bp
    end   
    
-   'nb_poly_saved_run_onequad_polyscaled_90150_v4':begin ;remade
+'nb_devel_June2015':begin
       diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
       cable_bandpass_fit=1
       saved_run_bp=1
-      saved_run_nodig_quad_polyscaled=1
+      ;production=1
+      ;no long tiles used in calculating saved bp
+      
+      allow_sidelobe_image_output=1
+      beam_output_threshold=0.002
+      ;ring_radius=30.*pad_uv_image
+      show_beam_contour=1
+      contour_levels=[0.01]
+      recalculate_all=0
+      stokes_high=1.
+   end 
+   'nb_devel_June2015_diffuseright':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      diffuse_model=diffuse_calibrate
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      ;production=1
+      ;no long tiles used in calculating saved bp
+      
+      allow_sidelobe_image_output=1
+      beam_output_threshold=0.002
+      ;ring_radius=30.*pad_uv_image
+      show_beam_contour=1
+      contour_levels=[0.01]
+      recalculate_all=0
+      stokes_high=1.
+   end   
+   'nb_devel_June2015_nosidelobes':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      ;production=1
+      allow_sidelobe_cal_sources=0
+      allow_sidelobe_model_sources=0
+      beam_threshold=0.01
+      beam_cal_threshold=0.01
+      beam_model_threshold=0.01
+      
+      ;allow_sidelobe_image_output=1
+      beam_output_threshold=0.002
+      show_beam_contour=1
+      contour_levels=[0.01]
+      recalculate_all=1
+      ;no long tiles used in calculating saved bp
+   end  
+   'nb_devel_June2015_nosidelobes_diffuseright':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      diffuse_model=diffuse_calibrate
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      ;production=1
+      allow_sidelobe_cal_sources=0
+      allow_sidelobe_model_sources=0
+      beam_threshold=0.01
+      beam_cal_threshold=0.01
+      beam_model_threshold=0.01
+      
+      ;allow_sidelobe_image_output=1
+      beam_output_threshold=0.002
+      show_beam_contour=1
+      contour_levels=[0.01]
+      recalculate_all=1
+      ;no long tiles used in calculating saved bp
+   end   
+   'nb_devel_June2015_sidelobecalonly':begin
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
       production=1
-      tile_flag_list=[17] ;I can't seem to fit this one. Tile inde 17, tile nme 32
+      allow_sidelobe_cal_sources=1
+      allow_sidelobe_model_sources=0
+      ;no long tiles used in calculating saved bp
+      
+      ;Maybe needs these to? Ask Ian
+      ;model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      return_cal_visibilities=0
+      allow_sidelobe_cal_sources=0
+      allow_sidelobe_model_sources=1
+   end     
+   'nb_std_test_polyquad':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_std_test_polyquad=1
+      ;production=1
       ;no long tiles used in calculating saved bp
    end
-
+   'nb_std_test_twopolyquad':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_std_test_polyquad=1
+      ;production=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_std_test_twopolyquad_fancymodeobs':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_std_test_polyquad=1
+      recalculate_all=1
+      ;production=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_std_test_twopolyquad_fancymodeobs_crossamp':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_polysplit_onemode=1
+      recalculate_all=1
+      ;production=1
+      ;no long tiles used in calculating saved bp
+   end
+   'nb_std_test_nodigtwopolyquad':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_std_test_polyquad=1
+      recalculate_all=1
+      ;production=1
+      ;no long tiles used in calculating saved bp
+   end   
+   'nb_sidelobe_calibration_july2015': begin
+   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+   cable_bandpass_fit=1
+   saved_run_bp=1
+   production=1
+   allow_sidelobe_cal_sources=1
+   allow_sidelobe_model_sources=0
+   ;no long tiles used in calculating saved bp
+   
+   ;model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+   model_visibilities=1
+   return_cal_visibilities=0
+   
+   beam_threshold=0.01
+   beam_cal_threshold=0.01
+   beam_model_threshold=0.01
+   beam_output_threshold=0.01
+   diffuse_model=diffuse_calibrate
+   recalculate_all=1
+   end   
+   'nb_std_test_twopolyquad_fancymodeobs_150only':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+      cable_bandpass_fit=1
+      saved_run_bp=1
+      saved_run_std_test_polyquad=1
+      recalculate_all=1
+      ;production=1
+      ;no long tiles used in calculating saved bp
+   end 
+   'nb_catalog_July2015':begin 
+      calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
+      saved_run_bp=0
+      recalculate_all=1
+   end   
+   
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
    ; My default full deconvolution parameters
@@ -1040,6 +1203,13 @@ case version of
       saved_run_bp=1
       production=1
    end
+   
+   'rlb_flag_rec15': begin
+      diffuse_calibrate = filepath('EoR0_diffuse_model_94.sav', root = rootdir('FHD'), subdir = 'catalog_data')
+      cable_bandpass_fit = 1
+      saved_run_bp = 1
+      tile_flag_list = [151, 152, 153, 154, 155, 156, 157, 158]
+   end
 
 
 
@@ -1063,7 +1233,7 @@ case version of
    beam_model_threshold=0.01
    beam_output_threshold=0.01
    diffuse_model=diffuse_calibrate
-   recalculate_all=1
+   ;recalculate_all=1
    end 
 
 
