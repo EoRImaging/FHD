@@ -1,4 +1,5 @@
-PRO fhd_log_settings,file_path_fhd,obs=obs,antenna=antenna,psf=psf,cal=cal,fhd=fhd,cmd_args=cmd_args,overwrite=overwrite,sub_directory=sub_directory
+PRO fhd_log_settings,file_path_fhd, obs=obs, antenna=antenna, psf=psf, cal=cal, skymodel=skymodel,$
+    fhd=fhd, cmd_args=cmd_args, overwrite=overwrite, sub_directory=sub_directory
 
 descr_file_path=file_path_fhd+'_settings.txt'
 IF Keyword_Set(sub_directory) THEN descr_file_path=filepath(file_basename(descr_file_path),root=file_dirname(descr_file_path),sub=sub_directory)
@@ -11,6 +12,7 @@ obs_delimiter='##OBS'
 antenna_delimiter='##ANTENNA'
 psf_delimiter='##PSF'
 cal_delimiter='##CAL'
+model_delimiter='##SKYMODEL'
 fhd_delimiter='##FHD'
 end_delimiter='##END'
 filler='##'
@@ -62,6 +64,7 @@ IF Keyword_Set(obs) THEN obs_insert=structure_to_text(obs,head=obs_delimiter,del
 IF Keyword_Set(antenna) THEN antenna_insert=structure_to_text(antenna,head=antenna_delimiter,delimiter=delimiter,max_len=max_len)
 IF Keyword_Set(psf) THEN psf_insert=structure_to_text(psf,head=psf_delimiter,delimiter=delimiter,max_len=max_len)
 IF Keyword_Set(cal) THEN cal_insert=structure_to_text(cal,head=cal_delimiter,delimiter=delimiter,max_len=max_len)
+IF Keyword_Set(skymodel) THEN skymodel_insert=structure_to_text(skymodel,head=skymodel_delimiter,delimiter=delimiter,max_len=max_len)
 IF Keyword_Set(fhd) THEN fhd_insert=structure_to_text(fhd,head=fhd_delimiter,delimiter=delimiter,max_len=max_len)
 
 IF N_Elements(cmd_insert) EQ 0 THEN cmd_insert=[cmd_delimiter,filler]
@@ -69,9 +72,10 @@ IF N_Elements(obs_insert) EQ 0 THEN obs_insert=[obs_delimiter,filler]
 IF N_Elements(antenna_insert) EQ 0 THEN antenna_insert=[antenna_delimiter,filler]
 IF N_Elements(psf_insert) EQ 0 THEN psf_insert=[psf_delimiter,filler]
 IF N_Elements(cal_insert) EQ 0 THEN cal_insert=[cal_delimiter,filler]
+IF N_Elements(skymodel_insert) EQ 0 THEN skymodel_insert=[skymodel_delimiter,filler]
 IF N_Elements(fhd_insert) EQ 0 THEN fhd_insert=[fhd_delimiter,filler]
 
-info_out=[[info_out],[cmd_insert],[obs_insert],[antenna_insert],[psf_insert],[cal_insert],[fhd_insert],[end_delimiter,filler]]
+info_out=[[info_out],[cmd_insert],[obs_insert],[antenna_insert],[psf_insert],[cal_insert],[skymodel_insert],[fhd_insert],[end_delimiter,filler]]
 empty_test=where(info_out EQ '',n_empty)
 IF n_empty GT 0 THEN info_out[empty_test]=filler
 textfast,info_out,/write,file_path=descr_file_path,delimiter=delimiter
