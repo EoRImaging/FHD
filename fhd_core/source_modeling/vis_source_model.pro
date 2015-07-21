@@ -1,14 +1,14 @@
-FUNCTION vis_source_model,source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,$
-    timing=timing,silent=silent,uv_mask=uv_mask,galaxy_calibrate=galaxy_calibrate,error=error,beam_arr=beam_arr,$
-    fill_model_vis=fill_model_vis,use_pointing_center=use_pointing_center,vis_model_ptr=vis_model_ptr,$
-    galaxy_model=galaxy_model,calibration_flag=calibration_flag,diffuse_calibrate=diffuse_calibrate,$
-    diffuse_model=diffuse_model,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
+FUNCTION vis_source_model,skymodel, obs, status_str, psf, params, flag_ptr, cal, jones, model_uv_arr=model_uv_arr,$
+    file_path_fhd=file_path_fhd, timing=timing, silent=silent, uv_mask=uv_mask, error=error, beam_arr=beam_arr,$
+    fill_model_vis=fill_model_vis, use_pointing_center=use_pointing_center, vis_model_ptr=vis_model_ptr,$
+    spectral_model_uv_arr=spectral_model_uv_arr, _Extra=extra
 
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF N_Elements(silent) EQ 0 THEN silent=1
 
+IF N_Elements(skymodel) EQ 0 THEN fhd_save_io,status_str,skymodel,var='skymodel',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra

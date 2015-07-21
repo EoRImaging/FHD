@@ -88,8 +88,8 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
 ENDIF
 
 fill_model_vis=1
-source_list=cal.source_list
-source_list.extend=Pointer_copy(cal.source_list.extend)
+source_list=cal.skymodel.source_list
+source_list.extend=Pointer_copy(source_list.extend) ;this will leave the pointers for any extended sources in the original model intact
 vis_model_arr=vis_source_model(source_list,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
     timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)    
 t1=Systime(1)-t0_0
@@ -231,7 +231,7 @@ IF Tag_exist(cal,'Mean_gain') THEN cal.mean_gain=cal_gain_avg
 IF Tag_exist(cal,'Mean_gain_residual') THEN cal.mean_gain_residual=cal_res_avg
 IF Tag_exist(cal,'Mean_gain_restrict') THEN cal.mean_gain_restrict=cal_res_restrict
 IF Tag_exist(cal,'Stddev_gain_residual') THEN cal.stddev_gain_residual=cal_res_stddev
-cal.source_list=source_list
+;cal.source_list=source_list
 
 t3=Systime(1)-t3_a
 timing=Systime(1)-t0_0
