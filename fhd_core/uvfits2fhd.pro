@@ -202,7 +202,8 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(grid_recalculate) THEN BEGIN
         image_uv_arr=visibility_grid_wrap(vis_arr,flag_arr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
             deconvolve=deconvolve,model_flag=model_flag,snapshot_healpix_export=snapshot_healpix_export,mapfn_recalculate=mapfn_recalculate,$
-            save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,_Extra=extra)
+            save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,$
+            return_decon_visibilities=return_decon_visibilities,_Extra=extra)
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE

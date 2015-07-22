@@ -12,7 +12,7 @@ IF N_Elements(silent) EQ 0 THEN silent=1
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-IF N_Elements(flag_ptr) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF Min(Ptr_valid(flag_ptr)) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 galaxy_flag=0
@@ -24,8 +24,6 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(diffuse_model) THEN diffuse_filepath=diffuse_model
 ENDELSE
 heap_gc
-
-;IF Keyword_Set(flag_ptr) THEN flag_switch=1 ELSE flag_switch=0
 
 pol_names=obs.pol_names
 
