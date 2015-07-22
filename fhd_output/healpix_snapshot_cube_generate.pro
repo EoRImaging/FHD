@@ -53,7 +53,11 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=ps_nfreq_avg,FoV=FoV_use,dimension=dimension_use)
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
-  psf_out=beam_setup(obs_out,0,antenna_out,/no_save,psf_resolution=ps_psf_resolution,/silent,_Extra=extra)
+  IF (kbinsize EQ obs_in.kpix) AND ((*obs_out.baseline_info).fbin_i EQ (*obs_in.baseline_info).fbin_i) THEN BEGIN
+    ;If the beam model to be used for making the snapshot cubes is the same as the one used for imaging, then simply copy the existing data and don't recalculate it
+    IF N_Elements(antenna) EQ 0 THEN fhd_save_io,status_str,antenna_out,var='antenna',/restore,file_path_fhd=file_path_fhd,_Extra=extra ELSE antenna_out=antenna
+    psf_out=psf_in
+  ENDIF ELSE  psf_out=beam_setup(obs_out,0,antenna_out,/no_save,psf_resolution=ps_psf_resolution,/silent,_Extra=extra)
   
   beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask,/square,beam_threshold=beam_threshold)
   
