@@ -53,7 +53,11 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=ps_nfreq_avg,FoV=FoV_use,dimension=dimension_use)
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
-  psf_out=beam_setup(obs_out,0,antenna_out,/no_save,psf_resolution=ps_psf_resolution,/silent,_Extra=extra)
+  IF (kbinsize EQ obs_in.kpix) AND ((*obs_out.baseline_info).fbin_i EQ (*obs_in.baseline_info).fbin_i) THEN BEGIN
+    ;If the beam model to be used for making the snapshot cubes is the same as the one used for imaging, then simply copy the existing data and don't recalculate it
+    IF N_Elements(antenna) EQ 0 THEN fhd_save_io,status_str,antenna_out,var='antenna',/restore,file_path_fhd=file_path_fhd,_Extra=extra ELSE antenna_out=antenna
+    psf_out=psf_in
+  ENDIF ELSE  psf_out=beam_setup(obs_out,0,antenna_out,/no_save,psf_resolution=ps_psf_resolution,/silent,_Extra=extra)
   
   beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask,/square,beam_threshold=beam_threshold)
   
@@ -66,7 +70,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,antenna=antenna_out,cal=cal,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
   undefine_fhd,antenna_out
   
-  IF N_Elements(flag_arr) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
+  IF Min(Ptr_valid(flag_arr)) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
     ELSE flag_arr_use=Pointer_copy(flag_arr)
   
   vis_flag_update,flag_arr_use,obs_out,psf_out,params,_Extra=extra

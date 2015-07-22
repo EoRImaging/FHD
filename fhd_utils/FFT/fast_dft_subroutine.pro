@@ -94,7 +94,8 @@ FOR si=0L,ns-1L DO BEGIN
         kernel_y*=y_sign
     ENDELSE
     kernel_single=kernel_x[xv_k_i]*kernel_y[yv_k_i]
-    kernel_norm=Total(kernel_single,/double)
+;    kernel_norm=Total(kernel_single,/double)
+    kernel_norm=1D
     
     t3_a=Systime(1)
     t2+=t3_a-t2_a

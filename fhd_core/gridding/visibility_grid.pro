@@ -29,7 +29,10 @@ n_vis_arr=obs.nf_vis
 
 flag_switch=Ptr_valid(flag_ptr)
 IF flag_switch THEN BEGIN
-    IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE flag_arr=Temporary(*flag_ptr)
+    IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE BEGIN
+        flag_arr=Temporary(*flag_ptr)
+        Ptr_free,flag_ptr
+    ENDELSE
 ENDIF
 
 IF N_Elements(bi_use) EQ 0 THEN BEGIN
@@ -47,12 +50,17 @@ n_f_use=N_Elements(fi_use)
 
 vis_inds_use=matrix_multiply(fi_use,replicate(1L,n_b_use))+matrix_multiply(replicate(1L,n_f_use),bi_use)*n_freq
 IF flag_switch THEN flag_arr=flag_arr[vis_inds_use]
-IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[vis_inds_use] ELSE vis_arr_use=(Temporary(*visibility_ptr))[vis_inds_use] 
+IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[vis_inds_use] ELSE BEGIN
+    vis_arr_use=(Temporary(*visibility_ptr))[vis_inds_use] 
+    Ptr_free,visibility_ptr
+ENDELSE
 model_flag=0
 IF Ptr_valid(model_ptr) THEN BEGIN
     IF Keyword_Set(model_return) THEN BEGIN
-        IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[vis_inds_use] $
-            ELSE model_use=(Temporary(*model_ptr))[vis_inds_use]
+        IF Keyword_Set(preserve_visibilities) THEN model_use=(*model_ptr)[vis_inds_use] ELSE BEGIN
+            model_use=(Temporary(*model_ptr))[vis_inds_use]
+            ptr_free,model_ptr
+        ENDELSE
         model_return=Complexarr(dimension,elements)
         model_flag=1
     ENDIF ELSE BEGIN
