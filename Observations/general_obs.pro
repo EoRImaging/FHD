@@ -89,7 +89,7 @@ IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 IF size(transfer_mapfn,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_mapfn[0],3,/reverse)) EQ '.txt' THEN $
     transfer_mapfn=string_list_read(transfer_mapfn,data_directory=data_directory)
     
-;NOTE: IF transfer_mapfn is ever supplied as an array, all later calls to uvfits2fhd will need to be updated
+;NOTE: IF transfer_mapfn is ever supplied as an array, all later calls to fhd_main will need to be updated
     
 IF N_Elements(transfer_calibration) EQ 0 THEN transfer_calibration=0
 IF size(transfer_calibration,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_calibration[0],3,/reverse)) EQ '.txt' THEN $
@@ -194,7 +194,7 @@ IF Keyword_Set(simultaneous) THEN BEGIN
         gain_factor=gain_factor,add_threshold=add_threshold,transfer_mapfn=transfer_mapfn,_Extra=extra    
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
-        uvfits2fhd,vis_file_list[fi],status_arr[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
+        fhd_main,vis_file_list[fi],status_arr[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
             transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
             silent=silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
