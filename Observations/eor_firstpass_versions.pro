@@ -37,6 +37,7 @@ n_avg=2
 ps_kbinsize=0.5
 ps_kspan=600.
 image_filter_fn='filter_uv_uniform'
+deconvolution_filter='filter_uv_uniform'
 
 uvfits_version=4
 uvfits_subversion=1
@@ -46,7 +47,7 @@ calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=ro
 
 dimension=2048
 max_sources=20000
-pad_uv_image=2.
+pad_uv_image=1.
 FoV=0
 no_ps=1
 min_baseline=1.
@@ -55,7 +56,7 @@ ring_radius=10.*pad_uv_image
 nfreq_avg=16
 no_rephase=1
 combine_obs=0
-smooth_width=11.
+smooth_width=32.
 bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
@@ -1100,7 +1101,42 @@ case version of
       saved_run_bp=0
       recalculate_all=1
    end   
-   
+   'nb_catalog_redonebp_July2015':begin 
+      calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
+      saved_run_bp=1 ;reading in a special by pointing bp calculated from by obs tests above
+   end   
+   'nb_std_test_twopolyquad_extrafancymodeobs':begin 
+      ;recalculate_all=1
+      saved_run_std_test_polyquad_extrafancy=1
+      filename_bp=1 ;temp solution to running multiple tests at once
+   end   
+   'nb_decon_July2015':begin 
+      max_sources=200000
+      dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      FoV=80.
+      pad_uv_image=1
+      time_cut=[2,-2]
+      snapshot_healpix_export=1
+      ;double memory, time
+   end   
+   'nb_dft_test': begin
+      dft_threshold=1
+    end
+    'nb_spec_indices': begin
+      ;will shift bp, bp will need 1,2
+       calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_fhd_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
+       degrid_spectral=1
+       flatten_spectrum=1
+       diffuse_spectral_index=-0.5
+     end
+
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
    ; My default full deconvolution parameters
