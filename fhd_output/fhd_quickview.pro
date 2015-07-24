@@ -44,7 +44,6 @@ dimension_uv=obs.dimension
 pol_names=obs.pol_names
 residual_flag=obs.residual
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
-IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     image_uv_arr=Ptrarr(n_pol,/allocate)

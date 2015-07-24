@@ -254,7 +254,7 @@ IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
         mask=1-beam_mask,/allow_sidelobe_cal_sources,_Extra=extra)
     n_sidelobe_src=N_Elements(source_arr_sidelobe)
     empty_test=(n_sidelobe_src EQ 1) AND (source_arr_sidelobe[0].flux.I EQ 0)
-    IF ~empty_test THEN BEGIN 
+    IF not empty_test THEN BEGIN 
         model_uv_sidelobe=source_dft_model(obs,jones,source_arr_sidelobe,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
         t3+=t_model
         

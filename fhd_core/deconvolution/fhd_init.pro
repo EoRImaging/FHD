@@ -1,7 +1,7 @@
 FUNCTION fhd_init,obs,cal,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_use=freq_use,time_i_use=time_i_use,$
     gain_factor=gain_factor,calibration_image_subtract=calibration_image_subtract,$
-    max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,smooth_width=smooth_width,$
-    beam_threshold=beam_threshold,add_threshold=add_threshold,$
+    max_iter=max_iter,check_iter=check_iter,max_add_sources=max_add_sources,max_sources=max_sources,$
+    smooth_width=smooth_width,beam_threshold=beam_threshold,add_threshold=add_threshold,$
     independent_fit=independent_fit,deconvolution_filter=deconvolution_filter,$
     beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,$
     reject_pol_sources=reject_pol_sources,filter_background=filter_background,$

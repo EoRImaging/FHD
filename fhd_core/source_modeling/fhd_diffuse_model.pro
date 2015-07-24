@@ -1,6 +1,6 @@
-FUNCTION fhd_diffuse_model,obs,jones,model_filepath=model_filepath,uv_return=uv_return,$
+FUNCTION fhd_diffuse_model,obs,jones,skymodel,model_filepath=model_filepath,uv_return=uv_return,$
     spectral_model_arr=spectral_model_arr,diffuse_units_kelvin=diffuse_units_kelvin,$
-    diffuse_spectral_index=diffuse_spectral_index,flatten_spectrum=flatten_spectrum,_Extra=extra
+    flatten_spectrum=flatten_spectrum,_Extra=extra
 
 dimension=obs.dimension
 elements=obs.elements
@@ -8,6 +8,7 @@ astr=obs.astr
 degpix=obs.degpix
 n_pol=obs.n_pol
 n_spectral=obs.degrid_spectral_terms
+diffuse_spectral_index=skymodel.diffuse_spectral_index
 xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
 radec_i=where(Finite(ra_arr))
 IF Keyword_Set(flatten_spectrum) THEN alpha_corr=obs.alpha ELSE alpha_corr=0.
@@ -71,15 +72,17 @@ Ptr_free,model_stokes_arr
 
 IF (size(diffuse_spectral_index,/type) GE 1) AND (size(diffuse_spectral_index,/type) LE 5) THEN BEGIN 
     ;if a scalar, assume a single spectral index will be used for the diffuse model
-    spectral_model_arr=Ptrarr(n_pol,n_spectral)
-    diffuse_spectral_index-=alpha_corr
-    FOR pol_i=0,n_pol-1 DO BEGIN
-        FOR s_i=0,n_spectral-1 DO BEGIN
-            IF Keyword_Set(uv_return) THEN $
-                spectral_model_arr[pol_i,s_i]=Ptr_new(fft_shift(FFT(fft_shift(*model_arr[pol_i]*diffuse_spectral_index^(s_i+1.)),/inverse))) $
-                    ELSE spectral_model_arr[pol_i,s_i]=Ptr_new(*model_arr[pol_i]*diffuse_spectral_index^(s_i+1.))
+    IF Finite(diffuse_spectral_index) THEN BEGIN
+        spectral_model_arr=Ptrarr(n_pol,n_spectral)
+        diffuse_spectral_index-=alpha_corr
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            FOR s_i=0,n_spectral-1 DO BEGIN
+                IF Keyword_Set(uv_return) THEN $
+                    spectral_model_arr[pol_i,s_i]=Ptr_new(fft_shift(FFT(fft_shift(*model_arr[pol_i]*diffuse_spectral_index^(s_i+1.)),/inverse))) $
+                        ELSE spectral_model_arr[pol_i,s_i]=Ptr_new(*model_arr[pol_i]*diffuse_spectral_index^(s_i+1.))
+            ENDFOR
         ENDFOR
-    ENDFOR
+    ENDIF
 ENDIF
 
 IF Keyword_Set(uv_return) THEN BEGIN
