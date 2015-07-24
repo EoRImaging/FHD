@@ -38,7 +38,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     weights_grid=weights_grid, save_visibilities=save_visibilities, return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
-    transfer_flags=transfer_flags, flag_calibration=flag_calibration, production=production, _Extra=extra
+    transfer_flags=transfer_flags, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, _Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -79,12 +79,12 @@ IF data_flag LE 0 THEN BEGIN
         IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
         RETURN
     ENDIF
-    IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(vis_arr,params,direction=deproject_w_term)
     
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra)
     n_pol=obs.n_pol
     n_freq=obs.n_freq
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end 
+    IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(obs,params,vis_arr,direction=deproject_w_term)
        
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
@@ -226,7 +226,7 @@ IF Keyword_Set(deconvolve) THEN BEGIN
     fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
         vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,$
-        log_store=log_store,flag_arr=flag_arr,skymodel=skymodel,_Extra=extra
+        log_store=log_store,flag_arr=flag_arr,_Extra=extra
     IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
