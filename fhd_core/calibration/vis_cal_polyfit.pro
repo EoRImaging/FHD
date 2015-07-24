@@ -1,6 +1,7 @@
 FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
     cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
-    cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,cal_cable_reflection_correct=cal_cable_reflection_correct,_Extra=extra
+    cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,$
+    cal_cable_reflection_correct=cal_cable_reflection_correct,no_phase_calibration=no_phase_calibration,_Extra=extra
 
 IF N_Elements(degree) EQ 0 THEN degree=2 ELSE BEGIN
     IF degree LE 0 THEN BEGIN
@@ -225,6 +226,8 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
         *cal_return.gain[pol_i]=gain_arr_fit
     ENDFOR
 ENDIF
+
+IF Keyword_Set(no_phase_calibration) THEN FOR pol_i=0,n_pol-1 DO *cal_return.gain[pol_i]=Abs(*cal_return.gain[pol_i])
 undefine_fhd,gain_residual
 RETURN,cal_return
 END

@@ -1,4 +1,4 @@
-PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+PRO fhd_quickview,obs,status_str,psf,cal,jones,skymodel,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
@@ -37,6 +37,7 @@ IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_
 IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(skymodel) EQ 0 THEN fhd_save_io,status_str,skymodel,var='skymodel',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
@@ -82,7 +83,6 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
 ENDIF
 
 IF residual_flag THEN model_flag=0
-IF residual_flag OR model_flag THEN IF N_Elements(source_array) EQ 0 THEN source_array=cal.source_list
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
@@ -138,8 +138,9 @@ IF Keyword_Set(write_healpix_fits) THEN BEGIN
     ring2nest, nside, hpx_cnv.inds, hpx_inds_nest ;external programs are much happier reading in Healpix fits files with the nested pixel ordering
 ENDIF
 
-IF N_Elements(source_array) GT 0 THEN BEGIN
+IF skymodel.n_sources GT 0 THEN BEGIN
     source_flag=1
+    source_array=skymodel.source_list
     source_arr_out=source_array
     
     ad2xy,source_array.ra,source_array.dec,astr_out,sx,sy
@@ -222,7 +223,7 @@ IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,sto
 
 ; plot calibration solutions, export to png
 IF N_Elements(cal) GT 0 THEN BEGIN
-   IF cal.n_cal_src ne 0 THEN BEGIN
+   IF cal.skymodel.n_sources GT 0 THEN BEGIN
       IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
          vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
          plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist

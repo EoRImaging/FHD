@@ -79,6 +79,7 @@ IF data_flag LE 0 THEN BEGIN
         IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
         RETURN
     ENDIF
+    
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra)
     n_pol=obs.n_pol
     n_freq=obs.n_freq
@@ -127,7 +128,8 @@ IF data_flag LE 0 THEN BEGIN
         print,"Calibrating visibilities"
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
-        vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
+        vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,skymodel_cal,$
+            flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,$
@@ -162,7 +164,8 @@ IF data_flag LE 0 THEN BEGIN
         undefine_fhd,model_uv_arr2
     ENDIF
     
-    skymodel=fhd_struct_combine_skymodel(skymodel_cal,skymodel_update)
+    skymodel=fhd_struct_combine_skymodel(obs, skymodel_cal, skymodel_update,calibration_flag=(Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract)))
+    fhd_save_io,status_str,skymodel,var='skymodel',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but not be used
     model_flag=min(Ptr_valid(vis_model_arr))
@@ -181,7 +184,7 @@ IF data_flag LE 0 THEN BEGIN
     IF ~Keyword_Set(silent) THEN flag_status,obs
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,skymodel=skymodel,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
     undefine_fhd,antenna
     auto_corr=vis_extract_autocorr(obs,status_str,vis_arr=vis_arr,file_path_fhd=file_path_fhd,_Extra=extra)
     
@@ -219,10 +222,10 @@ IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
+    fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
         vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,$
-        log_store=log_store,flag_arr=flag_arr,_Extra=extra
+        log_store=log_store,flag_arr=flag_arr,skymodel=skymodel,_Extra=extra
     IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
@@ -231,11 +234,11 @@ ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     IF status_str.fhd GT 0 THEN BEGIN
-        fhd_output,obs,status_str,fhd_params,cal,jones,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
+        fhd_output,obs,status_str,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
             image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam_arr,_Extra=extra 
     ENDIF ELSE BEGIN
         IF (obs.residual GT 0) AND (N_Elements(cal) GT 0) THEN source_array=cal.source_list
-        fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+        fhd_quickview,obs,status_str,psf,cal,jones,skymodel,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
             model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDELSE
 ENDIF
@@ -258,9 +261,8 @@ IF Keyword_Set(production) THEN BEGIN
 ENDIF
 
 undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_arr
-undefine_fhd,obs,cal,jones,psf,antenna,fhd_params
-;;generate images showing the uv contributions of each tile. Very helpful for debugging!
-;print,'Calculating individual tile uv coverage'
+undefine_fhd,obs,cal,jones,psf,antenna,fhd_params,skymodel,skymodel_cal,skymodel_update
+
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
 print,''

@@ -12,7 +12,7 @@
 ;
 ; :Author: isullivan May 6, 2012
 ;-
-PRO fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,file_path_fhd=file_path_fhd,beam_threshold=beam_threshold,quickview=quickview,$
+PRO fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,beam_threshold=beam_threshold,quickview=quickview,$
     data_directory=data_directory,filename=filename,version=version,silent=silent,transfer_mapfn=transfer_mapfn,$
     map_fn_arr=map_fn_arr,GPU_enable=GPU_enable,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     calibration_image_subtract=calibration_image_subtract,model_uv_arr=model_uv_arr,$

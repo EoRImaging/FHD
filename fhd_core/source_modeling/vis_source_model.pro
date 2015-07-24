@@ -15,14 +15,8 @@ IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/rest
 IF Min(Ptr_valid(flag_ptr)) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
-galaxy_flag=0
-IF Keyword_Set(calibration_flag) THEN BEGIN
-    IF Keyword_Set(galaxy_calibrate) THEN galaxy_flag=1
-    IF Keyword_Set(diffuse_calibrate) THEN diffuse_filepath=diffuse_calibrate
-ENDIF ELSE BEGIN
-    IF Keyword_Set(galaxy_model) THEN galaxy_flag=1
-    IF Keyword_Set(diffuse_model) THEN diffuse_filepath=diffuse_model
-ENDELSE
+galaxy_flag=skymodel.galaxy_model
+diffuse_filepath=skymodel.diffuse_model
 heap_gc
 
 pol_names=obs.pol_names
@@ -67,12 +61,7 @@ IF N_Elements(vis_model_ptr) LT n_pol THEN vis_model_ptr=intarr(n_pol)
 IF n_spectral EQ 0 THEN spectral_model_uv_arr=intarr(n_pol)
 
 vis_dimension=Float(nbaselines*n_samples)
-n_sources=N_Elements(source_list)
-IF size(cal,/type) EQ 8 THEN BEGIN
-    cal.n_cal_src=n_sources
-    cal.galaxy_cal=Keyword_Set(galaxy_calibrate)
-ENDIF
-
+n_sources=skymodel.n_sources
 
 IF Min(Ptr_valid(model_uv_arr)) EQ 0 THEN BEGIN
     model_uv_arr=Ptrarr(n_pol,/allocate)
@@ -86,12 +75,14 @@ ENDIF
 IF n_sources GT 1 THEN BEGIN ;test that there are actual sources in the source list
     ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
     ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
+    source_list=skymodel.source_list
+    source_list.extend=Pointer_copy(source_list.extend)
     source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 
     model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,$
         spectral_model_uv_arr=spectral_model_uv_arr1,uv_mask=uv_mask_use,_Extra=extra)
     FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr1[pol_i];*uv_mask_use 
     FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO *spectral_model_uv_arr[pol_i,s_i]+=*spectral_model_uv_arr1[pol_i,s_i];*uv_mask_use
-    undefine_fhd,model_uv_arr1,spectral_model_uv_arr1
+    undefine_fhd,model_uv_arr1,spectral_model_uv_arr1,source_list
     IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
 ENDIF
 
@@ -104,8 +95,7 @@ undefine_fhd,gal_model_uv,gal_spectral_model_uv
 
 IF Keyword_Set(diffuse_filepath) THEN BEGIN
     IF file_test(diffuse_filepath) EQ 0 THEN diffuse_filepath=(file_search(diffuse_filepath+'*'))[0]
-    IF Keyword_Set(calibration_flag) THEN print,"Reading diffuse model file for calibration: "+diffuse_filepath $
-        ELSE print,"Reading diffuse model file for model subtraction: "+diffuse_filepath
+    print,"Reading diffuse model file: "+diffuse_filepath 
     diffuse_model_uv=fhd_diffuse_model(obs,jones,spectral_model_arr=diffuse_spectral_model_uv,/uv_return,model_filepath=diffuse_filepath,_Extra=extra)
     IF Max(Ptr_valid(diffuse_model_uv)) EQ 0 THEN print,"Error reading or building diffuse model. Null pointer returned!"
 ENDIF
@@ -120,7 +110,7 @@ valid_test=fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO valid_test[pol_i]=Total(Abs(*model_uv_arr[pol_i]))
 IF min(valid_test) EQ 0 THEN BEGIN
     error=1
-    print,"ERROR: Invalid calibration model."
+    print,"ERROR: Invalid model."
     timing=Systime(1)-t0
     RETURN,vis_arr
 ENDIF
