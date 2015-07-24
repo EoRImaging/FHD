@@ -79,6 +79,7 @@ IF data_flag LE 0 THEN BEGIN
         IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
         RETURN
     ENDIF
+    IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(vis_arr,params,direction=deproject_w_term)
     
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra)
     n_pol=obs.n_pol
@@ -128,7 +129,7 @@ IF data_flag LE 0 THEN BEGIN
         print,"Calibrating visibilities"
         IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
         IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
-        vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,skymodel_cal,$
+        vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,$
             flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
