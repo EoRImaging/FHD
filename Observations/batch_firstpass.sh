@@ -154,7 +154,7 @@ message=$(qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_
 message=($message)
 id=`echo ${message[2]} | cut -f1 -d"."`
 
-qsub -hold_jid $id -l h_vmem=1G,h_stack=512k,h_rt=00:05:00 -V -v nslots=$nslots,outdir=$outdir,version=$version,FHDpath=$FHDpath,mem=$mem,wallclock_time=${wallclock_time},priority=$priority,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -pe chost 1 ${FHDpath}Observations/batch_check.sh ${good_obs_list[@]}
+#qsub -hold_jid $id -l h_vmem=1G,h_stack=512k,h_rt=00:05:00 -V -v nslots=$nslots,outdir=$outdir,version=$version,FHDpath=$FHDpath,mem=$mem,wallclock_time=${wallclock_time},priority=$priority,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -pe chost 1 ${FHDpath}Observations/batch_check.sh ${good_obs_list[@]}
 
 echo "Done"
 
