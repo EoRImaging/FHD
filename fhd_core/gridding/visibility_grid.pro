@@ -68,7 +68,7 @@ IF Ptr_valid(model_ptr) THEN BEGIN
 ;            ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
     ENDELSE
 ENDIF
-IF Tag_exist(obs,'freq') THEN frequency_array=obs.freq ELSE frequency_array=(*obs.baseline_info).freq
+frequency_array=(*obs.baseline_info).freq
 freq_norm=frequency_array^(-alpha)
 ;freq_norm/=Sqrt(Mean(freq_norm^2.))
 freq_norm/=Mean(freq_norm) 
