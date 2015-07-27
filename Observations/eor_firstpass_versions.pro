@@ -1205,7 +1205,9 @@ case version of
       decon_filter='filter_uv_uniform'
    end  
 
-   ;Ruby's stuff
+
+
+   ;;;;;Ruby's stuff;;;;;
    
    'rlb_devel_nodiffuse_june2015': begin
       model_visibilities=0
@@ -1216,7 +1218,7 @@ case version of
       production=1
    end
    
-   'rlb_master_nodiffuse_june2015': begin
+   'rlb_master_nodiffuse_june2015': begin ;;Deleted 7/27/15
       model_visibilities=0
       diffuse_model=0
       firstpass=1
@@ -1225,36 +1227,14 @@ case version of
       production=1
    end
    
-
-
-   ;Ruby's Stuff:
-   
-   'rlb_devel_nodiffuse_june2015': begin
-      model_visibilities=0
-      diffuse_model=0
-      firstpass=1
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      production=1
-   end 
-   
-   'rlb_master_nodiffuse_june2015': begin
-      model_visibilities=0
-      diffuse_model=0
-      firstpass=1
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      production=1
-   end
-   
-   'rlb_flag_rec15': begin
+   'rlb_flag_rec15': begin ;;July 2015
       diffuse_calibrate = filepath('EoR0_diffuse_model_94.sav', root = rootdir('FHD'), subdir = 'catalog_data')
       cable_bandpass_fit = 1
       saved_run_bp = 1
       tile_flag_list = [151, 152, 153, 154, 155, 156, 157, 158]
    end
    
-   'rlb_pipe_dream': begin
+   'rlb_pipe_dream': begin ;;July 2015
       dft_threshold = 1
    end
 
