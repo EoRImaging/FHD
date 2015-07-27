@@ -26,6 +26,7 @@ ENDIF ELSE catalog_path_full=catalog_path
 
 cat_init=source_comp_init(n_sources=0) ;define structure BEFORE restoring, in case the definition has changed
 RESTORE,catalog_path_full,/relaxed ;catalog
+if keyword_set(source_array) then catalog=source_array
 
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 

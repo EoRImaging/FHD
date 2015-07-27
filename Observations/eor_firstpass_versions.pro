@@ -1126,6 +1126,11 @@ case version of
       snapshot_healpix_export=1
       ;double memory, time
    end   
+   'nb_decon_July2015_through_firstpass': begin
+      max_calibration_sources=1000
+      calibration_catalog_file_path='/nfs/eor-03/r1/EoR2013/fhd_nb_decon_July2015/output_data/'+obs_id+'_source_array.sav'
+   end
+   
    'nb_dft_test': begin
       dft_threshold=1
     end
@@ -1136,6 +1141,8 @@ case version of
        flatten_spectrum=1
        diffuse_spectral_index=-0.5
      end
+
+
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
