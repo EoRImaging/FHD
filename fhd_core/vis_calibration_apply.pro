@@ -25,10 +25,10 @@ IF N_Elements(pol_i) EQ 0 THEN BEGIN
     FOR pol_i=0,n_pol_vis-1 DO BEGIN
         gain_arr1=*gain_ptr[gain_pol_arr1[pol_i]]
         gain_arr2=*gain_ptr[gain_pol_arr2[pol_i]]
-;        IF Keyword_Set(invert_gain) THEN BEGIN
-;            gain_arr1=weight_invert(Conj(gain_arr1))
-;            gain_arr2=weight_invert(Conj(gain_arr2))
-;        ENDIF
+        IF Keyword_Set(invert_gain) THEN BEGIN
+            gain_arr1=weight_invert(Conj(gain_arr1))
+            gain_arr2=weight_invert(Conj(gain_arr2))
+        ENDIF
         vis_gain=gain_arr1[inds_A]*Conj(gain_arr2[inds_B])
         *vis_cal_ptr[pol_i]*=Weight_invert(vis_gain)
     ENDFOR
@@ -39,10 +39,10 @@ ENDIF ELSE BEGIN
     
     gain_arr1=*gain_ptr[gain_pol_arr1[pol_i]]
     gain_arr2=*gain_ptr[gain_pol_arr2[pol_i]]
-;    IF Keyword_Set(invert_gain) THEN BEGIN
-;        gain_arr1=weight_invert(Conj(gain_arr1))
-;        gain_arr2=weight_invert(Conj(gain_arr2))
-;    ENDIF
+    IF Keyword_Set(invert_gain) THEN BEGIN
+        gain_arr1=weight_invert(Conj(gain_arr1))
+        gain_arr2=weight_invert(Conj(gain_arr2))
+    ENDIF
     vis_gain=gain_arr1[inds_A]*Conj(gain_arr2[inds_B])
     vis_cal*=Weight_invert(vis_gain)
     RETURN,vis_cal

@@ -1,0 +1,54 @@
+Tile	Dip	Pol	Comment								
+13	A	Y	low	lower	gain?						
+18	K	XY	low	lower	"gain,"	different	shape				
+18	O	XY	low	lower	"gain,"	different	shape				
+22	M	X	low	lower	"gain,"	different	shape				
+22	M	Y	dead	Flatline							
+23	E	Y	dead	Almost	flatline						
+26	P	Y	low	lower	"gain,"	different	shape				
+32	-	digital	garbage								
+34	C	Y	different	shape							
+43	N	X	low	lower	"gain,"	different	shape				
+44	C	Y	dead	Flatline							
+44	J	XY	low	lower	"gain,"	different	shape				
+56	M	X	low	lower	"gain,"	different	shape				
+61	B	X	low	lower	"gain,"	different	shape				
+61	B	Y	dead	Flatline							
+61	H	X	dead	Flatline							
+65	H	XY	low	lower	"gain,"	different	shape				
+68	M	X	low	lower	"gain,"	different	shape				
+68	O	XY	low	lower	"gain,"	different	shape				
+75	A	X	dead	Flatline							
+83	I	Y	low	lower	"gain,"	different	shape				
+85	-	powered	off								
+87	J	Y	dead	Flatline							
+88	P	X	dead	Flatline							
+92	A	X	low	lower	"gain,"	different	shape				
+93	F	Y	low	lower	"gain,"	different	shape				
+95	D	X	slightly	lower	gain						
+97	I	X	dead	Flatline							
+107	I	X	low	lower	"gain,"	different	shape				
+111	-	bad	dead	"cable,"	all	X	dipoles	"flatline,"	Y	all	fine.
+113	F	X	dead	Flatline							
+114	L	X	low	lower	"gain,"	different	shape				
+115	-	no	data	(system	thinks	power	is	off)			
+116	-	no	data	(system	thinks	power	is	off)			
+121	N	X	slightly	different	shape						
+122	A	Y	low	lower	"gain,"	different	shape				
+126	I	Y	dead	Almost	Flatline						
+127	P	Y	slightly	different	shape						
+128	B	X	low	lower	"gain,"	different	shape				
+128	B	Y	dead	Almost	Flatline						
+128	L	X	low	lower	"gain,"	different	shape				
+128	P	XY	Very	wierd	shape						
+132	G	XY	low	lower	"gain,"	different	shape				
+135	P	Y	low	lower	"gain,"	different	shape				
+138	M	X	dead	Flatline							
+141	H	X	Very	wierd	shape						
+143	E	Y	dead	Almost	Flatline						
+151	O	XY	Very	wierd	shape						
+155	P	X	low	lower	"gain,"	different	shape				
+156	M	Y	dead	Almost	Flatline						
+157	P	X	dead	Almost	Flatline						
+164	E	Y	dead	Flatline							
+167	M	X	different	shape							

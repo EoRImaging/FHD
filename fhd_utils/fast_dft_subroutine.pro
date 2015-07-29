@@ -1,4 +1,4 @@
-FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,$
+FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,silent=silent,$
     conserve_memory=conserve_memory,dft_threshold=dft_threshold,return_kernel=return_kernel
 
 t0_a=Systime(1)
@@ -94,7 +94,8 @@ FOR si=0L,ns-1L DO BEGIN
         kernel_y*=y_sign
     ENDELSE
     kernel_single=kernel_x[xv_k_i]*kernel_y[yv_k_i]
-    kernel_norm=Total(kernel_single,/double)
+;    kernel_norm=Total(kernel_single,/double)
+    kernel_norm=1D
     
     t3_a=Systime(1)
     t2+=t3_a-t2_a
@@ -126,26 +127,27 @@ IF Keyword_Set(mod_flag) THEN BEGIN
     
     ;add in aliasing!
     IF x_low1 GT 0 THEN BEGIN
-        IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[dimension-x_low1:dimension-1,y_low0:y_high0]=(*model_img_use[p_i])[0:x_low1-1,y_low1:y_high1] $
+        IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[dimension-x_low1:dimension-1,y_low0:y_high0]+=(*model_img_use[p_i])[0:x_low1-1,y_low1:y_high1] $
             ELSE model_img[dimension-x_low1:dimension-1,y_low0:y_high0]+=model_img_use[0:x_low1-1,y_low1:y_high1]
     ENDIF
     IF y_low1 GT 0 THEN BEGIN
-        IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[x_low0:x_high0,elements-y_low1:elements-1]=(*model_img_use[p_i])[x_low1:x_high1,0:y_low1-1] $
+        IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[x_low0:x_high0,elements-y_low1:elements-1]+=(*model_img_use[p_i])[x_low1:x_high1,0:y_low1-1] $
             ELSE model_img[x_low0:x_high0,elements-y_low1:elements-1]+=model_img_use[x_low1:x_high1,0:y_low1-1]
     ENDIF
     IF x_high1 LT dimension_use-1 THEN BEGIN
-        IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[0:dimension_use-x_high1-2,y_low0:y_high0]=(*model_img_use[p_i])[x_high1+1:dimension_use-1,y_low1:y_high1] $
+        IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[0:dimension_use-x_high1-2,y_low0:y_high0]+=(*model_img_use[p_i])[x_high1+1:dimension_use-1,y_low1:y_high1] $
             ELSE model_img[0:dimension_use-x_high1-2,y_low0:y_high0]+=model_img_use[x_high1+1:dimension_use-1,y_low1:y_high1]
     ENDIF
     IF y_high1 LT elements_use-1 THEN BEGIN
-        IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[x_low0:x_high0,0:elements_use-y_high1-2]=(*model_img_use[p_i])[x_low1:x_high1,y_high1+1:elements_use-1] $
+        IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[x_low0:x_high0,0:elements_use-y_high1-2]+=(*model_img_use[p_i])[x_low1:x_high1,y_high1+1:elements_use-1] $
             ELSE model_img[x_low0:x_high0,0:elements_use-y_high1-2]+=model_img_use[x_low1:x_high1,y_high1+1:elements_use-1]
     ENDIF
+    undefine_fhd,model_img_use
 ENDIF ELSE model_img=model_img_use
 
 t4=Systime(1)-t4_a
 t0=Systime(1)-t0_a
 
-print,t0,t1,t2,t3,t4
+IF not Keyword_Set(silent) THEN print,t0,t1,t2,t3,t4
 RETURN,model_img
 END

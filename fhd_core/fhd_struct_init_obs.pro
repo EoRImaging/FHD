@@ -4,15 +4,24 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
     dft_threshold=dft_threshold,psf_dim=psf_dim,nside=nside,restrict_hpx_inds=restrict_hpx_inds,$
-    n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,_Extra=extra
+    n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,$
+    degrid_spectral_terms=degrid_spectral_terms,grid_spectral_terms=grid_spectral_terms,$
+    grid_nfreq_avg=grid_nfreq_avg,_Extra=extra
 
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
-IF N_Elements(spectral_index) EQ 0 THEN spectral_index=-0.8 
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
 git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
+
+
+calibration=fltarr(4)+1.
+IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
+n_tile=hdr.n_tile
+n_freq=hdr.n_freq
+n_vis=(n_vis_raw=(n_vis_in=(Float(N_Elements(time))*n_freq)))
+n_vis_arr=Lonarr(n_freq)
 
 speed_light=299792458. 
 time=params.time
@@ -47,31 +56,43 @@ IF Tag_exist(hdr,'freq_arr') THEN BEGIN
     frequency_array=hdr.freq_arr
 ENDIF ELSE BEGIN
     freq_res=hdr.freq_width
-    ;frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i-1))*freq_res+hdr.freq_ref ;FITS header indices start at 1
-    frequency_array=(findgen(hdr.n_freq)-(hdr.freq_ref_i))*freq_res+hdr.freq_ref ;LEAVE unchanged for now to allow comparison!
+    ;frequency_array=(findgen(n_freq)-(hdr.freq_ref_i-1))*freq_res+hdr.freq_ref ;FITS header indices start at 1
+    frequency_array=(findgen(n_freq)-(hdr.freq_ref_i))*freq_res+hdr.freq_ref ;LEAVE unchanged for now to allow comparison!
 ENDELSE
 IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=1.
 
 IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*freq_res  ;Hz
 freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
 nfreq_bin=N_Elements(freq_hist)
-freq_bin_i=fltarr(hdr.n_freq)
+freq_bin_i=fltarr(n_freq)
 FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
 freq_center=Median(frequency_array)
 
-calibration=fltarr(4)+1.
-IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
-n_tile=hdr.n_tile
-n_freq=hdr.n_freq
-n_vis=(n_vis_raw=(n_vis_in=(Float(N_Elements(time))*n_freq)))
-n_vis_arr=Lonarr(n_freq)
+IF Keyword_Set(grid_nfreq_avg) THEN BEGIN
+    IF grid_nfreq_avg LT 0 THEN grid_bin_i=freq_bin_i ELSE BEGIN
+        IF grid_nfreq_avg LT 1E5 THEN freq_bin=grid_nfreq_avg*freq_res  ELSE freq_bin=grid_nfreq_avg;Hz
+        freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
+        nfreq_bin=N_Elements(freq_hist)
+        grid_bin_i=fltarr(n_freq)
+        FOR bin=0,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN grid_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
+    ENDELSE
+    grid_freq_arr=Fltarr(nfreq_bin)
+    FOR f_i=0L,nfreq_bin-1 DO grid_freq_arr[f_i]=Mean(frequency_array[where(grid_bin_i EQ f_i)])
+    grid_info=Ptr_new({n_freq:nfreq_bin,freq:grid_freq_arr,bin_i:grid_bin_i})
+ENDIF ELSE BEGIN
+    grid_info=Ptr_new()
+ENDELSE
 
 ;256 tile upper limit is hard-coded in CASA format
 ;these tile numbers have been verified to be correct
-IF not Keyword_Set(antenna_mod_index) THEN antenna_mod_index=Long(2^Floor(Alog(min(params.baseline_arr))/Alog(2.)))
-;antenna_mod_index=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
-tile_A=Long(Floor(params.baseline_arr/antenna_mod_index)) ;tile numbers start from 1
-tile_B=Long(Fix(params.baseline_arr mod antenna_mod_index))
+IF not Keyword_Set(antenna_mod_index) THEN BEGIN
+    antenna_mod_index_use=Long(2^Floor(Alog(min(params.baseline_arr))/Alog(2.))) 
+    tile_B_test=min(params.baseline_arr) mod antenna_mod_index_use
+    IF tile_B_test GT 1 THEN antenna_mod_index_use/=Long(2^Floor(Alog(tile_B_test)/Alog(2.))) 
+ENDIF ELSE antenna_mod_index_use=antenna_mod_index 
+;antenna_mod_index_use=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
+tile_A=Long(Floor(params.baseline_arr/antenna_mod_index_use)) ;tile numbers start from 1
+tile_B=Long(Fix(params.baseline_arr mod antenna_mod_index_use))
 IF (max(tile_A)>max(tile_B)) NE n_tile THEN BEGIN
     print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
     n_tile=max(tile_A)>max(tile_B)
@@ -119,6 +140,9 @@ ENDFOR
 tile_flag_i=where(tile_use1 EQ 0,n_flag)
 IF n_flag GT 0 THEN tile_use[tile_flag_i]=0
 
+IF N_Elements(degrid_spectral_terms) EQ 0 THEN degrid_spectral_terms=0 ELSE degrid_spectral_terms=Fix(degrid_spectral_terms)
+IF N_Elements(grid_spectral_terms) EQ 0 THEN grid_spectral_terms=0 ELSE grid_spectral_terms=Fix(grid_spectral_terms)
+IF N_Elements(spectral_index) EQ 0 THEN IF Keyword_Set(degrid_spectral_terms) THEN spectral_index=0. ELSE spectral_index=-0.8 
 IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=0. 
 IF dft_threshold EQ 1 THEN dft_threshold=1./((2.*!Pi)^2.*dimension)
 IF N_Elements(nside) EQ 0 THEN nside=0
@@ -139,6 +163,7 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),beam_integral:Ptrarr(4),pol_names:pol_names,$
     jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),freq_res:Float(freq_res),time_res:Float(time_res),astr:meta.astr,alpha:Float(spectral_index),pflag:Fix(pflag,type=2),cal:Float(calibration),$
-    residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,healpix:healpix}    
+    residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,$
+    degrid_spectral_terms:degrid_spectral_terms,grid_spectral_terms:grid_spectral_terms,grid_info:grid_info,healpix:healpix}    
 RETURN,struct
 END

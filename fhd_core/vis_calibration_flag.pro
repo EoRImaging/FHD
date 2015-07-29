@@ -5,6 +5,7 @@ PRO vis_calibration_flag,obs,cal,error=error,degree=degree,phase_degree=phase_de
 IF ~Keyword_Set(degree) THEN degree=2.
 IF ~Keyword_Set(phase_degree) THEN phase_degree=degree-1.
 amp_sigma_threshold=5.
+amp_threshold=2.
 phase_sigma_threshold=5.
 n_tile=obs.n_tile
 n_freq=obs.n_freq
@@ -56,7 +57,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         freq_cut_test=(gain_freq_fom-Median(gain_freq_fom[freq_uncut_i])-amp_sigma_threshold*gain_freq_sigma) GT 0
         freq_cut_i=where(freq_cut_test,n_freq_cut,ncomp=n_freq_uncut,complement=freq_uncut_i)
         tile_cut_test1=(gain_tile_fom-Median(gain_tile_fom[tile_uncut_i])-amp_sigma_threshold*gain_tile_sigma) GT 0
-        tile_cut_test2=gain_tile_avg LT Median(gain_tile_avg)/2.
+        tile_cut_test2=(gain_tile_avg LT Median(gain_tile_avg)/amp_threshold) OR (gain_tile_avg GT Median(gain_tile_avg)*amp_threshold)
         tile_cut_i=where(tile_cut_test1 OR tile_cut_test2,n_tile_cut,ncomp=n_tile_uncut,complement=tile_uncut_i)
         n_addl_cut=(n_freq_cut+n_tile_cut)-n_cut
         n_cut=n_freq_cut+n_tile_cut

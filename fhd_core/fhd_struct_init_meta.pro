@@ -117,8 +117,8 @@ IF N_Elements(zenra_in) EQ 1 THEN zenra=zenra_in
 IF N_Elements(zendec_in) EQ 1 THEN zendec=zendec_in
 IF N_Elements(obsra_in) EQ 1 THEN obsra=obsra_in
 IF N_Elements(obsdec_in) EQ 1 THEN obsdec=obsdec_in
+IF N_Elements(phasera_in) EQ 1 THEN phasera=phasera_in
 IF N_Elements(phasedec_in) EQ 1 THEN phasedec=phasedec_in
-IF N_Elements(phasedec_in) EQ 1 THEN phasedec=zendec_in
 IF N_Elements(override_target_phasera) EQ 0 THEN orig_phasera=phasera ELSE orig_phasera=override_target_phasera
 IF N_Elements(override_target_phasedec) EQ 0 THEN orig_phasedec=phasedec ELSE orig_phasedec=override_target_phasedec
 IF Keyword_Set(no_rephase) THEN BEGIN

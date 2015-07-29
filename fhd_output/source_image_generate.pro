@@ -3,6 +3,7 @@ FUNCTION source_image_generate,source_array,obs,pol_i=pol_i,resolution=resolutio
 IF Keyword_Set(obs) THEN BEGIN
     dimension=obs.dimension
     elements=obs.elements
+    IF N_Elements(restored_beam_width) EQ 0 THEN restored_beam_width=beam_width_calculate(obs,/fwhm)
 ENDIF ELSE IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF N_Elements(restored_beam_width) EQ 0 THEN restored_beam_width=1. ;width of gaussian to use to restore sources
 IF N_Elements(ring_radius) EQ 0 THEN ring_radius=0 ;set to restore sources with a ring with a gaussian radial profile

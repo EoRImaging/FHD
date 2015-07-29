@@ -10,6 +10,17 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,$
     firstpass=firstpass,return_cal_visibilities=return_cal_visibilities,cmd_args=cmd_args,silent=silent,_Extra=extra
 
+scope_str=scope_traceback(/structure)
+routine_stack=scope_str.routine
+n_routine=N_Elements(routine_stack)
+general_obs_i=where(routine_stack EQ routine_stack[n_routine-1],n_general_obs_match)
+IF n_general_obs_match GT 1 THEN BEGIN
+    print,"ERROR! Nested call to general_obs.pro! This is most likely the result of starting a new run after a previous run crashed and did not exit cleanly."
+    print,'This is a problem because memory from the previous run is still in use. Clean up your IDL session with a RETALL or .RESET_SESSION and try again."
+    print,"Returning..."
+    RETURN
+ENDIF
+
 except=!except
 !except=0 
 heap_gc

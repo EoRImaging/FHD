@@ -1,5 +1,5 @@
 FUNCTION mwa_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
-    za_arr=za_arr,az_arr=az_arr,dead_dipole_list=dead_dipole_list,psf_image_dim=psf_image_dim
+    za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim
 
 n_ant_pol=Max(antenna.n_pol)
 nfreq_bin=Max(antenna.nfreq_bin)
@@ -12,19 +12,6 @@ freq_center=antenna[0].freq ;all need to be identical, so just use the first
 speed_light=299792458. ;speed of light, in meters/second
 icomp=Complex(0,1)
 
-IF Keyword_Set(dead_dipole_list) THEN BEGIN
-    ;Format is 3xN array, column 0: Tile number (names, not index), 1: polarization (0:x, 1:y), 2: dipole number
-    tile_id=Reform(dead_dipole_list[0,*])
-    pol_id=Reform(dead_dipole_list[1,*])
-    dipole_id=Reform(dead_dipole_list[2,*])
-    n_dead_dipole=N_Elements(tile_id)
-    names_ref=Fix((*obs.baseline_info).tile_names,type=Size(tile_id,/type))
-    FOR d_i=0L,n_dead_dipole-1 DO BEGIN
-        tile_i=where(names_ref EQ tile_id,n_match)
-        IF n_match GT 0 THEN (*((antenna[tile_i].gain)[pol_id[d_i]]))[*,dipole_id[d_i]]=0.
-    ENDFOR
-ENDIF ELSE IF file_test(file_path_fhd+'_dipole_gains.sav') THEN restore,file_path_fhd+'_dipole_gains.sav'
-
 ;calculate group identifications (used to set pointers to identical models)
 FOR pol_i=0,n_ant_pol-1 DO BEGIN
     gi=0
@@ -33,7 +20,7 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
     WHILE n_ungrouped GT 0 DO BEGIN
         ref_i=ungrouped_i[0]
         antenna[ref_i].group_id[pol_i]=gi
-        FOR ug_i=1L,n_ungrouped-1 DO IF Total(*antenna[ungrouped_i[ug_i]].gain[pol_i] - *antenna[ref_i].gain[pol_i]) EQ 0 THEN antenna[ungrouped_i[ug_i]].group_id[pol_i]=gi 
+        FOR ug_i=1L,n_ungrouped-1 DO IF Total(Abs(*antenna[ungrouped_i[ug_i]].gain[pol_i] - *antenna[ref_i].gain[pol_i])) EQ 0 THEN antenna[ungrouped_i[ug_i]].group_id[pol_i]=gi 
         ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
         gi+=1
     ENDWHILE

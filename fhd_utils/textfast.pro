@@ -4,10 +4,10 @@ PRO TextFast,data,header,file_path=file_path,read=read,write=write,action=action
 ON_ERROR,2
 
 IF N_Elements(delimiter) EQ 0 THEN delimiter=String(9B)
+IF N_Elements(extension) EQ 0 THEN extension='.txt'
 UPNAME=StrUpCase(file_path)
-ptxt=strpos(UPNAME,'.TXT')
-IF N_Elements(extension) NE 0 THEN IF extension EQ 0 THEN ptxt=0
-IF ptxt EQ -1 THEN file_path_use=file_path+'.txt' ELSE file_path_use=file_path
+ptxt=strpos(UPNAME,StrUpCase(extension))
+IF ptxt EQ -1 THEN file_path_use=file_path+extension ELSE file_path_use=file_path
 IF Keyword_Set(write) THEN action='write'
 IF Keyword_Set(read) THEN action='read'
 IF ~Keyword_Set(action) THEN action=' '

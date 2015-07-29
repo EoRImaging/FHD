@@ -1,14 +1,14 @@
 FUNCTION mwa_beam_setup_init,obs,antenna_str,antenna_size=antenna_size,dead_dipole_list=dead_dipole_list,$
-    dipole_mutual_coupling_factor=dipole_mutual_coupling_factor,antenna_spacing=antenna_spacing
+    dipole_mutual_coupling_factor=dipole_mutual_coupling_factor,antenna_spacing=antenna_spacing,flag_dead_dipoles=flag_dead_dipoles
 ;indices of gain_arr correspond to these antenna locations
 ;         N
-;    0  1  2  3
+;    1   2   3  4
 ;    
-;    4  5  6  7  
-;W                E
-;    8  9  10 11   
+;    5   6   7  8  
+;W                  E
+;    9  10 11 12   
 ;    
-;    12 13 14 15 
+;    13 14 15 16 
 ;         S
 ;polarization 0: x, 1: y
 
@@ -60,6 +60,21 @@ antenna_str.height=antenna_height
 antenna_str.delays=delay_settings
 antenna=replicate(antenna_str,n_tiles)
 FOR t_i=0L,n_tiles-1 DO antenna[t_i].gain=Pointer_copy(gain_arr)
+IF Keyword_Set(flag_dead_dipoles) THEN mwa_dead_dipole_list_read,obs,antenna
+
+IF Keyword_Set(dead_dipole_list) THEN BEGIN
+;Format is 3xN array, column 0: Tile number (names, not index), 1: polarization (0:x, 1:y), 2: dipole number
+    ; entries are 1 for dead, 2 for low power (half?)
+    tile_id=Reform(dead_dipole_list[0,*])
+    pol_id=Reform(dead_dipole_list[1,*])
+    dipole_id=Reform(dead_dipole_list[2,*])
+    n_dead_dipole=N_Elements(tile_id)
+    names_ref=Fix((*obs.baseline_info).tile_names,type=Size(tile_id,/type))
+    FOR d_i=0L,n_dead_dipole-1 DO BEGIN
+        tile_i=where(names_ref EQ tile_id,n_match)
+        IF n_match GT 0 THEN (*((antenna[tile_i].gain)[pol_id[d_i]]))[*,dipole_id[d_i]]=0.
+    ENDFOR
+ENDIF; ELSE IF file_test(file_path_fhd+'_dipole_gains.sav') THEN restore,file_path_fhd+'_dipole_gains.sav'
 
 RETURN,antenna
 END

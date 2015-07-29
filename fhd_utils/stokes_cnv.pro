@@ -69,6 +69,7 @@ IF Keyword_Set(rotate_pol) THEN BEGIN
     ;this is meant as a debugging tool!
     FOR i=0,1 DO BEGIN
         p_map[*,i]=jones.Jmat[*,1-i]
+        p_map[*,i+2]=jones.Jmat[*,3-i]
         p_corr[i,*]=jones.Jinv[1-i,*]
         p_corr[i+2,*]=jones.Jinv[3-i,*]
     ENDFOR
@@ -116,7 +117,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     ;if the beam model is supplied as a vector, assume it is already calculated for each component. Otherwise, assume it is a 2D array the same size as the image
     IF size(*beam_use[0],/n_dimension) GT 1 THEN FOR pol_i=0,n_pol-1 DO *beam_use[pol_i]=(*beam_use[pol_i])[sx,sy]
     
-    ;also convert extended source components. Set square=0 since the beam is already squared if that option is set
+    ;also convert extended source components.
     extend_i=where(Ptr_valid(source_list.extend),n_ext)
     IF Keyword_Set(no_extend) THEN n_ext=0
     FOR ext_i=0L,n_ext-1 DO *(source_list[extend_i[ext_i]].extend)=$
