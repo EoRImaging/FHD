@@ -133,8 +133,8 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
           print, 'time for eor modelling (min): ' + number_formatter((time1-time0)/60.)
           if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
           else model_uvf_cube = temporary(eor_uvf_cube)
-        endif
-      endif
+        endif ;; end if eor_gen gt 0
+      endif ;; end if keyword_set(include_eor)
       
       ;; model cube assumed to be Stokes I
       switch n_pol of
@@ -146,12 +146,13 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
       
       undefine, model_uvf_cube
       
-    endif
+    endif ;; end if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(include_eor)
     
     if n_elements(source_model_uv_arr) gt 0 then begin
       if n_elements(model_uvf_arr) gt 0 then begin
+        ;; if there is also a uvf cube, add the uv from the sources to the cube at each freq.
         FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*source_model_uv_arr[pol_i]
-      endif else model_uvf_arr = Pointer_copy(source_model_uv_arr)
+      endif else model_uvf_arr = Pointer_copy(source_model_uv_arr) ;; otherwise just use the uv from the sources
       undefine_fhd, source_model_uv_arr
     endif
     
@@ -162,7 +163,8 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
     endif
     
     model_uvf = *model_uvf_arr[0]
-    IF ~Keyword_Set(no_save) and eor_gen eq 1 THEN save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
+    IF ~Keyword_Set(no_save) and keyword_set(include_eor) then if eor_gen eq 1 THEN $
+      save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
     undefine, model_uvf
     
     vis_dimension=N_Elements(params.uu)
@@ -171,34 +173,47 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
     for pol_i=0,n_pol-1 do *vis_model_arr[pol_i]=Complexarr(n_freq,vis_dimension)
     
     time0=systime(1)
-    for fi=0, n_freq-1 do begin
-      if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
-      
-      this_flag_ptr = Ptrarr(n_pol,/allocate)
-      this_model_uv = Ptrarr(n_pol,/allocate)
-      for pol_i=0,n_pol-1 do begin
-        *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
-        (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
-        
-        *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
-      endfor
-      
-      if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
-      
-      this_model_ptr=vis_source_model(0,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+    dim_uv_arr = size(*model_uvf_arr[0], /dimension)
+    if n_elements(dim_uv_arr) gt 3 or n_elements(dim_uv_arr) lt 2 then $
+      message, 'model_uvf_arr must point to 2 or 3 dimensional arrays'
+    if n_elements(dim_uv_arr) eq 2 then begin
+      ;; 2 dimensional -- same for all frequencies
+    
+      for pol_i=0,n_pol-1 do $
+        (*vis_model_arr[pol_i]) = vis_source_model(0,obs,status_str,psf,params,model_uv_arr=model_uvf_arr[pol_i],$
         timing=model_timing,silent=silent,error=error,_Extra=extra)
-      print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
-      
-      for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
-      
-      undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
-    endfor
+        
+    endif else begin
+      ;; 3 dimensional -- loop over frequencies
+      for fi=0, n_freq-1 do begin
+        if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
+        
+        this_flag_ptr = Ptrarr(n_pol,/allocate)
+        this_model_uv = Ptrarr(n_pol,/allocate)
+        for pol_i=0,n_pol-1 do begin
+          *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
+          (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
+          
+          *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
+        endfor
+        
+        if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
+        
+        this_model_ptr=vis_source_model(0,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+          timing=model_timing,silent=silent,error=error,_Extra=extra)
+        print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
+        
+        for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
+        
+        undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
+      endfor
+    endelse
     undefine_fhd, model_uvf_arr
     time1=systime(1)
     print, 'model visibility timing(s):'+ number_formatter(time1-time0)
     
     fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,no_save=no_save,_Extra=extra
-  ENDIF ELSE BEGIN
+  ENDIF ELSE BEGIN ;; end if recalculate_all
     vis_model_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO BEGIN
       fhd_save_io,status_str,vis_model_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra
