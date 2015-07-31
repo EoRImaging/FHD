@@ -178,9 +178,9 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
       message, 'model_uvf_arr must point to 2 or 3 dimensional arrays'
     if n_elements(dim_uv_arr) eq 2 then begin
       ;; 2 dimensional -- same for all frequencies
-    
-      for pol_i=0,n_pol-1 do $
-        (*vis_model_arr[pol_i]) = vis_source_model(0,obs,status_str,psf,params,model_uv_arr=model_uvf_arr[pol_i],$
+        
+        ;; flag_arr is passed in from array_simulator
+        vis_model_arr = vis_source_model(0,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uvf_arr,$
         timing=model_timing,silent=silent,error=error,_Extra=extra)
         
     endif else begin

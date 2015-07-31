@@ -3,7 +3,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     n_pol=n_pol,silent=silent,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
     eor_sim=eor_sim,include_catalog_sources = include_catalog_sources, source_list=source_list,$
-    catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export,$
+    catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export, export_images=export_images, $
     snapshot_recalculate=snapshot_recalculate,grid_recalculate=grid_recalculate,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
     
 compile_opt idl2,strictarrsubs
@@ -99,6 +99,12 @@ IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
     auto_corr[pol_i]=Ptr_new(auto_vals)
 ENDFOR
 fhd_save_io,status_str,auto_corr,var='auto_corr',/compress,file_path_fhd=file_path_fhd,obs=obs,_Extra=extra
+
+;; handling simulation with no model
+; if there is no vis_model_ptr defined, then create a dummy that is not a valid pointer to be passed to visibility_grid().
+; (visibility_grid and vis_export will not do anything with model_ptr if it is not a valid pointer)
+if ~ptr_valid(vis_model_ptr) then vis_model_ptr = intarr(n_pol)
+
   
 IF Keyword_Set(save_visibilities) THEN BEGIN
     t_save0=Systime(1)
