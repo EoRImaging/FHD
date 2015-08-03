@@ -2,6 +2,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
     recalculate_all=recalculate_all,$
     include_eor=include_eor, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
     delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
+    include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
     
@@ -156,61 +157,92 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
       undefine_fhd, source_model_uv_arr
     endif
     
-    if n_elements(model_uvf_arr) eq 0 then begin
-      print, 'No input model (image cube, model_uvf or sources)'
+    if n_elements(model_uvf_arr) eq 0 and not keyword_set(include_noise) then begin
+      print, 'No input model (image cube, model_uvf or sources) and include_noise not set'
       error=1
       RETURN,Ptrarr(n_pol)
     endif
     
-    model_uvf = *model_uvf_arr[0]
-    IF ~Keyword_Set(no_save) and keyword_set(include_eor) then if eor_gen eq 1 THEN $
-      save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
-    undefine, model_uvf
-    
-    vis_dimension=N_Elements(params.uu)
-    
-    vis_model_arr = Ptrarr(n_pol,/allocate)
-    for pol_i=0,n_pol-1 do *vis_model_arr[pol_i]=Complexarr(n_freq,vis_dimension)
-    
-    time0=systime(1)
-    dim_uv_arr = size(*model_uvf_arr[0], /dimension)
-    if n_elements(dim_uv_arr) gt 3 or n_elements(dim_uv_arr) lt 2 then $
-      message, 'model_uvf_arr must point to 2 or 3 dimensional arrays'
-    if n_elements(dim_uv_arr) eq 2 then begin
-      ;; 2 dimensional -- same for all frequencies
-        
+    if n_elements(model_uv_arr) gt 0 then begin
+      model_uvf = *model_uvf_arr[0]
+      IF ~Keyword_Set(no_save) and keyword_set(include_eor) then if eor_gen eq 1 THEN $
+        save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
+      undefine, model_uvf
+      
+      vis_dimension=N_Elements(params.uu)
+      
+      vis_model_arr = Ptrarr(n_pol,/allocate)
+      for pol_i=0,n_pol-1 do *vis_model_arr[pol_i]=Complexarr(n_freq,vis_dimension)
+      
+      time0=systime(1)
+      dim_uv_arr = size(*model_uvf_arr[0], /dimension)
+      if n_elements(dim_uv_arr) gt 3 or n_elements(dim_uv_arr) lt 2 then $
+        message, 'model_uvf_arr must point to 2 or 3 dimensional arrays'
+      if n_elements(dim_uv_arr) eq 2 then begin
+        ;; 2 dimensional -- same for all frequencies
+      
         ;; flag_arr is passed in from array_simulator
         vis_model_arr = vis_source_model(0,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uvf_arr,$
-        timing=model_timing,silent=silent,error=error,_Extra=extra)
-        
-    endif else begin
-      ;; 3 dimensional -- loop over frequencies
-      for fi=0, n_freq-1 do begin
-        if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
-        
-        this_flag_ptr = Ptrarr(n_pol,/allocate)
-        this_model_uv = Ptrarr(n_pol,/allocate)
-        for pol_i=0,n_pol-1 do begin
-          *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
-          (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
-          
-          *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
-        endfor
-        
-        if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
-        
-        this_model_ptr=vis_source_model(0,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
           timing=model_timing,silent=silent,error=error,_Extra=extra)
-        print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
+          
+      endif else begin
+        ;; 3 dimensional -- loop over frequencies
+        for fi=0, n_freq-1 do begin
+          if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
+          
+          this_flag_ptr = Ptrarr(n_pol,/allocate)
+          this_model_uv = Ptrarr(n_pol,/allocate)
+          for pol_i=0,n_pol-1 do begin
+            *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
+            (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
+            
+            *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
+          endfor
+          
+          if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
+          
+          this_model_ptr=vis_source_model(0,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+            timing=model_timing,silent=silent,error=error,_Extra=extra)
+          print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
+          
+          for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
+          
+          undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
+        endfor
+      endelse
+      undefine_fhd, model_uvf_arr
+      time1=systime(1)
+      print, 'model visibility timing(s):'+ number_formatter(time1-time0)
+    endif ;; end if n_elements(model_uvf_arr) gt 0
+    
+    if keyword_set(include_noise) then begin
+      if n_elements(noise_sigma_freq) eq 0 then noise_sigma_freq = 28. ;; something close to the average noise in a visibility
+      if n_elements(noise_sigma_freq) eq 1 then noise_sigma_freq = fltarr(n_freq) + noise_sigma_freq
+      
+      vis_noise_ptr=Ptrarr(n_pol,/allocate)
+      
+      if n_elements(vis_model_arr) gt 0 then begin
+        vis_dims = size(*(vis_model_arr[0]), /dimension)
+        if vis_dims[0] ne n_freq then message, 'number of frequencies in visibility array does not match n_freq'
+        vis_dimension = vis_dims[1]
+      endif else begin
+        nbaselines=obs.nbaselines
+        n_samples=obs.n_time
+        vis_dimension=nbaselines*n_samples
+      endelse
+      noise_sigma_arr = rebin(noise_sigma_freq, n_freq, vis_dimension)
+      
+      for pol_i=0,n_pol-1 do *(vis_noise_ptr[pol_i]) = randomn(seed, [n_freq, vis_dimension]) * noise_sigma_arr + $
+        complex(0,1) * randomn(seed, [n_freq, vis_dimension]) * noise_sigma_arr
         
-        for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
-        
-        undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
-      endfor
-    endelse
-    undefine_fhd, model_uvf_arr
-    time1=systime(1)
-    print, 'model visibility timing(s):'+ number_formatter(time1-time0)
+      undefine, noise_sigma_arr
+      
+      if n_elements(vis_model_arr) gt 0 then begin
+        for pol_i=0,n_pol-1 do *(vis_model_arr[pol_i]) += *(vis_noise_ptr[pol_i])
+        undefine_fhd, vis_noise_ptr
+      endif else vis_model_arr = vis_noise_ptr
+      
+    endif
     
     fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,no_save=no_save,_Extra=extra
   ENDIF ELSE BEGIN ;; end if recalculate_all
