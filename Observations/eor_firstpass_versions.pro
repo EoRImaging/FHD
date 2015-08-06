@@ -1271,7 +1271,7 @@ case version of
    production=1
    flag_dead_dipoles=1
    ;no long tiles used in calculating saved bp
-   recalculate_all=1
+   ;recalculate_all=1
 
    end
 
