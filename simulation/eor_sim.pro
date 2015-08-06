@@ -108,15 +108,6 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, real_sky = real_sky, flat
   
   ;signal = temporary(signal_amp) * exp(complex(0,1) * temporary(signal_phase))
   
-  if keyword_set(real_sky) then begin
-    sky_signal = shift(fft(fft(shift(signal, [n_kx/2, n_ky/2, 0]), dimension=1), dimension=2), [-n_kx/2, -n_ky/2, 0])
-    
-    temp = real_part(temporary(sky_signal))*sqrt(2.)
-    signal = shift(fft(fft(shift(temp, [n_kx/2, n_ky/2, 0]), dimension=1, /inverse), dimension=2, /inverse), [-n_kx/2, -n_ky/2, 0])
-    undefine, temp
-    
-  endif
-  
   ;; shift it so that it's as expected when we take the fft
   signal = shift(temporary(signal), [0,0,n_kz/2])
   
@@ -138,7 +129,17 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, real_sky = real_sky, flat
   ;; convert to Jy
   for i=0, n_kz-1 do temp[*,*,i] = temp[*,*,i]/conv_factor[i]
   
-  ;; 1st frequency is typically flagged. if flag_sigma and no_distrib is set, cube is only non-zero in 1st freq so shift to put power in next frequency
+  if keyword_set(real_sky) then begin
+    sky_signal = shift(fft(fft(shift(temp, [n_kx/2, n_ky/2, 0]), dimension=1), dimension=2), [-n_kx/2, -n_ky/2, 0])
+    
+    temp2 = real_part(temporary(sky_signal))*sqrt(2.)
+    temp = shift(fft(fft(shift(temp2, [n_kx/2, n_ky/2, 0]), dimension=1, /inverse), dimension=2, /inverse), [-n_kx/2, -n_ky/2, 0])
+    undefine, temp2
+    
+  endif
+  
+  
+  ;; 1st frequency is typically flagged. if flag_sigma and no_distrib are set, cube is only non-zero in 1st freq so shift to put power in next frequency
   if keyword_set(flat_sigma) and keyword_set(no_distrib) then temp = shift(temporary(temp), [0,0,1])
   
   print, 'sum(uvf signal^2)*z_delta:', total(abs(temp)^2d)*z_mpc_delta

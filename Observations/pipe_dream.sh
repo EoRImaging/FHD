@@ -1,8 +1,33 @@
 #!/bin/bash
 
+####################################################
 #
-#COMMENTS
+# PIPE_DREAM.SH
 #
+# Top level script to run a list of observation IDs through FHD (deconvolution or firstpass),
+# check the status of resulting FHD outputs, rerun specific observation IDs as necessary
+# with new resource allocations, integrate cubes, and generate power spectra through 
+# eppsilon.
+#
+# Required input arguments are obs_file_name (-f /path/to/obsfile) and version
+# (-v yourinitials_jackknife_test)
+#
+# Optional input arguments are: starting_obs (-s 1061311664) which is defaulted to the beginning
+# obsid of the specified file, ending_obs (-e 1061323008) which is defaulted to the ending obsid
+# of the specified file, outdir (-o /path/to/output/directory) which is defaulted to 
+# /nfs/mwa-09/r1/djc/EoR2013/Aug23, priority (-p -10) which is defaulted to zero but can range from
+# -20 (higher priority) to 20 (lower priority), wallclock_time (-w 08:00:00) which is defaulted to 
+# 4 hours for a typical firstpass run, nslots (-n 10) which is defaulted to 10 for a typical IDL
+# job, mem (-m 4G) which is defaulted to 4 Gigabytes per slot for a typical firstpass run, and
+# thresh (-t 1) which is defaulted to 1 to tell the code to not look for a threshold from wedge
+# statistics.
+#
+# WARNING!
+# Terminal will hang as it waits for jobs to finish, and closing the termianal will kill any 
+# remaining jobs! To run in the background, run: 
+# nohup ./pipe_dream.sh -f /path/to/obsfile -v yourinitials_jackknife_test > /path/to/your/output/log/file.txt &
+#
+####################################################
 
 #Clear input parameters
 unset obs_file_name
@@ -12,6 +37,8 @@ unset outdir
 unset version
 unset resubmit_list
 unset resubmit_index
+
+#######Gathering the input arguments and applying defaults if necessary
 
 #Parse flags for inputs
 while getopts ":f:s:e:o:v:p:w:n:m:t:" option
@@ -167,16 +194,30 @@ for obs_id in "${obs_id_array[@]}"; do
     fi
 done
 
+#######End of gathering the input arguments and applying defaults if necessary
 
-#####Submit the firstpass job and wait for output
 
+
+
+#######Submit the firstpass job and wait for output
+
+#Find the number of obsids to run in array
 nobs=${#good_obs_list[@]}
 
+#Make the qsub command given the input parameters. 
 message=$(qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v nslots=$nslots,outdir=$outdir,version=$version,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots -sync y ${FHDpath}Observations/eor_firstpass_job.sh ${good_obs_list[@]})
+
+#Run the command
 message=($message)
+
+#Gather the grid engine id from the job for later use
 id=`echo ${message[2]} | cut -f1 -d"."`
 
-####
+########End of submitting the firstpass job and waiting for output
+
+
+
+########Check the firstpass run, and setup a rerun list with new memory/walltime if necessary.
 
 #Check that output location is not running out of space
 if df -h $outdir | awk '{print $4}' | grep M -q; then
@@ -188,7 +229,8 @@ fi
 i=0
 for obs_id in "${obs_id_array[@]}"; do
    i=$((i + 1))
-   if grep "Execution halted at:" $outdir/fhd_$version/grid_out/firstpass.e$id.$i -q; then
+   exec_num=$(grep "Execution halted at:" $outdir/fhd_$version/grid_out/firstpass.e$id.$i | wc -l)
+   if [ "$exec_num" -gt 1 ]; then
       echo $obs_id encountered code error during firstpass run
       resubmit_list+=($obs_id)
       resubmit_index+=($i)
@@ -270,6 +312,10 @@ for index in "${resubmit_index[@]}"; do
          if echo $mem | grep G -q; then
             resubmit_mem="$((${mem%G}+2))"G
             resubmit_mem_flag=1
+            if [ "$((${resubmit_mem%G}))" -gt 8 ]
+               echo Hit the maximum memory level for the cluster during rerun for $resubmit_list[$index]. Will attempt to rerun with same level of memory.
+               resubmit_mem_flag=0
+            fi
             echo Adding two more Gigs to memory for $index
          elif echo $mem | grep M -q; then
             resubmit_mem=$(echo ${mem%M} 1000 2 | awk '{printf "%5.3f\n",$1/$2+$3}')G
@@ -286,7 +332,13 @@ for index in "${resubmit_index[@]}"; do
 done
 
 
-#####Resubmit the firstpass jobs that failed and might benefit from a rerun
+########End of checking the firstpass run, and setuping a rerun list with new memory/walltime if necessary.
+
+
+
+
+########Resubmit the firstpass jobs that failed and might benefit from a rerun
+
 if [ "$rerun_flag" -ne 1 ];then 
 
    nobs=${#resubmit_list[@]}
@@ -295,9 +347,11 @@ if [ "$rerun_flag" -ne 1 ];then
    message=($message)
    id=`echo ${message[2]} | cut -f1 -d"."`
 
-####
-
 fi
+
+########End of resubmitting the firstpass jobs that failed and might benefit from a rerun
+
+
 
 
 ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)

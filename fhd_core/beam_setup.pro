@@ -170,7 +170,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDFOR
 ENDFOR
 
-IF Tag_exist(obs,'beam_integral') THEN obs.beam_integral=beam_integral
+FOR pol_i=0,n_pol-1 DO obs.beam_integral[pol_i]=beam_integral[pol_i]
 print,t_ant,t_beam_power,t_beam_int
 
 ;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal

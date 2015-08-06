@@ -456,7 +456,6 @@ undefine_fhd,beam_contour_arr,beam_contour_arr2,beam_correction_out,beam_base_ou
 undefine_fhd,instr_residual_arr,instr_dirty_arr,instr_sources,instr_rings
 undefine_fhd,stokes_residual_arr,stokes_sources,stokes_rings
 undefine_fhd,gal_model_img
-undefine_fhd,obs_out
 
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Image output timing (quickview): ',timing

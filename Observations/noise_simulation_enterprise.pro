@@ -1,9 +1,7 @@
-PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
+pro noise_simulation_enterprise, cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, $
     use_saved_uvf = use_saved_uvf, uvf_savefile = uvf_savefile, $
     sim_baseline_density = sim_baseline_density, $
-    flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
-    delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
     silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
@@ -67,7 +65,8 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
   no_restrict_cal_sources=1
   
   ;; for simulation
-  eor_sim = 1
+  include_noise = 1
+  ;noise_sigma_freq
   include_catalog_sources = 0
   save_uvf=1
   save_imagecube=1
@@ -127,24 +126,14 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       sim_baseline_time = [intarr(n_per_time), intarr(n_per_time)+1]
       if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
     endif
-    
-    if n_elements(use_saved_uvf) eq 0 then use_saved_uvf = 1
-    if keyword_set(use_saved_uvf) then begin
-      if n_elements(uvf_savefile) eq 0 then begin
-        eor_uvf_cube_file = '/data4/MWA/FHD_Aug23/bjh_arrsim_model_uvf/'
-        if keyword_set(flat_sigma) then eor_uvf_cube_file = eor_uvf_cube_file + 'flat_input_model.sav' else stop
-        if keyword_set(no_distrib) or keyword_set(delta_power) then stop
-      endif else eor_uvf_cube_file = uvf_savefile
-    endif
-    
+        
     array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
       sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
       simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, $
       n_time = n_time, sim_baseline_time=sim_baseline_time, $
       cleanup=cleanup,recalculate_all=recalculate_all, beam_recalculate=beam_recalculate, /silent, $
       n_pol=n_pol,tile_flag_list=tile_flag_list, no_rephase = no_rephase,$
-      eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, $
-      delta_power = delta_power, delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
+      include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
       include_catalog_sources = include_catalog_sources, source_list=source_list,$
       catalog_file_path=catalog_file_path, $
       export_images=export_images,dimension=dimension, image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$

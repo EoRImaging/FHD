@@ -1130,10 +1130,6 @@ case version of
       max_calibration_sources=1000
       calibration_catalog_file_path='/nfs/eor-03/r1/EoR2013/fhd_nb_decon_July2015/output_data/'+obs_id+'_source_array.sav'
    end
-   
-   'nb_dft_test': begin
-      dft_threshold=1
-    end
     'nb_spec_indices': begin
       ;will shift bp, bp will need 1,2
        calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_fhd_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
