@@ -1232,7 +1232,7 @@ case version of
    
    'rlb_pipe_dream': begin ;;July 2015
       dft_threshold = 1
-      healpix_recalculate = 1
+      snapshot_recalculate = 1
    end
 
 
