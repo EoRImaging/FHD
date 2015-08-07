@@ -1126,16 +1126,24 @@ case version of
       snapshot_healpix_export=1
       ;double memory, time
    end   
-   'nb_dft_test': begin
-      dft_threshold=1
-    end
+   'nb_decon_July2015_through_firstpass': begin
+      ;max_calibration_sources=1000
+      calibration_catalog_file_path='/nfs/eor-03/r1/EoR2013/fhd_nb_decon_July2015/output_data/'+obs_id+'_source_array.sav'
+   end
     'nb_spec_indices': begin
       ;will shift bp, bp will need 1,2
        calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_fhd_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
        degrid_spectral=1
        flatten_spectrum=1
        diffuse_spectral_index=-0.5
-     end
+   end
+   'nb_std_test_twopolyquad_extrafancymodeobs_restricted':begin 
+      saved_run_std_test_polyquad_1=1
+   end
+   'nb_std_test_twopolyquad_extrafancymodeobs_onemode':begin 
+      saved_run_std_test_polyquad_onemode=1
+   end
+
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
@@ -1198,7 +1206,9 @@ case version of
       decon_filter='filter_uv_uniform'
    end  
 
-   ;Ruby's stuff
+
+
+   ;;;;;Ruby's stuff;;;;;
    
    'rlb_devel_nodiffuse_june2015': begin
       model_visibilities=0
@@ -1209,7 +1219,7 @@ case version of
       production=1
    end
    
-   'rlb_master_nodiffuse_june2015': begin
+   'rlb_master_nodiffuse_june2015': begin ;;Deleted 7/27/15
       model_visibilities=0
       diffuse_model=0
       firstpass=1
@@ -1218,35 +1228,17 @@ case version of
       production=1
    end
    
-
-
-   ;Ruby's Stuff:
-   
-   'rlb_devel_nodiffuse_june2015': begin
-      model_visibilities=0
-      diffuse_model=0
-      firstpass=1
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      production=1
-   end 
-   
-   'rlb_master_nodiffuse_june2015': begin
-      model_visibilities=0
-      diffuse_model=0
-      firstpass=1
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      production=1
-   end
-   
-   'rlb_flag_rec15': begin
+   'rlb_flag_rec15': begin ;;July 2015
       diffuse_calibrate = filepath('EoR0_diffuse_model_94.sav', root = rootdir('FHD'), subdir = 'catalog_data')
       cable_bandpass_fit = 1
       saved_run_bp = 1
       tile_flag_list = [151, 152, 153, 154, 155, 156, 157, 158]
    end
-
+   
+   'rlb_pipe_dream': begin ;;July 2015
+      dft_threshold = 1
+      healpix_recalculate = 1
+   end
 
 
    ;Khang's Stuff:
@@ -1279,8 +1271,8 @@ case version of
    saved_run_bp=1
    production=1
    flag_dead_dipoles=1
-   ;no long tiles used in calculating saved bp
-   recalculate_all=1
+   healpix_recalculate=1 
+   ;recalculate_all=1
 
    end
 
