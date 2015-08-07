@@ -1127,7 +1127,7 @@ case version of
       ;double memory, time
    end   
    'nb_decon_July2015_through_firstpass': begin
-      max_calibration_sources=1000
+      ;max_calibration_sources=1000
       calibration_catalog_file_path='/nfs/eor-03/r1/EoR2013/fhd_nb_decon_July2015/output_data/'+obs_id+'_source_array.sav'
    end
     'nb_spec_indices': begin
@@ -1136,8 +1136,13 @@ case version of
        degrid_spectral=1
        flatten_spectrum=1
        diffuse_spectral_index=-0.5
-     end
-
+   end
+   'nb_std_test_twopolyquad_extrafancymodeobs_restricted':begin 
+      saved_run_std_test_polyquad_1=1
+   end
+   'nb_std_test_twopolyquad_extrafancymodeobs_onemode':begin 
+      saved_run_std_test_polyquad_onemode=1
+   end
 
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
