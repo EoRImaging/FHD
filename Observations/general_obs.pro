@@ -1,6 +1,5 @@
 PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
-    healpix_recalculate=healpix_recalculate,mapfn_recalculate=mapfn_recalculate,$
-    grid_recalculate=grid_recalculate,snapshot_recalculate=snapshot_recalculate,deconvolve=deconvolve,$
+    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,snapshot_recalculate=snapshot_recalculate,deconvolve=deconvolve,$
     image_filter_fn=image_filter_fn,data_directory=data_directory,output_directory=output_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,double_precison_beam=double_precison_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
@@ -69,7 +68,6 @@ n_files=N_Elements(vis_file_list)
 
 ;Set which files to restore or recalculate (if the file is not found and needed, it will be recalculated
 IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
-IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=recalculate_all
 IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
 IF N_Elements(flag_calibration) EQ 0 THEN flag_calibration=1
@@ -158,7 +156,7 @@ WHILE fi LT n_files DO BEGIN
         complex=complex_beam,double=double_precison_beam,precess=precess,error=error,$
         gain_factor=gain_factor,add_threshold=add_threshold,cleanup=cleanup,save_visibilities=save_visibilities,$
         calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
-        healpix_recalculate=healpix_recalculate,flag_calibration=flag_calibration,return_cal_visibilities=return_cal_visibilities,$
+        flag_calibration=flag_calibration,return_cal_visibilities=return_cal_visibilities,$
         snapshot_healpix_export=snapshot_healpix_export,snapshot_recalculate=snapshot_recalculate,$
         split_ps_export=split_ps_export,cmd_args=cmd_args,_Extra=extra
     IF ~Keyword_Set(error) THEN IF Tag_exist(status_str,'complete') THEN status_str.complete=1
@@ -195,7 +193,7 @@ IF Keyword_Set(simultaneous) THEN BEGIN
     heap_gc
     IF Keyword_Set(export_sim) THEN FOR fi=0L,n_files_use-1 DO BEGIN
         uvfits2fhd,vis_file_list[fi],status_arr[fi],file_path_fhd=fhd_file_list[fi],n_pol=n_pol,/force_no_data,$
-            transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,healpix_recalculate=0,$
+            transfer_mapfn=transfer_mapfn,mapfn_recalculate=0,flag_visibilities=0,grid=0,$
             silent=silent,max_sources=max_sources,deconvolve=0,catalog_file_path=catalog_file_path,$
             export_images=1,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
             error=error,snapshot_recalculate=snapshot_recalculate1,_Extra=extra
