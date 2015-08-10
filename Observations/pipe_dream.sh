@@ -312,7 +312,7 @@ for index in "${resubmit_index[@]}"; do
          if echo $mem | grep G -q; then
             resubmit_mem="$((${mem%G}+2))"G
             resubmit_mem_flag=1
-            if [ "$((${resubmit_mem%G}))" -gt 8 ]
+            if [ "$((${resubmit_mem%G}))" -gt 8 ]; then
                echo Hit the maximum memory level for the cluster during rerun for $resubmit_list[$index]. Will attempt to rerun with same level of memory.
                resubmit_mem_flag=0
             fi
@@ -357,7 +357,7 @@ fi
 ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 PSpath=$(idl -e 'print,rootdir("ps")')
 
-.${PSpath}ps_wrappers/ps_script.sh -f $obs_file_name -d $outdir/fhd_$version
+${PSpath}ps_wrappers/ps_script.sh -f $obs_file_name -d $outdir/fhd_$version
 
 
 echo "Cube integration and PS submitted"
