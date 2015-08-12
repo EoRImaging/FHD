@@ -163,7 +163,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
       RETURN,Ptrarr(n_pol)
     endif
     
-    if n_elements(model_uv_arr) gt 0 then begin
+    if n_elements(model_uvf_arr) gt 0 then begin
       model_uvf = *model_uvf_arr[0]
       IF ~Keyword_Set(no_save) and keyword_set(include_eor) then if eor_gen eq 1 THEN $
         save,filename=input_model_filepath, model_uvf, uv_arr, freq_arr, /compress
