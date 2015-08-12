@@ -1273,7 +1273,7 @@ case version of
    flag_dead_dipoles=1
    snapshot_recalculate=1
    ;healpix_recalculate=1 
-   ;recalculate_all=1
+   recalculate_all=1
 
    end
 
