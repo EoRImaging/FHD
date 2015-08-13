@@ -32,6 +32,7 @@ ENDIF
 
 IF Keyword_Set(debug_evenoddsplit_integration) THEN BEGIN
     divisor=debug_evenoddsplit_integration/obs.time_res
+    print,"DEBUG option: even/odd split integrated to "+Strn(debug_evenoddsplit_integration)+"s ("+Strn(divisor)+" time steps)"
     bin_i=Floor(bin_i/divisor)
 ENDIF
 
