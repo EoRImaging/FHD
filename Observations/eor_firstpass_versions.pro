@@ -1143,7 +1143,21 @@ case version of
    'nb_std_test_twopolyquad_extrafancymodeobs_onemode':begin 
       saved_run_std_test_polyquad_onemode=1
    end
-
+   'nb_vis_integration_4sec':begin 
+      debug_evenoddsplit_integration=4
+   end
+   'nb_vis_integration_6sec':begin 
+      debug_evenoddsplit_integration=6
+   end
+   'nb_vis_integration_8sec':begin 
+      debug_evenoddsplit_integration=8
+   end
+   'nb_vis_integration_10sec':begin 
+      debug_evenoddsplit_integration=10
+   end
+   'nb_vis_integration_12sec':begin 
+      debug_evenoddsplit_integration=12
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
