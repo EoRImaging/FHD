@@ -1,5 +1,5 @@
 FUNCTION hera_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
-    za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim
+    za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use
 
 n_ant_pol=Max(antenna.n_pol)
 nfreq_bin=Max(antenna.nfreq_bin)
@@ -58,7 +58,7 @@ ENDFOR
             FOR hpx_i=0L,n_hpx-1 DO hera_beam_interp[hpx_i,*]=Interpol((*hera_beam_in[pol_i])[*,hpx_i],hera_frequency_array,freq_center)
             hera_beam_interp_arr=Ptrarr(nfreq_bin)
             FOR freq_i=0,nfreq_bin-1 DO hera_beam_interp_arr[freq_i]=Ptr_new(hera_beam_interp[*,freq_i])
-            hera_beam_grid_arr=healpix_interpolate(hera_beam_interp_arr,obs,nside=nside)
+            hera_beam_grid_arr=healpix_interpolate(hera_beam_interp_arr,obs,nside=nside,Jdate_use=Jdate_use,coord_sys='equatorial')
             FOR freq_i=0,nfreq_bin-1 DO Jones_matrix[pol_i,pol_i,freq_i]=Ptr_new(Interpolate(*hera_beam_grid_arr[freq_i],xvals_instrument,yvals_instrument)*horizon_mask)
             
         ENDFOR
