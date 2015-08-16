@@ -6,8 +6,8 @@ nfreq_bin=Max(antenna.nfreq_bin)
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 n_tile=obs.n_tile
 beam_model_version=Max(antenna.model_version)
-xvals_instrument=za_arr*Sin(az_arr*!DtoR)
-yvals_instrument=za_arr*Cos(az_arr*!DtoR)
+xvals_interp=za_arr*Sin(az_arr*!DtoR)/obs.degpix+obs.dimension/2.
+yvals_interp=za_arr*Cos(az_arr*!DtoR)/obs.degpix+obs.elements/2.
 freq_center=antenna[0].freq ;all need to be identical, so just use the first
 speed_light=299792458. ;speed of light, in meters/second
 icomp=Complex(0,1)
@@ -59,7 +59,7 @@ ENDFOR
             hera_beam_interp_arr=Ptrarr(nfreq_bin)
             FOR freq_i=0,nfreq_bin-1 DO hera_beam_interp_arr[freq_i]=Ptr_new(hera_beam_interp[*,freq_i])
             hera_beam_grid_arr=healpix_interpolate(hera_beam_interp_arr,obs,nside=nside,Jdate_use=Jdate_use,coord_sys='equatorial')
-            FOR freq_i=0,nfreq_bin-1 DO Jones_matrix[pol_i,pol_i,freq_i]=Ptr_new(Interpolate(*hera_beam_grid_arr[freq_i],xvals_instrument,yvals_instrument)*horizon_mask)
+            FOR freq_i=0,nfreq_bin-1 DO Jones_matrix[pol_i,pol_i,freq_i]=Ptr_new(Interpolate(*hera_beam_grid_arr[freq_i],xvals_interp,yvals_interp)*horizon_mask)
             
         ENDFOR
     
