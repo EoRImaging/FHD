@@ -117,7 +117,7 @@ fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,cal=cal,psf=psf,skymodel=s
 IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_arr) THEN BEGIN
         ;could generate model visibilities from just the source list (allows sources to be pruned), or from the final uv model (don't have to redo the DFT) 
-        vis_model_arr=vis_source_model(source_array,obs,status_str,psf,params,flag_arr,$
+        vis_model_arr=vis_source_model(skymodel,obs,status_str,psf,params,flag_arr,$
             timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)   
 ;        vis_model_arr=vis_source_model(source_array,obs,psf,params,model_uv_arr=model_uv_arr,$
 ;            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)      
