@@ -155,8 +155,12 @@ ENDIF
 IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
     uv_mask=fltarr(dimension,elements)
+    IF model_flag EQ 0 THEN BEGIN
+        model_uv_arr=Ptrarr(n_pol,/allocate)
+        model_flag=1
+    ENDIF
     fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra
-    component_array=getvar_savefile(fhd_sav_filepath,'component_array')
+    component_array=getvar_savefile(fhd_sav_filepath+'.sav','component_array')
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*weights_arr[pol_i])]=1
     noise_map=fhd_params.convergence*rebin(weight_invert(beam_avg),dimension,elements)
     component_array=component_array[0:fhd_params.n_components-1]
