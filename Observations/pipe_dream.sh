@@ -357,7 +357,7 @@ fi
 ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 PSpath=$(idl -e 'print,rootdir("ps")')
 
-.${PSpath}ps_wrappers/ps_script.sh -f $obs_file_name -d $outdir/fhd_$version
+${PSpath}ps_wrappers/ps_script.sh -f $obs_file_name -d $outdir/fhd_$version
 
 
 echo "Cube integration and PS submitted"

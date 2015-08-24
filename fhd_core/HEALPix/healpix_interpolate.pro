@@ -1,8 +1,9 @@
 FUNCTION healpix_interpolate,healpix_map,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=from_kelvin,$
-    hpx_ordering=hpx_ordering,coord_sys=coord_sys
+    hpx_ordering=hpx_ordering,coord_sys=coord_sys,Jdate_use=Jdate_use
 
 IF N_Elements(hpx_ordering) EQ 0 THEN hpx_ordering='ring' ELSE hpx_ordering=StrLowCase(hpx_ordering) ;other ordering is 'nested'
-IF N_Elements(coord_sys) EQ 0 THEN coord_sys='celestial'
+IF N_Elements(coord_sys) EQ 0 THEN coord_sys='celestial' ELSE coord_sys=StrLowCase(coord_sys)
+IF N_Elements(Jdate_use) EQ 0 THEN Jdate_use=obs.JD0
 n_hpx=nside2npix(nside)
 IF N_Elements(hpx_inds) EQ 0 THEN hpx_inds=Lindgen(n_hpx)
 astr=obs.astr
@@ -26,8 +27,11 @@ ENDELSE
 
 IF hpx_ordering EQ 'ring' THEN pix2vec_ring,nside,hpx_inds,pix_coords $
     ELSE pix2vec_nest,nside,hpx_inds,pix_coords
+    
+
 vec2ang,pix_coords,pix_dec,pix_ra,/astro
-IF coord_sys NE 'celestial' THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /degree
+IF coord_sys EQ 'galactic' THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /degree
+IF coord_sys EQ 'equatorial' THEN Hor2Eq,pix_dec,pix_ra,Jdate_use,pix_ra,pix_dec,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
 
 ad2xy,pix_ra,pix_dec,astr,xv_hpx,yv_hpx
 
