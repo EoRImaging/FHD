@@ -240,7 +240,8 @@ IF Keyword_Set(export_images) THEN BEGIN
     ENDIF ELSE BEGIN
         IF (obs.residual GT 0) AND (N_Elements(cal) GT 0) THEN source_array=cal.source_list
         fhd_quickview,obs,status_str,psf,cal,jones,skymodel,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
-            model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
+            model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,$
+            map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,_Extra=extra
     ENDELSE
 ENDIF
 

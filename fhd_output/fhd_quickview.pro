@@ -7,7 +7,8 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,skymodel,image_uv_arr=image_uv_ar
     use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,beam_threshold=beam_threshold,$
     beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,$
-    image_mask_horizon=image_mask_horizon,write_healpix_fits=write_healpix_fits,nside=nside,_Extra=extra
+    image_mask_horizon=image_mask_horizon,write_healpix_fits=write_healpix_fits,nside=nside,$
+    model_recalculate=model_recalculate,map_fn_arr=map_fn_arr,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -129,6 +130,41 @@ beam_avg/=(n_pol<2)
 beam_avg=Sqrt(beam_avg>0)*beam_mask
 beam_i=where(beam_mask)
 jones_out=fhd_struct_init_jones(obs_out,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
+
+IF Keyword_Set(model_recalculate) THEN BEGIN
+    IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        IF Ptr_valid(map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+            fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
+                transfer=transfer_mapfn,/no_save,path_use=path_use,obs=obs,_Extra=extra
+            IF file_test(path_use+'.sav') EQ 0 THEN BEGIN
+                print,'No mapping function supplied, and .sav files not found! Model not recalculated'
+                print,path_use+'.sav'
+                model_recalculate=0
+                pol_i=n_pol ;skip any remaining polarizations if even one is missing
+                CONTINUE
+            ENDIF
+            RESTORE,path_use+'.sav' ;map_fn
+            map_fn_arr[pol_i]=Ptr_new(map_fn,/no_copy)
+        ENDIF
+    ENDFOR
+ENDIF
+
+IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
+    ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
+    uv_mask=fltarr(dimension,elements)
+    FOR pol_i=0,n_pol-1 DO uv_mask[where(*weights_arr[pol_i])]=1
+    noise_map=fhd_params.convergence*rebin(weight_invert(beam_avg),dimension,elements)
+    comp_arr=comp_arr[0:fhd_params.n_components-1]
+    source_array=Components2Sources(comp_arr,obs,fhd_params,noise_map=noise_map,source_mask=source_mask,_Extra=extra)
+    IF Keyword_Set(no_condense_sources) THEN $
+        model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0,_extra=extra) $
+        ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut,_extra=extra)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv_arr[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+    ENDFOR
+ENDIF
+heap_gc
 
 IF Keyword_Set(write_healpix_fits) THEN BEGIN
     FoV_use=!RaDeg/obs_out.kpix
