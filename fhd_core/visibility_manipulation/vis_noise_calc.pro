@@ -1,4 +1,4 @@
-PRO vis_noise_calc,obs,vis_arr,flag_arr,noise_arr=noise_arr,bi_use=bi_use
+PRO vis_noise_calc,obs,vis_arr,flag_arr,noise_arr=noise_arr,bi_use=bi_use,_Extra=extra
 ;; A simple script to calculate the noise in the visibilities
 
 n_pol=obs.n_pol
@@ -6,7 +6,7 @@ n_freq=Long(obs.n_freq)
 noise_arr=fltarr(n_pol,n_freq)
 
 IF obs.n_time LT 2 THEN RETURN ;exit if not enough data to calculate noise
-IF N_Elements(bi_use) NE 2 THEN flag_arr_use=split_vis_flags(obs,flag_arr,bi_use=bi_use,/preserve_flags) 
+IF N_Elements(bi_use) NE 2 THEN flag_arr_use=split_vis_flags(obs,flag_arr,bi_use=bi_use,/preserve_flags,_Extra=extra) 
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     data_diff =Imaginary( (*vis_arr[pol_i])[*,*bi_use[0]])-Imaginary((*vis_arr[pol_i])[*,*bi_use[1]]) ; only use imaginary part
