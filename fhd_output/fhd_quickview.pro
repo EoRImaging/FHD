@@ -1,4 +1,4 @@
-PRO fhd_quickview,obs,status_str,psf,cal,jones,skymodel,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
+PRO fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
@@ -26,6 +26,7 @@ IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=beam_threshold/2.
 IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
+IF status_str.fhd EQ 0 THEN model_recalculate=0
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
@@ -39,6 +40,7 @@ IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_
 IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(skymodel) EQ 0 THEN fhd_save_io,status_str,skymodel,var='skymodel',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(fhd_params) EQ 0 THEN fhd_save_io,status_str,fhd_params,var='fhd_params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
@@ -153,12 +155,14 @@ ENDIF
 IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
     ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
     uv_mask=fltarr(dimension,elements)
+    fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra
+    component_array=getvar_savefile(fhd_sav_filepath,'component_array')
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*weights_arr[pol_i])]=1
     noise_map=fhd_params.convergence*rebin(weight_invert(beam_avg),dimension,elements)
-    comp_arr=comp_arr[0:fhd_params.n_components-1]
-    source_array=Components2Sources(comp_arr,obs,fhd_params,noise_map=noise_map,source_mask=source_mask,_Extra=extra)
+    component_array=component_array[0:fhd_params.n_components-1]
+    source_array=Components2Sources(component_array,obs,fhd_params,noise_map=noise_map,source_mask=source_mask,_Extra=extra)
     IF Keyword_Set(no_condense_sources) THEN $
-        model_uv_full=source_dft_model(obs,jones,comp_arr,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0,_extra=extra) $
+        model_uv_full=source_dft_model(obs,jones,component_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0,_extra=extra) $
         ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut,_extra=extra)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_arr[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
@@ -184,18 +188,18 @@ IF skymodel.n_sources GT 0 THEN BEGIN
     extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
     IF n_extend GT 0 THEN BEGIN
         FOR ext_i=0L,n_extend-1 DO BEGIN
-            comp_arr_out=*source_array[extend_test[ext_i]].extend
-            ad2xy,comp_arr_out.ra,comp_arr_out.dec,astr_out,cx,cy
-            comp_arr_out.x=cx & comp_arr_out.y=cy
+            component_array_out=*source_array[extend_test[ext_i]].extend
+            ad2xy,component_array_out.ra,component_array_out.dec,astr_out,cx,cy
+            component_array_out.x=cx & component_array_out.y=cy
             
-            IF Total(comp_arr_out.flux.(0)) EQ 0 THEN BEGIN
-                comp_arr_out.flux.(0)=(*beam_base_out[0])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.I+comp_arr_out.flux.Q)/2.
-                comp_arr_out.flux.(1)=(*beam_base_out[1])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.I-comp_arr_out.flux.Q)/2.
-        ;        comp_arr_out.flux.(2)=(*beam_base_out[2])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.Q+comp_arr_out.flux.U)/2.
-        ;        comp_arr_out.flux.(3)=(*beam_base_out[3])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.Q-comp_arr_out.flux.U)/2.
+            IF Total(component_array_out.flux.(0)) EQ 0 THEN BEGIN
+                component_array_out.flux.(0)=(*beam_base_out[0])[component_array_out.x,component_array_out.y]*(component_array_out.flux.I+component_array_out.flux.Q)/2.
+                component_array_out.flux.(1)=(*beam_base_out[1])[component_array_out.x,component_array_out.y]*(component_array_out.flux.I-component_array_out.flux.Q)/2.
+        ;        component_array_out.flux.(2)=(*beam_base_out[2])[component_array_out.x,component_array_out.y]*(component_array_out.flux.Q+component_array_out.flux.U)/2.
+        ;        component_array_out.flux.(3)=(*beam_base_out[3])[component_array_out.x,component_array_out.y]*(component_array_out.flux.Q-component_array_out.flux.U)/2.
             ENDIF
             source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)
-            *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
+            *source_arr_out[extend_test[ext_i]].extend=component_array_out
         ENDFOR
     ENDIF
     source_arr_out=stokes_cnv(source_arr_out,jones_out,beam=beam_base_out,/inverse,_Extra=extra)

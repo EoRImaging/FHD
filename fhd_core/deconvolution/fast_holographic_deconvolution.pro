@@ -15,7 +15,7 @@
 ;
 ; :Author: isullivan May 4, 2012
 ;-
-PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,source_array,comp_arr,timing=timing,weights_arr=weights_arr,$
+PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,source_array,component_array,timing=timing,weights_arr=weights_arr,$
     residual_array=residual_array,dirty_array=dirty_array,model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,$
     ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,$
     beam_base=beam_base,beam_correction=beam_correction,file_path_fhd=file_path_fhd,no_condense_sources=no_condense_sources,$
@@ -273,12 +273,12 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     i2+=1
     max_sources+=n_cal_src
     
-    comp_arr=source_comp_init(n_sources=max_sources,alpha=obs.alpha,freq=obs.freq_center)
+    component_array=source_comp_init(n_sources=max_sources,alpha=obs.alpha,freq=obs.freq_center)
     cal_sources=cal.source_list
     IF calibration_model_subtract LT 1 THEN BEGIN
         FOR tag_i=0,n_tags(cal_sources.flux)-1 DO cal_sources.flux.(tag_i)*=(0.>calibration_model_subtract<1.)
     ENDIF
-    IF n_cal_src GT 0 THEN comp_arr[0:n_cal_src-1]=cal_sources ;if this breaks, use a FOR loop
+    IF n_cal_src GT 0 THEN component_array[0:n_cal_src-1]=cal_sources ;if this breaks, use a FOR loop
     
     FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]*(0.>calibration_model_subtract<1.) ;this allows you to subtract less than 100% of the model!
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -303,7 +303,7 @@ IF Keyword_Set(calibration_model_subtract) THEN BEGIN
     converge_check[i2]=Stddev(source_find_image[where(beam_mask)],/nan)
     converge_check2[i2]=Stddev(source_find_image[where(beam_mask)],/nan)
     print,"Convergence after subtracting input source model:",Strn(converge_check[i2])
-ENDIF ELSE comp_arr=source_comp_init(n_sources=max_sources,alpha=obs.alpha,freq=obs.freq_center,gain_factor=gain_use)
+ENDIF ELSE component_array=source_comp_init(n_sources=max_sources,alpha=obs.alpha,freq=obs.freq_center,gain_factor=gain_use)
 
 IF ~Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
@@ -375,7 +375,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
 ;    model_I_use=model_I_use*beam_avg*source_taper*source_mask
     image_use=image_unfiltered*beam_avg*beam_mask*source_mask
    
-    comp_arr1=fhd_source_detect(obs_fit,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+    component_array1=fhd_source_detect(obs_fit,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
         model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
         beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     
@@ -390,7 +390,7 @@ FOR iter=i0,max_iter-1 DO BEGIN
     
     IF si+n_sources GE max_sources THEN BEGIN
         n_sources=max_sources-si-1
-        IF n_sources GT 0 THEN comp_arr1=comp_arr1[0:n_sources-1]
+        IF n_sources GT 0 THEN component_array1=component_array1[0:n_sources-1]
     ENDIF
     IF n_sources LE 0 THEN BEGIN
         ;do something to end loop if n_mask EQ 0
@@ -405,12 +405,12 @@ FOR iter=i0,max_iter-1 DO BEGIN
         recalc_flag=0
     ENDIF ELSE recalc_flag=1
     
-    comp_arr[si:si+n_sources-1]=comp_arr1
+    component_array[si:si+n_sources-1]=component_array1
     si+=n_sources
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    source_dft_multi,obs,jones,comp_arr1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,$
+    source_dft_multi,obs,jones,component_array1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,$
         /silent,dft_threshold=dft_threshold,return_kernel=return_kernel,_Extra=extra
     
     t4_0=Systime(1)
@@ -469,25 +469,25 @@ IF over_resolution GT 1 THEN BEGIN
 ENDIF
 ;noise_map*=gain_normalization
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
-;comp_arr=comp_arr[0:si]
-comp_i_use=where(comp_arr.flux.I GT 0)
-comp_arr=comp_arr[comp_i_use]
+;component_array=component_array[0:si]
+comp_i_use=where(component_array.flux.I GT 0)
+component_array=component_array[comp_i_use]
 fhd_params.n_iter=iter
-fhd_params.n_components=N_Elements(comp_arr)
+fhd_params.n_components=N_Elements(component_array)
 fhd_params.detection_threshold=detection_threshold
 source_n_arr=source_n_arr[0:iter-1]
 detection_threshold_arr=detection_threshold_arr[0:iter-1]
 source_mask=Rebin(source_mask,dimension,elements,/sample)
-source_array=Components2Sources(comp_arr,obs,fhd_params,radius=beam_width>1.5,noise_map=noise_map,$
+source_array=Components2Sources(component_array,obs,fhd_params,radius=beam_width>1.5,noise_map=noise_map,$
     gain_array=gain_array,clean_bias_threshold=gain_factor,source_mask=source_mask,_Extra=extra) ;;Note that gain_array=gain_factor*source_taper
 fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
 fhd_params.info=Ptr_new(info_struct)
 t3_0=Systime(1)
 IF Keyword_Set(no_condense_sources) THEN BEGIN
-    comp_i=where(comp_arr.id GE 0)
-    comp_arr_use=comp_arr[comp_i]
-    model_uv_full=source_dft_model(obs,jones,comp_arr_use,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
+    comp_i=where(component_array.id GE 0)
+    component_array_use=component_array[comp_i]
+    model_uv_full=source_dft_model(obs,jones,component_array_use,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
         dft_threshold=dft_threshold,_Extra=extra) 
 ENDIF ELSE BEGIN
     model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$

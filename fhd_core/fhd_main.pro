@@ -234,15 +234,14 @@ ENDELSE
 
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
-    IF status_str.fhd GT 0 THEN BEGIN
-        fhd_output,obs,status_str,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
-            image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam_arr,_Extra=extra 
-    ENDIF ELSE BEGIN
-        IF (obs.residual GT 0) AND (N_Elements(cal) GT 0) THEN source_array=cal.source_list
-        fhd_quickview,obs,status_str,psf,cal,jones,skymodel,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
+;    IF status_str.fhd GT 0 THEN BEGIN
+;        fhd_output,obs,status_str,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
+;            image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam_arr,_Extra=extra 
+;    ENDIF ELSE BEGIN
+        fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
             model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,$
             map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,_Extra=extra
-    ENDELSE
+;    ENDELSE
 ENDIF
 
 ;optionally export frequency-splt Healpix cubes
