@@ -3,7 +3,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
     include_eor=include_eor, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
     delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
     include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
-    include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
+    include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
     
   n_freq=obs.n_freq
@@ -24,13 +24,13 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
   if keyword_set(recalculate_all) then begin
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset,no_save=no_save
     if keyword_set(include_catalog_sources) then begin
-      catalog_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_file_path,_Extra=extra)
-      if n_elements(source_list) gt 0 then source_list = [source_list, catalog_source_list] else source_list = catalog_source_list
+      catalog_source_array=generate_source_cal_list(obs,psf,catalog_path=catalog_file_path,_Extra=extra)
+      if n_elements(source_array) gt 0 then source_array = [source_array, catalog_source_array] else source_array = catalog_source_array
     endif
     
-    n_sources=N_Elements(source_list)
+    n_sources=N_Elements(source_array)
     if n_sources gt 0 then begin
-      source_model_uv_arr=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
+      source_model_uv_arr=source_dft_model(obs,jones,source_array,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
     endif
     

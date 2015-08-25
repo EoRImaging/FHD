@@ -1,4 +1,4 @@
-FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
+FUNCTION generate_source_cal_list,obs,psf,source_array,catalog_path=catalog_path,calibration_spectral_index=calibration_spectral_index,$
     max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
     no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,mask=mask,beam_cal_threshold=beam_cal_threshold,$
     allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,beam_arr=beam_arr,model_visibilities=model_visibilities,$
@@ -7,26 +7,29 @@ FUNCTION generate_source_cal_list,obs,psf,catalog_path=catalog_path,calibration_
     allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,beam_threshold=beam_threshold,$
     preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra
 
-UPNAME=StrUpCase(catalog_path)
-psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
-IF psav EQ -1 THEN catalog_path+='.sav'
-IF file_test(catalog_path) EQ 0 THEN BEGIN
-    catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
-    IF file_test(catalog_path_full) EQ 0 THEN BEGIN
-        if keyword_set(delicate_calibration_catalog) then begin
-          print,String(format='(A," not found! Critical problem, quitting!',catalog_path)
-          exit
-        endif else begin
-          print,String(format='(A," not found! Using default: ",A)',catalog_path,obs.instrument+'_calibration_source_list.sav')
-          catalog_path=obs.instrument+'_calibration_source_list.sav'
-          catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
-        endelse
-    ENDIF
-ENDIF ELSE catalog_path_full=catalog_path
-
-cat_init=source_comp_init(n_sources=0) ;define structure BEFORE restoring, in case the definition has changed
-RESTORE,catalog_path_full,/relaxed ;catalog
-if keyword_set(source_array) then catalog=source_array
+IF size(source_array,/type) EQ 8 THEN BEGIN
+    catalog=source_array ;If a valid structure is supplied, use that 
+ENDIF ELSE BEGIN
+    UPNAME=StrUpCase(catalog_path)
+    psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
+    IF psav EQ -1 THEN catalog_path+='.sav'
+    IF file_test(catalog_path) EQ 0 THEN BEGIN
+        catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+        IF file_test(catalog_path_full) EQ 0 THEN BEGIN
+            if keyword_set(delicate_calibration_catalog) then begin
+              print,String(format='(A," not found! Critical problem, quitting!',catalog_path)
+              exit
+            endif else begin
+              print,String(format='(A," not found! Using default: ",A)',catalog_path,obs.instrument+'_calibration_source_list.sav')
+              catalog_path=obs.instrument+'_calibration_source_list.sav'
+              catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
+            endelse
+        ENDIF
+    ENDIF ELSE catalog_path_full=catalog_path
+    
+    cat_init=source_comp_init(n_sources=0) ;define structure BEFORE restoring, in case the definition has changed
+    RESTORE,catalog_path_full,/relaxed ;catalog
+ENDELSE
 
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 
