@@ -81,6 +81,9 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
             fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
             *model_uv_arr[pol_i]=grid_uv_model
         ENDFOR
+    ENDIF ELSE IF status_str.fhd GT 0 THEN BEGIN
+        fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra
+        model_uv_arr=getvar_savefile(fhd_sav_filepath+'.sav','model_uv_holo')
     ENDIF ELSE model_flag=0
 ENDIF
 
