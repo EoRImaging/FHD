@@ -95,6 +95,7 @@ fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_arr,
     beam_base=beam_base,beam_correction=beam_correction,model_uv_arr=model_uv_arr,$
     source_mask=source_mask,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,_Extra=extra
 
+;Save results
 
 fhd_save_io,status_str,fhd_params,var='fhd_params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 ;compression reduces the file size by 50%, but takes 5-30 seconds longer
@@ -102,6 +103,8 @@ fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_
 SAVE,residual_array,dirty_array,image_uv_arr,source_array,component_array,model_uv_full,model_uv_holo,weights_arr,$
     source_mask,beam_base,beam_correction,astr,filename=fhd_sav_filepath+'.sav',/compress
 fhd_save_io,status_str,var='fhd',file_path_fhd=file_path_fhd,/force,_Extra=extra ;call a second time to update the status structure now that the file has actually been written
+
+FOR pol_i=0,n_pol-1 DO fhd_save_io,status_str,*model_uv_holo[pol_i],var='grid_uv_model',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
 
 ;save and export deconvolved source list
 beam_avg=*beam_base[0]
@@ -114,6 +117,8 @@ skymodel_decon=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_pat
 skymodel=skymodel_decon ;In the future, we might want to include support for different combinations of calibration, firstpass source/diffuse subtraction, and deconvolution
 fhd_save_io,status_str,skymodel,var='skymodel',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,cal=cal,psf=psf,skymodel=skymodel,sub_dir='metadata' 
+
+;Optionally degrid and export the visibilities formed from the deconvolution model 
 IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_arr) THEN BEGIN
         ;could generate model visibilities from just the source list (allows sources to be pruned), or from the final uv model (don't have to redo the DFT) 

@@ -1,32 +1,3 @@
-
-;+
-; :Description:
-;    uvfits2fhd is the main program for working with uvfits data. 
-;    It will read the uvfits file, grid the data, generate the holographic mapping functions, 
-;    and run Fast Holographic Deconvolution
-;
-; Test line!
-;
-; :Keywords:
-;    data_directory - working directory
-;    
-;    filename - uvfits filename, omitting the .uvfits extension. 
-;       If the data is already calibrated, it should end with _cal.uvfits instead of just .uvfits
-;    
-;    mapfn_recalculate - if not set to 0, will generate Holographic Mapping Functions for each polarization
-;    
-;    dimension - desired dimension in pixels of the final images
-;    
-;    kbinsize - pixel size in wavelengths of the uv image. 
-;    
-;    n_pol - 1: use xx only, 2: use xx and yy, 4: use xx, yy, xy, and yx (Default: as many as are available)
-;    
-;    flag_visibilities - set to look for anomalous visibility data and update flags 
-;    
-;    Extra - pass any non-default parameters to fast_holographic_deconvolution through this parameter 
-;
-; :Author: isullivan 2012
-;-
 PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cleanup, recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate, grid_recalculate=grid_recalculate,$
     n_pol=n_pol, flag_visibilities=flag_visibilities, silent=silent, deconvolve=deconvolve, transfer_mapfn=transfer_mapfn,$

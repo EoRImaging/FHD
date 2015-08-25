@@ -1,3 +1,7 @@
+;+
+;NOTE!!!! This routine is no longer used. Use fhd_quickview instead!
+; :Author: Ian Sullivan
+;-
 PRO fhd_output,obs,status_str,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,version=version,map_fn_arr=map_fn_arr,$
     silent=silent,show_grid=show_grid,align=align,catalog_file_path=catalog_file_path,image_filter_fn=image_filter_fn,$
     pad_uv_image=pad_uv_image,galaxy_model_fit=galaxy_model_fit,model_recalculate=model_recalculate,$
