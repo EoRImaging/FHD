@@ -1,7 +1,7 @@
 FUNCTION fhd_setup,file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
-    transfer_flags=transfer_flags,healpix_recalculate=healpix_recalculate,snapshot_recalculate=snapshot_recalculate,$
+    transfer_flags=transfer_flags,snapshot_recalculate=snapshot_recalculate,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
@@ -27,7 +27,6 @@ ENDIF
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(calibrate_visibilities) EQ 0 THEN calibrate_visibilities=0
 IF N_Elements(grid_recalculate) EQ 0 THEN grid_recalculate=recalculate_all
-IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=0
 IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
@@ -80,7 +79,7 @@ IF grid_recalculate GT 0 THEN data_flag=0
 ;    status_str.antenna=0
 ;    status_str.jones=0
 ;ENDIF
-IF Keyword_Set(healpix_recalculate) THEN status_str.hpx_cnv=0
+status_str.hpx_cnv=0
 IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 IF Keyword_Set(grid_recalculate) THEN BEGIN
     status_str.map_fn=0

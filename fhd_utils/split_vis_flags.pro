@@ -1,4 +1,5 @@
-FUNCTION split_vis_flags,obs,flag_arr,bi_use=bi_use,preserve_flags=preserve_flags,even_only=even_only,odd_only=odd_only
+FUNCTION split_vis_flags,obs,flag_arr,bi_use=bi_use,preserve_flags=preserve_flags,even_only=even_only,odd_only=odd_only,$
+    debug_evenoddsplit_integration=debug_evenoddsplit_integration,_Extra=extra
 ;function to create split even and odd time samples with identical flagging
 
 n_pol=N_Elements(flag_arr)
@@ -27,6 +28,12 @@ time_cut_i=where(time_use LE 0,nt_cut)
 IF nt_cut GT 0 THEN BEGIN
     bin_i_cut=where(bin_i EQ time_cut_i,n_cut)
     IF n_cut GT 0 THEN bin_i[bin_i_cut]=-1 ; will be skipped by using where(bin_i mod 2 EQ 0,1) below (-1 mod 2 is still -1)
+ENDIF
+
+IF Keyword_Set(debug_evenoddsplit_integration) THEN BEGIN
+    divisor=debug_evenoddsplit_integration/obs.time_res
+    print,"DEBUG option: even/odd split integrated to "+Strn(debug_evenoddsplit_integration)+"s ("+Strn(divisor)+" time steps)"
+    bin_i=Floor(bin_i/divisor)
 ENDIF
 
 bi_use=Ptrarr(2,/allocate)

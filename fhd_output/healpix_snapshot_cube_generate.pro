@@ -91,7 +91,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   IF Keyword_Set(split_ps_export) THEN BEGIN
     n_iter=2
-    flag_arr_use=split_vis_flags(obs_out,flag_arr_use,bi_use=bi_use)
+    flag_arr_use=split_vis_flags(obs_out,flag_arr_use,bi_use=bi_use,_Extra=extra)
     vis_noise_calc,obs_out,vis_arr,flag_arr_use,bi_use=bi_use
     uvf_name = ['even','odd']
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+['_even','_odd'] + '_gridded_imagecube.sav'

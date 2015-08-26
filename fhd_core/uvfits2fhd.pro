@@ -30,7 +30,7 @@
 PRO uvfits2fhd,file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,silent=silent,GPU_enable=GPU_enable,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
-    healpix_recalculate=healpix_recalculate,tile_flag_list=tile_flag_list,$
+    tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,freq_start=freq_start,freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path,dft_threshold=dft_threshold,$
@@ -57,8 +57,7 @@ IF Keyword_Set(!Journal) THEN journal
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
-    transfer_flags=transfer_flags,healpix_recalculate=healpix_recalculate,$
-    file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
+    transfer_flags=transfer_flags,file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
     snapshot_healpix_export=snapshot_healpix_export,log_store=log_store,_Extra=extra)

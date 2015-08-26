@@ -3,7 +3,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     n_pol=n_pol,silent=silent,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
     eor_sim=eor_sim, include_noise = include_noise, $
-    include_catalog_sources = include_catalog_sources, source_list=source_list,$
+    include_catalog_sources = include_catalog_sources, source_array=source_array,$
     catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export, export_images=export_images, $
     snapshot_recalculate=snapshot_recalculate,grid_recalculate=grid_recalculate,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
     
@@ -70,9 +70,10 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
   fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
   fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
       
+  IF Size(source_array,/type) EQ 8 THEN source_array=generate_source_cal_list(obs,psf,source_array,_Extra=extra)   
   vis_arr=vis_simulate(obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all, include_eor = eor_sim, include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
-    include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
+    include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra)
     
   vis_noise_calc,obs,vis_arr,flag_arr
