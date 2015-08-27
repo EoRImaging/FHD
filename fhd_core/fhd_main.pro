@@ -135,7 +135,8 @@ IF data_flag LE 0 THEN BEGIN
         undefine_fhd,model_uv_arr2
     ENDIF
     
-    skymodel=fhd_struct_combine_skymodel(obs, skymodel_cal, skymodel_update,calibration_flag=(Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract)))
+    IF Keyword_Set(skymodel_cal) OR Keyword_Set(skymodel_update) THEN $
+        skymodel=fhd_struct_combine_skymodel(obs, skymodel_cal, skymodel_update,calibration_flag=(Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract)))
     fhd_save_io,status_str,skymodel,var='skymodel',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but not be used
