@@ -1,7 +1,7 @@
 PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cleanup, recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate, grid_recalculate=grid_recalculate,$
     n_pol=n_pol, flag_visibilities=flag_visibilities, silent=silent, deconvolve=deconvolve, transfer_mapfn=transfer_mapfn,$
-    tile_flag_list=tile_flag_list,$
+    tile_flag_list=tile_flag_list, diffuse_calibrate=diffuse_calibrate, diffuse_model=diffuse_model,$
     file_path_fhd=file_path_fhd, force_data=force_data, force_no_data=force_no_data, freq_start=freq_start, freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities, transfer_calibration=transfer_calibration, error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path, dft_threshold=dft_threshold,$
@@ -81,7 +81,7 @@ IF data_flag LE 0 THEN BEGIN
         IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
         IF ~Keyword_Set(calibration_source_list) THEN $
             calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)        
-        skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,_Extra=extra)
+        skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,diffuse_model=diffuse_calibrate,_Extra=extra)
         cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
             catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
     ENDIF
@@ -127,7 +127,8 @@ IF data_flag LE 0 THEN BEGIN
             IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN $
                 model_source_list=source_list_append(obs,model_source_list,skymodel_cal.source_list,/exclude)
         ENDIF
-        skymodel_update=fhd_struct_init_skymodel(obs,source_list=model_source_list,catalog_path=model_catalog_file_path,return_cal=return_cal_visibilities,_Extra=extra)
+        skymodel_update=fhd_struct_init_skymodel(obs,source_list=model_source_list,catalog_path=model_catalog_file_path,$
+            diffuse_model=diffuse_model,return_cal=return_cal_visibilities,_Extra=extra)
         vis_model_arr=vis_source_model(skymodel_update,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr2,$
             timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
         IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr2[pol_i] $
