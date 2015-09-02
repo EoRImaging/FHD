@@ -1,4 +1,4 @@
-PRO combine_obs_healpix,file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,stokes_dirty_hpx=stokes_dirty_hpx,$
+PRO combine_obs_healpix,fhd_file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,stokes_dirty_hpx=stokes_dirty_hpx,$
     stokes_model_hpx=stokes_model_hpx,weights_hpx=weights_hpx,stokes_sources_hpx=stokes_sources_hpx,$
     nside=nside,restore_last=restore_last,output_path=output_path,beam_threshold=beam_threshold,image_filter_fn=image_filter_fn,silent=silent,$
     catalog_file_path=catalog_file_path,restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
@@ -10,8 +10,8 @@ IF N_Elements(restrict_hpx_inds) EQ 0 THEN restrict_hpx_inds=0
 IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform'
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 
-n_obs=N_Elements(file_list)
-save_path=output_path+'_'+file_basename(file_list[0])+'-'+file_basename(file_list[n_obs-1])+'_maps.sav'
+n_obs=N_Elements(fhd_file_list)
+save_path=output_path+'_'+file_basename(fhd_file_list[0])+'-'+file_basename(fhd_file_list[n_obs-1])+'_maps.sav'
 
 IF Keyword_Set(restore_last) THEN BEGIN
     RESTORE,save_path
@@ -22,14 +22,14 @@ fhd_save_io,status_init,/reset
 IF N_Elements(status_arr) NE n_obs THEN BEGIN
     status_arr=Replicate(status_init,n_obs)
     FOR obs_i=0L,n_obs-1 DO BEGIN
-        fhd_save_io,status_single,file_path_fhd=file_list[obs_i]
+        fhd_save_io,status_single,file_path_fhd=fhd_file_list[obs_i],var_name='status_str',/restore
         status_arr[obs_i]=status_single
     ENDFOR
 ENDIF
 
 fi_use=where(status_arr.obs,n_obs)
 IF n_obs EQ 0 THEN RETURN
-file_list_use=file_list[fi_use]
+fhd_file_list_use=fhd_file_list[fi_use]
 status_arr_use=status_arr[fi_use]
 fhd_flag=Min(status_arr.fhd)
 
@@ -39,7 +39,7 @@ IF N_Elements(restrict_hpx_inds) GT 1 THEN BEGIN
     fit_inds_flag=0
 ENDIF ELSE BEGIN
     fit_inds_flag=1
-    fhd_save_io,status_arr_use[0],obs,file_path_fhd=file_list_use[0],var='obs',/restore
+    fhd_save_io,status_arr_use[0],obs,file_path_fhd=fhd_file_list_use[0],var='obs',/restore
     IF Keyword_Set(restrict_hpx_inds) THEN $
         IF size(restrict_hpx_inds,/type) NE 7 THEN restrict_hpx_inds_path=observation_healpix_inds_select(obs) ELSE restrict_hpx_inds_path=restrict_hpx_inds
     IF size(restrict_hpx_inds_path,/type) EQ 7 THEN BEGIN 
@@ -58,7 +58,7 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 FOR obs_i=0,n_obs-1 DO BEGIN
-    file_path_fhd=file_list_use[obs_i]
+    file_path_fhd=fhd_file_list_use[obs_i]
     fhd_save_io,status_arr_use[obs_i],obs,file_path_fhd=file_path_fhd,var='obs',/restore
     IF obs_i EQ 0 THEN obs_arr=[obs] ELSE obs_arr=[obs_arr,obs]
     
@@ -83,7 +83,7 @@ stokes_sources_hpx=Ptrarr(n_pol)
 weights_hpx=Ptrarr(n_pol)
 
 FOR obs_i=0L,n_obs-1 DO BEGIN
-    file_path_fhd=file_list_use[obs_i]
+    file_path_fhd=fhd_file_list_use[obs_i]
     IF ~Keyword_Set(silent) THEN print,StrCompress('Converting '+file_basename(file_path_fhd)+'('+Strn(obs_i+1)+' of '+Strn(n_obs)+')')
     obs=obs_arr[obs_i]
     status_str=status_arr_use[obs_i]
