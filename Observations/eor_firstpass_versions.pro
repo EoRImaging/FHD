@@ -723,6 +723,14 @@ case version of
         split_ps_export=0
         n_avg=2
    end
+   'apb_test_zenith_phase':begin
+      uvfits_version=5
+      uvfits_subversion=0
+   end
+   'apb_test_zenith_phase_std':begin
+      ; do nothing, this is the standard to compare
+   end
+
 
    ; Abraham's versions
 
