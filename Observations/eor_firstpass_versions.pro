@@ -726,9 +726,10 @@ case version of
    'apb_test_zenith_phase':begin
       uvfits_version=5
       uvfits_subversion=0
+      saved_run_bp=0
    end
    'apb_test_zenith_phase_std':begin
-      ; do nothing, this is the standard to compare
+      saved_run_bp=0 ; using far off pointing, don't have bp
    end
 
 
