@@ -53,6 +53,7 @@ calibration_catalog_file_path=filepath('master_catalog.sav',root=rootdir('FHD'),
 
 firstpass=1
 
+dft_threshold=1
 calibrate_visibilities=1
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF Keyword_Set(recalculate_all) THEN export_image=1 ELSE export_images=0

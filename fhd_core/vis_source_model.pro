@@ -117,7 +117,7 @@ undefine_fhd,diffuse_model_uv,diffuse_spectral_model_uv
 vis_arr=Ptrarr(n_pol)
 
 valid_test=fltarr(n_pol)
-FOR pol_i=0,n_pol-1 DO valid_test[pol_i]=Total(Abs(*model_uv_arr[pol_i]))
+FOR pol_i=0,n_pol-1 DO valid_test[pol_i]=Total(Abs(*model_uv_arr[pol_i])) ; if the model only contains unpolarized sources but n_pol is set > 2, then this test will fail. Set n_pol=2.
 IF min(valid_test) EQ 0 THEN BEGIN
     error=1
     print,"ERROR: Invalid calibration model."

@@ -1158,6 +1158,54 @@ case version of
    'nb_vis_integration_12sec':begin 
       debug_evenoddsplit_integration=12
    end
+    'nb_sim_perfect_cal':begin 
+      calibrate_visibilities=0
+      export_images=0
+   end
+   'nb_sim_orig_cal':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+   end
+   'nb_sim_cable_cal':begin 
+       saved_run_bp=0
+   end
+   'nb_sim_savedbp_cal':begin 
+;No keywords needed
+   end
+   'nb_sim_savedbp_twopolyquadpointing_cal':begin 
+       saved_run_std_test_polyquad=1
+   end
+   'nb_sim_overfit_cal':begin 
+      over_calibrate=1
+   end
+   'nb_sim_overfit_cal_enhanced':begin 
+      over_calibrate=1
+      enhance_eor=1
+   end
+   'nb_sim_perfect_cal_enhanced':begin 
+      calibrate_visibilities=0
+      export_images=0
+      enhance_eor=1
+   end
+   'nb_sim_orig_cal_enhanced':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      enhance_eor=1
+   end
+   'nb_sim_orig_cal_noflag':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      unflag_all=1
+   end
+   'nb_sim_perfect_cal_noflag':begin 
+      calibrate_visibilities=0
+      export_images=0
+      unflag_all=1
+   end   
+   'nb_sim_overfit_cal_noflag':begin 
+      over_calibrate=1
+      unflag_all=1
+   end 
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
