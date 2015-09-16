@@ -141,6 +141,15 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       neg_color_range = zero_color-1 + [-1*(n_pos_neg_colors-1), 0]
       pos_color_range = zero_color+1 + [0,n_pos_neg_colors-1]
       
+      if (n_pos_neg_colors*2. + 1) lt data_n_colors then begin
+        ndiff = data_n_colors - (n_pos_neg_colors*2. + 1)
+        data_n_colors = data_n_colors - ndiff
+        n_colors = n_colors - ndiff
+        
+        data_color_range[1] = data_color_range[1] - ndiff
+        color_range[1] = color_range[1] - ndiff       
+      endif
+      
       cgLoadCT, 16, /brewer, /reverse, clip=[20, 220], bottom=0, ncolors=n_pos_neg_colors
       cgloadct, 0, clip = [255, 255], bottom = zero_color, ncolors = 1
       cgLoadCT, 13, /brewer, clip=[20, 220], bottom=zero_color+1, ncolors=n_pos_neg_colors
