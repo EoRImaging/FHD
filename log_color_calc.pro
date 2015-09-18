@@ -36,10 +36,10 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
   data_n_colors = data_color_range[1] - data_color_range[0] + 1
   
   wh_pos = where(data gt 0d, count_pos)
-  if count gt 0 then min_pos = min(data[wh_pos]) else if data_range[0] gt 0 then min_pos = data_range[0] else $
+  if count_pos gt 0 then min_pos = min(data[wh_pos]) else if data_range[0] gt 0 then min_pos = data_range[0] else $
     if data_range[1] gt 0 then min_pos = data_range[1]/10d else min_pos = 0.01d
   wh_neg = where(data lt 0d, count_neg)
-  if count gt 0 then max_neg = max(data[wh_neg]) else if data_range[1] lt 0 then max_neg = data_range[1] else $
+  if count_neg gt 0 then max_neg = max(data[wh_neg]) else if data_range[1] lt 0 then max_neg = data_range[1] else $
     if data_range[0] lt 0 then max_neg = data_range[0]/10d
   wh_zero = where(data eq 0, count_zero)
   
@@ -147,7 +147,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
         n_colors = n_colors - ndiff
         
         data_color_range[1] = data_color_range[1] - ndiff
-        color_range[1] = color_range[1] - ndiff       
+        color_range[1] = color_range[1] - ndiff
       endif
       
       cgLoadCT, 16, /brewer, /reverse, clip=[20, 220], bottom=0, ncolors=n_pos_neg_colors
