@@ -121,6 +121,7 @@ ps_difference_plots, folder_names,obs_info, cube_types, pols, spec_window_types 
 
 if n_elements(ratio_data_range) eq 0 then ratio_data_range = [1e-3, 1e1]
 
+diff_range=[-1,1]
 ps_ratio_plots, folder_names, obs_info, $
     plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
     note = note, spec_window_types = spec_window_types, data_range = ratio_data_range, $

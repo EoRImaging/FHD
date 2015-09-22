@@ -1,29 +1,24 @@
-PRO RTScal_test,_Extra=extra
+PRO eor1_low,_Extra=extra
 except=!except
 !except=0 
 heap_gc
 
-calibrate_visibilities=0
+calibrate_visibilities=1
 recalculate_all=0
-;specific things to get this data to work
-antenna_mod_index=257
-force_rephase_to_zenith=1
-no_frequency_flagging=1
-
 export_images=1
 cleanup=0
 ps_export=0
 version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','RTScal'])
-vis_file_list='D:\MWA\DATA3\128T\RTScal\1061316296_RTSCAL.uvfits'
-;IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
+IF N_Elements(data_version) EQ 0 THEN data_version='3'
+data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','eor1_low'])
+vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
+IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-;calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_fhd_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
+calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('master_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('mwa_EOR0_source_list_v0.sav',root=rootdir('FHD'),subdir='catalog_data')
 ;calibration_catalog_file_path=filepath('eor01_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -56,6 +51,7 @@ cal_cable_reflection_correct=150.
 recalculate_all=0
 no_restrict_cal_sources=1
 no_rephase=1
+calibrate_visibilities=1
 mark_zenith=1
 psf_resolution=32.
 beam_diff_image=1
@@ -69,11 +65,10 @@ IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_calibrate') THEN IF e
 IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_model') THEN IF extra.diffuse_model EQ 1 THEN extra=structure_update(extra,diffuse_model='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
 
 n_pol=2
-restore_vis_savefile=0
+restore_vis_savefile=0;(data_version EQ '3')
 firstpass=1
 max_cal_iter=100L
 beam_model=2
-dft_threshold=1
 
 cmd_args=extra
 extra=var_bundle()

@@ -163,3 +163,15 @@ pip-log.txt
 .DS_Store
 catalog_data/eor0test_calibration_source_list.sav
 catalog_data/mwa_commissioning_source_list_compact_sources.sav
+catalog_data/eor0_south_sidelobe.sav
+catalog_data/mwa_eor1_ultralow_1.sav
+catalog_data/mwa_eor1_ultralow_2.sav
+catalog_data/mwa_eor1_ultralow_3.sav
+catalog_data/PAPER_EOR1_calibration_catalog.sav
+catalog_data/PAPER_EOR1_calibration_catalog2.sav
+catalog_data/PAPER_EOR1_calibration_catalog3.sav
+catalog_data/PAPER_EOR1_calibration_catalog4.sav
+catalog_data/PAPER_PicA_calibration_catalog1.sav
+observations/debug_test.pro
+observations/eor0_sidelobe_test.pro
+observations/tv_test.pro

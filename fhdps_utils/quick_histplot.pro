@@ -1,11 +1,17 @@
 pro quick_histplot, data, binsize = binsize, logdata = logdata, loghist = loghist, min = min_val, max = max_val, range = range, $
-    ytitle = ytitle, _REF_EXTRA=extra
+    ytitle = ytitle, hist_out = hist, hist_locs = locs, _REF_EXTRA=extra
     
     
   if n_elements(range) gt 1 then begin
     min_val = min(range)
     max_val = max(range)
   endif
+  
+  if max(abs(imaginary(data))) gt 0 then begin
+    print, 'data is complex, using real part'
+    data = real_part(data)
+  endif
+  
   
   if keyword_set(logdata) then begin
     if max(data) le 0 then begin
