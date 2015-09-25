@@ -64,11 +64,14 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
           zero_color=1
           zero_val = log_data_range[0]
           
-          if log_cut_val gt min_pos then log_data_range = [log_cut_val-2*data_n_colors/(log_data_range[1]-log_data_range[0]), alog10(data_range[1])]
+          ;; Don't want this to override specified data range. Removing 9/25/15 BJH
+          ;if log_cut_val gt alog10(min_pos) then log_data_range = [log_cut_val-2*data_n_colors/(log_data_range[1]-log_data_range[0]), alog10(data_range[1])]
           
         endif else begin
           min_pos_color = 1
-          if log_cut_val gt min_pos then log_data_range = [log_cut_val-data_n_colors/(log_data_range[1]-log_data_range[0]), alog10(data_range[1])]
+
+          ;; Don't want this to override specified data range. Removing 9/25/15 BJH
+          ;if log_cut_val gt alog10(min_pos) then log_data_range = [log_cut_val-data_n_colors/(log_data_range[1]-log_data_range[0]), alog10(data_range[1])]
           
         endelse
         neg_color=0
