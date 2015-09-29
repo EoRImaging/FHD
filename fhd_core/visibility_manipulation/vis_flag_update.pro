@@ -63,26 +63,24 @@ ENDIF
 IF Keyword_Set(no_frequency_flagging) THEN (*obs.baseline_info).freq_use=Replicate(1,n_freq) ELSE BEGIN
     freq_cut_i=where(b_info.freq_use EQ 0,n_freq_cut)
     IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut_i,*]=0
-    tile_cut_i=where(b_info.tile_use EQ 0,n_tile_cut)
-    IF n_tile_cut GT 0 THEN BEGIN
-        bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
-        IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,bi_cut]=0
-    ENDIF
 ENDELSE
-
-IF Tag_exist(b_info,'time_use') THEN BEGIN
-    time_use=b_info.time_use
-    nt=N_Elements(time_use)
-    time_cut_i=where(time_use EQ 0,n_time_cut)
-    bin_offset=b_info.bin_offset
-    bin_offset=[bin_offset,n_baselines]
-    time_bin=Lonarr(n_baselines)
-    FOR ti=0L,nt-1 DO time_bin[bin_offset[ti]:bin_offset[ti+1]-1]=ti
-    FOR ti=0L,n_time_cut-1 DO BEGIN
-        ti_cut=where(time_bin EQ time_cut_i[ti],n_ti_cut)
-        IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,ti_cut]=0
-    ENDFOR
+tile_cut_i=where(b_info.tile_use EQ 0,n_tile_cut)
+IF n_tile_cut GT 0 THEN BEGIN
+    bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
+    IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,bi_cut]=0
 ENDIF
+
+time_use=b_info.time_use
+nt=N_Elements(time_use)
+time_cut_i=where(time_use EQ 0,n_time_cut)
+bin_offset=b_info.bin_offset
+bin_offset=[bin_offset,n_baselines]
+time_bin=Lonarr(n_baselines)
+FOR ti=0L,nt-1 DO time_bin[bin_offset[ti]:bin_offset[ti+1]-1]=ti
+FOR ti=0L,n_time_cut-1 DO BEGIN
+    ti_cut=where(time_bin EQ time_cut_i[ti],n_ti_cut)
+    IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,ti_cut]=0
+ENDFOR
 
 n_flag_dim=size(*flag_ptr[0],/n_dimension)
 flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
@@ -102,7 +100,7 @@ bin_n=histogram(Temporary(xmin)+Temporary(ymin)*dimension,binsize=1,min=0) ;shou
 bin_i=where(bin_n,n_bin_use);+bin_min
 obs.n_vis=Total(bin_n)
 
-IF Tag_exist(obs,'n_time_flag') THEN obs.n_time_flag=Total(1L-(*obs.baseline_info).time_use)
-IF Tag_exist(obs,'n_tile_flag') THEN obs.n_tile_flag=Total(1L-(*obs.baseline_info).tile_use)
-IF Tag_exist(obs,'n_freq_flag') THEN obs.n_freq_flag=Total(1L-(*obs.baseline_info).freq_use)
+obs.n_time_flag=Total(1L-(*obs.baseline_info).time_use)
+obs.n_tile_flag=Total(1L-(*obs.baseline_info).tile_use)
+obs.n_freq_flag=Total(1L-(*obs.baseline_info).freq_use)
 END
