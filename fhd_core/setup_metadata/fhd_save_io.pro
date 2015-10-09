@@ -54,19 +54,19 @@ CASE var_name OF ;listed in order typically generated
     'source_array':BEGIN status_use.source_array=1 & path_add='_source_array' & subdir='output_data'& END
     'flag_arr':BEGIN status_use.flag_arr=1 & path_add='_flags' & subdir='vis_data'& END
     'auto_corr':BEGIN status_use.auto_corr=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
-    'vis_ptr':BEGIN status_use.vis_ptr[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
-    'vis_model_ptr':BEGIN status_use.vis_model_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & END
-    'grid_uv':BEGIN status_use.grid_uv[pol_i]=1 & path_add='_uv_'+pol_names[pol_i] & subdir='grid_data'& END
-    'weights_uv':BEGIN status_use.weights_uv[pol_i]=1 & path_add='_uv_weights_'+pol_names[pol_i] & subdir='grid_data'& END
-    'grid_uv_model':BEGIN status_use.grid_uv_model[pol_i]=1 & path_add='_uv_model_'+pol_names[pol_i] & subdir='grid_data'& END
+    'vis_ptr':BEGIN status_use.vis_ptr[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
+    'vis_model_ptr':BEGIN status_use.vis_model_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
+    'grid_uv':BEGIN status_use.grid_uv[pol_i]=1 & path_add='_uv_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
+    'weights_uv':BEGIN status_use.weights_uv[pol_i]=1 & path_add='_uv_weights_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
+    'grid_uv_model':BEGIN status_use.grid_uv_model[pol_i]=1 & path_add='_uv_model_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'vis_count':BEGIN status_use.vis_count=1 & path_add='_vis_count' & subdir='grid_data'& END
-    'map_fn':BEGIN status_use.map_fn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn'& END
+    'map_fn':BEGIN status_use.map_fn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn'& pol_flag=1 & END
     'fhd_params':BEGIN status_use.fhd_params=1 & path_add='_fhd_params' & subdir='deconvolution'& END
     'fhd':BEGIN status_use.fhd=1 & path_add='_fhd' & subdir='deconvolution' & END 
     'hpx_cnv':BEGIN status_use.hpx_cnv=1 & path_add='_hpxcnv' & subdir='Healpix' & END
-    'healpix_cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube'+pol_names[pol_i] & subdir='Healpix' & END
-    'hpx_even':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube'+pol_names[pol_i] & subdir='Healpix' & END
-    'hpx_odd':BEGIN status_use.hpx_odd[pol_i]=1 & path_add='_odd_cube'+pol_names[pol_i] & subdir='Healpix' & END
+    'healpix_cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube'+pol_names[pol_i] & subdir='Healpix' & pol_flag=1 & END
+    'hpx_even':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube'+pol_names[pol_i] & subdir='Healpix' & pol_flag=1 & END
+    'hpx_odd':BEGIN status_use.hpx_odd[pol_i]=1 & path_add='_odd_cube'+pol_names[pol_i] & subdir='Healpix' & pol_flag=1 & END
     ELSE:name_error=1
 ENDCASE
 
@@ -101,6 +101,7 @@ IF ~Keyword_Set(name_error) THEN BEGIN
         status_rename=Execute(var_name_use+'=param') ;rename the variable to be saved
         fn_string='SAVE,'+var_name_use
         IF Keyword_Set(obs_flag) THEN fn_string+=',obs'
+        IF Keyword_Set(pol_flag) THEN fn_string+=',pol_i'
         fn_string+=',filename="'+path_sav+'",compress='+String(compress)
         status_save=Execute(fn_string,1,1)
     ENDIF ELSE status_save=0
