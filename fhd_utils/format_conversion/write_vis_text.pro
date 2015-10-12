@@ -43,7 +43,8 @@ pro write_vis_text, save_file, text_file = text_file
   times = (*obs.baseline_info).jdate
   times = rebin(reform(times, 1, n_elements(times)), n_freq, n_baselines, /sample)
   
-  vis = *vis_ptr
+  if n_elements(vis_ptr) gt 0 then vis = *vis_ptr else if n_elements(vis_model_ptr) then vis = *vis_model_ptr else $
+    message, 'save_file does not contain vis_ptr or vis_model_ptr'
   undefine_fhd, vis_ptr
   undefine_fhd, obs
   
