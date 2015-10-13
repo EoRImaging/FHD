@@ -162,8 +162,9 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     stokes_dirty=stokes_cnv(instr_dirty_arr,jones,obs,beam_arr=beam_base,/square)
     IF model_flag THEN stokes_model=stokes_cnv(instr_model_arr,jones,obs,beam_arr=beam_base,/square)
     IF source_flag THEN stokes_sources=stokes_cnv(instr_sources,jones,obs,beam_arr=beam_base,/square)
-    stokes_weights=stokes_cnv(beam_base2,jones,obs)
-    stokes_weights=*stokes_weights[0]
+    stokes_weights_ptr=stokes_cnv(beam_base2,jones,obs)
+    stokes_weights=*stokes_weights_ptr[0]
+    Ptr_free,stokes_weights_ptr
     
     ; renormalize based on weights
     renorm_factor = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_base,filter_arr=filter_arr,$
