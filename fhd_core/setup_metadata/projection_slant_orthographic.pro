@@ -1,4 +1,4 @@
-PRO projection_slant_orthographic,obs,ra_arr,dec_arr,astr=astr,valid_i=valid_i,$
+PRO projection_slant_orthographic,obs,astr=astr,valid_i=valid_i,$
     degpix=degpix,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
     dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,$
     zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec,$
@@ -16,9 +16,6 @@ IF Keyword_Set(obs) THEN BEGIN
     obsx=obs.obsx
     obsy=obs.obsy
     astr=obs.astr
-    xvals=meshgrid(dimension,elements,1)
-    yvals=meshgrid(dimension,elements,2)
-    xy2ad,xvals,yvals,astr,ra_arr,dec_arr
     ad2xy,zenra,zendec,astr,zenx,zeny
     obs.zenx=zenx
     obs.zeny=zeny
@@ -73,16 +70,6 @@ MAKE_ASTR, astr, CD = Float(cd) , DELT = Float(delt), CRPIX = Float([x_c+1.,y_c+
     DATE_OBS=date_obs,NAXIS=Float([dimension,elements]),axes=[1,2]
 
 ad2xy,zenra,zendec,astr,zenx,zeny
-ad2xy,obsra,obsdec,astr,obsx,obsy
+;ad2xy,obsra,obsdec,astr,obsx,obsy
 
-IF arg_present(ra_arr) THEN BEGIN
-    xvals=meshgrid(dimension,elements,1)
-    yvals=meshgrid(dimension,elements,2)
-    xy2ad,xvals,yvals,astr,ra_arr,dec_arr
-    valid_i=where(Finite(ra_arr),complement=invalid_i,ncomplement=n_invalid)
-    IF n_invalid GT 0 THEN BEGIN
-        ra_arr[invalid_i]=0
-        dec_arr[invalid_i]=0
-    ENDIF
-ENDIF
 END

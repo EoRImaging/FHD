@@ -54,8 +54,7 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 IF Keyword_Set(no_restrict_sources) THEN fft_alias_range=0. ELSE fft_alias_range=dimension/4.
-    
-astr=obs.astr
+
 dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
@@ -66,8 +65,8 @@ freq_use=obs.freq_center
 IF freq_use GT 1E5 THEN freq_use/=1E6
 n_pol=obs.n_pol
 
-ra0=astr.crval[0]
-dec0=astr.crval[1]
+ra0=obs.obsra
+dec0=obs.obsdec
 angs=angle_difference(dec0,ra0,catalog.dec,catalog.ra,/degree)
 i_use=where(Abs(angs) LE FoV/2.,n_use)
 
@@ -85,8 +84,8 @@ IF n_use GT 0 THEN BEGIN
     IF N_Elements(spectral_index) GT 1 THEN spectral_index=spectral_index[i_use]
     source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
         alpha=spectral_index,extend=catalog.extend)
-        
-    ad2xy,source_list.ra,source_list.dec,astr,x_arr,y_arr
+   
+    apply_astrometry, obs, ra=source_list.ra, dec=source_list.dec, x=x_arr, y=y_arr, /ad2xy    
     source_list.x=x_arr
     source_list.y=y_arr
     FOR i=0,7 DO source_list.flux.(i)=catalog.flux.(i)*(freq_use/catalog.freq)^spectral_index
@@ -124,7 +123,7 @@ IF n_use GT 0 THEN BEGIN
         FOR ext_i=0L,n_extend-1 DO BEGIN
             ex_spectral_index=source_list[extend_i[ext_i]].alpha
             extend_list=*source_list[extend_i[ext_i]].extend
-            ad2xy,extend_list.ra,extend_list.dec,astr,x_arr,y_arr
+            apply_astrometry, obs, ra=extend_list.ra, dec=extend_list.dec, x=x_arr, y=y_arr, /ad2xy
             extend_list.x=x_arr
             extend_list.y=y_arr
             extend_list.alpha=ex_spectral_index

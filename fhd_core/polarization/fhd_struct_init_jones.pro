@@ -37,7 +37,8 @@ IF N_Elements(mask) EQ 0 THEN mask=Replicate(1.,dimension,elements)
 
 xvals=meshgrid(dimension,elements,1)
 yvals=meshgrid(dimension,elements,2)
-xy2ad,xvals,yvals,obs.astr,ra_arr,dec_arr
+;ignore effect of refraction, since we are only determining which pixels to include
+apply_astrometry, obs, ra=ra_arr, dec=dec_arr, x=xvals, y=yvals, /xy2ad, /ignore_refraction
 inds_use=where(Finite(ra_arr) AND mask,n_pix)
 ra_use=ra_arr[inds_use]
 dec_use=dec_arr[inds_use]

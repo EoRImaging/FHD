@@ -1,4 +1,4 @@
-FUNCTION mrc_catalog_read,astr,names=names,file_path=file_path,frequency=frequency
+FUNCTION mrc_catalog_read,obs,names=names,file_path=file_path,frequency=frequency
 ;MRC catalog is 99% complete to 1 Jy. Catalog is at 408MHz
 ;filename='MRC full radio catalog.fits'
 ;data_dir='DATA'
@@ -41,13 +41,13 @@ ENDIF ELSE BEGIN
 
 ENDELSE
 
-IF Keyword_Set(astr) THEN BEGIN
-    ra0=astr.crval[0]
-    dec0=astr.crval[1]
+IF Keyword_Set(obs) THEN BEGIN
+    ra0=obs.obsra
+    dec0=obs.obsdec
     angs=angle_difference(dec0,ra0,dec,ra,/degree)
     i_use=where(Abs(angs) LE 60.,n_use)
     IF n_use GT 0 THEN BEGIN
-        ad2xy,ra[i_use],dec[i_use],astr,x_arr,y_arr
+        apply_astrometry, obs, ra=ra[i_use], dec=dec[i_use], x=x_arr, y=y_arr, /ad2xy
         mrc_cat[i_use].x=x_arr
         mrc_cat[i_use].y=y_arr
     ENDIF
