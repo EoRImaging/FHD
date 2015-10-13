@@ -5,7 +5,7 @@ pro write_vis_text, save_file, text_file = text_file
   if n_elements(text_file) eq 0 then begin
     filebase = cgrootname(save_file, directory = dir, extension = exten)
     new_dir = (strsplit(dir, 'vis_data',/extract, /regex))[0] + 'text_files/'
-    
+    if not file_test(new_dir, /directory) then file_mkdir, new_dir
     text_file = new_dir + filebase + '.txt'
   endif
   
