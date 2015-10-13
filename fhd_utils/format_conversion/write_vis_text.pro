@@ -53,9 +53,10 @@ pro write_vis_text, save_file, text_file = text_file
   undefine_fhd, flag_arr
   
   restore, params_file
-  uu = params.uu * 3.8e6
-  vv = params.vv * 3.8e6
-  ww = params.ww * 3.8e6
+  ;; convert u,v,w from light travel time in seconds to meters
+  uu = params.uu * 3.8e8
+  vv = params.vv * 3.8e8
+  ww = params.ww * 3.8e8
   undefine_fhd, params
   
   ncol = 10
