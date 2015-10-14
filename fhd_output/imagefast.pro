@@ -288,6 +288,7 @@ IF Keyword_Set(show_grid) THEN BEGIN
             END
         ENDCASE
         astr_use.cdelt=astr_use.cdelt*cd_mod
+        ;don't use apply_astrometry here, since we're only calculating grid lines and have modified the astr structure
         xy2ad,xvals,yvals,astr_use,ra_arr,dec_arr
         ra_levels=indgen(360./grid_spacing)*grid_spacing
         dec_levels=indgen(1+180./grid_spacing)*grid_spacing-90

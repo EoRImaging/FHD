@@ -197,7 +197,7 @@ WHILE n_sources EQ 0 DO BEGIN
         source_box=image_I_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius]
         xcen0=xcen-sx0+box_radius
         ycen0=ycen-sy0+box_radius
-        xy2ad,xcen,ycen,astr,ra,dec
+        apply_astrometry, obs, x=xcen, y=ycen, ra=ra, dec=dec, /xy2ad
         flux_min=Min(source_box[box_radius-local_max_radius:box_radius+local_max_radius,box_radius-local_max_radius:box_radius+local_max_radius])<0
         
         IF flux_interp_flag EQ 0 THEN flux_use=Interpolate(source_box,xcen0,ycen0,cubic=-0.5)>image_I_flux[sx,sy] $
