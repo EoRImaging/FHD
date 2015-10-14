@@ -59,7 +59,7 @@ ENDIF
 
 IF Keyword_Set(ad2xy) THEN BEGIN    
     IF ~Keyword_Set(ignore_refraction) THEN BEGIN
-        i_use=where(Finite(ra_arr,/nan),n_use,ncomplement=n_nan)
+        i_nan=where(Finite(ra_arr,/nan),n_nan,ncomplement=n_nan,complement=i_use)
         IF n_nan EQ 0 THEN BEGIN
             Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0
             alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed)
