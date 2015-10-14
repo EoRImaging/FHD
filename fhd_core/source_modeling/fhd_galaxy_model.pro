@@ -13,7 +13,7 @@ elements=obs.elements
 astr=obs.astr
 degpix=obs.degpix
 n_pol=obs.n_pol
-xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
+apply_astrometry, obs, x=meshgrid(dimension,elements,1), y=meshgrid(dimension,elements,2), ra=ra_arr, dec=dec_arr, /xy2ad
 IF N_Elements(jones) EQ 0 THEN jones=fhd_struct_init_jones(obs,file_path_fhd=file_path_fhd,/restore)
 
 ;i_use=where(Finite(ra_arr))

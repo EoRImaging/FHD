@@ -44,7 +44,7 @@ astr=obs.astr
 speed_light=299792458. ;speed of light, in meters/second
 IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=16. ;=32? ;super-resolution factor
 IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=10.
-Eq2Hor,obsra,obsdec,Jdate_use,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+Eq2Hor,obsra,obsdec,Jdate_use,obsalt,obsaz,lat=obs.lat,lon=obs.lon,alt=obs.alt ; this may or may not include refraction
 obsalt=Float(obsalt)
 obsaz=Float(obsaz)
 obsza=90.-obsalt
@@ -83,7 +83,8 @@ psf_scale=dimension*psf_intermediate_res/psf_image_dim
 
 xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obsx
 yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
-xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
+apply_astrometry, obs, x=xvals_celestial, y=yvals_celestial, ra=ra_arr, dec=dec_arr, /xy2ad
+;xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
 valid_i=where(Finite(ra_arr),n_valid)
 ra_use=ra_arr[valid_i]
 dec_use=dec_arr[valid_i]
