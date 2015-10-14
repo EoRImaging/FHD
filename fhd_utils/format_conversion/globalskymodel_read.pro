@@ -10,7 +10,7 @@ elements=obs.elements
 astr=obs.astr
 degpix=obs.degpix
 n_pol=obs.n_pol
-xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
+apply_astrometry, obs, x=meshgrid(dimension, elements, 1), y=meshgrid(dimension, elements, 2), ra=ra_arr, dec=dec_arr, /xy2ad
 
 file_path_base=filepath('',root=rootdir('FHD'),sub='catalog_data')
 IF Keyword_Set(haslam_filtered) THEN BEGIN
@@ -43,9 +43,9 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     pix2vec_nest,nside,Lindgen(npix),pix_coords
     vec2ang,pix_coords,pix_gb,pix_gl,/astro
     GlactC,pix_ra,pix_dec,2000.,pix_gl,pix_gb,2,/degree
-    Eq2hor,pix_ra,pix_dec,obs.JD0,pix_alt,pix_az,lat=obs.lat,lon=obs.lon,alt=obs.alt
+    Eq2hor,pix_ra,pix_dec,obs.JD0,pix_alt,pix_az,lat=obs.lat,lon=obs.lon,alt=obs.alt, /precess, /nutate, refract=0
     
-    ad2xy,pix_ra,pix_dec,astr,xv_hpx,yv_hpx
+    apply_astrometry,obs, ra=pix_ra, dec=pix_dec, x=xv_hpx, y=yv_hpx, /ad2xy
     hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)) AND (pix_alt GT 0),n_hpx_use,complement=hpx_i_cut) 
 ;    hpx_i_use=hpx_i_cut
     IF n_hpx_use EQ 0 THEN RETURN,Ptrarr(n_pol)

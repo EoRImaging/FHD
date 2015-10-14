@@ -9,7 +9,7 @@ IF N_Elements(hpx_inds) EQ 0 THEN hpx_inds=Lindgen(n_hpx)
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
-xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr,ra_arr,dec_arr
+apply_astrometry,obs, x=meshgrid(dimension,elements,1), y=meshgrid(dimension, elements, 1), ra=ra_arr, dec=dec_arr, /xy2ad
 radec_i=where(Finite(ra_arr))
 
 IF size(healpix_map,/type) EQ 10 THEN BEGIN ;check if pointer type, and if so allow it to be a pointer array
@@ -33,7 +33,7 @@ vec2ang,pix_coords,pix_dec,pix_ra,/astro
 IF coord_sys EQ 'galactic' THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /degree
 IF coord_sys EQ 'equatorial' THEN Hor2Eq,pix_dec,pix_ra,Jdate_use,pix_ra,pix_dec,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
 
-ad2xy,pix_ra,pix_dec,astr,xv_hpx,yv_hpx
+apply_astrometry, obs, ra=pix_ra, dec=pix_dec, x=xv_hpx, y=yv_hpx, /ad2xy
 
 hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)),n_hpx_use) 
 IF n_hpx_use EQ 0 THEN BEGIN

@@ -78,7 +78,7 @@ FOR pix=0L,n_pix-1 DO BEGIN
     ;calculate tensor product J(X)J* 
     ;Jmat converts [pp,qq,pq,qp] -> [xx,yy,xy,yx]
     ;Jinv converts [xx, yy, xy, yx] -> [pp, qq, pq, qp]
-    ;Note: Stokes [I, Q, U, V] = (1./2.)*[(pp+qq), (pp-qq), ?(pq+qp)?, ?(pq-qp)?]
+    ;Note: Stokes [I, Q, U, V] = (1./2.)*[(pp+qq), (qq-pp), ?(pq+qp)?, ?(qp-pq)?]
 
     Jmat=[[J11[pix]^2.,J12[pix]^2.,J11[pix]*J12[pix],J12[pix]*J11[pix]],$
              [J21[pix]^2.,J22[pix]^2.,J21[pix]*J22[pix],J22[pix]*J21[pix]],$
