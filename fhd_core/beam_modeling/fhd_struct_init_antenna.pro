@@ -83,7 +83,8 @@ psf_scale=dimension*psf_intermediate_res/psf_image_dim
 
 xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obsx
 yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
-apply_astrometry, obs, x=xvals_celestial, y=yvals_celestial, ra=ra_arr, dec=dec_arr, /xy2ad
+;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
+apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
 ;xy2ad,xvals_celestial,yvals_celestial,astr,ra_arr,dec_arr
 valid_i=where(Finite(ra_arr),n_valid)
 ra_use=ra_arr[valid_i]
@@ -91,7 +92,7 @@ dec_use=dec_arr[valid_i]
 
 ;NOTE: Eq2Hor REQUIRES Jdate_use to have the same number of elements as RA and Dec for precession!!
 ;;NOTE: The NEW Eq2Hor REQUIRES Jdate_use to be a scalar! They created a new bug when they fixed the old one
-Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
+Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate, refract=0
 za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 

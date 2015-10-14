@@ -9,7 +9,7 @@ degpix=obs.degpix
 n_pol=obs.n_pol
 n_spectral=obs.degrid_spectral_terms
 diffuse_spectral_index=skymodel.diffuse_spectral_index
-apply_astrometry, obs, x=meshgrid(dimension,elements,1), y=meshgrid(dimension,elements,2), ra=ra_arr, de=dec_arr, /xy2ad
+apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 radec_i=where(Finite(ra_arr))
 IF Keyword_Set(flatten_spectrum) THEN alpha_corr=obs.alpha ELSE alpha_corr=0.
 
