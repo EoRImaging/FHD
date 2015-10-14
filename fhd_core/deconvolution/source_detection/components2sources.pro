@@ -72,7 +72,7 @@ FOR gi=0L,ng-1 DO BEGIN
     sx=Total(comp_arr[si_g].x*flux_I)/Total(flux_I)
     sy=Total(comp_arr[si_g].y*flux_I)/Total(flux_I)
     
-    apply_astrometry, obs, x=sx, y=sy, ra=sra, dec=sdec, /xy2ad
+    apply_astrometry, obs, x_arr=sx, y_arr=sy, ra_arr=sra, dec_arr=sdec, /xy2ad
     source_arr[gi].x=sx ;flux_I is guaranteed to be non-zero from above
     source_arr[gi].y=sy ;flux_I is guaranteed to be non-zero from above
     source_arr[gi].ra=sra ;flux_I is guaranteed to be non-zero from above
@@ -152,7 +152,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
             IF n_pix EQ 0 THEN CONTINUE
             sx=Float(pix_i mod dimension)
             sy=Float(Floor(pix_i/dimension))
-            apply_astrometry, obs, x=sx, y=sy, ra=sra, dec=sdec, /xy2ad
+            apply_astrometry, obs, x_arr=sx, y_arr=sy, ra_arr=sra, dec_arr=sdec, /xy2ad
             salpha=Replicate(source_arr[si].alpha,n_pix)
             sfreq=Replicate(source_arr[si].freq,n_pix)
             ci=N_Elements(ext_comp)

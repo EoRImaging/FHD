@@ -116,7 +116,7 @@ source_taper=Sqrt((beam_avg*(beam_corr_avg<1./sqrt(beam_threshold)))>0.)
 horizon_mask=intarr(dimension,elements)+1
 
 ;ignore refraction since it's only being used to calculate a pixel mask for the horizon
-apply_astrometry, obs, x=meshgrid(dimension,elements,1), y=meshgrid(dimension,elements,2), ra=ra_arr, dec=dec_arr, /xy2ad, /ignore_refraction
+apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
 nan_i=where(Finite(ra_arr,/nan),n_nan,complement=horizon_i)
 IF n_nan GT 0 THEN horizon_mask[nan_i]=0
 ra_use=ra_arr[horizon_i]

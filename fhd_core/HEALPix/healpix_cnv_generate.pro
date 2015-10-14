@@ -24,7 +24,7 @@ IF N_Elements(hpx_radius) EQ 0 THEN BEGIN
         xv_arr=meshgrid(dimension,elements,1)
         yv_arr=meshgrid(dimension,elements,2)
         ;set /ignore_refraction for speed, since we don't need to be exact
-        apply_astrometry, obs, x=xv_arr, y=yv_arr, ra=ra_arr, dec=dec_arr, /xy2ad, /ignore_refraction 
+        apply_astrometry, obs, x_arr=xv_arr, y_arr=yv_arr, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction 
         ang_arr=angle_difference(dec_arr,ra_arr,obs.obsdec,obs.obsra,/degree)
         ang_i=where((mask GT 0) AND Finite(ang_arr),n_ang_use)
         IF n_ang_use GT 0 THEN radius=Max(ang_arr[ang_i])
@@ -65,13 +65,13 @@ ENDIF ELSE pixel_area_cnv=1. ;turn this off for now
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
     pix2vec_ring,nside,hpx_inds,pix_coords
     vec2ang,pix_coords,pix_dec,pix_ra,/astro
-    apply_astrometry, obs, ra=pix_ra, dec=pix_dec, x=xv_hpx, y=yv_hpx, /ad2xy
+    apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
 ENDIF ELSE BEGIN
     ang2vec,obs.obsdec,obs.obsra,cen_coords,/astro
     Query_disc,nside,cen_coords,radius,hpx_inds0,ninds,/deg
     pix2vec_ring,nside,hpx_inds0,pix_coords
     vec2ang,pix_coords,pix_dec,pix_ra,/astro
-    apply_astrometry, obs, ra=pix_ra, dec=pix_dec, x=xv_hpx, y=yv_hpx, /ad2xy
+    apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
     pix_coords=0
     pix_ra=0
     pix_dec=0
