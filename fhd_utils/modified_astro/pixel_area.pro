@@ -5,7 +5,7 @@ elements=obs.elements
 xvals=meshgrid(dimension,elements,1)
 yvals=meshgrid(dimension,elements,2)
 ;refraction has negligible effect on the size of pixels, so ignore to save time
-apply_astrometry, obs, x=xvals, y=yvals, ra=ra_arr, dec=dec_arr, /xy2ad, /ignore_refraction
+apply_astrometry, obs, x_arr=xvals, y_arr=yvals, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
 ra_i_nan=where(Finite(ra_arr,/nan),n_nan,complement=ra_i_use)
 ra_vals=ra_arr[ra_i_use]
 dec_vals=dec_arr[ra_i_use]

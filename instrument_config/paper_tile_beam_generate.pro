@@ -57,7 +57,7 @@ IF n_mask GT 0 THEN BEGIN
     xvals_use[mask_i]=!Values.F_NAN
     yvals_use[mask_i]=!Values.F_NAN
 ENDIF
-apply_astrometry, ra=xvals_use, dec=yvals_use, x=x_int, y=y_int, JDate=obs.JD0, astr=astr ; This might be broken! If it is, it's probably a problem with JDate
+apply_astrometry, ra_arr=xvals_use, dec_arr=yvals_use, x_arr=x_int, y_arr=y_int, JDate=obs.JD0, astr=astr ; This might be broken! If it is, it's probably a problem with JDate
 ;ad2xy,xvals_use,yvals_use,astr,x_int,y_int
 tile_beam=Float(interpolate(beam_slice,x_int,y_int,missing=0,cubic=-0.5))>0.
 

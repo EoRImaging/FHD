@@ -85,7 +85,7 @@ IF n_use GT 0 THEN BEGIN
     source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
         alpha=spectral_index,extend=catalog.extend)
    
-    apply_astrometry, obs, ra=source_list.ra, dec=source_list.dec, x=x_arr, y=y_arr, /ad2xy    
+    apply_astrometry, obs, ra_arr=source_list.ra, dec_arr=source_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy    
     source_list.x=x_arr
     source_list.y=y_arr
     FOR i=0,7 DO source_list.flux.(i)=catalog.flux.(i)*(freq_use/catalog.freq)^spectral_index
@@ -123,7 +123,7 @@ IF n_use GT 0 THEN BEGIN
         FOR ext_i=0L,n_extend-1 DO BEGIN
             ex_spectral_index=source_list[extend_i[ext_i]].alpha
             extend_list=*source_list[extend_i[ext_i]].extend
-            apply_astrometry, obs, ra=extend_list.ra, dec=extend_list.dec, x=x_arr, y=y_arr, /ad2xy
+            apply_astrometry, obs, ra_arr=extend_list.ra, dec_arr=extend_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy
             extend_list.x=x_arr
             extend_list.y=y_arr
             extend_list.alpha=ex_spectral_index
