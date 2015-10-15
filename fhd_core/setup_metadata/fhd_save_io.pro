@@ -60,7 +60,9 @@ CASE var_name OF ;listed in order typically generated
     'weights_uv':BEGIN status_use.weights_uv[pol_i]=1 & path_add='_uv_weights_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'grid_uv_model':BEGIN status_use.grid_uv_model[pol_i]=1 & path_add='_uv_model_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'vis_count':BEGIN status_use.vis_count=1 & path_add='_vis_count' & subdir='grid_data'& END
-    'map_fn':BEGIN status_use.map_fn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn'& pol_flag=1 & END
+    ;NOTE: Because of it's size, only the map_fn can be saved in the mapfn .sav file. It has to be restored using RESTORE ,
+    ; and including other parameters can cause unwanted behavior when they are restored
+    'map_fn':BEGIN status_use.map_fn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn' & pol_flag=0 & END
     'fhd_params':BEGIN status_use.fhd_params=1 & path_add='_fhd_params' & subdir='deconvolution'& END
     'fhd':BEGIN status_use.fhd=1 & path_add='_fhd' & subdir='deconvolution' & END 
     'hpx_cnv':BEGIN status_use.hpx_cnv=1 & path_add='_hpxcnv' & subdir='Healpix' & END
