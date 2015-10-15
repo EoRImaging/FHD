@@ -42,16 +42,16 @@ IF Keyword_Set(xy2ad) THEN BEGIN
     xy2ad, x_arr, y_arr, astr, ra_arr, dec_arr
     
     IF ~Keyword_Set(ignore_refraction) THEN BEGIN   
-        i_use=where(Finite(ra_arr,/nan),n_use,ncomplement=n_nan)
+        i_nan=where(Finite(ra_arr,/nan),n_nan,ncomplement=n_nan,complement=i_use)
         IF n_nan EQ 0 THEN BEGIN
-            Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0
+            Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr, dec_arr, precess=0, nutate=0, refract=0
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr, dec_arr, precess=0, nutate=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
         ENDIF ELSE BEGIN
             ra_vals=ra_arr[i_use] & dec_vals=dec_arr[i_use]
-            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0
+            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=0, nutate=0, refract=0
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=0, nutate=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             ra_arr[i_use]=ra_vals & dec_arr[i_use]=dec_vals
         ENDELSE
     ENDIF
