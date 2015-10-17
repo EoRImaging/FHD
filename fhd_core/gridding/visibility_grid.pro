@@ -1,6 +1,6 @@
 FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,uniform_filter=uniform_filter,$
-    GPU_enable=GPU_enable,complex_flag=complex_flag,double=double,fi_use=fi_use,bi_use=bi_use,$
+    GPU_enable=GPU_enable,complex_flag=complex_flag,fi_use=fi_use,bi_use=bi_use,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
@@ -18,6 +18,8 @@ kx_span=kbinsize*dimension ;Units are # of wavelengths
 ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
+double_precision=0
+IF Tag_Exist(obs, 'precision') THEN double_precision=obs.double_precision
 IF N_Elements(silent) EQ 0 THEN verbose=0 ELSE verbose=0>Round(1-silent)<1
 
 IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
@@ -179,21 +181,17 @@ obs.nf_vis=n_vis_arr
 index_arr=Lindgen(dimension,elements)
 n_psf_dim=N_Elements(psf_base)
 CASE 1 OF
-    complex_flag AND Keyword_Set(double): BEGIN
+    complex_flag AND Keyword_Set(double_precision): BEGIN
         init_arr=Dcomplexarr(psf_dim2,psf_dim2)
-;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Dcomplex(*psf_base[i])
     END
-    Keyword_Set(double): BEGIN
+    Keyword_Set(double_precision): BEGIN
         init_arr=Dblarr(psf_dim2,psf_dim2)
-;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Double(Abs(*psf_base[i]))
     END
     complex_flag: BEGIN
         init_arr=Complexarr(psf_dim2,psf_dim2)
-;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Complex(*psf_base[i])
     END
     ELSE: BEGIN
         init_arr=Fltarr(psf_dim2,psf_dim2)
-;        FOR i=0.,n_psf_dim-1 DO *psf_base[i]=Float(real_part(*psf_base[i]))
     ENDELSE
 ENDCASE
 arr_type=Size(init_arr,/type)

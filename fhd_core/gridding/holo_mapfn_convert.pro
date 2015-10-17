@@ -41,6 +41,7 @@ IF n_use EQ 0 THEN BEGIN
     RETURN,0
 ENDIF
 
+double_flag=Size(*map_fn[i_use[0]],/type) EQ 9  
 i_use_hist=histogram(i_use,min=0,bin=1,reverse_ind=ri_use)
 sa=Ptrarr(n_use,/allocate)
 ija=Ptrarr(n_use,/allocate)
@@ -50,6 +51,7 @@ FOR i0=0.,n_use-1 DO BEGIN
     xi=Long(i mod dimension)
     yi=Long(Floor(i/dimension))
     map_fn_sub=*map_fn[xi,yi]
+;    IF double_flag THEN map_fn_sub=Complex(*map_fn[xi,yi]) ELSE map_fn_sub=*map_fn[xi,yi]
     *map_fn[xi,yi]=0 ;free memory as soon as it's read
     j_use=where(Abs(map_fn_sub) GT threshold,n_use)
     

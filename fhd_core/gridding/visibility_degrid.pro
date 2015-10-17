@@ -1,6 +1,6 @@
 FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
-    complex=complex,double=double,fill_model_vis=fill_model_vis,$
+    complex=complex,fill_model_vis=fill_model_vis,$
     vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 t0=Systime(1)
 heap_gc
@@ -8,6 +8,8 @@ heap_gc
 pol_names=obs.pol_names
 complex=psf.complex_flag
 n_spectral=obs.degrid_spectral_terms
+double_precision=0
+IF Tag_Exist(obs, 'precision') THEN double_precision=obs.double_precision
 
 ;extract information from the structures
 dimension=Float(obs.dimension)
@@ -41,7 +43,7 @@ group_arr=reform(psf.id[polarization,freq_bin_i,*])
 beam_arr=*psf.beam_ptr
 
 vis_dimension=nbaselines*n_samples
-IF Keyword_Set(double) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
+IF Keyword_Set(double_precision) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
     ELSE visibility_array=Complexarr(n_freq,vis_dimension) 
 
 dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
@@ -93,8 +95,8 @@ bin_i=Long(where(bin_n,n_bin_use));+bin_min
 ind_ref=Lindgen(max(bin_n))
 
 CASE 1 OF
-    Keyword_Set(complex) AND Keyword_Set(double): init_arr=Dcomplexarr(psf_dim2,psf_dim2)
-    Keyword_Set(double): init_arr=Dblarr(psf_dim2,psf_dim2)
+    Keyword_Set(complex) AND Keyword_Set(double_precision): init_arr=Dcomplexarr(psf_dim2,psf_dim2)
+    Keyword_Set(double_precision): init_arr=Dblarr(psf_dim2,psf_dim2)
     Keyword_Set(complex): init_arr=Complexarr(psf_dim2,psf_dim2)
     ELSE: init_arr=Fltarr(psf_dim2,psf_dim2)
 ENDCASE

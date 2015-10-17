@@ -113,6 +113,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   max_baseline=obs.max_baseline
   dimension=obs.dimension
   elements=obs.elements
+  double_precision=0
+  IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision
+  
   min_cal_baseline=cal.min_cal_baseline
   max_cal_baseline=cal.max_cal_baseline
   min_cal_solutions=cal.min_solns ;minimum number of calibration equations needed to solve for the gain of one baseline
@@ -267,7 +270,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
                 ENDIF
             ENDIF ELSE BEGIN
                 FOR tile_i=0L,n_tile_use-1 DO IF n_arr[tile_i] GE min_cal_solutions THEN $
-                    gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2)
+                    gain_new[tile_i]=LA_Least_Squares(vis_model_matrix[*A_ind_arr[tile_i]],vis_use[*A_ind_arr[tile_i]],method=2, double=double_precision)
             ENDELSE
             
             gain_old=gain_curr

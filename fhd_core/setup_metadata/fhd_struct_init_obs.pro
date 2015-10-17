@@ -1,5 +1,5 @@
 FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
-    pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,$
+    pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,double=double,$
     FoV=FoV,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
@@ -149,13 +149,14 @@ IF N_Elements(nside) EQ 0 THEN nside=0
 IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=restrict_hpx_inds
 IF N_Elements(n_hpx) EQ 0 THEN n_hpx=0
 IF N_Elements(n_zero_hpx) EQ 0 THEN n_zero_hpx=-1
+IF Keyword_Set(double) THEN double_precision=1 ELSE double_precision=0
 pol_names=['XX','YY','XY','YX','I','Q','U','V']
 healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
 
 arr={tile_A:Long(tile_A),tile_B:Long(tile_B),bin_offset:Long(bin_offset),Jdate:meta.Jdate,freq:Float(frequency_array),fbin_i:Long(freq_bin_i),$
     freq_use:Fix(freq_use),tile_use:Fix(tile_use),time_use:Fix(time_use),tile_names:String(meta.tile_names),tile_height:Float(meta.tile_height),tile_flag:meta.tile_flag}
 struct={code_version:String(code_version),instrument:String(instrument),obsname:String(obsname),$
-    dimension:Float(dimension),elements:Float(elements),nbaselines:Long(nbaselines),dft_threshold:Float(dft_threshold),$
+    dimension:Float(dimension),elements:Float(elements),nbaselines:Long(nbaselines),dft_threshold:Float(dft_threshold),double_precision:double_precision,$
     kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,obsra:meta.obsra,obsdec:meta.obsdec,$
     zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,zenx:meta.zenx,zeny:meta.zeny,$
     phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$
