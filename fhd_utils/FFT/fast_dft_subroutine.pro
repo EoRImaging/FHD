@@ -1,23 +1,24 @@
 FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,silent=silent,$
-    conserve_memory=conserve_memory,dft_threshold=dft_threshold,return_kernel=return_kernel
+    conserve_memory=conserve_memory,dft_threshold=dft_threshold,return_kernel=return_kernel,double_precision=double_precision
 
 t0_a=Systime(1)
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF size(amp_vec,/type) EQ 10 THEN  ptr_flag=1 ELSE ptr_flag=0 ;check if pointer type. This allows the same locations to be used for multiple sets of fluxes
 
+Pi=!DPi
 dimension_kernel=dimension;2
 elements_kernel=elements;*2
-IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=1./((2.*!Pi)^2.*dimension)  ;1/2 value of kernel_test along either axis and one bin to either side at the edge of the image. 
+IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=1./((2.*Pi)^2.*dimension)  ;1/2 value of kernel_test along either axis and one bin to either side at the edge of the image. 
 
 t1_a=Systime(1)
 xv_test=meshgrid(dimension_kernel,elements_kernel,1)-dimension_kernel/2.
 yv_test=meshgrid(dimension_kernel,elements_kernel,2)-elements_kernel/2.
 
-kernel_test=1./((Abs(!Pi*xv_test)>1.)*(Abs(!Pi*yv_test)>1.))$
-           +1./((Abs(!Pi*(xv_test+dimension_kernel)))*(Abs(!Pi*yv_test)>1.))$
-           +1./((Abs(!Pi*(xv_test-dimension_kernel)))*(Abs(!Pi*yv_test)>1.))$
-           +1./((Abs(!Pi*xv_test)>1.)*(Abs(!Pi*(yv_test+dimension_kernel))))$
-           +1./((Abs(!Pi*xv_test)>1.)*(Abs(!Pi*(yv_test-dimension_kernel))))
+kernel_test=1D/((Abs(Pi*xv_test)>1.)*(Abs(Pi*yv_test)>1.))$
+           +1D/((Abs(Pi*(xv_test+dimension_kernel)))*(Abs(Pi*yv_test)>1.))$
+           +1D/((Abs(Pi*(xv_test-dimension_kernel)))*(Abs(Pi*yv_test)>1.))$
+           +1D/((Abs(Pi*xv_test)>1.)*(Abs(Pi*(yv_test+dimension_kernel))))$
+           +1D/((Abs(Pi*xv_test)>1.)*(Abs(Pi*(yv_test-dimension_kernel))))
 kernel_test_shift=Shift(kernel_test,-1,-1) ;the peak of the kernel may be offset by up to one pixel
 kernel_i=where((kernel_test>kernel_test_shift) GE dft_threshold,n_k)
 kernel_mask=intarr(dimension_kernel,elements_kernel) & kernel_mask[kernel_i]=1
@@ -70,27 +71,26 @@ x_sign=(-1D)^xv0
 y_sign=(-1D)^yv0
 xv_k_i=xv_k+dimension_kernel/2.
 yv_k_i=yv_k+elements_kernel/2.
-pi_use=!DPi
-sin_x=Sin(pi_use*(-dx_arr))
-sin_y=Sin(pi_use*(-dy_arr))
+sin_x=Sin(Pi*(-dx_arr))
+sin_y=Sin(Pi*(-dy_arr))
 FOR si=0L,ns-1L DO BEGIN
     t2_a=Systime(1)
     IF dx_arr[si] EQ 0 THEN BEGIN
         kernel_x=Dblarr(dimension_kernel)
         kernel_x[dimension_kernel/2]=1D
     ENDIF ELSE BEGIN
-        kernel_x=sin_x[si]/(pi_use*(xv0-dx_arr[si]))$
-                +sin_x[si]/(pi_use*(dimension_kernel+xv0-dx_arr[si]+x0))$
-                +sin_x[si]/(pi_use*(-dimension_kernel+xv0-dx_arr[si]-x0))
+        kernel_x=sin_x[si]/(Pi*(xv0-dx_arr[si]))$
+                +sin_x[si]/(Pi*(dimension_kernel+xv0-dx_arr[si]+x0))$
+                +sin_x[si]/(Pi*(-dimension_kernel+xv0-dx_arr[si]-x0))
         kernel_x*=x_sign
     ENDELSE
     IF dy_arr[si] EQ 0 THEN BEGIN
         kernel_y=Dblarr(elements_kernel)
         kernel_y[elements_kernel/2]=1D
     ENDIF ELSE BEGIN
-        kernel_y=sin_y[si]/(pi_use*(yv0-dy_arr[si]))$
-                +sin_y[si]/(pi_use*(elements_kernel+yv0-dy_arr[si]+y0))$
-                +sin_y[si]/(pi_use*(-elements_kernel+yv0-dy_arr[si]-y0))
+        kernel_y=sin_y[si]/(Pi*(yv0-dy_arr[si]))$
+                +sin_y[si]/(Pi*(elements_kernel+yv0-dy_arr[si]+y0))$
+                +sin_y[si]/(Pi*(-elements_kernel+yv0-dy_arr[si]-y0))
         kernel_y*=y_sign
     ENDELSE
     kernel_single=kernel_x[xv_k_i]*kernel_y[yv_k_i]
@@ -118,10 +118,12 @@ IF Keyword_Set(mod_flag) THEN BEGIN
     
     IF ptr_flag THEN BEGIN
         model_img=Ptrarr(n_ptr0)
-        FOR p_i=0,n_ptr0-1 DO model_img[p_i]=Ptr_new(Fltarr(dimension,elements))
+        IF Keyword_Set(double_precision) THEN $
+            FOR p_i=0,n_ptr0-1 DO model_img[p_i]=Ptr_new(Dblarr(dimension,elements)) $
+            ELSE FOR p_i=0,n_ptr0-1 DO model_img[p_i]=Ptr_new(Fltarr(dimension,elements))
         FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[x_low0:x_high0,y_low0:y_high0]=(*model_img_use[p_i])[x_low1:x_high1,y_low1:y_high1]
     ENDIF ELSE BEGIN 
-        model_img=Fltarr(dimension,elements)
+        IF Keyword_Set(double_precision) THEN model_img=Dblarr(dimension,elements) ELSE model_img=Fltarr(dimension,elements)
         model_img[x_low0:x_high0,y_low0:y_high0]=model_img_use[x_low1:x_high1,y_low1:y_high1]
     ENDELSE
     

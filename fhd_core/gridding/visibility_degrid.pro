@@ -9,7 +9,7 @@ pol_names=obs.pol_names
 complex=psf.complex_flag
 n_spectral=obs.degrid_spectral_terms
 double_precision=0
-IF Tag_Exist(obs, 'precision') THEN double_precision=obs.double_precision
+IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision
 
 ;extract information from the structures
 dimension=Float(obs.dimension)

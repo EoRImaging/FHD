@@ -1,7 +1,7 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
     conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,silent=silent,$
     dimension=dimension,elements=elements,n_pol=n_pol,spectral_model_uv_arr=spectral_model_uv_arr,$
-    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,_Extra=extra
+    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,double_precision=double_precision,_Extra=extra
 
 alpha_corr=0.
 IF Keyword_Set(obs) THEN BEGIN
@@ -11,12 +11,14 @@ IF Keyword_Set(obs) THEN BEGIN
     n_pol=obs.n_pol
     IF N_Elements(n_spectral) EQ 0 THEN n_spectral=obs.degrid_spectral_terms
     IF Keyword_Set(flatten_spectrum) THEN alpha_corr=obs.alpha
+    IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision ELSE double_precision=0
 ENDIF ELSE BEGIN
     IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=0.
     IF N_Elements(elements) EQ 0 THEN elements=dimension
     IF N_Elements(n_pol) EQ 0 THEN n_pol=1
     IF N_Elements(n_spectral) EQ 0 THEN n_spectral=0
     IF Keyword_Set(flatten_spectrum) THEN print,"WARNING: obs structure not present in source_dft_multi, but flatten_spectrum was set"
+    IF N_Elements(double_precision) EQ 0 THEN double_precision=0
 ENDELSE
 
 IF N_Elements(uv_i_use) EQ 0 THEN uv_i_use=Lindgen(dimension*elements)
@@ -59,12 +61,13 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     IF Keyword_Set(dft_threshold) THEN BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
         model_uv_arr=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-            silent=silent,conserve_memory=conserve_memory,dft_threshold=dft_threshold)
+            silent=silent,conserve_memory=conserve_memory,dft_threshold=dft_threshold,double_precision=double_precision)
         
         Ptr_free,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
-        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,conserve_memory=conserve_memory,silent=silent)
+        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
+                                 conserve_memory=conserve_memory,silent=silent,double_precision=double_precision)
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!

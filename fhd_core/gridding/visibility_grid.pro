@@ -19,7 +19,7 @@ ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
 double_precision=0
-IF Tag_Exist(obs, 'precision') THEN double_precision=obs.double_precision
+IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision
 IF N_Elements(silent) EQ 0 THEN verbose=0 ELSE verbose=0>Round(1-silent)<1
 
 IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
