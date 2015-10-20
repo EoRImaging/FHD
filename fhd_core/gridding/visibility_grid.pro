@@ -63,7 +63,7 @@ IF Ptr_valid(model_ptr) THEN BEGIN
             model_use=(Temporary(*model_ptr))[vis_inds_use]
             ptr_free,model_ptr
         ENDELSE
-        model_return=Complexarr(dimension,elements)
+        IF Keyword_Set(double_precision) THEN model_return=DComplexarr(dimension,elements) ELSE model_return=Complexarr(dimension,elements)
         model_flag=1
     ENDIF ELSE BEGIN
 ;        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[vis_inds_use] $
@@ -96,10 +96,10 @@ psf_dim2=2*psf_dim
 psf_dim3=psf_dim*psf_dim
 bi_use_reduced=bi_use mod nbaselines
 
-image_uv=Complexarr(dimension,elements)
-weights=Complexarr(dimension,elements)
-variance=Fltarr(dimension,elements)
-uniform_filter=Fltarr(dimension,elements)
+IF Keyword_Set(double_precision) THEN image_uv=DComplexarr(dimension,elements) ELSE image_uv=Complexarr(dimension,elements)
+IF Keyword_Set(double_precision) THEN weights=DComplexarr(dimension,elements) ELSE weights=Complexarr(dimension,elements)
+IF Keyword_Set(double_precision) THEN variance=Dblarr(dimension,elements) ELSE variance=Fltarr(dimension,elements)
+IF Keyword_Set(double_precision) THEN uniform_filter=Dblarr(dimension,elements) ELSE uniform_filter=Fltarr(dimension,elements)
 IF Keyword_Set(grid_uniform) THEN BEGIN
     mapfn_recalculate=0 ;mapfn is incompatible with uniformly gridded images!
     uniform_flag=1
