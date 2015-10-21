@@ -91,6 +91,9 @@ IF ~Keyword_Set(name_error) THEN BEGIN
     IF Keyword_Set(restore) THEN BEGIN
         IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name 
         IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use, compatibility_mode = compatibility_mode)
+        ;My change
+        ;IF file_test('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav') THEN $
+        ;  param=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav',var_name_use, compatibility_mode = compatibility_mode)
         RETURN
     ENDIF
     

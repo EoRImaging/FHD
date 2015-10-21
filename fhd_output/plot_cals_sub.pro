@@ -23,6 +23,7 @@ IF Keyword_Set(phase) THEN BEGIN
 ENDIF ELSE BEGIN
     IF N_Elements(yrange) NE 2 THEN BEGIN
         yrange=Minmax(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]]))
+        If yrange[0] EQ yrange[1] then yrange=[0,yrange[0]*2]
         
         IF (gain_type LE 5) OR Keyword_Set(real_vs_imaginary) THEN BEGIN
             IF n_pol GT 1 THEN max_amp = mean(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]])) + 5*stddev(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]])) $
