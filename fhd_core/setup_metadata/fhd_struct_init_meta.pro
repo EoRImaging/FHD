@@ -96,8 +96,8 @@ ENDIF ELSE BEGIN
     IF missing_n GT 0 THEN tile_flag0[missing_i]=1
     tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(tile_flag0)
     date_obs=hdr.date
-    JD0=date_conv(date_obs,'JULIAN')
-    epoch=date_conv(date_obs,'REAL')/1000.
+    JD0=hdr.JD0
+    epoch=date_conv(JD0,'REAL')/1000.
     epoch_year=Floor(epoch)
     epoch_fraction=(epoch-epoch_year)*1000./365.24218967
     epoch=epoch_year+epoch_fraction   
