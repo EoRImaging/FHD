@@ -61,12 +61,12 @@ IF file_test(metafits_path) THEN BEGIN
 ;    HA=sxpar(meta_hdr,'HA')
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
     date_obs=sxpar(meta_hdr,'DATE-OBS')
-    JD0=date_conv(date_obs,'JULIAN')
+    JD0=hdr.JD0
     IF Keyword_Set(time_offset) THEN BEGIN
         time_offset/=(24.*3600.)
         JD0+=time_offset
     ENDIF
-    epoch=date_conv(date_obs,'REAL')/1000.
+    epoch=date_conv(JD0,'REAL')/1000.
     epoch_year=Floor(epoch)
     epoch_fraction=(epoch-epoch_year)*1000./365.24218967
     epoch=epoch_year+epoch_fraction    
@@ -95,7 +95,7 @@ ENDIF ELSE BEGIN
     tile_flag0=intarr(n_tile)
     IF missing_n GT 0 THEN tile_flag0[missing_i]=1
     tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(tile_flag0)
-    date_obs=hdr.date
+    date_obs=hdr.date_obs
     JD0=hdr.JD0
     epoch=date_conv(JD0,'REAL')/1000.
     epoch_year=Floor(epoch)
