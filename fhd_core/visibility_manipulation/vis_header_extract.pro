@@ -51,10 +51,10 @@ date_i=where(Strmatch(param_list,'DATE', /fold_case),found_date) & IF found_date
 IF (found_baseline NE 1) OR (found_uu NE 1) OR (found_vv NE 1) OR (found_ww NE 1) OR (found_date LT 1) THEN error=1 
 
 IF found_date GT 1 THEN BEGIN
-    Jdate0=sxpar(header,String(format='("PZERO",I1)',date_i[0]+1)) + params[date_i[0],0]
+    Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i[0]+1))) + Double(params[date_i[0],0])
     date_i=date_i[1]
 ENDIF ELSE BEGIN
-    Jdate0=sxpar(header,String(format='("PZERO",I1)',date_i+1))
+    Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i+1)))
 ENDELSE
 ;Jdate_extract=sxpar(header,String(format='("PZERO",I1)',date_i+1),count=found_jd0)
 ;IF Keyword_Set(found_jd0) THEN IF Jdate_extract GT 2.4E6 THEN Jdate0=Jdate_extract
