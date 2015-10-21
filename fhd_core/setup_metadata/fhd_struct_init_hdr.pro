@@ -42,7 +42,7 @@ IF N_Elements(obsdec) EQ 0 THEN obsdec=-1. ;set to something that should be obvi
         
 hdr={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_pol,n_freq:n_freq,$
     freq_res:freq_res,freq_arr:freq_arr,lon:lon,lat:lat,alt:alt,obsra:obsra,obsdec:obsdec,$
-    uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:jd0,date:date_obs,$
+    uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:jd0,date_obs:date_obs,$
     pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
 RETURN,hdr
 END
