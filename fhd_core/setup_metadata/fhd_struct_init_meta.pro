@@ -109,7 +109,6 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
     IF N_Elements(phasera) EQ 0 THEN phasera=obsra
     IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec
-;    Precess,obsra,obsdec,2000.,epoch
 
     hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate
     beamformer_delays=Ptr_new()

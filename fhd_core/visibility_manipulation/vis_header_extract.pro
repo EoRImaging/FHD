@@ -20,15 +20,12 @@ IF freq_res EQ 0 THEN print,'WARNING: Invalid frequency resolution in uvfits hea
 freq_ref_i=sxpar(header,'crpix4') -1;368-1 (Remember, FITS indices start from 1, IDL indices start from 0)
 date_obs=sxpar(header,'date-obs')
 frequency_array=(findgen(n_freq)-(freq_ref_i-1))*freq_res+freq_ref 
-
 n_fields=sxpar(header,'tfields') ;12
 
 n_grp_params=sxpar(header,'pcount')
 param_list=Strarr(n_grp_params)
 ptype_list=String(format='("PTYPE",I1)',indgen(n_grp_params)+1)
 FOR pi=0,n_grp_params-1 DO param_list[pi]=StrTrim(sxpar(header,ptype_list[pi]),2)
-
-;Jdate0=date_conv(date_obs,'JULIAN')
 
 param_names = strlowcase(strtrim(sxpar(header, 'CTYPE*'), 2))
 wh_ra = where(param_names eq 'ra', count_ra)
@@ -58,19 +55,6 @@ ENDIF ELSE BEGIN
 ENDELSE
 ;Jdate_extract=sxpar(header,String(format='("PZERO",I1)',date_i+1),count=found_jd0)
 ;IF Keyword_Set(found_jd0) THEN IF Jdate_extract GT 2.4E6 THEN Jdate0=Jdate_extract
-
-;; get number of tiles from number of baselines.
-;256 tile upper limit is hard-coded in CASA format
-;these tile numbers have been verified to be correct
-baseline_arr=reform(params[baseline_i,*]) 
-tile_A1=Long(Floor(baseline_arr/256)) ;tile numbers start from 1
-tile_B1=Long(Fix(baseline_arr mod 256))
-hist_A1=histogram(tile_A1,min=0,max=256,/binsize)
-hist_B1=histogram(tile_B1,min=0,max=256,/binsize)
-hist_AB=hist_A1+hist_B1
-tile_nums=where(hist_AB,n_tile)
-;tile_A=Long(Floor(baseline_arr/256)) ;tile numbers start from 1
-;n_tile=n_elements(uniq(tile_A[sort(tile_A)]))
 
 grp_row_size=n_complex*n_pol*n_freq*nbaselines
 
