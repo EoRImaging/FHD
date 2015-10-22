@@ -73,7 +73,7 @@ FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN BEGIN
     weights_flag=0
 ENDIF
 
-model_flag=1
+model_flag=Keyword_Set(skymodel)
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,/allocate)
@@ -185,7 +185,7 @@ IF Keyword_Set(write_healpix_fits) THEN BEGIN
     ring2nest, nside, hpx_cnv.inds, hpx_inds_nest ;external programs are much happier reading in Healpix fits files with the nested pixel ordering
 ENDIF
 
-IF skymodel.n_sources GT 0 THEN BEGIN
+IF model_flag THEN IF skymodel.n_sources GT 0 THEN BEGIN
     source_flag=1
     source_array=skymodel.source_list
     source_arr_out=source_array
