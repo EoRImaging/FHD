@@ -144,7 +144,7 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
 ENDIF
 projection_slant_orthographic,astr=astr,degpix=degpix2,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
     dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec,$
-    epoch=2000.,JDate=JD0,date_obs=date_obs
+    epoch=2000.,JDate=JD0
 
 Eq2Hor,obsra,obsdec,JD0,obsalt,obsaz,lat=lat,lon=lon,alt=Mean(alt)
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
