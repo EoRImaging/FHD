@@ -1,6 +1,6 @@
 FUNCTION visibility_degrid,image_uv,flag_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
-    complex=complex,fill_model_vis=fill_model_vis,$
+    complex=complex,fill_model_visibilities=fill_model_visibilities,$
     vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
 t0=Systime(1)
 heap_gc
@@ -80,7 +80,7 @@ IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
 IF flag_switch THEN BEGIN
     flag_i=where(*flag_ptr LE 0,n_flag)
-    IF Keyword_Set(fill_model_vis) THEN n_flag=0L
+    IF Keyword_Set(fill_model_visibilities) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
