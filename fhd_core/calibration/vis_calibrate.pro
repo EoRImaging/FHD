@@ -207,7 +207,7 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
         
         if keyword_set(cal) then cal_store=cal
         
-        filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_nox2fix_updatedcompare_dirtyphase/'+obs.obsname+'_cal.sav
+        filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_x2fix_updatecompare_amponly/combined/'+obs.obsname+'_cal.sav
         ;filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_meanphase_nox2fix_updatedcompare_zeromean/'+obs.obsname+'_cal.sav
         restore,filename_poly
         (*cal_polyfit.gain[0])=(*cal.gain[0])
