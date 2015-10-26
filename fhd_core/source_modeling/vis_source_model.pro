@@ -16,11 +16,11 @@ IF Min(Ptr_valid(flag_ptr)) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 IF Keyword_Set(skymodel) THEN BEGIN
-galaxy_flag=skymodel.galaxy_model
-diffuse_filepath=skymodel.diffuse_model
+    galaxy_flag=skymodel.galaxy_model
+    diffuse_filepath=skymodel.diffuse_model
 ENDIF ELSE BEGIN
     galaxy_flag=0
-    
+    diffuse_filepath=''
 ENDELSE
 heap_gc
 
@@ -40,14 +40,6 @@ icomp=Complex(0,1)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 
-;only the LOWER half of the u-v plane is used for gridding/degridding. 
-; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half 
-;IF ~Keyword_Set(uv_mask) THEN BEGIN
-;    uv_mask=Fltarr(dimension,elements)
-;    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1,fill_model_visibilities=fill_model_visibilities,file_path_fhd=file_path_fhd)
-;    mask_i_use=where(vis_count)
-;    uv_mask[mask_i_use]=1
-;ENDIF ELSE 
 IF Keyword_Set(uv_mask) THEN uv_mask_use=uv_mask ELSE uv_mask_use=Fltarr(dimension,elements)+1
 uv_mask_use[*,elements/2+psf.dim:*]=0. 
 
@@ -55,9 +47,6 @@ freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 frequency_array=(*obs.baseline_info).freq
 
-;kx_arr=params.uu/kbinsize
-;ky_arr=params.vv/kbinsize
-;baseline_i=params.baseline_arr
 nbaselines=obs.nbaselines
 n_samples=obs.n_time
 n_freq=obs.n_freq

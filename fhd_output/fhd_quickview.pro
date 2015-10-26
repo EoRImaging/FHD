@@ -74,6 +74,7 @@ FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN BEGIN
 ENDIF
 
 model_flag=Keyword_Set(skymodel)
+source_flag = Keyword_Set(skymodel) ? Keyword_Set(skymodel.n_sources):0
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,/allocate)
