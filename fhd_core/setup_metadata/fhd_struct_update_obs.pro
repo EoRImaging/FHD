@@ -55,7 +55,7 @@ struct.alpha=Float(spectral_index)
 
 projection_slant_orthographic,astr=astr,degpix=degpix,obsra=obs.obsra,obsdec=obs.obsdec,zenra=obs.zenra,zendec=obs.zendec,$
     dimension=dimension,elements=elements,phasera=obs.phasera,phasedec=obs.phasedec,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny,$
-    epoch=2000.,JDate=obs.JD0,date_obs=obs.astr.dateobs
+    epoch=2000.,JDate=obs.JD0
 
 
 struct.obsx=Float(obsx)
