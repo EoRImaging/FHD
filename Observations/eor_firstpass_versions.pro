@@ -1215,6 +1215,11 @@ case version of
       over_calibrate=1
       unflag_all=1
    end 
+   'nb_polarized_diffuse_Oct2015':begin
+      diffuse_calibrate=filepath('diffuse_maps_polarized_Oct2015.sav',root=rootdir('FHD'),subdir='catalog_data')
+      production=1
+      ;no long tiles used in calculating saved bp
+   end  
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
