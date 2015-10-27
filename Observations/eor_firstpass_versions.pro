@@ -1192,6 +1192,17 @@ case version of
       ;turn_off_visflagbasic=1
       unflag_all=1
    end
+   'nb_sim_beamperchannel_unflagged_tenthgridsize':begin 
+      FoV=0
+      kbinsize=0.1
+      ps_kbinsize=0.1
+      dimension= 4096
+      ps_dimension = 2048
+      no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+   end
    
    
 
