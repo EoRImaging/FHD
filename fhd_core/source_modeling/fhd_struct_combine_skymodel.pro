@@ -19,10 +19,10 @@ ENDIF ELSE BEGIN
     galaxy_model=skymodel_cal.galaxy_model
     galaxy_spectral_index=skymodel_cal.galaxy_spectral_index
 ENDELSE
-IF Keyword_Set(skymodel_update.catalog_path) THEN BEGIN
-    catalog_path=skymodel_update.catalog_path
+IF Keyword_Set(skymodel_update.catalog_name) THEN BEGIN
+    catalog_path=skymodel_update.catalog_name
 ENDIF ELSE BEGIN
-    catalog_path=skymodel_cal.catalog_path
+    catalog_path=skymodel_cal.catalog_name
 ENDELSE
 
 skymodel=fhd_struct_init_skymodel(obs,source_list=source_list,$
