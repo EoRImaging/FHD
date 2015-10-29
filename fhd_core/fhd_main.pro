@@ -12,7 +12,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     transfer_flags=transfer_flags, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
     cal_sim=cal_sim, input_unflagged=input_unflagged, no_diffuse=no_diffuse, bubbles=bubbles, enhance_eor=enhance_eor, $
     remove_eor=remove_eor, real_data_add_eor=real_data_add_eor, turn_off_visflagbasic=turn_off_visflagbasic, $
-    nofreqdepbeam=nofreqdepbeam,_Extra=extra
+    nofreqdepbeam=nofreqdepbeam,tenthgrid=tenthgrid,_Extra=extra
     
   compile_opt idl2,strictarrsubs
   except=!except
@@ -72,6 +72,11 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
       if keyword_Set(nofreqdepbeam) then begin
         vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nofreqdepbeam/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
         vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nofreqdepbeam/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
+      endif
+      
+      if keyword_Set(tenthgrid) then begin
+        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_tenthgridsize/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
+        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_tenthgridsize/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
       endif
       
       ;restore EoR visibilities from the latest standard
