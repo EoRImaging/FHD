@@ -103,14 +103,14 @@ IF n_use GT 0 THEN BEGIN
         ELSE beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
     beam_mask=fltarr(dimension,elements) & beam_mask[beam_i]=1.
     IF N_Elements(mask) EQ N_Elements(beam_mask) THEN beam_mask*=mask
-    
+
     ;If flux_threshold is negative, assume that it is an UPPER bound, and only include the fainter sources
     flux_I_use = source_list.flux.I
     IF flux_threshold LT 0 THEN flux_I_use = -flux_I_use
 
     src_use=where((x_arr GE fft_alias_range) AND (x_arr LE dimension-1-fft_alias_range) AND (y_arr GE fft_alias_range) $
         AND (y_arr LE elements-1-fft_alias_range) AND (flux_I_use GT flux_threshold) AND (flux_I_use NE 0),n_src_use)
-    
+
     IF n_src_use EQ 0 THEN RETURN,source_comp_init(n_sources=0,freq=obs.freq_center);
     src_use2=where(beam_mask[Round(x_arr[src_use]),Round(y_arr[src_use])],n_src_use)
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
