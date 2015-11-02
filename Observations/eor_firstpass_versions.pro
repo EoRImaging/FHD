@@ -2544,6 +2544,10 @@ healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_
 
 extra=var_bundle() ; bundle all the variables into a structure
 
+print,""
+print,"Keywords set in wrapper:"
+print,structure_to_text(extra)
+print,""
 general_obs,_Extra=extra
 
 end
