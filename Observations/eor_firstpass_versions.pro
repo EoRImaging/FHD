@@ -1856,6 +1856,20 @@ case version of
       nfreq_avg=1
       recalculate_all=1
    end
+   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_dimfluxthreshold':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim=1
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      input_unflagged=1
+      calibration_flux_threshold=-.3
+      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav'
+      nfreq_avg=1
+      recalculate_all=1
+   end
                            'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_test':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -2264,7 +2278,7 @@ case version of
       undefine, diffuse_calibrate, diffuse_model
       recalculate_all=1
    end
-   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_tenthgrid':begin 
+   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_tenthgrid_transferflags':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -2274,9 +2288,22 @@ case version of
       ;remove_eor=1
       ;input_unflagged=1
       max_calibration_sources=4000
-      nfreq_avg=1
+      ;nfreq_avg=1
       tenthgrid=1
+            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav'
+      
       ;recalculate_all=1
+      
+            FoV=0
+      kbinsize=0.1
+      ;ps_kbinsize=0.1
+      dimension= 4096
+      ;ps_dimension = 2048
+      ;no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      ;unflag_all=1
+      nfreq_avg=384
    end
    'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_nofreqdepbeam':begin 
       saved_run_bp=0
