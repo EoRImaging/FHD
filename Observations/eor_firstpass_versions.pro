@@ -1204,7 +1204,44 @@ case version of
       unflag_all=1
       nfreq_avg=384
    end
-   
+   'nb_sim_beamperchannel_unflagged_fifteenthgridsize':begin 
+      FoV=0
+      kbinsize=0.15
+      ps_kbinsize=0.1
+      dimension= 4096
+      ps_dimension = 2048
+      no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+   end
+   'nb_sim_beamperchannel_unflagged_fifteenthgridsize_beamres':begin 
+      FoV=0
+      kbinsize=0.15
+      ps_kbinsize=0.1
+      dimension= 4096
+      ps_dimension = 2048
+      no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+      psf_resolution = 30
+   end
+   'nb_sim_beamperchannel_unflagged_30gridsize_beamres':begin 
+      FoV=0
+      kbinsize=0.3
+      ps_kbinsize=0.1
+      dimension= 4096
+      ps_dimension = 2048
+      no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+      psf_resolution = 30
+   end
    
 
                'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix':begin 
@@ -1863,10 +1900,11 @@ case version of
       cal_sim=1
       no_frequency_flagging=1
       perfect_cal_ones=1
+      undefine, diffuse_calibrate, diffuse_model
       ;remove_eor=1
-      input_unflagged=1
+      no_diffuse=1
       calibration_flux_threshold=-.3
-      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav'
+      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
       nfreq_avg=1
       recalculate_all=1
    end
@@ -2177,6 +2215,8 @@ case version of
       input_unflagged=1
       calibration_flux_threshold=0.3
       nfreq_avg=1
+            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
+      
       recalculate_all=1
    end
    
@@ -2290,12 +2330,95 @@ case version of
       max_calibration_sources=4000
       ;nfreq_avg=1
       tenthgrid=1
-            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav'
+            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
       
       ;recalculate_all=1
       
             FoV=0
       kbinsize=0.1
+      ;ps_kbinsize=0.1
+      dimension= 4096
+      ;ps_dimension = 2048
+      ;no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      ;unflag_all=1
+      nfreq_avg=384
+   end
+     'nb_sim_perfect_cal_eor_ones_maxcalsources_fifteenth':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim=1
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      ;input_unflagged=1
+      max_calibration_sources=4000
+      ;nfreq_avg=1
+      fifteenthgrid_orig=1
+            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
+      
+      ;recalculate_all=1
+      
+            FoV=0
+      kbinsize=0.15
+      ;ps_kbinsize=0.1
+      dimension= 4096
+      ;ps_dimension = 2048
+      ;no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      ;unflag_all=1
+      nfreq_avg=384
+   end
+        'nb_sim_perfect_cal_eor_ones_maxcalsources_fifteenth_beamres':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim=1
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      ;input_unflagged=1
+      max_calibration_sources=4000
+      ;nfreq_avg=1
+      fifteenthgrid_beamres=1
+            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
+      
+      ;recalculate_all=1
+      
+            FoV=0
+      kbinsize=0.15
+      psf_resolution = 30
+      ;ps_kbinsize=0.1
+      dimension= 4096
+      ;ps_dimension = 2048
+      ;no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      ;unflag_all=1
+      nfreq_avg=384
+   end
+           'nb_sim_perfect_cal_eor_ones_maxcalsources_30gridsize_beamres':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim=1
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      ;input_unflagged=1
+      max_calibration_sources=4000
+      ;nfreq_avg=1
+      thirtygrid=1
+            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
+      
+      ;recalculate_all=1
+      
+            FoV=0
+      kbinsize=0.3
+      psf_resolution = 30
       ;ps_kbinsize=0.1
       dimension= 4096
       ;ps_dimension = 2048
