@@ -11,9 +11,20 @@ ENDIF
 IF N_Elements(compress) EQ 0 THEN compress=0
 IF Keyword_Set(obs) THEN pol_names=obs.pol_names ELSE pol_names=['XX','YY','XY','YX','I','Q','U','V']
 
-IF Keyword_Set(transfer_filename) THEN BEGIN
-    IF file_test(transfer_filename,/directory) THEN base_path=transfer_filename $
-        ELSE base_name=transfer_filename 
+IF Keyword_Set(transfer_filename) AND Keyword_Set(restore) THEN BEGIN
+    IF file_test(transfer_filename) THEN BEGIN
+        print,"Transferring " + var_name + " from file:" + transfer_filename
+        force_path = transfer_filename
+    ENDIF ELSE BEGIN
+        IF file_test(transfer_filename,/directory) THEN BEGIN
+            base_name=file_basename(file_path_fhd)
+            base_path=transfer_filename
+        ENDIF ELSE BEGIN
+            base_name=transfer_filename 
+            base_path=file_dirname(file_path_fhd)
+        ENDELSE
+        print,"Transferring " + var_name + " from " + base_name + " in " + base_path
+    ENDELSE
 ENDIF
 IF N_Elements(base_name) EQ 0 THEN base_name=file_basename(file_path_fhd)
 IF N_Elements(base_path) EQ 0 THEN base_path=file_dirname(file_path_fhd)
@@ -93,10 +104,9 @@ IF ~Keyword_Set(name_error) THEN BEGIN
 
     IF Keyword_Set(restore) THEN BEGIN
         IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name 
-        IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use, compatibility_mode = compatibility_mode)
-        ;My change
-        ;IF file_test('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav') THEN $
-        ;  param=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav',var_name_use, compatibility_mode = compatibility_mode)
+        IF Keyword_Set(force_path) THEN path_sav=force_path
+        ;do NOT check with file_test() here! We want getvar_savefile to throw the error if it's not found
+        param=getvar_savefile(path_sav,var_name_use, compatibility_mode = compatibility_mode)
         RETURN
     ENDIF
     
@@ -113,7 +123,10 @@ IF ~Keyword_Set(name_error) THEN BEGIN
     
     IF Keyword_Set(force_set) THEN status_save=1
     IF Keyword_Set(status_save) THEN status_str=status_use
-ENDIF ELSE status_save=0
+ENDIF ELSE BEGIN
+    print, var_name + " is not a defined save/restore variable in fhd_save_io"
+    status_save=0
+ENDELSE
 
 IF ~Keyword_Set(file_path_fhd) THEN status_save=0
 IF Keyword_Set(status_save) THEN BEGIN
