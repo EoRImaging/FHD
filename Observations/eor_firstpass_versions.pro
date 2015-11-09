@@ -1242,6 +1242,26 @@ case version of
       nfreq_avg=384
       psf_resolution = 30
    end
+   'nb_sim_beamperchannel_unflagged_farextent2':begin 
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+   end
+   'nb_sim_beamperchannel_unflagged_farextent3':begin 
+      FoV=0
+      kbinsize=0.5
+      dimension= 6144
+      no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+   end
    
 
                'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix':begin 
