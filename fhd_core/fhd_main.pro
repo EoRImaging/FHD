@@ -10,9 +10,9 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
-    cal_sim=cal_sim,remove_eor=remove_eor,enhance_eor=enhance_eor,turn_off_visflagbasic=turn_off_visflagbasic,input_unflagged=input_unflagged, $
-    bubbles=bubbles,real_data_add_eor=real_data_add_eor,no_diffuse=no_diffuse,nofreqdepbeam=nofreqdepbeam,tenthgrid=tenthgrid,$
-    fifteenthgrid_orig=fifteenthgrid_orig,fifteenthgrid_beamres=fifteenthgrid_beamres,thirtygrid=thirtygrid,_Extra=extra
+    cal_sim=cal_sim, calibration_sim_input=calibration_sim_input, bubbles=bubbles, enhance_eor=enhance_eor, $
+    remove_eor=remove_eor, real_data_add_eor=real_data_add_eor, turn_off_visflagbasic=turn_off_visflagbasic, $
+    _Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -47,105 +47,11 @@ IF data_flag LE 0 THEN BEGIN
         RETURN
     ENDIF
     
+    ;Calibration simulations given input model visibilities as dirty visilibilities
     If keyword_set(cal_sim) then begin
-        (*vis_weights[0])[*,*]=1.
-        (*vis_weights[1])[*,*]=1.
-      
-        vis_arr=PTRARR(2,/allocate) ;correct pol format
-      
-        ;restore model visibilities from the latest standard
-        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-      endif
-      
-      if keyword_Set(no_diffuse) then begin
-        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nodiffuse/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nodiffuse/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-      endif
-      
-      if keyword_Set(nofreqdepbeam) then begin
-        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nofreqdepbeam/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nofreqdepbeam/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-      endif
-      
-      if keyword_Set(tenthgrid) then begin
-        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_tenthgridsize/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_tenthgridsize/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-      endif
-      
-      if keyword_Set(fifteenthgrid_orig) then begin
-        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_fifteenthgridsize/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_fifteenthgridsize/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-      endif
-      
-      if keyword_Set(fifteenthgrid_beamres) then begin
-        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_fifteenthgridsize_beamres/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_fifteenthgridsize_beamres/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-      endif
-      
-      if keyword_Set(thirtygrid) then begin
-        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_30gridsize_beamres/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_30gridsize_beamres/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-      endif
-      
-      ;restore EoR visibilities from the latest standard
-      vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
-      vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_YY.sav', 'vis_ptr')
-      
-      if keyword_set(bubbles) then begin
-      
-        if keyword_set(input_unflagged) then begin
-            ;restore model visibilities from the latest standard
-            vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-            vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-        endif
-      
-        if keyword_Set(no_diffuse) then begin
-            vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nodiffuse/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-            vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nodiffuse/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-        endif
-      
-        ;restore EoR visibilities from the latest standard
-        vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
-        vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_YY.sav', 'vis_ptr')
-      
-        if keyword_set(bubbles) then begin
-      
-            input_unflagged=1
-            if keyword_set(input_unflagged) then begin
-                ;restore model visibilities from the latest standard
-                ;vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_novisflagbasic/vis_data/1061316296_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-                ;vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_novisflagbasic/vis_data/1061316296_vis_model_YY.sav', 'vis_model_ptr')
-                vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-                vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
-            endif
-        
-            ;restore EoR visibilities from the latest standard
-            vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_bubbles_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
-            vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_bubbles_YY.sav', 'vis_ptr')
-        endif
-      
-        If keyword_set(enhance_eor) then begin
-            If enhance_eor EQ 1 then begin
-                *vis_XX_eor=*vis_XX_eor*1000.
-                *vis_YY_eor=*vis_YY_eor*1000.
-            endif
-        
-            If enhance_eor EQ 2 then begin
-                *vis_XX_eor=*vis_XX_eor*100000.
-                *vis_YY_eor=*vis_YY_eor*100000.
-            endif
-        endif
-        If keyword_set(remove_eor) then begin
-            *vis_XX_eor=0.
-            *vis_YY_eor=0.
-        endif
-      
-        ;Combine the calibrated visibilities in the correct format for the script
-        *vis_arr[0] = *vis_XX_model+*vis_XX_eor
-        *vis_arr[1] = *vis_YY_model+*vis_YY_eor
-      
+        calibration_sim_setup, calibration_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,_Extra=extra
     endif
+    ;End of calibration simulation read in and input visibility manipulation
     
     If keyword_set(real_data_add_eor) then begin
     
