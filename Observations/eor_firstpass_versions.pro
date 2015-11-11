@@ -575,6 +575,13 @@ case version of
 	mcalibration_catalog_file_path=filepath('arn_eor0_low_cat_patti_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
     end
 
+    'arn_percablebandpass_patticatalog':begin
+	cable_bandpass_fit=1
+	calibration_catalog_file_path=filepath('arn_eor0_low_cat_patti_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+	saved_run_bp=0
+	return_calibration_visibilities=1
+    end
+
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
    
    ; Adam's versions. only Adam can make versions here.
