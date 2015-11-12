@@ -1,7 +1,8 @@
 PRO combine_obs_healpix,fhd_file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,stokes_dirty_hpx=stokes_dirty_hpx,$
     stokes_model_hpx=stokes_model_hpx,weights_hpx=weights_hpx,stokes_sources_hpx=stokes_sources_hpx,$
     nside=nside,restore_last=restore_last,output_path=output_path,beam_threshold=beam_threshold,image_filter_fn=image_filter_fn,silent=silent,$
-    catalog_file_path=catalog_file_path,restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
+    catalog_file_path=catalog_file_path,restrict_hpx_inds=restrict_hpx_inds,$
+    diffuse_model_filepath=diffuse_model_filepath,_Extra=extra
 
 except=!except
 !except=0 
@@ -287,4 +288,10 @@ ENDFOR
 
 SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,stokes_dirty_hpx,stokes_model_hpx,weights_hpx,$
     stokes_sources_hpx,stokes_catalog_hpx,filename=save_path,/compress
+    
+IF Keyword_Set(diffuse_model_filepath) THEN BEGIN
+    model_arr = Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO model_arr[pol_i] = Ptr_new(*stokes_dirty_hpx[pol_i] - *stokes_model_hpx[pol_i])
+    SAVE,hpx_inds,nside,model_arr,filename=diffuse_model_filepath,/compress
+ENDIF
 END
