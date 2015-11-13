@@ -270,6 +270,8 @@ ENDIF
 IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=output_path+'_source_list'
 
 ; plot calibration solutions, export to png
+if size(cal,/type) eq 8 then begin
+    
 IF N_Elements(cal) GT 0 THEN BEGIN
    IF cal.skymodel.n_sources GT 0 THEN BEGIN
       IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
@@ -280,6 +282,8 @@ IF N_Elements(cal) GT 0 THEN BEGIN
       ENDELSE
    ENDIF
 ENDIF
+
+endif ;end 
 
 ;Build a fits header
 mkhdr,fits_header,*instr_dirty_arr[0]
