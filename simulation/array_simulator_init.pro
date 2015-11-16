@@ -28,7 +28,7 @@ PRO array_simulator_init,obs,params,error=error,sim_from_uvfits_filepath=sim_fro
   ELSE hdr=hdr_in
   
   IF Keyword_Set(simulate_baselines) OR ~Keyword_Set(params_in) THEN BEGIN
-    if n_elements(sim_baseline_time_inds) then begin
+    if n_elements(sim_baseline_time_inds) gt 0 then begin
       default_time = params_in.time
       unique_times = default_time[Uniq(default_time)]
       n_time_in=N_Elements(unique_times)
@@ -37,8 +37,8 @@ PRO array_simulator_init,obs,params,error=error,sim_from_uvfits_filepath=sim_fro
         ;; need to make slots for more times than exist in original uvfits file
         delta_t = unique_times[1] - unique_times[0]
         time_arr = [unique_times, (dblarr(n_time_new-n_time_in)+1)*delta_t+max(unique_times)]
-        sim_baseline_time = unique_times[sim_baseline_time_inds]
-      endif else sim_baseline_time = time_arr[sim_baseline_time_inds]
+        sim_baseline_time = time_arr[sim_baseline_time_inds]
+      endif else sim_baseline_time = unique_times[sim_baseline_time_inds]
     endif
     params=uvfits_params_simulate(hdr,params_in,sim_baseline_time=sim_baseline_time,_Extra=extra)
   ENDIF ELSE params=params_in

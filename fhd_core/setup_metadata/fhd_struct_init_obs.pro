@@ -7,7 +7,6 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,$
     degrid_spectral_terms=degrid_spectral_terms,grid_spectral_terms=grid_spectral_terms,$
     grid_nfreq_avg=grid_nfreq_avg,_Extra=extra
-
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(pflag) EQ 0 THEN pflag=0
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)

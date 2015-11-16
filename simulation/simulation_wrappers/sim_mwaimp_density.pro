@@ -32,7 +32,7 @@ undefine, catalog
 
 output_directory='/data4/MWA/zmart_FHD/mwa_impulse_densitysim' ; output directory for fhd_path_setup
 
-use_obsid = 0 ; toggles using a specific obsid/uvfits file
+use_obsid = 1 ; toggles using a specific obsid/uvfits file
 if keyword_set(use_obsid) then begin
     ; Choose a directory that contains uvfits files; denoted by jdate
     julian_day = 2456528
@@ -172,7 +172,7 @@ array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $
     simulate_header=simulate_header, $
     complex=complex_beam, $
     double=double_precision_beam, $
-    simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, n_time=n_time, sim_baseline_time=sim_baseline_time, $
+    simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, n_time=n_time, sim_baseline_time_inds=sim_baseline_time, $
     export_images=export_images, $
     save_visibilities=save_visibilities, $
     snapshot_healpix_export=snapshot_healpix_export, $
