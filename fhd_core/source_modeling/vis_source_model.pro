@@ -1,6 +1,6 @@
 FUNCTION vis_source_model,skymodel, obs, status_str, psf, params, flag_ptr, cal, jones, model_uv_arr=model_uv_arr,$
     file_path_fhd=file_path_fhd, timing=timing, silent=silent, uv_mask=uv_mask, error=error, beam_arr=beam_arr,$
-    fill_model_vis=fill_model_vis, use_pointing_center=use_pointing_center, vis_model_ptr=vis_model_ptr,$
+    fill_model_visibilities=fill_model_visibilities, use_pointing_center=use_pointing_center, vis_model_ptr=vis_model_ptr,$
     spectral_model_uv_arr=spectral_model_uv_arr, _Extra=extra
 
 t0=Systime(1)
@@ -15,8 +15,13 @@ IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/rest
 IF Min(Ptr_valid(flag_ptr)) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
-galaxy_flag=skymodel.galaxy_model
-diffuse_filepath=skymodel.diffuse_model
+IF Keyword_Set(skymodel) THEN BEGIN
+    galaxy_flag=skymodel.galaxy_model
+    diffuse_filepath=skymodel.diffuse_model
+ENDIF ELSE BEGIN
+    galaxy_flag=0
+    diffuse_filepath=''
+ENDELSE
 heap_gc
 
 pol_names=obs.pol_names
@@ -35,14 +40,6 @@ icomp=Complex(0,1)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
 
-;only the LOWER half of the u-v plane is used for gridding/degridding. 
-; Visibilities that would land in the upper half use the complex conjugate of their mirror in the lower half 
-;IF ~Keyword_Set(uv_mask) THEN BEGIN
-;    uv_mask=Fltarr(dimension,elements)
-;    vis_count=visibility_count(obs,psf,params,flag_ptr=flag_ptr,no_conjugate=1,fill_model_vis=fill_model_vis,file_path_fhd=file_path_fhd)
-;    mask_i_use=where(vis_count)
-;    uv_mask[mask_i_use]=1
-;ENDIF ELSE 
 IF Keyword_Set(uv_mask) THEN uv_mask_use=uv_mask ELSE uv_mask_use=Fltarr(dimension,elements)+1
 uv_mask_use[*,elements/2+psf.dim:*]=0. 
 
@@ -50,9 +47,6 @@ freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 frequency_array=(*obs.baseline_info).freq
 
-;kx_arr=params.uu/kbinsize
-;ky_arr=params.vv/kbinsize
-;baseline_i=params.baseline_arr
 nbaselines=obs.nbaselines
 n_samples=obs.n_time
 n_freq=obs.n_freq
@@ -118,7 +112,7 @@ ENDIF
 t_degrid=Fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,$
-        timing=t_degrid0,polarization=pol_i,fill_model_vis=fill_model_vis,$
+        timing=t_degrid0,polarization=pol_i,fill_model_visibilities=fill_model_visibilities,$
         vis_input_ptr=vis_model_ptr[pol_i],spectral_model_uv_arr=spectral_model_uv_arr[pol_i,*])
     t_degrid[pol_i]=t_degrid0
 ENDFOR

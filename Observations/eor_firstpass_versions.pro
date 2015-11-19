@@ -1615,6 +1615,7 @@ case version of
       nfreq_avg=1
       calibration_flux_threshold=0.3
    end
+
                   'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_nocable_outercal':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -1643,6 +1644,7 @@ case version of
       max_calibration_sources=4000
       min_cal_baseline=100.
       max_cal_baseline=300.
+
    end
                   'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_nocable_outerannulus':begin 
       saved_run_bp=0

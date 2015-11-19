@@ -178,11 +178,13 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
       dim_uv_arr = size(*model_uvf_arr[0], /dimension)
       if n_elements(dim_uv_arr) gt 3 or n_elements(dim_uv_arr) lt 2 then $
         message, 'model_uvf_arr must point to 2 or 3 dimensional arrays'
+      
+      skymodel=fhd_struct_init_skymodel(obs,_Extra=extra)
       if n_elements(dim_uv_arr) eq 2 then begin
         ;; 2 dimensional -- same for all frequencies
       
         ;; flag_arr is passed in from array_simulator
-        vis_model_arr = vis_source_model(0,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uvf_arr,$
+        vis_model_arr = vis_source_model(skymodel,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uvf_arr,$
           timing=model_timing,silent=silent,error=error,_Extra=extra)
           
       endif else begin
@@ -201,7 +203,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
           
           if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
           
-          this_model_ptr=vis_source_model(0,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+          this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
             timing=model_timing,silent=silent,error=error,_Extra=extra)
           print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
           

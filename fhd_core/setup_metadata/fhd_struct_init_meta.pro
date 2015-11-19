@@ -61,12 +61,11 @@ IF file_test(metafits_path) THEN BEGIN
 ;    HA=sxpar(meta_hdr,'HA')
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
     date_obs=sxpar(meta_hdr,'DATE-OBS')
-    JD0=date_conv(date_obs,'JULIAN')
-    IF Keyword_Set(time_offset) THEN BEGIN
-        time_offset/=(24.*3600.)
-        JD0+=time_offset
-    ENDIF
-    epoch=date_conv(date_obs,'REAL')/1000.
+    IF ~Keyword_Set(time_offset) THEN time_offset=0d
+    time_offset/=(24.*3600.)
+    JD0=Min(Jdate)+time_offset
+    
+    epoch=date_conv(JD0,'REAL')/1000.
     epoch_year=Floor(epoch)
     epoch_fraction=(epoch-epoch_year)*1000./365.24218967
     epoch=epoch_year+epoch_fraction    
@@ -95,23 +94,21 @@ ENDIF ELSE BEGIN
     tile_flag0=intarr(n_tile)
     IF missing_n GT 0 THEN tile_flag0[missing_i]=1
     tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(tile_flag0)
-    date_obs=hdr.date
-    JD0=date_conv(date_obs,'JULIAN')
-    epoch=date_conv(date_obs,'REAL')/1000.
-    epoch_year=Floor(epoch)
-    epoch_fraction=(epoch-epoch_year)*1000./365.24218967
-    epoch=epoch_year+epoch_fraction   
+    date_obs=hdr.date_obs
     
     IF ~Keyword_Set(time_offset) THEN time_offset=0d
     time_offset/=(24.*3600.)
     JD0=Min(Jdate)+time_offset
+    epoch=date_conv(JD0,'REAL')/1000.
+    epoch_year=Floor(epoch)
+    epoch_fraction=(epoch-epoch_year)*1000./365.24218967
+    epoch=epoch_year+epoch_fraction   
     
     obsra=hdr.obsra
     obsdec=hdr.obsdec
     IF Keyword_Set(precess) THEN Precess,obsra,obsdec,epoch,2000.
     IF N_Elements(phasera) EQ 0 THEN phasera=obsra
     IF N_Elements(phasedec) EQ 0 THEN phasedec=obsdec
-;    Precess,obsra,obsdec,2000.,epoch
 
     hor2eq,90.,0.,jd0,zenra,zendec,ha_out,lat=lat,lon=lon,/precess,/nutate
     beamformer_delays=Ptr_new()
@@ -147,7 +144,7 @@ IF Keyword_Set(rephase_to_zenith) THEN BEGIN
 ENDIF
 projection_slant_orthographic,astr=astr,degpix=degpix2,obsra=obsra,obsdec=obsdec,zenra=zenra,zendec=zendec,$
     dimension=dimension,elements=elements,obsx=obsx,obsy=obsy,zenx=zenx,zeny=zeny,phasera=phasera,phasedec=phasedec,$
-    epoch=2000.,JDate=JD0,date_obs=date_obs
+    epoch=2000.,JDate=JD0
 
 Eq2Hor,obsra,obsdec,JD0,obsalt,obsaz,lat=lat,lon=lon,alt=Mean(alt)
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
