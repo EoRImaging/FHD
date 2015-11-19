@@ -16,7 +16,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance
   
   ;restore model visibilities given the cal_sim_input
   vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-  vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
+  vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
   
   
   ;restore EoR visibilities
