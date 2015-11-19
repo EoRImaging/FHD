@@ -10,7 +10,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
-    cal_sim=cal_sim, calibration_sim_input=calibration_sim_input, bubbles=bubbles, enhance_eor=enhance_eor, $
+    cal_sim_input=cal_sim_input, bubbles=bubbles, enhance_eor=enhance_eor, make_grid_beam=make_grid_beam,$
     remove_eor=remove_eor, real_data_add_eor=real_data_add_eor, turn_off_visflagbasic=turn_off_visflagbasic, $
     _Extra=extra
 
@@ -48,28 +48,32 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF
     
     ;Calibration simulations given input model visibilities as dirty visilibilities
-    If keyword_set(cal_sim) then begin
-        calibration_sim_setup, calibration_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,_Extra=extra
+    If keyword_set(cal_sim_input) then begin
+        calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,_Extra=extra
     endif
     ;End of calibration simulation read in and input visibility manipulation
     
+    ;Enhancing and adding an eor signal to real data in order to ask questions about signal loss through calibration
     If keyword_set(real_data_add_eor) then begin
-    
-        ;restore EoR visibilities from the latest standard
-        vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
-        vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_YY.sav', 'vis_ptr')
-        *vis_XX_eor=*vis_XX_eor*1000.
-        *vis_YY_eor=*vis_YY_eor*1000.
+      ;restore EoR visibilities from the latest standard
+      vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
+      vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_YY.sav', 'vis_ptr')
       
-        flag_zero1=where(*vis_weights[0] EQ 0, flag_count1)
-        If flag_count1 GT 0 then (*vis_XX_eor)[flag_zero1]=0
-        flag_zero2=where(*vis_weights[1] EQ 0, flag_count2)
-        If flag_count2 GT 0 then (*vis_YY_eor)[flag_zero2]=0
+      ;Enchance the eor visibilities by 1000
+      *vis_XX_eor=*vis_XX_eor*1000.
+      *vis_YY_eor=*vis_YY_eor*1000.
       
-        ;Combine the calibrated visibilities in the correct format for the script
-        *vis_arr[0] = *vis_arr[0]+*vis_XX_eor
-        *vis_arr[1] = *vis_arr[1]+*vis_YY_eor
+      ;Zero the eor visibilities that correspond to flagged visibilities in real data
+      flag_zero1=where(*flag_arr[0] EQ 0, flag_count1)
+      If flag_count1 GT 0 then (*vis_XX_eor)[flag_zero1]=0
+      flag_zero2=where(*flag_arr[1] EQ 0, flag_count2)
+      If flag_count2 GT 0 then (*vis_YY_eor)[flag_zero2]=0
+      
+      ;Combine the eor visibilities and real data visibilities in the correct format for the script
+      *vis_arr[0] = *vis_arr[0]+*vis_XX_eor
+      *vis_arr[1] = *vis_arr[1]+*vis_YY_eor
     endif
+    ;End of enhancing and adding an eor signal to real data in order to ask questions about signal loss through calibration
     
     
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
@@ -90,6 +94,27 @@ IF data_flag LE 0 THEN BEGIN
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+
+    ;My changes!!
+    If keyword_set(make_grid_beam) then begin
+      dimension=obs.dimension
+      elements=obs.elements
+      undefine, antenna,vis_arr,hdr,params,flag_arr,status_str
+      beam2_xx_image = fltarr(dimension, elements, n_freq)
+      beam2_yy_image = fltarr(dimension, elements, n_freq)
+      beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
+      for freq_i=0,n_freq-1 do begin
+        beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
+        beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
+      endfor
+      print, 'Trying to save beam2'
+      save, file='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod/1061316176_initial_beam2_image.sav', beam2_xx_image, beam2_yy_image, obs
+      undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
+      ;psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_beamperchannelforreal/beams/1061316176_beams.sav','psf')
+      ;End
+      ;RETURN
+    endif
+
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
     
@@ -105,6 +130,7 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
     ENDIF
     
+    ;An option to bypass main flagging, especially useful for calibration simulation with no flagged frequencies
     If ~keyword_set(turn_off_visflagbasic) then begin
         vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
             freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
