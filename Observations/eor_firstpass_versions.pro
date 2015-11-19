@@ -1126,6 +1126,22 @@ case version of
       snapshot_healpix_export=1
       ;double memory, time
    end   
+   'nb_decon_Nov2015':begin 
+      max_sources=200000
+      dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      FoV=80.
+      pad_uv_image=1
+      time_cut=[2,-2]
+      snapshot_healpix_export=1
+      ;double memory, time
+   end   
    'nb_decon_July2015_through_firstpass': begin
       ;max_calibration_sources=1000
       calibration_catalog_file_path='/nfs/eor-03/r1/EoR2013/fhd_nb_decon_July2015/output_data/'+obs_id+'_source_array.sav'
@@ -1175,6 +1191,15 @@ case version of
    end
    'nb_twopolyquad_extrafancy_meanphase':begin
    saved_run_std_test_polyquad=1
+   end
+   'nb_twopolyquad_autocheck':begin
+      saved_run_twopoly_meanmode=1
+   end
+   'nb_twopolyquad_autocheck_crosspoly':begin
+      saved_run_twopoly_meanmode=1
+   end
+   'nb_twopolyquad_autocheck_stdpoly':begin
+      saved_run_twopoly_meanmode=1
    end
 
     'nb_sim_beamperchannel_unflagged_nodiffuse':begin 
@@ -1242,7 +1267,7 @@ case version of
       nfreq_avg=384
       psf_resolution = 30
    end
-   'nb_sim_beamperchannel_unflagged_farextent2':begin 
+   'nb_sim_beamperchannel_unflagged_farextent2_nod':begin 
       FoV=0
       kbinsize=0.5
       dimension= 4096
@@ -1251,8 +1276,9 @@ case version of
       ;turn_off_visflagbasic=1
       unflag_all=1
       nfreq_avg=384
+      undefine, diffuse_calibrate, diffuse_model
    end
-   'nb_sim_beamperchannel_unflagged_farextent3':begin 
+   'nb_sim_beamperchannel_unflagged_farextent3_nod':begin 
       FoV=0
       kbinsize=0.5
       dimension= 6144
@@ -1261,6 +1287,7 @@ case version of
       ;turn_off_visflagbasic=1
       unflag_all=1
       nfreq_avg=384
+      undefine, diffuse_calibrate, diffuse_model
    end
    
 
@@ -2448,6 +2475,60 @@ case version of
       ;unflag_all=1
       nfreq_avg=384
    end
+   
+  'nb_sim_perfect_cal_eor_ones_maxcalsources_farextent2_nod':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_farextent2_nod'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      nfreq_avg=384
+      save_uvf=1
+      save_imagecube=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'nb_sim_perfect_cal_eor_ones_maxcalsources_nod':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      nfreq_avg=1
+      save_uvf=1
+      save_imagecube=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      ;make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+     'nb_sim_perfect_cal_eor_ones_maxcalsources_farextent3_nod':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_farextent3_nod'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      FoV=0
+      kbinsize=0.5
+      dimension= 6144
+      nfreq_avg=384
+      save_uvf=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
    'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_nofreqdepbeam':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -2508,6 +2589,27 @@ case version of
       nfreq_avg=1
       real_data_add_eor=1
    end
+   
+      'nb_realdata_overfit_cal_beamperchannel_eor':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      over_calibrate=1
+      nfreq_avg=1
+      real_data_add_eor=1
+   end
+  'nb_realdata_cable_cal_beamperchannel_eor':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=1
+      nfreq_avg=1
+      real_data_add_eor=1
+   end
+   'nb_realdata_savedcable_cal_beamperchannel_eor':begin 
+      saved_run_bp=1
+      cable_bandpass_fit=1
+      nfreq_avg=1
+      real_data_add_eor=1
+   end
+   
   'nb_realdata_transfer_cal_beamperchannel_eor_enhance':begin 
       saved_run_bp=0
       cable_bandpass_fit=1
@@ -2536,6 +2638,18 @@ case version of
       production=1
       ;no long tiles used in calculating saved bp
    end   
+
+  'nb_polarized_diffuse_Nov2015':begin
+      diffuse_calibrate=filepath('EoR0_polarized_diffuse.sav',root=rootdir('FHD'),subdir='catalog_data')
+      production=1
+      ;no long tiles used in calculating saved bp
+   end  
+   
+  'nb_polarized_diffuse_Nov2015_subonly':begin
+      diffuse_model=filepath('EoR0_polarized_diffuse.sav',root=rootdir('FHD'),subdir='catalog_data')
+      model_visibilities=1
+      undefine, diffuse_calibrate
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
