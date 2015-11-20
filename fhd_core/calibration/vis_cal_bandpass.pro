@@ -49,7 +49,7 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
       pointing_num=mwa_get_pointing_number(obs,/string)
       
       ;saved bandpass location
-      If mean(freq_arr) LT 165.e6 THEN bandsuffix='_lowband' ELSE bandsuffix=''
+      If mean(freq_arr) LT 165.e6 THEN bandsuffix='_lowband_order4' ELSE bandsuffix=''
       filename=filepath(pointing_num+'_bandpass'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
       
       ;reinstate the saved solution into the proper format for replacing bandpass_single later
