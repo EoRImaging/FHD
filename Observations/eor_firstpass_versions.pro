@@ -588,6 +588,14 @@ case version of
         saved_run_bp=1
         return_calibration_visibilities=1
     end
+
+    'arn_fittedbandpass_patticatalog_nodiffuse':begin
+	cable_bandpass_fit=1
+	calibration_catalog_file_path=filepath('arn_eor0_low_cat_patti_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
+	saved_run_bp=1
+	return_calibration_visibilities=1
+	undefine,diffuse_calibrate,diffuse_model
+    end
  
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
