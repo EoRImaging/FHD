@@ -1141,7 +1141,26 @@ case version of
       time_cut=[2,-2]
       snapshot_healpix_export=1
       ;double memory, time
-   end   
+   end
+      'nb_decon_Nov2015_presidelobesubtract':begin 
+      max_sources=200000
+      dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      FoV=80.
+      pad_uv_image=1
+      time_cut=[2,-2]
+      snapshot_healpix_export=1
+      subtract_sidelobe_catalog=1
+      recalculate_all=1
+      ;double memory, time
+   end
+   
    'nb_decon_July2015_through_firstpass': begin
       ;max_calibration_sources=1000
       calibration_catalog_file_path='/nfs/eor-03/r1/EoR2013/fhd_nb_decon_July2015/output_data/'+obs_id+'_source_array.sav'
@@ -1200,6 +1219,7 @@ case version of
    end
    'nb_twopolyquad_autocheck_stdpoly':begin
       saved_run_twopoly_meanmode=1
+      recalculate_all=1
    end
 
     'nb_sim_beamperchannel_unflagged_nodiffuse':begin 
@@ -1210,6 +1230,14 @@ case version of
       ;turn_off_visflagbasic=1
       unflag_all=1
    end    
+       'nb_sim_beamperchannel_unflagged_nodiffuse_onebeam':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      recalculate_all=1
+      undefine, diffuse_calibrate, diffuse_model
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+   end 
    'nb_sim_beamperchannel_unflagged_nofreqdepbeam':begin 
       nfreq_avg=384
       no_frequency_flagging=1
@@ -2502,16 +2530,17 @@ case version of
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse'
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
       no_frequency_flagging=1
       perfect_cal_ones=1
       max_calibration_sources=4000
-      nfreq_avg=1
+      nfreq_avg=384
       save_uvf=1
       save_imagecube=1
       snapshot_recalculate=1
       recalculate_all=1
       ;make_grid_beam=1
+      make_grid_psf=1
       undefine, diffuse_calibrate, diffuse_model
    end
    
