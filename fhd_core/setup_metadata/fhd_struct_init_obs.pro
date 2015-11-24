@@ -14,7 +14,6 @@ obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/
 git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
-
 calibration=fltarr(4)+1.
 IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
 n_tile=hdr.n_tile
