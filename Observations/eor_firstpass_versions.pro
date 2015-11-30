@@ -596,6 +596,16 @@ case version of
 	return_calibration_visibilities=1
 	undefine,diffuse_calibrate,diffuse_model
     end
+
+    'arn_test_one_jy_source_at_eor0_center':begin
+	;return_cal_visibilities=1
+	return_calibration_visibilities=1
+	undefine,diffuse_calibrate,diffuse_model
+	;calibrate_visibilities=0
+	;catalag_file_path =          filepath('one_jy_source_at_eor0_center.sav',root=rootdir('FHD'),subdir='catalog_data')
+	;model_visibilities = 1
+	calibration_catalog_file_path=filepath('one_jy_source_at_eor0_center.sav',root=rootdir('FHD'),subdir='catalog_data')
+    end
  
 
    ;;; NEW VERSIONS AFTER 2-10-2014 (Devel merge) - note new defaults!
