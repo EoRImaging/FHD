@@ -248,8 +248,8 @@ model_holo_arr=Ptrarr(n_pol,/allocate)
 source_n_arr=Lonarr(max_iter)
 detection_threshold_arr=Fltarr(max_iter)
 IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
-    source_arr_sidelobe=generate_source_cal_list(obs,psf,catalog_path=subtract_sidelobe_catalog,$
-        mask=1-beam_mask,/allow_sidelobe_cal_sources,/model_visibilities,_Extra=extra)
+    source_arr_sidelobe=generate_source_cal_list(obs_fit,psf,catalog_path=subtract_sidelobe_catalog,$
+        mask=1-beam_mask,/allow_sidelobe_model_sources,/model_visibilities,_Extra=extra)
     
     n_sidelobe_src=N_Elements(source_arr_sidelobe)
     empty_test=(n_sidelobe_src EQ 1) AND (source_arr_sidelobe[0].flux.I EQ 0)

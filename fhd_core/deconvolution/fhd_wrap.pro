@@ -15,8 +15,8 @@
 PRO fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,$
     data_directory=data_directory,filename=filename,version=version,silent=silent,transfer_mapfn=transfer_mapfn,$
     map_fn_arr=map_fn_arr,GPU_enable=GPU_enable,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
-    calibration_image_subtract=calibration_image_subtract,model_uv_arr=model_uv_arr,$
-    vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,flag_arr=flag_arr,log_store=log_store,_Extra=extra
+    model_uv_arr=model_uv_arr, vis_model_arr=vis_model_arr,$
+    return_decon_visibilities=return_decon_visibilities,flag_arr=flag_arr,log_store=log_store,_Extra=extra
 
 ;snapshot data must have been gridded previously, and the Holo map fns generated
 ;reads and deconvolves simultaneously on multiple polarizations, time intervals, and frequencies
@@ -37,7 +37,7 @@ IF size(cal,/type) NE 8 THEN $
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(skymodel) EQ 0 THEN fhd_save_io,status_str,skymodel,var='skymodel',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
-fhd_params=fhd_init(obs,skymodel,calibration_image_subtract=calibration_image_subtract,transfer_mapfn=transfer_mapfn,file_path_fhd=file_path_fhd,_Extra=extra)
+fhd_params=fhd_init(obs,skymodel,transfer_mapfn=transfer_mapfn,file_path_fhd=file_path_fhd,_Extra=extra)
 
 n_pol=fhd_params.npol
 
@@ -75,17 +75,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         map_fn_arr[pol_i]=Ptr_new(map_fn,/no_copy)
     ENDIF
 ENDFOR
-IF Keyword_Set(calibration_image_subtract) THEN BEGIN
-    IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
-        IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
-            model_uv_arr=Ptrarr(n_pol)
-            FOR pol_i=0,n_pol-1 DO BEGIN
-                fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
-                model_uv_arr[pol_i]=Ptr_new(grid_uv_model,/no_copy)
-            ENDFOR
-        ENDIF
-    ENDIF
-ENDIF
+;IF Keyword_Set(calibration_image_subtract) THEN BEGIN
+;    IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
+;        IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
+;            model_uv_arr=Ptrarr(n_pol)
+;            FOR pol_i=0,n_pol-1 DO BEGIN
+;                fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
+;                model_uv_arr[pol_i]=Ptr_new(grid_uv_model,/no_copy)
+;            ENDFOR
+;        ENDIF
+;    ENDIF
+;ENDIF
 
 IF ~Keyword_Set(silent) THEN fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,psf=psf,sub_dir='metadata' ;DO NOT SUPPLY CAL STRUCTURE HERE!!!
 
