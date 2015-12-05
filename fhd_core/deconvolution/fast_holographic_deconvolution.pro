@@ -250,7 +250,19 @@ detection_threshold_arr=Fltarr(max_iter)
 IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
     source_arr_sidelobe=generate_source_cal_list(obs_fit,psf,catalog_path=subtract_sidelobe_catalog,$
         mask=1-beam_mask,/allow_sidelobe_model_sources,/model_visibilities,_Extra=extra)
-    
+    IF over_resolution GT 1 THEN BEGIN
+        source_arr_sidelobe.x/=over_resolution
+        source_arr_sidelobe.y/=over_resolution
+        sidelobe_extend_i=where(Ptr_valid(source_arr_sidelobe.extend),n_sidelobe_extend)
+        IF n_sidelobe_extend GT 0 THEN BEGIN
+            FOR ext_i=0L,n_sidelobe_extend-1 DO BEGIN
+                source_arr_sub=*source_arr_sidelobe[sidelobe_extend_i[ext_i]].extend
+                source_arr_sub.x/=over_resolution
+                source_arr_sub.y/=over_resolution
+                *source_arr_sidelobe[sidelobe_extend_i[ext_i]].extend=source_arr_sub
+            ENDFOR
+        ENDIF
+    ENDIF
     n_sidelobe_src=N_Elements(source_arr_sidelobe)
     empty_test=(n_sidelobe_src EQ 1) AND (source_arr_sidelobe[0].flux.I EQ 0)
     IF not empty_test THEN BEGIN 
