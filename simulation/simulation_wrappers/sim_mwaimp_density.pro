@@ -1,5 +1,5 @@
 PRO sim_mwaimp_density, version=version, sources_file_name=sources_file_name, catalog_file_name=catalog_file_name,fov=fov,$
-    sim_baseline_density=sim_baseline_density, _Extra=extra
+    sim_baseline_density=sim_baseline_density,set_sidelobe_keywords=set_sidelobe_keywords, _Extra=extra
 
 
 except=!except
@@ -67,7 +67,7 @@ snapshot_healpix_export = 1
 split_ps_export=1
 save_imagecube=1
 
-set_sidelobe_keywords=0
+if n_elements(set_sidelobe_keywords) eq 0 then set_sidelobe_keywords=0
 
 allow_sidelobe_image_output=set_sidelobe_keywords
 allow_sidelobe_sources=set_sidelobe_keywords
@@ -126,9 +126,6 @@ if keyword_set(sim_baseline_density) then begin
   ;; set up baseline distribution
   simulate_baselines = 1
   
-  ps_kspan=600.
-  ps_kbinsize=0.5
-  
   nsample = round(ps_kspan^2. * sim_baseline_density, /L64)
   sim_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2. ;nsample u components
   sim_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2. ;nsample v components, minmax is set by span in kspace
@@ -152,7 +149,7 @@ if keyword_set(sim_baseline_density) then begin
   
   sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
   sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
-  
+
   sim_baseline_time = [intarr(n_per_time), intarr(n_per_time)+1]
   if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
 endif

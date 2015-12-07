@@ -36,13 +36,13 @@ PRO array_simulator_init,obs,params,error=error,sim_from_uvfits_filepath=sim_fro
         n_time_new = max(sim_baseline_time_inds)+1
         ;; need to make slots for more times than exist in original uvfits file
         delta_t = unique_times[1] - unique_times[0]
-        time_arr = [unique_times, (dblarr(n_time_new-n_time_in)+1)*delta_t+max(unique_times)]
+        time_arr = [unique_times, (dindgen(n_time_new-n_time_in)+1.)*delta_t+max(unique_times)]
         sim_baseline_time = time_arr[sim_baseline_time_inds]
       endif else sim_baseline_time = unique_times[sim_baseline_time_inds]
     endif
     params=uvfits_params_simulate(hdr,params_in,sim_baseline_time=sim_baseline_time,_Extra=extra)
   ENDIF ELSE params=params_in
-  
+
   IF N_Elements(file_path_vis) EQ 0 THEN file_path_vis='simulation'
   obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,instrument=instrument,_Extra=extra)
 END

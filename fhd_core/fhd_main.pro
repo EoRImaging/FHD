@@ -5,7 +5,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     file_path_fhd=file_path_fhd, force_data=force_data, force_no_data=force_no_data, freq_start=freq_start, freq_end=freq_end,$
     calibrate_visibilities=calibrate_visibilities, transfer_calibration=transfer_calibration, error=error,$
     calibration_catalog_file_path=calibration_catalog_file_path, dft_threshold=dft_threshold,$
-    calibration_image_subtract=calibration_image_subtract, calibration_visibilities_subtract=calibration_visibilities_subtract,$
+    calibration_visibilities_subtract=calibration_visibilities_subtract,$
     weights_grid=weights_grid, save_visibilities=save_visibilities, return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
@@ -97,8 +97,6 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
-        IF Keyword_Set(calibration_visibilities_subtract) THEN calibration_image_subtract=0
-        IF Keyword_Set(calibration_image_subtract) THEN return_cal_visibilities=1
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,$
             flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
@@ -195,7 +193,7 @@ IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
-    fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,silent=silent,calibration_image_subtract=calibration_image_subtract,$
+    fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,silent=silent,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
         vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,$
         log_store=log_store,flag_arr=flag_arr,_Extra=extra
