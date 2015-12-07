@@ -66,6 +66,7 @@ save_visibilities= 1
 snapshot_healpix_export = 1
 split_ps_export=1
 save_imagecube=1
+save_uvf=1
 
 if n_elements(set_sidelobe_keywords) eq 0 then set_sidelobe_keywords=0
 
@@ -175,6 +176,7 @@ array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $
     snapshot_healpix_export=snapshot_healpix_export, $
     split_ps_export=split_ps_export, $
     save_imagecube=save_imagecube, $
+    save_uvf=save_uvf,$
     include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     n_pol=n_pol,$
     dimension=dimension, $
