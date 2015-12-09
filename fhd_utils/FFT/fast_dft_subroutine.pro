@@ -1,5 +1,5 @@
 FUNCTION fast_dft_subroutine,x_vec,y_vec,amp_vec,dimension=dimension,elements=elements,silent=silent,$
-    conserve_memory=conserve_memory,dft_threshold=dft_threshold,return_kernel=return_kernel,double_precision=double_precision
+    dft_threshold=dft_threshold,return_kernel=return_kernel,inds_use=inds_use,double_precision=double_precision
 
 t0_a=Systime(1)
 IF N_Elements(elements) EQ 0 THEN elements=dimension
@@ -32,6 +32,11 @@ ycen0=Long(Floor(y_vec))
 si1=where((xcen0 GE 0) AND (ycen0 GE 0) AND (xcen0 LE dimension-1) AND (ycen0 LE elements-1),ns)
 dx_arr=x_vec-xcen0
 dy_arr=y_vec-ycen0
+IF Keyword_Set(inds_use) THEN BEGIN
+    ind_flag=intarr(N_Elements(xcen0))
+    ind_flag[inds_use]=1
+    ind_flag=ind_flag[si1]
+ENDIF
 
 ;test if any gridding kernels would extend beyond image boudaries
 xv_test=Minmax(xcen0[si1])+Minmax(xv_k)
@@ -74,6 +79,7 @@ yv_k_i=yv_k+elements_kernel/2.
 sin_x=Sin(Pi*(-dx_arr))
 sin_y=Sin(Pi*(-dy_arr))
 FOR si=0L,ns-1L DO BEGIN
+    IF Keyword_Set(inds_use) THEN IF ind_flag[si] EQ 0 THEN CONTINUE
     t2_a=Systime(1)
     IF dx_arr[si] EQ 0 THEN BEGIN
         kernel_x=Dblarr(dimension_kernel)
