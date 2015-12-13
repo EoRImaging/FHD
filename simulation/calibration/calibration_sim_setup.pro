@@ -1,4 +1,4 @@
-PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles
+PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles, file_path_vis=file_path_vis
 
   (*flag_arr[0])[*,*]=1.
   (*flag_arr[1])[*,*]=1.
@@ -13,17 +13,19 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance
     print, 'Please specify an input into the calibration simulation, e.g. fhd_nb_sim_beamperchannel_unflagged'
     exit
   endif
-  
+
+  obs_id = file_basename(file_path_vis, '.uvfits')
+
   ;restore model visibilities given the cal_sim_input
-  vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-  vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
+  vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
+  vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_YY.sav', 'vis_model_ptr')
   
   
   ;restore EoR visibilities
   If ~keyword_set(bubbles) then begin
     ;Hash eor
-    vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
-    vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_YY.sav', 'vis_ptr')
+    vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/'+obs_id+'_vis_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
+    vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/'+obs_id+'_vis_YY.sav', 'vis_ptr')
   endif else begin
     ;Bubble eor from Adam Lidz
     vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_bubbles_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities

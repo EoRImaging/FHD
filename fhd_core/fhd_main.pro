@@ -11,8 +11,8 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_flags=transfer_flags, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
     cal_sim_input=cal_sim_input, bubbles=bubbles, enhance_eor=enhance_eor, make_grid_beam=make_grid_beam,$
-    remove_eor=remove_eor, real_data_add_eor=real_data_add_eor, turn_off_visflagbasic=turn_off_visflagbasic, $
-    _Extra=extra
+    remove_eor=remove_eor, real_data_add_eor=real_data_add_eor, turn_off_visflagbasic=turn_off_visflagbasic,make_grid_psf=make_grid_psf, $
+    temp_make_grid_beam=temp_make_grid_beam,_Extra=extra
     
   compile_opt idl2,strictarrsubs
   except=!except
@@ -49,7 +49,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     
     ;Calibration simulations given input model visibilities as dirty visilibilities
     If keyword_set(cal_sim_input) then begin
-      calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,_Extra=extra
+      calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis,_Extra=extra
     endif
     ;End of calibration simulation read in and input visibility manipulation
     
@@ -93,12 +93,16 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
-    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+    If ~keyword_set(make_grid_psf) then begin
+      psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+    ;endif else psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_dimcalsources_nod/beams/1061316176_beams.sav','psf')
+    endif else psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod/beams/1061316176_beams.sav','psf')
+    
     ;My changes!!
-    If keyword_set(make_grid_beam) then begin
+    If keyword_set(temp_make_grid_beam) then begin
       dimension=obs.dimension
       elements=obs.elements
-      undefine, antenna,vis_arr,hdr,params,flag_arr,status_str
+      ;undefine, antenna,vis_arr,hdr,params,flag_arr,status_str
       beam2_xx_image = fltarr(dimension, elements, n_freq)
       beam2_yy_image = fltarr(dimension, elements, n_freq)
       beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
@@ -107,16 +111,19 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
         beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
       endfor
       print, 'Trying to save beam2'
-      save, file='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod/1061316176_initial_beam2_image.sav', beam2_xx_image, beam2_yy_image, obs
+      initial_beam_filepath = file_path_fhd + '_initial_beam2_image.sav'
+      save, file=initial_beam_filepath, beam2_xx_image, beam2_yy_image, obs
       undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
-      ;psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_beamperchannelforreal/beams/1061316176_beams.sav','psf')
-      ;End
-      ;RETURN
+    ;psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_beamperchannelforreal/beams/1061316176_beams.sav','psf')
+    ;End
+    ;RETURN
     endif
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     ;My changes!!
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
-    ;jones=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_beamperchannelforreal/beams/1061316176_jones.sav','jones')
+    ;jones=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_dimcalsources_nod/beams/1061316176_jones.sav','jones')
+    ;jones=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod/beams/1061316176_jones.sav','jones')
+    
     ;End
     
     IF Keyword_Set(transfer_flags) THEN BEGIN
@@ -145,6 +152,24 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
       cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
         catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
     ENDIF
+    
+    ;Put initial beam here
+    If keyword_set(make_grid_beam) then begin
+      dimension=obs.dimension
+      elements=obs.elements
+      undefine, antenna,vis_arr,hdr,params,flag_arr,status_str
+      beam2_xx_image = fltarr(dimension, elements, n_freq)
+      beam2_yy_image = fltarr(dimension, elements, n_freq)
+      beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
+      for freq_i=0,n_freq-1 do begin
+        beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
+        beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
+      endfor
+      print, 'Trying to save beam2'
+      save, file='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod/1061316176_initial_beam2_image.sav', beam2_xx_image, beam2_yy_image, obs
+      undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
+    endif
+    ;End of intial beam
     
     ;print informational messages
     obs_status,obs
@@ -277,9 +302,31 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
   ENDIF
   
   ;optionally export frequency-splt Healpix cubes
-  IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,$
-    vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
+  IF Keyword_Set(snapshot_healpix_export) THEN BEGIN
+    healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,$
+      vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args, $
+      obs_out=obs_out,psf_out=psf_out,_Extra=extra
+      
+    ;My changes
+    If keyword_set(temp_make_grid_beam) then begin
+      n_freq=obs_out.n_freq
+      beam2_xx_image = fltarr(obs_out.dimension, obs_out.elements, n_freq)
+      beam2_yy_image = fltarr(obs_out.dimension, obs_out.elements, n_freq)
+      
+      nf_vis=obs_out.nf_vis
+      beam_arr=beam_image_cube(obs_out,psf_out, n_freq_bin = n_freq,/square)
+      for freq_i=0,n_freq-1 do begin
+        beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])*nf_vis[freq_i]
+        beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])*nf_vis[freq_i]
+      endfor
+      ptr_free,beam_arr
+      gridded_beam_filepath = file_path_fhd + '_gridded_beam2_image.sav'
+      save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
+    endif
+  ;End of my changes
     
+  ENDIF
+  
   ;Optionally fill the fhd table on the mwa_qc database located on eor-00 under the mwa username. See the python script
   ;for more information about possible queries.
   IF Keyword_Set(production) THEN BEGIN
