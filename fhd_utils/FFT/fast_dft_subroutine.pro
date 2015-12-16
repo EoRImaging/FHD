@@ -28,19 +28,24 @@ yv_k=Long(Floor(kernel_i/dimension_kernel)-elements_kernel/2)
 
 xcen0=Long(Floor(x_vec))
 ycen0=Long(Floor(y_vec))
-
-si1=where((xcen0 GE 0) AND (ycen0 GE 0) AND (xcen0 LE dimension-1) AND (ycen0 LE elements-1),ns)
 dx_arr=x_vec-xcen0
 dy_arr=y_vec-ycen0
+
+
+si_use=where((xcen0 GT 0) AND (ycen0 GT 0) AND (xcen0 LT dimension-1) AND (ycen0 LT elements-1),ns)
 IF Keyword_Set(inds_use) THEN BEGIN
     ind_flag=intarr(N_Elements(xcen0))
-    ind_flag[inds_use]=1
-    ind_flag=ind_flag[si1]
+    ind_flag2=ind_flag
+    ind_flag[si_use]=1
+    ind_flag2[inds_use]=1
+    ind_flag*=ind_flag2
+    si_use = where(ind_flag,ns)
 ENDIF
 
-;test if any gridding kernels would extend beyond image boudaries
-xv_test=Minmax(xcen0[si1])+Minmax(xv_k)
-yv_test=Minmax(ycen0[si1])+Minmax(yv_k)
+
+;test if any gridding kernels would extend beyond image boundaries
+xv_test=Minmax(xcen0[si_use])+Minmax(xv_k)
+yv_test=Minmax(ycen0[si_use])+Minmax(yv_k)
 
 IF xv_test[0] LT 0 OR xv_test[1] GT dimension-1 OR yv_test[0] LT 0 OR yv_test[1] GT elements-1 THEN BEGIN
     mod_flag=1
@@ -78,8 +83,8 @@ xv_k_i=xv_k+dimension_kernel/2.
 yv_k_i=yv_k+elements_kernel/2.
 sin_x=Sin(Pi*(-dx_arr))
 sin_y=Sin(Pi*(-dy_arr))
-FOR si=0L,ns-1L DO BEGIN
-    IF Keyword_Set(inds_use) THEN IF ind_flag[si] EQ 0 THEN CONTINUE
+FOR si_iter=0L,ns-1L DO BEGIN
+    si = si_use[si_iter]
     t2_a=Systime(1)
     IF dx_arr[si] EQ 0 THEN BEGIN
         kernel_x=Dblarr(dimension_kernel)
@@ -105,9 +110,9 @@ FOR si=0L,ns-1L DO BEGIN
     
     t3_a=Systime(1)
     t2+=t3_a-t2_a
-    inds=xcen0[si1[si]]+xv_k+(ycen0[si1[si]]+yv_k)*dimension_use
-    IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img_use[p_i])[inds]+=(*amp_ptr[p_i])[si1[si]]*kernel_single/kernel_norm $
-        ELSE model_img_use[inds]+=amp_vec[si1[si]]*kernel_single/kernel_norm
+    inds=xcen0[si]+xv_k+(ycen0[si]+yv_k)*dimension_use
+    IF ptr_flag THEN FOR p_i=0,n_ptr-1 DO (*model_img_use[p_i])[inds]+=(*amp_ptr[p_i])[si]*kernel_single/kernel_norm $
+        ELSE model_img_use[inds]+=amp_vec[si]*kernel_single/kernel_norm
     t3+=Systime(1)-t3_a
 ENDFOR
 
