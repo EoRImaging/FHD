@@ -334,18 +334,8 @@ FOR iter=0L,max_iter-1 DO BEGIN
         IF Keyword_Set(independent_fit) THEN BEGIN
             image_use_Q=dirty_image_composite_Q-model_image_composite_Q
             image_use_U=dirty_image_composite_U-model_image_composite_U
-            image_use_V=dirty_image_composite_V-model_image_composite_V
-;            image_smooth_Q=Median(image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-;            image_use_Q[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_Q
-;            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
-;            image_smooth_V=Median(image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-;            image_use_V[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_V            
-        ENDIF ELSE IF n_pol GT 2 THEN BEGIN
-            image_use_U=dirty_image_composite_U-model_image_composite_U
-;            image_smooth_U=Median(image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-;            image_use_U[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth_U
-        ENDIF  
+            image_use_V=dirty_image_composite_V-model_image_composite_V           
+        ENDIF 
     ENDIF ELSE t2_0=Systime(1)
     source_find_image=image_filtered*beam_avg*source_taper*source_mask
 ;    model_I_use=model_I_use*beam_avg*source_taper*source_mask
@@ -444,7 +434,7 @@ IF over_resolution GT 1 THEN BEGIN
     beam_width=beam_width_calculate(obs,min_restored_beam_width=1.,/FWHM)
 ENDIF
 ;noise_map*=gain_normalization
-IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(2.)
+IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(n_pol)
 ;component_array=component_array[0:comp_i]
 comp_i_use=where(component_array.flux.I GT 0)
 component_array=component_array[comp_i_use]

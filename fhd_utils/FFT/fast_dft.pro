@@ -1,6 +1,6 @@
 FUNCTION fast_dft,x_vec,y_vec,dimension=dimension,elements=elements,degpix=degpix,flux_arr=flux_arr,silent=silent,$
-    dft_threshold=dft_threshold,conserve_memory=conserve_memory,return_kernel=return_kernel,no_fft=no_fft,$
-    double_precision=double_precision,_Extra=extra
+    dft_threshold=dft_threshold,return_kernel=return_kernel,no_fft=no_fft,$
+    inds_use=inds_use,double_precision=double_precision,_Extra=extra
 
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 
@@ -20,8 +20,8 @@ IF Min(Ptr_valid(model_uv_full[0:n_dim-1])) EQ 0 THEN BEGIN
     FOR pol_i=0,n_dim-1 DO model_uv_full[pol_i]=Ptr_new(init_array)
 ENDIF
 model_img=fast_dft_subroutine(x_vec,y_vec,flux_arr_use,dft_threshold=dft_threshold,silent=silent,$
-    dimension=dimension,elements=elements,conserve_memory=conserve_memory,return_kernel=return_kernel,$
-    double_precision=double_precision)
+    dimension=dimension,elements=elements,return_kernel=return_kernel,$
+    inds_use=inds_use,double_precision=double_precision)
 FOR pol_i=0,n_dim-1 DO BEGIN
     IF Keyword_Set(no_fft) THEN model_uv=*model_img[pol_i] ELSE $
         model_uv=fft_shift(FFT(fft_shift(*model_img[pol_i]),/inverse)) ;normalization seems okay
