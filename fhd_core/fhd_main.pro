@@ -95,8 +95,9 @@ IF data_flag LE 0 THEN BEGIN
     print,'Calculating beam model'
     If ~keyword_set(make_grid_psf) then begin
       psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
-    ;endif else psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_dimcalsources_nod/beams/1061316176_beams.sav','psf')
-    endif else psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod/beams/1061316176_beams.sav','psf')
+    endif else psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_dimcalsources_nod/beams/1061316176_beams.sav','psf')
+    ;endif else 
+    ;psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_eor_maxcalsources_nod/beams/1061316176_beams.sav','psf')
     
     ;My changes!!
     If keyword_set(temp_make_grid_beam) then begin

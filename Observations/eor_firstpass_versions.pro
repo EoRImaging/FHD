@@ -15,7 +15,7 @@ obs_id = args[0]
 output_directory = args[1]
 ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 version = args[2]
-;version = 'nb_decon_Feb2016'
+;version = 'nb_sim_overfit_cal_eor_maxcalsources_nod'
 cmd_args={version:version}
 
 ; Set default values for everything
@@ -26,7 +26,7 @@ ps_export=0
 split_ps_export=1
 combine_healpix=0
 deconvolve=0
-mapfn_recalculate=0
+;mapfn_recalculate=0
 healpix_recalculate=0
 flag_visibilities=0
 vis_baseline_hist=1
@@ -43,7 +43,7 @@ deconvolution_filter='filter_uv_uniform'
 uvfits_version=4
 uvfits_subversion=1
 
-catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
+catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data') ;Depreciated
 calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
 
 dimension=2048
@@ -96,6 +96,7 @@ cal_amp_degree_fit=2
 cal_phase_degree_fit=1
 
 case version of
+
    'apb_test_restrict_hpx_inds_1': begin
       restrict_hpx_inds='EoR0_high_healpix_inds.idlsave'       ; now graduated to a default
    end
@@ -1105,7 +1106,7 @@ case version of
       ;turn_off_visflagbasic=1
       unflag_all=1
    end    
-       'nb_sim_beamperchannel_unflagged_nodiffuse_onebeam':begin 
+   'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing':begin 
       nfreq_avg=384
       no_frequency_flagging=1
       recalculate_all=1
@@ -1113,671 +1114,20 @@ case version of
       ;turn_off_visflagbasic=1
       unflag_all=1
    end 
-   'nb_sim_beamperchannel_unflagged_nofreqdepbeam':begin 
+     'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit':begin 
       nfreq_avg=384
       no_frequency_flagging=1
       recalculate_all=1
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
       ;turn_off_visflagbasic=1
       unflag_all=1
-   end
-   'nb_sim_beamperchannel_unflagged_tenthgridsize':begin 
-      FoV=0
-      kbinsize=0.1
-      ps_kbinsize=0.1
-      dimension= 4096
-      ps_dimension = 2048
-      no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      unflag_all=1
-      nfreq_avg=384
-   end
-   'nb_sim_beamperchannel_unflagged_fifteenthgridsize':begin 
-      FoV=0
-      kbinsize=0.15
-      ps_kbinsize=0.1
-      dimension= 4096
-      ps_dimension = 2048
-      no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      unflag_all=1
-      nfreq_avg=384
-   end
-   'nb_sim_beamperchannel_unflagged_fifteenthgridsize_beamres':begin 
-      FoV=0
-      kbinsize=0.15
-      ps_kbinsize=0.1
-      dimension= 4096
-      ps_dimension = 2048
-      no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      unflag_all=1
-      nfreq_avg=384
-      psf_resolution = 30
-   end
-   'nb_sim_beamperchannel_unflagged_30gridsize_beamres':begin 
-      FoV=0
-      kbinsize=0.3
-      ps_kbinsize=0.1
-      dimension= 4096
-      ps_dimension = 2048
-      no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      unflag_all=1
-      nfreq_avg=384
-      psf_resolution = 30
-   end
-   'nb_sim_beamperchannel_unflagged_farextent2_nod':begin 
-      FoV=0
-      kbinsize=0.5
-      dimension= 4096
-      no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      unflag_all=1
-      nfreq_avg=384
-      undefine, diffuse_calibrate, diffuse_model
-   end
-   'nb_sim_beamperchannel_unflagged_farextent3_nod':begin 
-      FoV=0
-      kbinsize=0.5
-      dimension= 6144
-      no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      unflag_all=1
-      nfreq_avg=384
-      undefine, diffuse_calibrate, diffuse_model
-   end
-   
 
-               'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      ;recalculate_all=1
-   end
-                  'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-   end
-                     'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=0.3
-   end
-                     'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_maxcalsources':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-   end
-                        'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_innercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      ;remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-      min_cal_baseline=1.
-      max_cal_baseline=100.
-   end
-                        'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_outercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      ;remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-            min_cal_baseline=400.
-      ;max_cal_baseline=100
-   end
-                        'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_innerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      ;remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-            min_cal_baseline=100.
-      max_cal_baseline=300.
-   end
-                        'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_outerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      ;remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-            min_cal_baseline=300.
-      max_cal_baseline=500.
-   end
-                           'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_innercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      ;remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=.3
-      min_cal_baseline=1.
-      max_cal_baseline=100.
-   end
-                        'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_outercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      ;remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=.3
-            min_cal_baseline=400.
-      ;max_cal_baseline=100
-   end
-                        'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_innerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      ;remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=.3
-            min_cal_baseline=100.
-      max_cal_baseline=300.
-   end
-                        'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_outerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      ;remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=.3
-            min_cal_baseline=300.
-      max_cal_baseline=500.
-   end
-                     'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_beamcut':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      beam_cal_threshold=.1
-   end
-                     'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_beamcut':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      remove_eor=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      input_unflagged=1
-      nfreq_avg=1
-      beam_cal_threshold=.1
-   end
-                  'nb_sim_overfit_cal_beamperchannel_visflagbasic_modelnoflag_noeor_weightfix_transfer':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      ;turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav'
-      ;recalculate_all=1
-   end
-                  'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-                     'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_enhance_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-      enhance_eor=1
-   end
-                     'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      ;remove_eor=1
-      bubbles=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-
-                     'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles_enhanced_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      ;remove_eor=1
-      enhance_eor=1
-      bubbles=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-      'nb_sim_orig_cal_beamperchannel_visflagbasic_modelnoflag_eor_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end
-                        'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      undefine, cal_cable_reflection_fit
-      ;over_calibrate=1
-      ;remove_eor=1
-      bubbles=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-                           'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles_enhanced_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      undefine, cal_cable_reflection_fit
-      ;over_calibrate=1
-      ;remove_eor=1
-      enhance_eor=1
-      bubbles=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-         'nb_sim_cable_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=1
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-            'nb_sim_cable_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_nocable':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=1
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-   end
-               'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_nocable':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=0.3
-   end
-                  'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_nocable_outercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-      min_cal_baseline=400.
-   end
-                  'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_nocable_innerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-      min_cal_baseline=100.
-      max_cal_baseline=300.
-   end
-                  'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_nocable_outerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-      min_cal_baseline=300.
-      max_cal_baseline=500.
-   end
-                  'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_maxcalsources_nocable_innercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_calibration_sources=4000
-      min_cal_baseline=1.
-      max_cal_baseline=100.
-   end
-                     'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_nocable_outercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=.3
-      min_cal_baseline=400.
-   end
-                  'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_nocable_innerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=.3
-      min_cal_baseline=100.
-      max_cal_baseline=300.
-   end
-                  'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_nocable_outerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=.3
-      min_cal_baseline=300.
-      max_cal_baseline=500.
-   end
-                  'nb_sim_orig_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_fluxthreshold_nocable_innercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      undefine, cal_cable_reflection_fit
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      calibration_flux_threshold=.3
-      min_cal_baseline=1.
-      max_cal_baseline=100.
-   end
-            'nb_sim_cable_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_beamcut':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=1
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      beam_cal_threshold=.1
-   end
-            'nb_sim_cable_cal_beamperchannel_novisflagbasic_modelnoflag_eor_enhance_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=1
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      enhance_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-            'nb_sim_cable_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles_weightfix':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=1
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      ;over_calibrate=1
-      ;remove_eor=1
-      bubbles=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-   
-            'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_beamperchannelforreal_test':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end   
-   'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      bubbles=1
-      ;recalculate_all=1
-   end
-         'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_eor_beamperchannelforreal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end   
-   
-
-   'nb_sim_perfect_cal_beamperchannel_modelnoflag_recalc':begin 
-      calibrate_visibilities=0
-      export_images=1
-      unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      ;recalculate_all=1
-   end
-   'nb_sim_perfect_cal_beamperchannel_modelnoflag_noeor':begin 
-      calibrate_visibilities=0
-      unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      no_frequency_flagging=1
-      remove_eor=1
-   end
-
-               'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_dnr':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
+      nfreq_avg=384
+      flag_calibration=0
+      over_calibrate=1 
    end 
-                  'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end
-               'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_ones':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end 
-   
-   
-   
-   
-                  'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_nocal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      ;recalculate_all=1
-   end
+
+
                   'nb_sim_perfect_cal_beamperchannel_visflagbasic_modelnoflag_noeor_weightfix_nocal_transfer':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -1790,613 +1140,6 @@ case version of
       nfreq_avg=1
       transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav'
       ;recalculate_all=1
-   end
-   
-                     'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_nocal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_nocal_maxcalsources':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_model_sources=4000
-      recalculate_all=1
-   end
-                     'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_maxcalsources':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      recalculate_all=1
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      recalculate_all=1
-   end
-   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_dimfluxthreshold':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      undefine, diffuse_calibrate, diffuse_model
-      ;remove_eor=1
-      no_diffuse=1
-      calibration_flux_threshold=-.3
-      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
-      nfreq_avg=1
-      recalculate_all=1
-   end
-                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_test':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      recalculate_all=1
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles_weightfix_dnr':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      undefine, cal_cable_reflection_fit
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      bubbles=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles_enhanced_weightfix_ones':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      undefine, cal_cable_reflection_fit
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      bubbles=1
-      enhance_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_maxcalsources_innercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=1.
-      max_cal_baseline=100.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_maxcalsources_outercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=400.
-      ;max_cal_baseline=100.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_maxcalsources_innerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=100.
-      max_cal_baseline=300.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_maxcalsources_outerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=300.
-      max_cal_baseline=500.
-   end
-                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_fluxthreshold_innercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=.3
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=1.
-      max_cal_baseline=100.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_fluxthreshold_outercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=.3
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=400.
-      ;max_cal_baseline=100.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_fluxthreshold_innerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=.3
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=100.
-      max_cal_baseline=300.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_fluxthreshold_outerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=.3
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=300.
-      max_cal_baseline=500.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_dnr_fluxthreshold':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=0.3
-      nfreq_avg=1
-      recalculate_all=1
-   end
-   
-                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_innercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=1.
-      max_cal_baseline=100.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_outercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=400.
-      ;max_cal_baseline=100.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_innerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=100.
-      max_cal_baseline=300.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_outerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=300.
-      max_cal_baseline=500.
-   end
-                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_fluxthreshold_innercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=.3
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=1.
-      max_cal_baseline=100.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_fluxthreshold_outercal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=.3
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=400.
-      ;max_cal_baseline=100.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_fluxthreshold_innerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=.3
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=100.
-      max_cal_baseline=300.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_fluxthreshold_outerannulus':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=.3
-      nfreq_avg=1
-      ;recalculate_all=1
-            min_cal_baseline=300.
-      max_cal_baseline=500.
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_fluxthreshold':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      calibration_flux_threshold=0.3
-      nfreq_avg=1
-            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
-      
-      recalculate_all=1
-   end
-   
-                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_nocal_maxcalsources':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      max_model_sources=4000
-      recalculate_all=1
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_dnr_maxcalsources':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      remove_eor=1
-      input_unflagged=1
-      max_cal_sources=4000
-      nfreq_avg=1
-   end
-                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_nocal_beamcut':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      beam_model_threshold=.1
-      recalculate_all=1
-   end
-                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_nocal_beamcut':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      beam_model_threshold=.1
-      recalculate_all=1
-   end
-                        'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_enhance_weightfix_nocal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-      enhance_eor=1
-   end
-   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_bubbles_weightfix_nocal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      bubbles=1
-      input_unflagged=1
-      nfreq_avg=1
-      recalculate_all=1
-   end
-       'nb_sim_beamperchannel_unflagged_novisflagbasic':begin 
-      nfreq_avg=1
-      no_frequency_flagging=1
-      turn_off_visflagbasic=1
-      recalculate_all=1
-   end  
-                              'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_nodiffuse':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      ;input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-      no_diffuse=1
-      undefine, diffuse_calibrate, diffuse_model
-      recalculate_all=1
-   end
-   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_tenthgrid_transferflags':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      ;input_unflagged=1
-      max_calibration_sources=4000
-      ;nfreq_avg=1
-      tenthgrid=1
-            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
-      
-      ;recalculate_all=1
-      
-            FoV=0
-      kbinsize=0.1
-      ;ps_kbinsize=0.1
-      dimension= 4096
-      ;ps_dimension = 2048
-      ;no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      ;unflag_all=1
-      nfreq_avg=384
-   end
-     'nb_sim_perfect_cal_eor_ones_maxcalsources_fifteenth':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      ;input_unflagged=1
-      max_calibration_sources=4000
-      ;nfreq_avg=1
-      fifteenthgrid_orig=1
-            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
-      
-      ;recalculate_all=1
-      
-            FoV=0
-      kbinsize=0.15
-      ;ps_kbinsize=0.1
-      dimension= 4096
-      ;ps_dimension = 2048
-      ;no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      ;unflag_all=1
-      nfreq_avg=384
-   end
-        'nb_sim_perfect_cal_eor_ones_maxcalsources_fifteenth_beamres':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      ;input_unflagged=1
-      max_calibration_sources=4000
-      ;nfreq_avg=1
-      fifteenthgrid_beamres=1
-            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
-      
-      ;recalculate_all=1
-      
-            FoV=0
-      kbinsize=0.15
-      psf_resolution = 30
-      ;ps_kbinsize=0.1
-      dimension= 4096
-      ;ps_dimension = 2048
-      ;no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      ;unflag_all=1
-      nfreq_avg=384
-   end
-           'nb_sim_perfect_cal_eor_ones_maxcalsources_30gridsize_beamres':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      ;input_unflagged=1
-      max_calibration_sources=4000
-      ;nfreq_avg=1
-      thirtygrid=1
-            transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/'
-      
-      ;recalculate_all=1
-      
-            FoV=0
-      kbinsize=0.3
-      psf_resolution = 30
-      ;ps_kbinsize=0.1
-      dimension= 4096
-      ;ps_dimension = 2048
-      ;no_frequency_flagging=1
-      recalculate_all=1
-      ;turn_off_visflagbasic=1
-      ;unflag_all=1
-      nfreq_avg=384
-   end
-   
-  'nb_sim_perfect_cal_eor_ones_maxcalsources_farextent2_nod':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_farextent2_nod'
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      max_calibration_sources=4000
-      FoV=0
-      kbinsize=0.5
-      dimension= 4096
-      nfreq_avg=384
-      save_uvf=1
-      save_imagecube=1
-      snapshot_recalculate=1
-      recalculate_all=1
-      make_grid_beam=1
-      undefine, diffuse_calibrate, diffuse_model
    end
    
    'nb_sim_perfect_cal_eor_ones_maxcalsources_nod':begin 
@@ -2413,54 +1156,266 @@ case version of
       snapshot_recalculate=1
       recalculate_all=1
       ;make_grid_beam=1
+      ;make_grid_psf=1
+      temp_make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_noauto_iter1000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      nfreq_avg=384
+      recalculate_all=1
+      ;make_grid_beam=1
+      ;make_grid_psf=1
+      calibration_auto_initialize=0
+      max_cal_iter=1000
+      undefine, diffuse_calibrate, diffuse_model
+   end
+
+   'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+      'nb_sim_overfit_cal_eor_maxcalsources_nod_zenithpointing':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing'
+      no_frequency_flagging=1
+      over_calibrate=1
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   
+      'nb_sim_overfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      over_calibrate=1
+            flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      ;transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing_notileflag':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+         'nb_sim_savedfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      saved_calibrate=1
+            flag_calibration=0
+      
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+         'nb_sim_savedfit_cal_eor_maxcalsources_nod_zenithpointing':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing'
+      no_frequency_flagging=1
+      saved_calibrate=1
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_calvisflag':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      no_tile_vis_flagging=1
+      max_calibration_sources=4000
+      nfreq_avg=384
+      recalculate_all=1
+      ;make_grid_beam=1
       make_grid_psf=1
       undefine, diffuse_calibrate, diffuse_model
    end
-   
-     'nb_sim_perfect_cal_eor_ones_maxcalsources_farextent3_nod':begin 
+   'nb_sim_perfect_cal_eor_ones_dimcalsources_nod_unflagall':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_farextent3_nod'
+      unflag_all=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
       no_frequency_flagging=1
       perfect_cal_ones=1
-      max_calibration_sources=4000
-      FoV=0
-      kbinsize=0.5
-      dimension= 6144
+      max_calibration_sources=-4000
       nfreq_avg=384
-      save_uvf=1
+      recalculate_all=1
       undefine, diffuse_calibrate, diffuse_model
    end
-   
-   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_nofreqdepbeam':begin 
+      'nb_sim_perfect_cal_eor_ones_dimcalsources_nod_calvisflag':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
       no_frequency_flagging=1
       perfect_cal_ones=1
-      ;remove_eor=1
-      ;input_unflagged=1
+      max_calibration_sources=-4000
+      nfreq_avg=384
+      recalculate_all=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_5000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=5000
+      nfreq_avg=384
+      save_uvf=1
+      save_imagecube=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      ;make_grid_beam=1
+      ;make_grid_psf=1
+      temp_make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_6000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=6000
+      nfreq_avg=384
+      save_uvf=1
+      save_imagecube=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      ;make_grid_beam=1
+      ;make_grid_psf=1
+      temp_make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_7000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=7000
+      nfreq_avg=384
+      save_uvf=1
+      save_imagecube=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      ;make_grid_beam=1
+      ;make_grid_psf=1
+      temp_make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_3000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=3000
+      nfreq_avg=384
+      save_uvf=1
+      save_imagecube=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      ;make_grid_beam=1
+      ;make_grid_psf=1
+      temp_make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_2000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=2000
+      nfreq_avg=384
+      save_uvf=1
+      save_imagecube=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      ;make_grid_beam=1
+      ;make_grid_psf=1
+      temp_make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_1000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=1000
+      nfreq_avg=384
+      save_uvf=1
+      save_imagecube=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      ;make_grid_beam=1
+      ;make_grid_psf=1
+      temp_make_grid_beam=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_double':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_beamperchannel_unflagged_nodiffuse_onebeam_double'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
       max_calibration_sources=4000
       nfreq_avg=384
-      ;recalculate_all=1
-      nofreqdepbeam=1
+      snapshot_recalculate=1
       recalculate_all=1
-   end
-                                 'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_nodiffuse_double':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      ;input_unflagged=1
-      max_calibration_sources=4000
-      nfreq_avg=1
-      ;recalculate_all=1
-      no_diffuse=1
       double=1
       undefine, diffuse_calibrate, diffuse_model
       recalculate_all=1
@@ -2684,50 +1639,13 @@ case version of
       uvfits_subversion = 1
       saved_run_bp = 0
       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
-   end
-
-
-   ;Khang's Stuff:
-
-   'kn_sideLobeCalibration_july2015': begin
-   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-   cable_bandpass_fit=1
-   saved_run_bp=1
-   production=1
-   allow_sidelobe_cal_sources=1
-   allow_sidelobe_model_sources=0
-   ;no long tiles used in calculating saved bp
-   
-   model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-   model_visibilities=1
-   return_cal_visibilities=0
-   
-   beam_threshold=0.01
-   beam_cal_threshold=0.01
-   beam_model_threshold=0.01
-   beam_output_threshold=0.01
-   diffuse_model=diffuse_calibrate
-   ;recalculate_all=1
-   end 
-
-
-   'kn_nb_devel_July2015':begin
-   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-   cable_bandpass_fit=1
-   saved_run_bp=1
-   production=1
-   flag_dead_dipoles=1
-   snapshot_recalculate=1
-   ;healpix_recalculate=1 
-   recalculate_all=1
 
    end
-
-
+   
    ;;;;;; Jon R's Stuff ;;;;;;;
     'jonr_barebones_aws':begin
      end
-   
+
 endcase
    
 if version EQ 'nb_pytest' then begin
