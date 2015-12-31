@@ -1,4 +1,4 @@
-FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
+FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,skip_bp_plots=skip_bp_plots,$
     bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,saved_run_bp=saved_run_bp,_Extra=extra
   ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.
     
@@ -169,8 +169,10 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     
   ENDELSE
   
+  If ~keyword_set(skip_bp_plots) then begin
   IF Keyword_Set(file_path_fhd) THEN bandpass_plots,obs,bandpass_arr,file_path_fhd=file_path_fhd,$
       cable_length_ref=cable_length_ref,tile_use_arr=tile_use_arr
+      endif
   
   RETURN,cal_bandpass
 END

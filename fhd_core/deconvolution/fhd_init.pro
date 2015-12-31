@@ -51,7 +51,7 @@ IF N_Elements(deconvolution_over_resolution) EQ 0 THEN over_resolution=2 ELSE ov
 IF N_Elements(deconvolution_horizon_threshold) EQ 0 THEN deconvolution_horizon_threshold=10. ;degrees above the horizon to exclude from deconvolution
 IF N_Elements(subtract_sidelobe_catalog) EQ 0 THEN sidelobe_subtract='' ELSE BEGIN
     IF size(restrict_hpx_inds,/type) EQ 7 THEN sidelobe_subtract=subtract_sidelobe_catalog ELSE BEGIN
-        IF Keyword_Set(subtract_sidelobe_catalog) THEN IF N_Elements(cal) GT 0 THEN sidelobe_subtract=cal.catalog_name ELSE BEGIN
+        IF Keyword_Set(subtract_sidelobe_catalog) THEN IF N_Elements(cal) GT 0 THEN sidelobe_subtract=cal.skymodel.catalog_name ELSE BEGIN
             IF N_Elements(obs) GT 0 THEN sidelobe_subtract=obs.instrument+'_calibration_source_list' ELSE sidelobe_subtract='' 
         ENDELSE
     ENDELSE

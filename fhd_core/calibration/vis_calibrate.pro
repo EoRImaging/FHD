@@ -6,8 +6,9 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,calibration_bandpass_iterate=calibration_bandpass_iterate,$
     calibration_auto_fit=calibration_auto_fit,saved_run_std_test_polyquad=saved_run_std_test_polyquad,$
-    saved_run_twopoly_meanmode=saved_run_twopoly_meanmode,over_calibrate=over_calibrate,$
-    perfect_cal_ones=perfect_cal_ones,perfect_cal_dnr=perfect_cal_dnr,_Extra=extra
+    saved_run_twopoly_meanmode=saved_run_twopoly_meanmode,over_calibrate=over_calibrate,skip_cal_plots=skip_cal_plots,$
+    perfect_cal_ones=perfect_cal_ones,perfect_cal_dnr=perfect_cal_dnr, perfect_add_mode=perfect_add_mode, $
+    just_amp_over_calibrate=just_amp_over_calibrate,just_phase_over_calibrate=just_phase_over_calibrate,_Extra=extra
   t0_0=Systime(1)
   error=0
   timing=-1
@@ -207,7 +208,7 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
         
         if keyword_set(cal) then cal_store=cal
         
-        filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_x2fix_updatecompare_amponly/combined/'+obs.obsname+'_cal.sav
+        filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_automodeinput/'+obs.obsname+'_cal.sav
         ;filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_meanphase_nox2fix_updatedcompare_zeromean/'+obs.obsname+'_cal.sav
         restore,filename_poly
         (*cal_polyfit.gain[0])=(*cal.gain[0])
@@ -218,6 +219,8 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
       endif
       
       cal=vis_cal_combine(cal_polyfit,cal_bandpass)
+      If keyword_set(saved_run_twopoly_meanmode) then cal=cal_polyfit
+      
     ENDELSE
   ENDIF ELSE cal=cal_bandpass
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
@@ -227,12 +230,29 @@ If keyword_set(over_calibrate) then begin
   cal=cal_base & FOR pol_i=0,nc_pol-1 DO cal.gain[pol_i]=Ptr_new(*cal_base.gain[pol_i])
 endif
 
-If keyword_set(over_calibrate_just_amp) then begin
-  phase_fit_xx=atan(*cal.gain[0],/phase)
-  phase_fit_yy=atan(*cal.gain[1],/phase)
+If keyword_set(saved_calibrate) then begin
+  cal_final=getvar_savefile('/nfs/eor-00/h1/nbarry/cal_final_notileflag.sav','cal_final')
+  FOR pol_i=0,nc_pol-1 DO BEGIN
+    FOR tile_i=0, 127 do begin
+      (*cal.gain[pol_i])[*,tile_i]=cal_final[*,pol_i]
+    ENDFOR
+  ENDFOR
+endif
+
+If keyword_set(just_amp_over_calibrate) then begin
+  phase_fit_xx=0.;atan(*cal.gain[0],/phase)
+  phase_fit_yy=0.;atan(*cal.gain[1],/phase)
   cal=cal_base & FOR pol_i=0,nc_pol-1 DO cal.gain[pol_i]=Ptr_new(*cal_base.gain[pol_i])
   *cal.gain[0]=abs(*cal.gain[0])*exp(Complex(0,1)*phase_fit_xx)
   *cal.gain[1]=abs(*cal.gain[1])*exp(Complex(0,1)*phase_fit_yy)
+endif
+
+If keyword_set(just_phase_over_calibrate) then begin
+  amp_fit_xx=1.;abs(*cal.gain[0])
+  amp_fit_yy=1.;abs(*cal.gain[1])
+  cal=cal_base & FOR pol_i=0,nc_pol-1 DO cal.gain[pol_i]=Ptr_new(*cal_base.gain[pol_i])
+  *cal.gain[0]=amp_fit_xx*exp(Complex(0,1)*(*cal.gain[0]))
+  *cal.gain[1]=amp_fit_yy*exp(Complex(0,1)*(*cal.gain[1]))
 endif
 
 
@@ -244,13 +264,25 @@ basename=file_basename(file_path_fhd)
 dirpath=file_dirname(file_path_fhd)
 image_path=filepath(basename,root=dirpath,sub='output_images')
 ;make sure to plot both, if autocorrelations are used for the calibration solution
-plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
+if ~keyword_set(skip_cal_plots) then plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
 
 If keyword_set(perfect_cal_ones) then begin
   one_arr=complex(FLTARR(384,128))
   one_arr[*,*]=1.
   *cal.gain[0]=one_arr
   *cal.gain[1]=one_arr
+  
+  If keyword_set(perfect_add_mode) then begin
+    for pol_i=0,1 do begin
+      for tile_i= 0,127 do begin
+        IF cal.mode_params[pol_i,tile_i] NE !NULL then begin
+          gain_mode_fit=(*cal.mode_params[pol_i,tile_i])[1]*exp(-Complex(0,1)*2.*!Pi*((*cal.mode_params[pol_i,tile_i])[0]*findgen(n_freq)/n_freq)+Complex(0,1)*(*cal.mode_params[pol_i,tile_i])[2])
+          (*cal.gain[pol_i])[*,tile_i]+=gain_mode_fit
+        endif
+      endfor
+    endfor
+  endif
+  
 endif
 
 IF Keyword_Set(calibration_auto_fit) THEN cal=cal_auto
