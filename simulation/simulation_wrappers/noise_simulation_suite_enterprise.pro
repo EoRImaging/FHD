@@ -67,7 +67,7 @@ pro noise_simulation_suite_enterprise, uvf_input = uvf_input,  $
       
       print, '***CALCULATING PS***: for ' + folder_names[sample, obs]
       
-      enterprise_wrapper, folder_names[sample, obs], obsids[obs], uvf_input = uvf_input, /sim,$
+      ps_wrapper, folder_names[sample, obs], obsids[obs], uvf_input = uvf_input, /sim,$
         refresh_dft = refresh_ps, refresh_ps = refresh_ps
         
     endfor
