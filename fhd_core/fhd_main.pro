@@ -50,7 +50,8 @@ IF data_flag LE 0 THEN BEGIN
         RETURN
     ENDIF
     
-    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra)
+    ;Note: explicitly reference dft_threshold here to remove it from EXTRA, which would be passed on to lower-level routines
+    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra) 
     n_pol=obs.n_pol
     n_freq=obs.n_freq
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end 
