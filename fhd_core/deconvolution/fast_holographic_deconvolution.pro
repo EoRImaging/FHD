@@ -311,24 +311,17 @@ FOR iter=0L,max_iter-1 DO BEGIN
                 IF n_filter GT 0 THEN BEGIN
                     image_rebin2=Median(image_rebin,4,/even)
                     image_rebin[mask_i_use[filter_i]]=image_rebin2[mask_i_use[filter_i]]
-;                    model_rebin2=Median(model_rebin,4,/even)
-;                    model_rebin[mask_i_use[filter_i]]=model_rebin2[mask_i_use[filter_i]]
                 ENDIF
                 image_smooth=Rebin(image_rebin,dimension_fit,elements_fit)
-;                model_smooth=Rebin(model_rebin,dimension_fit,elements_fit)
                 image_filtered=(image_unfiltered-image_smooth)*beam_mask
-;                model_I_use=(model_image_composite-model_smooth)*beam_mask
             ENDIF ELSE BEGIN
                 image_smooth=Median(image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
                 image_filtered=fltarr(dimension_fit,elements_fit)
                 image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-image_smooth
                 model_smooth=Median(model_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-;                model_I_use=fltarr(dimension_fit,elements_fit)
-;                model_I_use[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=model_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-model_smooth
             ENDELSE
         ENDIF ELSE BEGIN
             image_filtered=image_unfiltered
-;            model_I_use=model_image_composite
         ENDELSE
         
         IF Keyword_Set(independent_fit) THEN BEGIN
@@ -338,18 +331,17 @@ FOR iter=0L,max_iter-1 DO BEGIN
         ENDIF 
     ENDIF ELSE t2_0=Systime(1)
     source_find_image=image_filtered*beam_avg*source_taper*source_mask
-;    model_I_use=model_I_use*beam_avg*source_taper*source_mask
     image_use=image_unfiltered*beam_avg*beam_mask*source_mask
    
-    component_array1=fhd_source_detect(obs_fit,fhd_params,jones,source_find_image,image_I=image_filtered,image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
-        model_I_image=model_I_use,gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
+    component_array1=fhd_source_detect(obs_fit,fhd_params,jones,source_find_image,image_I=image_filtered,$
+        image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
+        gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
         beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     
     source_n_arr[iter]=n_sources
     detection_threshold_arr[iter]=detection_threshold
     image_use*=source_mask
     source_find_image*=source_mask
-;    model_I_use*=source_mask
     IF iter EQ 0 THEN converge_check[iter]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
     converge_check2[iter]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
     ;use the composite image to locate sources, but then fit for flux independently

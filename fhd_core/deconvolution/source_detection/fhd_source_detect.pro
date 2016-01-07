@@ -1,8 +1,6 @@
 FUNCTION fhd_source_detect,obs,fhd_params,jones,source_find_image,image_I_flux=image_I_flux,image_Q_flux=image_Q_flux,$
     image_U_flux=image_U_flux,image_V_flux=image_V_flux,beam_arr=beam_arr,beam_corr_avg=beam_corr_avg,$
-    beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,detection_threshold=detection_threshold,$
-    model_I_image=model_I_image,negative_ratio=negative_ratio,_Extra=extra
-;NOTE: if supplied, model_I_image should be in the same units and weighting scheme as source_find_image
+    beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,detection_threshold=detection_threshold,_Extra=extra
 
 add_threshold=fhd_params.add_threshold
 max_add_sources=fhd_params.max_add_sources
@@ -13,7 +11,6 @@ sigma_threshold=2.
 frequency=obs.freq_center
 alpha_use=obs.alpha ;spectral index used for the subtracted component
 over_resolution=fhd_params.over_resolution
-;IF N_Elements(negative_ratio) NE 1 THEN negative_ratio=2./!Pi ;relative strength of first negative sidelobe compared to the strength of the peak. Defaut is taken from the Sin(x)/x function
 
 n_pol=fhd_params.npol
 dimension=obs.dimension
@@ -34,28 +31,10 @@ converge_check=Stddev(source_find_image[where(beam_mask)],/nan)
 
 IF N_Elements(source_mask) EQ 0 THEN source_mask0=beam_mask ELSE source_mask0=source_mask
 neg_i=where(source_find_image LE -Max(source_find_image),n_neg)
-IF n_neg GT 0 THEN BEGIN
-    debug_point=1
-;    source_neg=fltarr(dimension,elements)
-;    source_neg[neg_i]=1.
-;    source_neg=Smooth(source_neg,Ceil(beam_width*4.))*Ceil(beam_width*4.)^2
-;    source_mask0[where(source_neg)]=0
-ENDIF
 
 source_mask1=beam_mask*source_mask0
 flux_offset=Mean(source_find_image[where(source_mask0)])
 source_find_image-=flux_offset
-
-;IF N_Elements(model_I_image) EQ N_Elements(source_find_image) THEN BEGIN
-;    mask_test_i=where((source_find_image LT -5.*converge_check) AND (model_I_image GT 5.*converge_check),n_mask)
-;    IF n_mask GT 0 THEN BEGIN
-;        mask_test=fltarr(dimension,elements)
-;        mask_test[mask_test_i]=1
-;        mask_test=smooth(mask_test,2.*local_max_radius+1,/edge_truncate)
-;        mask_i=where(mask_test,n_mask)
-;        source_mask1[mask_i]=0
-;    ENDIF
-;ENDIF
     
 ;    Find additional sources:
 ;       require that they be isolated ; This is local_max_radius
