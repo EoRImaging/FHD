@@ -1,4 +1,4 @@
-PRO sim_mwaimp_density, version=version, sources_file_name=sources_file_name, catalog_file_name=catalog_file_name,fov=fov,$
+PRO sim_mwaimp_density_wrapper, version=version, sources_file_name=sources_file_name, catalog_file_name=catalog_file_name,fov=fov,$
     sim_baseline_density=sim_baseline_density,set_sidelobe_keywords=set_sidelobe_keywords, _Extra=extra
 
 
@@ -67,6 +67,8 @@ snapshot_healpix_export = 1
 split_ps_export=1
 save_imagecube=1
 save_uvf=1
+
+unflag_all=1
 
 if n_elements(set_sidelobe_keywords) eq 0 then set_sidelobe_keywords=0
 
