@@ -57,7 +57,6 @@ END
 gain_arr=read_numpy(cal_file_use)
 gain_arr_ptr=Ptr_new(gain_arr)
 cal=fhd_struct_init_cal(obs,params,calibration_origin=cal_file_use,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
-
 END
 ELSE: BEGIN
 	print,'Unknown file format: ',cal_file_use
@@ -241,6 +240,12 @@ If keyword_set(over_calibrate_just_amp) then begin
 	cal=cal_base & FOR pol_i=0,nc_pol-1 DO cal.gain[pol_i]=Ptr_new(*cal_base.gain[pol_i])
 	*cal.gain[0]=abs(*cal.gain[0])*exp(Complex(0,1)*phase_fit_xx)
 	*cal.gain[1]=abs(*cal.gain[1])*exp(Complex(0,1)*phase_fit_yy)
+endif
+
+If keyword_set(smooth_calibrate) then begin
+  ;cal_final=getvar_savefile('/nfs/eor-00/h1/nbarry/cal_smooth_notileflag.sav','cal')
+  cal_final=getvar_savefile('/nfs/eor-00/h1/nbarry/cal_smooth_notileflag_perfect_phase.sav','cal')
+  FOR pol_i=0,nc_pol-1 DO cal.gain[pol_i]=Ptr_new(*cal_final.gain[pol_i])
 endif
 
 If keyword_set(saved_calibrate) then begin
