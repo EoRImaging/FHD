@@ -1,5 +1,5 @@
 FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
-    pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,double=double,$
+    pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,double_precision=double_precision,$
     FoV=FoV,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
     nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
@@ -147,7 +147,14 @@ IF N_Elements(nside) EQ 0 THEN nside=0
 IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=restrict_hpx_inds
 IF N_Elements(n_hpx) EQ 0 THEN n_hpx=0
 IF N_Elements(n_zero_hpx) EQ 0 THEN n_zero_hpx=-1
-IF Keyword_Set(double) THEN double_precision=1 ELSE double_precision=0
+IF Keyword_Set(double_precision) THEN double_precision=1 ELSE double_precision=0
+IF dimension GT 4096 THEN BEGIN
+    IF double_precision EQ 0 THEN BEGIN
+        print, "WARNING: If dimension is greater than 4096 you MUST use double precision!"
+        print, "Turning on double precision"
+        double_precision=1
+    ENDIF
+ENDIF
 pol_names=['XX','YY','XY','YX','I','Q','U','V']
 healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
 

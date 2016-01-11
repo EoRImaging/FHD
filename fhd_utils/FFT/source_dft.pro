@@ -43,7 +43,7 @@ y_use=y_loc_use-elements/2.
 x_use*=(2.*Pi/dimension)
 y_use*=(2.*Pi/dimension)
 
-element_check=Float(N_Elements(xvals))*Float(N_Elements(x_use))
+element_check=Long64(N_Elements(xvals))*Long64(N_Elements(x_use))
 
 IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the same locations to be used for multiple sets of fluxes
     fbin_use=where(Ptr_valid(flux_use),n_fbin)

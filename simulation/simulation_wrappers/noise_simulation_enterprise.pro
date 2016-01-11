@@ -1,11 +1,11 @@
 pro noise_simulation_enterprise, cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, $
-    use_saved_uvf = use_saved_uvf, uvf_savefile = uvf_savefile, $
     sim_baseline_density = sim_baseline_density, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
     silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
-    snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
+    snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,$
+    use_saved_baselines = use_saved_baselines, _Extra=extra
     
   except=!except
   !except=0
@@ -97,10 +97,12 @@ pro noise_simulation_enterprise, cleanup=cleanup,recalculate_all=recalculate_all
     ENDIF
     
     if keyword_set(sim_baseline_density) then begin
+    
       ;; set up baseline distribution
       simulate_baselines = 1
       
       nsample = round(ps_kspan^2. * sim_baseline_density, /L64)
+      
       sim_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
       sim_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
       
@@ -112,21 +114,24 @@ pro noise_simulation_enterprise, cleanup=cleanup,recalculate_all=recalculate_all
       max_n_baseline = 8000
       n_time = 2*ceil(nsample/float(max_n_baseline))
       n_per_time = floor(nsample/(n_time/2.))
-      if n_per_time*n_time ne nsample then begin
-        nsample = n_per_time*n_time/2.
-        sim_uu = sim_uu[0:nsample-1]
-        sim_vv = sim_vv[0:nsample-1]
-      endif
-      sim_uu = reform(sim_uu, n_per_time, 1, n_time/2)
-      sim_vv = reform(sim_vv, n_per_time, 1, n_time/2)
+      n_sample_use = n_time*n_per_time/2.
       
-      sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
-      sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
+      sim_uu = reform(sim_uu[0:n_sample_use-1], n_per_time, 1, n_time/2)
+      sim_vv = reform(sim_vv[0:n_sample_use-1], n_per_time, 1, n_time/2)
+      
+      if keyword_set(use_saved_baselines) then begin
+        restore, output_directory + 'fhd_' + version + '/baselines_sim.sav'
+      endif else begin
+        sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
+        sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
+      endelse
+      save, filename = output_directory + 'fhd_' + version + '/baselines_sim.sav', sim_baseline_uu, sim_baseline_vv
       
       sim_baseline_time = [intarr(n_per_time), intarr(n_per_time)+1]
       if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
-    endif
-        
+      
+    endif    
+    
     array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
       sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
       simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, $
