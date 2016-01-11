@@ -8,7 +8,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag
     calibration_auto_fit=calibration_auto_fit,saved_run_std_test_polyquad=saved_run_std_test_polyquad,$
     saved_run_twopoly_meanmode=saved_run_twopoly_meanmode,over_calibrate=over_calibrate,skip_cal_plots=skip_cal_plots,$
     perfect_cal_ones=perfect_cal_ones,perfect_cal_dnr=perfect_cal_dnr, perfect_add_mode=perfect_add_mode, $
-    just_amp_over_calibrate=just_amp_over_calibrate,just_phase_over_calibrate=just_phase_over_calibrate,_Extra=extra
+    just_amp_over_calibrate=just_amp_over_calibrate,just_phase_over_calibrate=just_phase_over_calibrate,$
+    saved_calibrate=saved_calibrate,smooth_calibrate=smooth_calibrate,_Extra=extra
   t0_0=Systime(1)
   error=0
   timing=-1
@@ -228,6 +229,12 @@ ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,
 ;****My changes
 If keyword_set(over_calibrate) then begin
   cal=cal_base & FOR pol_i=0,nc_pol-1 DO cal.gain[pol_i]=Ptr_new(*cal_base.gain[pol_i])
+endif
+
+If keyword_set(smooth_calibrate) then begin
+  ;cal_final=getvar_savefile('/nfs/eor-00/h1/nbarry/cal_smooth_notileflag.sav','cal')
+  cal_final=getvar_savefile('/nfs/eor-00/h1/nbarry/cal_smooth_notileflag_perfect_phase.sav','cal')
+  FOR pol_i=0,nc_pol-1 DO cal.gain[pol_i]=Ptr_new(*cal_final.gain[pol_i])
 endif
 
 If keyword_set(saved_calibrate) then begin

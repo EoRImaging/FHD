@@ -111,7 +111,19 @@ case version of
       flag_calibration=0
       over_calibrate=1 
    end 
-
+     'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_onesource':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      recalculate_all=1
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      calibration_auto_initialize=0
+      flag_calibration=0
+      over_calibrate=1 
+      calibration_catalog_file_path=filepath('bright_source7.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+    
  
 
 
@@ -217,7 +229,50 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
-         'nb_sim_savedfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag':begin 
+   'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   
+         'nb_sim_perfect_cal_noeor_ones_dimcalsources_nod_notileflag':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      remove_eor=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      max_calibration_sources=-4000
+      nfreq_avg=384
+      recalculate_all=1
+      undefine, diffuse_calibrate, diffuse_model
+   end
+         'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing_notileflag_cable':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      perfect_add_mode=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+         'nb_sim_savedfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -228,7 +283,33 @@ case version of
       
       max_calibration_sources=4000
       nfreq_avg=384  
-      undefine, diffuse_calibrate, diffuse_model
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+            'nb_sim_smoothfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      smooth_calibrate=1
+            flag_calibration=0
+      recalculate_all=1
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+   'nb_sim_smoothfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag_perfectphase':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      smooth_calibrate=1
+            flag_calibration=0
+      recalculate_all=1
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
          'nb_sim_savedfit_cal_eor_maxcalsources_nod_zenithpointing':begin 
       saved_run_bp=0
