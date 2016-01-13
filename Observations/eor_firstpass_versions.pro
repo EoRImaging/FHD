@@ -1232,6 +1232,20 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
+        'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_onesource':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_bright_source7'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+      calibration_catalog_file_path=filepath('bright_source7.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
    
    
          'nb_sim_perfect_cal_noeor_ones_dimcalsources_nod_notileflag':begin 
