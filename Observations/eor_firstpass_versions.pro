@@ -8,14 +8,14 @@ heap_gc
 
 ; parse command line args
 compile_opt strictarr
-;args = Command_Line_Args(count=nargs)
-;obs_id = args[0]
-obs_id = '1061316176'
-;output_directory = args[1]
-output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
-;version = args[2]
-version = 'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_onesource'
-;cmd_args={version:version}
+args = Command_Line_Args(count=nargs)
+obs_id = args[0]
+;obs_id = '1061316176'
+output_directory = args[1]
+;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+version = args[2]
+;version = 'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_onesource'
+cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
