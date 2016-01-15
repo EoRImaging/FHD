@@ -1,5 +1,4 @@
-PRO sim_mwaimp_density, version=version, sources_file_name=sources_file_name, catalog_file_name=catalog_file_name,fov=fov,$
-    sim_baseline_density=sim_baseline_density,set_sidelobe_keywords=set_sidelobe_keywords, _Extra=extra
+PRO pol_sim_mwaimp, version=version, sources_file_name=sources_file_name, catalog_file_name=catalog_file_name,fov=fov,beam_model_version=beam_model_version, _Extra=extra
 
 
 except=!except
@@ -30,7 +29,7 @@ source_array = catalog
 undefine, catalog
 ;;**
 
-output_directory='/data4/MWA/zmart_FHD/mwa_impulse_densitysim' ; output directory for fhd_path_setup
+output_directory='/data4/MWA/zmart_FHD/pol_mwa_impulse' ; output directory for fhd_path_setup
 
 use_obsid = 1 ; toggles using a specific obsid/uvfits file
 if keyword_set(use_obsid) then begin
@@ -66,21 +65,19 @@ save_visibilities= 1
 snapshot_healpix_export = 1
 split_ps_export=1
 save_imagecube=1
+save_uvf=1
 
-if n_elements(set_sidelobe_keywords) eq 0 then set_sidelobe_keywords=0
-
-allow_sidelobe_image_output=set_sidelobe_keywords
-allow_sidelobe_sources=set_sidelobe_keywords
-allow_sidelobe_model_sources=set_sidelobe_keywords
-allow_sidelobe_cal_sources=set_sidelobe_keywords
+allow_sidelobe_image_output=1
+allow_sidelobe_sources=1
+allow_sidelobe_model_sources=1
+allow_sidelobe_cal_sources=1
 
 include_catalog_sources = 0 ; toggles the use of catalog sources in the simulation source list.
 
+if n_elements(beam_model_version) eq 0 then beam_model_verison=1 ; this uses the Hertzian dipole projection matrix as the beam model Jones matrix
 
-if n_elements(sim_baseline_density) eq 0 then message, "Density not set." ;baseline density in number per wavelength^2 
+sim_baseline_density = 0
 eor_sim = 0; toggles eor simulation in vis_simulate
-
-;used for simulating baselines
 
 ; This is now unnecessary with the structure above. The toggling is now in the use_obsid parameter.
 ; 
@@ -102,7 +99,7 @@ IF N_Elements(double_precison_beam) EQ 0 THEN double_precison_beam=0
 IF N_Elements(complex_beam) EQ 0 THEN complex_beam=1
 IF N_Elements(precess) EQ 0 THEN precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 
-n_pol = 2
+n_pol = 4
 image_filter_fn='filter_uv_uniform' ; not sure if this makes sense for simulations
 dimension=1024
 if n_elements(fov) eq 0 then fov=80.
@@ -114,7 +111,7 @@ kbinsize=0.5
 no_rephase=1 ;set to use obsra, obsdec for phase center even if phasera, phasedec present in a .metafits file
 
 ;obsra=0. ; forces an obsra 
-;obsdec=-26.78
+
 
 
 ; Baseline Simulation
@@ -127,8 +124,8 @@ if keyword_set(sim_baseline_density) then begin
   simulate_baselines = 1
   
   nsample = round(ps_kspan^2. * sim_baseline_density, /L64)
-  sim_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2. ;nsample u components
-  sim_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2. ;nsample v components, minmax is set by span in kspace
+  sim_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
+  sim_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
   
   ;; convert to light travel time (ie m/c or wavelenghts/freq) -- use f=150MHz 
   ;for lowest frequency
@@ -149,7 +146,7 @@ if keyword_set(sim_baseline_density) then begin
   
   sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
   sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
-
+  
   sim_baseline_time = [intarr(n_per_time), intarr(n_per_time)+1]
   if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
 endif
@@ -169,12 +166,13 @@ array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $
     simulate_header=simulate_header, $
     complex=complex_beam, $
     double=double_precision_beam, $
-    simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, n_time=n_time, sim_baseline_time_inds=sim_baseline_time, $
+    simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, n_time=n_time, sim_baseline_time=sim_baseline_time, $
     export_images=export_images, $
     save_visibilities=save_visibilities, $
     snapshot_healpix_export=snapshot_healpix_export, $
     split_ps_export=split_ps_export, $
     save_imagecube=save_imagecube, $
+    save_uvf=save_uvf, $
     include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     n_pol=n_pol,$
     dimension=dimension, $
@@ -189,7 +187,8 @@ array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $
     allow_sidelobe_model_sources=allow_sidelobe_model_sources,$
     allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,$
     psf_resolution=psf_resolution,$
-    kbinsize=kbinsize,$    
+    kbinsize=kbinsize,$
+    beam_model_version=beam_model_version,$    
     _Extra=extra
     
 heap_gc
