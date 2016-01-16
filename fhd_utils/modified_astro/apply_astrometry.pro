@@ -40,20 +40,22 @@ IF size(obs,/type) EQ 8 THEN BEGIN
     astr=obs.astr
     JDate=obs.JD0
 ENDIF ELSE ignore_refraction=1
+precess_forward=0
+precess_reverse=0
 IF Keyword_Set(xy2ad) THEN BEGIN
     xy2ad, x_arr, y_arr, astr, ra_arr, dec_arr
     
     IF ~Keyword_Set(ignore_refraction) THEN BEGIN   
         i_nan=where(Finite(ra_arr,/nan),n_nan,complement=i_use)
         IF n_nan EQ 0 THEN BEGIN
-            Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=1,precess=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=precess_reverse,precess=precess_reverse,aberration=precess_reverse, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, _Extra=extra)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr, dec_arr, precess=1, nutate=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr, dec_arr, precess=precess_forward, nutate=precess_forward,aberration=precess_forward, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
         ENDIF ELSE BEGIN
             ra_vals=ra_arr[i_use] & dec_vals=dec_arr[i_use]
-            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=1,precess=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=precess_reverse,precess=precess_reverse,aberration=precess_reverse, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, _Extra=extra)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=1, nutate=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=precess_forward, nutate=precess_forward,aberration=precess_forward, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             ra_arr[i_use]=ra_vals & dec_arr[i_use]=dec_vals
         ENDELSE
     ENDIF
@@ -65,14 +67,14 @@ IF Keyword_Set(ad2xy) THEN BEGIN
     IF ~Keyword_Set(ignore_refraction) THEN BEGIN
         i_nan=where(Finite(ra_arr_new,/nan),n_nan,complement=i_use)
         IF n_nan EQ 0 THEN BEGIN
-            Eq2Hor,ra_arr_new, dec_arr_new, JDate, alt_arr, az_arr, nutate=1,precess=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Eq2Hor,ra_arr_new, dec_arr_new, JDate, alt_arr, az_arr, nutate=precess_reverse,precess=precess_reverse,aberration=precess_reverse, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed, _Extra=extra)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr_new, dec_arr_new, precess=1, nutate=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr_new, dec_arr_new, precess=precess_forward, nutate=precess_forward,aberration=precess_forward, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
         ENDIF ELSE BEGIN
             ra_vals=ra_arr_new[i_use] & dec_vals=dec_arr_new[i_use]
-            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=1,precess=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=precess_reverse,precess=precess_reverse,aberration=precess_reverse, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed, _Extra=extra)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=1, nutate=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=precess_forward, nutate=precess_forward,aberration=precess_forward, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             ra_arr_new[i_use]=ra_vals & dec_arr_new[i_use]=dec_vals
         ENDELSE
     ENDIF
