@@ -180,9 +180,9 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       if count_neg gt 0 then begin
         data_log_norm[wh_neg] = (log_data_range[1] - neg_data_log[wh_neg])*(n_pos_neg_colors-1)/(log_data_range[1]-log_data_range[0]) + neg_color_range[0]
         wh_under = where(neg_data_log[wh_neg] lt log_data_range[0], count_under)
-        if count_under gt 0 then data_log_norm[wh_neg[wh_under]] = neg_color_range[0]
+        if count_under gt 0 then data_log_norm[wh_neg[wh_under]] = neg_color_range[1]
         wh_over = where(neg_data_log[wh_neg] gt log_data_range[1], count_over)
-        if count_over gt 0 then data_log_norm[wh_neg[wh_over]] = neg_color_range[1]
+        if count_over gt 0 then data_log_norm[wh_neg[wh_over]] = neg_color_range[0]
       endif
       if count_zero gt 0 then data_log_norm[wh_zero] = zero_color
       
