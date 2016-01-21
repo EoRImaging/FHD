@@ -22,7 +22,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     plot_as_map = plot_as_map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
     data_range = data_range, silent=silent, title=title, note = note, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
     projection=projection, coord_in=coord_in, coord_out = coord_out, $
-    color_profile = color_profile, log = log, window_num = window_num
+    color_profile = color_profile, data_min_abs = data_min_abs, log = log, window_num = window_num
     
   IF N_Elements(silent) EQ 0 THEN silent=1
   IF N_Elements(nside) NE 1 THEN begin
@@ -180,7 +180,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
       quick_image, map_out, missing_val = bad_val, data_range = data_range, xtitle = 'ra (degrees)', ytitle = 'dec (degrees)', $
         title = title, note = note, charsize = charsize, noerase = noerase, xrange = ra_range, yrange = dec_range, $
         savefile = savefile, png = png, eps = eps, pdf = pdf, $
-        log = log, color_profile = color_profile, window_num = window_num
+        log = log, color_profile = color_profile, data_min_abs = data_min_abs, window_num = window_num
     endif
   endif else begin
   
