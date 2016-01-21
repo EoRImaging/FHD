@@ -3,6 +3,7 @@ FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=element
 fft_norm=1.
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
 IF conserve_memory GT 1E6 THEN mem_thresh=conserve_memory ELSE mem_thresh=1E8
+; NOTE: Now perform ALL calculations as double precision, and convert to floats if double_precision is not set
 ;IF Keyword_Set(degpix) THEN fft_norm=(degpix*!DtoR)^2. ELSE fft_norm=1.
 
 IF N_Elements(flux) EQ 0 THEN flux=fltarr(size(x_loc,/dimension)>1)+1.
@@ -35,8 +36,8 @@ IF N_Elements(dimension) EQ 0 THEN BEGIN
     ENDELSE
 ENDIF
 IF N_Elements(elements) EQ 0 THEN elements=dimension
-IF Keyword_Set(double_precision) THEN Pi=!DPi ELSE Pi=!Pi
-icomp=Complex(0,1,double=double_precision)
+Pi=!DPi
+icomp=DComplex(0,1)
 
 x_use=x_loc_use-dimension/2.
 y_use=y_loc_use-elements/2.
@@ -65,7 +66,7 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
                 flux_vals=(*flux_use[fbin_use[fbin_i]])[inds]
                 source_uv_real_vals=matrix_multiply(cos_term,flux_vals)
                 source_uv_im_vals=matrix_multiply(sin_term,flux_vals)
-                *source_uv_vals[fbin_use[fbin_i]]+=Complex(source_uv_real_vals,source_uv_im_vals,double=double_precision)
+                *source_uv_vals[fbin_use[fbin_i]]+=DComplex(source_uv_real_vals,source_uv_im_vals)
             ENDFOR
             cos_term=(sin_term=0) ;free memory
         ENDFOR
@@ -76,15 +77,18 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
         FOR fbin_i=0L,n_fbin-1 DO BEGIN
             source_uv_real_vals=matrix_multiply(cos_term,*flux_use[fbin_use[fbin_i]])
             source_uv_im_vals=matrix_multiply(sin_term,*flux_use[fbin_use[fbin_i]])
-            *source_uv_vals[fbin_use[fbin_i]]+=Complex(source_uv_real_vals,source_uv_im_vals,double=double_precision)
+            *source_uv_vals[fbin_use[fbin_i]]+=DComplex(source_uv_real_vals,source_uv_im_vals)
         ENDFOR
         cos_term=(sin_term=0) ;free memory
     ENDELSE
     FOR fbin_i=0L,n_fbin-1 DO *source_uv_vals[fbin_use[fbin_i]]*=fft_norm
+    IF not Keyword_Set(double_precision) THEN $
+        FOR fbin_i=0L,n_fbin-1 DO $
+            *source_uv_vals[fbin_use[fbin_i]]=Complex(Temporary(*source_uv_vals[fbin_use[fbin_i]]))
 ENDIF ELSE BEGIN
     IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
         memory_bins=Round(element_check/mem_thresh)
-        source_uv_vals=Complexarr(size(xvals,/dimension))
+        source_uv_vals=DComplexarr(size(xvals,/dimension))
         n0=N_Elements(x_use)
         binsize=Lonarr(memory_bins)+Round(n0/memory_bins)
         binsize[memory_bins-1]-=Total(binsize)-n0
@@ -96,7 +100,7 @@ ENDIF ELSE BEGIN
             source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux_use[inds])
             sin_term=Sin(Temporary(phase))
             source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux_use[inds])
-            source_uv_vals+=Complex(source_uv_real_vals,source_uv_im_vals,double=double_precision)
+            source_uv_vals+=DComplex(source_uv_real_vals,source_uv_im_vals)
         ENDFOR
     ENDIF ELSE BEGIN
         phase=matrix_multiply(xvals,x_use)+matrix_multiply(yvals,y_use)
@@ -104,9 +108,10 @@ ENDIF ELSE BEGIN
         source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux_use)
         sin_term=Sin(Temporary(phase))
         source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux_use)
-        source_uv_vals=Complex(source_uv_real_vals,source_uv_im_vals,double=double_precision)
+        source_uv_vals=DComplex(source_uv_real_vals,source_uv_im_vals)
     ENDELSE
     source_uv_vals*=fft_norm
+    IF not Keyword_Set(double_precision) THEN source_uv_vals=Complex(source_uv_vals)
 ENDELSE
 
 IF Keyword_Set(flux_ptr_cleanup) THEN Ptr_free,flux_use
