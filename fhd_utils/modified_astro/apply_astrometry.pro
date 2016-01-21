@@ -22,11 +22,13 @@
 ;    ad2xy - set to convert from celestial to pixel coordinates
 ;    
 ;    ignore_refraction - set to ignore refraction (for backwards compatibility and testing)
+;    
+;    _Extra - passes any additional keywords (like temperature (Kelvin) or pressure (millibars) to co_refract
 ;
 ; :Author: Ian
 ;-
 PRO apply_astrometry,obs, x_arr=x_arr, y_arr=y_arr, ra_arr=ra_arr, dec_arr=dec_arr, xy2ad=xy2ad, ad2xy=ad2xy, $
-    astr=astr, JDate=JDate, ignore_refraction=ignore_refraction
+    astr=astr, JDate=JDate, ignore_refraction=ignore_refraction, _Extra=extra
 
 IF not (Keyword_Set(xy2ad) OR Keyword_Set(ad2xy)) THEN $
     message, "ERROR! At least one direction keyword (xy2ad or ad2xy) must be set."
@@ -42,37 +44,39 @@ IF Keyword_Set(xy2ad) THEN BEGIN
     xy2ad, x_arr, y_arr, astr, ra_arr, dec_arr
     
     IF ~Keyword_Set(ignore_refraction) THEN BEGIN   
-        i_nan=where(Finite(ra_arr,/nan),n_nan,ncomplement=n_nan,complement=i_use)
+        i_nan=where(Finite(ra_arr,/nan),n_nan,complement=i_use)
         IF n_nan EQ 0 THEN BEGIN
-            Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr, dec_arr, precess=0, nutate=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=1,precess=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, _Extra=extra)
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr, dec_arr, precess=1, nutate=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
         ENDIF ELSE BEGIN
             ra_vals=ra_arr[i_use] & dec_vals=dec_arr[i_use]
-            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=0, nutate=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=1,precess=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, _Extra=extra)
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=1, nutate=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
             ra_arr[i_use]=ra_vals & dec_arr[i_use]=dec_vals
         ENDELSE
     ENDIF
 ENDIF
 
 IF Keyword_Set(ad2xy) THEN BEGIN    
+    ra_arr_new = ra_arr
+    dec_arr_new = dec_arr
     IF ~Keyword_Set(ignore_refraction) THEN BEGIN
-        i_nan=where(Finite(ra_arr,/nan),n_nan,ncomplement=n_nan,complement=i_use)
+        i_nan=where(Finite(ra_arr_new,/nan),n_nan,complement=i_use)
         IF n_nan EQ 0 THEN BEGIN
-            Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr, dec_arr, precess=0, nutate=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            Eq2Hor,ra_arr_new, dec_arr_new, JDate, alt_arr, az_arr, nutate=1,precess=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed, _Extra=extra)
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr_new, dec_arr_new, precess=1, nutate=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
         ENDIF ELSE BEGIN
-            ra_vals=ra_arr[i_use] & dec_vals=dec_arr[i_use]
-            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=0,precess=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=0, nutate=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-            ra_arr[i_use]=ra_vals & dec_arr[i_use]=dec_vals
+            ra_vals=ra_arr_new[i_use] & dec_vals=dec_arr_new[i_use]
+            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=1,precess=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed, _Extra=extra)
+            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=1, nutate=1,aberration=1, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+            ra_arr_new[i_use]=ra_vals & dec_arr_new[i_use]=dec_vals
         ENDELSE
     ENDIF
-    ad2xy, ra_arr, dec_arr, astr, x_arr, y_arr
+    ad2xy, ra_arr_new, dec_arr_new, astr, x_arr, y_arr
 ENDIF
 
 END

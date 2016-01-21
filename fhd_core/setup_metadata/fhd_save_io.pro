@@ -9,12 +9,7 @@ PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compres
   ENDIF
   
   IF N_Elements(compress) EQ 0 THEN compress=0
-  ;;;;;;;;;;;;;;;;;;;;;;;
-  ;If keyword_set(compatibility_mode) then begin
-  ;  pol_names=['xx','yy','xy','yx','I','Q','U','V']
-  ;endif else begin
-    IF Keyword_Set(obs) THEN pol_names=obs.pol_names ELSE pol_names=['XX','YY','XY','YX','I','Q','U','V']
-  ;endelse
+  IF Keyword_Set(obs) THEN pol_names=obs.pol_names ELSE pol_names=['XX','YY','XY','YX','I','Q','U','V']
   
   IF Keyword_Set(transfer_filename) AND Keyword_Set(restore) THEN BEGIN
     IF file_test(transfer_filename) THEN BEGIN
@@ -111,7 +106,6 @@ PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compres
       IF Keyword_Set(sub_var_name) THEN var_name_use=sub_var_name
       IF Keyword_Set(force_path) THEN path_sav=force_path
       ;do NOT check with file_test() here! We want getvar_savefile to throw the error if it's not found
-
       param=getvar_savefile(path_sav,var_name_use, compatibility_mode = compatibility_mode)
       RETURN
     ENDIF

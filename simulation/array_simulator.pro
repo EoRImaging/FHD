@@ -93,7 +93,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     error=1
     RETURN
   ENDIF
-  
+
   autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
   auto_corr=Ptrarr(n_pol)
   IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN

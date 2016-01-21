@@ -21,6 +21,8 @@ ENDIF ELSE BEGIN
     IF N_Elements(double_precision) EQ 0 THEN double_precision=0
 ENDELSE
 
+
+dft_edge_pix = Floor((dimension<elements)/8)
 IF N_Elements(uv_i_use) EQ 0 THEN uv_i_use=Lindgen(dimension*elements)
 
 IF N_Elements(xvals) NE N_Elements(uv_i_use) THEN xvals=(meshgrid(dimension,elements,1))[uv_i_use]-dimension/2
@@ -59,15 +61,39 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     ENDFOR
     
     IF Keyword_Set(dft_threshold) THEN BEGIN
-        IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
-        model_uv_arr=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-            silent=silent,conserve_memory=conserve_memory,dft_threshold=dft_threshold,double_precision=double_precision)
-        
+        model_uv_arr=Ptrarr(n_pol,n_spectral+1)
+        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
+            n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        IF n_edge_pix GT 0 THEN BEGIN
+            IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
+            model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
+                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision)
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
+                    single_uv=Complexarr(dimension,elements)
+                    single_uv[uv_i_use]=*model_uv_vals[pol_i,s_i] 
+                    model_uv_arr[pol_i,s_i]=Ptr_new(single_uv,/no_copy)
+                ENDFOR
+            ENDFOR
+        ENDIF
+        IF n_center_pix GT 0 THEN BEGIN
+            model_uv_arr2=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
+                silent=silent,dft_threshold=dft_threshold,inds_use=center_pix_i,double_precision=double_precision)
+            FOR i=0L,N_Elements(model_uv_arr)-1 DO BEGIN
+                IF Ptr_valid(model_uv_arr[i]) THEN *model_uv_arr[i]+=*model_uv_arr2[i] $
+                    ELSE model_uv_arr[i]=Ptr_new(*model_uv_arr2[i])
+            ENDFOR
+            Ptr_free,model_uv_arr2
+        ENDIF
+        IF not Keyword_Set(silent) THEN BEGIN
+            print,"Center sources using DFT approximation: " + Strn(n_center_pix)
+            print,"Edge sources using true DFT: " + Strn(n_edge_pix)
+        ENDIF
         Ptr_free,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-                                 conserve_memory=conserve_memory,silent=silent,double_precision=double_precision)
+            conserve_memory=conserve_memory,silent=silent,double_precision=double_precision)
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
@@ -98,15 +124,38 @@ ENDIF ELSE BEGIN
         FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]=Complexarr(dimension,elements)
     ENDIF
     IF Keyword_Set(dft_threshold) THEN BEGIN
-        IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=0
-        model_uv_new=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
-            silent=silent,conserve_memory=conserve_memory,dft_threshold=dft_threshold)
-        FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_new[pol_i]
-        undefine_fhd,model_uv_new,flux_arr
+        model_uv_arr=Ptrarr(n_pol)
+        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
+            n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        IF n_edge_pix GT 0 THEN BEGIN
+            IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
+            model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
+                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision)
+            FOR pol_i=0,n_pol-1 DO BEGIN
+                single_uv=Complexarr(dimension,elements)
+                single_uv[uv_i_use]=*model_uv_vals[pol_i] 
+                model_uv_arr[pol_i]=Ptr_new(single_uv,/no_copy)
+            ENDFOR
+        ENDIF
+        IF n_center_pix GT 0 THEN BEGIN
+            model_uv_arr2=fast_dft(x_vec,y_vec,dimension=dimension,elements=elements,flux_arr=flux_arr,return_kernel=return_kernel,$
+                silent=silent,dft_threshold=dft_threshold,inds_use=center_pix_i,double_precision=double_precision)
+            FOR i=0L,N_Elements(model_uv_arr)-1 DO BEGIN
+                IF Ptr_valid(model_uv_arr[i]) THEN *model_uv_arr[i]+=*model_uv_arr2[i] $
+                    ELSE model_uv_arr[i]=Ptr_new(*model_uv_arr2[i])
+            ENDFOR
+            Ptr_free,model_uv_arr2
+        ENDIF
+        FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]
+        IF not Keyword_Set(silent) THEN BEGIN
+            print,"Center sources using DFT approximation: " + Strn(n_center_pix)
+            print,"Edge sources using true DFT: " + Strn(n_edge_pix)
+        ENDIF
+        undefine_fhd,model_uv_arr,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
-        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,$
-            silent=silent,flux=flux_arr,conserve_memory=conserve_memory)
+        model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
+            silent=silent,conserve_memory=conserve_memory,double_precision=double_precision)
         FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
         undefine_fhd,model_uv_vals,flux_arr
     ENDELSE

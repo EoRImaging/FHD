@@ -123,24 +123,6 @@ case version of
       over_calibrate=1 
       calibration_catalog_file_path=filepath('bright_source7.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
-    
- 
-
-
-
-                  'nb_sim_perfect_cal_beamperchannel_visflagbasic_modelnoflag_noeor_weightfix_nocal_transfer':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      ;turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      calibrate_visibilities=0
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_flags.sav'
-      ;recalculate_all=1
-   end
    
    'nb_sim_perfect_cal_eor_ones_maxcalsources_nod':begin 
       saved_run_bp=0

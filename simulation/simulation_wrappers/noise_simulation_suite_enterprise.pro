@@ -1,9 +1,9 @@
 pro noise_simulation_suite_enterprise, uvf_input = uvf_input,  $
     recalc_sim = recalc_sim, recalc_baselines = recalc_baselines, $
-    refresh_ps = refresh_ps
+    refresh_ps = refresh_ps, uv_img_clip = uv_img_clip
     
-  ;sample_factors = [.0002,.0005,.001,.005,.01,.05,.1,.5,1]
-  sample_factors = [0.0002]
+  ;sample_factors = [.0002,.0005,.001,.005,.01,.05,.1,.5,1,5]
+  sample_factors = [.0002]
   obsids = ['1061316176', '1061316296']
   
   version = make_array(n_elements(sample_factors), n_elements(obsids), /string)
@@ -14,11 +14,12 @@ pro noise_simulation_suite_enterprise, uvf_input = uvf_input,  $
   endfor
   
   folder_names = 'fhd_' + version
-  folder_path = '/data4/MWA/FHD_Aug23/'
+  folder_path = '/data3/MWA/FHD_Aug23/'
+  if keyword_set(recalc_baselines) then recalc_sim = 1
   
   for sample=0, n_elements(sample_factors)-1 do begin
-    ;for obs=0, n_elements(obsids)-1 do begin
-    for obs=1, n_elements(obsids)-1 do begin
+    for obs=0, n_elements(obsids)-1 do begin
+    ;for obs=1, n_elements(obsids)-1 do begin
     
       if keyword_set(recalc_sim) then begin
         sim_file_test = 0
@@ -57,15 +58,16 @@ pro noise_simulation_suite_enterprise, uvf_input = uvf_input,  $
         if obsids[obs] eq '1061316176' then obsnum = 36
         if obsids[obs] eq '1061316296' then obsnum = 37
         print, '***CALCULATING SIMULATION***: for '  + folder_names[sample, obs]
+        
         noise_simulation_enterprise, start=obsnum, end=obsnum, version=version[sample, obs], sim_baseline_density=sample_factors[sample], $
-          use_saved_baselines = use_saved_baselines,$
-          /recalculate_all
+          use_saved_baselines = use_saved_baselines, output_directory = folder_path, $
+          /recalculate_all, uv_img_clip = uv_img_clip
           
       endif
       
       print, '***CALCULATING PS***: for ' + folder_names[sample, obs]
       
-      enterprise_wrapper, folder_names[sample, obs], obsids[obs], uvf_input = uvf_input, /sim,$
+      ps_wrapper, folder_names[sample, obs], obsids[obs], uvf_input = uvf_input, /sim,$
         refresh_dft = refresh_ps, refresh_ps = refresh_ps
         
     endfor

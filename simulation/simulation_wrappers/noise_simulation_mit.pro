@@ -1,11 +1,11 @@
-pro noise_simulation_enterprise, cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
+pro noise_simulation_mit, cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     beam_recalculate=beam_recalculate,healpix_recalculate=healpix_recalculate, $
+    use_saved_uvf = use_saved_uvf, uvf_savefile = uvf_savefile, $
     sim_baseline_density = sim_baseline_density, $
     channel=channel,output_directory=output_directory,save_visibilities=save_visibilities,$
     julian_day=julian_day,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,$
     silent=silent,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,$
-    snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,$
-    use_saved_baselines = use_saved_baselines, _Extra=extra
+    snapshot_healpix_export=snapshot_healpix_export,n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,_Extra=extra
     
   except=!except
   !except=0
@@ -31,19 +31,21 @@ pro noise_simulation_enterprise, cleanup=cleanup,recalculate_all=recalculate_all
   image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
   ;image_filter_fn=''
   
-  ; This file structure works at enterprise
-  data_directory='/data4/MWA/EoRuvfits/jd'+strtrim(julian_day,2)+'v'+strtrim(uvfits_version,2)+'_'+strtrim(uvfits_subversion,2)
+  ; This file structure works at mit
+  ; /csr/mwa/python/mwa_git/mwatools_setup/bin/read_uvfits_loc.py -v 4 -s 1 -o 1062263248
+  data_directory='/nfs/mwa-11/r1/EoRuvfits/EoR0_low_sem1_v4_1'
   ;  data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'+'3'])
   
-  vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
+  vis_file_list=file_search(data_directory,'1062263248.uvfits',count=n_files)
+  print,vis_file_list
   fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory,_Extra=extra)
   healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
-  catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
+  catalog_file_path=filepath('one_jy_source_at_eor0_center.sav',root=rootdir('FHD'),subdir='catalog_data')
   ;calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
   ;calibration_catalog_file_path=filepath('eor1_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
   ;calibration_catalog_file_path=filepath('mwa_calibration_source_list_nofornax.sav',root=rootdir('FHD'),subdir='catalog_data')
   ;calibration_catalog_file_path=filepath('eor01_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-  calibration_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
+  calibration_catalog_file_path=filepath('one_jy_source_at_eor0_center.sav',root=rootdir('FHD'),subdir='catalog_data')
   ;calibration_catalog_file_path=filepath('test_component_catalog.sav',root=rootdir('FHD'),subdir='catalog_data')
   
   dimension=2048.
@@ -97,12 +99,10 @@ pro noise_simulation_enterprise, cleanup=cleanup,recalculate_all=recalculate_all
     ENDIF
     
     if keyword_set(sim_baseline_density) then begin
-    
       ;; set up baseline distribution
       simulate_baselines = 1
       
       nsample = round(ps_kspan^2. * sim_baseline_density, /L64)
-      
       sim_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
       sim_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2.
       
@@ -114,24 +114,21 @@ pro noise_simulation_enterprise, cleanup=cleanup,recalculate_all=recalculate_all
       max_n_baseline = 8000
       n_time = 2*ceil(nsample/float(max_n_baseline))
       n_per_time = floor(nsample/(n_time/2.))
-      n_sample_use = n_time*n_per_time/2.
+      if n_per_time*n_time ne nsample then begin
+        nsample = n_per_time*n_time/2.
+        sim_uu = sim_uu[0:nsample-1]
+        sim_vv = sim_vv[0:nsample-1]
+      endif
+      sim_uu = reform(sim_uu, n_per_time, 1, n_time/2)
+      sim_vv = reform(sim_vv, n_per_time, 1, n_time/2)
       
-      sim_uu = reform(sim_uu[0:n_sample_use-1], n_per_time, 1, n_time/2)
-      sim_vv = reform(sim_vv[0:n_sample_use-1], n_per_time, 1, n_time/2)
-      
-      if keyword_set(use_saved_baselines) then begin
-        restore, output_directory + 'fhd_' + version + '/baselines_sim.sav'
-      endif else begin
-        sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
-        sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
-      endelse
-      save, filename = output_directory + 'fhd_' + version + '/baselines_sim.sav', sim_baseline_uu, sim_baseline_vv
+      sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
+      sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
       
       sim_baseline_time = [intarr(n_per_time), intarr(n_per_time)+1]
       if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
-      
-    endif    
-    
+    endif
+        
     array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
       sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
       simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, $
