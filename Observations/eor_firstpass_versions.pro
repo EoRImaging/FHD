@@ -1104,7 +1104,7 @@ case version of
       ;turn_off_visflagbasic=1
       unflag_all=1
    end 
-     'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit':begin 
+     'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_2':begin 
       nfreq_avg=384
       no_frequency_flagging=1
       recalculate_all=1
@@ -1244,7 +1244,7 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
-         'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10':begin 
+         'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -1257,7 +1257,7 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
-            'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double':begin 
+            'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -1271,7 +1271,7 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
-            'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_5outof10':begin 
+            'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_5outof10_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -1284,7 +1284,7 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
-               'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_5outof10_double':begin 
+               'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_5outof10_double_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -1298,7 +1298,7 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
-               'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_all10':begin 
+               'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_all10_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -1313,7 +1313,7 @@ case version of
       undefine, diffuse_calibrate, diffuse_model
       calibration_catalog_file_path=filepath('10brightsources.sav',root=rootdir('FHD'),subdir='catalog_data')
    end
-            'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_minus5outof10':begin 
+            'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_minus5outof10_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -1330,7 +1330,7 @@ case version of
       
       undefine, diffuse_calibrate, diffuse_model
    end
-               'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_minus5outof10_double':begin 
+               'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_minus5outof10_double_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
