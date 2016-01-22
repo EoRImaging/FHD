@@ -352,7 +352,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
         model_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     ENDIF
-    box_arr=matrix_multiply(vis_box/n_vis,box_matrix_dag,/atranspose,/btranspose)
+    box_arr=matrix_multiply(Temporary(vis_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     
     IF verbose THEN BEGIN
@@ -390,7 +390,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 ENDFOR
 
 ;free memory
-vis_arr_use=0
+vis_arr_use=(model_use=0)
 xmin=(ymin=(ri=(inds=(x_offset=(y_offset=(bin_i=(bin_n=0)))))))
 
 t7_0=Systime(1)
