@@ -1255,6 +1255,40 @@ case version of
       flag_calibration=0
       max_calibration_sources=10
       nfreq_avg=384  
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+            'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_2_psf200':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=200
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+               'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_2_psf1000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=1000
+            recalculate_all=1
+      mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
             'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double_2':begin 
@@ -1269,18 +1303,54 @@ case version of
       max_calibration_sources=10
       double=1
       nfreq_avg=384  
+            recalculate_all=1
+      mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
             'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_5outof10_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10'
+      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_2'
       no_frequency_flagging=1
       perfect_cal_ones=1
       remove_eor=1
       flag_calibration=0
       max_calibration_sources=5
+            recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+               'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_5outof10_2_psf200':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_2_psf200'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      recalculate_all=1
+      psf_resolution=200
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                  'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_5outof10_2_psf1000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_2_psf1000'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      recalculate_all=1
+      psf_resolution=1000
+      mapfn_recalculate=0
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
@@ -1288,13 +1358,15 @@ case version of
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double'
+      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double_2'
       no_frequency_flagging=1
       double=1
       perfect_cal_ones=1
       remove_eor=1
       flag_calibration=0
       max_calibration_sources=5
+            recalculate_all=1
+      mapfn_recalculate=0
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
@@ -1302,12 +1374,14 @@ case version of
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10'
+      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_2'
       no_frequency_flagging=1
       perfect_cal_ones=1
       remove_eor=1
       flag_calibration=0
       ;max_calibration_sources=5
+            recalculate_all=1
+      mapfn_recalculate=0
       recalculate_all=1
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
@@ -1317,16 +1391,18 @@ case version of
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10'
+      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_2'
       no_frequency_flagging=1
       perfect_cal_ones=1
       remove_eor=1
       flag_calibration=0
       ;max_calibration_sources=
+            recalculate_all=1
+      mapfn_recalculate=0
       nfreq_avg=384  
       recalculate_all=1
       mapfn_recalculate=0
-      calibration_catalog_file_path=filepath('10brightsources.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path=filepath('5dimsources.sav',root=rootdir('FHD'),subdir='catalog_data')
       
       undefine, diffuse_calibrate, diffuse_model
    end
@@ -1334,17 +1410,19 @@ case version of
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double'
+      cal_sim_input='fhd_nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double_2'
       no_frequency_flagging=1
       perfect_cal_ones=1
       remove_eor=1
       flag_calibration=0
       ;max_calibration_sources=
+            recalculate_all=1
+      mapfn_recalculate=0
       nfreq_avg=384  
       recalculate_all=1
       double=1
       mapfn_recalculate=0
-      calibration_catalog_file_path=filepath('10brightsources.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path=filepath('5dimsources.sav',root=rootdir('FHD'),subdir='catalog_data')
       
       undefine, diffuse_calibrate, diffuse_model
    end
