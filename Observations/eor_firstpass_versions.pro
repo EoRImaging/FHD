@@ -1253,6 +1253,24 @@ case version of
       production=1
       ;no long tiles used in calculating saved bp
    end  
+   
+      'nb_decon_Jan2016':begin 
+      max_sources=200000
+      ;dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      ;double memory, time
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
