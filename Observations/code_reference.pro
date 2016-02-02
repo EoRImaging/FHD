@@ -123,9 +123,13 @@ max_cal_iter=100.
 restore_vis_savefile=1
 export_images=1
 plot_k0_power=1
-IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_calibrate') THEN IF extra.diffuse_calibrate EQ 1 THEN extra=structure_update(extra,diffuse_calibrate='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
-IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_model') THEN IF extra.diffuse_model EQ 1 THEN extra=structure_update(extra,diffuse_model='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse.sav')
-
+default_diffuse='D:\MWA\IDL_code\FHD\catalog_data\diffuse_pol_test.sav'
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_calibrate') THEN IF extra.diffuse_calibrate EQ 1 THEN $
+    extra=structure_update(extra,diffuse_calibrate=default_diffuse)
+IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_model') THEN IF extra.diffuse_model EQ 1 THEN BEGIN
+    extra=structure_update(extra,diffuse_model=default_diffuse)
+    IF ~(Tag_exist(extra,'model_visibilities') OR (N_Elements(model_visibilities) GT 0)) THEN model_visibilities=1
+ENDIF
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
 IF Tag_exist(extra,'comment') THEN BEGIN
