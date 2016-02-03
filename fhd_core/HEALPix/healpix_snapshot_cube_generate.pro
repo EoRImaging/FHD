@@ -142,7 +142,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,flag_arr_use,obs_out=obs,psf_out=psf,/rephase_weights,$
       weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
       file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_arr,$
-      save_uvf=save_uvf, uvf_name=uvf_name[iter],bi_use=*bi_use[iter])
+      save_uvf=save_uvf, uvf_name=uvf_name[iter],bi_use=*bi_use[iter], _Extra=extra)
 ;    Ptr_free,flags_use
     t_split+=t_split1
     IF dirty_flag THEN BEGIN
