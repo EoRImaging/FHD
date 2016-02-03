@@ -114,7 +114,7 @@ t_degrid=Fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,$
         timing=t_degrid0,polarization=pol_i,fill_model_visibilities=fill_model_visibilities,$
-        vis_input_ptr=vis_model_ptr[pol_i],spectral_model_uv_arr=spectral_model_uv_arr[pol_i,*])
+        vis_input_ptr=vis_model_ptr[pol_i],spectral_model_uv_arr=spectral_model_uv_arr[pol_i,*], _Extra=extra)
     t_degrid[pol_i]=t_degrid0
 ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid)
