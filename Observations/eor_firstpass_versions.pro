@@ -123,7 +123,19 @@ case version of
       over_calibrate=1 
       calibration_catalog_file_path=filepath('bright_source7.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
-   
+        'nb_sim_model_confusion_S5000':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      calibration_auto_initialize=0
+      flag_calibration=0
+      over_calibrate=1 
+                  recalculate_all=1
+      mapfn_recalculate=0
+      calibration_catalog_file_path=filepath('confusion2.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
    'nb_sim_perfect_cal_eor_ones_maxcalsources_nod':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -182,6 +194,56 @@ case version of
       max_calibration_sources=4000
       nfreq_avg=384  
       transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+         'nb_sim_perfect_cal_eor_ones_confusion_S5000_100mJy':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_confusion_S5000'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      model_flux_threshold = .1
+                        recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+            calibration_catalog_file_path=filepath('confusion2.sav',root=rootdir('FHD'),subdir='catalog_data')
+      
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+            'nb_sim_perfect_cal_eor_ones_farextent2_nod':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent2'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+               'nb_sim_perfect_cal_eor_ones_farextent3_nod':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent3'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 6144
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model
    end
    
@@ -696,7 +758,44 @@ case version of
       double=1
       undefine, diffuse_calibrate, diffuse_model
    end
-   
+   'nb_diffuse_I_Jan2016':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_refract.sav',root=rootdir('FHD'),subdir='catalog_data')
+      diffuse_model=diffuse_calibrate
+   end 
+   'nb_diffuse_I_Jan2016_throughfirstpass':begin ;remade
+      diffuse_calibrate=filepath('EoR0_diffuse_refract.sav',root=rootdir('FHD'),subdir='catalog_data')
+      diffuse_model=diffuse_calibrate
+      calibration_catalog_file_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_Jan2016/output_data/'+obs_id+'_catalog.sav'
+   end
+   'nb_nodiffuse_I_Jan2016_throughfirstpass':begin ;remade
+      ;diffuse_calibrate=filepath('EoR0_diffuse_refract.sav',root=rootdir('FHD'),subdir='catalog_data')
+      ;diffuse_model=diffuse_calibrate
+      calibration_catalog_file_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_Jan2016/output_data/'+obs_id+'_catalog.sav'
+   end
+   'nb_nodiffuse_Jan2016':begin ;remade
+      undefine,diffuse_model,diffuse_calibrate
+   end 
+   'nb_sim_model_farextent2_nod':begin 
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      no_frequency_flagging=1
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      'nb_sim_model_farextent3_nod':begin 
+      FoV=0
+      kbinsize=0.5
+      dimension= 6144
+      no_frequency_flagging=1
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+      undefine, diffuse_calibrate, diffuse_model
+   end
+
 
 endcase
    
