@@ -71,7 +71,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
   fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
       
   IF Size(source_array,/type) EQ 8 THEN source_array=generate_source_cal_list(obs,psf,source_array,_Extra=extra)   
-  vis_arr=vis_simulate(obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+  vis_arr=vis_simulate(obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all, include_eor = eor_sim, include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra)
@@ -148,7 +148,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     
     ;Generate fits data files and images
     IF Keyword_Set(export_images) THEN BEGIN
-      fhd_quickview,obs,status_str,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+      fhd_quickview,obs,status_str,psf,cal,jones,skymodel,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
         model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDIF
   ENDIF

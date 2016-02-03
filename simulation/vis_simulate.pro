@@ -1,4 +1,4 @@
-FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all,$
     include_eor=include_eor, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
     delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
@@ -29,6 +29,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
     endif
     
     n_sources=N_Elements(source_array)
+    skymodel=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_path=catalog_file_path,return_cal=0,_Extra=extra)
     if n_sources gt 0 then begin
       source_model_uv_arr=source_dft_model(obs,jones,source_array,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
@@ -152,7 +153,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
     if n_elements(source_model_uv_arr) gt 0 then begin
       if n_elements(model_uvf_arr) gt 0 then begin
         ;; if there is also a uvf cube, add the uv from the sources to the cube at each freq.
-        FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*source_model_uv_arr[pol_i]
+        FOR pol_i=0,n_pol-1 DO *model_uvf_arr[pol_i]+=Rebin(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
       endif else model_uvf_arr = Pointer_copy(source_model_uv_arr) ;; otherwise just use the uv from the sources
       undefine_fhd, source_model_uv_arr
     endif
@@ -179,13 +180,17 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,file_path_fhd=file_path_fh
       if n_elements(dim_uv_arr) gt 3 or n_elements(dim_uv_arr) lt 2 then $
         message, 'model_uvf_arr must point to 2 or 3 dimensional arrays'
       
-      skymodel=fhd_struct_init_skymodel(obs,_Extra=extra)
       if n_elements(dim_uv_arr) eq 2 then begin
         ;; 2 dimensional -- same for all frequencies
       
         ;; flag_arr is passed in from array_simulator
-        vis_model_arr = vis_source_model(skymodel,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uvf_arr,$
-          timing=model_timing,silent=silent,error=error,_Extra=extra)
+        ;Call visibility_degrid directly, instead of calling the wrapper, since we are adding the uv models earlier
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            vis_arr[pol_i]=visibility_degrid(*model_uvf_arr[pol_i],flag_arr[pol_i],obs,psf,params,silent=silent,$
+                polarization=pol_i,_Extra=extra)
+        ENDFOR
+;        vis_model_arr = vis_source_model(skymodel,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uvf_arr,$
+;          timing=model_timing,silent=silent,error=error,_Extra=extra)
           
       endif else begin
         ;; 3 dimensional -- loop over frequencies
