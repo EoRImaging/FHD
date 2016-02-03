@@ -757,6 +757,59 @@ case version of
       recalculate_all=1
       double=1
       undefine, diffuse_calibrate, diffuse_model
+end
+   'nb_sim_perfect_cal_noflag':begin 
+      calibrate_visibilities=0
+      export_images=0
+      unflag_all=1
+   end   
+   'nb_sim_overfit_cal_noflag':begin 
+      over_calibrate=1
+      unflag_all=1
+   end 
+   'nb_polarized_diffuse_Oct2015':begin
+      diffuse_calibrate=filepath('diffuse_maps_polarized_Oct2015.sav',root=rootdir('FHD'),subdir='catalog_data')
+      production=1
+      ;no long tiles used in calculating saved bp
+   end  
+   
+      'nb_decon_Jan2016':begin 
+      max_sources=200000
+      ;dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      ;double memory, time
+   end
+
+   ;;; Patti's versions!!! Only Patti may edit this section!!!
+   
+   ; My default full deconvolution parameters
+   'pac_full_fhd':begin
+      deconvolve=1 
+      return_decon_visibilities=1
+      max_sources=30000.
+      pad_uv_image=1.
+      gain_factor=.2
+      uvfits_version=4
+      uvfits_subversion=0
+      time_cut=[2,-2]
+      vis_freq_average=2
+      snapshot_healpix_export=0
+      dimension=3072
+      FoV=80.
+      filter_background=0
+      decon_filter='filter_uv_uniform'
+
    end
    'nb_diffuse_I_Jan2016':begin ;remade
       diffuse_calibrate=filepath('EoR0_diffuse_refract.sav',root=rootdir('FHD'),subdir='catalog_data')

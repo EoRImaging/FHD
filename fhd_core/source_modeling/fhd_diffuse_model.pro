@@ -1,6 +1,6 @@
 FUNCTION fhd_diffuse_model,obs,jones,skymodel,model_filepath=model_filepath,uv_return=uv_return,$
     spectral_model_arr=spectral_model_arr,diffuse_units_kelvin=diffuse_units_kelvin,$
-    flatten_spectrum=flatten_spectrum,_Extra=extra
+    flatten_spectrum=flatten_spectrum,no_polarized_diffuse=no_polarized_diffuse,_Extra=extra
 
 dimension=obs.dimension
 elements=obs.elements
@@ -8,7 +8,7 @@ astr=obs.astr
 degpix=obs.degpix
 n_pol=obs.n_pol
 n_spectral=obs.degrid_spectral_terms
-diffuse_spectral_index=skymodel.diffuse_spectral_index
+IF Keyword_Set(skymodel) THEN diffuse_spectral_index=skymodel.diffuse_spectral_index ELSE diffuse_spectral_index=0
 apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 radec_i=where(Finite(ra_arr))
 IF Keyword_Set(flatten_spectrum) THEN alpha_corr=obs.alpha ELSE alpha_corr=0.
@@ -52,6 +52,7 @@ ENDIF ;case of specifying a single scalar to be applied to the entire diffuse mo
 model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=diffuse_units_kelvin)
 IF size(model_stokes_arr,/type) EQ 10 THEN BEGIN
     np_hpx=Total(Ptr_valid(model_hpx_arr))
+    IF Keyword_Set(no_polarized_diffuse) THEN np_hpx=1
     IF np_hpx LT n_pol THEN BEGIN
         model_tmp=Pointer_copy(model_stokes_arr)
         Ptr_free,model_stokes_arr

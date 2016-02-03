@@ -9,6 +9,7 @@ IF N_Elements(baseline_threshold) EQ 0 THEN baseline_threshold=0.
 dimension=(size(dirty_image_uv,/dimension))[0]
 elements=(size(dirty_image_uv,/dimension))[1]
 di_uv_use=dirty_image_uv
+double_flag = (size(di_uv_use,/type) EQ 9)
 
 IF Keyword_Set(baseline_threshold) THEN BEGIN
     IF N_Elements(width_smooth) EQ 0 THEN width_smooth=Floor(Sqrt(dimension*elements)/100.)
@@ -65,8 +66,9 @@ IF Keyword_Set(pad_uv_image) THEN BEGIN
 ENDIF
 
 IF Keyword_Set(degpix) THEN di_uv_use/=(degpix*!DtoR)^2. ;FFT normalization
-IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use))) $
-    ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use))))
+IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use),double=1)) $
+    ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use),double=1)))
+IF not Keyword_Set(double_flag) THEN dirty_image=Float(dirty_image)
 IF Keyword_Set(normalization) THEN dirty_image*=normalization
 RETURN,dirty_image
 END

@@ -18,9 +18,11 @@ IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore
 IF Keyword_Set(skymodel) THEN BEGIN
     galaxy_flag=skymodel.galaxy_model
     diffuse_filepath=skymodel.diffuse_model
+    n_sources=skymodel.n_sources
 ENDIF ELSE BEGIN
     galaxy_flag=0
     diffuse_filepath=''
+    n_sources=0
 ENDELSE
 heap_gc
 
@@ -55,7 +57,6 @@ IF N_Elements(vis_model_ptr) LT n_pol THEN vis_model_ptr=intarr(n_pol)
 IF n_spectral EQ 0 THEN spectral_model_uv_arr=intarr(n_pol)
 
 vis_dimension=Float(nbaselines*n_samples)
-n_sources=skymodel.n_sources
 
 IF Min(Ptr_valid(model_uv_arr)) EQ 0 THEN BEGIN
     model_uv_arr=Ptrarr(n_pol,/allocate)
@@ -81,7 +82,7 @@ IF n_sources GT 0 THEN BEGIN ;test that there are actual sources in the source l
 ENDIF
 
 
-IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,skymodel,spectral_model_uv_arr=gal_spectral_model_uv,antialias=1,/uv_return,_Extra=extra)
+IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,spectral_model_uv_arr=gal_spectral_model_uv,antialias=1,/uv_return,_Extra=extra)
 IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i];*uv_mask_use
 IF Min(Ptr_valid(gal_spectral_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO $
     *spectral_model_uv_arr[pol_i,s_i]+=*gal_spectral_model_uv[pol_i,s_i];*uv_mask_use
@@ -113,7 +114,7 @@ t_degrid=Fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,$
         timing=t_degrid0,polarization=pol_i,fill_model_visibilities=fill_model_visibilities,$
-        vis_input_ptr=vis_model_ptr[pol_i],spectral_model_uv_arr=spectral_model_uv_arr[pol_i,*])
+        vis_input_ptr=vis_model_ptr[pol_i],spectral_model_uv_arr=spectral_model_uv_arr[pol_i,*], _Extra=extra)
     t_degrid[pol_i]=t_degrid0
 ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid)
