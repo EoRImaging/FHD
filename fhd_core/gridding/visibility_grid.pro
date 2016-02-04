@@ -319,7 +319,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     IF interpolate_grid_kernel THEN $
         FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
-            interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii], dx=dx[ii], dy=dy[ii], resolution=psf_resolution) $
+            interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii], dx=dx[ii], dy=dy[ii], resolution=psf_resolution, dim=psf_dim) $
         ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 ;;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
