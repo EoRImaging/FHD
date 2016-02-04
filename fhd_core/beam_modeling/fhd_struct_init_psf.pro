@@ -6,7 +6,8 @@
 ;-
 FUNCTION fhd_struct_init_psf,beam_ptr=beam_ptr,complex_flag=complex_flag,$
     xvals=xvals,yvals=yvals,fbin_i=fbin_i,psf_resolution=psf_resolution,psf_dim=psf_dim,$
-    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen,pol_norm=pol_norm,freq_norm=freq_norm,group_arr=group_arr
+    n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen,pol_norm=pol_norm,freq_norm=freq_norm,group_arr=group_arr,$
+    interpolate_kernel=interpolate_kernel
     
 IF N_Elements(n_pol) EQ 0 THEN n_pol=1 ELSE n_pol=Fix(n_pol)
 IF N_Elements(n_freq) EQ 0 THEN n_freq=1 ELSE n_freq=Fix(n_freq)
@@ -20,8 +21,10 @@ IF N_Elements(freq_norm) EQ 0 THEN freq_norm=replicate(1.,n_freq) ELSE freq_norm
 IF N_Elements(fbin_i) EQ 0 THEN fbin_i=Lonarr(1) ELSE fbin_i=Long(fbin_i)
 IF N_Elements(complex_flag) EQ 0 THEN complex_flag=1
 IF N_Elements(group_arr) EQ 0 THEN group_arr=Lonarr(size(beam_arr,/dimension))
+IF N_Elements(interpolate_kernel) EQ 0 THEN interpolate_kernel=0 ELSE interpolate_kernel=Keyword_Set(interpolate_kernel)
 
 struct={beam_ptr:beam_ptr,xvals:xvals,yvals:yvals,pnorm:pol_norm,fnorm:freq_norm,id:group_arr,$
-    fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim,complex_flag:complex_flag,n_pol:n_pol,n_freq:n_freq,freq:freq_cen}
+    fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim,complex_flag:complex_flag,n_pol:n_pol,$
+    n_freq:n_freq,freq:freq_cen,interpolate_kernel:interpolate_kernel}
 RETURN,struct
 END

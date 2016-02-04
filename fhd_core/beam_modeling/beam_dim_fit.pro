@@ -3,6 +3,7 @@ PRO beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,beam_mas
 IF N_Elements(beam_residual_threshold) EQ 0 THEN beam_residual_threshold=0.
 edge_test=fltarr(psf_dim*psf_dim)
 res_i=psf_resolution/2
+psf_resolution_dim = (size(*(*beam_arr[0,0,0])[0,0],/dimension))[0]
  ;add together ALL beams, because we just want to find out if EVERY border pixel is zero
 FOR i=0L,N_Elements(beam_arr)-1 DO edge_test+=(Abs(*(*beam_arr[i])[res_i,res_i]) GT Max(Abs(*(*beam_arr[i])[res_i,res_i]))/beam_mask_threshold)
 edge_test=reform(edge_test,psf_dim,psf_dim)
@@ -20,7 +21,7 @@ IF edge_zeroes GT 0 THEN BEGIN
         WHILE bi LT n_baselines DO BEGIN
             bi_test_i=where(beam_arr[pol_i,freq_i,bi] EQ beam_arr[pol_i,freq_i,*],n_match)
             IF n_match GT 0 THEN BEGIN
-                FOR p_i=0L,psf_resolution-1 DO FOR p_j=0L,psf_resolution-1 DO BEGIN
+                FOR p_i=0L,psf_resolution_dim-1 DO FOR p_j=0L,psf_resolution_dim-1 DO BEGIN
                     psf_single=Reform(*(*beam_arr[pol_i,freq_i,bi])[p_i,p_j],psf_dim,psf_dim)
                     psf_single=psf_single[edge_zeroes:psf_dim-edge_zeroes-1,edge_zeroes:psf_dim-edge_zeroes-1]
                     *(*beam_arr[pol_i,freq_i,bi])[p_i,p_j]=Reform(psf_single,psf_dim2*psf_dim2)

@@ -22,7 +22,7 @@ max_baseline=obs.max_baseline
 double_precision=0
 IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision
 IF N_Elements(silent) EQ 0 THEN verbose=0 ELSE verbose=0>Round(1-silent)<1
-IF Keyword_Set(interpolate_grid_kernel) THEN interpolate_grid_kernel=1 ELSE interpolate_grid_kernel=0
+IF Tag_exist(psf,'interpolate_kernel') THEN interp_flag=psf.interpolate_kernel ELSE interp_flag=0
 
 IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 freq_bin_i=(*obs.baseline_info).fbin_i
@@ -133,6 +133,10 @@ x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
 dx_arr = (xcen-Floor(xcen))*psf_resolution - Floor((xcen-Floor(xcen))*psf_resolution)
 dy_arr = (ycen-Floor(ycen))*psf_resolution - Floor((ycen-Floor(ycen))*psf_resolution)
+dx0dy0_arr = (1-dx_arr)*(1-dy_arr)
+dx0dy1_arr = (1-dx_arr)*dy_arr
+dx1dy0_arr = dx_arr*(1-dy_arr)
+dx1dy1_arr = Temporary(dx_arr) * Temporary(dy_arr)
 xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
 ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
 
@@ -248,8 +252,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     x_off=x_offset[inds]
     y_off=y_offset[inds]
-    dx=dx_arr[inds]
-    dy=dy_arr[inds]
+    dx1dy1 = dx1dy1_arr[inds]
+    dx1dy0 = dx1dy0_arr[inds]
+    dx0dy1 = dx0dy1_arr[inds]
+    dx0dy0 = dx0dy0_arr[inds]
         
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
@@ -263,7 +269,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     group_max=Max(group_id)+1
     
 ;    IF Keyword_Set(grid_spectral) THEN n_xyf_bin=vis_n
-    IF interpolate_grid_kernel THEN n_xyf_bin=vis_n ELSE BEGIN
+    IF interp_flag THEN n_xyf_bin=vis_n ELSE BEGIN
         xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.)*group_max+group_id
         
         xyf_si=Sort(xyf_i)
@@ -317,9 +323,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t2+=t3_0-t1_0
     ENDIF
     
-    IF interpolate_grid_kernel THEN $
+    IF interp_flag THEN $
         FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
-            interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii], dx=dx[ii], dy=dy[ii], resolution=psf_resolution, dim=psf_dim) $
+            interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
         ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 ;;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
