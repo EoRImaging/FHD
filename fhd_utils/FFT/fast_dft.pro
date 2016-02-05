@@ -14,7 +14,7 @@ ENDIF ELSE BEGIN
     mem_free=1
 ENDELSE 
 
-IF N_Elements(model_uv_full) LT n_dim THEN model_uv_full=Ptrarr(size(flux_arr,/dimensions))
+IF N_Elements(model_uv_full) LT n_dim THEN model_uv_full=Ptrarr(size(flux_arr_use,/dimensions)>1)
 IF Min(Ptr_valid(model_uv_full[0:n_dim-1])) EQ 0 THEN BEGIN
     CASE 1 OF 
         Keyword_Set(no_fft) AND Keyword_Set(double_precision): init_array=Dblarr(dimension,elements)
@@ -29,9 +29,13 @@ model_img=fast_dft_subroutine(x_vec,y_vec,flux_arr_use,dft_threshold=dft_thresho
     dimension=dimension,elements=elements,return_kernel=return_kernel,$
     inds_use=inds_use,/double_precision)
 FOR pol_i=0,n_dim-1 DO BEGIN
-    IF Keyword_Set(no_fft) THEN model_uv=*model_img[pol_i] ELSE $
+    IF Keyword_Set(no_fft) THEN BEGIN
+        model_uv=*model_img[pol_i] 
+        *model_uv_full[pol_i]+=Keyword_Set(double_precision) ? model_uv:Float(model_uv)
+    ENDIF ELSE BEGIN
         model_uv=fft_shift(FFT(fft_shift(*model_img[pol_i]),/inverse,/double)) ;normalization seems okay
-    *model_uv_full[pol_i]+=Keyword_Set(double_precision) ? model_uv:Complex(model_uv)
+        *model_uv_full[pol_i]+=Keyword_Set(double_precision) ? model_uv:Complex(model_uv)
+    ENDELSE
 ENDFOR
 
 IF Keyword_Set(mem_free) THEN undefine_fhd,flux_arr_use
