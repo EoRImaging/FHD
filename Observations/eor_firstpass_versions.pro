@@ -346,6 +346,74 @@ case version of
       mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
+                  'nb_sim_model_psf8interpol':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=8
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf16interpol':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=16
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf32interpol':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=32
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf100interpol':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=100
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
             'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -788,6 +856,107 @@ end
       pad_uv_image=1
       ;time_cut=[2,-2]
       snapshot_healpix_export=1
+      ;double memory, time
+   end
+
+      'nb_decon_Jan2016_nocleanbias':begin 
+      max_sources=200000
+      ;dft_threshold=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      recalculate_all = 0 
+      deconvolve=1
+      export_images = 1
+      model_recalculate = 1
+      clean_bias_threshold = 0
+      ;double memory, time
+   end
+      'nb_decon_Jan2016_nocondense':begin 
+      max_sources=200000
+      ;dft_threshold=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      recalculate_all = 0 
+      deconvolve=0
+      export_images = 1
+      model_recalculate = 1
+      no_condense_sources = 1
+      ;double memory, time
+   end
+      'nb_decon_Jan2016_filterwidth2':begin 
+      max_sources=200000
+      ;dft_threshold=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      recalculate_all = 0 
+      deconvolve=0
+      export_images = 1
+      model_recalculate = 1
+      filter_width = 2
+      ;double memory, time
+   end
+         'nb_decon_Jan2016_filterwidth4':begin 
+      max_sources=200000
+      ;dft_threshold=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      recalculate_all = 0 
+      deconvolve=0
+      export_images = 1
+      model_recalculate = 1
+      filter_width = 4
+      ;double memory, time
+   end
+            'nb_decon_Jan2016_filterwidth10':begin 
+      max_sources=200000
+      ;dft_threshold=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      recalculate_all = 0 
+      deconvolve=0
+      export_images = 1
+      model_recalculate = 1
+      filter_width = 10
       ;double memory, time
    end
 
