@@ -2,7 +2,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
-    beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,_Extra=extra
+    beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
+    interpolate_kernel=interpolate_kernel,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -159,8 +160,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)/psf_resolution^2. 
             n_grp_use+=baseline_group_n
             t_beam_int+=Systime(1)-t_bint
-            psf_single=Ptrarr(psf_resolution,psf_resolution)
+            psf_single=Ptrarr(psf_resolution+1,psf_resolution+1)
+;            NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
+;               the first element, shifted by one pixel. This allows efficient subscripting for interpolation during gridding
             FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
+            FOR i=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+i,yvals_i+psf_resolution-1],psf_dim,psf_dim),0,1),psf_dim^2.))
+            FOR j=0,psf_resolution-1 DO psf_single[psf_resolution,psf_resolution-1-j]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+psf_resolution-1,yvals_i+j],psf_dim,psf_dim),1,0),psf_dim^2.))
+            psf_single[psf_resolution,psf_resolution]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+psf_resolution-1,yvals_i+psf_resolution-1],psf_dim,psf_dim),1,1),psf_dim^2.))
             psf_single=Ptr_new(psf_single)
             FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
         ENDFOR
@@ -182,7 +188,7 @@ complex_flag=1
 beam_ptr=Ptr_new(beam_arr)
 psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
-    n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr)
+    n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr,interpolate_kernel=interpolate_kernel)
     
 fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
 fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
