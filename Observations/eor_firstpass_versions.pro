@@ -134,7 +134,7 @@ case version of
       over_calibrate=1 
                   recalculate_all=1
       mapfn_recalculate=0
-      calibration_catalog_file_path=filepath('confusion2.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path=filepath('confusion3.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
    'nb_sim_perfect_cal_eor_ones_maxcalsources_nod':begin 
       saved_run_bp=0
@@ -205,11 +205,11 @@ case version of
       no_frequency_flagging=1
       perfect_cal_ones=1
       flag_calibration=0
-      model_flux_threshold = .1
+      ;model_flux_threshold = .1
                         recalculate_all=1
       mapfn_recalculate=0
       nfreq_avg=384  
-            calibration_catalog_file_path=filepath('confusion2.sav',root=rootdir('FHD'),subdir='catalog_data')
+            calibration_catalog_file_path=filepath('confusion_completeness3.sav',root=rootdir('FHD'),subdir='catalog_data')
       
       undefine, diffuse_calibrate, diffuse_model
    end
@@ -218,7 +218,7 @@ case version of
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_model_farextent2'
+      cal_sim_input='fhd_nb_sim_model_farextent2_nod'
       no_frequency_flagging=1
       perfect_cal_ones=1
       flag_calibration=0
@@ -234,7 +234,7 @@ case version of
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_model_farextent3'
+      cal_sim_input='fhd_nb_sim_model_farextent3_nod'
       no_frequency_flagging=1
       perfect_cal_ones=1
       flag_calibration=0
@@ -346,7 +346,92 @@ case version of
       mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
-                  'nb_sim_model_psf8interpol':begin 
+                    'nb_sim_model_psf8interpol_4000source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      psf_resolution=8
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf16interpol_4000source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      psf_resolution=16
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf32interpol_4000source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      psf_resolution=32
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf100interpol_4000source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      psf_resolution=100
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                        'nb_sim_model_psf500interpol_4000source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      psf_resolution=500
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                  'nb_sim_model_psf8interpol_10source':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -363,7 +448,7 @@ case version of
       mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
-                     'nb_sim_model_psf16interpol':begin 
+                     'nb_sim_model_psf16interpol_10source':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -380,7 +465,7 @@ case version of
       mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
-                     'nb_sim_model_psf32interpol':begin 
+                     'nb_sim_model_psf32interpol_10source':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -397,7 +482,7 @@ case version of
       mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
-                     'nb_sim_model_psf100interpol':begin 
+                     'nb_sim_model_psf100interpol_10source':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -409,6 +494,108 @@ case version of
       max_calibration_sources=10
       nfreq_avg=384  
       psf_resolution=100
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                        'nb_sim_model_psf500interpol_10source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=500
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                    'nb_sim_perfect_psf8interpol_10source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf8interpol_10source'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=8
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_perfect_psf16interpol_10source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf16interpol_10source'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=16
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_perfect_psf32interpol_10source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf32interpol_10source'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=32
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_perfect_psf100interpol_10source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf100interpol_10source'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=100
+      interpolate_grid_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                        'nb_sim_perfect_psf500interpol_10source':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf500interpol_10source'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=500
       interpolate_grid_kernel=1
             recalculate_all=1
       mapfn_recalculate=0
@@ -861,7 +1048,7 @@ end
 
       'nb_decon_Jan2016_nocleanbias':begin 
       max_sources=200000
-      ;dft_threshold=1
+      dft_threshold=1
       return_decon_visibilities=1
       smooth_width=32
       deconvolution_filter='filter_uv_uniform'
@@ -872,7 +1059,7 @@ end
       pad_uv_image=1
       ;time_cut=[2,-2]
       snapshot_healpix_export=1
-      recalculate_all = 0 
+      recalculate_all = 1 
       deconvolve=1
       export_images = 1
       model_recalculate = 1
@@ -892,8 +1079,8 @@ end
       pad_uv_image=1
       ;time_cut=[2,-2]
       snapshot_healpix_export=1
-      recalculate_all = 0 
-      deconvolve=0
+      recalculate_all = 1
+      deconvolve=1
       export_images = 1
       model_recalculate = 1
       no_condense_sources = 1
@@ -912,8 +1099,8 @@ end
       pad_uv_image=1
       ;time_cut=[2,-2]
       snapshot_healpix_export=1
-      recalculate_all = 0 
-      deconvolve=0
+      recalculate_all = 1 
+      deconvolve=1
       export_images = 1
       model_recalculate = 1
       filter_width = 2
@@ -932,8 +1119,8 @@ end
       pad_uv_image=1
       ;time_cut=[2,-2]
       snapshot_healpix_export=1
-      recalculate_all = 0 
-      deconvolve=0
+      recalculate_all = 1
+      deconvolve=1
       export_images = 1
       model_recalculate = 1
       filter_width = 4
@@ -952,8 +1139,8 @@ end
       pad_uv_image=1
       ;time_cut=[2,-2]
       snapshot_healpix_export=1
-      recalculate_all = 0 
-      deconvolve=0
+      recalculate_all = 1
+      deconvolve=1
       export_images = 1
       model_recalculate = 1
       filter_width = 10
