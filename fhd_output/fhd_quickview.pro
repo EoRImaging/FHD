@@ -40,7 +40,6 @@ IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_
 IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(skymodel) EQ 0 THEN fhd_save_io,status_str,skymodel,var='skymodel',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-IF N_Elements(fhd_params) EQ 0 THEN fhd_save_io,status_str,fhd_params,var='fhd_params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
@@ -165,6 +164,7 @@ IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
         model_flag=1
     ENDIF
     fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra
+    IF N_Elements(fhd_params) EQ 0 THEN fhd_save_io,status_str,fhd_params,var='fhd_params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
     component_array=getvar_savefile(fhd_sav_filepath+'.sav','component_array')
     FOR pol_i=0,n_pol-1 DO uv_mask[where(*weights_arr[pol_i])]=1
     noise_map=fhd_params.convergence*rebin(weight_invert(beam_avg),dimension,elements)
