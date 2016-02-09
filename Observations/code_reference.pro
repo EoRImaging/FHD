@@ -113,6 +113,7 @@ time_cut=[-2,2]
 dft_threshold=1
 
 ;defaults not set in firstpass:
+interpolate_kernel=1
 mark_zenith=1
 beam_diff_image=1
 beam_residual_threshold=0.1
