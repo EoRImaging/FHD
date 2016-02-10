@@ -5,7 +5,8 @@ FUNCTION fhd_init,obs,skymodel,file_path_fhd=file_path_fhd,pol_use=pol_use,freq_
     independent_fit=independent_fit,deconvolution_filter=deconvolution_filter,$
     beam_max_threshold=beam_max_threshold,sigma_cut=sigma_cut,local_max_radius=local_max_radius,$
     reject_pol_sources=reject_pol_sources,filter_background=filter_background,$
-    galaxy_model_fit=galaxy_model_fit,transfer_mapfn=transfer_mapfn,subtract_sidelobe_catalog=subtract_sidelobe_catalog,$
+    galaxy_model_fit=galaxy_model_fit,transfer_mapfn=transfer_mapfn,$
+    subtract_sidelobe_catalog=subtract_sidelobe_catalog,return_sidelobe_catalog=return_sidelobe_catalog,$
     joint_deconvolution_list=joint_deconvolution_list,dft_deconvolution_threshold=dft_deconvolution_threshold,$
     deconvolution_over_resolution=deconvolution_over_resolution,deconvolution_horizon_threshold=deconvolution_horizon_threshold
 
@@ -55,6 +56,8 @@ IF N_Elements(subtract_sidelobe_catalog) EQ 0 THEN sidelobe_subtract='' ELSE BEG
         ENDELSE
     ENDELSE
 ENDELSE
+IF N_Elements(return_sidelobe_catalog) EQ 0 THEN sidelobe_return=0 $
+    ELSE sidelobe_return=Keyword_Set(sidelobe_subtract) ? return_sidelobe_catalog:0
 end_condition='Not successfully run'
 n_iter=0
 n_components=0L
@@ -63,15 +66,15 @@ detection_threshold=0.
 convergence=0.
 info=Ptr_new()
 
-fhd={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
+fhd_params={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
     gain_factor:gain_factor,add_threshold:add_threshold,max_add_sources:max_add_sources,$
     over_resolution:over_resolution,dft_threshold:dft_deconvolution_threshold,independent_fit:independent_fit,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,horizon_threshold:deconvolution_horizon_threshold,smooth_width:smooth_width,$
     pol_use:pol_use,sigma_cut:sigma_cut,local_max_radius:local_max_radius,transfer_mapfn:transfer_mapfn,$
-    galaxy_subtract:galaxy_model_fit,sidelobe_subtract:sidelobe_subtract,$
+    galaxy_subtract:galaxy_model_fit,sidelobe_subtract:sidelobe_subtract,sidelobe_return:sidelobe_return,$
     filter_background:filter_background,decon_filter:deconvolution_filter,decon_mode:decon_mode,$
     joint_obs:joint_obs,end_condition:end_condition,n_iter:n_iter,n_components:n_components,n_sources:n_sources,$
     detection_threshold:detection_threshold,convergence:convergence,info:info}
 
-RETURN,fhd
+RETURN,fhd_params
 END

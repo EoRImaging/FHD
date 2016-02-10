@@ -53,8 +53,7 @@ source_candidate_x=source_candidate_i mod dimension & source_candidate_x-=zoom_x
 source_candidate_y=Floor(source_candidate_i/dimension) & source_candidate_y-=zoom_y[0]
 zoom_dim=Long(zoom_x[1]-zoom_x[0]+1)
 source_candidate_i2=source_candidate_x+source_candidate_y*zoom_dim
-c_i0=Max(comp_arr.id)+1
-FOR c_i=c_i0,n_candidates+c_i0-1 DO BEGIN
+FOR c_i=0,n_candidates-1 DO BEGIN
     t0a=Systime(1)
     influence_i=Region_grow(intensity_zoom,source_candidate_i2[c_i],threshold=[gain_min,1.])
     IF min(influence_i) EQ -1 THEN CONTINUE

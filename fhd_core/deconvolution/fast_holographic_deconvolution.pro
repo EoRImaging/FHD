@@ -47,6 +47,7 @@ filter_background=fhd_params.filter_background
 decon_filter=fhd_params.decon_filter
 galaxy_model_fit=fhd_params.galaxy_subtract
 subtract_sidelobe_catalog=fhd_params.sidelobe_subtract
+return_sidelobe_catalog=fhd_params.sidelobe_return
 
 component_array=source_comp_init(n_sources=max_sources,alpha=obs.alpha,freq=obs.freq_center,gain_factor=gain_factor)
 
@@ -274,10 +275,13 @@ IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
         ENDIF
         source_arr_sidelobe=source_list_expand(source_arr_sidelobe)
         n_sidelobe_src=N_Elements(source_arr_sidelobe)
-        component_array = [source_arr_sidelobe, component_array]
-        max_sources += n_sidelobe_src
-        comp_i += n_sidelobe_src
         print,'Subtracting source model from the sidelobes: '+Strn(n_sidelobe_src) + " source components"
+        IF Keyword_Set(return_sidelobe_catalog) THEN BEGIN
+            print, 'Sidelobe sources included in source list"
+            component_array = [source_arr_sidelobe, component_array]
+            max_sources += n_sidelobe_src
+            comp_i += n_sidelobe_src
+        ENDIF ELSE print, 'Sidelobe sources not included in source list'
         model_uv_sidelobe=source_dft_model(obs,jones,source_arr_sidelobe,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
         t3+=t_model
         FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
