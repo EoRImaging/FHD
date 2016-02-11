@@ -69,6 +69,7 @@ save_imagecube=1
 save_uvf=1
 
 unflag_all=1
+no_frequency_flagging=1
 
 if n_elements(set_sidelobe_keywords) eq 0 then set_sidelobe_keywords=0
 
@@ -168,6 +169,7 @@ array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $
     include_catalog_sources=include_catalog_sources, $
     error=error, $
     unflag_all=unflag_all, $
+    no_frequency_flagging=no_frequency_flagging, $
     eor_sim=eor_sim, $
     simulate_header=simulate_header, $
     complex=complex_beam, $
