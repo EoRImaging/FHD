@@ -21,15 +21,15 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
   IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
   
   ;Construct model visibilities. Start by building a model u-v-f cube
+  if keyword_set(include_catalog_sources) then begin
+    catalog_source_array=generate_source_cal_list(obs,psf,catalog_path=catalog_file_path,_Extra=extra)
+    if n_elements(source_array) gt 0 then source_array = [source_array, catalog_source_array] else source_array = catalog_source_array
+  endif    
+  n_sources=N_Elements(source_array)
+  skymodel=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_path=catalog_file_path,return_cal=0,_Extra=extra)
+  
   if keyword_set(recalculate_all) then begin
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset,no_save=no_save
-    if keyword_set(include_catalog_sources) then begin
-      catalog_source_array=generate_source_cal_list(obs,psf,catalog_path=catalog_file_path,_Extra=extra)
-      if n_elements(source_array) gt 0 then source_array = [source_array, catalog_source_array] else source_array = catalog_source_array
-    endif
-    
-    n_sources=N_Elements(source_array)
-    skymodel=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_path=catalog_file_path,return_cal=0,_Extra=extra)
     if n_sources gt 0 then begin
       source_model_uv_arr=source_dft_model(obs,jones,source_array,t_model=t_model,sigma_threshold=2.,uv_mask=uv_mask)
       IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
@@ -259,6 +259,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
       fhd_save_io,status_str,vis_model_ptr,var='vis_ptr',/restore,file_path_fhd=file_path_fhd,obs=obs_out,pol_i=pol_i,_Extra=extra
       vis_model_arr[pol_i]=vis_model_ptr
     ENDFOR
+    fhd_save_io,status_str,skymodel,var='skymodel',/restore,file_path_fhd=file_path_fhd,_Extra=extra
   ENDELSE
   RETURN,vis_model_arr
 END
