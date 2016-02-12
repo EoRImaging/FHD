@@ -1,7 +1,7 @@
 FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=restore_last,timing=timing,$
     residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
-    swap_pol=swap_pol,no_complex_beam=no_complex_beam,no_save=no_save,beam_pol_test=beam_pol_test,$
+    swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
     beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
     interpolate_kernel=interpolate_kernel,_Extra=extra
 
@@ -25,15 +25,8 @@ IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
 n_pol=obs.n_pol
+double_flag=obs.double_precision
 
-;obsra=obs.obsra
-;obsdec=obs.obsdec
-;zenra=obs.zenra
-;zendec=obs.zendec
-;phasera=obs.phasera
-;phasedec=obs.phasedec
-;Jdate=obs.Jd0
-;frequency_array=(*obs.baseline_info).freq
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
 
@@ -43,16 +36,9 @@ nbaselines=obs.nbaselines
 
 dimension=obs.dimension
 elements=obs.elements
-;kx_span=kbinsize*dimension ;Units are # of wavelengths
-;ky_span=kx_span
 degpix=obs.degpix
-;astr=obs.astr
-
 antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
-
-;IF tag_exist(obs,'delays') THEN delay_settings=obs.delays
-;IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 
@@ -61,10 +47,6 @@ kbinsize=obs.kpix
 kbinsize_superres=kbinsize/psf_resolution
 beam_integral=Ptrarr(n_pol,/allocate)
 
-;;residual_tolerance is residual as fraction of psf_base above which to include 
-;IF N_Elements(residual_tolerance) EQ 0 THEN residual_tolerance=1./100.  
-;;residual_threshold is minimum residual above which to include
-;IF N_Elements(residual_threshold) EQ 0 THEN residual_threshold=0.
 IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E2
 
 ;;begin forming psf
@@ -157,9 +139,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             t_beam_power+=Systime(1)-t_bpwr
             t_bint=Systime(1)
             ;divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
-            beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2)/psf_resolution^2. 
+            beam_int+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2. 
             n_grp_use+=baseline_group_n
             t_beam_int+=Systime(1)-t_bint
+            IF ~double_flag THEN psf_base_superres=Complex(psf_base_superres)
             psf_single=Ptrarr(psf_resolution+1,psf_resolution+1)
 ;            NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
 ;               the first element, shifted by one pixel. This allows efficient subscripting for interpolation during gridding
@@ -172,7 +155,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDFOR
         beam_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
         fi_use=where(freq_bin_i EQ freq_i,nf_use)
-        FOR fi1=0L,nf_use-1 DO (*beam_integral[pol_i])[fi_use[fi1]]=beam_int
+        FOR fi1=0L,nf_use-1 DO (*beam_integral[pol_i])[fi_use[fi1]]=Float(beam_int)
     ENDFOR
 ENDFOR
 

@@ -7,13 +7,11 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
 freq_center=antenna1.freq[freq_i]
 dimension_super=(size(xvals_uv_superres,/dimension))[0]
 
-beam_ant1=*(antenna1.response[ant_pol1,freq_i])
-beam_ant2=*(antenna2.response[ant_pol2,freq_i])
 Jones1=antenna1.Jones[*,*,freq_i]
 Jones2=antenna2.Jones[*,*,freq_i]
 
-beam_ant1=*(antenna1.response[ant_pol1,freq_i])
-beam_ant2=Conj(*(antenna2.response[ant_pol2,freq_i]))
+beam_ant1=DComplex(*(antenna1.response[ant_pol1,freq_i]))
+beam_ant2=DComplex(Conj(*(antenna2.response[ant_pol2,freq_i])))
 beam_norm=1.
 
 IF ant_pol1 NE ant_pol2 THEN BEGIN

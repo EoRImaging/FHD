@@ -10,10 +10,12 @@ elements=obs.elements
 n_pol=obs.n_pol
 
 ;Set up defaults
+pregroup_flag=0
 IF Keyword_Set(fhd_params) THEN BEGIN
     IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=fhd_params.detection_threshold
     IF N_Elements(reject_sigma_threshold) EQ 0 THEN IF Keyword_Set(noise_map) THEN reject_sigma_threshold=fhd_params.sigma_cut ELSE reject_sigma_threshold=0  
-    
+    IF Tag_exist(fhd_params,"sidelobe_return") THEN $
+        IF Keyword_Set(fhd_params.sidelobe_return) THEN pregroup_flag=1
 ENDIF ELSE BEGIN
     IF N_Elements(detection_threshold) EQ 0 THEN detection_threshold=Min(comp_arr[comp_i_use].flux.I)/2.
     IF N_Elements(reject_sigma_threshold) EQ 0 THEN IF Keyword_Set(noise_map) THEN reject_sigma_threshold=2. ELSE reject_sigma_threshold=0  
@@ -42,6 +44,10 @@ IF Keyword_Set(regrid_extended_sources) THEN BEGIN
     hpx_cnv=healpix_cnv_generate(obs,/no_save,/divide_pixel_area,nside=nside,/pointer_return)
 ENDIF
 
+IF pregroup_flag THEN gi0=Max(comp_arr.id)+1 ELSE BEGIN
+    gi0=0L
+    comp_arr.id=-1
+ENDELSE
 group_id=group_source_components(obs,comp_arr,radius=radius,gain_array=gain_array)
 
 IF max(group_id) LE 0 THEN BEGIN
@@ -84,8 +90,8 @@ FOR gi=0L,ng-1 DO BEGIN
     source_arr[gi].ra=sra ;flux_I is guaranteed to be non-zero from above
     source_arr[gi].dec=sdec ;flux_I is guaranteed to be non-zero from above
     FOR pol_i=0,7 DO source_arr[gi].flux.(pol_i)=Total(comp_arr[si_g].flux.(pol_i))
-    source_arr[gi].id=gi
-    comp_arr[si_g].id=gi
+    source_arr[gi].id=gi+gi0
+    comp_arr[si_g].id=gi+gi0
     IF Keyword_Set(noise_map) THEN BEGIN
         IF N_Elements(noise_map) EQ 1 THEN nm0=noise_map ELSE nm0=noise_map[source_arr[gi].x,source_arr[gi].y] ;need some sort of error checking here first!!!
         IF nm0 GT 0 THEN source_arr[gi].ston=Total(flux_I)/nm0 ELSE source_arr[gi].ston=0.
@@ -129,7 +135,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
 ;    product(
     flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi[source_arr.id]
     
-    si_use=where(flux_frac_arr GE Abs(clean_bias_threshold),n_use)
+    si_use=where(flux_frac_arr GE Abs(clean_bias_threshold) AND (hcomp_gi[source_arr.id] GT 1),n_use)
     IF n_use EQ 0 THEN RETURN,source_arr ; return if no valid values found
     source_arr=source_arr[si_use]
     flux_frac_arr=flux_frac_arr[si_use]
