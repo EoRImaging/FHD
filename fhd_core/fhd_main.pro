@@ -12,7 +12,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     transfer_flags=transfer_flags, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
     cal_sim_input=cal_sim_input, bubbles=bubbles, enhance_eor=enhance_eor, make_grid_beam=make_grid_beam,$
     remove_eor=remove_eor, real_data_add_eor=real_data_add_eor, turn_off_visflagbasic=turn_off_visflagbasic,make_grid_psf=make_grid_psf, $
-    temp_make_grid_beam=temp_make_grid_beam,_Extra=extra
+    temp_make_grid_beam=temp_make_grid_beam,add_sim_noise=add_sim_noise,_Extra=extra
     
   compile_opt idl2,strictarrsubs
   except=!except
@@ -49,7 +49,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     
     ;Calibration simulations given input model visibilities as dirty visilibilities
     If keyword_set(cal_sim_input) then begin
-      calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis,_Extra=extra
+      calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis, add_sim_noise=add_sim_noise, _Extra=extra
     endif
     ;End of calibration simulation read in and input visibility manipulation
     
