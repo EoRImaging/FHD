@@ -1,5 +1,6 @@
-PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles, file_path_vis=file_path_vis
-
+PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles, file_path_vis=file_path_vis, $
+    add_sim_noise=add_sim_noise
+    
   (*flag_arr[0])[*,*]=1.
   (*flag_arr[1])[*,*]=1.
   
@@ -13,9 +14,9 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance
     print, 'Please specify an input into the calibration simulation, e.g. fhd_nb_sim_beamperchannel_unflagged'
     exit
   endif
-
+  
   obs_id = file_basename(file_path_vis, '.uvfits')
-
+  
   ;restore model visibilities given the cal_sim_input
   vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
   vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_YY.sav', 'vis_model_ptr')
@@ -55,5 +56,11 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance
   ;Combine the calibrated visibilities in the correct format for the script
   *vis_arr[0] = *vis_XX_model+*vis_XX_eor
   *vis_arr[1] = *vis_YY_model+*vis_YY_eor
+  
+  If keyword_set(add_sim_noise) then begin
+    vis_noise=getvar_savefile('/nfs/mwa-00/h1/nbarry/'+obs_id+'_noise.sav','vis_noise')
+    *vis_arr[0] = *vis_arr[0]+*vis_noise[0]
+    *vis_arr[1] = *vis_arr[1]+*vis_noise[1]
+  endif
   
 END
