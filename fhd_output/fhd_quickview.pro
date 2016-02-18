@@ -186,6 +186,7 @@ IF Keyword_Set(write_healpix_fits) THEN BEGIN
     ring2nest, nside, hpx_cnv.inds, hpx_inds_nest ;external programs are much happier reading in Healpix fits files with the nested pixel ordering
 ENDIF
 
+source_flag=0 
 IF model_flag THEN IF skymodel.n_sources GT 0 THEN BEGIN
     source_flag=1
     source_array=skymodel.source_list
@@ -212,7 +213,7 @@ IF model_flag THEN IF skymodel.n_sources GT 0 THEN BEGIN
         ENDFOR
     ENDIF
     source_arr_out=stokes_cnv(source_arr_out,jones_out,beam=beam_base_out,/inverse,_Extra=extra)
-ENDIF ELSE source_flag=0
+ENDIF
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
 gal_model_img=Ptrarr(n_pol)
