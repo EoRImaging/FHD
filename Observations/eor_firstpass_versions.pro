@@ -101,7 +101,7 @@ case version of
       ;turn_off_visflagbasic=1
       unflag_all=1
    end 
-     'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_2':begin 
+     'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit':begin 
       nfreq_avg=384
       no_frequency_flagging=1
       recalculate_all=1
@@ -111,6 +111,7 @@ case version of
       flag_calibration=0
       over_calibrate=1 
    end 
+   
      'nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_onesource':begin 
       nfreq_avg=384
       no_frequency_flagging=1
@@ -196,6 +197,37 @@ case version of
       transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
       undefine, diffuse_calibrate, diffuse_model
    end
+      'nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing_dnorm':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing' ;accidently had all sources, not just 10
+      no_frequency_flagging=1
+            psf_resolution=100
+      interpolate_kernel=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+            flag_calibration=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+      'nb_sim_overfit_cal_eor_maxcalsources_nod_zenithpointing_dnorm':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf100interpol_10source_dnorm' ;accidently had all sources, not just 10
+      psf_resolution=100
+      interpolate_kernel=1
+      no_frequency_flagging=1
+      over_calibrate=1
+                  flag_calibration=0
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
    
          'nb_sim_perfect_cal_eor_ones_confusion_S5000_100mJy':begin 
       saved_run_bp=0
@@ -295,10 +327,61 @@ case version of
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
       cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      ;no_frequency_flagging=1
+      over_calibrate=1
+            ;flag_calibration=0
+      max_calibration_sources=4000
+      add_sim_noise=1
+      nfreq_avg=384  
+      recalculate_all=1
+      mapfn_recalculate=0
+      ;transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
+      undefine, diffuse_calibrate, diffuse_model
+   end
+            'nb_sim_overfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag_noise_nomin':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
       no_frequency_flagging=1
       over_calibrate=1
             flag_calibration=0
       max_calibration_sources=4000
+      min_cal_baseline=1.
+      add_sim_noise=1
+      nfreq_avg=384  
+      recalculate_all=1
+      mapfn_recalculate=0
+      ;transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
+      undefine, diffuse_calibrate, diffuse_model
+   end
+               'nb_sim_overfit_cal_eor_nod_zenithpointing_notileflag_noise_nomin':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      over_calibrate=1
+            flag_calibration=0
+      ;max_calibration_sources=4000
+      min_cal_baseline=1.
+      add_sim_noise=1
+      nfreq_avg=384  
+      recalculate_all=1
+      mapfn_recalculate=0
+      ;transfer_flags='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod_zenithpointing/vis_data/'+obs_id+'_flags.sav'
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+            'nb_sim_overfit_cal_eor_nod_zenithpointing_notileflag_noise':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      over_calibrate=1
+            flag_calibration=0
+      ;max_calibration_sources=4000
       add_sim_noise=1
       nfreq_avg=384  
       recalculate_all=1
@@ -509,6 +592,71 @@ case version of
       mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
+        'nb_sim_model_psf8interpol_10source_dnorm':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      flag_calibration=0
+      over_calibrate=1 
+            psf_resolution=8
+      interpolate_kernel=1
+   end 
+           'nb_sim_model_psf16interpol_10source_dnorm':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      flag_calibration=0
+      over_calibrate=1 
+            psf_resolution=16
+      interpolate_kernel=1
+   end 
+           'nb_sim_model_psf32interpol_10source_dnorm':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      flag_calibration=0
+      over_calibrate=1 
+            psf_resolution=32
+      interpolate_kernel=1
+   end 
+           'nb_sim_model_psf100interpol_10source_dnorm':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      flag_calibration=0
+      over_calibrate=1 
+            psf_resolution=100
+      interpolate_kernel=1
+   end 
+           'nb_sim_model_psf500interpol_10source_dnorm':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      flag_calibration=0
+      over_calibrate=1 
+            psf_resolution=500
+      interpolate_kernel=1
+   end 
                   'nb_sim_model_psf8interpol_10source':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -582,6 +730,91 @@ case version of
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
       cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=500
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf8interpol_10source_dnorm_5s':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf8interpol_10source_dnorm'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=8
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf16interpol_10source_dnorm_5s':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf16interpol_10source_dnorm'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=16
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf32interpol_10source_dnorm_5s':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf32interpol_10source_dnorm'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=32
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_model_psf100interpol_10source_dnorm_5s':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf100interpol_10source_dnorm'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=100
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                        'nb_sim_model_psf500interpol_10source_dnorm_5s':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf500interpol_10source_dnorm'
       no_frequency_flagging=1
       perfect_cal_ones=1
       remove_eor=1
@@ -679,6 +912,110 @@ case version of
       mapfn_recalculate=0
       undefine, diffuse_calibrate, diffuse_model
    end
+   
+                       'nb_sim_perfect_psf8interpol_10source_dnorm':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf8interpol_10source_dnorm_5s'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=8
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_perfect_psf16interpol_10source_dnorm':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf16interpol_10source_dnorm_5s'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=16
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_perfect_psf32interpol_10source_dnorm':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf32interpol_10source_dnorm_5s'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=32
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                     'nb_sim_perfect_psf100interpol_10source_dnorm':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf100interpol_10source_dnorm_5s'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=100
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                        'nb_sim_perfect_psf500interpol_10source_dnorm':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf500interpol_10source_dnorm_5s'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=500
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                           'nb_sim_perfect_psf100interpol_10source_dnorm_noeor':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf100interpol_10source_dnorm_5s'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=100
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
             'nb_sim_perfect_cal_noeor_ones_maxcalsources_nod_zenithpointing_notileflag_modelmake10_double_2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -899,6 +1236,32 @@ case version of
       saved_calibrate=1
             flag_calibration=0
       
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+            'nb_sim_savedfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag_noiseoncal_2p':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      noise_calibrate=1
+            flag_calibration=0
+      
+      max_calibration_sources=4000
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+               'nb_sim_savedfit_cal_eor_maxcalsources_nod_zenithpointing_notileflag_noiseonall':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      noise_calibrate=1
+            flag_calibration=0
+      add_sim_noise=1
       max_calibration_sources=4000
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
