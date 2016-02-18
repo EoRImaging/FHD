@@ -257,6 +257,15 @@ If keyword_set(saved_calibrate) then begin
   ENDFOR
 endif
 
+If keyword_set(noise_calibrate) then begin
+  cal_final=getvar_savefile('/nfs/eor-00/h1/nbarry/cal_final_noise_2p.sav','cal_final')
+  FOR pol_i=0,nc_pol-1 DO BEGIN
+    FOR tile_i=0, 127 do begin
+      (*cal.gain[pol_i])[*,tile_i]=cal_final[*,pol_i]
+    ENDFOR
+  ENDFOR
+endif
+
 If keyword_set(just_amp_over_calibrate) then begin
   phase_fit_xx=0.;atan(*cal.gain[0],/phase)
   phase_fit_yy=0.;atan(*cal.gain[1],/phase)

@@ -1,14 +1,15 @@
-pro vis_add_noise_simulation, cal_sim_input, vis_arr, obs_id
+pro vis_add_noise_simulation, cal_sim_input, vis_arr, obs_id,obs
 
   ;Clear important variables
   undefine, vis_ptr, vis_xx, vis_yy, random_arr, real_noise, imaginary_noise, noisy_vis_xx, noisy_vis_yy
   
   ;Restore the obs structure to get the noise standard deviation per visibility
-  obs = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/metadata/'+obs_id+'_obs.sav', 'obs')
+
   vis_noise_full=*obs.vis_noise
   vis_noise=vis_noise_full
-  vis_noise[*,*]=vis_noise_full[0,6] ;A non-flagged index, since I really don't want any flagging influence.
+  vis_noise[*,*]=vis_noise_full[0,6]/4 ;A non-flagged index, since I really don't want any flagging influence.
 
+  undefine, vis_noise_full, obs
   
   visibility_num=size(*vis_arr[0])
   
@@ -18,7 +19,7 @@ pro vis_add_noise_simulation, cal_sim_input, vis_arr, obs_id
   ;Set up an array of pol,freq,visibilities. The real and imaginary parts have the same visibility noise. Each visibility
   ;apparently has the same noise standard deviation...divide by the sq root of 30000, which is about 1000hrs of observation
   vis_noise_large=DBLARR(2,384,visibility_num[2])
-  for i=0, visibility_num[2]-1 do vis_noise_large[*,*,i]=vis_noise[*,*];/sqrt(30000.)
+  for i=0, visibility_num[2]-1 do vis_noise_large[*,*,i]=vis_noise[*,*];/10.
   
   ;Get the real and imaginary noise, which are uncorrelated.
   real_noise=vis_noise_large*random_arr[0,*,*,*]
@@ -32,11 +33,14 @@ pro vis_add_noise_simulation, cal_sim_input, vis_arr, obs_id
   
   vis_noise_xx=real_noise[0,*,*]+Complex(0,1)*imaginary_noise[0,*,*]
   vis_noise_yy=real_noise[1,*,*]+Complex(0,1)*imaginary_noise[1,*,*]
+  
+  undefine, imaginary_noise, real_noise
+  
   vis_noise=PTRARR(2,/allocate)
   *vis_noise[0] = vis_noise_xx
   *vis_noise[1] = vis_noise_yy
 
-  save, vis_noise, filename='/nfs/mwa-00/h1/nbarry/'+obs_id+'_noise.sav'
+  save, vis_noise, filename='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_noise/'+obs_id+'_noise.sav'
   
 ;Save the visibilities in pointers (like the input format) and save in seperate xx and yy savefiles.
 ;vis_model_ptr=ptr_new(/allocate_heap)
