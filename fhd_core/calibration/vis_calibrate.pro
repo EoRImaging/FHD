@@ -9,7 +9,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag
     saved_run_twopoly_meanmode=saved_run_twopoly_meanmode,over_calibrate=over_calibrate,skip_cal_plots=skip_cal_plots,$
     perfect_cal_ones=perfect_cal_ones,perfect_cal_dnr=perfect_cal_dnr, perfect_add_mode=perfect_add_mode, $
     just_amp_over_calibrate=just_amp_over_calibrate,just_phase_over_calibrate=just_phase_over_calibrate,$
-    saved_calibrate=saved_calibrate,smooth_calibrate=smooth_calibrate,_Extra=extra
+    saved_calibrate=saved_calibrate,smooth_calibrate=smooth_calibrate,noise_calibrate=noise_calibrate,_Extra=extra
   t0_0=Systime(1)
   error=0
   timing=-1
@@ -239,6 +239,15 @@ endif
 
 If keyword_set(saved_calibrate) then begin
   cal_final=getvar_savefile('/nfs/eor-00/h1/nbarry/cal_final_notileflag.sav','cal_final')
+  FOR pol_i=0,nc_pol-1 DO BEGIN
+    FOR tile_i=0, 127 do begin
+      (*cal.gain[pol_i])[*,tile_i]=cal_final[*,pol_i]
+    ENDFOR
+  ENDFOR
+endif
+
+If keyword_set(noise_calibrate) then begin
+  cal_final=getvar_savefile('/nfs/eor-00/h1/nbarry/cal_final_noise_2p.sav','cal_final')
   FOR pol_i=0,nc_pol-1 DO BEGIN
     FOR tile_i=0, 127 do begin
       (*cal.gain[pol_i])[*,tile_i]=cal_final[*,pol_i]
