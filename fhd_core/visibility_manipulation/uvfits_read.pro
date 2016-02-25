@@ -58,9 +58,9 @@ ENDIF ELSE BEGIN
         ENDELSE 
         
         CASE uvfits_dim OF
-            7:data_array = Temporary(reform(data_array[*,*,*,spec_i,spec_i,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
-            6:data_array = Temporary(reform(data_array[*,*,*,spec_i,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
-            5:data_array = Temporary(reform(data_array[*,*,*,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
+            7:data_array = Temporary(reform(data_array[*,*,*,spec_i,spec_i,spec_i,*],3,hdr.n_pol,n_freq0,nbaselines0))
+            6:data_array = Temporary(reform(data_array[*,*,*,spec_i,spec_i,*],3,hdr.n_pol,n_freq0,nbaselines0))
+            5:data_array = Temporary(reform(data_array[*,*,*,spec_i,*],3,hdr.n_pol,n_freq0,nbaselines0))
             ELSE: BEGIN
                 print,"Extra dimensions found in the uvfits file!"
                 print,"Total dimensions: " + Strn(uvfits_dim)
