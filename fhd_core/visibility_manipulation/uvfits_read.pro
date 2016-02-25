@@ -44,9 +44,9 @@ ENDIF ELSE BEGIN
     nbaselines0=hdr.nbaselines
     uvfits_dim = size(data_array,/n_dimension)
     
-    IF uvfits_dim GT 6 THEN BEGIN
+    IF uvfits_dim GT 4 THEN BEGIN
         uvfits_dim_arr = size(data_array,/dimension)
-        IF max(uvfits_dim_arr[5:uvfits_dim-2]) EQ 1 THEN spec_i = 0 $
+        IF max(uvfits_dim_arr[3:uvfits_dim-2]) EQ 1 THEN spec_i = 0 $
         ELSE BEGIN
             IF N_Elements(uvfits_spectral_dimension) EQ 0 THEN BEGIN
                 print,"Extra dimensions with size greater than 1 found in the uvfits file!"
@@ -58,13 +58,13 @@ ENDIF ELSE BEGIN
         ENDELSE 
         
         CASE uvfits_dim OF
-            9:data_array = Temporary(reform(data_array[*,*,*,spec_i,spec_i,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
-            8:data_array = Temporary(reform(data_array[*,*,*,spec_i,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
-            7:data_array = Temporary(reform(data_array[*,*,*,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
+            7:data_array = Temporary(reform(data_array[*,*,*,spec_i,spec_i,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
+            6:data_array = Temporary(reform(data_array[*,*,*,spec_i,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
+            5:data_array = Temporary(reform(data_array[*,*,*,spec_i,*],2,hdr.n_pol,n_freq0,nbaselines0))
             ELSE: BEGIN
                 print,"Extra dimensions found in the uvfits file!"
                 print,"Total dimensions: " + Strn(uvfits_dim)
-                print,"Dimensions over 9 are not supported"
+                print,"Dimensions over 7 are not supported"
                 error=1
                 RETURN
             END
