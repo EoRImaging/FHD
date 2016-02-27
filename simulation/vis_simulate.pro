@@ -185,9 +185,8 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
       
         ;; flag_arr is passed in from array_simulator
         ;Call visibility_degrid directly, instead of calling the wrapper, since we are adding the uv models earlier
-        vis_arr=Ptrarr(n_pol)
         FOR pol_i=0,n_pol-1 DO BEGIN
-            vis_arr[pol_i]=visibility_degrid(*model_uvf_arr[pol_i],flag_arr[pol_i],obs,psf,params,silent=silent,$
+            vis_model_arr[pol_i]=visibility_degrid(*model_uvf_arr[pol_i],flag_arr[pol_i],obs,psf,params,silent=silent,$
                 polarization=pol_i,_Extra=extra)
         ENDFOR
 ;        vis_model_arr = vis_source_model(skymodel,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uvf_arr,$

@@ -12,7 +12,7 @@ if n_elements(version) eq 0 then begin ;version provides a name for the output s
     return
 endif
     
-recalculate_all=0 ; If there is no data being used for context, FHD should calculate everything from scratch.
+recalculate_all=1 ; If there is no data being used for context, FHD should calculate everything from scratch.
 grid_recalculate = 1 ; This is needed in array_simulator to enter the griding/imaging sections
 
 ;if n_elements(catalog_file_name) eq 0 then catalog_file_name='master_catalog' 
@@ -110,7 +110,7 @@ n_pol = 2
 image_filter_fn='filter_uv_uniform' ; not sure if this makes sense for simulations
 dimension=1024
 if n_elements(fov) eq 0 then fov=80.
-nfreq_avg=16.
+nfreq_avg=384.
 
 psf_resolution=100.
 kbinsize=0.5
@@ -130,9 +130,15 @@ if keyword_set(sim_baseline_density) then begin
   ;; set up baseline distribution
   simulate_baselines = 1
   
-  nsample = round(ps_kspan^2. * sim_baseline_density, /L64)
-  sim_uu = randomu(seed, nsample)*ps_kspan - ps_kspan/2. ;nsample u components
-  sim_vv = randomu(seed, nsample)*ps_kspan - ps_kspan/2. ;nsample v components, minmax is set by span in kspace
+  ps_kspan_x_mod = 1.0
+  ps_kspan_y_mod = 1.0
+  
+  ps_kspan_x = ps_kspan * ps_kspan_x_mod
+  ps_kspan_y = ps_kspan * ps_kspan_y_mod
+  
+  nsample = round(ps_kspan_x * ps_kspan_y * sim_baseline_density, /L64)
+  sim_uu = randomu(seed, nsample)*ps_kspan_x - ps_kspan_x/2. ;nsample u components
+  sim_vv = randomu(seed, nsample)*ps_kspan_y - ps_kspan_y/2. ;nsample v components, minmax is set by span in kspace
   
   ;; convert to light travel time (ie m/c or wavelenghts/freq) -- use f=150MHz 
   ;for lowest frequency
