@@ -49,7 +49,8 @@ IF data_flag LE 0 THEN BEGIN
     
     ;Calibration simulations given input model visibilities as dirty visilibilities
     If keyword_set(cal_sim_input) then begin
-        calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis, add_sim_noise=add_sim_noise, _Extra=extra
+        calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis, $
+           add_sim_noise=add_sim_noise,stokesV=stokesV, _Extra=extra
     endif
     ;End of calibration simulation read in and input visibility manipulation
     

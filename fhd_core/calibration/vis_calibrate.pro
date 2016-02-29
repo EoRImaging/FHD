@@ -95,6 +95,9 @@ vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight
 	timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
 t1=Systime(1)-t0_0
 
+IF Keyword_Set(cal.auto_initialize) THEN $
+  initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr,_Extra=extra)
+
 vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
 IF Keyword_Set(cal.auto_initialize) THEN BEGIN
 	IF Keyword_Set(vis_auto) THEN $

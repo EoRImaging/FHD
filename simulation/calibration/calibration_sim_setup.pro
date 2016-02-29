@@ -1,5 +1,5 @@
 PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles, file_path_vis=file_path_vis, $
-    add_sim_noise=add_sim_noise
+    add_sim_noise=add_sim_noise,stokesV=stokesV
     
   (*flag_arr[0])[*,*]=1.
   (*flag_arr[1])[*,*]=1.
@@ -17,9 +17,15 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance
   
   obs_id = file_basename(file_path_vis, '.uvfits')
   
-  ;restore model visibilities given the cal_sim_input
-  vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
-  vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_YY.sav', 'vis_model_ptr')
+  If ~keyword_set(stokesV) then begin
+    ;restore model visibilities given the cal_sim_input
+    vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
+    vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_YY.sav', 'vis_model_ptr')
+  endif else begin
+    vis_arr =  GETVAR_SAVEFILE('/nfs/mwa-03/r1/EoR2013/'+cal_sim_input+'/'+obs_id+'_vis_model_arr_2.sav', 'vis_model_arr')
+    IF ~keyword_set(vis_arr) then message, '/nfs/mwa-03/r1/EoR2013/'+cal_sim_input+'/'+obs_id+'_vis_model_arr.sav not found or did not contain specified variable'
+    Return
+  endelse
   
   ;vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
   ;vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_YY.sav', 'vis_ptr')
