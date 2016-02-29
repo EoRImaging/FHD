@@ -1,4 +1,4 @@
-PRO pol_sim_mwaimp, version=version, sources_file_name=sources_file_name, catalog_file_name=catalog_file_name,fov=fov,beam_model_version=beam_model_version, _Extra=extra
+PRO pol_sim_mwaimp_wrapper, version=version, sources_file_name=sources_file_name, catalog_file_name=catalog_file_name,fov=fov,beam_model_version=beam_model_version, _Extra=extra
 
 
 except=!except
@@ -105,7 +105,7 @@ dimension=1024
 if n_elements(fov) eq 0 then fov=80.
 nfreq_avg=16.
 
-psf_resolution=100.
+psf_resolution=16.
 kbinsize=0.5
 
 no_rephase=1 ;set to use obsra, obsdec for phase center even if phasera, phasedec present in a .metafits file
