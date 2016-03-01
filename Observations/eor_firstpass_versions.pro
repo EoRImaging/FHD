@@ -14,7 +14,6 @@ obs_id = args[0]
 output_directory = args[1]
 ;output_directory = '/nfs/mwa-03/r1/EoR2013/'
 version = args[2]
-;version = 'nb_sim_overfit_cal_eor_maxcalsources_nod'
 cmd_args={version:version}
 
 ; Set default values for everything
@@ -2160,7 +2159,7 @@ case version of
       n_pol=4
 
       undefine, diffuse_calibrate, diffuse_model
-      calibration_catalog_file_path=filepath('confusion_StokesV.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path=filepath('confusion_StokesV_2_ids.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
               'nb_sim_model_StokesV_10':begin 
       saved_run_bp=0
@@ -2198,7 +2197,7 @@ case version of
       mapfn_recalculate=0
       n_pol=4
       stokesV=1
-      calibration_catalog_file_path=filepath('confusion_completeness_StokesV.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path=filepath('confusion_completeness_StokesV_2_ids.sav',root=rootdir('FHD'),subdir='catalog_data')
       undefine, diffuse_calibrate, diffuse_model
    end
               'nb_sim_perfect_cal_noeor_ones_StokesV_10':begin 
