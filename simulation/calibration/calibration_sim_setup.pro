@@ -22,7 +22,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance
     vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
     vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/'+cal_sim_input+'/vis_data/'+obs_id+'_vis_model_YY.sav', 'vis_model_ptr')
   endif else begin
-    vis_arr =  GETVAR_SAVEFILE('/nfs/mwa-03/r1/EoR2013/'+cal_sim_input+'/'+obs_id+'_vis_model_arr_2.sav', 'vis_model_arr')
+    vis_arr =  GETVAR_SAVEFILE('/nfs/mwa-03/r1/EoR2013/'+cal_sim_input+'/'+obs_id+'_vis_model_arr.sav', 'vis_model_arr')
     IF ~keyword_set(vis_arr) then message, '/nfs/mwa-03/r1/EoR2013/'+cal_sim_input+'/'+obs_id+'_vis_model_arr.sav not found or did not contain specified variable'
     Return
   endelse
