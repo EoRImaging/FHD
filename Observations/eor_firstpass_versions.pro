@@ -1235,6 +1235,84 @@ case version of
       undefine, diffuse_calibrate, diffuse_model
       calibration_catalog_file_path=filepath('confusion_StokesV_2_ids_200mJy.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
+                 'nb_sim_model_StokesQ':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_onesource'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      ;max_calibration_sources=4000
+      nfreq_avg=384  
+      instrument='mwa'
+      recalculate_all=1
+      mapfn_recalculate=0
+      n_pol=4
+
+      undefine, diffuse_calibrate, diffuse_model
+      calibration_catalog_file_path=filepath('confusion_StokesQ_ids_10Jy.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+                    'nb_sim_model_StokesV_West':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit_onesource'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      ;max_calibration_sources=4000
+      nfreq_avg=384  
+      instrument='mwa'
+      recalculate_all=1
+      mapfn_recalculate=0
+      n_pol=4
+
+      undefine, diffuse_calibrate, diffuse_model
+      calibration_catalog_file_path=filepath('confusion_StokesV_ids_10Jy_West.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end 
+               'nb_sim_perfect_cal_noeor_ones_StokesQ':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      remove_eor=1
+      cal_sim_input='fhd_nb_sim_model_StokesQ'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      nfreq_avg=384
+      skip_bp_plots=1
+      instrument='mwa'
+            recalculate_all=1
+      mapfn_recalculate=0
+      n_pol=4
+      stokesV=1
+      calibration_catalog_file_path=filepath('confusion_completeness_StokesQ_ids_10Jy.sav',root=rootdir('FHD'),subdir='catalog_data')
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                  'nb_sim_perfect_cal_noeor_ones_StokesV_West':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      remove_eor=1
+      cal_sim_input='fhd_nb_sim_model_StokesV_West'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      nfreq_avg=384
+      skip_bp_plots=1
+      instrument='mwa'
+            recalculate_all=1
+      mapfn_recalculate=0
+      n_pol=4
+      stokesV=1
+      calibration_catalog_file_path=filepath('confusion_completeness_StokesV_ids_10Jy_West.sav',root=rootdir('FHD'),subdir='catalog_data')
+      undefine, diffuse_calibrate, diffuse_model
+   end
             'nb_sim_perfect_cal_noeor_ones_StokesV':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
