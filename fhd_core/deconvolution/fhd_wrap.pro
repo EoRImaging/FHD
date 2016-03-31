@@ -118,12 +118,13 @@ skymodel=skymodel_decon ;In the future, we might want to include support for dif
 fhd_save_io,status_str,skymodel,var='skymodel',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 fhd_log_settings,file_path_fhd,fhd=fhd_params,obs=obs,cal=cal,psf=psf,skymodel=skymodel,sub_dir='metadata' 
 
+undefine_fhd,map_fn_arr
 ;Optionally degrid and export the visibilities formed from the deconvolution model 
 IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_arr) THEN BEGIN
         ;could generate model visibilities from just the source list (allows sources to be pruned), or from the final uv model (don't have to redo the DFT) 
         vis_model_arr=vis_source_model(skymodel,obs,status_str,psf,params,flag_arr,$
-            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)   
+            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd,_Extra=extra)   
 ;        vis_model_arr=vis_source_model(source_array,obs,psf,params,model_uv_arr=model_uv_arr,$
 ;            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)      
     ENDIF
