@@ -1,7 +1,7 @@
 FUNCTION source_residual_image,obs,source_arr,image_arr,jones=jones,source_residual_stokes=source_residual_stokes,beam_arr=beam_arr,beam_power=beam_power,$
     image_path=image_path,source_residual_radius=source_residual_radius,source_residual_ston_threshold=source_residual_ston_threshold,$
     source_residual_flux_threshold=source_residual_flux_threshold,source_residual_beam_threshold=source_residual_beam_threshold,$
-    smooth_width=smooth_width,beam_threshold=beam_threshold,source_residual_include_sidelobe=source_residual_include_sidelobe,smooth_iter=smooth_iter
+    beam_threshold=beam_threshold,source_residual_include_sidelobe=source_residual_include_sidelobe,smooth_iter=smooth_iter
 
 source_arr_use=source_arr
 
@@ -14,7 +14,7 @@ IF N_Elements(beam_power) EQ 0 THEN beam_power=1.
 IF Keyword_Set(source_residual_stokes) THEN pol_offset=4 ELSE pol_offset=0
 beam_flag=Min(Ptr_valid(beam_arr))
 restored_beam_width=beam_width_calculate(obs,min_restored_beam_width=1.)
-IF N_Elements(smooth_width) EQ 0 THEN smooth_width=5.*restored_beam_width
+smooth_width=5.*restored_beam_width 
 IF N_Elements(smooth_iter) EQ 0 THEN smooth_iter=4.
 
 IF Keyword_Set(source_residual_stokes) THEN BEGIN
