@@ -46,11 +46,11 @@ ENDFOR
 IF Keyword_Set(debug_crosspol_grid) THEN BEGIN
     icomp = Complex(0,1)
     crosspol_image_0 = (*image_uv_arr[2] + conjugate_mirror(*image_uv_arr[3]))/2.
-    crosspol_image_0 = (crosspol_image_0 + conjugate_mirror(crosspol_image_0))/2.
-    crosspol_image_1 = (*image_uv_arr[2] - icomp * conjugate_mirror(*image_uv_arr[3]))/2.
-    crosspol_image_1 = (crosspol_image_1 + conjugate_mirror(crosspol_image_1))/2.
-    *image_uv_arr[2] = crosspol_image_0
-    *image_uv_arr[3] = crosspol_image_1
+    pseudo_stokes_U = (crosspol_image_0 + conjugate_mirror(crosspol_image_0))/2.
+    crosspol_image_1 = (*image_uv_arr[2] + conjugate_mirror(*image_uv_arr[3]))/2.
+    pseudo_stokes_V = -icomp * (crosspol_image_1 - conjugate_mirror(crosspol_image_1))/2.
+    *image_uv_arr[2] = pseudo_stokes_U + pseudo_stokes_V
+    *image_uv_arr[3] = pseudo_stokes_U - pseudo_stokes_V
 ENDIF
 
 FOR pol_i=0, n_pol-1 DO BEGIN
