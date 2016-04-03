@@ -4,7 +4,7 @@ FUNCTION source_comp_init,source_comp_in,n_sources=n_sources,xvals=xvals,yvals=y
 IF N_Elements(n_sources) EQ 0 THEN $
     n_sources=Max([N_Elements(xvals),N_Elements(yvals),N_Elements(ra),N_Elements(dec),1.])
 
-flux_struct={flux,xx:0.,yy:0.,xy:0.,yx:0.,I:0.,Q:0.,U:0.,V:0.}
+flux_struct={flux,xx:0.,yy:0.,xy:Complex(0.),yx:Complex(0.),I:0.,Q:0.,U:0.,V:0.}
 ;flux order is 0-3: xx, yy, xy, yx in apparent brightness; 4-7: I, Q, U, V in sky brightness
 ;flag type codes are 0: no flag, 1: low confidence 2: sidelobe contamination
 struct_base={id:-1L,x:0.,y:0.,ra:0.,dec:0.,ston:0.,freq:100.,alpha:0.,gain:1.,flag:0,extend:Ptr_new(),flux:flux_struct}
