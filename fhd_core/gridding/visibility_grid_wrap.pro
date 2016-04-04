@@ -1,7 +1,6 @@
 FUNCTION visibility_grid_wrap,vis_arr,flag_arr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
     deconvolve=deconvolve,model_flag=model_flag,snapshot_healpix_export=snapshot_healpix_export,mapfn_recalculate=mapfn_recalculate,$
-    save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,$
-    debug_crosspol_grid=debug_crosspol_grid,_Extra=extra
+    save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,_Extra=extra
     
 n_pol=obs.n_pol
 t_grid=fltarr(n_pol)
@@ -19,7 +18,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF Keyword_Set(preserve_visibilities) THEN return_mapfn=0 ELSE return_mapfn=mapfn_recalculate
     IF Keyword_Set(mapfn_recalculate) AND Keyword_Set(save_visibilities) THEN preserve_vis_grid=0 ELSE preserve_vis_grid=preserve_visibilities
     IF pol_i EQ 0 THEN uniform_filter=1 ELSE uniform_filter=0
-    IF Keyword_Set(debug_crosspol_grid) AND pol_i GT 1 THEN no_conjugate=1 ELSE no_conjugate=0 
+    IF pol_i GT 1 THEN no_conjugate=1 ELSE no_conjugate=0 
     grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
         timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,uniform_filter=uniform_filter,$
         mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
@@ -43,15 +42,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
 ENDFOR
 
-IF Keyword_Set(debug_crosspol_grid) THEN BEGIN
-    icomp = Complex(0,1)
-    crosspol_image_0 = (*image_uv_arr[2] + conjugate_mirror(*image_uv_arr[3]))/2.
-    pseudo_stokes_U = (crosspol_image_0 + conjugate_mirror(crosspol_image_0))/2.
-    crosspol_image_1 = (*image_uv_arr[2] + conjugate_mirror(*image_uv_arr[3]))/2.
-    pseudo_stokes_V = -icomp * (crosspol_image_1 - conjugate_mirror(crosspol_image_1))/2.
-    *image_uv_arr[2] = pseudo_stokes_U + pseudo_stokes_V
-    *image_uv_arr[3] = pseudo_stokes_U - pseudo_stokes_V
-ENDIF
+image_uv_arr=crosspol_reformat(image_uv_arr)
 
 FOR pol_i=0, n_pol-1 DO BEGIN
     fhd_save_io,status_str,*image_uv_arr[pol_i],var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra

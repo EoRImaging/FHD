@@ -160,4 +160,6 @@ ENDIF ELSE BEGIN
         undefine_fhd,model_uv_vals,flux_arr
     ENDELSE
 ENDELSE
+
+model_uv_full=crosspol_reformat(model_uv_full)
 END

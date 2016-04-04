@@ -96,10 +96,10 @@ IF Keyword_Set(center_rotate) THEN BEGIN
         ENDFOR
     ENDFOR
 ENDIF
-sign=[1,-1,1,-1]
 
 type=size(image_arr,/type)
 IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
+    sign=[1,-1,1,-complex(0,1)]
     source_list=image_arr
     ns_in=N_Elements(source_list)
     sx=source_list.x
@@ -128,7 +128,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i+4)
         FOR pol_i=0,n_pol-1 DO *flux_pq[pol_i]=((*flux_arr[stokes_list1[pol_i]])+sign[pol_i]*(*flux_arr[stokes_list2[pol_i]]))/2.
         FOR pol_i2=0,n_pol-1 DO BEGIN
-            *flux_out[pol_i2]=Fltarr(ns)
+            IF pol_i2 LE 1 THEN *flux_out[pol_i2]=Fltarr(ns) ELSE *flux_out[pol_i2]=Complexarr(ns) 
             FOR pol_i1=0,n_pol-1 DO BEGIN
                 *flux_out[pol_i2]+=*flux_pq[pol_i1]*(*p_map[pol_i1,pol_i2])[p_ind]
             ENDFOR
@@ -139,23 +139,25 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i)
         
         FOR pol_i2=0,n_pol-1 DO BEGIN
-            *flux_pq[pol_i2]=fltarr(ns)
+            IF pol_i2 LE 1 THEN *flux_pq[pol_i2]=Fltarr(ns) ELSE *flux_pq[pol_i2]=Complexarr(ns)
             FOR pol_i1=0,n_pol-1 DO BEGIN
                 *flux_pq[pol_i2]+=*flux_arr[pol_i1]*weight_invert(*beam_use[pol_i1])*(*p_corr[pol_i1,pol_i2])[p_ind]
             ENDFOR
         ENDFOR
-        FOR pol_i=0,n_pol-1 DO *flux_out[pol_i]=(*flux_pq[stokes_list1[pol_i]])+sign[pol_i]*(*flux_pq[stokes_list2[pol_i]])
+        FOR pol_i=0,n_pol-1 DO *flux_out[pol_i]=Real_part((*flux_pq[stokes_list1[pol_i]])+sign[pol_i]*(*flux_pq[stokes_list2[pol_i]]))
     ENDELSE
      ;indices of source_list.flux are [xx,yy,xy,yx,I,Q,U,V]
     FOR pol_i=0,n_pol-1 DO BEGIN
         flux_single=fltarr(ns_in)
+        IF pol_i+stokes_i_offset EQ 2 OR pol_i+stokes_i_offset EQ 3 THEN flux_single=Complexarr(ns_in) 
         flux_single[s_use]=*flux_out[pol_i]
         source_list.flux.(pol_i+stokes_i_offset)=flux_single ;;Reform() is to handle ns=1 case
     ENDFOR
     
     Ptr_free,flux_out,flux_arr,flux_pq
     result=source_list
-ENDIF ELSE BEGIN
+ENDIF ELSE BEGIN ;else case is array of images
+    sign=[1,-1,1,-1]
     n_pol=N_Elements(image_arr) ;redefine n_pol here, just to make sure it matches the images
     image_arr_out=Ptrarr(n_pol)
     IF ~Ptr_valid(image_arr[0]) THEN BEGIN
