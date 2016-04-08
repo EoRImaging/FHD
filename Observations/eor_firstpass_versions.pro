@@ -1361,7 +1361,7 @@ case version of
    end
    
    'nb_whitening': begin
-      ;max_calibration_sources=1000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
       saved_run_bp=0
 
    end
