@@ -12,7 +12,7 @@ args = Command_Line_Args(count=nargs)
 obs_id = args[0]
 ;obs_id = '1061311664'
 output_directory = args[1]
-;output_directory = '/nfs/mwa-03/r1/EoR2013/'
+;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23'
 version = args[2]
 cmd_args={version:version}
 
@@ -2737,17 +2737,133 @@ case version of
       nfreq_avg=384
       undefine, diffuse_calibrate, diffuse_model
    end
-
-  'nb_polarized_diffuse_Nov2015':begin
-      diffuse_calibrate=filepath('EoR0_polarized_diffuse.sav',root=rootdir('FHD'),subdir='catalog_data')
-      production=1
-      ;no long tiles used in calculating saved bp
-   end  
-   
-  'nb_polarized_diffuse_Nov2015_subonly':begin
-      diffuse_model=filepath('EoR0_polarized_diffuse.sav',root=rootdir('FHD'),subdir='catalog_data')
-      model_visibilities=1
-      undefine, diffuse_calibrate
+         'nb_sim_model_farextent1_nod_Apr':begin 
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      no_frequency_flagging=1
+      interpolate_kernel=1
+      flag_calibration=0
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                  'nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                     'nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr_max':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+      'nb_sim_model_farextent2_nod_Apr':begin 
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      no_frequency_flagging=1
+      interpolate_kernel=1
+      flag_calibration=0
+      conserve_memory=5E7
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                     'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                        'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_max':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      max_calibration_sources=4000
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+      'nb_sim_model_farextent3_nod_Apr':begin 
+      FoV=0
+      kbinsize=0.5
+      dimension= 6144
+      no_frequency_flagging=1
+      interpolate_kernel=1
+      flag_calibration=0
+      conserve_memory=5E7
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                     'nb_sim_perfect_cal_eor_ones_farextent3_nod_Apr':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent3_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 6144
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
