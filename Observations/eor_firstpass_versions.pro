@@ -10,11 +10,11 @@ heap_gc
 compile_opt strictarr
 args = Command_Line_Args(count=nargs)
 obs_id = args[0]
-;obs_id = '1061316296'
+;obs_id = '1061311664'
 output_directory = args[1]
 ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
 version = args[2]
-;version = 'nb_autocal'
+;version = 'nb_decon_Feb2016'
 cmd_args={version:version}
 
 ; Set default values for everything
@@ -1271,6 +1271,100 @@ case version of
       snapshot_healpix_export=1
       ;double memory, time
    end
+   
+         'nb_decon_Feb2016_2':begin 
+      max_sources=200000
+      ;dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
+            'nb_decon_March2016':begin 
+      max_sources=200000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      conserve_memory=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=0
+      
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
+               'nb_decon_March2016_presidelobe':begin 
+      max_sources=200000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      ;dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      
+            undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
+   
+   'nb_decon_Feb2016_through_firstpass': begin
+      ;max_calibration_sources=1000
+      undefine, diffuse_calibrate, diffuse_model
+      calibration_catalog_file_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_Feb2016/output_data/'+obs_id+'_source_array2.sav'
+      saved_run_bp=0
+      recalculate_all=1
+      mapfn_recalculate=0
+   end
+   
+   'nb_decon_March2016_small_through_firstpass': begin
+      ;max_calibration_sources=1000
+      undefine, diffuse_calibrate, diffuse_model
+      calibration_catalog_file_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_March2016_small/output_data/'+obs_id+'_source_array2.sav'
+      saved_run_bp=0
+      recalculate_all=1
+      mapfn_recalculate=0
+   end
+   
+   'nb_whitening': begin
+      ;max_calibration_sources=1000
+      saved_run_bp=0
+
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
@@ -1408,12 +1502,16 @@ case version of
 
 endcase
    
-SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
-  STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
+if version EQ 'nb_whitening' then begin
+  vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/whitening_change/uvfits/'+strtrim(string(obs_id),2)+'.uvfits'
+endif else begin
+  SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+    STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-undefine,uvfits_version ; don't need these passed further
-undefine,uvfits_subversion
-undefine,obs_id
+  undefine,uvfits_version ; don't need these passed further
+  undefine,uvfits_subversion
+  undefine,obs_id
+endelse
 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
