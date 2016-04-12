@@ -91,7 +91,8 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     dimension=obs.dimension
     elements=obs.elements
     n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
-    astr=obs.astr            
+    astr=obs.astr    
+    degpix = obs.degpix        
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
     fhd_save_io,status_str,cal,file_path_fhd=file_path_fhd,var='cal',/restore
     IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,file_path_fhd=file_path_fhd)
