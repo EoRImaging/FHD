@@ -43,7 +43,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 image_uv_arr=crosspol_reformat(image_uv_arr)
-
+weights_arr=crosspol_reformat(weights_arr)
+IF Keyword_Set(model_flag) THEN $
+    model_uv_holo=crosspol_reformat(model_uv_holo)
 FOR pol_i=0, n_pol-1 DO BEGIN
     fhd_save_io,status_str,*image_uv_arr[pol_i],var='grid_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
     fhd_save_io,status_str,*weights_arr[pol_i],var='weights_uv',/compress,file_path_fhd=file_path_fhd,pol_i=pol_i,obs=obs,_Extra=extra
