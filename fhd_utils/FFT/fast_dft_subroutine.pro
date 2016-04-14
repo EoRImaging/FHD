@@ -71,9 +71,14 @@ IF ptr_flag THEN BEGIN
     n_ptr0=N_Elements(amp_vec)
     ptr_i=where(Ptr_valid(amp_vec),n_ptr)
     amp_ptr=amp_vec[ptr_i]
+    IF size(*amp_ptr[0], /type) GE 6 THEN init_arr=DComplexarr(dimension_use, elements_use) ELSE init_arr=Dblarr(dimension_use,elements_use)
     model_img_use=Ptrarr(n_ptr)
-    FOR p_i=0,n_ptr-1 DO model_img_use[p_i]=Ptr_new(Dblarr(dimension_use,elements_use))
-ENDIF ELSE model_img_use=Dblarr(dimension_use,elements_use)
+    FOR p_i=0,n_ptr-1 DO model_img_use[p_i]=Ptr_new(init_arr)
+ENDIF ELSE BEGIN
+    IF size(amp_vec, /type) GE 6 THEN init_arr=DComplexarr(dimension_use, elements_use) ELSE init_arr=Dblarr(dimension_use,elements_use)
+    model_img_use=init_arr
+ENDELSE
+init_arr_ret=init_arr[0:dimension-1, 0:elements-1]
 
 xv0=Dindgen(dimension_kernel)-dimension_kernel/2.
 yv0=Dindgen(elements_kernel)-elements_kernel/2.
@@ -129,12 +134,10 @@ IF Keyword_Set(mod_flag) THEN BEGIN
     
     IF ptr_flag THEN BEGIN
         model_img=Ptrarr(n_ptr0)
-        IF Keyword_Set(double_precision) THEN $
-            FOR p_i=0,n_ptr0-1 DO model_img[p_i]=Ptr_new(Dblarr(dimension,elements)) $
-            ELSE FOR p_i=0,n_ptr0-1 DO model_img[p_i]=Ptr_new(Fltarr(dimension,elements))
+            FOR p_i=0,n_ptr0-1 DO model_img[p_i]=Ptr_new(init_arr_ret)
         FOR p_i=0,n_ptr-1 DO (*model_img[ptr_i[p_i]])[x_low0:x_high0,y_low0:y_high0]=(*model_img_use[p_i])[x_low1:x_high1,y_low1:y_high1]
     ENDIF ELSE BEGIN 
-        IF Keyword_Set(double_precision) THEN model_img=Dblarr(dimension,elements) ELSE model_img=Fltarr(dimension,elements)
+        model_img=init_arr_ret
         model_img[x_low0:x_high0,y_low0:y_high0]=model_img_use[x_low1:x_high1,y_low1:y_high1]
     ENDELSE
     

@@ -91,7 +91,8 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     dimension=obs.dimension
     elements=obs.elements
     n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
-    astr=obs.astr            
+    astr=obs.astr    
+    degpix = obs.degpix        
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
     fhd_save_io,status_str,cal,file_path_fhd=file_path_fhd,var='cal',/restore
     IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,file_path_fhd=file_path_fhd)
@@ -164,7 +165,9 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     IF model_flag THEN stokes_model=stokes_cnv(instr_model_arr,jones,obs,beam_arr=beam_base,/square)
     IF source_flag THEN stokes_sources=stokes_cnv(instr_sources,jones,obs,beam_arr=beam_base,/square)
     stokes_weights_ptr=stokes_cnv(beam_base2,jones,obs)
-    stokes_weights=*stokes_weights_ptr[0]
+    npix=nside2npix(nside)
+    pixel_area_cnv= pixel_area(obs) / (4.*!Pi*!RaDeg^2. / npix)
+    stokes_weights=*stokes_weights_ptr[0] * pixel_area_cnv
     Ptr_free,stokes_weights_ptr
     
     ; renormalize based on weights
@@ -287,7 +290,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 SAVE,hpx_inds,nside,obs_arr,n_obs_hpx,stokes_dirty_hpx,stokes_model_hpx,weights_hpx,$
-    stokes_sources_hpx,stokes_catalog_hpx,filename=save_path,/compress
+    stokes_sources_hpx,filename=save_path,/compress
     
 IF Keyword_Set(diffuse_model_filepath) THEN BEGIN
     model_arr = Ptrarr(n_pol)
