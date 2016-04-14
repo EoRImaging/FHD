@@ -70,6 +70,7 @@ FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=element
       ;***End special case
       
       ;Make the last bin forces number of sources distributed throughout bins equals the total num of sources.
+
       binsize[memory_bins-1]-=Total(binsize)-n0 
       bin_start=[0,Total(binsize,/cumulative)]
       FOR bin_i=0L,memory_bins-1 DO BEGIN
@@ -85,7 +86,8 @@ FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=element
         ENDFOR
         cos_term=(sin_term=0) ;free memory
       ENDFOR
-      ;*****End of memory-managed DFT
+    ;*****End of memory-managed DFT
+
       
     ENDIF ELSE BEGIN
       phase=matrix_multiply(xvals,x_use)+matrix_multiply(yvals,y_use)

@@ -1,7 +1,7 @@
 PRO bandpass_plots,obs,bandpass_arr,file_path_fhd=file_path_fhd,$
     cable_length_ref=cable_length_ref,tile_use_arr=tile_use_arr
 
-n_pol=obs.n_pol
+n_pol=obs.n_pol < 2
 freq_arr=(*obs.baseline_info).freq
 freq_use=where((*obs.baseline_info).freq_use)
 

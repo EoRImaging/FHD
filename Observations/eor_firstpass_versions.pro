@@ -2130,6 +2130,7 @@ end
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
+
                            'nb_sim_perfect_cal_eor_ones_farextent3_nod_Apr_max':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -2148,6 +2149,7 @@ end
       mapfn_recalculate=0
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+
    end
                      'nb_sim_perfect_cal_eor_ones_farextent3_nod_Apr':begin 
       saved_run_bp=0
@@ -2340,12 +2342,16 @@ end
 
 endcase
    
-SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
-  STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
+if version EQ 'nb_whitening' then begin
+  vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/whitening_change/uvfits/'+strtrim(string(obs_id),2)+'.uvfits'
+endif else begin
+  SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+    STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-undefine,uvfits_version ; don't need these passed further
-undefine,uvfits_subversion
-undefine,obs_id
+  undefine,uvfits_version ; don't need these passed further
+  undefine,uvfits_subversion
+  undefine,obs_id
+endelse
 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)

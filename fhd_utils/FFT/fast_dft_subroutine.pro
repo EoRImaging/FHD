@@ -6,8 +6,8 @@ IF N_Elements(elements) EQ 0 THEN elements=dimension
 IF size(amp_vec,/type) EQ 10 THEN  ptr_flag=1 ELSE ptr_flag=0 ;check if pointer type. This allows the same locations to be used for multiple sets of fluxes
 
 Pi=!DPi
-dimension_kernel=dimension*2.0
-elements_kernel=elements*2.0
+dimension_kernel=Long(dimension*2)
+elements_kernel=Long(elements*2)
 IF N_Elements(dft_threshold) EQ 0 THEN dft_threshold=1./((2.*Pi)^2.*dimension)  ;1/2 value of kernel_test along either axis and one bin to either side at the edge of the image. 
 
 t1_a=Systime(1)
