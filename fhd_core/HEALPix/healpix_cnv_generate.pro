@@ -1,6 +1,6 @@
 FUNCTION healpix_cnv_generate,obs,status_str,file_path_fhd=file_path_fhd,nside=nside,mask=mask,hpx_radius=hpx_radius,$
     restore_last=restore_last,silent=silent,pointer_return=pointer_return,no_save=no_save,$
-    restrict_hpx_inds=restrict_hpx_inds,divide_pixel_area=divide_pixel_area,_Extra=extra
+    restrict_hpx_inds=restrict_hpx_inds,_Extra=extra
 
 IF N_Elements(file_path_fhd) EQ 0 THEN file_path_fhd=''
 IF Keyword_Set(restore_last) AND (file_test(file_path_fhd+'_hpxcnv'+'.sav') EQ 0) THEN BEGIN 
@@ -56,11 +56,10 @@ IF ~Keyword_Set(nside) THEN BEGIN
 ;    nside*=2.
 ENDIF
 npix=nside2npix(nside)
-;pixel_area_cnv=(1./(obs.degpix*!DtoR)^2.)*(4.*!Pi/npix) ; (old pixel/steradian)*(steradian/new pixel)
 
-IF Keyword_Set(divide_pixel_area) THEN BEGIN
-    pixel_area_cnv=(4.*!Pi*!RaDeg^2. / npix) * weight_invert(pixel_area(obs))
-ENDIF ELSE pixel_area_cnv=1. ;turn this off for now
+;IF Keyword_Set(divide_pixel_area) THEN BEGIN
+;    pixel_area_cnv=(4.*!Pi*!RaDeg^2. / npix) * weight_invert(pixel_area(obs))
+;ENDIF ELSE pixel_area_cnv=1. ;turn this off for now
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
     pix2vec_ring,nside,hpx_inds,pix_coords
@@ -143,8 +142,8 @@ FOR i=0L,n_img_use-1L DO BEGIN
         sa0[bin_i[bi]:bin_i[bi+1]-1]=(1.-x_frac[inds1])*(1.-y_frac[inds1])
         ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
-    IF N_Elements(pixel_area_cnv) GT 1 THEN *sa[i]=sa0*pixel_area_cnv[i_use[i]] ELSE *sa[i]=sa0*pixel_area_cnv
-;    *sa[i]=sa0*pixel_area_cnv
+;    IF N_Elements(pixel_area_cnv) GT 1 THEN *sa[i]=sa0*pixel_area_cnv[i_use[i]] ELSE *sa[i]=sa0*pixel_area_cnv
+    *sa[i]=sa0
     *ija[i]=ija0
         
 ENDFOR
