@@ -169,7 +169,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     ; renormalize based on weights
     renorm_factor = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_base,filter_arr=filter_arr,$
-        image_filter_fn=image_filter_fn,degpix=degpix,/antialias)
+        image_filter_fn=image_filter_fn,degpix=degpix,/antialias) * pixel_area_cnv
     undefine_fhd,instr_dirty_arr,instr_model_arr,instr_sources,beam_base,beam_base2,filter_arr,jones
     
     ;multiply by stokes_weights so that observations can be added weighted by their variance. 
