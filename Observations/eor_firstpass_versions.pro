@@ -14,7 +14,7 @@ obs_id = args[0]
 output_directory = args[1]
 ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23'
 version = args[2]
-;version = 'nb_sim_model_farextent2_nod_Apr'
+;version = 'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
 cmd_args={version:version}
 
 ; Set default values for everything
@@ -1826,6 +1826,18 @@ end
       nfreq_avg=384
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
+            'nb_sim_model_farextent1_nod_Apr_nointerp':begin 
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      no_frequency_flagging=1
+      ;interpolate_kernel=1
+      flag_calibration=0
+      ;turn_off_visflagbasic=1
+      unflag_all=1
+      nfreq_avg=384
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
                   'nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -1843,15 +1855,50 @@ end
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
-                     'nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr_max':begin 
+                     'nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr_run2':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr'
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr'
       no_frequency_flagging=1
       interpolate_kernal=1
       perfect_cal_ones=1
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                           'nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr_max':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
       max_calibration_sources=4000
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                     'nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr_nointerp':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      perfect_cal_ones=1
       flag_calibration=0
       FoV=0
       kbinsize=0.5
@@ -1892,11 +1939,151 @@ end
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
+                        'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_700':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=700.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                           'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_1000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=1000.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_1000_largewidth':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=1000.
+      width_smooth=200.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                 'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_1400_largewidth':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=1400.
+      width_smooth=400.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                    'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_1400_extralargewidth':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=1400.
+      width_smooth=600.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                    'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_1400_largewidth_max':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      max_calibration_sources=4000
+      baseline_threshold=1400.
+      width_smooth=400.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                    'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_1400_extralargewidth_max':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      max_calibration_sources=4000
+      baseline_threshold=1400.
+      width_smooth=600.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
                         'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_max':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
-      cal_sim_input='fhd_nb_sim_model_farextent2_nod_Apr'
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
       no_frequency_flagging=1
       interpolate_kernal=1
       perfect_cal_ones=1
@@ -1924,6 +2111,44 @@ end
       nfreq_avg=384
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
+                              'nb_sim_perfect_cal_eor_ones_farextent3_nod_Apr_1500':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent3_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      baseline_threshold=1500.
+      FoV=0
+      kbinsize=0.5
+      dimension= 6144
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                           'nb_sim_perfect_cal_eor_ones_farextent3_nod_Apr_max':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent3_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      max_calibration_sources=4000
+      FoV=0
+      kbinsize=0.5
+      dimension= 6144
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
                      'nb_sim_perfect_cal_eor_ones_farextent3_nod_Apr':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -1942,6 +2167,176 @@ end
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
+   
+   
+                              'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_-1000':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=-1000.
+      max_calibration_sources=4000
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_-1000_largewidth':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=-1000.
+      max_calibration_sources=4000
+      width_smooth=200.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                 'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_-1400_largewidth':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=-1400.
+      max_calibration_sources=4000
+      width_smooth=400.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                    'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_-1400_extralargewidth':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=-1400.
+      max_calibration_sources=4000
+      width_smooth=600.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+   
+                                 'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_-1000_thresh':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=-1000.
+      calibration_flux_threshold=.4
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_-1000_largewidth_thresh':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=-1000.
+      calibration_flux_threshold=.4
+      width_smooth=200.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                 'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_-1400_largewidth_thresh':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=-1400.
+      calibration_flux_threshold=.4
+      width_smooth=400.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                    'nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr_-1400_extralargewidth_thresh':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      baseline_threshold=-1400.
+      calibration_flux_threshold=.4
+      width_smooth=600.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end   
+
 
 endcase
    
