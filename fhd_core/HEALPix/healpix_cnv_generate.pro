@@ -58,7 +58,7 @@ ENDIF
 npix=nside2npix(nside)
 
 ;IF Keyword_Set(divide_pixel_area) THEN BEGIN
-;    pixel_area_cnv=(4.*!Pi*!RaDeg^2. / npix) * weight_invert(pixel_area(obs))
+pixel_area_cnv=(4.*!Pi*!RaDeg^2. / npix) * weight_invert(pixel_area(obs))
 ;ENDIF ELSE pixel_area_cnv=1. ;turn this off for now
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
@@ -142,7 +142,7 @@ FOR i=0L,n_img_use-1L DO BEGIN
         sa0[bin_i[bi]:bin_i[bi+1]-1]=(1.-x_frac[inds1])*(1.-y_frac[inds1])
         ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
-;    IF N_Elements(pixel_area_cnv) GT 1 THEN *sa[i]=sa0*pixel_area_cnv[i_use[i]] ELSE *sa[i]=sa0*pixel_area_cnv
+    IF N_Elements(pixel_area_cnv) GT 1 THEN *sa[i]=sa0*pixel_area_cnv[i_use[i]] ELSE *sa[i]=sa0*pixel_area_cnv
     *sa[i]=sa0
     *ija[i]=ija0
         
