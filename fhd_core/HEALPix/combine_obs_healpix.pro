@@ -123,9 +123,11 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             IF N_Elements(grid_uv_model) GT 0 THEN model_uv_holo[pol_i]=Ptr_new(grid_uv_model)
             undefine_fhd,grid_uv_model
         ENDFOR
-        IF cal.n_cal_src GT 0 THEN BEGIN
-            source_flag=1
-            source_array=cal.source_list
+        IF tag_exist(cal,n_cal_src,/quiet) EQ 1 THEN BEGIN
+            IF cal.n_cal_src GT 0 THEN BEGIN
+                source_flag=1
+                source_array=cal.source_list
+            ENDIF ELSE source_flag=0
         ENDIF ELSE source_flag=0
         
         IF status_str.psf THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd $
@@ -166,7 +168,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     IF source_flag THEN stokes_sources=stokes_cnv(instr_sources,jones,obs,beam_arr=beam_base,/square)
     stokes_weights_ptr=stokes_cnv(beam_base2,jones,obs)
     npix=nside2npix(nside)
-    pixel_area_cnv= pixel_area(obs) / (4.*!Pi*!RaDeg^2. / npix)
+    pixel_area_cnv= (4.*!Pi*!RaDeg^2. / npix) * weight_invert(pixel_area(obs))
     stokes_weights=*stokes_weights_ptr[0]
     Ptr_free,stokes_weights_ptr
     
