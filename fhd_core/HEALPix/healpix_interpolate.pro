@@ -50,7 +50,7 @@ x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
 IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=nside,freq=obs.freq_center) $
     ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/n_hpx) ; (steradian/new pixel)/(steradian/old pixel)
-pixel_area_cnv=1.
+;pixel_area_cnv=1.
 
 area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
 IF area_ratio GT 1 THEN BEGIN
@@ -77,7 +77,7 @@ ENDIF ELSE BEGIN
     FOR map_i=0,n_map-1 DO BEGIN
         model_img=fltarr(dimension,elements)
         IF Ptr_flag THEN hpx_vals=(*healpix_map[map_i])[hpx_i_use] ELSE hpx_vals=healpix_map[hpx_i_use] 
-        hpx_vals*=pixel_area_cnv ;convert 
+        hpx_vals*=pixel_area_cnv ;convert to Jy/pixel for the new Healpix pixels
         
         model_img[Floor(xv_hpx),Floor(yv_hpx)]+=x_frac*y_frac*hpx_vals
         model_img[Floor(xv_hpx),Ceil(yv_hpx)]+=x_frac*(1-y_frac)*hpx_vals

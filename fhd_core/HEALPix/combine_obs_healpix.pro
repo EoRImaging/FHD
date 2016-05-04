@@ -168,7 +168,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     IF source_flag THEN stokes_sources=stokes_cnv(instr_sources,jones,obs,beam_arr=beam_base,/square)
     stokes_weights_ptr=stokes_cnv(beam_base2,jones,obs)
     npix=nside2npix(nside)
-    pixel_area_cnv= (4.*!Pi*!RaDeg^2. / npix) * weight_invert(pixel_area(obs))
+    pixel_area_cnv= pixel_area(obs) / (4.*!Pi*!RaDeg^2. / npix)
     stokes_weights=*stokes_weights_ptr[0]
     Ptr_free,stokes_weights_ptr
     
