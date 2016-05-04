@@ -10,10 +10,11 @@ heap_gc
 compile_opt strictarr
 args = Command_Line_Args(count=nargs)
 obs_id = args[0]
-;obs_id = '1061311664'
+;obs_id = '1061321792'
 output_directory = args[1]
 ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23'
 version = args[2]
+;version = 'nb_pyuvfits_test'
 cmd_args={version:version}
 
 ; Set default values for everything
@@ -1602,6 +1603,40 @@ case version of
             psf_resolution=500
       interpolate_kernel=1
    end 
+                     'nb_sim_model_psf1000interpol_windowtest':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='calibration_sim/fhd_nb_sim_unflagged_nodiffuse_onebeam_zenithpointing_calvisflag_overfit'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=10
+      nfreq_avg=384  
+      psf_resolution=1000
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+                       'nb_sim_perfect_psf1000interpol_windowtest':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_psf1000interpol_windowtest'
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      remove_eor=1
+      flag_calibration=0
+      max_calibration_sources=5
+      nfreq_avg=384  
+      psf_resolution=1000
+      interpolate_kernel=1
+            recalculate_all=1
+      mapfn_recalculate=0
+      undefine, diffuse_calibrate, diffuse_model
+   end
                   'nb_sim_model_psf8interpol_10source':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -2831,6 +2866,179 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
+                        'nb_sim_perfect_cal_eor_ones_short_baselines_included':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                           'nb_sim_overfit_cal_eor_ones_short_baselines_included':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      over_calibrate=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_overfit_cal_eor_ones_short_baselines_excluded':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      over_calibrate=1
+      max_calibration_sources=4000
+      ;min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                        'nb_sim_model_farextent2_maxbaseline_512':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent2_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      max_baseline = 512.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_perfect_farextent2_maxbaseline_512':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent2_maxbaseline_512'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      max_calibration_sources=4000
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      max_baseline =512.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                 'nb_sim_perfect_farextent1_maxbaseline_512':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_maxbaseline_512'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      max_calibration_sources=4000
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      max_baseline =512.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                           'nb_nb_sim_perfect_farextent2_maxbaseline':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent2_maxbaseline'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 4096
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      max_baseline = 700.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_model_farextent1_maxbaseline_512':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_perfect_cal_eor_ones_farextent1_nod_Apr'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      conserve_memory=5E7
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      max_baseline = 512.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+   
+                        'nb_nb_sim_perfect_farextent1_maxbaseline':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_maxbaseline'
+      no_frequency_flagging=1
+      interpolate_kernal=1
+      perfect_cal_ones=1
+      flag_calibration=0
+      FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      max_baseline = 700.
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
       'nb_sim_model_farextent2_nod_Apr':begin 
       FoV=0
       kbinsize=0.5
@@ -3259,8 +3467,150 @@ case version of
       width_smooth=600.
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end   
+   
+   'nb_decon_March2016_small_through_firstpass': begin
+      ;max_calibration_sources=1000
+      undefine, diffuse_calibrate, diffuse_model
+      calibration_catalog_file_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_March2016_small/output_data/'+obs_id+'_source_array2.sav'
+      saved_run_bp=0
+      recalculate_all=1
+      mapfn_recalculate=0
+   end
+   
+      'nb_firstpass_map_2048': begin
+      ;max_calibration_sources=1000
+      undefine, diffuse_calibrate, diffuse_model
+      calibration_catalog_file_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_March2016_small/output_data/'+obs_id+'_source_array2.sav'
+      saved_run_bp=0
+      recalculate_all=1
+      mapfn_recalculate=0
+      dimension = 2048
+            FoV=0
+      kbinsize=0.5
+   end
+   
+         'nb_firstpass_map_1024': begin
+      ;max_calibration_sources=1000
+      undefine, diffuse_calibrate, diffuse_model
+      calibration_catalog_file_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_March2016_small/output_data/'+obs_id+'_source_array2.sav'
+      saved_run_bp=0
+      recalculate_all=1
+      mapfn_recalculate=0
+      dimension = 1024
+            FoV=0
+      kbinsize=0.5
+   end
+   
+   'nb_April2016_newdiffuse': begin
+      ;max_calibration_sources=1000
+      diffuse_calibrate=filepath('EoR0_diffuse_March2016_small_through_firstpass_normfix_415.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      saved_run_bp=0
+   end
 
-
+            'nb_decon_March2016_maxcal':begin 
+      max_sources=200000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      conserve_memory=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=0
+      max_cal_baseline = 700.
+      
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
+               'nb_decon_March2016_maxall':begin 
+      max_sources=200000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=3072
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      conserve_memory=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=0
+      max_cal_baseline = 700.
+      max_baseline = 700.
+      
+      
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
+               'nb_decon_March2016_small_maxcal':begin 
+      max_sources=200000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=2048
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      conserve_memory=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=0
+      max_cal_baseline = 700.
+      
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
+                  'nb_decon_March2016_small_maxall':begin 
+      max_sources=200000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=2048
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      conserve_memory=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=0
+      max_cal_baseline = 700.
+      max_baseline = 700.
+      
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
    ; My default full deconvolution parameters
@@ -3398,15 +3748,19 @@ case version of
      end
 
 endcase
-   
-if version EQ 'nb_pytest' then begin
-  vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
+
+  
+  if version EQ 'nb_pyuvfits_test' then begin 
+;if version EQ 'nb_whitening' then begin
+  ;vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/whitening_change/uvfits/'+strtrim(string(obs_id),2)+'.uvfits'
+  vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
 endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
   ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
 endelse
 undefine, uvfits_subversion, uvfits_version
+
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 
@@ -3417,5 +3771,9 @@ print,"Keywords set in wrapper:"
 print,structure_to_text(extra)
 print,""
 general_obs,_Extra=extra
+
+IF keyword_set(profile) THEN BEGIN
+   PROFILER, FILENAME=STRING(profile_path), /REPORT;, /CODE_COVERAGE
+ENDIF
 
 end
