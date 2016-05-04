@@ -94,8 +94,11 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     astr=obs.astr    
     degpix = obs.degpix        
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-    fhd_save_io,status_str,cal,file_path_fhd=file_path_fhd,var='cal',/restore
-    IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,file_path_fhd=file_path_fhd)
+    IF status_str.skymodel GT 0 THEN BEGIN
+        fhd_save_io,status_str,skymodel,file_path_fhd=file_path_fhd,var='skymodel',/restore
+        source_array = skymodel.source_list
+        IF skymodel.n_sources EQ 0 THEN source_flag = 0 ELSE source_flag = 1
+    ENDIF ELSE source_flag = 0
     
     image_uv_arr=Ptrarr(n_pol)
     weights_arr=Ptrarr(n_pol)
@@ -123,10 +126,6 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             IF N_Elements(grid_uv_model) GT 0 THEN model_uv_holo[pol_i]=Ptr_new(grid_uv_model)
             undefine_fhd,grid_uv_model
         ENDFOR
-        IF cal.n_cal_src GT 0 THEN BEGIN
-            source_flag=1
-            source_array=cal.source_list
-        ENDIF ELSE source_flag=0
         
         IF status_str.psf THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd $
             ELSE psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=1,no_save=1,_Extra=extra)
