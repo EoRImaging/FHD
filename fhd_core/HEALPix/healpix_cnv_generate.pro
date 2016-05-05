@@ -143,7 +143,7 @@ FOR i=0L,n_img_use-1L DO BEGIN
         ija0[bin_i[bi]:bin_i[bi+1]-1]=inds1
     ENDIF
     IF N_Elements(pixel_area_cnv) GT 1 THEN *sa[i]=sa0*pixel_area_cnv[i_use[i]] ELSE *sa[i]=sa0*pixel_area_cnv
-    *sa[i]=sa0
+;    *sa[i]=sa0
     *ija[i]=ija0
         
 ENDFOR
