@@ -176,14 +176,16 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     ;multiply by stokes_weights so that observations can be added weighted by their variance. 
     ;We will divide by the sum of the variances at the end to make this a variance-weighted average
+    pixel_area_cnv=(4.*!Pi / npix) * weight_invert(pixel_area(obs))
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *stokes_dirty[pol_i]*=renorm_factor*stokes_weights
-        IF model_flag THEN *stokes_model[pol_i]*=renorm_factor*stokes_weights 
-        IF source_flag THEN *stokes_sources[pol_i]*=stokes_weights
+        *stokes_dirty[pol_i]*=renorm_factor*stokes_weights * pixel_area_cnv
+        IF model_flag THEN *stokes_model[pol_i]*=renorm_factor*stokes_weights * pixel_area_cnv
+        IF source_flag THEN *stokes_sources[pol_i]*=stokes_weights * pixel_area_cnv
     ENDFOR
     
     hpx_cnv=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside,$
-        mask=beam_mask,restore_last=0,restrict_hpx_inds=restrict_hpx_inds,/no_save,_Extra=extra)
+        mask=beam_mask,restore_last=0,restrict_hpx_inds=restrict_hpx_inds,/no_save,$
+        divide_pixel_area=0,_Extra=extra)
     hpx_inds1=hpx_cnv.inds 
     
     IF fit_inds_flag THEN BEGIN
