@@ -58,7 +58,7 @@ ENDIF
 npix=nside2npix(nside)
 
 ;IF Keyword_Set(divide_pixel_area) THEN BEGIN
-pixel_area_cnv=(4.*!Pi*!RaDeg^2. / npix) * weight_invert(pixel_area(obs))
+pixel_area_cnv=(4.*!Pi / npix) * weight_invert(pixel_area(obs))
 ;ENDIF ELSE pixel_area_cnv=1. ;turn this off for now
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
