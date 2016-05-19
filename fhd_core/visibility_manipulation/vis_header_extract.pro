@@ -46,6 +46,8 @@ vv_i=(where(Strmatch(param_list,'VV', /fold_case),found_vv))[0] & IF found_vv NE
 ww_i=(where(Strmatch(param_list,'WW', /fold_case),found_ww))[0] & IF found_ww NE 1 THEN print,"WARNING: Group parameter WW not found within uvfits header PTYPE keywords"
 date_i=where(Strmatch(param_list,'DATE', /fold_case),found_date) & IF found_date LT 1 THEN print,"WARNING: Group parameter DATE not found within uvfits header PTYPE keywords"
 IF (found_baseline NE 1) OR (found_uu NE 1) OR (found_vv NE 1) OR (found_ww NE 1) OR (found_date LT 1) THEN error=1 
+ant1_i = where(Strmatch(param_list,'ANTENNA1', /fold_case),found_ant1)
+ant2_i = where(Strmatch(param_list,'ANTENNA2', /fold_case),found_ant2)
 
 IF found_date GT 1 THEN BEGIN
     Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i[0]+1))) + Double(params[date_i[0],0])
@@ -61,7 +63,8 @@ grp_row_size=n_complex*n_pol*n_freq*nbaselines
 hdr=fhd_struct_init_hdr(n_grp_params=n_grp_params,nbaselines=nbaselines,n_tile=n_tile,n_pol=n_pol,n_freq=n_freq,$
     freq_res=freq_res,freq_arr=frequency_array,lon=lon,lat=lat,alt=alt,obsra=obsra,obsdec=obsdec,$
     uu_i=uu_i,vv_i=vv_i,ww_i=ww_i,baseline_i=baseline_i,date_i=date_i,jd0=Jdate0,date_obs=date_obs,$
-    pol_dim=pol_dim,freq_dim=freq_dim,real_index=real_index,imaginary_index=imaginary_index,flag_index=flag_index)
+    pol_dim=pol_dim,freq_dim=freq_dim,real_index=real_index,imaginary_index=imaginary_index,$
+    flag_index=flag_index, ant1_i=ant1_i, ant2_i=ant2_i)
 
 RETURN,hdr
 END

@@ -81,21 +81,34 @@ ENDIF ELSE BEGIN
     grid_info=Ptr_new()
 ENDELSE
 
-;256 tile upper limit is hard-coded in CASA format
-;these tile numbers have been verified to be correct
-IF not Keyword_Set(antenna_mod_index) THEN BEGIN
-    antenna_mod_index_use=Long(2^Floor(Alog(min(params.baseline_arr))/Alog(2.))) 
-    tile_B_test=min(params.baseline_arr) mod antenna_mod_index_use
-    IF tile_B_test GT 1 THEN $ ; Check if a bad fit
-        IF min(params.baseline_arr) mod 2 EQ 1 THEN $ ; but not if autocorrelations or the first tile are missing
-            antenna_mod_index_use/=Long(2^Floor(Alog(tile_B_test)/Alog(2.))) 
-ENDIF ELSE antenna_mod_index_use=antenna_mod_index 
-;antenna_mod_index_use=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
-tile_A=Long(Floor(params.baseline_arr/antenna_mod_index_use)) ;tile numbers start from 1
-tile_B=Long(Fix(params.baseline_arr mod antenna_mod_index_use))
-IF (max(tile_A)>max(tile_B)) NE n_tile THEN BEGIN
-    print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
-    n_tile=max(tile_A)>max(tile_B)
+antenna_flag = 1
+IF Tag_exist(params, "antenna1") AND Tag_exist(params, "antenna2") THEN BEGIN
+    ant1_arr = params.antenna1
+    ant2_arr = params.antenna2
+    IF Keyword_Set(ant1_arr) AND Keyword_Set(ant2_arr) THEN BEGIN
+        tile_A = ant1_arr
+        tile_B = ant2_arr
+        n_tile=max(tile_A)>max(tile_B)
+        antenna_flag = 0
+    ENDIF
+ENDIF
+IF antenna_flag THEN BEGIN
+    ;256 tile upper limit is hard-coded in CASA format
+    ;these tile numbers have been verified to be correct
+    IF not Keyword_Set(antenna_mod_index) THEN BEGIN
+        antenna_mod_index_use=Long(2^Floor(Alog(min(params.baseline_arr))/Alog(2.))) 
+        tile_B_test=min(params.baseline_arr) mod antenna_mod_index_use
+        IF tile_B_test GT 1 THEN $ ; Check if a bad fit
+            IF min(params.baseline_arr) mod 2 EQ 1 THEN $ ; but not if autocorrelations or the first tile are missing
+                antenna_mod_index_use/=Long(2^Floor(Alog(tile_B_test)/Alog(2.))) 
+    ENDIF ELSE antenna_mod_index_use=antenna_mod_index 
+    ;antenna_mod_index_use=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
+    tile_A=Long(Floor(params.baseline_arr/antenna_mod_index_use)) ;tile numbers start from 1
+    tile_B=Long(Fix(params.baseline_arr mod antenna_mod_index_use))
+    IF (max(tile_A)>max(tile_B)) NE n_tile THEN BEGIN
+        print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
+        n_tile=max(tile_A)>max(tile_B)
+    ENDIF
 ENDIF
 
 freq_use=Lonarr(n_freq)+1

@@ -1,7 +1,8 @@
 FUNCTION fhd_struct_init_hdr,n_grp_params=n_grp_params,nbaselines=nbaselines,n_tile=n_tile,n_pol=n_pol,n_freq=n_freq,$
     freq_res=freq_res,freq_arr=freq_arr,lon=lon,lat=lat,alt=alt,obsra=obsra,obsdec=obsdec,$
     uu_i=uu_i,vv_i=vv_i,ww_i=ww_i,baseline_i=baseline_i,date_i=date_i,jd0=jd0,date_obs=date_obs,$
-    pol_dim=pol_dim,freq_dim=freq_dim,real_index=real_index,imaginary_index=imaginary_index,flag_index=flag_index
+    pol_dim=pol_dim,freq_dim=freq_dim,real_index=real_index,imaginary_index=imaginary_index,$
+    flag_index=flag_index, ant1_i=ant1_i, ant2_i=ant2_i
 
 IF N_Elements(n_tile) EQ 0 THEN n_tile=128.
 IF N_Elements(pol_dim) EQ 0 THEN pol_dim=2
@@ -28,6 +29,8 @@ IF N_Elements(uu_i) EQ 0 THEN uu_i=-1
 IF N_Elements(vv_i) EQ 0 THEN vv_i=-1
 IF N_Elements(ww_i) EQ 0 THEN ww_i=-1
 IF N_Elements(date_i) EQ 0 THEN date_i=-1
+IF N_Elements(ant1_i) EQ 0 THEN ant1_i=-1
+IF N_Elements(ant2_i) EQ 0 THEN ant2_i=-1
 CASE 1 OF
     Keyword_Set(jd0):date_obs=date_conv(jd0,'fits')
     Keyword_Set(date_obs): jd0=date_conv(date_obs,'julian') 
@@ -43,6 +46,7 @@ IF N_Elements(obsdec) EQ 0 THEN obsdec=-1. ;set to something that should be obvi
 hdr={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_pol,n_freq:n_freq,$
     freq_res:freq_res,freq_arr:freq_arr,lon:lon,lat:lat,alt:alt,obsra:obsra,obsdec:obsdec,$
     uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:jd0,date_obs:date_obs,$
-    pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
+    pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,$
+    flag_index:flag_index, ant1_i:ant1_i, ant2_i:ant2_i}
 RETURN,hdr
 END
