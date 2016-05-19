@@ -86,7 +86,9 @@ ENDELSE
 IF not Keyword_Set(antenna_mod_index) THEN BEGIN
     antenna_mod_index_use=Long(2^Floor(Alog(min(params.baseline_arr))/Alog(2.))) 
     tile_B_test=min(params.baseline_arr) mod antenna_mod_index_use
-    IF tile_B_test GT 1 THEN antenna_mod_index_use/=Long(2^Floor(Alog(tile_B_test)/Alog(2.))) 
+    IF tile_B_test GT 1 THEN $ ; Check if a bad fit
+        IF min(params.baseline_arr) mod 2 EQ 1 THEN $ ; but not if autocorrelations or the first tile are missing
+            antenna_mod_index_use/=Long(2^Floor(Alog(tile_B_test)/Alog(2.))) 
 ENDIF ELSE antenna_mod_index_use=antenna_mod_index 
 ;antenna_mod_index_use=2.^((Ceil(Alog(Sqrt(nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
 tile_A=Long(Floor(params.baseline_arr/antenna_mod_index_use)) ;tile numbers start from 1
