@@ -24,7 +24,8 @@ PRO array_simulator_init,obs,params,error=error,sim_from_uvfits_filepath=sim_fro
   ENDCASE
   
   IF N_Elements(instrument) EQ 0 THEN instrument='mwa'
-  IF Keyword_Set(simulate_header) OR ~Keyword_Set(hdr_in) THEN hdr=uvfits_header_simulate(hdr_in,n_pol=n_pol,_Extra=extra) $
+  IF Keyword_Set(simulate_header) OR ~Keyword_Set(hdr_in) THEN $
+    hdr=uvfits_header_simulate(hdr_in,n_pol=n_pol, instrument=instrument,_Extra=extra) $
   ELSE hdr=hdr_in
   
   IF Keyword_Set(simulate_baselines) OR ~Keyword_Set(params_in) THEN BEGIN
