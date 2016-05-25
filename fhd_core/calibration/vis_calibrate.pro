@@ -92,10 +92,13 @@ vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,flag_ptr,c
     timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)    
 t1=Systime(1)-t0_0
 
-IF Keyword_Set(cal.auto_initialize) THEN $
-    initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr,_Extra=extra)
-   
 vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
+IF Keyword_Set(cal.auto_initialize) THEN BEGIN
+    IF Keyword_Set(vis_auto) THEN $
+        initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr,_Extra=extra) $
+    ELSE print,"calibration_auto_initialize is set, but autocorrelation visibilities are missing. Skipping." 
+ENDIF
+   
 IF Keyword_Set(fill_model_vis) THEN vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
 
 ;IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
