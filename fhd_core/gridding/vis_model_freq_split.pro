@@ -44,7 +44,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
   ENDIF ELSE model_flag=1
   
   IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(flag_arr) ELSE flag_arr_use=flag_arr
-  IF N_Elements(bi_use) EQ 0 THEN BEGIN
+  IF ~Keyword_Set(bi_use) THEN BEGIN
       IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
       bi_use=where(flag_test GT 0)
   ENDIF
