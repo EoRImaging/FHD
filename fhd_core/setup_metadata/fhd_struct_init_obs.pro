@@ -120,19 +120,28 @@ kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr)) $
     ELSE max_baseline_use=max_baseline
 
-IF Keyword_Set(psf_dim) THEN BEGIN
-    psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
-    kbinsize=(antenna_size*2.*Max(frequency_array)/speed_light)/(psf_dim-1.)
-    FoV=!RaDeg/kbinsize
-ENDIF
+;Determine the imaging parameters to use
+IF Keyword_Set(FoV) AND Keyword_Set(kbinsize) THEN $
+    print,"WARNING!! Only one of FoV and kbinsize can be specified. Using FoV."
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
-IF ~Keyword_Set(kbinsize) THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
-IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline_use ELSE k_span=!RaDeg/degpix 
-dimension_test=2.^Round(ALOG10(k_span/kbinsize)/ALOG10(2.))
 
-IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ELSE dimension=Float(dimension);dimension of the image in pixels; dimension = x direction
-IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
-degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
+IF Keyword_Set(dimension) THEN BEGIN
+    IF Keyword_Set(kbinsize) THEN BEGIN
+        IF Keyword_Set(degpix) THEN print, "WARNING! Imaging parameters over constrained. Ignoring degpix."
+        degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
+    ENDIF ELSE BEGIN
+        IF ~Keyword_Set(degpix) THEN BEGIN
+            kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
+            degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
+        ENDIF ELSE kbinsize = !RaDeg/(degpix*dimension)
+    ENDELSE
+ENDIF ELSE BEGIN
+    IF ~Keyword_Set(kbinsize) THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel        
+    IF ~Keyword_Set(degpix) THEN k_span=2.*max_baseline_use ELSE k_span=!RaDeg/degpix 
+    dimension=(elements=2.^Round(ALOG10(k_span/kbinsize)/ALOG10(2.)))
+ENDELSE
+IF ~Keyword_Set(elements) THEN elements=dimension
+
 IF N_Elements(max_baseline) EQ 0 THEN $
     max_baseline=Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))])) $
     ELSE max_baseline=max_baseline<Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))

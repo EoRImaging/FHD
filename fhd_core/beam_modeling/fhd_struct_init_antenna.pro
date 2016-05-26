@@ -64,7 +64,7 @@ antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_versi
 ;first, update to include basic configuration data
 antenna=Call_function(tile_init_fn,obs,antenna_str,_Extra=extra) ;mwa_beam_setup_init
 
-psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize/Cos(obsza*!DtoR))  
+psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 
 IF Keyword_Set(psf_max_dim) THEN BEGIN
