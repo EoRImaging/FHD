@@ -17,9 +17,9 @@ n_freq=sxpar(header,'naxis4') ;768
 freq_ref=sxpar(header,'crval4') ;1.5424E8
 freq_res=sxpar(header,'cdelt4') ;40000 
 IF freq_res EQ 0 THEN print,'WARNING: Invalid frequency resolution in uvfits header! Uses header keyword cdelt4'
-freq_ref_i=sxpar(header,'crpix4') -1;368-1 (Remember, FITS indices start from 1, IDL indices start from 0)
+freq_ref_i=sxpar(header,'crpix4')-1  ;368-1 (Remember, FITS indices start from 1, IDL indices start from 0)
 date_obs=sxpar(header,'date-obs')
-frequency_array=(findgen(n_freq)-(freq_ref_i-1))*freq_res+freq_ref 
+frequency_array=(findgen(n_freq)-freq_ref_i)*freq_res+freq_ref 
 n_fields=sxpar(header,'tfields') ;12
 
 n_grp_params=sxpar(header,'pcount')
