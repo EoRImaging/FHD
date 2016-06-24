@@ -71,11 +71,15 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
   fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
       
   IF Size(source_array,/type) EQ 8 THEN source_array=generate_source_cal_list(obs,psf,source_array,_Extra=extra)   
-  vis_arr=vis_simulate(obs,status_str,psf,params,jones,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+  vis_arr=vis_simulate(obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
     recalculate_all=recalculate_all, include_eor = eor_sim, include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra)
-    
+  
+  ; This is a persistent problem! Mostly due to misnaming of the array that is to be passed out whenever vis_simulate is edited. So here is a quick test...
+  test_vis = max(abs(*vis_arr[0]))
+  if test_vis eq 0 then print, "Visiblities are probably identically zero, you should check very carefully!"
+  
   vis_noise_calc,obs,vis_arr,flag_arr
   tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
   freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
@@ -85,15 +89,16 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     Strn(n_tile_use),Strn(n_tile_cut))
     
   fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+  fhd_save_io,status_str,skymodel,var='skymodel',/compress,file_path_fhd=file_path_fhd,_Extra=extra
   fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-  fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
+  fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,skymodel=skymodel
   
   IF obs.n_vis EQ 0 THEN BEGIN
     print,"All data flagged! Returning."
     error=1
     RETURN
   ENDIF
-  
+
   autocorr_i=where((*obs.baseline_info).tile_A EQ (*obs.baseline_info).tile_B,n_autocorr)
   auto_corr=Ptrarr(n_pol)
   IF n_autocorr GT 0 THEN FOR pol_i=0,n_pol-1 DO BEGIN
@@ -148,7 +153,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     
     ;Generate fits data files and images
     IF Keyword_Set(export_images) THEN BEGIN
-      fhd_quickview,obs,status_str,psf,cal,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+      fhd_quickview,obs,status_str,psf,cal,jones,skymodel,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
         model_uv_holo=model_uv_holo,file_path_fhd=file_path_fhd,silent=silent,_Extra=extra
     ENDIF
   ENDIF

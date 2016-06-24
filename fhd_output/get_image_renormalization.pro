@@ -1,6 +1,8 @@
 function get_image_renormalization,obs,weights_arr=weights_arr,beam_base=beam_base,degpix=degpix,psf=psf,params=params,$
-      image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,filter_arr=filter_arr,antialias=antialias,_Extra=extra
+      image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,filter_arr=filter_arr,$
+      antialias=antialias,baseline_threshold=baseline_threshold,_Extra=extra
   ; Use the weights to renormalize the image to units of Jy/beam
+  ; Note: include keyword baseline_threshold even though it is not used, to strip it from _Extra if present
   
 n_pol=obs.n_pol
 dimension=obs.dimension

@@ -1,4 +1,4 @@
-PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights_arr=weights_arr,source_array=source_array,$
+PRO fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
@@ -7,7 +7,8 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,image_uv_arr=image_uv_arr,weights
     use_pointing_center=use_pointing_center,galaxy_model_fit=galaxy_model_fit,beam_arr=beam_arr,$
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,beam_threshold=beam_threshold,$
     beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,$
-    image_mask_horizon=image_mask_horizon,write_healpix_fits=write_healpix_fits,nside=nside,_Extra=extra
+    image_mask_horizon=image_mask_horizon,write_healpix_fits=write_healpix_fits,nside=nside,$
+    model_recalculate=model_recalculate,map_fn_arr=map_fn_arr,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -25,6 +26,7 @@ IF N_Elements(show_grid) EQ 0 THEN show_grid=1
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=beam_threshold/2.
 IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
+IF status_str.fhd EQ 0 THEN model_recalculate=0
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
@@ -37,13 +39,13 @@ IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_
 IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(skymodel) EQ 0 THEN fhd_save_io,status_str,skymodel,var='skymodel',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 n_pol=obs.n_pol
 dimension_uv=obs.dimension
 pol_names=obs.pol_names
 residual_flag=obs.residual
 IF N_Elements(galaxy_model_fit) EQ 0 THEN galaxy_model_fit=0
-IF N_Elements(cal) GT 0 THEN IF cal.galaxy_cal THEN galaxy_model_fit=1
 
 IF N_Elements(image_uv_arr) EQ 0 THEN BEGIN
     image_uv_arr=Ptrarr(n_pol,/allocate)
@@ -70,7 +72,8 @@ FOR pol_i=0,n_pol-1 DO IF Total(Abs(*weights_arr[pol_i])) EQ 0 THEN BEGIN
     weights_flag=0
 ENDIF
 
-model_flag=1
+model_flag=Keyword_Set(skymodel)
+source_flag = Keyword_Set(skymodel) ? Keyword_Set(skymodel.n_sources):0
 IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
     IF Min(status_str.grid_uv_model[0:n_pol-1]) GT 0 THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,/allocate)
@@ -78,11 +81,13 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
             fhd_save_io,status_str,grid_uv_model,var='grid_uv_model',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
             *model_uv_arr[pol_i]=grid_uv_model
         ENDFOR
+    ENDIF ELSE IF status_str.fhd GT 0 THEN BEGIN
+        fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra
+        model_uv_arr=getvar_savefile(fhd_sav_filepath+'.sav','model_uv_holo')
     ENDIF ELSE model_flag=0
 ENDIF
 
 IF residual_flag THEN model_flag=0
-IF residual_flag OR model_flag THEN IF N_Elements(source_array) EQ 0 THEN source_array=cal.source_list
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
@@ -100,7 +105,8 @@ astr_out=obs_out.astr
 
 horizon_mask=fltarr(dimension,elements)+1.
 ;IF Keyword_Set(image_mask_horizon) THEN BEGIN
-    xy2ad,meshgrid(dimension,elements,1),meshgrid(dimension,elements,2),astr_out,ra_arr,dec_arr
+    ;set /ignore_refraction for speed since we're just finding pixels to mask
+    apply_astrometry, obs_out, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
     horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
     IF n_horizon_mask GT 0 THEN horizon_mask[horizon_test]=0
 ;ENDIF
@@ -131,6 +137,48 @@ beam_avg=Sqrt(beam_avg>0)*beam_mask
 beam_i=where(beam_mask)
 jones_out=fhd_struct_init_jones(obs_out,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
 
+IF Keyword_Set(model_recalculate) THEN BEGIN
+    IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        IF Ptr_valid(map_fn_arr[pol_i]) EQ 0 THEN BEGIN
+            fhd_save_io,status_str,map_fn,var='map_fn',file_path_fhd=file_path_fhd,pol_i=pol_i,$
+                transfer=transfer_mapfn,/no_save,path_use=path_use,obs=obs,_Extra=extra
+            IF file_test(path_use+'.sav') EQ 0 THEN BEGIN
+                print,'No mapping function supplied, and .sav files not found! Model not recalculated'
+                print,path_use+'.sav'
+                model_recalculate=0
+                pol_i=n_pol ;skip any remaining polarizations if even one is missing
+                CONTINUE
+            ENDIF
+            RESTORE,path_use+'.sav' ;map_fn
+            map_fn_arr[pol_i]=Ptr_new(map_fn,/no_copy)
+        ENDIF
+    ENDFOR
+ENDIF
+
+IF Keyword_Set(model_recalculate) THEN IF model_recalculate GT 0 THEN BEGIN
+    ;set model_recalculate=-1 to force the map_fn to be restored if the file exists, but not actually recalculate the point source model
+    uv_mask=fltarr(dimension,elements)
+    IF model_flag EQ 0 THEN BEGIN
+        model_uv_arr=Ptrarr(n_pol,/allocate)
+        model_flag=1
+    ENDIF
+    fhd_save_io,var='fhd',file_path_fhd=file_path_fhd,path_use=fhd_sav_filepath,/no_save,_Extra=extra
+    IF N_Elements(fhd_params) EQ 0 THEN fhd_save_io,status_str,fhd_params,var='fhd_params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+    component_array=getvar_savefile(fhd_sav_filepath+'.sav','component_array')
+    FOR pol_i=0,n_pol-1 DO uv_mask[where(*weights_arr[pol_i])]=1
+    noise_map=fhd_params.convergence*rebin(weight_invert(beam_avg),dimension,elements)
+    component_array=component_array[0:fhd_params.n_components-1]
+    source_array=Components2Sources(component_array,obs,fhd_params,noise_map=noise_map,source_mask=source_mask,_Extra=extra)
+    IF Keyword_Set(no_condense_sources) THEN $
+        model_uv_full=source_dft_model(obs,jones,component_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=0,_extra=extra) $
+        ELSE model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=uv_mask,sigma_threshold=fhd_params.sigma_cut,_extra=extra)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+        *model_uv_arr[pol_i]=holo_mapfn_apply(*model_uv_full[pol_i],map_fn_arr[pol_i],_Extra=extra,/indexed)
+    ENDFOR
+ENDIF
+heap_gc
+
 IF Keyword_Set(write_healpix_fits) THEN BEGIN
     FoV_use=!RaDeg/obs_out.kpix
     hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside,restore_last=0,/no_save,$
@@ -138,32 +186,34 @@ IF Keyword_Set(write_healpix_fits) THEN BEGIN
     ring2nest, nside, hpx_cnv.inds, hpx_inds_nest ;external programs are much happier reading in Healpix fits files with the nested pixel ordering
 ENDIF
 
-IF N_Elements(source_array) GT 0 THEN BEGIN
+source_flag=0 
+IF model_flag THEN IF skymodel.n_sources GT 0 THEN BEGIN
     source_flag=1
+    source_array=skymodel.source_list
     source_arr_out=source_array
     
-    ad2xy,source_array.ra,source_array.dec,astr_out,sx,sy
+    apply_astrometry, obs_out, ra_arr=source_array.ra, dec_arr=source_array.dec, x_arr=sx, y_arr=sy, /ad2xy
     source_arr_out.x=sx & source_arr_out.y=sy
     
     extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
     IF n_extend GT 0 THEN BEGIN
         FOR ext_i=0L,n_extend-1 DO BEGIN
-            comp_arr_out=*source_array[extend_test[ext_i]].extend
-            ad2xy,comp_arr_out.ra,comp_arr_out.dec,astr_out,cx,cy
-            comp_arr_out.x=cx & comp_arr_out.y=cy
+            component_array_out=*source_array[extend_test[ext_i]].extend
+            apply_astrometry, obs_out, ra_arr=component_array_out.ra, dec_arr=component_array_out.dec, x_arr=cx, y_arr=cy, /ad2xy
+            component_array_out.x=cx & component_array_out.y=cy
             
-            IF Total(comp_arr_out.flux.(0)) EQ 0 THEN BEGIN
-                comp_arr_out.flux.(0)=(*beam_base_out[0])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.I+comp_arr_out.flux.Q)/2.
-                comp_arr_out.flux.(1)=(*beam_base_out[1])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.I-comp_arr_out.flux.Q)/2.
-        ;        comp_arr_out.flux.(2)=(*beam_base_out[2])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.Q+comp_arr_out.flux.U)/2.
-        ;        comp_arr_out.flux.(3)=(*beam_base_out[3])[comp_arr_out.x,comp_arr_out.y]*(comp_arr_out.flux.Q-comp_arr_out.flux.U)/2.
+            IF Total(component_array_out.flux.(0)) EQ 0 THEN BEGIN
+                component_array_out.flux.(0)=(*beam_base_out[0])[component_array_out.x,component_array_out.y]*(component_array_out.flux.I+component_array_out.flux.Q)/2.
+                component_array_out.flux.(1)=(*beam_base_out[1])[component_array_out.x,component_array_out.y]*(component_array_out.flux.I-component_array_out.flux.Q)/2.
+        ;        component_array_out.flux.(2)=(*beam_base_out[2])[component_array_out.x,component_array_out.y]*(component_array_out.flux.Q+component_array_out.flux.U)/2.
+        ;        component_array_out.flux.(3)=(*beam_base_out[3])[component_array_out.x,component_array_out.y]*(component_array_out.flux.Q-component_array_out.flux.U)/2.
             ENDIF
             source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)
-            *source_arr_out[extend_test[ext_i]].extend=comp_arr_out
+            *source_arr_out[extend_test[ext_i]].extend=component_array_out
         ENDFOR
     ENDIF
     source_arr_out=stokes_cnv(source_arr_out,jones_out,beam=beam_base_out,/inverse,_Extra=extra)
-ENDIF ELSE source_flag=0
+ENDIF
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
 gal_model_img=Ptrarr(n_pol)
@@ -221,8 +271,10 @@ ENDIF
 IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=output_path+'_source_list'
 
 ; plot calibration solutions, export to png
+if size(cal,/type) eq 8 then begin
+    
 IF N_Elements(cal) GT 0 THEN BEGIN
-   IF cal.n_cal_src ne 0 THEN BEGIN
+   IF cal.skymodel.n_sources GT 0 THEN BEGIN
       IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
          vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
          plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist
@@ -231,6 +283,8 @@ IF N_Elements(cal) GT 0 THEN BEGIN
       ENDELSE
    ENDIF
 ENDIF
+
+endif ;end 
 
 ;Build a fits header
 mkhdr,fits_header,*instr_dirty_arr[0]

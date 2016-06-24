@@ -13,78 +13,6 @@ IF Keyword_Set(antenna_beam_arr) THEN IF Keyword_Set(*antenna_beam_arr[0]) THEN 
     RETURN,tile_beam
 ENDIF
 
-;;;BEGIN COPY FROM MWA AS A CHECK!!!
-
-;kbinsize_use=kbinsize;/psf_resolution
-;
-;IF N_Elements(normalization) EQ 0 THEN normalization=1.
-;psf_dim=Float(psf_dim)
-;;psf_dim2=psf_dim*psf_resolution
-;psf_dim2=dimension
-;degpix_use=!RaDeg/(kbinsize_use*psf_dim2) 
-;IF N_Elements(xvals) EQ 0 THEN xvals=(meshgrid(psf_dim2,psf_dim2,1)-psf_dim2/2.)*degpix_use
-;IF N_Elements(yvals) EQ 0 THEN yvals=(meshgrid(psf_dim2,psf_dim2,2)-psf_dim2/2.)*degpix_use
-;IF (N_Elements(obsaz)EQ 0) OR (N_Elements(obsza) EQ 0) THEN BEGIN
-;    x1=reform(xvals[*,psf_dim2/2.]) & x1i=where(x1)
-;    y1=reform(yvals[psf_dim2/2.,*]) & y1i=where(y1)
-;    x0=interpol(x1i,x1[x1i],0.)
-;    y0=interpol(y1i,y1[y1i],0.)
-;    za=Interpolate(za_arr,x0,y0,cubic=-0.5)
-;    az=Interpolate(az_arr,x0,y0,cubic=-0.5)
-;ENDIF ELSE BEGIN
-;    za=obsza
-;    az=obsaz
-;ENDELSE
-;;za=za_arr[psf_dim2/2.,psf_dim2/2.]
-;;az=az_arr[psf_dim2/2.,psf_dim2/2.]
-;
-;antenna_length=29.125*2.54/100. ;FROM MWA!!! meters (measured)
-;antenna_height=0.60 ; meters (rumor from Danny J.)
-;
-;Kconv=(2.*!Pi)*(frequency/299792458.) ;wavenumber (radians/meter)
-;;Kconv=(frequency/299792458.) ;wavenumber (radians/meter)
-;wavelength=299792458./frequency
-;
-;xc_arr=[0.] & yc_arr=[0.] & zc_arr=[0.]
-;term_A=Tan(az*!DtoR)
-;term_B=za*!DtoR
-;xc=Sqrt((term_B^2.)/(1+term_A^2.))
-;yc=term_A*xc
-;za_arr_use=Reform(za_arr,(psf_dim2)^2.)
-;az_arr_use=Reform(az_arr,(psf_dim2)^2.)
-;D0_d=[0.]
-;
-;proj_east=Reform(xvals,(psf_dim2)^2.)
-;proj_north=Reform(yvals,(psf_dim2)^2.)
-;proj_z=Cos(za_arr_use*!DtoR)
-;
-;;;phase of each dipole for the source (relative to the beamformer settings)
-;;D_d=(proj_east#xc_arr+proj_north#yc_arr+proj_z#zc_arr-replicate(1,(psf_dim2)^2.)#D0_d*!Radeg);/Kconv
-;;D_d=Reform(D_d,psf_dim2,psf_dim2,16)
-;
-;groundplane=2.*Sin(Cos(za_arr_use*!DtoR)*(Kconv*(antenna_height)))
-;groundplane=Reform(groundplane,psf_dim2,psf_dim2)
-;
-;projection=1.
-;
-;ii=Complex(0,1)
-;;dipole_gain_arr=Exp(-ii*Kconv*D_d*!DtoR)
-;
-;
-;IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(1,/allocate)
-;FOR i=0,0 DO BEGIN
-;    *antenna_beam_arr[i]=groundplane;*dipole_gain_arr[*,*,i]
-;ENDFOR
-;
-;;tile_beam=fltarr(psf_dim2,psf_dim2)
-;tile_beam=*antenna_beam_arr[0]*antenna_gain_arr[0]
-;
-;tile_beam*=normalization
-;
-;;tile_beam=tile_beam>0.
-;RETURN,tile_beam
-;END
-
 xvals_use=xvals
 yvals_use=yvals
 dimension=(size(xvals,/dimension))[0]
@@ -129,7 +57,8 @@ IF n_mask GT 0 THEN BEGIN
     xvals_use[mask_i]=!Values.F_NAN
     yvals_use[mask_i]=!Values.F_NAN
 ENDIF
-ad2xy,xvals_use,yvals_use,astr,x_int,y_int
+apply_astrometry, ra_arr=xvals_use, dec_arr=yvals_use, x_arr=x_int, y_arr=y_int, JDate=obs.JD0, astr=astr ; This might be broken! If it is, it's probably a problem with JDate
+;ad2xy,xvals_use,yvals_use,astr,x_int,y_int
 tile_beam=Float(interpolate(beam_slice,x_int,y_int,missing=0,cubic=-0.5))>0.
 
 IF not Keyword_Set(antenna_beam_arr) THEN antenna_beam_arr=Ptrarr(1,/allocate)

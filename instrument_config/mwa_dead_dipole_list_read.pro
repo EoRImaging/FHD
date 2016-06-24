@@ -1,8 +1,9 @@
-PRO mwa_dead_dipole_list_read,obs,antenna
+PRO mwa_dead_dipole_list_read,obs,antenna,debug_dipole_order=debug_dipole_order
 Jdate=obs.JD0
 tile_names=Strtrim((*obs.baseline_info).tile_names,2)
 ant_pol_names=['X','Y']
 alpha_table=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P']
+IF Keyword_Set(debug_dipole_order) THEN alpha_table=Reverse(alpha_table)
 
 IF Jdate LT 2456529 AND Jdate GE 2456528 THEN BEGIN ; 2456528 is August 23, 2013
     dipole_filepath=filepath(obs.instrument+'_dead_dipole_list.txt',root=rootdir('FHD'),subdir='instrument_config')

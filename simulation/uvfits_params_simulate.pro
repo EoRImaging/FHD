@@ -3,7 +3,6 @@ FUNCTION uvfits_params_simulate,hdr,params_in,sim_baseline_uu=sim_baseline_uu,si
     sim_tile_locations_x=sim_tile_locations_x,sim_tile_locations_y=sim_tile_locations_y,sim_tile_i=sim_tile_i,n_time=n_time,_Extra=extra
 
 ;    params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time}
-
 n_tile=hdr.n_tile
 n_baseline=hdr.nbaselines ;excludes time axis!
 IF N_Elements(n_time) EQ 0 THEN n_time=1.

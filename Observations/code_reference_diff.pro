@@ -103,17 +103,13 @@ obs_info = ps_filenames(folder_names, rts = 0, sim = 0, casa = 0, data_subdirs =
 ;  noise_range = nev_range
 ;endif
 
-if tag_exist(obs_info, 'diff_note') then obs_info = create_struct(obs_info, 'diff_plot_path', obs_info.diff_save_path)
-  
-if n_elements(obs_info.folder_names) eq 2 then begin
-;    save_path = obs_info.diff_save_path
-    note = obs_info.diff_note
-;    plot_path = obs_info.diff_plot_path
-endif else begin
-;    save_path = obs_info.save_paths[0]
-    note = obs_info.fhd_types[0]
-;    plot_path = obs_info.plot_paths[0]
-endelse
+if tag_exist(obs_info, 'diff_note') then $
+    IF Tag_Exist(obs_info, 'diff_plot_path') THEN obs_info.diff_plot_path = obs_info.diff_save_path $
+    ELSE obs_info = create_struct(obs_info, 'diff_plot_path', obs_info.diff_save_path)
+
+note = obs_info.diff_note
+plot_path = obs_info.diff_plot_path
+
 ps_difference_plots, folder_names,obs_info, cube_types, pols, spec_window_types = spec_window_types, all_type_pol = all_type_pol, $
     plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
     note = note, kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, data_range = data_range, data_min_abs = data_min_abs, $
@@ -121,6 +117,7 @@ ps_difference_plots, folder_names,obs_info, cube_types, pols, spec_window_types 
 
 if n_elements(ratio_data_range) eq 0 then ratio_data_range = [1e-3, 1e1]
 
+diff_range=[-1,1]
 ps_ratio_plots, folder_names, obs_info, $
     plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
     note = note, spec_window_types = spec_window_types, data_range = ratio_data_range, $
