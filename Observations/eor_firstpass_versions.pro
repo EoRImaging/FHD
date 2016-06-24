@@ -1499,7 +1499,10 @@ case version of
    end
 
 
-
+   ;;;;;; Jon R's Stuff ;;;;;;;
+    'jonr_barebones_aws':begin
+     end
+   
 endcase
    
 if version EQ 'nb_whitening' then begin
