@@ -8,15 +8,15 @@ heap_gc
 
 ; parse command line args
 compile_opt strictarr
-;args = Command_Line_Args(count=nargs)
-;obs_id = args[0]
+args = Command_Line_Args(count=nargs)
+obs_id = args[0]
 ;obs_id = '1061321792'
-obs_id = '1061316296'
-;output_directory = args[1]
-output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23'
-;version = args[2]
-version = 'nb_small_uvfits'
-;cmd_args={version:version}
+;obs_id = '1061316296'
+output_directory = args[1]
+;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23'
+version = args[2]
+;version = 'nb_small_uvfits'
+cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
@@ -2892,6 +2892,69 @@ case version of
       min_cal_baseline=1.
       flag_calibration=0
       FoV=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                           'nb_sim_perfect_cal_eor_ones_short_baselines_included_beam2a':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=2
+      dipole_mutual_coupling_factor=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_perfect_cal_eor_ones_short_baselines_included_beam1b':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=1
+      dipole_mutual_coupling_factor=1
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                 'nb_sim_perfect_cal_eor_ones_short_baselines_included_beam1a':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      perfect_cal_ones=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=1
+      dipole_mutual_coupling_factor=0
       kbinsize=0.5
       dimension= 2048
       recalculate_all=1
