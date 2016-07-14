@@ -3,36 +3,36 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
 
 ## Beam
 
-*beam_offset_time*: calculate the beam at a specific time within the observation. An observation has 112 seconds, with 0 seconds indicating the start of the observation and 112 indicating the end of the observation.
-  -**Default**:56
-  -**Range**:0-112
+**beam_offset_time**: calculate the beam at a specific time within the observation. An observation has 112 seconds, with 0 seconds indicating the start of the observation and 112 indicating the end of the observation. <br />
+  -*Default*:56 <br />
+  -*Range*:0-112 <br />
 
 ## Calibration
 
-*calibrate_visibilities*: turn on or turn off calibration of the visilibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur.
-  -**Turn off/on**: 0/1
-  -**Default**: 1 
-*cable_bandpass_fit*: average the calibration solutions across tiles within a cable grouping.
-  -**Dependency**: instrument_config/<instrument>_cable_length.txt
-  -**Turn off/on**: 0/1
-  -**Default**: 1
-*saved_run_bp*
-  -**Needs updating**: File name needs more information to descriminate between instruments and bands.
-  -**Dependency**: instrument_config/<pointing number>_bandpass.txt
-  -**Turn off/on**: 0/1
-  -**Default**: 1
-*diffuse_calibrate*
-  -**Default**: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-*return_cal_visibilities*
-  -**Default**: 1
-*allow_sidelobe_cal_sources*
-  -**Default**: 1
+**calibrate_visibilities**: turn on or turn off calibration of the visilibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
+**cable_bandpass_fit**: average the calibration solutions across tiles within a cable grouping. <br />
+  -*Dependency*: instrument_config/<instrument>_cable_length.txt <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
+**saved_run_bp** <br />
+  -*Needs updating*: File name needs more information to descriminate between instruments and bands. <br />
+  -*Dependency*: instrument_config/<pointing number>_bandpass.txt <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
+**diffuse_calibrate** <br />
+  -*Default*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+**return_cal_visibilities** <br />
+  -*Default*: 1 <br />
+**allow_sidelobe_cal_sources** <br />
+  -*Default*: 1 <br />
 
-catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
-calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-bandpass_calibrate=1
-calibration_polyfit=2
-no_restrict_cal_sources=1
+catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data') <br />
+calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+bandpass_calibrate=1 <br />
+calibration_polyfit=2 <br />
+no_restrict_cal_sources=1 <br /> 
 
 ## Diffuse
 
@@ -40,9 +40,9 @@ no_restrict_cal_sources=1
 
 ## Recalculation
 
-*recalculate_all*:
-  -**Turn off/on**: 0/1
-  -**Default**:0
+**recalculate_all**: <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*:0 <br />
 
 mapfn_recalculate=0
 healpix_recalculate=0
