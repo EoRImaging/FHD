@@ -9,24 +9,32 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
 
 ## Calibration
 
-**calibrate_visibilities**: turn on or turn off calibration of the visilibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur. <br />
+**allow_sidelobe_cal_sources**: allows FHD to calibrate on sources in the sidelobes. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of a calibration source catalog for the particular observation. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-**cable_bandpass_fit**: average the calibration solutions across tiles within a cable grouping. <br />
+**cable_bandpass_fit**: average the calibration solutions across tiles within a cable grouping for the particular instrument. <br />
   -*Dependency*: instrument_config/<instrument>_cable_length.txt <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-**saved_run_bp** <br />
-  -*Needs updating*: File name needs more information to descriminate between instruments and bands. <br />
+**cal_cable_reflection_fit**: <br />
+  -*Default*: 150 <br />
+**cal_cable_reflection_correct=150** <br />
+**cal_cable_reflection_mode_fit=150** <br />
+**calibrate_visibilities**: turn on or turn off calibration of the visilibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
+**diffuse_calibrate**: a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. <br />
+  -*Default*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+**saved_run_bp**: use a saved bandpass for bandpass calibration. Reads in a text file saved in instrument config which is dependent on pointing number at the moment. Needs updating. <br />
+  -*Needs updating*: File name needs more information to descriminate between instruments and bands. Need to have capability to read in saved bandpasses not dependent on cable type.<br />
   -*Dependency*: instrument_config/<pointing number>_bandpass.txt <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-**diffuse_calibrate** <br />
-  -*Default*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
-**return_cal_visibilities** <br />
+**min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
+  -*Default*: 50 <br />
+**return_cal_visibilities**: <br />
   -*Default*: 1 <br />
-**allow_sidelobe_cal_sources** <br />
-  -*Default*: 1 <br />
+
 
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data') <br />
 calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
@@ -79,14 +87,14 @@ pad_uv_image=1.
 FoV=0
 no_ps=1
 min_baseline=1.
-min_cal_baseline=50.
+
 ring_radius=10.*pad_uv_image
 nfreq_avg=16
 no_rephase=1
 combine_obs=0
 smooth_width=32.
 
-cal_cable_reflection_fit=150
+
 restrict_hpx_inds=1
 
 kbinsize=0.5
