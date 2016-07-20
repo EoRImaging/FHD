@@ -3,7 +3,7 @@ FUNCTION vis_cal_polyfit,cal,obs,amp_degree=amp_degree,phase_degree=phase_degree
     cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,$
     cal_cable_reflection_correct=cal_cable_reflection_correct,no_phase_calibration=no_phase_calibration,_Extra=extra
 
-IF amp_degree LE 0 THEN amp_degree=Round(abs(amp_degree))>1 ELSE amp_degree=Round(amp_degree)>1
+If N_elements(amp_degree) NE 0 then IF amp_degree LE 0 THEN amp_degree=Round(abs(amp_degree))>1 ELSE amp_degree=Round(amp_degree)>1
 
 IF Keyword_Set(cal_cable_reflection_fit) OR Keyword_Set(cal_cable_reflection_correct) THEN cal.mode_fit=1.
 cal_mode_fit=cal.mode_fit
