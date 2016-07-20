@@ -20,14 +20,24 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
   -*Dependency*: instrument_config/<instrument>_cable_length.txt <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-**cal_cable_reflection_fit**: calculate theoretical cable reflection fits given the velocity and length data stored in a config file. <br />
-  -*Needs updating*: all cable keywords need a major overhaul
+**cal_mode_fit**: Determines whether calibration will fit for reflection in cables (see following three entries). This will be set if
+	`cal_cable_reflection_correct` or `cal_cable_reflection_fit` is set. <br />
+  -*Obsolete* - use `cal_cable_reflection_correct` or `cal_cable_reflection_mode_fit` instead. <br />
+**cal_cable_reflection_correct**: Use predetermined cable reflection parameters in calibration solutions. <br />
+  -*Needs updating*: all cable keywords need a major overhaul <br />
+  -Set to 1 to correct all antennas using default tile for instrument (e.g. `FHD/instrument_config/mwa_cable_reflection_coefficients.txt`) <br />
+  -OR set to cable length or array of cable lengths to only correct those lengths (e.g. [90,150]), again using default file. <br />
+  -OR set to file path with reflection coefficients. <br />
+  -*Default*: unset (off) <br />
+**cal_cable_reflection_fit**: calculate theoretical cable reflection modes given the velocity and length data stored in a config file. <br />
+  -*Needs updating*: all cable keywords need a major overhaul <br />
+  -Set to length of cable to fit, or negative length of cable to omit. <br />
+  -*Must be used in conjunction with `cal_cable_reflection_mode_fit`* <br />
   -*Default*: 150 <br />
-**cal_cable_reflection_correct** <br />
-  -*Needs updating*: all cable keywords need a major overhaul
-  -*Default*: 150 <br />
-**cal_cable_reflection_mode_fit** <br />
-  -*Needs updating*: all cable keywords need a major overhaul
+**cal_cable_reflection_mode_fit**: Fits residual gains to reflection mode and coefficient. <br />
+  -*Needs updating*: all cable keywords need a major overhaul <br />
+  -Takes precidence over `cal_cable_reflection_correct`. <br />
+  -*Turn off/on*: 0/1 <br />
   -*Default*: 150 <br />
 **calibrate_visibilities**: turn on or turn off calibration of the visilibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur. <br />
   -*Turn off/on*: 0/1 <br />
