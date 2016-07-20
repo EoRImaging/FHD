@@ -2962,6 +2962,207 @@ case version of
       nfreq_avg=384  
       undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
    end
+   
+   
+                           'nb_sim_perfect_cal_eor_ones_short_baselines_included_beam2a_allsources':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      perfect_cal_ones=1
+      ;max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=2
+      dipole_mutual_coupling_factor=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_perfect_cal_eor_ones_short_baselines_included_beam1b_allsources':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      perfect_cal_ones=1
+      ;max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=1
+      dipole_mutual_coupling_factor=1
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                 'nb_sim_perfect_cal_eor_ones_short_baselines_included_beam1a_allsources':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+      perfect_cal_ones=1
+      ;max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=1
+      dipole_mutual_coupling_factor=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+   
+   
+                           'nb_sim_overfit_cal_eor_ones_short_baselines_included_beam2a':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+            over_calibrate=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=2
+      dipole_mutual_coupling_factor=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                              'nb_sim_overfit_cal_eor_ones_short_baselines_included_beam1b':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+            over_calibrate=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=1
+      dipole_mutual_coupling_factor=1
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+                                 'nb_sim_overfit_cal_eor_ones_short_baselines_included_beam1a':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+            over_calibrate=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=1
+      dipole_mutual_coupling_factor=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+   end
+   
+                              'nb_sim_overfit_cal_eor_ones_short_baselines_included_beam2a_matched':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+            over_calibrate=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=2
+      dipole_mutual_coupling_factor=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+            calibration_catalog_file_path = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_model_farextent1_nod_Apr_nointerp/output_data/catalog.sav'
+   end
+                              'nb_sim_overfit_cal_eor_ones_short_baselines_included_beam1b_matched':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+            over_calibrate=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=1
+      dipole_mutual_coupling_factor=1
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+            calibration_catalog_file_path = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_model_farextent1_nod_Apr_nointerp/output_data/catalog.sav'
+   end
+                                 'nb_sim_overfit_cal_eor_ones_short_baselines_included_beam1a_matched':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim_input='fhd_nb_sim_model_farextent1_nod_Apr_nointerp'
+      no_frequency_flagging=1
+      ;interpolate_kernal=1
+            over_calibrate=1
+      max_calibration_sources=4000
+      min_cal_baseline=1.
+      flag_calibration=0
+      FoV=0
+      beam_model_version=1
+      dipole_mutual_coupling_factor=0
+      kbinsize=0.5
+      dimension= 2048
+      recalculate_all=1
+      mapfn_recalculate=0
+      nfreq_avg=384  
+      undefine, diffuse_calibrate, diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+      calibration_catalog_file_path = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_model_farextent1_nod_Apr_nointerp/output_data/catalog.sav'
+
+   end
+   
+   
+   
                            'nb_sim_perfect_cal_eor_ones_short_baselines_included_zenithpointing':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -4230,12 +4431,11 @@ case version of
       calibration_catalog_file_path=filepath('patti_v3.7.sav',root=rootdir('FHD'),subdir='catalog_data')
    end   
 
-
    ;Standard MWACS for comparison
    'pac_standard_cat': begin
       calibration_catalog_file_path=filepath('standard_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
    end 
-   
+
    ; NOTE combined_cat.sav here is called combined_cat2.sav in the settings
    ;Updated MWACS with FHD positions where well matched and fluxes where confident
    'pac_combined_cat2': begin
@@ -4342,11 +4542,11 @@ case version of
 endcase
 
   
-  if version EQ 'nb_small_uvfits' then begin 
+  if version EQ 'nb_pytest_after' then begin 
 ;if version EQ 'nb_whitening' then begin
   ;vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/whitening_change/uvfits/'+strtrim(string(obs_id),2)+'.uvfits'
   ;vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
-  vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/test_fhd_to_pyuv/'+strtrim(string(obs_id),2)+'.uvfits'
+  vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
 endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
