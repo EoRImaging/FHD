@@ -1,18 +1,10 @@
-FUNCTION vis_cal_polyfit,cal,obs,degree=degree,phase_degree=phase_degree,$
+FUNCTION vis_cal_polyfit,cal,obs,amp_degree=amp_degree,phase_degree=phase_degree,$
     cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,$
     cal_cable_reflection_correct=cal_cable_reflection_correct,no_phase_calibration=no_phase_calibration,_Extra=extra
 
-IF N_Elements(degree) EQ 0 THEN degree=2 ELSE BEGIN
-    IF degree LE 0 THEN BEGIN
-        amp_free_fit=1
-        degree=Round(abs(degree))>1
-    ENDIF ELSE BEGIN
-        amp_free_fit=0
-        degree=Round(degree)>1
-    ENDELSE
-ENDELSE
-IF N_Elements(phase_degree) EQ 0 THEN phase_degree=1.
+IF amp_degree LE 0 THEN amp_degree=Round(abs(amp_degree))>1 ELSE amp_degree=Round(amp_degree)>1
+
 IF Keyword_Set(cal_cable_reflection_fit) OR Keyword_Set(cal_cable_reflection_correct) THEN cal.mode_fit=1.
 cal_mode_fit=cal.mode_fit
 
@@ -61,20 +53,18 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain_phase=Atan(gain_arr,/phase)
     FOR tile_i=0L,n_tile-1 DO BEGIN
         gain=reform(gain_amp[freq_use,tile_i])
-        fit_params=poly_fit(freq_use,gain,degree)
-        cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
         
-        IF Keyword_Set(amp_free_fit) THEN BEGIN
-            gain_fit=Reform(gain_amp[*,tile_i])
-        ENDIF ELSE BEGIN
+        IF N_Elements(amp_degree) GT 0 THEN BEGIN
+            fit_params=poly_fit(freq_use,gain,amp_degree)
+            cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
             gain_fit=fltarr(n_freq)
-            FOR di=0L,degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
-        ENDELSE
+            FOR di=0L,amp_degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
+        ENDIF ELSE gain_fit=Reform(gain_amp[*,tile_i])
         
         gain_residual[pol_i,tile_i]=Ptr_new(Reform(gain_amp[*,tile_i])-gain_fit)
         
         IF Keyword_Set(cal_step_fit) THEN FOR si=0L,n_step-1 DO gain_fit[freq_use[step_i[si]]:*,*]+=jump_test[step_i[si]]
-        IF phase_degree GT 0 THEN BEGIN
+        IF N_elements(phase_degree) GT 0 THEN BEGIN
             phase_use=PhUnwrap(reform(gain_phase[freq_use,tile_i]))
             phase_params=poly_fit(freq_use,phase_use,phase_degree,yfit=phase_fit)
             cal_return.phase_params[pol_i,tile_i]=Ptr_new(phase_params)
