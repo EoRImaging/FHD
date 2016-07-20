@@ -16,10 +16,15 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
   -*Dependency*: instrument_config/<instrument>_cable_length.txt <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-**cal_cable_reflection_fit**: <br />
+**cal_cable_reflection_fit**: calculate theoretical cable reflection fits given the velocity and length data stored in a config file. <br />
+  -*Needs updating*: all cable keywords need a major overhaul
   -*Default*: 150 <br />
-**cal_cable_reflection_correct=150** <br />
-**cal_cable_reflection_mode_fit=150** <br />
+**cal_cable_reflection_correct** <br />
+  -*Needs updating*: all cable keywords need a major overhaul
+  -*Default*: 150 <br />
+**cal_cable_reflection_mode_fit** <br />
+  -*Needs updating*: all cable keywords need a major overhaul
+  -*Default*: 150 <br />
 **calibrate_visibilities**: turn on or turn off calibration of the visilibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
