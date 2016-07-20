@@ -351,7 +351,11 @@ fi
 
 ########End of resubmitting the firstpass jobs that failed and might benefit from a rerun
 
-
+#Delete PS directory if it exists to force eppsilon to run
+#It is assumed that if you are rerunning FHD, PS will need to be rerun as well.
+if [[ -d ${outdir}/fhd_${version}/ps ]]; then 
+   rm ${outdir}/fhd_${version}/ps -r
+fi
 
 
 ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
