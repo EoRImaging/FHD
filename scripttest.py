@@ -268,13 +268,13 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 		time.sleep(sleep_time)
 		for use_node_index in range(len(obs_running)):
 			obs_chunk = obs_running[use_node_index]
-			final_task_jobids = final_task_jobids_running[use_node_index]
+			final_task_jobid = final_task_jobids_running[use_node_index]
 			job_finish_array = [False for obsid in obs_chunk]
 
 			#Check each of tasks in the task array for the last submitted job
 			for task_array_index in range(len(obs_chunk)):
 				#Talk to Grid Engine about the last submitted job for one of the tasks
-				qsub_command = 'qacct -j ' + str(final_task_jobids[task_array_index]) + ' -t ' + str(task_array_index)
+				qsub_command = 'qacct -j ' + str(final_task_jobid) + ' -t ' + str(task_array_index)
 				stdoutpointer = subprocess.Popen(qsub_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				stdout_data, stderr_data = stdoutpointer.communicate()
 
