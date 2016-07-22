@@ -177,18 +177,18 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
     cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
     IF Keyword_Set(calibration_polyfit) THEN BEGIN        
         IF Keyword_Set(calibration_bandpass_iterate) THEN BEGIN
-            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=1,_Extra=extra)
+            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,amp_degree=1,_Extra=extra)
             cal_poly_sub=vis_cal_divide(cal_base,cal_polyfit)
             cal_bandpass2=vis_cal_bandpass(cal_poly_sub,obs,file_path_fhd=file_path_fhd,_Extra=extra)
             cal_remainder2=vis_cal_divide(cal_base,cal_bandpass2)
-            cal_polyfit2=vis_cal_polyfit(cal_remainder2,obs,degree=calibration_polyfit,_Extra=extra)
+            cal_polyfit2=vis_cal_polyfit(cal_remainder2,obs,_Extra=extra)
             cal=vis_cal_combine(cal_polyfit2,cal_bandpass2)
         ENDIF ELSE BEGIN
-            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
+            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,_Extra=extra)
             cal=vis_cal_combine(cal_polyfit,cal_bandpass)
         ENDELSE
     ENDIF ELSE cal=cal_bandpass
-ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
+ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,_Extra=extra)
 IF Keyword_Set(vis_auto_model) THEN cal_auto=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
 IF Keyword_Set(calibration_auto_fit) THEN cal_res=vis_cal_subtract(cal_base,cal_auto) ELSE cal_res=vis_cal_subtract(cal_base,cal)
 basename=file_basename(file_path_fhd)
