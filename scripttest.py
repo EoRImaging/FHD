@@ -219,7 +219,12 @@ def main():
 			for failed in failed_obs:
 				obs_submitted[obsids.index(failed)] = False
 
+			del free_nodes[use_node_index]
 			del obs_running[use_node_index]
+			del save_paths_running[use_node_index]
+			del download_script_paths_running[use_node_index]
+			del metafits_script_paths_running[use_node_index]
+			del cotter_script_paths_running[use_node_index]
 			del final_task_jobids_running[use_node_index]
 
 
