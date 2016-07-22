@@ -49,7 +49,7 @@ def main():
 		print "To download uvfits files only and bypass cotter, set -u 1 on the command line."
 		sys.exit(1)
 
-	obs_per_chunk = 1 #number of obsids to run in parallel
+	obs_per_chunk = 3 #number of obsids to run in parallel
 
 	#get obsids to download:
 	obsfile = open(obsfile_name, "r")
@@ -277,10 +277,18 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 #checks if the downloads were successful, and deletes the gpubox files
 def chunk_complete(download_script_path, metafits_script_path, cotter_script_path, obs_chunk, save_paths):
 
+	#Make a list of non-duplicate entries in the script paths for easy deletion
+	download_script_path=list(set(download_script_path))
+	metafits_script_path=list(set(metafits_script_path))
+	cotter_script_path=list(set(cotter_script_path))
+
 	#Remove the temporary bash script for download, metafits, and cotter in Grid Engine
-	os.remove(download_script_path)
-	os.remove(metafits_script_path)
-	os.remove(cotter_script_path)
+	for script in download_script_path:
+		os.remove(script)
+	for script in metafits_script_path:
+		os.remove(script)
+	for script in cotter_script_path:
+		os.remove(script)
 
 	#Fill the database with the new uvfits
 	fill_database(obs_chunk,version,subversion,save_paths,cotter_version,db_comment,uvfits_download_check)
