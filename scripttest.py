@@ -209,6 +209,19 @@ def main():
 
 				obs_chunk = []
 
+		while len(obs_running) > 0:
+			#Wait for a chunk to finish running
+			use_node_index = wait_for_gridengine(obs_running, final_task_jobids_running)
+
+			#Process the completed chunk
+			failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
+				cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index])
+			for failed in failed_obs:
+				obs_submitted[obsids.index(failed)] = False
+
+			del obs_running[use_node_index]
+			del final_task_jobids_running[use_node_index]
+
 
 #********************************
 
