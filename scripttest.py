@@ -49,7 +49,7 @@ def main():
 		print "To download uvfits files only and bypass cotter, set -u 1 on the command line."
 		sys.exit(1)
 
-	obs_per_chunk = 3 #number of obsids to run in parallel
+	obs_per_chunk = 7 #number of obsids to run in parallel
 
 	#get obsids to download:
 	obsfile = open(obsfile_name, "r")
@@ -274,16 +274,13 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 			#Check each of tasks in the task array for the last submitted job
 			for task_array_index in range(len(obs_chunk)):
 				#Talk to Grid Engine about the last submitted job for one of the tasks
-				qsub_command = 'qacct -j ' + str(final_task_jobid) + ' -t ' + str(task_array_index)
+				qsub_command = 'qacct -j ' + str(final_task_jobid[0]) + ' -t ' + str(task_array_index)
 				stdoutpointer = subprocess.Popen(qsub_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				stdout_data, stderr_data = stdoutpointer.communicate()
 
 				#If the command that only works when the job is done does not throw an error, then the job finished
 				if not stderr_data:
-					exit_start = stdout_data.rfind('exit_status') + 11
-					exit_end = stdout_data.rfind('ru_wallclock')
-					exit_status = stdout_data[exit_start:exit_end].split()[0]
-					job_finish_array[task_array_index] = exit_status
+					job_finish_array[task_array_index] = True
 
 			#If all of the tasks are done, then break the sleeper loop
 			if all(job_finish_array):
@@ -501,7 +498,8 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	cotter_path = stdout_data.strip('\n')
 	metafits_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '.metafits' for i in range(len(obs_chunk))]
 	uvfits_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '.uvfits' for i in range(len(obs_chunk))]
-	gpubox_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '*gpubox*.fits' for i in range(len(obs_chunk))]
+	#gpubox_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '*gpubox*.fits' for i in range(len(obs_chunk))]
+	gpubox_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] for i in range(len(obs_chunk))]
 
 	#Find out the version of the found cotter using a child process
 	stdoutpointer = subprocess.Popen((cotter_path + " --version").split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -524,7 +522,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'gpubox_path=(0 ' +  " ".join(gpubox_path) + ')\n' +  \
 		'metafits_path=(0 ' + " ".join(metafits_path) + ')\n' + \
 		'ls ${save_paths[$SGE_TASK_ID]} > /dev/null\n' + \
-		cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + ' -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}')
+		cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + ' -mem 50 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
 	#Close the file
 	cotter_commands_file.close() 
 
@@ -533,11 +531,11 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 
 	#Setup the bulk of the Grid Engine command, depending on if there is a task to wait on
 	if task_jobid:
-		qsub_command = "qsub -V -b y -hold_jid " + task_jobid + " -l h_vmem=5G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] \
+		qsub_command = "qsub -V -b y -hold_jid " + task_jobid + " -l h_vmem=26G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] \
 			 + ".mit.edu -pe chost 1 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
 	else:
-		qsub_command = "qsub -V -b y -l h_vmem=1G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] \
-			 + ".mit.edu -pe chost 5 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
+		qsub_command = "qsub -V -b y -l h_vmem=26G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] \
+			 + ".mit.edu -pe chost 1 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
 
 	#Run cotter with the correct arguments, the path to the metafits, the uvfits output path, and the gpubox file paths
 	stdoutpointer = subprocess.Popen((qsub_command + ' ' + cotter_script_path).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
