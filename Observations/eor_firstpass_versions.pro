@@ -771,6 +771,9 @@ case version of
    'apb_std_July2016_200obsids':begin
       foo = 1 ; Don't do anything
     end
+    'apb_std_July2016_zen_obses':begin
+      foo=1
+    end
 
 
    ; Abraham's versions
