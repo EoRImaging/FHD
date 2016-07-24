@@ -522,7 +522,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'gpubox_path=(0 ' +  " ".join(gpubox_path) + ')\n' +  \
 		'metafits_path=(0 ' + " ".join(metafits_path) + ')\n' + \
 		'ls ${save_paths[$SGE_TASK_ID]} > /dev/null\n' + \
-		cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + ' -mem 50 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
+		cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + ' -mem 25 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
 	#Close the file
 	cotter_commands_file.close() 
 
@@ -531,10 +531,10 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 
 	#Setup the bulk of the Grid Engine command, depending on if there is a task to wait on
 	if task_jobid:
-		qsub_command = "qsub -V -b y -hold_jid " + task_jobid + " -l h_vmem=26G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] \
+		qsub_command = "qsub -V -b y -hold_jid " + task_jobid + " -l h_vmem=18G,h_stack=512,h_rt=02:00:00,h=" + node.split('/')[2] \
 			 + ".mit.edu -pe chost 1 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
 	else:
-		qsub_command = "qsub -V -b y -l h_vmem=26G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] \
+		qsub_command = "qsub -V -b y -l h_vmem=18G,h_stack=512,h_rt=02:00:00,h=" + node.split('/')[2] \
 			 + ".mit.edu -pe chost 1 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
 
 	#Run cotter with the correct arguments, the path to the metafits, the uvfits output path, and the gpubox file paths
@@ -551,6 +551,12 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 
 	#return the version of cotter used for fill_database and the qsub job id
 	return (task_jobid, cotter_version, cotter_script_path)
+
+	#Some stats about the MIT cluster's performance with cotter leading to the decision regarding allocation
+	#100% memory allowed in cotter, allocating 80G per job (used <46), ran 1 jobs per cpu, took ~80 min for 7 job run
+	#50% memory allowed in cotter, allocating 25G per job (used <25), ran 3 jobs per cpu, took ~45 min for 7 job run
+	#25% memory allowed in cotter, allocating 20G per job (used <18), ran 4 jobs per cpu, took ~43 min for 7 job run
+	#Under 25% memory in cotter causes memory allocation errors.
 #********************************
 
 #********************************
