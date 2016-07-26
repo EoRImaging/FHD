@@ -51,6 +51,10 @@ def main():
 
 	obs_per_chunk = 7 #number of obsids to run in parallel
 
+	#find which nodes have enough space for downloads:
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05", "eor-06", "eor-07", "eor-08", "eor-10", "eor-11", "eor-12", "eor-13", "eor-14"]
+	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
+
 	#get obsids to download:
 	obsfile = open(obsfile_name, "r")
 	obsids = [line.split( ) for line in obsfile.readlines()]
@@ -60,164 +64,187 @@ def main():
 	if len(obsids) != len(nonredundant_obsids):
 		print "WARNING: Obs list contains redundant entries."
 		obsids = nonredundant_obsids
-	obs_submitted = [False for i in range(len(obsids))]	  
 
-	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05", "eor-06", "eor-07", "eor-08", "eor-10", "eor-11", "eor-12", "eor-13", "eor-14"]
-	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
-	free_nodes = filespace(all_nodes)
-	if len(free_nodes) == 0:
-		print "ERROR: No file space found."
-		sys.exit(1)
+	#Find the obsids' save directories:
+	t = Time([int(obs) for obsid in obsids], format="gps", scale="utc")
+	jds = t.jd
+	jds = [int(date) for date in chunk_jds]
+	save_directories = ["EoRuvfits/jd" + str(jd) + "v"+ str(version) + "_" + str(subversion) + "/" for jd in jds]
 
-	obs_running = []
-	save_paths_running = []
-	download_script_paths_running = []
-	metafits_script_paths_running = []
-	cotter_script_paths_running = []
-        final_task_jobids_running = []
-	use_node_index = 0
+	#find each obs' preferred node, put in object node_preferred (False if there is no preferred node)  
+
+	#Check to see if GPU box files already exist:
+	save_paths = []
+	for obsid in obsids:
+		gpu_loc_node = find_gpubox(obsid, save_directories[i], all_nodes)
+		if not gpu_loc_node:
+			node_preferred.append(False)
+		else:
+			node_preferred.append(gpu_loc_node)
+	
+
+	obs_submitted = [False for i in range(len(obsids))]
 	download_tries = 2 #number of times a obsid will attempt to download correctly
 	for download_try in range(download_tries):
+		if download_try > 0:
+			print "Reprocessing failed obsids: Download attempt number " + str(download_try+1)
+
+		free_nodes = filespace(all_nodes)
+		if len(free_nodes) == 0:
+			print "ERROR: No file space found."
+			sys.exit(1)
 		obs_chunk = []
-		for obs_index in range(len(obsids)):
+		obs_failed = []
+		obs_running = []
+		save_paths_running = []
+		download_script_paths_running = []
+		metafits_script_paths_running = []
+		cotter_script_paths_running = []
+		final_task_jobids_running = []
+		use_node_index = 0
 
-			#Find the obsids that need to be run and submit them in chunks
-			if obs_submitted[obs_index] == False:
-				obs_chunk.append(obsids[obs_index])
-				obs_submitted[obs_index] = True
+		while obs_submitted.count(False) > 0:
 
-			if len(obs_chunk) == obs_per_chunk or (obs_index == len(obsids)-1 and len(obs_chunk) != 0): #chunk is filled or the last obsid is reached
+			#Find which node the next chunk should run on
+			if len(obs_running) < len(free_nodes): #this is the first batch of chunks submitted to the available nodes
+				node = free_nodes[use_node_index]
+				use_node_index += 1
+			else:
+				while True:
 
-				#Define which node the chunk should run on
-				if len(obs_running) < len(free_nodes): #this is the first batch of chunks submitted to the available nodes
+					#Wait for a chunk to finish running
+					use_node_index = wait_for_gridengine(obs_running, final_task_jobids_running)
+
+					#Process the completed chunk
+					new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
+						cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index])
+					failed_obs.extend(new_failed_obs)
+
+					#Check to see if the node that finished has enough space to accept a new chunk; if not, remove that node from use
 					node = free_nodes[use_node_index]
-					use_node_index += 1
-				else:
-					while True:
+					if len(filespace(node)) == 0:
+						del free_nodes[use_node_index]
+						del obs_running[use_node_index]
+						del save_paths_running[use_node_index]
+						del download_script_paths_running[use_node_index]
+						del metafits_script_paths_running[use_node_index]
+						del cotter_script_paths_running[use_node_index]
+						del final_task_jobids_running[use_node_index]
+					else:
+						break
 
-						#Wait for a chunk to finish running
-						use_node_index = wait_for_gridengine(obs_running, final_task_jobids_running)
-
-						#Process the completed chunk
-						failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
-							cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index])
-						for failed in failed_obs:
-							obs_submitted[obsids.index(failed)] = False
-
-						#Check to see if the node that finished has enough space to accept a new chunk; if not, remove that node from use
-						node = free_nodes[use_node_index]
-						if len(filespace(node)) == 0:
-							del free_nodes[use_node_index]
-							del obs_running[use_node_index]
-							del save_paths_running[use_node_index]
-							del download_script_paths_running[use_node_index]
-							del metafits_script_paths_running[use_node_index]
-							del cotter_script_paths_running[use_node_index]
-							del final_task_jobids_running[use_node_index]
+			#Assemble an obs_chunk:
+			while len(obs_chunk) != obs_per_chunk and obs_submitted.count(False) > 0:
+				for obs_index, obsid in enumerate(obsids):
+					if obs_submitted[obs_index] == False:
+						if node_preferred.count(node) > 0:
+							if node_preferred[obs_index] = node:
+								obs_chunk.append(obsid)
+								obs_submitted[obs_index] = True
 						else:
-							break
+							if node_preferred.count(False) > 0:
+								if node_preferred[obs_index] = False
+									obs_chunk.append(obsid)
+									obs_submitted[obs_index] = True
+							else:
+								obs_chunk.append(obsid)
+								obs_submitted[obs_index] = True
 
-				download_script_paths = []
-				metafits_script_paths = []
-				cotter_script_paths = []
-			        final_task_jobids = []
+			download_script_paths = []
+			metafits_script_paths = []
+			cotter_script_paths = []
+			final_task_jobid = []
 
-				t = Time([int(obs) for obs in obs_chunk], format="gps", scale="utc")
-				chunk_jds = t.jd
-				chunk_jds = [int(date) for date in chunk_jds]
-				save_directories = ["EoRuvfits/jd" + str(jd) + "v"+ str(version) + "_" + str(subversion) + "/" for jd in chunk_jds]
-
-				#Check to see if GPU box files already exist:
-				download = [True for i in range(len(obs_chunk))] #indicates which obsids need to be downloaded
-				save_paths = []
-				for i, obsid in enumerate(obs_chunk):
-					gpu_loc_path = find_gpubox(obsid, save_directories[i], all_nodes)
-					if not gpu_loc_path:
-						save_paths.append(node + save_directories[i])
-					else:
-						save_paths.append(gpu_loc_path)
-						download[i] = False
-
-				#Find the path to python using a child process
-				stdoutpointer = subprocess.Popen(["which","python"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-				stdout_data, stderr_data = stdoutpointer.communicate()
-
-				#Check to see if a path was found for python
-				if stderr_data:
-					print 'ERROR: The command "which python" did not return the path of the python installation you want to use.'
-					print 'Please add the path to python.'
-					sys.exit(1)
-
-				python_path = stdout_data
-
-				#Check to make sure the log_files directory exists on the node
-				if not os.path.exists(node + 'EoRuvfits/log_files/'):
-					os.makedirs(node + 'EoRuvfits/log_files/')
-
-				#Check to make sure the obsid directory exists on the node for each obsid
-				#Otherwise, script runs ahead of Grid Engine, and requires directory before GE can make it.
-				for i in range(len(obs_chunk)):
-					if not os.path.exists(save_paths[i] + obs_chunk[i]):
-						os.makedirs(save_paths[i] + obs_chunk[i])
-
-				#initialize
-				task_jobid = False
-
-				#Download the files (a uvfits or gpuboxes depending on uvfits_download_check)
-				if any(download) or uvfits_download_check:
-					(task_jobid, download_script_path) = download_files(save_paths, obs_chunk, uvfits_download_check, python_path, node, download)
-					download_script_paths.append(download_script_path)
-
-				#If metafits does not exist in the same location as the gpubox files, set up logic to create it
-				metafits_logic = []
-				for i in range(len(obs_chunk)):
-					if not os.path.isfile(save_paths[i] + obs_chunk[i] +'/' + obs_chunk[i] + '.metafits'):
-						metafits_logic.append(True)
-					else:
-						metafits_logic.append(False)
-						print "Using metafits file found for obsid " + obs_chunk[i] + " located in " + save_paths[i]
-
-				if any(metafits_logic):
-					#Make a metafits file for the obsids, will bypass if all the metafits exists.    
-					(task_jobid, metafits_script_path) = make_metafits(obs_chunk, save_paths,task_jobid,python_path,node,metafits_logic)
-					metafits_script_paths.append(metafits_script_path)
-
-				#Run cotter if gpubox files were downloaded
-				if not uvfits_download_check:
-					(task_jobid, cotter_version, cotter_script_path) = run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node)
-					cotter_script_paths.append(cotter_script_path)
-
-				#Grab the last Grid Engine jobid to watch while the program sleeps
-				final_task_jobids.append(task_jobid)
-			
-				#Record information for the currently running chunks
-				if len(obs_running) < use_node_index:
-					obs_running.append(obs_chunk)
-					save_paths_running.append(save_paths)
-					download_script_paths_running.append(download_script_paths)
-					metafits_script_paths_running.append(metafits_script_paths)
-					cotter_script_paths_running.append(cotter_script_paths)
-					final_task_jobids_running.append(final_task_jobids)
+			download = []
+			save_paths = []
+			for obsid in obs_chunk:
+				obs_index = obsids.index(obsid)
+				if node_preferred[obs_index] == False
+					download.append(True)
+					save_paths.append(node + save_directories[obs_index])
 				else:
-					obs_running[use_node_index] = obs_chunk
-					save_paths_running[use_node_index] = save_paths
-					download_script_paths_running[use_node_index] = download_script_paths
-					metafits_script_paths_running[use_node_index] = metafits_script_paths
-					cotter_script_paths_running[use_node_index] = cotter_script_paths
-					final_task_jobids_running[use_node_index] = final_task_jobids
+					download.append(False)
+					save_paths.append(node_preferred[obs_index] + save_directories[obs_index])
 
-				obs_chunk = []
+			#Find the path to python using a child process
+			stdoutpointer = subprocess.Popen(["which","python"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			stdout_data, stderr_data = stdoutpointer.communicate()
+
+			#Check to see if a path was found for python
+			if stderr_data:
+				print 'ERROR: The command "which python" did not return the path of the python installation you want to use.'
+				print 'Please add the path to python.'
+				sys.exit(1)
+
+			python_path = stdout_data
+
+			#Check to make sure the log_files directory exists on the node
+			if not os.path.exists(node + 'EoRuvfits/log_files/'):
+				os.makedirs(node + 'EoRuvfits/log_files/')
+
+			#Check to make sure the obsid directory exists on the node for each obsid
+			#Otherwise, script runs ahead of Grid Engine, and requires directory before GE can make it.
+			for i in range(len(obs_chunk)):
+				if not os.path.exists(save_paths[i] + obs_chunk[i]):
+					os.makedirs(save_paths[i] + obs_chunk[i])
+
+			#initialize
+			task_jobid = False
+
+			#Download the files (a uvfits or gpuboxes depending on uvfits_download_check)
+			if any(download) or uvfits_download_check:
+				(task_jobid, download_script_path) = download_files(save_paths, obs_chunk, uvfits_download_check, python_path, node, download)
+				download_script_paths.append(download_script_path)
+
+			#If metafits does not exist in the same location as the gpubox files, set up logic to create it
+			metafits_logic = []
+			for i in range(len(obs_chunk)):
+				if not os.path.isfile(save_paths[i] + obs_chunk[i] +'/' + obs_chunk[i] + '.metafits'):
+					metafits_logic.append(True)
+				else:
+					metafits_logic.append(False)
+					print "Using metafits file found for obsid " + obs_chunk[i] + " located in " + save_paths[i]
+
+			if any(metafits_logic):
+				#Make a metafits file for the obsids, will bypass if all the metafits exists.    
+				(task_jobid, metafits_script_path) = make_metafits(obs_chunk, save_paths,task_jobid,python_path,node,metafits_logic)
+				metafits_script_paths.append(metafits_script_path)
+
+			#Run cotter if gpubox files were downloaded
+			if not uvfits_download_check:
+				(task_jobid, cotter_version, cotter_script_path) = run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node)
+				cotter_script_paths.append(cotter_script_path)
+
+			#Grab the last Grid Engine jobid to watch while the program sleeps
+			final_task_jobid.append(task_jobid)
+	
+			#Record information for the currently running chunks
+			if len(obs_running) < use_node_index:
+				obs_running.append(obs_chunk)
+				save_paths_running.append(save_paths)
+				download_script_paths_running.append(download_script_paths)
+				metafits_script_paths_running.append(metafits_script_paths)
+				cotter_script_paths_running.append(cotter_script_paths)
+				final_task_jobids_running.append(final_task_jobid)
+			else:
+				obs_running[use_node_index] = obs_chunk
+				save_paths_running[use_node_index] = save_paths
+				download_script_paths_running[use_node_index] = download_script_paths
+				metafits_script_paths_running[use_node_index] = metafits_script_paths
+				cotter_script_paths_running[use_node_index] = cotter_script_paths
+				final_task_jobids_running[use_node_index] = final_task_jobid
+
+			obs_chunk = []
+			break
 
 		while len(obs_running) > 0:
 			#Wait for a chunk to finish running
 			use_node_index = wait_for_gridengine(obs_running, final_task_jobids_running)
 
 			#Process the completed chunk
-			failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
+			new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
 				cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index])
-			for failed in failed_obs:
-				obs_submitted[obsids.index(failed)] = False
+			failed_obs.extend(new_failed_obs)
 
 			del free_nodes[use_node_index]
 			del obs_running[use_node_index]
@@ -226,6 +253,14 @@ def main():
 			del metafits_script_paths_running[use_node_index]
 			del cotter_script_paths_running[use_node_index]
 			del final_task_jobids_running[use_node_index]
+
+		#Mark which obsids need to be reran, if any:
+		if len(failed_obs) == 0:
+			print "All obsids downloaded successfully."
+			break
+		else:
+			for failed in failed_obs:
+				obs_submitted(obsids.index(failed)) = False 
 
 
 #********************************
@@ -256,7 +291,7 @@ def find_gpubox(obsid, save_directory, all_nodes):
 				#print "GPU box files for obsid " + obsid + " located in " + gpu_loc_path
 				#if gpubox00 != 24 or gpubox01 != 24 or flags != 1 or metafits != 1:
 			     	#	print "WARNING: Directory contains extra GPU box files."
-				return gpu_loc_path   
+				return gpu_loc_node   
 	return False
 #********************************
 
