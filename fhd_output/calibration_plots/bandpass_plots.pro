@@ -54,6 +54,6 @@ ENDIF ELSE BEGIN
         cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
     ENDIF
     
-    cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
+    ; cgPS_Close,/png,Density=300,Resize=100.,/allow_transparent,/nomessage
 ENDELSE
 END
