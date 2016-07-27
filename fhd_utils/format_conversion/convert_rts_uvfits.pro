@@ -43,10 +43,10 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         freq_dim=hdr.freq_dim
         real_index=hdr.real_index
         imaginary_index=hdr.imaginary_index
-        flag_index=hdr.flag_index
+        weights_index=hdr.weights_index
         FOR pol_i=0,n_pol-1 DO BEGIN
             *vis_arr2[fi,pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))
-            *vis_weights2[fi,pol_i]=reform(data_array[flag_index,pol_i,*,*])
+            *vis_weights2[fi,pol_i]=reform(data_array[weights_index,pol_i,*,*])
         ENDFOR
         ;free memory
         data_array=0 

@@ -39,7 +39,7 @@ ENDIF ELSE BEGIN
     freq_dim=hdr.freq_dim
     real_index=hdr.real_index
     imaginary_index=hdr.imaginary_index
-    flag_index=hdr.flag_index
+    weights_index=hdr.weights_index
     n_freq0=hdr.n_freq
     nbaselines0=hdr.nbaselines
     uvfits_dim = size(data_array,/n_dimension)
@@ -77,7 +77,7 @@ ENDIF ELSE BEGIN
     ENDIF
     FOR pol_i=0,n_pol-1 DO BEGIN
         *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*],n_freq0,nbaselines0),Reform(data_array[imaginary_index,pol_i,*,*],n_freq0,nbaselines0))
-        *vis_weights[pol_i]=reform(data_array[flag_index,pol_i,*,*],n_freq0,nbaselines0)
+        *vis_weights[pol_i]=reform(data_array[weights_index,pol_i,*,*],n_freq0,nbaselines0)
     ENDFOR
     ;free memory
     data_array=0 

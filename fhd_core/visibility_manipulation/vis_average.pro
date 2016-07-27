@@ -20,7 +20,7 @@ n_baselines=bin_width[0]
 ;hdr={n_params:n_grp_params,nbaselines:nbaselines,n_tile:n_tile,n_pol:n_polarizations,n_freq:n_frequencies,$
 ;    freq_res:freq_res,freq_arr:frequency_array,obsra:obsra,obsdec:obsdec,date:date_obs,$
 ;    uu_i:uu_i,vv_i:vv_i,ww_i:ww_i,baseline_i:baseline_i,date_i:date_i,jd0:Jdate0,$
-;    pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,flag_index:flag_index}
+;    pol_dim:pol_dim,freq_dim:freq_dim,real_index:real_index,imaginary_index:imaginary_index,weights_index:weights_index}
 IF Keyword_Set(vis_freq_average) THEN BEGIN
     n_freq=Floor(hdr.n_freq/vis_freq_average)
     hdr.n_freq=n_freq
