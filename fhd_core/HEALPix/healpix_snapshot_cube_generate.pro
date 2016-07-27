@@ -127,14 +127,6 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   obs_out_ref=obs_out
   obs_in_ref=obs_in
   FOR iter=0,n_iter-1 DO BEGIN
-;    IF Ptr_valid(bi_use[iter]) THEN BEGIN
-;        flags_use=Ptrarr(n_pol,/allocate)
-;        FOR pol_i=0,n_pol-1 DO BEGIN
-;          vis_weights1=fltarr(size(*vis_weights_use[pol_i],/dimension))
-;          vis_weights1[*,*bi_use[iter]]=(*vis_weights_use[pol_i])[*,*bi_use[iter]]
-;          *flags_use[pol_i]=Temporary(vis_weights1)
-;        ENDFOR
-;    ENDIF ELSE flags_use=Pointer_copy(vis_weights_use)
     obs=obs_out_ref ;will have some values over-written!
     obs_in=obs_in_ref
     psf=psf_out
@@ -143,7 +135,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
       file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_arr,$
       save_uvf=save_uvf, uvf_name=uvf_name[iter],bi_use=*bi_use[iter], _Extra=extra)
-;    Ptr_free,flags_use
+
     t_split+=t_split1
     IF dirty_flag THEN BEGIN
       dirty_arr1=residual_arr1
