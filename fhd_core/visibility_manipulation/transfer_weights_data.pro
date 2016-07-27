@@ -1,4 +1,4 @@
-PRO transfer_flag_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
+PRO transfer_weights_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
     transfer_filename=transfer_filename,error=error,flag_visibilities=flag_visibilities,$
     flag_calibration=flag_calibration,_Extra=extra
 n_pol=obs.n_pol

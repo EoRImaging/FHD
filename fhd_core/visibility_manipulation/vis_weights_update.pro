@@ -1,4 +1,4 @@
-PRO vis_flag_update,vis_weight_ptr,obs,psf,params,xmin=xmin,xcen=xcen,ymin=ymin,no_frequency_flagging=no_frequency_flagging
+PRO vis_weights_update,vis_weight_ptr,obs,psf,params,xmin=xmin,xcen=xcen,ymin=ymin,no_frequency_flagging=no_frequency_flagging
 t0_0=Systime(1)
 heap_gc
 

@@ -65,7 +65,7 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;
-        transfer_flag_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
+        transfer_weights_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
             transfer_filename=transfer_weights,error=error,flag_visibilities=flag_visibilities,$
             flag_calibration=flag_calibration,_Extra=extra
         IF Keyword_Set(error) THEN BEGIN
@@ -76,7 +76,7 @@ IF data_flag LE 0 THEN BEGIN
     
     vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
-    vis_flag_update,vis_weights,obs,psf,params,_Extra=extra
+    vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
@@ -110,7 +110,7 @@ IF data_flag LE 0 THEN BEGIN
             RETURN
         ENDIF
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-        vis_flag_update,vis_weights,obs,psf,params,_Extra=extra
+        vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
     ENDIF
     
     IF Keyword_Set(flag_visibilities) THEN BEGIN

@@ -62,7 +62,7 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
   
   vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
     freq_end=freq_end,tile_flag_list=tile_flag_list,instrument=instrument,_Extra=extra)
-  vis_flag_update,vis_weights,obs,psf,params
+  vis_weights_update,vis_weights,obs,psf,params
   ;print informational messages
   IF ~silent THEN obs_status,obs
   ;save and output settings here for debugging, though they should be re-saved later in case things change

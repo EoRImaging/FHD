@@ -73,7 +73,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   IF Min(Ptr_valid(vis_weights)) LT n_pol THEN fhd_save_io,status_str,vis_weights_use,var='vis_weights',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
     ELSE vis_weights_use=Pointer_copy(vis_weights)
   
-  vis_flag_update,vis_weights_use,obs_out,psf_out,params,_Extra=extra
+  vis_weights_update,vis_weights_use,obs_out,psf_out,params,_Extra=extra
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
   IF N_Elements(*vis_arr[0]) EQ 0 THEN BEGIN
     IF ~Keyword_Set(silent) THEN print,"Restoring saved visibilities (this may take a while)"

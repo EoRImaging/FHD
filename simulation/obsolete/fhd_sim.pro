@@ -64,7 +64,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
     freq_end=freq_end,tile_flag_list=tile_flag_list,_Extra=extra)
-  vis_flag_update,vis_weights,obs,psf,params
+  vis_weights_update,vis_weights,obs,psf,params
   ;print informational messages
   obs_status,obs
   
