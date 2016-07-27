@@ -517,7 +517,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		"4,0": "-timeres 2 -freqres 80 -edgewidth 80 -usepcentre -initflag 2 -noflagautos", \
 		"4,1": "-timeres 2 -freqres 80 -edgewidth 80 -usepcentre -initflag 2 -noflagautos", \
 		"5,0": "-timeres 2 -freqres 80 -edgewidth 80 -initflag 2 -noflagautos", \
-		"5,1": "-timeres 2 -freqres 80 -edgewidth 80 -usepcentre -initflag 2 -noflagautos -flagfiles -sbpassband" \
+		"5,1": "-timeres 2 -freqres 80 -edgewidth 80 -usepcentre -initflag 2 -noflagautos -norfi -flagfiles -sbpassband" \
 		}
 
 	#Check that the version and subversion supplied exist in the argument dictionary
@@ -559,14 +559,14 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	#Currently fails on the whole chunk if one zip file is missing...needs to be discussed
 	#Can isfile and zipfile work on lists? If so, take out for loop
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
-		for i in range(len(obs_chunk)):
-			if os.path.isfile(flagfiles_zip[i]):
-				zip_ref = zipfile.ZipFile(flagfiles_zip[i], 'r')
-				zip_ref.extractall(save_paths[i] + obs_chunk[i] + '/')
-				zip_ref.close()
-			else:
-				print "ERROR: Flags zip file is expected and does not exist"
-				sys.exit(1)
+	#	for i in range(len(obs_chunk)):
+	#		if os.path.isfile(flagfiles_zip[i]):
+	#			zip_ref = zipfile.ZipFile(flagfiles_zip[i], 'r')
+	#			zip_ref.extractall(save_paths[i] + obs_chunk[i] + '/')
+	#			zip_ref.close()
+	#		else:
+	#			print "ERROR: Flags zip file is expected and does not exist"
+	#			sys.exit(1)
 		index = cotter_args[str(version)+','+str(subversion)].find('-flagfiles')
 		output_line = cotter_args[str(version)+','+str(subversion)][:index+10] + ' ${flagfiles_path[$SGE_TASK_ID]}' + cotter_args[str(version)+','+str(subversion)][index+10:]
 		cotter_args[str(version)+','+str(subversion)] = output_line
@@ -576,9 +576,8 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	if '-sbpassband' in cotter_args[str(version)+','+str(subversion)]:
 		if not os.path.isfile(save_paths[0] + 'sbpassband_1s.txt'):
 			sbpassband_1s_file = open(save_paths[0] + 'sbpassband_1s.txt', 'w')
-			array_ones = np.ones(128,4)
-			array_ones = array_ones.T
-			np.savetxt(sbpassband_1s_file, array_ones, fmt=['%d','%d','%d','%d'])
+			array_ones = np.ones((32,5))
+			np.savetxt(sbpassband_1s_file, array_ones, fmt=['%d','%d','%d','%d','%d'])
 			sbpassband_1s_file.close()
 		index = cotter_args[str(version)+','+str(subversion)].find('-sbpassband')
 		output_line = cotter_args[str(version)+','+str(subversion)][:index+11] + save_paths[0] + 'sbpassband_1s.txt' + cotter_args[str(version)+','+str(subversion)][index+11:]
@@ -587,6 +586,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	#Write a bash script so that Grid Engine can run a task array for the downloads.
 	cotter_script_path = save_paths[0] + 'cotter_commands_file_chunk'+obs_chunk[0]+'.sh'
 	cotter_commands_file = open(cotter_script_path, 'w')
+
 	#Write the contents of the file and the necessary arguments
 	cotter_commands_file.write('#!/bin/bash\n\n' + \
 		'#$ -S /bin/bash\n\n' + \
@@ -594,9 +594,15 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'gpubox_path=(0 ' +  " ".join(gpubox_path) + ')\n' +  \
 		'metafits_path=(0 ' + " ".join(metafits_path) + ')\n' + \
 		'flagfiles_path=(0 ' + " ".join(flagfiles_path) + ')\n' + \
-		'ls ${save_paths[$SGE_TASK_ID]} > /dev/null\n' + \
-		cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + ' -absmem 20 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
-	#Close the file
+		'flagfiles_zip=(0 ' + " ".join(flagfiles_zip) + ')\n' + \
+		'ls ${save_paths[$SGE_TASK_ID]} > /dev/null\n' )
+
+	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
+		cotter_commands_file.write('unzip ${flagfiles_zip[$SGE_TASK_ID]}\n')
+
+	cotter_commands_file.write(cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + \
+		' -absmem 20 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
+	
 	cotter_commands_file.close() 
 
 	#Make the file executable 
