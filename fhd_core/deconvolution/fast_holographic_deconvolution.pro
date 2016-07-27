@@ -163,7 +163,8 @@ gain_normalization = get_image_renormalization(obs,psf=psf,params=params,weights
 FOR pol_i=0,n_pol-1 DO BEGIN 
 ;    filter_single=filter_arr[pol_i]
     *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs_fit,psf=psf,params=params,$
-        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],pad_uv=over_resolution,/antialias,norm=gain_normalization);*(*beam_correction_fit[pol_i])
+        weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],pad_uv=over_resolution,/antialias,$
+        norm=gain_normalization,beam_ptr=beam_base_fit[pol_i]);*(*beam_correction_fit[pol_i])
 ;    filter_arr[pol_i]=filter_single
 ENDFOR
 
@@ -298,7 +299,8 @@ t_init=Systime(1)-t00
 FOR iter=0L,max_iter-1 DO BEGIN 
     IF Keyword_Set(recalc_flag) THEN BEGIN
         t1_0=Systime(1)
-        FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],pad_uv=over_resolution,/antialias,norm=gain_normalization)
+        FOR pol_i=0,n_pol-1 DO *model_holo_arr[pol_i]=dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],$
+            pad_uv=over_resolution,/antialias,norm=gain_normalization,beam_ptr=beam_base_fit[pol_i])
         undefine_fhd,model_stokes_arr
         model_stokes_arr=stokes_cnv(model_holo_arr,jones_fit,beam_arr=beam_base_fit,/square,_Extra=extra)
         model_image_composite=*model_stokes_arr[0]
@@ -472,7 +474,8 @@ t1_0=Systime(1)
 t4+=t1_0-t4_0    
 undefine_fhd,beam_correction_fit,beam_base_fit
 FOR pol_i=0,n_pol-1 DO *residual_array[pol_i]=$
-    dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],/antialias,norm=gain_normalization)*(*beam_correction[pol_i])
+    dirty_image_generate(*image_uv_arr[pol_i]-*model_uv_holo[pol_i],degpix=degpix,filter=filter_arr[pol_i],$
+        /antialias,norm=gain_normalization,beam_ptr=beam_base[pol_i])*(*beam_correction[pol_i])
 t1+=Systime(1)-t1_0
 
 t00=Systime(1)-t00
