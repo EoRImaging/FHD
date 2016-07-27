@@ -1,4 +1,4 @@
-FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,flag_ptr=flag_ptr,model_uv_arr=model_uv_arr,$
+FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_ptr=vis_weight_ptr,model_uv_arr=model_uv_arr,$
     transfer_calibration=transfer_calibration,timing=timing,file_path_fhd=file_path_fhd,$
     n_cal_iter=n_cal_iter,error=error,preserve_visibilities=preserve_visibilities,$
     debug=debug,gain_arr_ptr=gain_arr_ptr,calibration_flag_iterate=calibration_flag_iterate,$
@@ -88,7 +88,7 @@ IF Keyword_Set(transfer_calibration) THEN BEGIN
 ENDIF
 
 fill_model_vis=1
-vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,flag_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
+vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
     timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)    
 t1=Systime(1)-t0_0
 
@@ -144,10 +144,10 @@ n_baselines=obs.nbaselines
 tile_A_i=tile_A_i[0:n_baselines-1]
 tile_B_i=tile_B_i[0:n_baselines-1]
 
-IF N_Elements(flag_ptr) EQ 0 THEN BEGIN
+IF N_Elements(vis_weight_ptr) EQ 0 THEN BEGIN
     flag_init=Replicate(1.,n_freq,n_baselines*Float(n_time))
-    flag_ptr=Ptrarr(n_pol,/allocate)
-    FOR pol_i=0,n_pol-1 DO *flag_ptr[pol_i]=flag_init
+    vis_weight_ptr=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0,n_pol-1 DO *vis_weight_ptr[pol_i]=flag_init
 ENDIF
 
 ;calibration loop
@@ -162,7 +162,7 @@ cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[po
 FOR iter=0,calibration_flag_iterate DO BEGIN
     t2_a=Systime(1)
     IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
-    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,flag_ptr,obs,params,cal,$
+    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,vis_weight_ptr,obs,params,cal,$
         preserve_visibilities=preserve_flag,_Extra=extra)
     t3_a=Systime(1)
     t2+=t3_a-t2_a

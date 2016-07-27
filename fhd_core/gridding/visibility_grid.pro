@@ -1,4 +1,4 @@
-FUNCTION visibility_grid,visibility_ptr,flag_ptr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,weights=weights,variance=variance,$
+FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,weights=weights,variance=variance,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,uniform_filter=uniform_filter,$
     GPU_enable=GPU_enable,complex_flag=complex_flag,fi_use=fi_use,bi_use=bi_use,$
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
@@ -31,11 +31,11 @@ IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
 freq_bin_i=freq_bin_i[fi_use]
 n_vis_arr=obs.nf_vis
 
-flag_switch=Ptr_valid(flag_ptr)
+flag_switch=Ptr_valid(vis_weight_ptr)
 IF flag_switch THEN BEGIN
-    IF Keyword_Set(preserve_visibilities) THEN vis_weights=*flag_ptr ELSE BEGIN
-        vis_weights=Temporary(*flag_ptr)
-        Ptr_free,flag_ptr
+    IF Keyword_Set(preserve_visibilities) THEN vis_weights=*vis_weight_ptr ELSE BEGIN
+        vis_weights=Temporary(*vis_weight_ptr)
+        Ptr_free,vis_weight_ptr
     ENDELSE
 ENDIF
 

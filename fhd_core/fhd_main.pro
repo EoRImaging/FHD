@@ -99,7 +99,7 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,$
-            flag_ptr=vis_weights,file_path_fhd=file_path_fhd,$
+            vis_weight_ptr=vis_weights,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,$

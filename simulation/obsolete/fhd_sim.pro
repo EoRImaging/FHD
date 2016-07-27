@@ -162,24 +162,24 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
 ;    for fi=0, n_freq-1 do begin
 ;      if max([(*vis_weights[0])[fi,*], (*vis_weights[1])[fi,*]]) lt 1 then continue
 ;      
-;      this_flag_ptr = Ptrarr(n_pol,/allocate)
+;      this_vis_weight_ptr = Ptrarr(n_pol,/allocate)
 ;      this_model_uv = Ptrarr(n_pol,/allocate)
 ;      for pol_i=0,n_pol-1 do begin
-;        *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
-;        (*this_flag_ptr[pol_i])[fi,*] = (*vis_weights[pol_i])[fi,*]
+;        *this_vis_weight_ptr[pol_i]=intarr(n_freq, vis_dimension)
+;        (*this_vis_weight_ptr[pol_i])[fi,*] = (*vis_weights[pol_i])[fi,*]
 ;        
 ;        *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
 ;      endfor
 ;      
 ;      if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
 ;      
-;      this_model_ptr=vis_source_model(0,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+;      this_model_ptr=vis_source_model(0,obs,status_str,psf,params,this_vis_weight_ptr,model_uv_arr=this_model_uv,$
 ;        timing=model_timing,silent=silent,error=error,_Extra=extra)
 ;      print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
 ;      
 ;      for pol_i=0,n_pol-1 do (*vis_model_ptr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
 ;      
-;      undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
+;      undefine_fhd, this_vis_weight_ptr, this_model_ptr, this_model_uv
 ;    endfor
 ;    undefine_fhd, model_uvf_arr
 ;    time1=systime(0)
