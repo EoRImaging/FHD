@@ -82,7 +82,6 @@ FOR ti=0L,n_time_cut-1 DO BEGIN
     IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,ti_cut]=0
 ENDFOR
 
-n_flag_dim=size(*vis_weight_ptr[0],/n_dimension)
 flag_i=where(*vis_weight_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
 flag_i_new=where(xmin LT 0,n_flag_new)
 IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[flag_i_new]=0

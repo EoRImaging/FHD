@@ -45,7 +45,7 @@ psf_base=psf.base
 psf_dim=(Size(*psf_base[0],/dimension))[0]
 psf_resolution=(Size(psf_base,/dimension))[2]
 
-flag_switch=Keyword_Set(vis_weights)
+vis_weight_switch=Keyword_Set(vis_weights)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 baseline_i=params.baseline_arr

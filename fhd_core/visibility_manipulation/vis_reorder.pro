@@ -1,7 +1,7 @@
 PRO vis_reorder,hdr,params,vis_arr,vis_weights
 ; reorder visibilities to have ascending basline index, and add any baselines missing from some time steps
 
-IF Min(Ptr_valid(vis_weights)) THEN flag_switch=1 ELSE flag_switch=0
+IF Min(Ptr_valid(vis_weights)) THEN vis_weight_switch=1 ELSE vis_weight_switch=0
 
 n_pol=N_Elements(vis_arr)
 
@@ -57,7 +57,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     vis_use=Complexarr(n_freq,n_baselines_int)
     vis_use[*,bi_order]=Temporary(*vis_arr[pol_i])
     vis_arr[pol_i]=Ptr_new(Temporary(vis_use))
-    IF flag_switch THEN BEGIN
+    IF vis_weight_switch THEN BEGIN
         vis_weight_use=fltarr(n_freq,n_baselines_int)
         vis_weight_use[*,bi_order]=Temporary(*vis_weights[pol_i])
         vis_weights[pol_i]=Ptr_new(Temporary(vis_weight_use))

@@ -30,7 +30,7 @@ freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
 psf_dim=psf.dim
 psf_resolution=Long(psf.resolution)
 
-flag_switch=Ptr_valid(vis_weight_ptr)
+vis_weight_switch=Ptr_valid(vis_weight_ptr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 ;baseline_i=params.baseline_arr
@@ -85,7 +85,7 @@ IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 ;    ymin[flag_dist_i]=-1
 ;ENDIF
 
-IF flag_switch THEN BEGIN
+IF vis_weight_switch THEN BEGIN
     flag_i=where(*vis_weight_ptr LE 0,n_flag)
     IF Keyword_Set(fill_model_visibilities) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN
