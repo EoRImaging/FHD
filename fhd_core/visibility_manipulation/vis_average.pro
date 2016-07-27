@@ -34,19 +34,19 @@ IF Keyword_Set(vis_freq_average) THEN BEGIN
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         vis_old=Temporary(*vis_arr[pol_i])
-        flag_old=Temporary(*vis_weights[pol_i])>0
+        vis_weight_old=Temporary(*vis_weights[pol_i])>0
         *vis_arr[pol_i]=Complexarr(n_freq,n_baseline_time)
         FOR fi=0L,n_freq-1 DO BEGIN
             (*vis_arr[pol_i])[fi,*]=Total(vis_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*]$
-                *flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)$
-                *weight_invert(Total(flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1))
+                *vis_weight_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)$
+                *weight_invert(Total(vis_weight_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1))
         ENDFOR
         vis_old=0 ;free memory
         *vis_weights[pol_i]=Fltarr(n_freq,n_baseline_time)
         FOR fi=0L,n_freq-1 DO BEGIN
-            (*vis_weights[pol_i])[fi,*]=Total(flag_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)
+            (*vis_weights[pol_i])[fi,*]=Total(vis_weight_old[fi*vis_freq_average:(fi+1)*vis_freq_average-1,*],1)
         ENDFOR
-        flag_old=0
+        vis_weight_old=0
     ENDFOR
 ENDIF
 ;params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time}
