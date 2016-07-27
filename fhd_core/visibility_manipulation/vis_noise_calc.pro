@@ -10,9 +10,9 @@ IF N_Elements(bi_use) NE 2 THEN vis_weights_use=split_vis_weights(obs,vis_weight
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     data_diff =Imaginary( (*vis_arr[pol_i])[*,*bi_use[0]])-Imaginary((*vis_arr[pol_i])[*,*bi_use[1]]) ; only use imaginary part
-    flag_diff = ((*vis_weights[pol_i])[*,*bi_use[0]]>0)*((*vis_weights[pol_i])[*,*bi_use[1]]>0)
+    vis_weight_diff = ((*vis_weights[pol_i])[*,*bi_use[0]]>0)*((*vis_weights[pol_i])[*,*bi_use[1]]>0)
     FOR fi=0L,n_freq-1 DO BEGIN
-        ind_use=where(flag_diff[fi,*],n_use)
+        ind_use=where(vis_weight_diff[fi,*],n_use)
         IF n_use GT 1 THEN noise_arr[pol_i,fi]=Stddev(data_diff[fi,ind_use])/Sqrt(2.)
     ENDFOR
 ENDFOR
