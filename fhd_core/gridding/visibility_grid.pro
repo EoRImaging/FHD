@@ -178,7 +178,7 @@ IF max(xmin)<max(ymin) LT 0 THEN BEGIN
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
-bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
+bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from weights
 bin_i=where(bin_n,n_bin_use)
 
 ind_ref=indgen(max(bin_n))

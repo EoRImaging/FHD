@@ -129,7 +129,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
   n_tile=cal.n_tile
   n_time=cal.n_time
   
-  vis_weight_ptr_use=vis_weight_ptr ;flags WILL be over-written! (Only for NAN gain solutions)
+  vis_weight_ptr_use=vis_weight_ptr ;weights WILL be over-written! (Only for NAN gain solutions)
   tile_A_i=cal.tile_A-1
   tile_B_i=cal.tile_B-1
   freq_arr=cal.freq

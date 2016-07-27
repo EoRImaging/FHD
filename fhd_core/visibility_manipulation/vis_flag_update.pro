@@ -96,7 +96,7 @@ IF max(xmin)<max(ymin) LT 0 THEN BEGIN
     RETURN
 ENDIF
 ;match all visibilities that map from and to exactly the same pixels
-bin_n=histogram(Temporary(xmin)+Temporary(ymin)*dimension,binsize=1,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
+bin_n=histogram(Temporary(xmin)+Temporary(ymin)*dimension,binsize=1,min=0) ;should miss any (xmin,ymin)=(-1,-1) from weights
 bin_i=where(bin_n,n_bin_use);+bin_min
 obs.n_vis=Total(bin_n)
 

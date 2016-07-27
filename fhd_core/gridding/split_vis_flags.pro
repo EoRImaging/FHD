@@ -1,9 +1,9 @@
-FUNCTION split_vis_flags,obs,vis_weights,bi_use=bi_use,preserve_flags=preserve_flags,even_only=even_only,odd_only=odd_only,$
+FUNCTION split_vis_weights,obs,vis_weights,bi_use=bi_use,preserve_weights=preserve_weights,even_only=even_only,odd_only=odd_only,$
     debug_evenoddsplit_integration=debug_evenoddsplit_integration,_Extra=extra
 ;function to create split even and odd time samples with identical flagging
 
 n_pol=N_Elements(vis_weights)
-IF Keyword_Set(preserve_flags) THEN flag_arr_use=pointer_copy(vis_weights) ELSE flag_arr_use=vis_weights
+IF Keyword_Set(preserve_weights) THEN flag_arr_use=pointer_copy(vis_weights) ELSE flag_arr_use=vis_weights
 bin_start=(*obs.baseline_info).bin_offset
 nt=obs.n_time
 IF nt LT 2 THEN RETURN,flag_arr_use

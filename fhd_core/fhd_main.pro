@@ -9,7 +9,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     weights_grid=weights_grid, save_visibilities=save_visibilities, return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
-    transfer_flags=transfer_flags, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, _Extra=extra
+    transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, _Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -28,7 +28,7 @@ IF Keyword_Set(!Journal) THEN journal
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
-    transfer_flags=transfer_flags,file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
+    transfer_weights=transfer_weights,file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
     snapshot_healpix_export=snapshot_healpix_export,log_store=log_store,_Extra=extra)
@@ -63,13 +63,13 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
     
-    IF Keyword_Set(transfer_flags) THEN BEGIN
+    IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;
         transfer_flag_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
-            transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,$
+            transfer_filename=transfer_weights,error=error,flag_visibilities=flag_visibilities,$
             flag_calibration=flag_calibration,_Extra=extra
         IF Keyword_Set(error) THEN BEGIN
-            print,"Error occured while attempting to transfer flags. Returning."
+            print,"Error occured while attempting to transfer weights. Returning."
             RETURN
         ENDIF
     ENDIF
@@ -117,7 +117,7 @@ IF data_flag LE 0 THEN BEGIN
         print,'Flagging anomalous data'
         vis_flag,vis_arr,vis_weights,obs,psf,params,_Extra=extra
         fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-    ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
+    ENDIF ELSE $ ;saved weights are needed for some later routines, so save them even if no additional flagging is done
         fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF Keyword_Set(model_visibilities) THEN BEGIN

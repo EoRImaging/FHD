@@ -82,7 +82,7 @@ IF Keyword_Set(vis_weights) THEN BEGIN
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
-bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
+bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from weights
 bin_i=where(bin_n,n_bin_use);+bin_min
 
 time_check_interval=Ceil(n_bin_use/10.)

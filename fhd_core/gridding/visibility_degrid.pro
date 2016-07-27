@@ -96,7 +96,7 @@ IF flag_switch THEN BEGIN
 ENDIF
 
 ;match all visibilities that map from and to exactly the same pixels
-bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0)) ;should miss any (xmin,ymin)=(-1,-1) from flags
+bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0)) ;should miss any (xmin,ymin)=(-1,-1) from weights
 bin_i=Long(where(bin_n,n_bin_use));+bin_min
 
 ind_ref=Lindgen(max(bin_n))
