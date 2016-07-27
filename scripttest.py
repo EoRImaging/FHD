@@ -79,8 +79,8 @@ def main():
 	#find each obs' preferred node, put in object node_preferred (False if there is no preferred node)  
 
 	#Check to see if GPU box files already exist:
-	save_paths = []
-	for obsid in obsids:
+	node_preferred = []
+	for i, obsid in enumerate(obsids):
 		gpu_loc_node = find_gpubox(obsid, save_directories[i], all_nodes)
 		if not gpu_loc_node:
 			node_preferred.append(False)
