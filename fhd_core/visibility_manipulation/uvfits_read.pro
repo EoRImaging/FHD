@@ -13,6 +13,7 @@ IF Keyword_Set(restore_vis_savefile) THEN BEGIN
     ENDIF
     t_readfits=Systime(1)
     RESTORE,file_path_vis_sav
+    IF Keyword_Set(flag_arr) THEN vis_weights=flag_arr
     t_readfits=Systime(1)-t_readfits
     print,"Time restoring visibility save file: "+Strn(t_readfits)
 ENDIF ELSE BEGIN
