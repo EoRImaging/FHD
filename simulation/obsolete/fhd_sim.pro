@@ -50,7 +50,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     error=1
     return
   ENDIF
-  uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
+  uvfits_read,hdr,params,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
   
   obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
   n_pol=obs.n_pol
@@ -62,13 +62,13 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=0,_Extra=extra)
   IF Keyword_Set(t_beam) THEN print,'Beam modeling time: ',t_beam
   
-  flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
+  vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
     freq_end=freq_end,tile_flag_list=tile_flag_list,_Extra=extra)
-  vis_flag_update,flag_arr,obs,psf,params
+  vis_flag_update,vis_weights,obs,psf,params
   ;print informational messages
   obs_status,obs
   
-  vis_model_ptr=vis_simulate(obs,status_str,psf,params,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+  vis_model_ptr=vis_simulate(obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_weights=vis_weights,$
     recalculate_all=recalculate_all,$
     eor_sim=eor_sim, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc, $
     include_catalog_sources = include_catalog_sources, source_list=source_list, catalog_file_path=catalog_file_path, $
@@ -160,13 +160,13 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
 ;    
 ;    time0=systime(1)
 ;    for fi=0, n_freq-1 do begin
-;      if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
+;      if max([(*vis_weights[0])[fi,*], (*vis_weights[1])[fi,*]]) lt 1 then continue
 ;      
 ;      this_flag_ptr = Ptrarr(n_pol,/allocate)
 ;      this_model_uv = Ptrarr(n_pol,/allocate)
 ;      for pol_i=0,n_pol-1 do begin
 ;        *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
-;        (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
+;        (*this_flag_ptr[pol_i])[fi,*] = (*vis_weights[pol_i])[fi,*]
 ;        
 ;        *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
 ;      endfor
@@ -185,10 +185,10 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
 ;    time1=systime(0)
 ;    print, 'model visibility timing(s):'+ number_formatter(time1-time0)
 ;    
-;    fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+;    fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 ;  endif
   
-  vis_noise_calc,obs,vis_arr,flag_arr
+  vis_noise_calc,obs,vis_arr,vis_weights
   tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
   freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
   print,String(format='(A," frequency channels used and ",A," channels flagged")',$
@@ -216,8 +216,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   
   IF Keyword_Set(save_visibilities) THEN BEGIN
     t_save0=Systime(1)
-    vis_export,obs,status_str,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
-    vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
+    vis_export,obs,status_str,vis_model_ptr,vis_weights,file_path_fhd=file_path_fhd,/compress,/model
+    vis_export,obs,status_str,vis_arr,vis_weights,file_path_fhd=file_path_fhd,/compress
     t_save=Systime(1)-t_save0
     IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
   ENDIF
@@ -237,7 +237,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     mapfn_recalculate=0
     preserve_visibilities=1
     FOR pol_i=0,n_pol-1 DO BEGIN
-      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
+      dirty_UV=visibility_grid(vis_arr[pol_i],vis_weights[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
         timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
         mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
         model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
@@ -266,7 +266,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
   IF Keyword_Set(snapshot_healpix_export) THEN begin
     IF ~Keyword_Set(n_avg) THEN n_avg=1
     healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,/restrict_hpx_inds,/snapshot_recalculate, $
-      vis_model_arr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
+      vis_model_arr=vis_model_ptr,file_path_fhd=file_path_fhd,vis_weights=vis_weights,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
       
@@ -286,7 +286,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
   endif
   undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,status_str
-  undefine_fhd,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out,flag_arr
+  undefine_fhd,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out,vis_weights
   
   timing=Systime(1)-t0
   print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))

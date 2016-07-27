@@ -1,7 +1,7 @@
 PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,vis_model_arr=vis_model_arr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
-    rephase_weights=rephase_weights,n_avg=n_avg,flag_arr=flag_arr,split_ps_export=split_ps_export,$
+    rephase_weights=rephase_weights,n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
     obs_out=obs_out,psf_out=psf_out,_Extra=extra
     
@@ -70,8 +70,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,antenna=antenna_out,cal=cal,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
   undefine_fhd,antenna_out
   
-  IF Min(Ptr_valid(flag_arr)) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
-    ELSE flag_arr_use=Pointer_copy(flag_arr)
+  IF Min(Ptr_valid(vis_weights)) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='vis_weights',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
+    ELSE flag_arr_use=Pointer_copy(vis_weights)
   
   vis_flag_update,flag_arr_use,obs_out,psf_out,params,_Extra=extra
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)

@@ -1,4 +1,4 @@
-FUNCTION vis_model_time_split,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
+FUNCTION vis_model_time_split,obs,status_str,psf,params,vis_weights,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,time_avg=time_avg,timing=timing,fft=fft,source_list=source_list,$
     file_path_fhd=file_path_fhd,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
@@ -41,7 +41,7 @@ FUNCTION vis_model_time_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
     ENDIF
   ENDIF ELSE model_flag=1
   
-  IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(flag_arr) ELSE flag_arr_use=flag_arr
+  IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(vis_weights) ELSE flag_arr_use=vis_weights
 ;  IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
   fi_use=where((*obs.baseline_info).freq_use)
   

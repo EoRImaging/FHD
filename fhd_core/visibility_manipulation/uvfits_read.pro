@@ -1,4 +1,4 @@
-PRO uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,$
+PRO uvfits_read,hdr,params,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,$
     restore_vis_savefile=restore_vis_savefile,reorder_visibilities=reorder_visibilities,$
     vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,error=error,$
     uvfits_spectral_dimension=uvfits_spectral_dimension,_Extra=extra
@@ -73,23 +73,23 @@ ENDIF ELSE BEGIN
     
     IF n_pol GT 0 THEN BEGIN
         vis_arr=Ptrarr(n_pol,/allocate)
-        flag_arr=Ptrarr(n_pol,/allocate)
+        vis_weights=Ptrarr(n_pol,/allocate)
     ENDIF
     FOR pol_i=0,n_pol-1 DO BEGIN
         *vis_arr[pol_i]=Complex(reform(data_array[real_index,pol_i,*,*],n_freq0,nbaselines0),Reform(data_array[imaginary_index,pol_i,*,*],n_freq0,nbaselines0))
-        *flag_arr[pol_i]=reform(data_array[flag_index,pol_i,*,*],n_freq0,nbaselines0)
+        *vis_weights[pol_i]=reform(data_array[flag_index,pol_i,*,*],n_freq0,nbaselines0)
     ENDFOR
     ;free memory
     data_array=0 
     flag_arr0=0
     
-    IF Keyword_Set(reorder_visibilities) THEN vis_reorder,hdr,params,vis_arr,flag_arr
+    IF Keyword_Set(reorder_visibilities) THEN vis_reorder,hdr,params,vis_arr,vis_weights
     
     ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
     IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
         IF Keyword_Set(vis_time_average) THEN print,"Averaging visibilities in time by a factor of: "+Strtrim(Strn(vis_time_average),2)
         IF Keyword_Set(vis_freq_average) THEN print,"Averaging visibilities in frequency by a factor of: "+Strtrim(Strn(vis_freq_average),2)
-        vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
+        vis_average,vis_arr,vis_weights,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
         IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
     ENDIF
     

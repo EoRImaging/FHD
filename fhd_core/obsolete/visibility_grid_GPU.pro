@@ -5,7 +5,7 @@
 ; :Params:
 ;    visibility_array - single polarization visibility data
 ;    
-;    flag_arr - 
+;    vis_weights - 
 ;    
 ;    obs - structure containing details of the observation
 ;    
@@ -22,7 +22,7 @@
 ;
 ; :Author: Ian Sullivan
 ;-
-FUNCTION visibility_grid_GPU,visibility_array,flag_arr,obs,psf,params,weights=weights,$
+FUNCTION visibility_grid_GPU,visibility_array,vis_weights,obs,psf,params,weights=weights,$
     timing=timing,polarization=polarization,mapfn_recalculate=mapfn_recalculate,silent=silent,GPU_enable=GPU_enable    
 t0=Systime(1)
 heap_gc
@@ -45,7 +45,7 @@ psf_base=psf.base
 psf_dim=(Size(*psf_base[0],/dimension))[0]
 psf_resolution=(Size(psf_base,/dimension))[2]
 
-flag_switch=Keyword_Set(flag_arr)
+flag_switch=Keyword_Set(vis_weights)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
 baseline_i=params.baseline_arr
@@ -73,8 +73,8 @@ y_offset=Round((Ceil(ycen)-ycen)*psf_resolution) mod psf_resolution
 xmin=Floor(Round(xcen+x_offset/psf_resolution+dimension/2.)-psf_dim/2.) 
 ymin=Floor(Round(ycen+y_offset/psf_resolution+elements/2.)-psf_dim/2.) 
 
-IF Keyword_Set(flag_arr) THEN BEGIN
-    flag_i=where(flag_arr LE 0,n_flag)
+IF Keyword_Set(vis_weights) THEN BEGIN
+    flag_i=where(vis_weights LE 0,n_flag)
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1

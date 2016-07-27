@@ -1,4 +1,4 @@
-PRO sparse_uv_flag,obs,psf,params,flag_arr,flag_sparse_uv_coverage=flag_sparse_uv_coverage
+PRO sparse_uv_flag,obs,psf,params,vis_weights,flag_sparse_uv_coverage=flag_sparse_uv_coverage
 t_sparse=Systime(1)
 n_pol=obs.n_pol
 n_freq=obs.n_freq
@@ -13,8 +13,8 @@ x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution
 y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
 xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
 ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
-flag_base=Fix(0>*flag_arr[0]<1)
-IF n_pol GE 2 THEN flag_base*=Fix(0>*flag_arr[1]<1)
+flag_base=Fix(0>*vis_weights[0]<1)
+IF n_pol GE 2 THEN flag_base*=Fix(0>*vis_weights[1]<1)
 flag_i=where(flag_base LE 0,n_flag)
 IF n_flag GT 0 THEN xmin[flag_i]=-1
 IF n_flag GT 0 THEN ymin[flag_i]=-1
@@ -42,7 +42,7 @@ FOR c_i=0L,n_cut-1 DO BEGIN
         flag_base[bi_cut]=0
     ENDIF
 ENDFOR
-IF n_cut_total THEN FOR pol_i=0,n_pol-1 DO *flag_arr[pol_i]=flag_base
+IF n_cut_total THEN FOR pol_i=0,n_pol-1 DO *vis_weights[pol_i]=flag_base
 t_sparse=Systime(1)-t_sparse
 print,'Flagging: '+Strn(n_cut_total)+' visibilities flagged because of sparse uv coverage (threshold='$
     +Strn(flag_sparse_uv_coverage)+' baselines)'

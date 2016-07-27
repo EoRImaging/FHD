@@ -5,7 +5,7 @@
 ; :Params:
 ;    data_array - [# of polarizations, # of frequencies, (# of baselines) * (# of time integrations)] complex array of visibilty data  
 ;    
-;    flag_arr - Same dimensions as data_array. Values LE 0 are considered flagged as bad data!
+;    vis_weights - Same dimensions as data_array. Values LE 0 are considered flagged as bad data!
 ;    
 ;    obs - structure containing details of the observation
 ;    

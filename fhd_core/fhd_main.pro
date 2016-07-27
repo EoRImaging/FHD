@@ -37,14 +37,14 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
     
-    uvfits_read,hdr,params,vis_arr,flag_arr,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,error=error,_Extra=extra
+    uvfits_read,hdr,params,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,error=error,_Extra=extra
     IF Keyword_Set(error) THEN BEGIN
         print,"Error occured while reading uvfits data. Returning."
         RETURN
     ENDIF
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
         IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
-        SAVE,vis_arr,flag_arr,hdr,params,filename=file_path_vis_sav
+        SAVE,vis_arr,vis_weights,hdr,params,filename=file_path_vis_sav
         timing=Systime(1)-t0
         IF ~Keyword_Set(silent) THEN print,'Processing time (minutes): ',Strn(Round(timing/60.))
         RETURN
@@ -65,7 +65,7 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(transfer_flags) THEN BEGIN
         flag_visibilities=0 ;
-        transfer_flag_data,flag_arr,obs,status_str,params,file_path_fhd=file_path_fhd,$
+        transfer_flag_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
             transfer_filename=transfer_flags,error=error,flag_visibilities=flag_visibilities,$
             flag_calibration=flag_calibration,_Extra=extra
         IF Keyword_Set(error) THEN BEGIN
@@ -74,9 +74,9 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
     ENDIF
     
-    flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
+    vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
         freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
-    vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
+    vis_flag_update,vis_weights,obs,psf,params,_Extra=extra
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
@@ -99,7 +99,7 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,$
-            flag_ptr=flag_arr,file_path_fhd=file_path_fhd,$
+            flag_ptr=vis_weights,file_path_fhd=file_path_fhd,$
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,$
@@ -110,15 +110,15 @@ IF data_flag LE 0 THEN BEGIN
             RETURN
         ENDIF
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-        vis_flag_update,flag_arr,obs,psf,params,_Extra=extra
+        vis_flag_update,vis_weights,obs,psf,params,_Extra=extra
     ENDIF
     
     IF Keyword_Set(flag_visibilities) THEN BEGIN
         print,'Flagging anomalous data'
-        vis_flag,vis_arr,flag_arr,obs,psf,params,_Extra=extra
-        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+        vis_flag,vis_arr,vis_weights,obs,psf,params,_Extra=extra
+        fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     ENDIF ELSE $ ;saved flags are needed for some later routines, so save them even if no additional flagging is done
-        fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+        fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF Keyword_Set(model_visibilities) THEN BEGIN
         IF Keyword_Set(model_catalog_file_path) THEN BEGIN
@@ -128,7 +128,7 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
         skymodel_update=fhd_struct_init_skymodel(obs,source_list=model_source_list,catalog_path=model_catalog_file_path,$
             diffuse_model=diffuse_model,return_cal=return_cal_visibilities,_Extra=extra)
-        vis_model_arr=vis_source_model(skymodel_update,obs,status_str,psf,params,flag_arr,0,jones,model_uv_arr=model_uv_arr2,$
+        vis_model_arr=vis_source_model(skymodel_update,obs,status_str,psf,params,vis_weights,0,jones,model_uv_arr=model_uv_arr2,$
             timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
         IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr2[pol_i] $
             ELSE model_uv_arr=Pointer_copy(model_uv_arr2) 
@@ -152,7 +152,7 @@ IF data_flag LE 0 THEN BEGIN
         source_array_export,source_array,obs,file_path=path_use
     ENDIF
     
-    vis_noise_calc,obs,vis_arr,flag_arr
+    vis_noise_calc,obs,vis_arr,vis_weights
     IF ~Keyword_Set(silent) THEN flag_status,obs
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
@@ -170,22 +170,22 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(return_decon_visibilities) THEN save_visibilities=1
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
-        vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
-        IF Keyword_Set(model_flag) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+        vis_export,obs,status_str,vis_arr,vis_weights,file_path_fhd=file_path_fhd,/compress
+        IF Keyword_Set(model_flag) THEN vis_export,obs,status_str,vis_model_arr,vis_weights,file_path_fhd=file_path_fhd,/compress,/model
         t_save=Systime(1)-t_save0
         IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
     ENDIF
     
     ;Grid the visibilities
     IF Keyword_Set(grid_recalculate) THEN BEGIN
-        image_uv_arr=visibility_grid_wrap(vis_arr,flag_arr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
+        image_uv_arr=visibility_grid_wrap(vis_arr,vis_weights,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
             deconvolve=deconvolve,model_flag=model_flag,snapshot_healpix_export=snapshot_healpix_export,mapfn_recalculate=mapfn_recalculate,$
             save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,$
             return_decon_visibilities=return_decon_visibilities,_Extra=extra)
     ENDIF ELSE BEGIN
         print,'Visibilities not re-gridded'
     ENDELSE
-    IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,flag_arr,vis_model_arr
+    IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,vis_weights,vis_model_arr
     IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
 ENDIF
 
@@ -197,8 +197,8 @@ IF Keyword_Set(deconvolve) THEN BEGIN
     fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,silent=silent,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
         vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,$
-        log_store=log_store,flag_arr=flag_arr,_Extra=extra
-    IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,status_str,vis_model_arr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
+        log_store=log_store,vis_weights=vis_weights,_Extra=extra
+    IF Keyword_Set(return_decon_visibilities) AND Keyword_Set(save_visibilities) THEN vis_export,obs,status_str,vis_model_arr,vis_weights,file_path_fhd=file_path_fhd,/compress,/model
 ENDIF ELSE BEGIN
     print,'Gridded visibilities not deconvolved'
 ENDELSE
@@ -217,7 +217,7 @@ ENDIF
 
 ;optionally export frequency-splt Healpix cubes
 IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,$
-    vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,cmd_args=cmd_args,_Extra=extra
+    vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,vis_weights=vis_weights,cmd_args=cmd_args,_Extra=extra
 
 ;Optionally fill the fhd table on the mwa_qc database located on eor-00 under the mwa username. See the python script 
 ;for more information about possible queries.
@@ -232,7 +232,7 @@ IF Keyword_Set(production) THEN BEGIN
       ' -p ' + file_path_fhd + ' -m ' + complete
 ENDIF
 
-undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,flag_arr,vis_model_arr
+undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,vis_weights,vis_model_arr
 undefine_fhd,obs,cal,jones,psf,antenna,fhd_params,skymodel,skymodel_cal,skymodel_update
 
 timing=Systime(1)-t0

@@ -65,27 +65,27 @@ FOR obs_i=0,n_obs-1 DO BEGIN
 ;    params=params_arr[0]
     
     vis_arr=Ptrarr(n_pol,/allocate)
-    flag_arr=Ptrarr(n_pol,/allocate)
+    vis_weights=Ptrarr(n_pol,/allocate)
     
     freq_end=Total(hdr_arr.n_freq,/cumulative)-1
     freq_start=[0,freq_end[0:n_uvfits-2]+1]
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         *vis_arr[pol_i]=Complexarr(n_freq,n_bt)
-        *flag_arr[pol_i]=Fltarr(n_freq,n_bt)
+        *vis_weights[pol_i]=Fltarr(n_freq,n_bt)
         FOR fi=0,n_uvfits-1 DO BEGIN
             (*vis_arr[pol_i])[freq_start[fi]:freq_end[fi],*]=Temporary(*vis_arr2[fi,pol_i])
-            (*flag_arr[pol_i])[freq_start[fi]:freq_end[fi],*]=Temporary(*flag_arr2[fi,pol_i])
+            (*vis_weights[pol_i])[freq_start[fi]:freq_end[fi],*]=Temporary(*flag_arr2[fi,pol_i])
         ENDFOR
     ENDFOR
     IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN
         IF Keyword_Set(vis_time_average) THEN print,"Averaging visibilities in time by a factor of: "+Strtrim(Strn(vis_time_average),2)
         IF Keyword_Set(vis_freq_average) THEN print,"Averaging visibilities in frequency by a factor of: "+Strtrim(Strn(vis_freq_average),2)
-        vis_average,vis_arr,flag_arr,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
+        vis_average,vis_arr,vis_weights,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
         IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
     ENDIF
     file_path_vis_sav=filepath(obsname_list[obs_i]+".uvfits.sav",root=rts_output_directory)
-    SAVE,vis_arr,flag_arr,hdr,params,/compress,filename=file_path_vis_sav
+    SAVE,vis_arr,vis_weights,hdr,params,/compress,filename=file_path_vis_sav
     print,"RTS conversion timing: ",Strn(Systime(1)-t0)
         debug_point=1
 ENDFOR

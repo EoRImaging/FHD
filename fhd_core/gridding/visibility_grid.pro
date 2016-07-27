@@ -33,15 +33,15 @@ n_vis_arr=obs.nf_vis
 
 flag_switch=Ptr_valid(flag_ptr)
 IF flag_switch THEN BEGIN
-    IF Keyword_Set(preserve_visibilities) THEN flag_arr=*flag_ptr ELSE BEGIN
-        flag_arr=Temporary(*flag_ptr)
+    IF Keyword_Set(preserve_visibilities) THEN vis_weights=*flag_ptr ELSE BEGIN
+        vis_weights=Temporary(*flag_ptr)
         Ptr_free,flag_ptr
     ENDELSE
 ENDIF
 
 IF N_Elements(bi_use) EQ 0 THEN BEGIN
     IF flag_switch THEN BEGIN
-        flag_test=Total(flag_arr>0,1)
+        flag_test=Total(vis_weights>0,1)
         bi_use=where((flag_test GT 0))
     ENDIF ELSE BEGIN
         b_info=(*obs.baseline_info)
@@ -53,7 +53,7 @@ n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
 
 vis_inds_use=matrix_multiply(fi_use,replicate(1L,n_b_use))+matrix_multiply(replicate(1L,n_f_use),bi_use)*n_freq
-IF flag_switch THEN flag_arr=flag_arr[vis_inds_use]
+IF flag_switch THEN vis_weights=vis_weights[vis_inds_use]
 IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[vis_inds_use] ELSE BEGIN
     vis_arr_use=(Temporary(*visibility_ptr))[vis_inds_use] 
     Ptr_free,visibility_ptr
@@ -152,8 +152,8 @@ IF n_dist_flag GT 0 THEN BEGIN
 ENDIF
 
 IF flag_switch THEN BEGIN
-    flag_i=where(flag_arr LE 0,n_flag)
-    flag_arr=0
+    flag_i=where(vis_weights LE 0,n_flag)
+    vis_weights=0
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1

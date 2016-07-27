@@ -1,4 +1,4 @@
-FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
+FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr=model_uv_arr,vis_data_arr=vis_data_arr,vis_model_arr=vis_model_arr,$
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
     file_path_fhd=file_path_fhd,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
@@ -18,7 +18,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
 ;  IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd
 ;  IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd
 ;  IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd
-;  IF N_Elements(flag_arr) EQ 0 THEN fhd_save_io,status_str,flag_arr,var='flag_arr',/restore,file_path_fhd=file_path_fhd
+;  IF N_Elements(vis_weights) EQ 0 THEN fhd_save_io,status_str,vis_weights,var='vis_weights',/restore,file_path_fhd=file_path_fhd
   
   n_freq=obs.n_freq
   n_pol=obs.n_pol
@@ -43,7 +43,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,flag_arr,model_uv_arr=mo
     ENDIF
   ENDIF ELSE model_flag=1
   
-  IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(flag_arr) ELSE flag_arr_use=flag_arr
+  IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(vis_weights) ELSE flag_arr_use=vis_weights
   IF ~Keyword_Set(bi_use) THEN BEGIN
       IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
       bi_use=where(flag_test GT 0)

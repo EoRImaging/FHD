@@ -42,7 +42,7 @@ IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE BEGIN
 ENDELSE
 
 IF Min(status_str.grid_uv[0:n_pol1-1]) LE 0 THEN grid_recalculate=1
-data_flag=status_str.obs*status_str.params*status_str.flag_arr*status_str.psf*status_str.jones
+data_flag=status_str.obs*status_str.params*status_str.vis_weights*status_str.psf*status_str.jones
 ;IF Keyword_set(calibrate_visibilities) THEN data_flag=1
 IF Keyword_Set(save_visibilities) THEN data_flag*=Min(status_str.vis_ptr[0:n_pol1-1])
 

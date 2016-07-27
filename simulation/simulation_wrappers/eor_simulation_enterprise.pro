@@ -137,7 +137,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
       endif else eor_uvf_cube_file = uvf_savefile
     endif
     
-    array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
+    array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
       sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
       simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, $
       n_time = n_time, sim_baseline_time=sim_baseline_time, $
