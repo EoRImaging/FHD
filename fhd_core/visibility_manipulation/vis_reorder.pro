@@ -58,9 +58,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     vis_use[*,bi_order]=Temporary(*vis_arr[pol_i])
     vis_arr[pol_i]=Ptr_new(Temporary(vis_use))
     IF flag_switch THEN BEGIN
-        flag_use=fltarr(n_freq,n_baselines_int)
-        flag_use[*,bi_order]=Temporary(*vis_weights[pol_i])
-        vis_weights[pol_i]=Ptr_new(Temporary(flag_use))
+        vis_weight_use=fltarr(n_freq,n_baselines_int)
+        vis_weight_use[*,bi_order]=Temporary(*vis_weights[pol_i])
+        vis_weights[pol_i]=Ptr_new(Temporary(vis_weight_use))
     ENDIF
 ENDFOR
 

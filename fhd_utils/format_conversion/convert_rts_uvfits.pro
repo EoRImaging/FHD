@@ -28,7 +28,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     IF n_uvfits EQ 0 THEN CONTINUE
     
     vis_arr2=Ptrarr(n_uvfits,n_pol,/allocate)
-    flag_arr2=Ptrarr(n_uvfits,n_pol,/allocate)
+    vis_weights2=Ptrarr(n_uvfits,n_pol,/allocate)
     FOR fi=0,n_uvfits-1 DO BEGIN
         data_struct=mrdfits(uvfits_list[fi],0,data_header0,/silent)
         hdr=vis_header_extract(data_header0, params = data_struct.params)  
@@ -46,18 +46,18 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         flag_index=hdr.flag_index
         FOR pol_i=0,n_pol-1 DO BEGIN
             *vis_arr2[fi,pol_i]=Complex(reform(data_array[real_index,pol_i,*,*]),Reform(data_array[imaginary_index,pol_i,*,*]))
-            *flag_arr2[fi,pol_i]=reform(data_array[flag_index,pol_i,*,*])
+            *vis_weights2[fi,pol_i]=reform(data_array[flag_index,pol_i,*,*])
         ENDFOR
         ;free memory
         data_array=0 
-        flag_arr0=0
+        vis_weights0=0
     ENDFOR
     order_i=Sort(hdr_arr.freq_ref)
     
     hdr_arr=hdr_arr[order_i]
 ;    params_arr=params_arr[order_i]
     vis_arr2=vis_arr2[order_i,*]
-    flag_arr2=flag_arr2[order_i,*]
+    vis_weights2=vis_weights2[order_i,*]
     hdr=hdr_arr[0]
     n_freq=Total(hdr_arr.n_freq)
     hdr.n_freq=n_freq
@@ -75,7 +75,7 @@ FOR obs_i=0,n_obs-1 DO BEGIN
         *vis_weights[pol_i]=Fltarr(n_freq,n_bt)
         FOR fi=0,n_uvfits-1 DO BEGIN
             (*vis_arr[pol_i])[freq_start[fi]:freq_end[fi],*]=Temporary(*vis_arr2[fi,pol_i])
-            (*vis_weights[pol_i])[freq_start[fi]:freq_end[fi],*]=Temporary(*flag_arr2[fi,pol_i])
+            (*vis_weights[pol_i])[freq_start[fi]:freq_end[fi],*]=Temporary(*vis_weights2[fi,pol_i])
         ENDFOR
     ENDFOR
     IF Keyword_Set(vis_time_average) OR Keyword_Set(vis_freq_average) THEN BEGIN

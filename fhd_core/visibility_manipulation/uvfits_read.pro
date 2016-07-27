@@ -81,7 +81,7 @@ ENDIF ELSE BEGIN
     ENDFOR
     ;free memory
     data_array=0 
-    flag_arr0=0
+    vis_weights0=0
     
     IF Keyword_Set(reorder_visibilities) THEN vis_reorder,hdr,params,vis_arr,vis_weights
     

@@ -41,8 +41,8 @@ FUNCTION vis_model_time_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     ENDIF
   ENDIF ELSE model_flag=1
   
-  IF Keyword_Set(preserve_visibilities) THEN flag_arr_use=pointer_copy(vis_weights) ELSE flag_arr_use=vis_weights
-;  IF n_pol GT 1 THEN flag_test=Total(*flag_arr_use[1]>*flag_arr_use[0]>0,1) ELSE flag_test=Total(*flag_arr_use[0]>0,1)
+  IF Keyword_Set(preserve_visibilities) THEN vis_weights_use=pointer_copy(vis_weights) ELSE vis_weights_use=vis_weights
+;  IF n_pol GT 1 THEN flag_test=Total(*vis_weights_use[1]>*vis_weights_use[0]>0,1) ELSE flag_test=Total(*vis_weights_use[0]>0,1)
   fi_use=where((*obs.baseline_info).freq_use)
   
   IF N_Elements(time_avg) EQ 0 THEN time_avg=time_res ELSE time_avg=Float(time_avg)
@@ -57,7 +57,7 @@ FUNCTION vis_model_time_split,obs,status_str,psf,params,vis_weights,model_uv_arr
   IF Keyword_Set(residual_flag) THEN model_flag=0
   IF Min(Ptr_valid(vis_model_arr)) EQ 0 THEN BEGIN
     IF Keyword_Set(model_flag) THEN BEGIN
-      vis_model_arr=vis_source_model(source_list,obs,status_str,psf,params,flag_arr_use,model_uv_arr=model_uv_arr,$
+      vis_model_arr=vis_source_model(source_list,obs,status_str,psf,params,vis_weights_use,model_uv_arr=model_uv_arr,$
         file_path_fhd=file_path_fhd,timing=t_model,silent=silent,_Extra=extra)
       IF ~Keyword_Set(silent) THEN print,"Vis modeling and degridding: ", strn(t_model)
     ENDIF ELSE vis_model_arr=Ptrarr(n_pol)
@@ -103,7 +103,7 @@ FUNCTION vis_model_time_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       
       IF nt_use EQ 0 THEN n_vis=0 ELSE BEGIN      
         bi_use=lindgen(nt_use)+time_bin_i[ti]
-        dirty_UV=visibility_grid(vis_ptr,flag_arr_use[pol_i],obs_out,0,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
+        dirty_UV=visibility_grid(vis_ptr,vis_weights_use[pol_i],obs_out,0,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
             polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
             model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return)
       ENDELSE

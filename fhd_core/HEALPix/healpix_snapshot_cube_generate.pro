@@ -70,10 +70,10 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   fhd_log_settings,file_path_fhd+'_ps',obs=obs_out,psf=psf_out,antenna=antenna_out,cal=cal,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
   undefine_fhd,antenna_out
   
-  IF Min(Ptr_valid(vis_weights)) LT n_pol THEN fhd_save_io,status_str,flag_arr_use,var='vis_weights',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
-    ELSE flag_arr_use=Pointer_copy(vis_weights)
+  IF Min(Ptr_valid(vis_weights)) LT n_pol THEN fhd_save_io,status_str,vis_weights_use,var='vis_weights',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
+    ELSE vis_weights_use=Pointer_copy(vis_weights)
   
-  vis_flag_update,flag_arr_use,obs_out,psf_out,params,_Extra=extra
+  vis_flag_update,vis_weights_use,obs_out,psf_out,params,_Extra=extra
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
   IF N_Elements(*vis_arr[0]) EQ 0 THEN BEGIN
     IF ~Keyword_Set(silent) THEN print,"Restoring saved visibilities (this may take a while)"
@@ -91,15 +91,15 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   
   IF Keyword_Set(split_ps_export) THEN BEGIN
     n_iter=2
-    flag_arr_use=split_vis_weights(obs_out,flag_arr_use,bi_use=bi_use,_Extra=extra)
-    vis_noise_calc,obs_out,vis_arr,flag_arr_use,bi_use=bi_use
+    vis_weights_use=split_vis_weights(obs_out,vis_weights_use,bi_use=bi_use,_Extra=extra)
+    vis_noise_calc,obs_out,vis_arr,vis_weights_use,bi_use=bi_use
     uvf_name = ['even','odd']
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+['_even','_odd'] + '_gridded_imagecube.sav'
   ENDIF ELSE BEGIN
     n_iter=1
     bi_use=Ptrarr(n_iter)
    *bi_use[0]=0
-    vis_noise_calc,obs_out,vis_arr,flag_arr_use
+    vis_noise_calc,obs_out,vis_arr,vis_weights_use
     uvf_name = ''
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+'_gridded_imagecube.sav'
   ENDELSE
@@ -130,16 +130,16 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
 ;    IF Ptr_valid(bi_use[iter]) THEN BEGIN
 ;        flags_use=Ptrarr(n_pol,/allocate)
 ;        FOR pol_i=0,n_pol-1 DO BEGIN
-;          flag_arr1=fltarr(size(*flag_arr_use[pol_i],/dimension))
-;          flag_arr1[*,*bi_use[iter]]=(*flag_arr_use[pol_i])[*,*bi_use[iter]]
-;          *flags_use[pol_i]=Temporary(flag_arr1)
+;          vis_weights1=fltarr(size(*vis_weights_use[pol_i],/dimension))
+;          vis_weights1[*,*bi_use[iter]]=(*vis_weights_use[pol_i])[*,*bi_use[iter]]
+;          *flags_use[pol_i]=Temporary(vis_weights1)
 ;        ENDFOR
-;    ENDIF ELSE flags_use=Pointer_copy(flag_arr_use)
+;    ENDIF ELSE flags_use=Pointer_copy(vis_weights_use)
     obs=obs_out_ref ;will have some values over-written!
     obs_in=obs_in_ref
     psf=psf_out
     
-    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,flag_arr_use,obs_out=obs,psf_out=psf,/rephase_weights,$
+    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,vis_weights_use,obs_out=obs,psf_out=psf,/rephase_weights,$
       weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
       file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_arr,$
       save_uvf=save_uvf, uvf_name=uvf_name[iter],bi_use=*bi_use[iter], _Extra=extra)
@@ -226,7 +226,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     undefine_fhd,dirty_hpx_arr,model_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr,residual_hpx_arr
 ENDFOR
 obs_out=obs ;for return
-Ptr_free,flag_arr_use
+Ptr_free,vis_weights_use
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
 END

@@ -152,13 +152,13 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
       ; which can be reformed to nfreq x n_baselines x n_time
       tile_A_i=tile_A_i[0:n_baselines-1]
       tile_B_i=tile_B_i[0:n_baselines-1]
-      flag_use=0>Reform(*vis_weight_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
+      vis_weight_use=0>Reform(*vis_weight_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
       IF Keyword_Set(preserve_visibilities) THEN vis_model=Reform(*vis_model_ptr[pol_i],n_freq,n_baselines,n_time) $
         ELSE vis_model=Reform(Temporary(*vis_model_ptr[pol_i]),n_freq,n_baselines,n_time)
-      vis_model=Total(Temporary(vis_model)*flag_use,3)
+      vis_model=Total(Temporary(vis_model)*vis_weight_use,3)
       vis_measured=Reform(*vis_ptr[pol_i],n_freq,n_baselines,n_time)
-      vis_avg=Total(Temporary(vis_measured)*flag_use,3)
-      weight=Total(Temporary(flag_use),3)
+      vis_avg=Total(Temporary(vis_measured)*vis_weight_use,3)
+      weight=Total(Temporary(vis_weight_use),3)
       
       kx_arr=cal.uu[0:n_baselines-1]/kbinsize ;ignore slight variation with time
       ky_arr=cal.vv[0:n_baselines-1]/kbinsize
@@ -174,12 +174,12 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
         baseline_weights=(1.-(taper_min+taper_max)^2.)>0.
       ENDIF ELSE flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (Temporary(xcen) GT dimension/2.) OR (Temporary(ycen) GT elements/2.),n_dist_cut)
     ENDIF ELSE BEGIN
-      flag_use=0>*vis_weight_ptr_use[pol_i]<1
+      vis_weight_use=0>*vis_weight_ptr_use[pol_i]<1
       IF Keyword_Set(preserve_visibilities) THEN vis_model=*vis_model_ptr[pol_i] $
         ELSE vis_model=Temporary(*vis_model_ptr[pol_i])
-      vis_model=Temporary(vis_model)*flag_use
-      vis_avg=*vis_ptr[pol_i]*flag_use
-      weight=Temporary(flag_use)
+      vis_model=Temporary(vis_model)*vis_weight_use
+      vis_avg=*vis_ptr[pol_i]*vis_weight_use
+      weight=Temporary(vis_weight_use)
       
       kx_arr=cal.uu/kbinsize
       ky_arr=cal.vv/kbinsize

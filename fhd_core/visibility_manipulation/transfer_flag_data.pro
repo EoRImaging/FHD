@@ -13,21 +13,21 @@ IF file_basename(file_path_fhd) EQ transfer_filename THEN BEGIN
     fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     RETURN
 ENDIF ELSE BEGIN
-    fhd_save_io,0,flag_arr_xfer,var='vis_weights',/restore,file_path_fhd=file_path_fhd,$
+    fhd_save_io,0,vis_weights_xfer,var='vis_weights',/restore,file_path_fhd=file_path_fhd,$
         transfer=transfer_filename,_Extra=extra 
 ENDELSE
 
-n0=N_Elements(*flag_arr_xfer[0])
+n0=N_Elements(*vis_weights_xfer[0])
 n1=N_Elements(*vis_weights[0])
 IF n1 GT n0 THEN BEGIN
     ;If more data, zero out additional
-    nf0=(size(*flag_arr_xfer[0],/dimension))[0]
-    nb0=(size(*flag_arr_xfer[0],/dimension))[1]
+    nf0=(size(*vis_weights_xfer[0],/dimension))[0]
+    nb0=(size(*vis_weights_xfer[0],/dimension))[1]
     FOR pol_i=0,n_pol-1 DO BEGIN
         *vis_weights[pol_i]=fltarr(size(*vis_weights[pol_i],/dimension))
-        (*vis_weights[pol_i])[0:nf0-1,0:nb0-1]*=Temporary(*flag_arr_xfer[pol_i])
+        (*vis_weights[pol_i])[0:nf0-1,0:nb0-1]*=Temporary(*vis_weights_xfer[pol_i])
     ENDFOR
-    Ptr_free,flag_arr_xfer
+    Ptr_free,vis_weights_xfer
     fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     RETURN
 ENDIF
@@ -39,7 +39,7 @@ ENDIF
 
 ; if n0 eq n1
 Ptr_free,vis_weights
-vis_weights=flag_arr_xfer
+vis_weights=vis_weights_xfer
 
 flag_calibration=0 ;make sure no flagging is done later
 ;reset tile/frequency/time flags in obs structure, then update with current values with a call to vis_flag_basic after this
