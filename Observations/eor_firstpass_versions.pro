@@ -91,8 +91,8 @@ cable_bandpass_fit=1
 saved_run_bp=1
 
 ;Defaults added - July2016
-amp_degree=2
-phase_degree=1
+cal_amp_degree_fit=2
+cal_phase_degree_fit=1
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin

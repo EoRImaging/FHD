@@ -12,17 +12,21 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
 **allow_sidelobe_cal_sources**: allows FHD to calibrate on sources in the sidelobes. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of a calibration source catalog for the particular observation. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-**amp_degree**: the order of the polynomial fit over the whole band to create calibration solutions for the amplitude of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. 
-  -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
-  -*Turn off/on*: undefined/defined <br />
-  -*Default*: 2 <br />
 **cable_bandpass_fit**: average the calibration solutions across tiles within a cable grouping for the particular instrument. <br />
   -*Dependency*: instrument_config/<instrument>_cable_length.txt <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
+**cal_amp_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the amplitude of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. 
+  -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
+  -*Turn off/on*: undefined/defined <br />
+  -*Default*: 2 <br />
 **cal_mode_fit**: Determines whether calibration will fit for reflection in cables (see following three entries). This will be set if
 	`cal_cable_reflection_correct` or `cal_cable_reflection_fit` is set. <br />
   -*Obsolete* - use `cal_cable_reflection_correct` or `cal_cable_reflection_mode_fit` instead. <br />
+**cal_phase_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. 
+  -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
+  -*Turn off/on*: undefined/defined <br />
+  -*Default*: 1 <br />
 **cal_cable_reflection_correct**: Use predetermined cable reflection parameters in calibration solutions. <br />
   -*Needs updating*: all cable keywords need a major overhaul <br />
   -Set to 1 to correct all antennas using default tile for instrument (e.g. `FHD/instrument_config/mwa_cable_reflection_coefficients.txt`) <br />
@@ -44,10 +48,6 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
   -*Default*: 1 <br />
 **diffuse_calibrate**: a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. <br />
   -*Default*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
-**phase_degree**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. 
-  -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
-  -*Turn off/on*: undefined/defined <br />
-  -*Default*: 1 <br />
 **saved_run_bp**: use a saved bandpass for bandpass calibration. Reads in a text file saved in instrument config which is dependent on pointing number at the moment. Needs updating. <br />
   -*Needs updating*: File name needs more information to descriminate between instruments and bands. Need to have capability to read in saved bandpasses not dependent on cable type.<br />
   -*Dependency*: instrument_config/<pointing number>_bandpass.txt <br />

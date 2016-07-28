@@ -133,8 +133,8 @@ n_freq=cal.n_freq
 n_tile=cal.n_tile
 n_time=cal.n_time
 
-IF tag_exist(cal,'bandpass') THEN bandpass_calibrate=cal.bandpass
-IF tag_exist(cal,'polyfit') THEN calibration_polyfit=cal.polyfit
+bandpass_calibrate=cal.bandpass
+calibration_polyfit=cal.polyfit
 
 tile_A_i=cal.tile_A-1
 tile_B_i=cal.tile_B-1
@@ -177,7 +177,8 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
     cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
     IF Keyword_Set(calibration_polyfit) THEN BEGIN        
         IF Keyword_Set(calibration_bandpass_iterate) THEN BEGIN
-            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,amp_degree=1,_Extra=extra)
+            cal_remainder.amp_degree = 1 & cal_remainder.phase_degree=0
+            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,_Extra=extra)
             cal_poly_sub=vis_cal_divide(cal_base,cal_polyfit)
             cal_bandpass2=vis_cal_bandpass(cal_poly_sub,obs,file_path_fhd=file_path_fhd,_Extra=extra)
             cal_remainder2=vis_cal_divide(cal_base,cal_bandpass2)
