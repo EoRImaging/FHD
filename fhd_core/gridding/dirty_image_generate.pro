@@ -69,10 +69,12 @@ IF Keyword_Set(degpix) THEN di_uv_use/=(degpix*!DtoR)^2. ;FFT normalization
 IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use),double=1)) $
     ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use),double=1)))
 
-CASE image_filter_fn OF
-    'filter_uv_weighted': IF Pointer_valid(beam_ptr) THEN dirty_image *= *beam_ptr
-    ELSE:
-ENDCASE
+IF Keyword_Set(image_filter_fn) THEN BEGIN
+    CASE image_filter_fn OF
+        'filter_uv_weighted': IF Pointer_valid(beam_ptr) THEN dirty_image *= *beam_ptr
+        ELSE:
+    ENDCASE
+ENDIF
 
 IF not Keyword_Set(double_flag) THEN dirty_image=Float(dirty_image)
 IF Keyword_Set(normalization) THEN dirty_image*=normalization
