@@ -104,7 +104,7 @@
 ;  
 ;end
 
-FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
+FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
     calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,_Extra=extra
     
   IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
@@ -129,7 +129,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
   n_tile=cal.n_tile
   n_time=cal.n_time
   
-  flag_ptr_use=flag_ptr ;flags WILL be over-written! (Only for NAN gain solutions)
+  vis_weight_ptr_use=vis_weight_ptr ;weights WILL be over-written! (Only for NAN gain solutions)
   tile_A_i=cal.tile_A-1
   tile_B_i=cal.tile_B-1
   freq_arr=cal.freq
@@ -152,13 +152,13 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       ; which can be reformed to nfreq x n_baselines x n_time
       tile_A_i=tile_A_i[0:n_baselines-1]
       tile_B_i=tile_B_i[0:n_baselines-1]
-      flag_use=0>Reform(*flag_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
+      vis_weight_use=0>Reform(*vis_weight_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
       IF Keyword_Set(preserve_visibilities) THEN vis_model=Reform(*vis_model_ptr[pol_i],n_freq,n_baselines,n_time) $
         ELSE vis_model=Reform(Temporary(*vis_model_ptr[pol_i]),n_freq,n_baselines,n_time)
-      vis_model=Total(Temporary(vis_model)*flag_use,3)
+      vis_model=Total(Temporary(vis_model)*vis_weight_use,3)
       vis_measured=Reform(*vis_ptr[pol_i],n_freq,n_baselines,n_time)
-      vis_avg=Total(Temporary(vis_measured)*flag_use,3)
-      weight=Total(Temporary(flag_use),3)
+      vis_avg=Total(Temporary(vis_measured)*vis_weight_use,3)
+      weight=Total(Temporary(vis_weight_use),3)
       
       kx_arr=cal.uu[0:n_baselines-1]/kbinsize ;ignore slight variation with time
       ky_arr=cal.vv[0:n_baselines-1]/kbinsize
@@ -174,12 +174,12 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
         baseline_weights=(1.-(taper_min+taper_max)^2.)>0.
       ENDIF ELSE flag_dist_cut=where((dist_arr LT min_cal_baseline) OR (Temporary(xcen) GT dimension/2.) OR (Temporary(ycen) GT elements/2.),n_dist_cut)
     ENDIF ELSE BEGIN
-      flag_use=0>*flag_ptr_use[pol_i]<1
+      vis_weight_use=0>*vis_weight_ptr_use[pol_i]<1
       IF Keyword_Set(preserve_visibilities) THEN vis_model=*vis_model_ptr[pol_i] $
         ELSE vis_model=Temporary(*vis_model_ptr[pol_i])
-      vis_model=Temporary(vis_model)*flag_use
-      vis_avg=*vis_ptr[pol_i]*flag_use
-      weight=Temporary(flag_use)
+      vis_model=Temporary(vis_model)*vis_weight_use
+      vis_avg=*vis_ptr[pol_i]*vis_weight_use
+      weight=Temporary(vis_weight_use)
       
       kx_arr=cal.uu/kbinsize
       ky_arr=cal.vv/kbinsize
@@ -577,7 +577,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
       ;any gains with NANs -> all tiles for that freq will have NANs
       freq_nan_i=nan_i mod n_freq
       freq_nan_i=freq_nan_i[Uniq(freq_nan_i,Sort(freq_nan_i))]
-      (*flag_ptr_use[pol_i])[freq_nan_i,*]=0
+      (*vis_weight_ptr_use[pol_i])[freq_nan_i,*]=0
       gain_arr[nan_i]=0.
       
     ENDIF
@@ -585,7 +585,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,flag_ptr,obs,params,cal,
     cal_return.convergence[pol_i]=Ptr_new(convergence)
   ENDFOR
   
-  vis_count_i=where(*flag_ptr_use[0],n_vis_cal)
+  vis_count_i=where(*vis_weight_ptr_use[0],n_vis_cal)
   cal_return.n_vis_cal=n_vis_cal
   
   RETURN,cal_return

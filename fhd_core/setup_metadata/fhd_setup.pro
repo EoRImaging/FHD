@@ -1,7 +1,7 @@
 FUNCTION fhd_setup,file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
-    transfer_flags=transfer_flags,snapshot_recalculate=snapshot_recalculate,$
+    transfer_weights=transfer_weights,snapshot_recalculate=snapshot_recalculate,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
@@ -42,13 +42,14 @@ IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE BEGIN
 ENDELSE
 
 IF Min(status_str.grid_uv[0:n_pol1-1]) LE 0 THEN grid_recalculate=1
-data_flag=status_str.obs*status_str.params*status_str.flag_arr*status_str.psf*status_str.jones
+IF Tag_exist(status_str,"vis_weights") THEN weight_flag=status_str.vis_weights ELSE weight_flag=status_str.flag_arr
+data_flag=status_str.obs*status_str.params*weight_flag*status_str.psf*status_str.jones
 ;IF Keyword_set(calibrate_visibilities) THEN data_flag=1
 IF Keyword_Set(save_visibilities) THEN data_flag*=Min(status_str.vis_ptr[0:n_pol1-1])
 
 IF Keyword_Set(transfer_mapfn) AND size(transfer_mapfn,/type) NE 7 THEN transfer_mapfn=file_basename(file_path_fhd)
-IF Keyword_Set(transfer_mapfn) THEN transfer_flags=transfer_mapfn
-IF Keyword_Set(transfer_flags) AND size(transfer_flags,/type) NE 7 THEN transfer_flags=file_basename(file_path_fhd)
+IF Keyword_Set(transfer_mapfn) THEN transfer_weights=transfer_mapfn
+IF Keyword_Set(transfer_weights) AND size(transfer_weights,/type) NE 7 THEN transfer_weights=file_basename(file_path_fhd)
 IF size(transfer_mapfn,/type) EQ 7 THEN BEGIN
     IF file_basename(file_path_fhd) EQ transfer_mapfn THEN BEGIN
         fhd_save_io,status_mapfn,file_path_fhd=file_path_fhd,transfer=transfer_mapfn

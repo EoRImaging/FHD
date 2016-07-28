@@ -1,4 +1,4 @@
-PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error,$
+PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=error,$
     instrument=instrument,cleanup=cleanup,recalculate_all=recalculate_all,$
     n_pol=n_pol,silent=silent,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
@@ -53,16 +53,16 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
   psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=0,_Extra=extra)
   IF Keyword_Set(t_beam) THEN IF ~silent THEN print,'Beam modeling time: ',t_beam
   
-  flag_arr=Ptrarr(n_pol,/allocate)
+  vis_weights=Ptrarr(n_pol,/allocate)
   n_param=N_Elements(params.uu)
   FOR pol_i=0,n_pol-1 DO BEGIN
-    *flag_arr[pol_i]=Replicate(1.,n_freq,n_param)
-    IF n_freq<n_param EQ 1 THEN *flag_arr[pol_i]=Reform(*flag_arr[pol_i],n_freq,n_param) ;need to make sure all dimensions are there even if n_freq=1 or n_param=1
+    *vis_weights[pol_i]=Replicate(1.,n_freq,n_param)
+    IF n_freq<n_param EQ 1 THEN *vis_weights[pol_i]=Reform(*vis_weights[pol_i],n_freq,n_param) ;need to make sure all dimensions are there even if n_freq=1 or n_param=1
   ENDFOR
   
-  flag_arr=vis_flag_basic(flag_arr,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
+  vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
     freq_end=freq_end,tile_flag_list=tile_flag_list,instrument=instrument,_Extra=extra)
-  vis_flag_update,flag_arr,obs,psf,params
+  vis_weights_update,vis_weights,obs,psf,params
   ;print informational messages
   IF ~silent THEN obs_status,obs
   ;save and output settings here for debugging, though they should be re-saved later in case things change
@@ -71,7 +71,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
   fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
       
   IF Size(source_array,/type) EQ 8 THEN source_array=generate_source_cal_list(obs,psf,source_array,_Extra=extra)   
-  vis_arr=vis_simulate(obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+  vis_arr=vis_simulate(obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,vis_weights=vis_weights,$
     recalculate_all=recalculate_all, include_eor = eor_sim, include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra)
@@ -80,7 +80,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
   test_vis = max(abs(*vis_arr[0]))
   if test_vis eq 0 then print, "Visiblities are probably identically zero, you should check very carefully!"
   
-  vis_noise_calc,obs,vis_arr,flag_arr
+  vis_noise_calc,obs,vis_arr,vis_weights
   tile_use_i=where((*obs.baseline_info).tile_use,n_tile_use,ncomplement=n_tile_cut)
   freq_use_i=where((*obs.baseline_info).freq_use,n_freq_use,ncomplement=n_freq_cut)
   print,String(format='(A," frequency channels used and ",A," channels flagged")',$
@@ -115,8 +115,8 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
   
   IF Keyword_Set(save_visibilities) THEN BEGIN
     t_save0=Systime(1)
-    vis_export,obs,status_str,vis_model_ptr,flag_arr,file_path_fhd=file_path_fhd,/compress,/model
-    vis_export,obs,status_str,vis_arr,flag_arr,file_path_fhd=file_path_fhd,/compress
+    vis_export,obs,status_str,vis_model_ptr,vis_weights,file_path_fhd=file_path_fhd,/compress,/model
+    vis_export,obs,status_str,vis_arr,vis_weights,file_path_fhd=file_path_fhd,/compress
     t_save=Systime(1)-t_save0
     IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
   ENDIF
@@ -136,7 +136,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     mapfn_recalculate=0
     preserve_visibilities=1
     FOR pol_i=0,n_pol-1 DO BEGIN
-      dirty_UV=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
+      dirty_UV=visibility_grid(vis_arr[pol_i],vis_weights[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
         timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,$
         mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
         model_return=model_return,model_ptr=vis_model_ptr[pol_i],preserve_visibilities=preserve_visibilities,_Extra=extra)
@@ -163,7 +163,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     IF ~Keyword_Set(n_avg) THEN n_avg=1
     IF Keyword_Set(snapshot_recalculate) THEN status_str.healpix_cube=(status_str.hpx_even=(status_str.hpx_odd=0))
     healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,/restrict_hpx_inds,$
-      vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,flag_arr=flag_arr,n_avg=n_avg,$
+      vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,vis_weights=vis_weights,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
     ;; now save beam cubes for the gridded pre-healpix cubes.
@@ -183,7 +183,7 @@ PRO array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error
     save, file=gridded_beam_filepath, beam2_xx_image, beam2_yy_image, obs_out
   endif
   undefine_fhd,map_fn_arr,cal,obs,fhd,image_uv_arr,weights_arr,model_uv_arr,vis_arr,status_str
-  undefine_fhd,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out,flag_arr
+  undefine_fhd,vis_model_ptr,beam2_xx_image, beam2_yy_image, obs, obs_out, psf, psf_out,vis_weights
   
   timing=Systime(1)-t0
   print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))

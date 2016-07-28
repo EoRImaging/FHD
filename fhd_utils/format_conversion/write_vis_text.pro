@@ -49,8 +49,8 @@ pro write_vis_text, save_file, text_file = text_file
   undefine_fhd, obs
   
   restore, flag_file
-  flags = 0>*flag_arr[pol_index]<1
-  undefine_fhd, flag_arr
+  flags = 0>*vis_weights[pol_index]<1
+  undefine_fhd, vis_weights
   
   restore, params_file
   ;; convert u,v,w from light travel time in seconds to meters

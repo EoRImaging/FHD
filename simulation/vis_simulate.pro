@@ -1,4 +1,4 @@
-FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,flag_arr=flag_arr,$
+FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,vis_weights=vis_weights,$
     recalculate_all=recalculate_all,$
     include_eor=include_eor, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
     delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
@@ -183,38 +183,38 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
       if n_elements(dim_uv_arr) eq 2 then begin
         ;; 2 dimensional -- same for all frequencies
       
-        ;; flag_arr is passed in from array_simulator
+        ;; vis_weights is passed in from array_simulator
         ;Call visibility_degrid directly, instead of calling the wrapper, since we are adding the uv models earlier
         FOR pol_i=0,n_pol-1 DO BEGIN
-            vis_model_arr[pol_i]=visibility_degrid(*model_uvf_arr[pol_i],flag_arr[pol_i],obs,psf,params,silent=silent,$
+            vis_model_arr[pol_i]=visibility_degrid(*model_uvf_arr[pol_i],vis_weights[pol_i],obs,psf,params,silent=silent,$
                 polarization=pol_i,_Extra=extra)
         ENDFOR
-;        vis_model_arr = vis_source_model(skymodel,obs,status_str,psf,params,flag_arr,model_uv_arr=model_uvf_arr,$
+;        vis_model_arr = vis_source_model(skymodel,obs,status_str,psf,params,vis_weights,model_uv_arr=model_uvf_arr,$
 ;          timing=model_timing,silent=silent,error=error,_Extra=extra)
           
       endif else begin
         ;; 3 dimensional -- loop over frequencies
         for fi=0, n_freq-1 do begin
-          if max([(*flag_arr[0])[fi,*], (*flag_arr[1])[fi,*]]) lt 1 then continue
+          if max([(*vis_weights[0])[fi,*], (*vis_weights[1])[fi,*]]) lt 1 then continue
           
-          this_flag_ptr = Ptrarr(n_pol,/allocate)
+          this_vis_weight_ptr = Ptrarr(n_pol,/allocate)
           this_model_uv = Ptrarr(n_pol,/allocate)
           for pol_i=0,n_pol-1 do begin
-            *this_flag_ptr[pol_i]=intarr(n_freq, vis_dimension)
-            (*this_flag_ptr[pol_i])[fi,*] = (*flag_arr[pol_i])[fi,*]
+            *this_vis_weight_ptr[pol_i]=intarr(n_freq, vis_dimension)
+            (*this_vis_weight_ptr[pol_i])[fi,*] = (*vis_weights[pol_i])[fi,*]
             
             *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
           endfor
           
           if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
           
-          this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_flag_ptr,model_uv_arr=this_model_uv,$
+          this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_vis_weight_ptr,model_uv_arr=this_model_uv,$
             timing=model_timing,silent=silent,error=error,_Extra=extra)
           print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
           
           for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
           
-          undefine_fhd, this_flag_ptr, this_model_ptr, this_model_uv
+          undefine_fhd, this_vis_weight_ptr, this_model_ptr, this_model_uv
         endfor
       endelse
       undefine_fhd, model_uvf_arr
@@ -251,7 +251,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
       
     endif
     
-    fhd_save_io,status_str,flag_arr,var='flag_arr',/compress,file_path_fhd=file_path_fhd,no_save=no_save,_Extra=extra
+    fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,no_save=no_save,_Extra=extra
   ENDIF ELSE BEGIN ;; end if recalculate_all
     vis_model_arr=Ptrarr(n_pol)
     FOR pol_i=0,n_pol-1 DO BEGIN

@@ -4,7 +4,7 @@ PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
     complex_beam=complex_beam,pad_uv_image=pad_uv_image,max_sources=max_sources,$
     update_file_list=update_file_list,combine_healpix=combine_healpix,start_fi=start_fi,end_fi=end_fi,skip_fi=skip_fi,flag_visibilities=flag_visibilities,$
-    transfer_mapfn=transfer_mapfn,transfer_flags=transfer_flags,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
+    transfer_mapfn=transfer_mapfn,transfer_weights=transfer_weights,split_ps_export=split_ps_export,simultaneous=simultaneous,flag_calibration=flag_calibration,$
     calibration_catalog_file_path=calibration_catalog_file_path,transfer_calibration=transfer_calibration,$
     snapshot_healpix_export=snapshot_healpix_export,save_visibilities=save_visibilities,error_method=error_method,$
     firstpass=firstpass,return_cal_visibilities=return_cal_visibilities,cmd_args=cmd_args,silent=silent,_Extra=extra
@@ -93,7 +93,7 @@ IF size(transfer_calibration,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_cali
     transfer_calibration=string_list_read(transfer_calibration,data_directory=data_directory)
 CASE 1 OF
     Keyword_Set(transfer_mapfn):transfer_file=transfer_mapfn
-    Keyword_Set(transfer_flags):transfer_file=transfer_flags
+    Keyword_Set(transfer_weights):transfer_file=transfer_weights
     Keyword_Set(transfer_calibration):transfer_file=transfer_calibration
     ELSE:transfer_file=''
 ENDCASE
@@ -148,7 +148,7 @@ WHILE fi LT n_files DO BEGIN
     IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(n_files-start_fi)))
     undefine_fhd,status_str
     fhd_main,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
-        independent_fit=independent_fit,transfer_mapfn=transfer_mapfn,transfer_flags=transfer_flags,$
+        independent_fit=independent_fit,transfer_mapfn=transfer_mapfn,transfer_weights=transfer_weights,$
         mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid_recalculate=grid_recalculate,$
         silent=silent,max_sources=max_sources,deconvolve=deconvolve,catalog_file_path=catalog_file_path,$
         export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$

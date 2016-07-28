@@ -1,13 +1,13 @@
-FUNCTION split_vis_flags,obs,flag_arr,bi_use=bi_use,preserve_flags=preserve_flags,even_only=even_only,odd_only=odd_only,$
+FUNCTION split_vis_weights,obs,vis_weights,bi_use=bi_use,preserve_weights=preserve_weights,even_only=even_only,odd_only=odd_only,$
     debug_evenoddsplit_integration=debug_evenoddsplit_integration,_Extra=extra
 ;function to create split even and odd time samples with identical flagging
 
-n_pol=N_Elements(flag_arr)
-IF Keyword_Set(preserve_flags) THEN flag_arr_use=pointer_copy(flag_arr) ELSE flag_arr_use=flag_arr
+n_pol=N_Elements(vis_weights)
+IF Keyword_Set(preserve_weights) THEN vis_weights_use=pointer_copy(vis_weights) ELSE vis_weights_use=vis_weights
 bin_start=(*obs.baseline_info).bin_offset
 nt=obs.n_time
-IF nt LT 2 THEN RETURN,flag_arr_use
-nb=(size(*flag_arr_use[0],/dimension))[1]
+IF nt LT 2 THEN RETURN,vis_weights_use
+nb=(size(*vis_weights_use[0],/dimension))[1]
 bin_end=fltarr(nt)
 bin_end[0:nt-2]=bin_start[1:nt-1]-1
 bin_end[nt-1]=nb-1
@@ -44,11 +44,11 @@ IF n_even LT n_odd THEN *bi_use[1]=(*bi_use[1])[0:n_even-1]
 IF n_odd LT n_even THEN *bi_use[0]=(*bi_use[0])[0:n_odd-1]
 
 FOR pol_i=0,n_pol-1 DO BEGIN
-    flag_use0=0>(*flag_arr_use[pol_i])[*,*bi_use[0]]<(*flag_arr_use[pol_i])[*,*bi_use[1]]<1
-    *flag_arr_use[pol_i]*=0
-    IF ~Keyword_Set(odd_only) THEN (*flag_arr_use[pol_i])[*,*bi_use[0]]=flag_use0
-    IF ~Keyword_Set(even_only) THEN (*flag_arr_use[pol_i])[*,*bi_use[1]]=flag_use0 
+    flag_use0=0>(*vis_weights_use[pol_i])[*,*bi_use[0]]<(*vis_weights_use[pol_i])[*,*bi_use[1]]<1
+    *vis_weights_use[pol_i]*=0
+    IF ~Keyword_Set(odd_only) THEN (*vis_weights_use[pol_i])[*,*bi_use[0]]=flag_use0
+    IF ~Keyword_Set(even_only) THEN (*vis_weights_use[pol_i])[*,*bi_use[1]]=flag_use0 
     flag_use0=0 ;free memory
 ENDFOR
-RETURN,flag_arr_use
+RETURN,vis_weights_use
 END

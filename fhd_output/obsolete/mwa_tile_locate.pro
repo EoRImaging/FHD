@@ -62,7 +62,7 @@ FOR ti=0,n_tiles-1 DO BEGIN
     xmin_use=xmin[*,i_use]
     ymin_use=ymin[*,i_use]
     
-    bin_n=histogram(xmin_use+ymin_use*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
+    bin_n=histogram(xmin_use+ymin_use*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from weights
     bin_i=where(bin_n,n_bin_use);+bin_min
     
     tile_img=fltarr(dimension,elements)

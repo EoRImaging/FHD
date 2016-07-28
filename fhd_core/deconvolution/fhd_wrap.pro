@@ -16,7 +16,7 @@ PRO fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_f
     data_directory=data_directory,filename=filename,version=version,silent=silent,transfer_mapfn=transfer_mapfn,$
     map_fn_arr=map_fn_arr,GPU_enable=GPU_enable,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
     model_uv_arr=model_uv_arr, vis_model_arr=vis_model_arr,$
-    return_decon_visibilities=return_decon_visibilities,flag_arr=flag_arr,log_store=log_store,_Extra=extra
+    return_decon_visibilities=return_decon_visibilities,vis_weights=vis_weights,log_store=log_store,_Extra=extra
 
 ;snapshot data must have been gridded previously, and the Holo map fns generated
 ;reads and deconvolves simultaneously on multiple polarizations, time intervals, and frequencies
@@ -123,7 +123,7 @@ undefine_fhd,map_fn_arr
 IF Keyword_Set(return_decon_visibilities) THEN BEGIN
     IF Arg_Present(vis_model_arr) THEN BEGIN
         ;could generate model visibilities from just the source list (allows sources to be pruned), or from the final uv model (don't have to redo the DFT) 
-        vis_model_arr=vis_source_model(skymodel,obs,status_str,psf,params,flag_arr,$
+        vis_model_arr=vis_source_model(skymodel,obs,status_str,psf,params,vis_weights,$
             timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd,_Extra=extra)   
 ;        vis_model_arr=vis_source_model(source_array,obs,psf,params,model_uv_arr=model_uv_arr,$
 ;            timing=model_timing,silent=silent,error=error,file_path_fhd=file_path_fhd)      

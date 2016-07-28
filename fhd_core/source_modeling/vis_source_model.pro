@@ -1,4 +1,4 @@
-FUNCTION vis_source_model,skymodel, obs, status_str, psf, params, flag_ptr, cal, jones, model_uv_arr=model_uv_arr,$
+FUNCTION vis_source_model,skymodel, obs, status_str, psf, params, vis_weight_ptr, cal, jones, model_uv_arr=model_uv_arr,$
     file_path_fhd=file_path_fhd, timing=timing, silent=silent, uv_mask=uv_mask, error=error, beam_arr=beam_arr,$
     fill_model_visibilities=fill_model_visibilities, use_pointing_center=use_pointing_center, vis_model_ptr=vis_model_ptr,$
     spectral_model_uv_arr=spectral_model_uv_arr, _Extra=extra
@@ -12,7 +12,7 @@ IF N_Elements(skymodel) EQ 0 THEN fhd_save_io,status_str,skymodel,var='skymodel'
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-IF Min(Ptr_valid(flag_ptr)) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF Min(Ptr_valid(vis_weight_ptr)) EQ 0 THEN fhd_save_io,status_str,vis_weight_ptr,var='vis_weights',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(jones) EQ 0 THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 IF Keyword_Set(skymodel) THEN BEGIN
@@ -112,7 +112,7 @@ ENDIF
 
 t_degrid=Fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
-    vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],flag_ptr[pol_i],obs,psf,params,silent=silent,$
+    vis_arr[pol_i]=visibility_degrid(*model_uv_arr[pol_i],vis_weight_ptr[pol_i],obs,psf,params,silent=silent,$
         timing=t_degrid0,polarization=pol_i,fill_model_visibilities=fill_model_visibilities,$
         vis_input_ptr=vis_model_ptr[pol_i],spectral_model_uv_arr=spectral_model_uv_arr[pol_i,*], _Extra=extra)
     t_degrid[pol_i]=t_degrid0

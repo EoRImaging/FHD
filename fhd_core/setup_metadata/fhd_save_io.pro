@@ -38,7 +38,7 @@ IF size(status_str,/type) NE 8 THEN BEGIN
 ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
-IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,skymodel:0,source_array:0,flag_arr:0,auto_corr:0,$
+IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,skymodel:0,source_array:0,vis_weights:0,auto_corr:0,$
     vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),vis_count:0,$
     map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4),complete:0}
 IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str', compatibility_mode = compatibility_mode)
@@ -63,7 +63,9 @@ CASE var_name OF ;listed in order typically generated
     'cal':BEGIN status_use.cal=1 & path_add='_cal' & subdir='calibration'& END
     'skymodel':BEGIN status_use.skymodel=1 & path_add='_skymodel' & subdir='output_data'& END
     'source_array':BEGIN status_use.source_array=1 & path_add='_source_array' & subdir='output_data'& END
-    'flag_arr':BEGIN status_use.flag_arr=1 & path_add='_flags' & subdir='vis_data'& END
+    'vis_weights':BEGIN
+        IF Tag_exist(status_use,"vis_weights") THEN status_use.vis_weights=1 ELSE status_use.flag_arr=1
+        path_add='_flags' & subdir='vis_data'& END
     'auto_corr':BEGIN status_use.auto_corr=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
     'vis_ptr':BEGIN status_use.vis_ptr[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
     'vis_model_ptr':BEGIN status_use.vis_model_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END

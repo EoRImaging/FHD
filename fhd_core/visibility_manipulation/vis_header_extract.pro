@@ -5,7 +5,7 @@ pol_dim=2
 freq_dim=4
 real_index=0
 imaginary_index=1
-flag_index=2
+weights_index=2
 
 n_extensions=sxpar(header,'nextend')
 naxis=sxpar(header,'naxis') ;6
@@ -64,7 +64,7 @@ hdr=fhd_struct_init_hdr(n_grp_params=n_grp_params,nbaselines=nbaselines,n_tile=n
     freq_res=freq_res,freq_arr=frequency_array,lon=lon,lat=lat,alt=alt,obsra=obsra,obsdec=obsdec,$
     uu_i=uu_i,vv_i=vv_i,ww_i=ww_i,baseline_i=baseline_i,date_i=date_i,jd0=Jdate0,date_obs=date_obs,$
     pol_dim=pol_dim,freq_dim=freq_dim,real_index=real_index,imaginary_index=imaginary_index,$
-    flag_index=flag_index, ant1_i=ant1_i, ant2_i=ant2_i)
+    weights_index=weights_index, ant1_i=ant1_i, ant2_i=ant2_i)
 
 RETURN,hdr
 END
