@@ -580,7 +580,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 			np.savetxt(sbpassband_1s_file, array_ones, fmt=['%d','%d','%d','%d','%d'])
 			sbpassband_1s_file.close()
 		index = cotter_args[str(version)+','+str(subversion)].find('-sbpassband')
-		output_line = cotter_args[str(version)+','+str(subversion)][:index+11] + save_paths[0] + 'sbpassband_1s.txt' + cotter_args[str(version)+','+str(subversion)][index+11:]
+		output_line = cotter_args[str(version)+','+str(subversion)][:index+11] + ' ' + save_paths[0] + 'sbpassband_1s.txt' + cotter_args[str(version)+','+str(subversion)][index+11:]
 		cotter_args[str(version)+','+str(subversion)] = output_line
 
 	#Write a bash script so that Grid Engine can run a task array for the downloads.
