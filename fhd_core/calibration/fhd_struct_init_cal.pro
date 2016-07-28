@@ -8,7 +8,7 @@ FUNCTION fhd_struct_init_cal, obs, params, skymodel, gain_arr_ptr=gain_arr_ptr, 
     calibration_polyfit=calibration_polyfit, bandpass_calibrate=bandpass_calibrate, $
     cal_mode_fit=cal_mode_fit, file_path_fhd=file_path_fhd, transfer_calibration=transfer_calibration, $
     calibration_auto_initialize=calibration_auto_initialize, cal_gain_init=cal_gain_init, $
-    phase_fit_iter=phase_fit_iter, _Extra=extra
+    phase_fit_iter=phase_fit_iter, cal_amp_degree_fit=cal_amp_degree_fit,cal_phase_degree_fit=cal_phase_degree_fit,_Extra=extra
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd
 IF N_Elements(params) EQ 0 THEN fhd_save_io,0,params,var='params',/restore,file_path_fhd=file_path_fhd
@@ -47,6 +47,8 @@ ENDIF
 gain_residual=Ptrarr(n_pol,/allocate)
 FOR pol_i=0,n_pol-1 DO *gain_residual[pol_i]=Complexarr(n_freq,n_tile)
 IF N_Elements(calibration_polyfit) EQ 0 THEN calibration_polyfit=0
+IF N_Elements(cal_amp_degree_fit) EQ 0 THEN cal_amp_degree_fit=2
+IF N_Elements(cal_phase_degree_fit) EQ 0 THEN cal_phase_degree_fit=1
 amp_params=Ptrarr(n_pol,n_tile)
 phase_params=Ptrarr(n_pol,n_tile)
 
@@ -64,7 +66,8 @@ cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, 
     min_cal_baseline:min_cal_baseline, max_cal_baseline:max_cal_baseline, n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average, min_solns:min_cal_solutions, ref_antenna:ref_antenna,$
     ref_antenna_name:ref_antenna_name, conv_thresh:cal_convergence_threshold, convergence:convergence,$
-    polyfit:calibration_polyfit, amp_params:amp_params, phase_params:phase_params,$
+    polyfit:calibration_polyfit, amp_degree:cal_amp_degree_fit, phase_degree:cal_phase_degree_fit,$
+    amp_params:amp_params, phase_params:phase_params,$
     mean_gain:Fltarr(n_pol), mean_gain_residual:Fltarr(n_pol), mean_gain_restrict:Fltarr(n_pol),$
     stddev_gain_residual:Fltarr(n_pol), bandpass:bandpass_calibrate, mode_fit:cal_mode_fit,$
     mode_params:mode_params, cal_origin:calibration_origin, skymodel:skymodel}

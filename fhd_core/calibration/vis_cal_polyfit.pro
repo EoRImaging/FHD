@@ -1,12 +1,11 @@
-FUNCTION vis_cal_polyfit,cal,obs,amp_degree=amp_degree,phase_degree=phase_degree,$
-    cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
+FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,$
     cal_cable_reflection_correct=cal_cable_reflection_correct,no_phase_calibration=no_phase_calibration,_Extra=extra
 
-If N_elements(amp_degree) NE 0 then IF amp_degree LE 0 THEN amp_degree=Round(abs(amp_degree))>1 ELSE amp_degree=Round(amp_degree)>1
-
 IF Keyword_Set(cal_cable_reflection_fit) OR Keyword_Set(cal_cable_reflection_correct) THEN cal.mode_fit=1.
 cal_mode_fit=cal.mode_fit
+IF Tag_exist(cal,"amp_degree") THEN amp_degree = cal.amp_degree ELSE amp_degree=2
+IF Tag_exist(cal,"phase_degree") THEN phase_degree = cal.phase_degree ELSE phase_degree=1
 
 n_pol=cal.n_pol
 n_freq=cal.n_freq

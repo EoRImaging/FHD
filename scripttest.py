@@ -48,13 +48,16 @@ def main():
 	#flagfiles=options.flagfiles
 	db_comment=options.db_comment
 
+	print version
+	print subversion
+
 	if (version is None) and (subversion is None) and (uvfits_download_check is None):
 		print "ERROR: version, subversion, and uvfits_download_check were not set."
 		print "To run cotter, set a version and subversion (defined in script)."
 		print "To download uvfits files only and bypass cotter, set -u 1 on the command line."
 		sys.exit(1)
 
-	obs_per_chunk = 7 #number of obsids to run in parallel
+	obs_per_chunk = 2 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
 	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05", "eor-06", "eor-07", "eor-08", "eor-10", "eor-11", "eor-12", "eor-13", "eor-14"]
@@ -121,8 +124,9 @@ def main():
 					use_node_index = wait_for_gridengine(obs_running, final_task_jobids_running)
 
 					#Process the completed chunk
-					new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
-						cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index])
+					new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], \
+						metafits_script_paths_running[use_node_index], cotter_script_paths_running[use_node_index], \
+						obs_running[use_node_index], save_paths_running[use_node_index], version, subversion)
 					failed_obs.extend(new_failed_obs)
 
 					#Check to see if the node that finished has enough space to accept a new chunk; if not, remove that node from use
@@ -141,6 +145,7 @@ def main():
 			#Assemble an obs_chunk:
 			while len(obs_chunk) != obs_per_chunk and obs_submitted.count(False) > 0:
 				for obs_index, obsid in enumerate(obsids):
+					print obsid
 					if obs_submitted[obs_index] == False:
 						if node_preferred.count(node) > 0:
 							if node_preferred[obs_index] == node:
@@ -154,6 +159,11 @@ def main():
 							else:
 								obs_chunk.append(obsid)
 								obs_submitted[obs_index] = True
+					if len(obs_chunk) == obs_per_chunk or obs_submitted.count(False) == 0:
+						break
+
+			print obs_chunk
+			print obs_submitted
 
 			download_script_paths = []
 			metafits_script_paths = []
@@ -240,7 +250,6 @@ def main():
 				final_task_jobids_running[use_node_index] = final_task_jobid
 
 			obs_chunk = []
-			break
 
 		while len(obs_running) > 0:
 			#Wait for a chunk to finish running
@@ -248,7 +257,8 @@ def main():
 
 			#Process the completed chunk
 			new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
-				cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index])
+				cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index], \
+				version, subversion)
 			failed_obs.extend(new_failed_obs)
 
 			del free_nodes[use_node_index]
@@ -330,7 +340,8 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 #********************************
 #Module that manages a chunk after it has been processed in Grid Engine; it removes temporary scripts,
 #checks if the downloads were successful, and deletes the gpubox files
-def chunk_complete(download_script_path, metafits_script_path, cotter_script_path, obs_chunk, save_paths):
+def chunk_complete(download_script_path, metafits_script_path, cotter_script_path, obs_chunk, save_paths, \
+	version, subversion):
 
 	#Make a list of non-duplicate entries in the script paths for easy deletion
 	download_script_path=list(set(download_script_path))

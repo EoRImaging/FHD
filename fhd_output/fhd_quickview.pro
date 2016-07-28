@@ -221,7 +221,7 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
     
     FOR pol_i=0,n_pol-1 DO gal_model_img[pol_i]=Ptr_new(dirty_image_generate(*gal_model_uv[pol_i],degpix=degpix,/antialias,$
-        image_filter_fn='',pad_uv_image=pad_uv_image,_Extra=extra)*(*beam_base_out[pol_i]))
+        image_filter_fn='',pad_uv_image=pad_uv_image,beam_ptr=beam_base_out[pol_i],_Extra=extra)*(*beam_base_out[pol_i]))
     
     gal_name='_galfit'
 ENDIF ELSE BEGIN
@@ -234,9 +234,9 @@ instr_rings=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,/allocate) 
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_dirty_arr[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],beam_ptr=beam_base_out[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
     IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],beam_ptr=beam_base_out[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))

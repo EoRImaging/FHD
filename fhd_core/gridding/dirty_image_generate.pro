@@ -1,7 +1,7 @@
 FUNCTION dirty_image_generate,dirty_image_uv,baseline_threshold=baseline_threshold,mask=mask,$
     normalization=normalization,resize=resize,width_smooth=width_smooth,degpix=degpix,$
     no_real=no_real,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
-    filter=filter,weights=weights,antialias=antialias,_Extra=extra
+    filter=filter,weights=weights,antialias=antialias,beam_ptr=beam_ptr,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 IF N_Elements(baseline_threshold) EQ 0 THEN baseline_threshold=0.
@@ -68,6 +68,14 @@ ENDIF
 IF Keyword_Set(degpix) THEN di_uv_use/=(degpix*!DtoR)^2. ;FFT normalization
 IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use),double=1)) $
     ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use),double=1)))
+
+IF Keyword_Set(image_filter_fn) THEN BEGIN
+    CASE image_filter_fn OF
+        'filter_uv_weighted': IF Pointer_valid(beam_ptr) THEN dirty_image *= *beam_ptr
+        ELSE:
+    ENDCASE
+ENDIF
+
 IF not Keyword_Set(double_flag) THEN dirty_image=Float(dirty_image)
 IF Keyword_Set(normalization) THEN dirty_image*=normalization
 RETURN,dirty_image
