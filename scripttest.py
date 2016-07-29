@@ -45,11 +45,7 @@ def main():
 	subversion=options.subversion
 	obsfile_name=options.obsfile_name
 	uvfits_download_check=options.uvfits_download_check
-	#flagfiles=options.flagfiles
 	db_comment=options.db_comment
-
-	print version
-	print subversion
 
 	if (version is None) and (subversion is None) and (uvfits_download_check is None):
 		print "ERROR: version, subversion, and uvfits_download_check were not set."
@@ -60,7 +56,7 @@ def main():
 	obs_per_chunk = 2 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05", "eor-06", "eor-07", "eor-08", "eor-10", "eor-11", "eor-12", "eor-13", "eor-14"]
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05", "eor-06", "eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
 	#get obsids to download:
@@ -143,7 +139,6 @@ def main():
 			#Assemble an obs_chunk:
 			while len(obs_chunk) != obs_per_chunk and obs_submitted.count(False) > 0:
 				for obs_index, obsid in enumerate(obsids):
-					print obsid
 					if obs_submitted[obs_index] == False:
 						if node_preferred.count(node) > 0:
 							if node_preferred[obs_index] == node:
@@ -160,8 +155,6 @@ def main():
 					if len(obs_chunk) == obs_per_chunk or obs_submitted.count(False) == 0:
 						break
 
-			print obs_chunk
-			print obs_submitted
 
 			download_script_paths = []
 			metafits_script_paths = []
@@ -203,6 +196,10 @@ def main():
 
 			#initialize
 			task_jobid = False
+
+			#Mount your home directory and the node directories to remove stale NFS handles
+			stdoutpointer = subprocess.Popen(("cd $HOME ; cd " + node).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+			stdout_data, stderr_data = stdoutpointer.communicate()
 
 			#Download the files (a uvfits or gpuboxes depending on uvfits_download_check)
 			if any(download) or uvfits_download_check:
@@ -413,7 +410,7 @@ def download_files(save_paths, obs_chunk, uvfits_download_check, python_path, no
 		print 'ERROR: MWA_Tools is not in the path, obsdownload.py not found!'
 		print 'Please add the path to MWA_Tools to your system path.'
 		sys.exit(1)
-			
+
 	#Setup the path to the download script and log files
 	obsdownload_path = mwa_tools_path[0:mwa_tools_path.find("MWA_Tools")+9] + '/scripts/obsdownload.py'
 	log_path = (save_paths[0])[0:(save_paths[0]).rfind("jd")] + "log_files/"
@@ -607,7 +604,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'ls ${save_paths[$SGE_TASK_ID]} > /dev/null\n' )
 
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
-		cotter_commands_file.write('unzip ${flagfiles_zip[$SGE_TASK_ID]}\n')
+		cotter_commands_file.write('unzip -o ${flagfiles_zip[$SGE_TASK_ID]}\n')
 
 	cotter_commands_file.write(cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + \
 		' -absmem 20 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')

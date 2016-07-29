@@ -1373,6 +1373,12 @@ case version of
 
    end
 
+   'nb_pytest_after_versioncontrol': begin
+       recalculate_all=1
+       mapfn_recalculate=0
+
+   end
+
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
    ; My default full deconvolution parameters
@@ -1512,8 +1518,8 @@ case version of
    
 endcase
    
-if version EQ 'nb_whitening' then begin
-  vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/whitening_change/uvfits/'+strtrim(string(obs_id),2)+'.uvfits'
+if version EQ 'nb_pytest_after_versioncontrol' then begin
+  vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
 endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
