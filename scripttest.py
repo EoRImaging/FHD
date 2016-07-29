@@ -76,12 +76,10 @@ def main():
 	#Find the obsids' save directories:
 	t = Time([int(obsid) for obsid in obsids], format="gps", scale="utc")
 	jds = t.jd
-	#jds = [int(date) for date in chunk_ids]
+	jds = [int(jd) for jd in jds]
 	save_directories = ["EoRuvfits/jd" + str(jd) + "v"+ str(version) + "_" + str(subversion) + "/" for jd in jds]
 
-	#find each obs' preferred node, put in object node_preferred (False if there is no preferred node)  
-
-	#Check to see if GPU box files already exist:
+	#Check to see if GPU box files already exist, define a preferred node if they do:
 	node_preferred = []
 	for i, obsid in enumerate(obsids):
 		gpu_loc_node = find_gpubox(obsid, save_directories[i], all_nodes)
