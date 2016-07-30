@@ -1378,6 +1378,31 @@ case version of
        mapfn_recalculate=0
 
    end
+   
+   'nb_gleam_firstpass': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+      'nb_gleam_firstpass_100mJy': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+       calibration_flux_threshold = .1
+   end
+         'nb_gleam_firstpass_100mJy_nodiffuse': begin
+       saved_run_bp=0
+       undefine, diffuse_calibrate, diffuse_model
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+       calibration_flux_threshold = .1
+   end
+      'nb_patti_catalog': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+      'nb_patti_catalog_nodiffuse': begin
+       saved_run_bp=0
+       undefine, diffuse_calibrate, diffuse_model
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    

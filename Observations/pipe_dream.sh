@@ -213,6 +213,8 @@ message=($message)
 #Gather the grid engine id from the job for later use
 id=`echo ${message[2]} | cut -f1 -d"."`
 
+echo $id
+
 ########End of submitting the firstpass job and waiting for output
 
 
@@ -231,7 +233,7 @@ for obs_id in "${obs_id_array[@]}"; do
    i=$((i + 1))
    exec_num=$(grep "Execution halted at:" $outdir/fhd_$version/grid_out/firstpass.e$id.$i | wc -l)
    if [ "$exec_num" -gt 1 ]; then
-      echo $obs_id encountered code error during firstpass run
+      echo "$obs_id encountered code error during firstpass run"
       resubmit_list+=($obs_id)
       resubmit_index+=($i)
    fi
@@ -241,7 +243,7 @@ done
 #during the run, and that resubmission is desired.
 n_resubmit=${#resubmit_list[@]}
 if [ "$nobs" -eq "$n_resubmit" ]; then
-   echo All jobs encountered code errors or halts during firstpass run. Exiting
+   echo "All jobs encountered code errors or halts during firstpass run. Exiting"
    exit 1
 fi
 
@@ -253,7 +255,7 @@ for obs_id in "${obs_id_array[@]}"; do
     i=$((i + 1))
     # Check to see if 4 files (even/odd, XX/YY) return from listing for that obsid
     if ! ls -1 ${outdir}/fhd_${version}/Healpix/${obs_id}*cube* 2>/dev/null | wc -l | grep 4 -q; then
-	echo Observation $obs_id is missing one or more Healpix cubes
+	echo "Observation $obs_id is missing one or more Healpix cubes"
         rerun_flag=1
         [[ $resubmit_list =~ $x ]] || resubmit_list+=($obs_id)
         [[ $resubmit_index =~ $i ]] || resubmit_index+=($i)
@@ -276,7 +278,7 @@ for index in "${resubmit_index[@]}"; do
       if [ "$result" -eq 1 ];then
          wallclock_resubmit="$(($wallclock_given_hrs+2))":00:00
          wallclock_resubmit_flag=1
-         echo Adding two more hours to wallclock time for $index
+         echo "Adding two more hours to wallclock time for $index"
       else
          if [ "$wallclock_resubmit_flag" -ne 1 ];then 
             wallclock_resubmit=$wallclock_time
@@ -313,14 +315,14 @@ for index in "${resubmit_index[@]}"; do
             resubmit_mem="$((${mem%G}+2))"G
             resubmit_mem_flag=1
             if [ "$((${resubmit_mem%G}))" -gt 8 ]; then
-               echo Hit the maximum memory level for the cluster during rerun for $resubmit_list[$index]. Will attempt to rerun with same level of memory.
+               echo "Hit the maximum memory level for the cluster during rerun for $resubmit_list[$index]. Will attempt to rerun with same level of memory."
                resubmit_mem_flag=0
             fi
-            echo Adding two more Gigs to memory for $index
+            echo "Adding two more Gigs to memory for $index"
          elif echo $mem | grep M -q; then
             resubmit_mem=$(echo ${mem%M} 1000 2 | awk '{printf "%5.3f\n",$1/$2+$3}')G
             resubmit_mem_flag=1
-            echo Adding two more Gigs to memory for $index
+            echo "Adding two more Gigs to memory for $index"
          fi
       else
          if [ "$resubmit_mem_flag" -ne 1 ];then 
@@ -339,7 +341,7 @@ done
 
 ########Resubmit the firstpass jobs that failed and might benefit from a rerun
 
-if [ "$rerun_flag" -ne 1 ];then 
+if [ "$rerun_flag" -eq 1 ];then 
 
    nobs=${#resubmit_list[@]}
 
