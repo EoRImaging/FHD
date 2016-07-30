@@ -548,6 +548,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	uvfits_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '.uvfits' for i in range(len(obs_chunk))]
 	flagfiles_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '_%%.mwaf' for i in range(len(obs_chunk))]
 	flagfiles_zip = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '_flags.zip' for i in range(len(obs_chunk))]
+	flagfiles_dir = [save_paths[i] + obs_chunk[i] + '/' for i in range(len(obs_chunk))]
 	gpubox_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] for i in range(len(obs_chunk))]
 
 	#Find out the version of the found cotter using a child process
@@ -562,17 +563,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	log_path = (save_paths[0])[0:(save_paths[0]).rfind("jd")] + "log_files/"
 
 	#If flagfiles is set in the cotter args, unzip the flag folder and place their path in the dict
-	#Currently fails on the whole chunk if one zip file is missing...needs to be discussed
-	#Can isfile and zipfile work on lists? If so, take out for loop
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
-	#	for i in range(len(obs_chunk)):
-	#		if os.path.isfile(flagfiles_zip[i]):
-	#			zip_ref = zipfile.ZipFile(flagfiles_zip[i], 'r')
-	#			zip_ref.extractall(save_paths[i] + obs_chunk[i] + '/')
-	#			zip_ref.close()
-	#		else:
-	#			print "ERROR: Flags zip file is expected and does not exist"
-	#			sys.exit(1)
 		index = cotter_args[str(version)+','+str(subversion)].find('-flagfiles')
 		output_line = cotter_args[str(version)+','+str(subversion)][:index+10] + ' ${flagfiles_path[$SGE_TASK_ID]}' + cotter_args[str(version)+','+str(subversion)][index+10:]
 		cotter_args[str(version)+','+str(subversion)] = output_line
@@ -601,10 +592,11 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'metafits_path=(0 ' + " ".join(metafits_path) + ')\n' + \
 		'flagfiles_path=(0 ' + " ".join(flagfiles_path) + ')\n' + \
 		'flagfiles_zip=(0 ' + " ".join(flagfiles_zip) + ')\n' + \
+		'flagfiles_dir=(0 ' + " ".join(flagfiles_dir) + ')\n' + \
 		'ls ${save_paths[$SGE_TASK_ID]} > /dev/null\n' )
 
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
-		cotter_commands_file.write('unzip -o ${flagfiles_zip[$SGE_TASK_ID]}\n')
+		cotter_commands_file.write('unzip -o ${flagfiles_zip[$SGE_TASK_ID]} -d ${flagfiles_dir[$SGE_TASK_ID]}\n')
 
 	cotter_commands_file.write(cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + \
 		' -absmem 20 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
@@ -642,6 +634,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	#50% memory allowed in cotter, allocating 25G per job (used <25), ran 3 jobs per cpu, took ~45 min for 7 job run
 	#25% memory allowed in cotter, allocating 20G per job (used <18), ran 4 jobs per cpu, took ~43 min for 7 job run
 	#Under 25% memory in cotter causes memory allocation errors.
+	#absmem option for cotter did not work with 20G allocation
 #********************************
 
 #********************************
