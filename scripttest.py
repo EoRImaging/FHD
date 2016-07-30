@@ -224,6 +224,8 @@ def main():
 			if not uvfits_download_check:
 				(task_jobid, cotter_version, cotter_script_path) = run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node)
 				cotter_script_paths.append(cotter_script_path)
+			else:
+				cotter_version=''
 
 			#Grab the last Grid Engine jobid to watch while the program sleeps
 			final_task_jobid.append(task_jobid)
@@ -253,7 +255,7 @@ def main():
 			#Process the completed chunk
 			new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
 				cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index], \
-				version, subversion)
+				version, subversion, cotter_version)
 			failed_obs.extend(new_failed_obs)
 
 			del free_nodes[use_node_index]
@@ -336,7 +338,7 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 #Module that manages a chunk after it has been processed in Grid Engine; it removes temporary scripts,
 #checks if the downloads were successful, and deletes the gpubox files
 def chunk_complete(download_script_path, metafits_script_path, cotter_script_path, obs_chunk, save_paths, \
-	version, subversion):
+	version, subversion, cotter_version):
 
 	#Make a list of non-duplicate entries in the script paths for easy deletion
 	download_script_path=list(set(download_script_path))
