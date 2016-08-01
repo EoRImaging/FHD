@@ -16,14 +16,14 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
   -*Dependency*: instrument_config/<instrument>_cable_length.txt <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-**cal_amp_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the amplitude of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. 
+**cal_amp_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the amplitude of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
   -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
   -*Turn off/on*: undefined/defined <br />
   -*Default*: 2 <br />
 **cal_mode_fit**: Determines whether calibration will fit for reflection in cables (see following three entries). This will be set if
 	`cal_cable_reflection_correct` or `cal_cable_reflection_fit` is set. <br />
   -*Obsolete* - use `cal_cable_reflection_correct` or `cal_cable_reflection_mode_fit` instead. <br />
-**cal_phase_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. 
+**cal_phase_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
   -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
   -*Turn off/on*: undefined/defined <br />
   -*Default*: 1 <br />
@@ -43,7 +43,7 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
   -Takes precidence over `cal_cable_reflection_correct`. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 150 <br />
-**calibrate_visibilities**: turn on or turn off calibration of the visilibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur. <br />
+**calibrate_visibilities**: turn on or turn off calibration of the visibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur and an uncalibrated dirty cube is output. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
 **diffuse_calibrate**: a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. <br />
@@ -55,7 +55,8 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
   -*Default*: 1 <br />
 **min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
   -*Default*: 50 <br />
-**return_cal_visibilities**: <br />
+**return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. <br />
+  -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
 
 
@@ -65,13 +66,18 @@ bandpass_calibrate=1 <br />
 calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
-## Diffuse
-
 ## Model
+
+**allow_sidelobe_model_sources**: allows FHD to model sources in the sidelobes for subtraction. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of amodel alibration source catalog for the particular observation. <br />
+  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect, otherwise `allow_sidelobe_cal_sources` overrides. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: Overriden by `allow_sidelobe_cal_sources` <br />
+
+## Diffuse
 
 ## Recalculation
 
-**recalculate_all**: <br />
+**recalculate_all**: forces FHD to recalculate all values instead of reading in save files. This is the same as setting `mapfn_recalculate`, `healpix_recalculate` , ... to 1. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*:0 <br />
 
