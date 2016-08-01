@@ -6,6 +6,8 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
 **beam_offset_time**: calculate the beam at a specific time within the observation. An observation has 112 seconds, with 0 seconds indicating the start of the observation and 112 indicating the end of the observation. <br />
   -*Default*:56 <br />
   -*Range*:0-112 <br />
+  
+**psf_resultion**
 
 ## Calibration
 
@@ -66,6 +68,27 @@ bandpass_calibrate=1 <br />
 calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
+## Deconvolution
+
+**deconvolve**: run fast holgraphic deconvolution. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+  
+**deconvolution_filter**:  !Q <br />
+  -*Default*: filter_uv_uniform <br />
+  
+**gain_factor**: a percent amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
+  
+**max_sources**: the number of sources allowed to be found in fast holographic deconvolution. This is necessarily the maximum number of sources found as a function of apparent brightness due to the way deconvolution finds sources. <br />
+  -*Default*: 20000 <br />
+  -*Question*: !Q Does this work for firstpass to?  <br />
+  
+**return_decon_visibilities**: <br />
+
+
+
+## Diffuse
+
 ## Model
 
 **allow_sidelobe_model_sources**: allows FHD to model sources in the sidelobes for subtraction. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of amodel alibration source catalog for the particular observation. <br />
@@ -73,7 +96,12 @@ no_restrict_cal_sources=1 <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: Overriden by `allow_sidelobe_cal_sources` <br />
 
-## Diffuse
+
+## Export
+
+ps_export=0
+split_ps_export=1
+snapshot_healpix_export=1
 
 ## Recalculation
 
@@ -84,11 +112,6 @@ no_restrict_cal_sources=1 <br />
 mapfn_recalculate=0
 healpix_recalculate=0
 
-## Export
-
-ps_export=0
-split_ps_export=1
-snapshot_healpix_export=1
 
 cleanup=0
 combine_healpix=0
