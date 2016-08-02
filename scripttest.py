@@ -2,6 +2,7 @@
 
 import os
 from astropy.time import Time
+from astropy.io import fits
 import psycopg2
 import sys
 import socket
@@ -56,8 +57,8 @@ def main():
 	obs_per_chunk = 2 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
-	#eor06 temporarly dropped
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-12"]
+	#eor06 temporarly dropped, eor11 is refusing to connect
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
 	#get obsids to download:
@@ -292,14 +293,14 @@ def find_gpubox(obsid, save_directory, all_nodes):
 			gpubox01 = 0
 			flags = 0
 			metafits = 0
-			for file in directory_contents: #counts how many of each type of file exists
-				if file.endswith("_00.fits"):
+			for filename in directory_contents: #counts how many of each type of file exists
+				if filename.endswith("_00.fits"):
 					gpubox00 += 1
-				if file.endswith("_01.fits"):
+				if filename.endswith("_01.fits"):
 					gpubox01 += 1
-				if file.endswith("_flags.zip"):
+				if filename.endswith("_flags.zip"):
 					flags += 1
-				if file.endswith("_metafits_ppds.fits"):
+				if filename.endswith("_metafits_ppds.fits"):
 					metafits += 1
 			if gpubox00 >= 24 and gpubox01 >= 24 and flags >= 1 and metafits >= 1:
 				#print "GPU box files for obsid " + obsid + " located in " + gpu_loc_path
@@ -361,9 +362,28 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 	#Check that all gpubox files were successfully downloaded
 	failed_obs = []
 	for i, obsid in enumerate(obs_chunk):
-		gpu_loc_path = find_gpubox(obsid, save_directories[i], all_nodes)
-		if not gpu_loc_path:
-			print "Obsid " + obsid + "not successfully downloaded"
+		failed = False
+		if os.path.isdir(save_paths[i]): #checks to see if the directory exists
+			directory_contents = os.listdir(save_paths[i])
+			gpubox00 = 0
+			gpubox01 = 0
+			flags = 0
+			metafits = 0
+			for filename in directory_contents: #counts how many of each type of file exists
+				if filename.endswith("_00.fits"):
+					gpubox00 += 1
+				if filename.endswith("_01.fits"):
+					gpubox01 += 1
+				if filename.endswith("_flags.zip"):
+					flags += 1
+				if filename.endswith("_metafits_ppds.fits"):
+					metafits += 1
+			if gpubox00 < 24 or gpubox01 < 24 or flags < 1 or metafits < 1:
+				failed = True
+		else:
+			failed = True
+		if failed:
+			print "Obsid " + obsid + "not successfully downloaded."
 			failed_obs.append(obsid)
 
 	#Delete the gpubox files
