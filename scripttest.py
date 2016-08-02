@@ -138,22 +138,26 @@ def main():
 
 			#Assemble an obs_chunk:
 			while len(obs_chunk) != obs_per_chunk and obs_submitted.count(False) > 0:
-				for obs_index, obsid in enumerate(obsids):
-					if obs_submitted[obs_index] == False:
-						if node_preferred.count(node) > 0:
-							if node_preferred[obs_index] == node:
-								obs_chunk.append(obsid)
+				obs_indices = [index for index, value in enumerate(obs_submitted) if value == False]
+				node_preferred_use = [node_preferred[obs_index] for obs_index in obs_indices]
+				for obs_index in obs_indices:
+					if node_preferred_use.count(node) > 0:
+						if node_preferred[obs_index] == node:
+							obs_chunk.append(obsids[obs_index])
+							obs_submitted[obs_index] = True
+					else:
+						if node_preferred_use.count(False) > 0:
+							if node_preferred[obs_index] == False:
+								obs_chunk.append(obsids[obs_index])
 								obs_submitted[obs_index] = True
 						else:
-							if node_preferred.count(False) > 0:
-								if node_preferred[obs_index] == False:
-									obs_chunk.append(obsid)
-									obs_submitted[obs_index] = True
-							else:
-								obs_chunk.append(obsid)
-								obs_submitted[obs_index] = True
+							obs_chunk.append(obsids[obs_index])
+							obs_submitted[obs_index] = True
 					if len(obs_chunk) == obs_per_chunk or obs_submitted.count(False) == 0:
 						break
+
+			print obs_chunk
+			print node_preferred
 
 
 			download_script_paths = []
