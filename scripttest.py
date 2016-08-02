@@ -98,7 +98,7 @@ def main():
 			print "ERROR: No file space found."
 			sys.exit(1)
 		obs_chunk = []
-		obs_failed = []
+		failed_obs = []
 		obs_running = []
 		save_paths_running = []
 		download_script_paths_running = []
@@ -128,7 +128,7 @@ def main():
 
 					#Check to see if the node that finished has enough space to accept a new chunk; if not, remove that node from use
 					node = free_nodes[use_node_index]
-					if len(filespace(node)) == 0:
+					if len(filespace([node])) == 0:
 						del free_nodes[use_node_index]
 						del obs_running[use_node_index]
 						del save_paths_running[use_node_index]
@@ -158,7 +158,6 @@ def main():
 							obs_submitted[obs_index] = True
 					if len(obs_chunk) == obs_per_chunk or obs_submitted.count(False) == 0:
 						break
-
 			download_script_paths = []
 			metafits_script_paths = []
 			cotter_script_paths = []
@@ -369,6 +368,7 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 			gpubox01 = 0
 			flags = 0
 			metafits = 0
+
 			for filename in directory_contents: #counts how many of each type of file exists
 				if filename.endswith("_00.fits"):
 					gpubox00 += 1
@@ -383,7 +383,7 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 		else:
 			failed = True
 		if failed:
-			print "Obsid " + obsid + "not successfully downloaded."
+			print "Obsid " + obsid + " not successfully downloaded."
 			failed_obs.append(obsid)
 
 	#Delete the gpubox files
