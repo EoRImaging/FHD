@@ -2,6 +2,7 @@
 
 import os
 from astropy.time import Time
+from astropy.io import fits
 import psycopg2
 import sys
 import socket
@@ -56,8 +57,8 @@ def main():
 	obs_per_chunk = 2 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
-	#eor06 temporarly dropped
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-12"]
+	#eor06 temporarly dropped, eor11 is refusing to connect
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
 	#get obsids to download:
