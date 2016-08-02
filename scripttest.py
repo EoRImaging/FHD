@@ -121,7 +121,8 @@ def main():
 					#Process the completed chunk
 					new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], \
 						metafits_script_paths_running[use_node_index], cotter_script_paths_running[use_node_index], \
-						obs_running[use_node_index], save_paths_running[use_node_index], version, subversion)
+						obs_running[use_node_index], save_paths_running[use_node_index], version, subversion, cotter_version, \
+						db_comment, uvfits_download_check)
 					failed_obs.extend(new_failed_obs)
 
 					#Check to see if the node that finished has enough space to accept a new chunk; if not, remove that node from use
@@ -136,7 +137,7 @@ def main():
 						del final_task_jobids_running[use_node_index]
 					else:
 						break
-			j=0
+
 			#Assemble an obs_chunk:
 			while len(obs_chunk) != obs_per_chunk and obs_submitted.count(False) > 0:
 				obs_indices = [index for index, value in enumerate(obs_submitted) if value == False]
@@ -256,7 +257,7 @@ def main():
 			#Process the completed chunk
 			new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
 				cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index], \
-				version, subversion, cotter_version)
+				version, subversion, cotter_version,db_comment, uvfits_download_check)
 			failed_obs.extend(new_failed_obs)
 
 			del free_nodes[use_node_index]
@@ -312,7 +313,6 @@ def find_gpubox(obsid, save_directory, all_nodes):
 def wait_for_gridengine(obs_running, final_task_jobids_running):
 
 	sleep_time = 20
-	print "waiting"
 	while True:
 		time.sleep(sleep_time)
 		for use_node_index in range(len(obs_running)):
@@ -324,11 +324,8 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 			for task_array_index in range(len(obs_chunk)):
 				#Talk to Grid Engine about the last submitted job for one of the tasks
 				qsub_command = 'qacct -j ' + str(final_task_jobid[0]) + ' -t ' + str(task_array_index)
-				print qsub_command
 				stdoutpointer = subprocess.Popen(qsub_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				stdout_data, stderr_data = stdoutpointer.communicate()
-				print stdout_data
-				print stderr_data
 
 				#If the command that only works when the job is done does not throw an error, then the job finished
 				if not stderr_data:
@@ -343,7 +340,7 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 #Module that manages a chunk after it has been processed in Grid Engine; it removes temporary scripts,
 #checks if the downloads were successful, and deletes the gpubox files
 def chunk_complete(download_script_path, metafits_script_path, cotter_script_path, obs_chunk, save_paths, \
-	version, subversion, cotter_version):
+	version, subversion, cotter_version,db_comment, uvfits_download_check):
 
 	#Make a list of non-duplicate entries in the script paths for easy deletion
 	download_script_path=list(set(download_script_path))
