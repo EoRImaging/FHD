@@ -382,7 +382,7 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 				failed = True
 		else:
 			failed = True
-		if failed = True:
+		if failed:
 			print "Obsid " + obsid + "not successfully downloaded."
 			failed_obs.append(obsid)
 
