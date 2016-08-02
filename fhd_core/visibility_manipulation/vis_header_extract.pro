@@ -36,9 +36,21 @@ if count_dec eq 1 then dec_cnum = wh_dec[0]+1 else message, 'DEC CTYPE not found
 obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
 obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
 
-IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, from Tingay et al. 2013)
-IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
-IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
+IF N_Elements(lon) EQ 0 THEN BEGIN
+    lon_i=(where(Strmatch(param_list,'LON', /fold_case),found_lon))[0]
+    IF found_lon THEN lon = sxpar(header,'LON') ELSE lon=116.67081524 ;degrees (MWA, from Tingay et al. 2013)
+ENDIF
+lon=Float(lon)
+IF N_Elements(lat) EQ 0 THEN BEGIN
+    lat_i=(where(Strmatch(param_list,'LAT', /fold_case),found_lat))[0]
+    IF found_lat THEN lat = sxpar(header,'LAT') ELSE lat=-26.7033194 ;degrees (MWA, from Tingay et al. 2013)
+ENDIF
+lat=Float(lat)
+IF N_Elements(alt) EQ 0 THEN BEGIN
+    alt_i=(where(Strmatch(param_list,'ALT', /fold_case),found_alt))[0]
+    IF found_alt THEN alt = sxpar(header,'LAT') ELSE alt=377.827 ;altitude (meters) (MWA, from Tingay et al. 2013)
+ENDIF
+alt=Float(alt)
 
 baseline_i=(where(Strmatch(param_list,'BASELINE', /fold_case),found_baseline))[0] & IF found_baseline NE 1 THEN print,"WARNING: Group parameter BASELINE not found within uvfits header PTYPE keywords" 
 uu_i=(where(Strmatch(param_list,'UU', /fold_case),found_uu))[0] & IF found_uu NE 1 THEN print,"WARNING: Group parameter UU not found within uvfits header PTYPE keywords"
