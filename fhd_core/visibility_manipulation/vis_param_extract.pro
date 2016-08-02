@@ -1,9 +1,9 @@
 FUNCTION vis_param_extract,params,header
 
 
-uu_arr=reform(params[header.uu_i,*])
-vv_arr=reform(params[header.vv_i,*])
-ww_arr=reform(params[header.ww_i,*])
+uu_arr=Double(reform(params[header.uu_i,*]))
+vv_arr=Double(reform(params[header.vv_i,*]))
+ww_arr=Double(reform(params[header.ww_i,*]))
 baseline_arr=reform(params[header.baseline_i,*]) 
 time=reform(params[header.date_i,*])
 IF Tag_exist(header, "ant1_i") THEN $
