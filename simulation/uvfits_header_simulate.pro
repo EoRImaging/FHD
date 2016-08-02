@@ -21,8 +21,8 @@ IF Keyword_Set(hdr_in) THEN BEGIN
         Keyword_Set(date_obs): julian_date_start=date_conv(date_obs,type='julian') ;NOT debugged
         Keyword_Set(julian_date_start):date_obs=date_conv(julian_date_start,type='fits')
         ELSE: BEGIN
-            date_obs=hdr.date_obs
-            julian_date_start=hdr.jd0
+            date_obs=hdr_in.date_obs
+            julian_date_start=hdr_in.jd0
         ENDELSE
     ENDCASE
     
