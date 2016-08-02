@@ -37,18 +37,18 @@ obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
 obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
 
 IF N_Elements(lon) EQ 0 THEN BEGIN
-    lon_i=(where(Strmatch(param_list,'LON', /fold_case),found_lon))[0]
-    IF found_lon THEN lon = sxpar(header,'LON') ELSE lon=116.67081524 ;degrees (MWA, from Tingay et al. 2013)
+    lon = sxpar(header,'LON',count=found_lon) 
+    IF found_lon EQ 0 THEN lon=116.67081524 ;degrees (MWA, from Tingay et al. 2013)
 ENDIF
 lon=Float(lon)
 IF N_Elements(lat) EQ 0 THEN BEGIN
-    lat_i=(where(Strmatch(param_list,'LAT', /fold_case),found_lat))[0]
-    IF found_lat THEN lat = sxpar(header,'LAT') ELSE lat=-26.7033194 ;degrees (MWA, from Tingay et al. 2013)
+    lat = sxpar(header,'LAT',count=found_lat) 
+    IF found_lat EQ 0 THEN lat=-26.7033194 ;degrees (MWA, from Tingay et al. 2013)
 ENDIF
 lat=Float(lat)
 IF N_Elements(alt) EQ 0 THEN BEGIN
-    alt_i=(where(Strmatch(param_list,'ALT', /fold_case),found_alt))[0]
-    IF found_alt THEN alt = sxpar(header,'LAT') ELSE alt=377.827 ;altitude (meters) (MWA, from Tingay et al. 2013)
+    alt = sxpar(header,'ALT',count=found_alt) 
+    IF found_alt EQ 0 THEN alt=377.827 ;altitude (meters) (MWA, from Tingay et al. 2013)
 ENDIF
 alt=Float(alt)
 
