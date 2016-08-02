@@ -156,10 +156,6 @@ def main():
 					if len(obs_chunk) == obs_per_chunk or obs_submitted.count(False) == 0:
 						break
 
-			print obs_chunk
-			print node_preferred
-
-
 			download_script_paths = []
 			metafits_script_paths = []
 			cotter_script_paths = []
