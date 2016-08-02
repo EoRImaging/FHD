@@ -1373,6 +1373,92 @@ case version of
 
    end
 
+   'nb_pytest_after_versioncontrol': begin
+       recalculate_all=1
+       mapfn_recalculate=0
+
+   end
+      'nb_pytest_before_versioncontrol': begin
+       recalculate_all=1
+       mapfn_recalculate=0
+
+   end
+   
+   
+   'nb_gleam_firstpass': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+      'nb_gleam_firstpass_100mJy': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+       calibration_flux_threshold = .1
+   end
+         'nb_gleam_firstpass_100mJy_nodiffuse': begin
+       saved_run_bp=0
+       undefine, diffuse_calibrate, diffuse_model
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+       calibration_flux_threshold = .1
+   end
+      'nb_patti_catalog': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+      'nb_patti_catalog_nodiffuse': begin
+       saved_run_bp=0
+       undefine, diffuse_calibrate, diffuse_model
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+         'nb_patti_catalog_nocaldiffuse': begin
+       saved_run_bp=0
+       undefine, diffuse_calibrate
+       diffuse_model=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       model_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       model_visibilities=1
+      return_cal_visibilities=0
+   end
+   'nb_patti_catalog_nosidelobes': begin
+      allow_sidelobe_cal_sources=0
+      allow_sidelobe_model_sources=0
+      saved_run_bp=0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+             recalculate_all=1
+       mapfn_recalculate=0
+   end
+      'nb_gleam_firstpass_nosidelobes': begin
+      allow_sidelobe_cal_sources=0
+      allow_sidelobe_model_sources=0
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+              recalculate_all=1
+       mapfn_recalculate=0
+   end
+   
+   'nb_decon_July2016_presidelobe':begin 
+      max_sources=200000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      ;dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=2048
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      
+            undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
+
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
    ; My default full deconvolution parameters
@@ -1512,8 +1598,8 @@ case version of
    
 endcase
    
-if version EQ 'nb_whitening' then begin
-  vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/whitening_change/uvfits/'+strtrim(string(obs_id),2)+'.uvfits'
+if version EQ 'nb_pytest_after_versioncontrol' then begin
+  vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
 endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list

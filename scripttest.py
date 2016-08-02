@@ -45,11 +45,7 @@ def main():
 	subversion=options.subversion
 	obsfile_name=options.obsfile_name
 	uvfits_download_check=options.uvfits_download_check
-	#flagfiles=options.flagfiles
 	db_comment=options.db_comment
-
-	print version
-	print subversion
 
 	if (version is None) and (subversion is None) and (uvfits_download_check is None):
 		print "ERROR: version, subversion, and uvfits_download_check were not set."
@@ -60,7 +56,8 @@ def main():
 	obs_per_chunk = 2 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05", "eor-06", "eor-07", "eor-08", "eor-10", "eor-11", "eor-12", "eor-13", "eor-14"]
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
+	#eor06 temporarly dropped
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
 	#get obsids to download:
@@ -76,12 +73,10 @@ def main():
 	#Find the obsids' save directories:
 	t = Time([int(obsid) for obsid in obsids], format="gps", scale="utc")
 	jds = t.jd
-	#jds = [int(date) for date in chunk_ids]
+	jds = [int(jd) for jd in jds]
 	save_directories = ["EoRuvfits/jd" + str(jd) + "v"+ str(version) + "_" + str(subversion) + "/" for jd in jds]
 
-	#find each obs' preferred node, put in object node_preferred (False if there is no preferred node)  
-
-	#Check to see if GPU box files already exist:
+	#Check to see if GPU box files already exist, define a preferred node if they do:
 	node_preferred = []
 	for i, obsid in enumerate(obsids):
 		gpu_loc_node = find_gpubox(obsid, save_directories[i], all_nodes)
@@ -126,7 +121,8 @@ def main():
 					#Process the completed chunk
 					new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], \
 						metafits_script_paths_running[use_node_index], cotter_script_paths_running[use_node_index], \
-						obs_running[use_node_index], save_paths_running[use_node_index], version, subversion)
+						obs_running[use_node_index], save_paths_running[use_node_index], version, subversion, cotter_version, \
+						db_comment, uvfits_download_check)
 					failed_obs.extend(new_failed_obs)
 
 					#Check to see if the node that finished has enough space to accept a new chunk; if not, remove that node from use
@@ -144,26 +140,23 @@ def main():
 
 			#Assemble an obs_chunk:
 			while len(obs_chunk) != obs_per_chunk and obs_submitted.count(False) > 0:
-				for obs_index, obsid in enumerate(obsids):
-					print obsid
-					if obs_submitted[obs_index] == False:
-						if node_preferred.count(node) > 0:
-							if node_preferred[obs_index] == node:
-								obs_chunk.append(obsid)
+				obs_indices = [index for index, value in enumerate(obs_submitted) if value == False]
+				node_preferred_use = [node_preferred[obs_index] for obs_index in obs_indices]
+				for obs_index in obs_indices:
+					if node_preferred_use.count(node) > 0:
+						if node_preferred[obs_index] == node:
+							obs_chunk.append(obsids[obs_index])
+							obs_submitted[obs_index] = True
+					else:
+						if node_preferred_use.count(False) > 0:
+							if node_preferred[obs_index] == False:
+								obs_chunk.append(obsids[obs_index])
 								obs_submitted[obs_index] = True
 						else:
-							if node_preferred.count(False) > 0:
-								if node_preferred[obs_index] == False:
-									obs_chunk.append(obsid)
-									obs_submitted[obs_index] = True
-							else:
-								obs_chunk.append(obsid)
-								obs_submitted[obs_index] = True
+							obs_chunk.append(obsids[obs_index])
+							obs_submitted[obs_index] = True
 					if len(obs_chunk) == obs_per_chunk or obs_submitted.count(False) == 0:
 						break
-
-			print obs_chunk
-			print obs_submitted
 
 			download_script_paths = []
 			metafits_script_paths = []
@@ -206,6 +199,10 @@ def main():
 			#initialize
 			task_jobid = False
 
+			#Mount your home directory and the node directories to remove stale NFS handles
+			stdoutpointer = subprocess.Popen(("cd $HOME ; cd " + node).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+			stdout_data, stderr_data = stdoutpointer.communicate()
+
 			#Download the files (a uvfits or gpuboxes depending on uvfits_download_check)
 			if any(download) or uvfits_download_check:
 				(task_jobid, download_script_path) = download_files(save_paths, obs_chunk, uvfits_download_check, python_path, node, download)
@@ -229,10 +226,12 @@ def main():
 			if not uvfits_download_check:
 				(task_jobid, cotter_version, cotter_script_path) = run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node)
 				cotter_script_paths.append(cotter_script_path)
+			else:
+				cotter_version=''
 
 			#Grab the last Grid Engine jobid to watch while the program sleeps
 			final_task_jobid.append(task_jobid)
-	
+
 			#Record information for the currently running chunks
 			if len(obs_running) < use_node_index:
 				obs_running.append(obs_chunk)
@@ -258,7 +257,7 @@ def main():
 			#Process the completed chunk
 			new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
 				cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index], \
-				version, subversion)
+				version, subversion, cotter_version,db_comment, uvfits_download_check)
 			failed_obs.extend(new_failed_obs)
 
 			del free_nodes[use_node_index]
@@ -341,7 +340,7 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 #Module that manages a chunk after it has been processed in Grid Engine; it removes temporary scripts,
 #checks if the downloads were successful, and deletes the gpubox files
 def chunk_complete(download_script_path, metafits_script_path, cotter_script_path, obs_chunk, save_paths, \
-	version, subversion):
+	version, subversion, cotter_version,db_comment, uvfits_download_check):
 
 	#Make a list of non-duplicate entries in the script paths for easy deletion
 	download_script_path=list(set(download_script_path))
@@ -415,7 +414,7 @@ def download_files(save_paths, obs_chunk, uvfits_download_check, python_path, no
 		print 'ERROR: MWA_Tools is not in the path, obsdownload.py not found!'
 		print 'Please add the path to MWA_Tools to your system path.'
 		sys.exit(1)
-			
+
 	#Setup the path to the download script and log files
 	obsdownload_path = mwa_tools_path[0:mwa_tools_path.find("MWA_Tools")+9] + '/scripts/obsdownload.py'
 	log_path = (save_paths[0])[0:(save_paths[0]).rfind("jd")] + "log_files/"
@@ -553,6 +552,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	uvfits_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '.uvfits' for i in range(len(obs_chunk))]
 	flagfiles_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '_%%.mwaf' for i in range(len(obs_chunk))]
 	flagfiles_zip = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] + '_flags.zip' for i in range(len(obs_chunk))]
+	flagfiles_dir = [save_paths[i] + obs_chunk[i] + '/' for i in range(len(obs_chunk))]
 	gpubox_path = [save_paths[i] + obs_chunk[i] + '/' + obs_chunk[i] for i in range(len(obs_chunk))]
 
 	#Find out the version of the found cotter using a child process
@@ -567,17 +567,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	log_path = (save_paths[0])[0:(save_paths[0]).rfind("jd")] + "log_files/"
 
 	#If flagfiles is set in the cotter args, unzip the flag folder and place their path in the dict
-	#Currently fails on the whole chunk if one zip file is missing...needs to be discussed
-	#Can isfile and zipfile work on lists? If so, take out for loop
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
-	#	for i in range(len(obs_chunk)):
-	#		if os.path.isfile(flagfiles_zip[i]):
-	#			zip_ref = zipfile.ZipFile(flagfiles_zip[i], 'r')
-	#			zip_ref.extractall(save_paths[i] + obs_chunk[i] + '/')
-	#			zip_ref.close()
-	#		else:
-	#			print "ERROR: Flags zip file is expected and does not exist"
-	#			sys.exit(1)
 		index = cotter_args[str(version)+','+str(subversion)].find('-flagfiles')
 		output_line = cotter_args[str(version)+','+str(subversion)][:index+10] + ' ${flagfiles_path[$SGE_TASK_ID]}' + cotter_args[str(version)+','+str(subversion)][index+10:]
 		cotter_args[str(version)+','+str(subversion)] = output_line
@@ -606,10 +596,11 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'metafits_path=(0 ' + " ".join(metafits_path) + ')\n' + \
 		'flagfiles_path=(0 ' + " ".join(flagfiles_path) + ')\n' + \
 		'flagfiles_zip=(0 ' + " ".join(flagfiles_zip) + ')\n' + \
+		'flagfiles_dir=(0 ' + " ".join(flagfiles_dir) + ')\n' + \
 		'ls ${save_paths[$SGE_TASK_ID]} > /dev/null\n' )
 
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
-		cotter_commands_file.write('unzip ${flagfiles_zip[$SGE_TASK_ID]}\n')
+		cotter_commands_file.write('unzip -o ${flagfiles_zip[$SGE_TASK_ID]} -d ${flagfiles_dir[$SGE_TASK_ID]}\n')
 
 	cotter_commands_file.write(cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + \
 		' -absmem 20 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
@@ -647,6 +638,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	#50% memory allowed in cotter, allocating 25G per job (used <25), ran 3 jobs per cpu, took ~45 min for 7 job run
 	#25% memory allowed in cotter, allocating 20G per job (used <18), ran 4 jobs per cpu, took ~43 min for 7 job run
 	#Under 25% memory in cotter causes memory allocation errors.
+	#absmem option for cotter did not work with 20G allocation
 #********************************
 
 #********************************
