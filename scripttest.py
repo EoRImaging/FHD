@@ -56,7 +56,8 @@ def main():
 	obs_per_chunk = 2 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05", "eor-06", "eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
+	#eor06 temporarly dropped
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
 	#get obsids to download:
@@ -135,7 +136,7 @@ def main():
 						del final_task_jobids_running[use_node_index]
 					else:
 						break
-
+			j=0
 			#Assemble an obs_chunk:
 			while len(obs_chunk) != obs_per_chunk and obs_submitted.count(False) > 0:
 				obs_indices = [index for index, value in enumerate(obs_submitted) if value == False]
@@ -229,7 +230,7 @@ def main():
 
 			#Grab the last Grid Engine jobid to watch while the program sleeps
 			final_task_jobid.append(task_jobid)
-	
+
 			#Record information for the currently running chunks
 			if len(obs_running) < use_node_index:
 				obs_running.append(obs_chunk)
@@ -311,6 +312,7 @@ def find_gpubox(obsid, save_directory, all_nodes):
 def wait_for_gridengine(obs_running, final_task_jobids_running):
 
 	sleep_time = 20
+	print "waiting"
 	while True:
 		time.sleep(sleep_time)
 		for use_node_index in range(len(obs_running)):
@@ -322,8 +324,11 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 			for task_array_index in range(len(obs_chunk)):
 				#Talk to Grid Engine about the last submitted job for one of the tasks
 				qsub_command = 'qacct -j ' + str(final_task_jobid[0]) + ' -t ' + str(task_array_index)
+				print qsub_command
 				stdoutpointer = subprocess.Popen(qsub_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				stdout_data, stderr_data = stdoutpointer.communicate()
+				print stdout_data
+				print stderr_data
 
 				#If the command that only works when the job is done does not throw an error, then the job finished
 				if not stderr_data:

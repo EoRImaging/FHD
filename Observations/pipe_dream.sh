@@ -213,8 +213,6 @@ message=($message)
 #Gather the grid engine id from the job for later use
 id=`echo ${message[2]} | cut -f1 -d"."`
 
-echo $id
-
 ########End of submitting the firstpass job and waiting for output
 
 
@@ -257,7 +255,7 @@ for obs_id in "${obs_id_array[@]}"; do
     if ! ls -1 ${outdir}/fhd_${version}/Healpix/${obs_id}*cube* 2>/dev/null | wc -l | grep 4 -q; then
 	echo "Observation $obs_id is missing one or more Healpix cubes"
         rerun_flag=1
-        [[ $resubmit_list =~ $x ]] || resubmit_list+=($obs_id)
+        [[ $resubmit_list =~ $obs_id ]] || resubmit_list+=($obs_id)
         [[ $resubmit_index =~ $i ]] || resubmit_index+=($i)
     fi
 
@@ -344,6 +342,8 @@ done
 if [ "$rerun_flag" -eq 1 ];then 
 
    nobs=${#resubmit_list[@]}
+
+   echo "Reprocessing ${resubmit_list[@]}"
 
    message=$(qsub -p $priority -P FHD -l h_vmem=$resubmit_mem,h_stack=512k,h_rt=${wallclock_resubmit} -V -v nslots=$nslots,outdir=$outdir,version=$version,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots -sync y ${FHDpath}Observations/eor_firstpass_job.sh ${resubmit_list[@]})
    message=($message)
