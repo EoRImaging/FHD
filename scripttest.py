@@ -362,8 +362,8 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 	failed_obs = []
 	for i, obsid in enumerate(obs_chunk):
 		failed = False
-		if os.path.isdir(save_paths[i]): #checks to see if the directory exists
-			directory_contents = os.listdir(save_paths[i])
+		if os.path.isdir(save_paths[i] + obsid): #checks to see if the directory exists
+			directory_contents = os.listdir(save_paths[i] + obsid)
 			gpubox00 = 0
 			gpubox01 = 0
 			flags = 0
