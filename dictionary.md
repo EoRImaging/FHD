@@ -69,8 +69,8 @@ calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
 ## Instrument Parameters
-**lat** Latitude, in decimal degrees
-**lon** Longitude, in decimal degrees
+**lat**: Latitude, in decimal degrees <br />
+**lon**: Longitude, in decimal degrees
 
 ## Deconvolution
 
