@@ -57,8 +57,8 @@ def main():
 	obs_per_chunk = 2 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-12"]
-	#eor06 temporarly dropped, eor11 is refusing to connect
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
+	#eor06 temporarly dropped
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
 	#get obsids to download:
@@ -385,6 +385,8 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 		if failed:
 			print "Obsid " + obsid + " not successfully downloaded."
 			failed_obs.append(obsid)
+		else:
+			print "Obsid " + obsid + "sucessfully downloaded to " + save_paths[i]
 
 	#Delete the gpubox files
 	delete_gpubox(obs_chunk,save_paths)
@@ -462,6 +464,7 @@ def download_files(save_paths, obs_chunk, uvfits_download_check, python_path, no
 		'save_paths_download=(0 '+" ".join(save_paths_download) + ')\n' + \
 		'obs_chunk_download=(0 ' +  " ".join(obs_chunk_download) + ')\n' + \
 		'ls ${save_paths_download[$SGE_TASK_ID]} > /dev/null \n' + \
+		#'cp obscrt.crt ${save_paths_download[$SGE_TASK_ID]}/obscrt.crt
 		python_path.strip('\n') + ' ' + obsdownload_path + ' -d ${save_paths_download[$SGE_TASK_ID]} -o ${obs_chunk_download[$SGE_TASK_ID]} ' + u_arg)
 	#Close the file
 	download_commands_file.close() 
@@ -793,7 +796,8 @@ def fill_database(obs_chunk,version,subversion,save_paths,cotter_version,db_comm
 		cur.execute("SELECT uvfits.obsid FROM uvfits WHERE (obsid,version,subversion,cotter_version,bottom_freq_mhz,top_freq_mhz)=(%s,%s,%s,%s,%s,%s);", \
 			(obsid,version,subversion,cotter_version,bottom_freq_mhz,top_freq_mhz))
 		if cur.fetchall():
-			print "WARNING: A uvfits file of this obsid, version, subversion, cotter version, and frequency range already exists."
+			print "WARNING: A uvfits file for obsid " + obsid + ", version " + version + ", subversion " + subversion + \
+				", cotter version " + cotter_version + ", and frequency range " + bottom_freq_mhz + "-" + top_freq_mhz + " already exists."
 
 		#Create the database row, and fill it with the inputs. 
 		cur.execute("INSERT INTO uvfits(obsid,version,subversion,path,cotter_version,timestamp,comment,bottom_freq_mhz,top_freq_mhz) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);", \
