@@ -71,6 +71,9 @@ def main():
 		print "WARNING: Obs list contains redundant entries."
 		obsids = nonredundant_obsids
 
+	#Define the progress bar (first element is obs done, second element is total obs)
+	obs_progress = [0,len(obsids)]
+
 	#Find the obsids' save directories:
 	t = Time([int(obsid) for obsid in obsids], format="gps", scale="utc")
 	jds = t.jd
@@ -123,7 +126,7 @@ def main():
 					new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], \
 						metafits_script_paths_running[use_node_index], cotter_script_paths_running[use_node_index], \
 						obs_running[use_node_index], save_paths_running[use_node_index], version, subversion, cotter_version, \
-						db_comment, uvfits_download_check)
+						db_comment, uvfits_download_check, obs_progress)
 					failed_obs.extend(new_failed_obs)
 
 					#Check to see if the node that finished has enough space to accept a new chunk; if not, remove that node from use
@@ -257,7 +260,7 @@ def main():
 			#Process the completed chunk
 			new_failed_obs = chunk_complete(download_script_paths_running[use_node_index], metafits_script_paths_running[use_node_index], \
 				cotter_script_paths_running[use_node_index], obs_running[use_node_index], save_paths_running[use_node_index], \
-				version, subversion, cotter_version,db_comment, uvfits_download_check)
+				version, subversion, cotter_version,db_comment, uvfits_download_check,obs_progress)
 			failed_obs.extend(new_failed_obs)
 
 			del free_nodes[use_node_index]
@@ -340,7 +343,7 @@ def wait_for_gridengine(obs_running, final_task_jobids_running):
 #Module that manages a chunk after it has been processed in Grid Engine; it removes temporary scripts,
 #checks if the downloads were successful, and deletes the gpubox files
 def chunk_complete(download_script_path, metafits_script_path, cotter_script_path, obs_chunk, save_paths, \
-	version, subversion, cotter_version,db_comment, uvfits_download_check):
+	version, subversion, cotter_version,db_comment, uvfits_download_check, obs_progress):
 
 	#Make a list of non-duplicate entries in the script paths for easy deletion
 	download_script_path=list(set(download_script_path))
@@ -386,7 +389,8 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 			print "Obsid " + obsid + " not successfully downloaded."
 			failed_obs.append(obsid)
 		else:
-			print "Obsid " + obsid + "sucessfully downloaded to " + save_paths[i]
+			obs_progress[0] = obs_progress[0] + 1
+			print "Obsid " + obsid + " sucessfully downloaded to " + save_paths[i] + ', ' + str(obs_progress[0]) + '/' + str(obs_progress[1]) + ' done'
 
 	#Delete the gpubox files
 	delete_gpubox(obs_chunk,save_paths)
@@ -797,7 +801,7 @@ def fill_database(obs_chunk,version,subversion,save_paths,cotter_version,db_comm
 			(obsid,version,subversion,cotter_version,bottom_freq_mhz,top_freq_mhz))
 		if cur.fetchall():
 			print "WARNING: A uvfits file for obsid " + obsid + ", version " + version + ", subversion " + subversion + \
-				", cotter version " + cotter_version + ", and frequency range " + bottom_freq_mhz + "-" + top_freq_mhz + " already exists."
+				", cotter " + cotter_version + ", and frequency range " + bottom_freq_mhz + "-" + top_freq_mhz + " already exists."
 
 		#Create the database row, and fill it with the inputs. 
 		cur.execute("INSERT INTO uvfits(obsid,version,subversion,path,cotter_version,timestamp,comment,bottom_freq_mhz,top_freq_mhz) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);", \
@@ -824,22 +828,31 @@ def delete_gpubox(obs_chunk,save_paths):
 
 		#Perform check to make sure essential information is known about the uvfits file
 		if not obsid:
-			return "WARNING: obsid not defined in delete_gpubox. Gpubox files not deleted"
+			print "WARNING: obsid not defined in delete_gpubox. Gpubox files not deleted"
+			return
 		if not save_path:
-			return "WARNING: save_path not defined in delete_gpubox. Gpubox files not deleted"
+			print "WARNING: save_path not defined in delete_gpubox. Gpubox files not deleted"
+			return
 	
 		#If the uvfits file does not exist with the gpubox files, do not delete the gpubox files
-		if not os.path.isfile(save_path + str(obsid) + '.uvfits'):
-			return "WARNING: uvfits file does not exist in the directory with the gpubox files. Gpubox files not deleted"
+		if not os.path.isfile(save_path + obsid + '/' + obsid + '.uvfits'):
+			print "WARNING: uvfits file does not exist in the directory with the gpubox files. Gpubox files not deleted"
+			return
+
+		directory_contents = os.listdir(save_path + obsid)
+
+		for filename in directory_contents:
+				if filename.endswith("_00.fits") or filename.endswith("_01.fits") or filename.endswith('.mwaf'):
+					os.remove(save_path + obsid + '/' + filename)
+					gpubox_flag = True
+					
 
 		#If the gpubox files do not exist, exit module
-		if not os.path.isfile(save_path + str(obsid) + '*gpubox*.fits'):
-			return "WARNING: there are not gpubox files to delete in " + save_path + " for obsid " + str(obsid) 
-
-		#Remove gpubox files
-		os.remove(save_path + str(obsid) + '*gpubox*.fits')
-
-		print "Gpubox files in " + save_path + " for obsid " + str(obsid) + " have been deleted."
+		if not gpubox_flag:
+			print "WARNING: there are not gpubox files to delete in " + save_path + " for obsid " + obsid
+			return
+		else:
+			print "Gpubox files in " + save_path + " for obsid " + obsid + " have been deleted."
 #********************************
 
 if __name__ == '__main__':
