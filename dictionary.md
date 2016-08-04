@@ -50,8 +50,9 @@ FHD uses keywords to create unique run-specific settings. This dictionary descri
   -*Default*: 1 <br />
 **diffuse_calibrate**: a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. <br />
   -*Default*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
-**max_calibration_sources**: limits the number of sources used in the calibration (and in the model if `model_visibilities` is not set). This is necessarily the maximum number of sources as a function of apparent brightness due to the way deconvolution finds sources for catalogs if the catalog is from a FHD run. <br />
-  -*Default*: Set by `max_sources` <br />
+**max_calibration_sources**: limits the number of sources used in the calibration. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
+  -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set.
+  -*Default*: All valid sources in the catalog are used. <br />
 **saved_run_bp**: use a saved bandpass for bandpass calibration. Reads in a text file saved in instrument config which is dependent on pointing number at the moment. Needs updating. <br />
   -*Needs updating*: File name needs more information to descriminate between instruments and bands. Need to have capability to read in saved bandpasses not dependent on cable type.<br />
   -*Dependency*: instrument_config/<pointing number>_bandpass.txt <br />
@@ -85,8 +86,7 @@ no_restrict_cal_sources=1 <br />
   
 **gain_factor**: a percent amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
   
-**max_sources**: the number of sources allowed to be calibrated on and to be found in fast holographic deconvolution (!Q true?), or the number of sources from a source list that are allowed in firstpass for calibration and modelling. This is necessarily the maximum number of sources found as a function of apparent brightness due to the way deconvolution finds sources. <br />
-  -*Dependency*: if `model_visibilities=1` and `max_model_sources` is set, `max_model_sources` will take precedence. If `model_visibilities=0` and `max_calibration_sources` is set, `max_calibration_sources` will take precedence. <br />
+**max_sources**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
   -*Default*: 20000 <br />
   
 **return_decon_visibilities**: <br />
@@ -98,13 +98,13 @@ no_restrict_cal_sources=1 <br />
 ## Model
 
 **allow_sidelobe_model_sources**: allows FHD to model sources in the sidelobes for subtraction. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of amodel alibration source catalog for the particular observation. <br />
-  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect, otherwise `allow_sidelobe_cal_sources` overrides. <br />
+  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: Overriden by `allow_sidelobe_cal_sources` <br />
+  -*Default*: Additional sidelobe sources are not included. If `return_cal_visibilities` and `allow_sidelobe_cal_sources` are both set, then the model will include those sources in the sidelobes that were used in calibration. <br />
 
-**max_model_sources**: limits the number of sources used in the model. This is necessarily the maximum number of sources as a function of apparent brightness due to the way deconvolution finds sources for catalogs if the catalog is from a FHD run. <br />
-  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect, otherwise `max_sources` or  `max_calibration_sources` overrides. <br />
-  -*Default*: Overriden by `max_sources` <br />
+**max_model_sources**: limits the number of sources used in the model. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
+  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. If `return_cal_visibilities` is set, then the final model will include all calibration sources and all model sources (duplicates are caught and included only once). <br />
+  -*Default*: All valid sources are used. <br />
 
 ## Export
 
