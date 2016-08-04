@@ -100,6 +100,7 @@ no_restrict_cal_sources=1 <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: Overriden by `allow_sidelobe_cal_sources` <br />
 
+**max_model_sources**: !Q Does this, as its name implies, limit the number of sources in the model? Will this carry over into simulations?
 
 ## Export
 
