@@ -1610,11 +1610,8 @@ if version EQ 'nb_pytest_after_versioncontrol' then begin
 endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
-;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
- 
+  ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
 endelse
-
-if version EQ 'nb_bandpass_division_test' then vis_file_list=vis_file_list+strtrim(string(obs_id),2)+'.uvfits'
 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
