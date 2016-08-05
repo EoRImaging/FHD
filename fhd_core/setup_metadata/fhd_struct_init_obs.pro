@@ -85,7 +85,7 @@ antenna_flag = 1
 IF Tag_exist(params, "antenna1") AND Tag_exist(params, "antenna2") THEN BEGIN
     ant1_arr = params.antenna1
     ant2_arr = params.antenna2
-    IF Keyword_Set(ant1_arr) AND Keyword_Set(ant2_arr) THEN BEGIN
+    IF Max(ant1_arr) GT 0 AND Max(ant2_arr) GT 0 THEN BEGIN
         tile_A = ant1_arr
         tile_B = ant2_arr
         n_tile=max(tile_A)>max(tile_B)
