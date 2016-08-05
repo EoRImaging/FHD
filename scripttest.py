@@ -810,7 +810,7 @@ def fill_database(obs_chunk,version,subversion,save_paths,cotter_version,db_comm
 
 		#Create the database row, and fill it with the inputs. 
 		cur.execute("INSERT INTO uvfits(obsid,version,subversion,path,cotter_version,timestamp,comment,bottom_freq_mhz,top_freq_mhz) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);", \
-			(obsid,version,subversion,save_path,cotter_version,timestamp,db_comment,bottom_freq_mhz,top_freq_mhz))
+			(obsid,version,subversion,save_path + obsid + '.uvfits',cotter_version,timestamp,db_comment,bottom_freq_mhz,top_freq_mhz))
 
 	#Commit all the cur.execute, and close the connection.
 	conn.commit()
