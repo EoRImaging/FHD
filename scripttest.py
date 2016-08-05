@@ -54,7 +54,7 @@ def main():
 		print "To download uvfits files only and bypass cotter, set -u 1 on the command line."
 		sys.exit(1)
 
-	obs_per_chunk = 2 #number of obsids to run in parallel
+	obs_per_chunk = 5 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
 	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
@@ -358,11 +358,10 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 	for script in cotter_script_path:
 		os.remove(script)
 
-	#Fill the database with the new uvfits
-	fill_database(obs_chunk,version,subversion,save_paths,cotter_version,db_comment,uvfits_download_check)
-
 	#Check that all gpubox files were successfully downloaded
 	failed_obs = []
+	obs_chunk_finished = []
+	save_path_finished = []
 	for i, obsid in enumerate(obs_chunk):
 		failed = False
 		if os.path.isdir(save_paths[i] + obsid): #checks to see if the directory exists
@@ -390,10 +389,16 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 			failed_obs.append(obsid)
 		else:
 			obs_progress[0] = obs_progress[0] + 1
+			obs_chunk_finished.append(obsid)
+			save_path_finished.append(save_paths[i])
 			print "Obsid " + obsid + " sucessfully downloaded to " + save_paths[i] + ', ' + str(obs_progress[0]) + '/' + str(obs_progress[1]) + ' done'
 
+
+	#Fill the database with the new uvfits that finished
+	fill_database(obs_chunk_finished,version,subversion,save_path_finished,cotter_version,db_comment,uvfits_download_check)
+
 	#Delete the gpubox files
-	delete_gpubox(obs_chunk,save_paths)
+	delete_gpubox(obs_chunk_finished,save_path_finished)
 
 	return failed_obs
 
