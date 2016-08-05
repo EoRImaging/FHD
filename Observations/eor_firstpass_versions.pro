@@ -1604,8 +1604,6 @@ endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-  undefine,uvfits_version ; don't need these passed further
-  undefine,uvfits_subversion
   undefine,obs_id
 endelse
 
