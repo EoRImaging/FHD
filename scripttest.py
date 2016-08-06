@@ -57,8 +57,8 @@ def main():
 	obs_per_chunk = 5 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
-	#eor06 temporarly dropped
+	all_nodes = ["eor-02", "eor-03", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
+	#eor06 temporarly dropped, eor04 has lowered capability
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
 	#get obsids to download:
@@ -203,8 +203,8 @@ def main():
 			task_jobid = False
 
 			#Mount your home directory and the node directories to remove stale NFS handles
-			stdoutpointer = subprocess.Popen(("cd $HOME ; cd " + node).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-			stdout_data, stderr_data = stdoutpointer.communicate()
+			#stdoutpointer = subprocess.Popen(("cd $HOME ; ls ; cd " + node + '; ls').split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+			#stdout_data, stderr_data = stdoutpointer.communicate()
 
 			#Download the files (a uvfits or gpuboxes depending on uvfits_download_check)
 			if any(download) or uvfits_download_check:
@@ -467,13 +467,13 @@ def download_files(save_paths, obs_chunk, uvfits_download_check, python_path, no
 	#Write a bash script so that Grid Engine can run a task array for the downloads.
 	download_script_path = save_paths_download[0] + 'download_commands_file_chunk'+obs_chunk_download[0]+'.sh'
 	download_commands_file = open(download_script_path, 'w')
-	#Write the contents of the file and the necessary arguments
+	#Write the contents of the file and the necessary arguments, mount directories to remove stale handles
 	download_commands_file.write('#!/bin/bash\n\n' + \
 		'#$ -S /bin/bash\n\n' + \
 		'save_paths_download=(0 '+" ".join(save_paths_download) + ')\n' + \
 		'obs_chunk_download=(0 ' +  " ".join(obs_chunk_download) + ')\n' + \
 		'ls ${save_paths_download[$SGE_TASK_ID]} > /dev/null \n' + \
-		#'cp obscrt.crt ${save_paths_download[$SGE_TASK_ID]}/obscrt.crt
+		'ls $HOME > /dev/null \n' + \
 		python_path.strip('\n') + ' ' + obsdownload_path + ' -d ${save_paths_download[$SGE_TASK_ID]} -o ${obs_chunk_download[$SGE_TASK_ID]} ' + u_arg)
 	#Close the file
 	download_commands_file.close() 
@@ -482,7 +482,7 @@ def download_files(save_paths, obs_chunk, uvfits_download_check, python_path, no
 	os.chmod(download_script_path, 0775)
 
 	#Setup the the bulk of the qsub command
-	qsub_command = "qsub -l h_vmem=1G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] + ".mit.edu -pe chost 1 -e " + \
+	qsub_command = "qsub -l h_vmem=1G,h_stack=512,h_rt=03:00:00,h=" + node.split('/')[2] + ".mit.edu -pe chost 1 -e " + \
 		log_path + " -o " + log_path + " -N obs_download -t 1:" + str(len(obs_chunk_download))
 
 	#Run the qsub command
@@ -644,10 +644,10 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 
 	#Setup the bulk of the Grid Engine command, depending on if there is a task to wait on
 	if task_jobid:
-		qsub_command = "qsub -V -b y -hold_jid " + task_jobid + " -l h_vmem=20G,h_stack=512,h_rt=02:00:00,h=" + node.split('/')[2] \
+		qsub_command = "qsub -V -b y -hold_jid " + task_jobid + " -l h_vmem=20G,h_stack=512,h_rt=01:00:00,h=" + node.split('/')[2] \
 			 + ".mit.edu -pe chost 1 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
 	else:
-		qsub_command = "qsub -V -b y -l h_vmem=20G,h_stack=512,h_rt=02:00:00,h=" + node.split('/')[2] \
+		qsub_command = "qsub -V -b y -l h_vmem=20G,h_stack=512,h_rt=01:00:00,h=" + node.split('/')[2] \
 			 + ".mit.edu -pe chost 1 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
 
 	#Run cotter with the correct arguments, the path to the metafits, the uvfits output path, and the gpubox file paths
@@ -716,10 +716,10 @@ def make_metafits(obs_chunk, save_paths, task_jobid, python_path, node, metafits
 
 	#Setup the bulk of the Grid Engine command, depending on if there is a task to wait on
 	if task_jobid: 
-		qsub_command = "qsub -hold_jid " + task_jobid + " -l h_vmem=1G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] + \
+		qsub_command = "qsub -hold_jid " + task_jobid + " -l h_vmem=1G,h_stack=512,h_rt=01:00:00,h=" + node.split('/')[2] + \
 			".mit.edu -V -pe chost 1 -e " + log_path + " -o " + log_path +" -N make_metafits -t 1:" + str(len(obs_elements))
 	else:
-		qsub_command = "qsub -l h_vmem=1G,h_stack=512,h_rt=08:00:00,h=" + node.split('/')[2] + \
+		qsub_command = "qsub -l h_vmem=1G,h_stack=512,h_rt=01:00:00,h=" + node.split('/')[2] + \
 			".mit.edu -V -pe chost 1 -e " + log_path + " -o " + log_path +" -N make_metafits -t 1:" + str(len(obs_elements))
 
 	#Run the metafits script to create a metafits for the obsid in the uvfits folder

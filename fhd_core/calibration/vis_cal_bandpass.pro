@@ -48,8 +48,7 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
       ;after cal solutions are found, so apply these gains by multiplication.
       for pol_i=0,n_pol-1 do $
         for tile_i=0, n_tile-1 do $
-          (*gain_arr_ptr[pol_i])[*,tile_i] = $
-            abs((*gain_arr_ptr[pol_i])[*,tile_i]) * ave_bp_gains_fullband * exp(Complex(0,1)*atan((*gain_arr_ptr[pol_i])[*,tile_i],/phase))
+          (*gain_arr_ptr[pol_i])[*,tile_i] = (*gain_arr_ptr[pol_i])[*,tile_i] * ave_bp_gains_fullband
       
     endif
   endif
