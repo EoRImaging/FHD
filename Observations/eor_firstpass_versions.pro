@@ -1560,6 +1560,21 @@ case version of
       dft_threshold = 1
       snapshot_recalculate = 1
    end
+   
+   'rlb_diffuse_survey_oneobs_nodiffuse': begin ;;July 2016
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_diffuse_survey_oneobs': begin ;;July 2016
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
 
 
    ;Khang's Stuff:
