@@ -56,12 +56,11 @@ def main():
 
 	obs_per_chunk = 5 #number of obsids to run in parallel
 
-	#find which nodes have enough space for downloads:
 	all_nodes = ["eor-02", "eor-03", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
 	#eor06 temporarly dropped, eor04 has lowered capability
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
-	#get obsids to download:
+	#Get obsids to download
 	obsfile = open(obsfile_name, "r")
 	obsids = [line.split( ) for line in obsfile.readlines()]
 	obsids = [obs[0] for obs in obsids]
@@ -74,7 +73,7 @@ def main():
 	#Define the progress bar (first element is obs done, second element is total obs)
 	obs_progress = [0,len(obsids)]
 
-	#Find the obsids' save directories:
+	#Find the obsids' save directory names
 	t = Time([int(obsid) for obsid in obsids], format="gps", scale="utc")
 	jds = t.jd
 	jds = [int(jd) for jd in jds]
@@ -96,6 +95,7 @@ def main():
 		if download_try > 0:
 			print "Reprocessing failed obsids: Download attempt number " + str(download_try+1)
 
+		#Find which nodes are available for downloads
 		free_nodes = filespace(all_nodes)
 		if len(free_nodes) == 0:
 			print "ERROR: No file space found."
@@ -112,11 +112,11 @@ def main():
 
 		while obs_submitted.count(False) > 0:
 
-			#Find which node the next chunk should run on
-			if len(obs_running) < len(free_nodes): #this is the first batch of chunks submitted to the available nodes
+			#Find which node the chunk should run on
+			if len(obs_running) < len(free_nodes): #if not all the nodes have been used for the first time
 				node = free_nodes[use_node_index]
 				use_node_index += 1
-			else:
+			else: #if all the nodes have been used for the first time, begin waiting for nodes to finish
 				while True:
 
 					#Wait for a chunk to finish running
@@ -144,23 +144,35 @@ def main():
 
 			#Assemble an obs_chunk:
 			while len(obs_chunk) != obs_per_chunk and obs_submitted.count(False) > 0:
-				obs_indices = [index for index, value in enumerate(obs_submitted) if value == False]
+			
+				#Find the indices of obsids that haven't been submitted
+				obs_indices = [index for index, value in enumerate(obs_submitted) if value == False] 
 				node_preferred_use = [node_preferred[obs_index] for obs_index in obs_indices]
+				
 				for obs_index in obs_indices:
-					if node_preferred_use.count(node) > 0:
+				
+					#First priority is to choose obsids that have a "preferred node" that matches the node it will be run on
+					if node_preferred_use.count(node) > 0: 
 						if node_preferred[obs_index] == node:
 							obs_chunk.append(obsids[obs_index])
 							obs_submitted[obs_index] = True
 					else:
-						if node_preferred_use.count(False) > 0:
+					
+						#Next choose obsids that don't have a "preferred node"
+						if node_preferred_use.count(False) > 0: 
 							if node_preferred[obs_index] == False:
 								obs_chunk.append(obsids[obs_index])
 								obs_submitted[obs_index] = True
+								
+						#Finally choose obsids that have a "preferred node" that isn't the node it will be run on
 						else:
-							obs_chunk.append(obsids[obs_index])
+							obs_chunk.append(obsids[obs_index]) 
 							obs_submitted[obs_index] = True
+					
+					#Chunk is done if it has obs_per_chunk number of obsids or if it contains the last obsids to be submitted		
 					if len(obs_chunk) == obs_per_chunk or obs_submitted.count(False) == 0:
 						break
+						
 			download_script_paths = []
 			metafits_script_paths = []
 			cotter_script_paths = []
@@ -313,6 +325,7 @@ def find_gpubox(obsid, save_directory, all_nodes):
 #********************************
 
 #********************************
+#Module that sleeps while periodically checking to see if a task has finished in gridengine
 def wait_for_gridengine(obs_running, final_task_jobids_running):
 
 	sleep_time = 20
