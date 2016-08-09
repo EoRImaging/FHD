@@ -318,7 +318,7 @@ def find_gpubox(obsid, save_directory, all_nodes):
 				if filename.endswith("_metafits_ppds.fits"):
 					metafits += 1
 			if gpubox00 >= 24 and (gpubox01 >= 24 or gpubox01 == 0) and flags >= 1 and metafits >= 1:
-				#print "GPU box files for obsid " + obsid + " located in " + gpu_loc_path
+				print "GPU box files for obsid " + obsid + " located in " + gpu_loc_path
 				#if gpubox00 != 24 or gpubox01 != 24 or flags != 1 or metafits != 1:
 			     	#	print "WARNING: Directory contains extra GPU box files."
 				return gpu_loc_node   
@@ -488,7 +488,7 @@ def download_files(save_paths, obs_chunk, uvfits_download_check, python_path, no
 		'obs_chunk_download=(0 ' +  " ".join(obs_chunk_download) + ')\n' + \
 		'ls ${save_paths_download[$SGE_TASK_ID]} > /dev/null \n' + \
 		'ls $HOME > /dev/null \n' + \
-		python_path.strip('\n') + ' ' + obsdownload_path + ' -d ${save_paths_download[$SGE_TASK_ID]} -o ${obs_chunk_download[$SGE_TASK_ID]} ' + u_arg)
+		python_path.strip('\n') + ' ' + obsdownload_path + ' -d ${save_paths_download[$SGE_TASK_ID]} -o ${obs_chunk_download[$SGE_TASK_ID]} -t 1 ' + u_arg)
 	#Close the file
 	download_commands_file.close() 
 
@@ -644,8 +644,10 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'flagfiles_zip=(0 ' + " ".join(flagfiles_zip) + ')\n' + \
 		'flagfiles_dir=(0 ' + " ".join(flagfiles_dir) + ')\n' + \
 		'ls ${gpubox_path[$SGE_TASK_ID]} > /dev/null\n' + \
-		'ls $HOME > /dev/null \n' + \
-		'if [ "$(ls -l ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits | wc -l)" -ne "48" ] ; then exit ; fi\n')	#Check to make sure gpubox files exist before queuing up 
+		'ls $HOME > /dev/null \n\n' + \
+		'echo JOB_ID $JOB_ID \n' + \
+		'echo TASK_ID $SGE_TASK_ID \n' + \
+		'if [ "$(ls -l ${gpubox_path[$SGE_TASK_ID]}*gpubox*_00.fits | wc -l)" -ne "24" ] ; then exit ; fi\n')	#Check to make sure gpubox files exist before queuing up 
 
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
 		cotter_commands_file.write('unzip -o ${flagfiles_zip[$SGE_TASK_ID]} -d ${flagfiles_dir[$SGE_TASK_ID]}\n')
