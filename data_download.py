@@ -317,7 +317,7 @@ def find_gpubox(obsid, save_directory, all_nodes):
 					flags += 1
 				if filename.endswith("_metafits_ppds.fits"):
 					metafits += 1
-			if gpubox00 >= 24 and gpubox01 >= 24 and flags >= 1 and metafits >= 1:
+			if gpubox00 >= 24 and (gpubox01 >= 24 or gpubox01 == 0) and flags >= 1 and metafits >= 1:
 				#print "GPU box files for obsid " + obsid + " located in " + gpu_loc_path
 				#if gpubox00 != 24 or gpubox01 != 24 or flags != 1 or metafits != 1:
 			     	#	print "WARNING: Directory contains extra GPU box files."
@@ -394,7 +394,7 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 					flags += 1
 				if filename.endswith("_metafits_ppds.fits"):
 					metafits += 1
-			if gpubox00 < 24 or gpubox01 < 24 or flags < 1 or metafits < 1:
+			if gpubox00 < 24 or (gpubox01 < 24 and gpubox01 != 0) or flags < 1 or metafits < 1:
 				failed = True
 		else:
 			failed = True
