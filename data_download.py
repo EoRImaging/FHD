@@ -56,8 +56,9 @@ def main():
 
 	obs_per_chunk = 5 #number of obsids to run in parallel
 
-	all_nodes = ["eor-02", "eor-03", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
-	#eor06 temporarly dropped, eor04 has lowered capability
+	#find which nodes have enough space for downloads:
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
+	#eor06 temporarly dropped
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
 	#Get obsids to download
@@ -536,7 +537,7 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 	if not node:
 		print "ERROR: node not defined in run_cotter"
 		sys.exit(1)
-	
+
 	#Warn the user if uvfits were automatically downloaded for at least one observation in the 
 	#chunk. Will delete this automatic uvfits and rerun cotter with the specifications.
 	uvfits_logic = []
@@ -642,13 +643,15 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'flagfiles_path=(0 ' + " ".join(flagfiles_path) + ')\n' + \
 		'flagfiles_zip=(0 ' + " ".join(flagfiles_zip) + ')\n' + \
 		'flagfiles_dir=(0 ' + " ".join(flagfiles_dir) + ')\n' + \
-		'ls ${save_paths[$SGE_TASK_ID]} > /dev/null\n' )
+		'ls ${gpubox_path[$SGE_TASK_ID]} > /dev/null\n' + \
+		'ls $HOME > /dev/null \n' + \
+		'if [ "$(ls -l ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits | wc -l)" -ne "48" ] ; then exit ; fi\n')	#Check to make sure gpubox files exist before queuing up 
 
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
 		cotter_commands_file.write('unzip -o ${flagfiles_zip[$SGE_TASK_ID]} -d ${flagfiles_dir[$SGE_TASK_ID]}\n')
 
 	cotter_commands_file.write(cotter_path + ' ' + cotter_args[str(version)+','+str(subversion)] + \
-		' -absmem 20 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
+		' -mem 25 -m ${metafits_path[$SGE_TASK_ID]} -o ${uvfits_path[$SGE_TASK_ID]} ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits')
 	
 	cotter_commands_file.close() 
 
@@ -657,10 +660,10 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 
 	#Setup the bulk of the Grid Engine command, depending on if there is a task to wait on
 	if task_jobid:
-		qsub_command = "qsub -V -b y -hold_jid " + task_jobid + " -l h_vmem=20G,h_stack=512,h_rt=01:00:00,h=" + node.split('/')[2] \
+		qsub_command = "qsub -V -b y -hold_jid " + task_jobid + " -l h_vmem=20G,h_stack=512,h_rt=02:00:00,h=" + node.split('/')[2] \
 			 + ".mit.edu -pe chost 1 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
 	else:
-		qsub_command = "qsub -V -b y -l h_vmem=20G,h_stack=512,h_rt=01:00:00,h=" + node.split('/')[2] \
+		qsub_command = "qsub -V -b y -l h_vmem=20G,h_stack=512,h_rt=02:00:00,h=" + node.split('/')[2] \
 			 + ".mit.edu -pe chost 1 -e " + log_path + " -o " + log_path +" -N cotter -t 1:" + str(len(obs_chunk)) + " " + cotter_script_path 
 
 	#Run cotter with the correct arguments, the path to the metafits, the uvfits output path, and the gpubox file paths
@@ -774,15 +777,20 @@ def fill_database(obs_chunk,version,subversion,save_paths,cotter_version,db_comm
 
 	#Perform check to make sure essential information is known about the uvfits file
 	if not obs_chunk:
-		return "WARNING: obs_chunk not defined in fill_database. Database not updated"
+		print "WARNING: obs_chunk not defined in fill_database. Database not updated"
+		return 
 	if not version and not uvfits_download_check:
-		return "WARNING: version not defined in fill_database. Database not updated"
+		print "WARNING: version not defined in fill_database. Database not updated"
+		return 
 	if not subversion and not uvfits_download_check:
-		return "WARNING: subversion not defined in fill_database. Database not updated"
+		print "WARNING: subversion not defined in fill_database. Database not updated"
+		return 
 	if not save_paths:
-		return "WARNING: save_paths not defined in fill_database. Database not updated"
+		print "WARNING: save_paths not defined in fill_database. Database not updated"
+		return 
 	if not cotter_version and not uvfits_download_check:
-		return "WARNING: cotter_version not defined in fill_database. Database not updated"
+		print "WARNING: cotter_version not defined in fill_database. Database not updated"
+		return 
 
 	iteration = 0
 	for obsid in obs_chunk:

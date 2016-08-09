@@ -24,34 +24,34 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
   n_pol=N_Elements(gain_arr_ptr)
   
   ;Select out the uvfits versions that did not apply a sub-bandpass to the data
-  IF keyword_set(uvfits_version) AND keyword_set(uvfits_subversion) then begin
-    If (uvfits_version EQ 5) AND (uvfits_subversion EQ 1) then begin
-    
-      ;Setup is for the Levine memo
-      bp_filename = filepath('bandpass_Levine.txt',root=rootdir('FHD'),subdir='instrument_config')
-      readcol, bp_filename, memo_bp_gains
-      
-      ;The memo gains have 128 fine frequency channels, so break the fine frequencies into sets that fit the data resolution
-      range_memo_low = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ 0)
-      range_memo_high = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ ULONG(obs.freq_res / 10000.)-1)
-      
-      ;Average the memo gains in sets to create the correct freq resolution
-      num_bp_channels = ULONG(1.28E6 / obs.freq_res)
-      ave_bp_gains = FLTARR(num_bp_channels)
-      for channel_i=0,num_bp_channels-1 do $
-        ave_bp_gains[channel_i] = mean(memo_bp_gains[range_memo_low[channel_i]:range_memo_high[channel_i]])
-      ;Create bandpass effects over the whole band
-      ave_bp_gains_fullband = ave_bp_gains
-      for band_i=1,n_freq/num_bp_channels-1 do ave_bp_gains_fullband = [ave_bp_gains_fullband,ave_bp_gains]
-      
-      ;Apply the bandpass values to the input gains. Calibration solutions are applied via division to the gains 
-      ;after cal solutions are found, so apply these gains by multiplication.
-      for pol_i=0,n_pol-1 do $
-        for tile_i=0, n_tile-1 do $
-          (*gain_arr_ptr[pol_i])[*,tile_i] = (*gain_arr_ptr[pol_i])[*,tile_i] * ave_bp_gains_fullband
-      
-    endif
-  endif
+;  IF keyword_set(uvfits_version) AND keyword_set(uvfits_subversion) then begin
+;    If (uvfits_version EQ 5) AND (uvfits_subversion EQ 1) then begin
+;    
+;      ;Setup is for the Levine memo
+;      bp_filename = filepath('bandpass_Levine.txt',root=rootdir('FHD'),subdir='instrument_config')
+;      readcol, bp_filename, memo_bp_gains
+;      
+;      ;The memo gains have 128 fine frequency channels, so break the fine frequencies into sets that fit the data resolution
+;      range_memo_low = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ 0)
+;      range_memo_high = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ ULONG(obs.freq_res / 10000.)-1)
+;      
+;      ;Average the memo gains in sets to create the correct freq resolution
+;      num_bp_channels = ULONG(1.28E6 / obs.freq_res)
+;      ave_bp_gains = FLTARR(num_bp_channels)
+;      for channel_i=0,num_bp_channels-1 do $
+;        ave_bp_gains[channel_i] = mean(memo_bp_gains[range_memo_low[channel_i]:range_memo_high[channel_i]])
+;      ;Create bandpass effects over the whole band
+;      ave_bp_gains_fullband = ave_bp_gains
+;      for band_i=1,n_freq/num_bp_channels-1 do ave_bp_gains_fullband = [ave_bp_gains_fullband,ave_bp_gains]
+;      
+;      ;Apply the bandpass values to the input gains. Calibration solutions are applied via division to the gains 
+;      ;after cal solutions are found, so apply these gains by multiplication.
+;      for pol_i=0,n_pol-1 do $
+;        for tile_i=0, n_tile-1 do $
+;          (*gain_arr_ptr[pol_i])[*,tile_i] = (*gain_arr_ptr[pol_i])[*,tile_i] * ave_bp_gains_fullband
+;      
+;    endif
+;  endif
   
   ;Initialize arrays
   gain_arr_ptr2=Ptrarr(n_pol,/allocate)
@@ -164,6 +164,12 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     cal_bandpass.gain=gain_arr_ptr2
     cal_remainder=cal
     cal_remainder.gain=gain_arr_ptr3
+    
+    ;Add the Levine memo bandpass to the gain solutions if applicable
+    IF keyword_set(uvfits_version) AND keyword_set(uvfits_subversion) then if (uvfits_version EQ 5) AND (uvfits_subversion EQ 1) then begin
+      for pol_i=0, n_pol-1 do for tile_i=0, n_tile-1 do cal_bandpass.gain[pol_i] = (cal_bandpass.gain[pol_i])[*,tile_i] * ave_bp_gains_fullband
+    endif
+
     
   ENDIF ELSE BEGIN
     bandpass_arr=Fltarr(n_pol+1,n_freq)

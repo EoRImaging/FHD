@@ -1022,6 +1022,12 @@ case version of
        uvfits_version=5
        uvfits_subversion=1
    end
+   'nb_no_bandpass_division_test': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+   end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
@@ -1184,7 +1190,7 @@ endif else begin
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
   ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
 endelse
-
+undefine, uvfits_subversion, uvfits_version
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 
