@@ -1131,6 +1131,8 @@ case version of
    end
    
    'rlb_diffuse_survey_oneobs_nodiffuse': begin ;;July 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
@@ -1139,6 +1141,8 @@ case version of
    end
    
    'rlb_diffuse_survey_oneobs': begin ;;July 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
