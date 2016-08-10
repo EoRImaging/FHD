@@ -1,10 +1,9 @@
-pro vis_delay_spectrum, dir, obsid=obsid
+pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type
   ; This is a script to generate delay spectra from visibilities
   ; TODO: Contruct file_path_fhd from dir and obsid, and then use standard fhd_save_io
   ; TODO: Handle backward compatibility (see read flags lines)
   ; TODO: Put data into physical units
   ; TODO: Call plotting routine to generate 2D PS-like plots
-  ; TODO: Window function capability
   
   if not keyword_set(obsid) then obsid = '1061316296'
   if not size(obsid,/type) ne 7 then obsid = number_formatter(obsid)
@@ -36,8 +35,17 @@ pro vis_delay_spectrum, dir, obsid=obsid
   ; Phase to zenith (see Danny for explanation)
   for poli=0,1 do data[*,*,poli] *= exp(i_comp * 2. * !pi * w_mat)
   
-  ; Do the fft
-  spectra = abs(shift(fft(data,dim=1),nfreq/2,0,0))^2 ; Shift only in fft direction.
+  ;;;;; Do the FFT
+  ; First, apply spectral window function
+  if n_elements(spec_window_type) ne 0 then begin
+    window = spectral_window(nfreq, type=spec_window_type,/periodic)
+    norm_factor = sqrt(nfreq/total(window^2.))
+    window = window * norm_factor
+    window_expand = rebin(reform(window,nfreq,1,1), nfreq, nbl, 2, /sample)
+    data = data * window_expand
+  endif
+  ; FFT
+  spectra = abs(shift(fft(data,dim=1),nfreq/2,0,0))^2. ; Shift only in fft direction.
   undefine_fhd,data
   ; fold over
   ndelay = nfreq/2.
@@ -53,6 +61,7 @@ pro vis_delay_spectrum, dir, obsid=obsid
   u_centers = u_locs + ubin/2d
   u_edges = [u_locs, max(u_locs) + ubin]
   nbins = n_elements(uhist)
+  ; Make 2D image
   delay2d = fltarr(nbins,ndelay,2)
   for i=0,nbins-1 do begin
     if uhist[i] gt 0 then begin
