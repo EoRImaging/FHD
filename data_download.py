@@ -54,7 +54,7 @@ def main():
 		print "To download uvfits files only and bypass cotter, set -u 1 on the command line."
 		sys.exit(1)
 
-	obs_per_chunk = 5 #number of obsids to run in parallel
+	obs_per_chunk = 4 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
 	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
@@ -91,7 +91,7 @@ def main():
 	
 
 	obs_submitted = [False for i in range(len(obsids))]
-	download_tries = 2 #number of times a obsid will attempt to download correctly
+	download_tries = 4 #number of times a obsid will attempt to download correctly
 	for download_try in range(download_tries):
 		if download_try > 0:
 			print "Reprocessing failed obsids: Download attempt number " + str(download_try+1)
@@ -378,6 +378,7 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 	save_path_finished = []
 	for i, obsid in enumerate(obs_chunk):
 		failed = False
+
 		if os.path.isdir(save_paths[i] + obsid): #checks to see if the directory exists
 			directory_contents = os.listdir(save_paths[i] + obsid)
 			gpubox00 = 0
@@ -394,6 +395,11 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 					flags += 1
 				if filename.endswith("_metafits_ppds.fits"):
 					metafits += 1
+				if filename.endswith(".uvfits"):
+					#Check to see if the uvfits has any information in it
+					if os.stat(save_paths[i] + obsid + '/' + obsid + '.uvfits').st_size == 0:
+						failed = True
+
 			if gpubox00 < 24 or (gpubox01 < 24 and gpubox01 != 0) or flags < 1 or metafits < 1:
 				failed = True
 		else:
@@ -496,7 +502,7 @@ def download_files(save_paths, obs_chunk, uvfits_download_check, python_path, no
 	os.chmod(download_script_path, 0775)
 
 	#Setup the the bulk of the qsub command
-	qsub_command = "qsub -l h_vmem=1G,h_stack=512,h_rt=03:00:00,h=" + node.split('/')[2] + ".mit.edu -pe chost 1 -e " + \
+	qsub_command = "qsub -l h_vmem=1G,h_stack=512,h_rt=05:00:00,h=" + node.split('/')[2] + ".mit.edu -pe chost 1 -e " + \
 		log_path + " -o " + log_path + " -N obs_download -t 1:" + str(len(obs_chunk_download))
 
 	#Run the qsub command
