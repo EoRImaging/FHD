@@ -4,7 +4,6 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   ; TODO: Handle backward compatibility (see read flags lines)
   ; TODO: Filter out flagged baselines better (ie, bl_use array)
   ; TODO: Put data into physical units
-  ; TODO: Fix missing delay axis of 2D plot
   
   if not keyword_set(obsid) then obsid = '1061316296'
   if not size(obsid,/type) ne 7 then obsid = number_formatter(obsid)
@@ -23,16 +22,23 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   ;undefine_fhd,flag_arr
   for poli=0,1 do flags[*,*,poli] = *vis_weights[poli]
   undefine_fhd,vis_weights
-  w_mat = freq_arr#params.ww ; This should now be in wavelengths
   data = Complex(fltarr(nfreq,nbl,2)) ; Stack pols
   restore, dir+'/vis_data/'+obsid+'_vis_XX.sav'
   data[*,*,0] = *vis_ptr
   restore, dir+'/vis_data/'+obsid+'_vis_YY.sav'
   data[*,*,1] = *vis_ptr
   undefine_fhd,vis_ptr
-  data *= flags
+  ; Only keep unflagged baselines
+  flag_test = Total(Total(flags>0,1),2)
+  bi_use=where(flag_test eq 2*nfreq)
+  data = data[*,bi_use,*]
+  uu = params.uu[bi_use]
+  vv = params.vv[bi_use]
+  ww = params.ww[bi_use]
+  nbl = n_elements(bi_use)
   undefine_fhd,flags
   ; Phase to zenith (see Danny for explanation)
+  w_mat = freq_arr#params.ww ; This should now be in wavelengths
   for poli=0,1 do data[*,*,poli] *= exp(i_comp * 2. * !pi * w_mat)
   
   ;;;;; Do the FFT
@@ -52,7 +58,7 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   spectra[(ndelay+1):*,*,*] += spectra[(ndelay-1):1:-1,*,*]
   spectra = spectra[ndelay:*,*,*]
   ; Bin up
-  umag = sqrt(abs(params.uu)^2 + abs(params.vv)^2) * mean(freq_arr)
+  umag = sqrt(abs(uu)^2 + abs(vv)^2) * mean(freq_arr)
   umin = min(umag)
   umax = max(umag)
   nbins = 100
@@ -87,8 +93,8 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   if keyword_set(plotfile) then begin
     wedge_amp = mean(wedge_factor) * !dpi / 180d * [20d, 90d]
     kpower_2d_plots, power=delay2d, kperp_edges=kperp_edges, kpar_edges=kpar_edges, $
-                       kperp_lambda_conv=kperp_lambda_conv, delay_params=[delay_delta, delay_max], $
-                       hubble_param=hubble_param, plotfile=plotfile, /pdf, /hinv,/ delay_axis, $
+                       kperp_lambda_conv=kperp_lambda_conv, delay_params=1e9*[delay_delta, delay_max], $
+                       hubble_param=hubble_param, plotfile=plotfile, /pdf, /hinv, /delay_axis, $
                        /baseline_axis, /plot_wedge_line, wedge_amp=wedge_amp, $
                        kperp_plot_range=[.007, .3], kpar_plot_range=[.003,4]
   endif
