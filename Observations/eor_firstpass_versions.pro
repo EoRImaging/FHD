@@ -940,6 +940,10 @@ case version of
        recalculate_all=1
        mapfn_recalculate=0
    end
+      'nb_pytest': begin
+       recalculate_all=1
+       mapfn_recalculate=0
+   end
       'nb_pytest_before_versioncontrol': begin
        recalculate_all=1
        mapfn_recalculate=0
@@ -1029,6 +1033,18 @@ case version of
        uvfits_subversion=1
    end
    'nb_Aug24_2014': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+   end
+   'nb_Sep14_2014': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+   end
+   'nb_Sep10_2015': begin
        saved_run_bp=0
        calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
        uvfits_version=5
@@ -1208,7 +1224,7 @@ case version of
    
 endcase
    
-if version EQ 'nb_pytest_after_versioncontrol' then begin
+if version EQ 'nb_pytest' then begin
   vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
 endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
