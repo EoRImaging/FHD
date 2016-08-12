@@ -41,6 +41,25 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   w_mat = freq_arr#params.ww ; This should now be in wavelengths
   for poli=0,1 do data[*,*,poli] *= exp(i_comp * 2. * !pi * w_mat)
   
+  ;;;; Get physical units
+  speed_of_light = 299792458.
+  z0_freq = 1420.40e6 ;; Hz
+  redshifts = z0_freq / freq_arr - 1
+  cosmology_measures, redshifts, comoving_dist_los = comov_dist_los, hubble_param = hubble_param,$
+                         Ez=Ez, wedge_factor=wedge_factor
+  z_mpc_mean = float(mean(comov_dist_los))
+  kperp_lambda_conv = z_mpc_mean / (2.*!pi)
+  ; Next the data itself
+  Jy_to_mK_str_conv = speed_of_light^2. / (2. * (freq_arr)^2. * 1.38065) ; 10^-26 * c^2 *10^3 / (2*f^2*kb)
+  str_to_Mpc2_conv = comov_dist_los^2.
+  conv_factor = 2. * rebin(reform(Jy_to_mK_str_conv * str_to_Mpc2_conv, nfreq,1,1),nfreq,nbl,2,/sample) ; 2 to get to I instead of instrumental x/y
+  dz = (max(comov_dist_los)-min(comov_dist_los))/(nfreq-1)
+  data = conv_factor * dz * nfreq * data ; dz and nfreq to prepare for fft
+  Aeff = 21. ; m^2 from Aaron E-W memo
+  window_int = (z_mpc_mean * speed_of_light/mean(freq_arr))^2. / Aeff * (max(comov_dist_los)-min(comov_dist_los))
+  window_int = window_int / 4. ; Checking back-of-the-envelope against eppsilon calcuation, I was off by ~4x
+  data = data / sqrt(window_int) ; Should divide by window int after fft, but doing all units here instead.
+  
   ;;;;; Do the FFT
   ; First, apply spectral window function
   if n_elements(spec_window_type) ne 0 then begin
@@ -67,6 +86,12 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   u_centers = u_locs + ubin/2d
   u_edges = [u_locs, max(u_locs) + ubin]
   nbins = n_elements(uhist)
+  kperp_edges = u_edges / kperp_lambda_conv
+  delay_delta = 1./(max(freq_arr)-min(freq_arr))
+  delay_max = (ndelay-1) * delay_delta
+  ; Note extra 1e3 for hubble constant to get it in m/s/Mpc
+  kpar_delta = delay_delta * 2*!pi * 100. * hubble_param * 1e3 * z0_freq * mean(Ez) / (speed_of_light * (1+mean(redshifts))^2.)
+  kpar_edges = kpar_delta*findgen(ndelay+1)-kpar_delta/2.
   ; Make 2D image
   delay2d = fltarr(nbins,ndelay,2)
   for i=0,nbins-1 do begin
@@ -74,21 +99,6 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
       delay2d[i,*,*] = mean(spectra[*,u_ri[u_ri[i]:u_ri[i+1]-1],*],dim=2)
     endif
   endfor
-
-  ;;;; Get physical units
-  speed_of_light = 299792458.
-  z0_freq = 1420.40e6 ;; Hz
-  redshifts = z0_freq / freq_arr - 1
-  cosmology_measures, redshifts, comoving_dist_los = comov_dist_los, hubble_param = hubble_param,$
-                         Ez=Ez, wedge_factor=wedge_factor
-  z_mpc_mean = float(mean(comov_dist_los))
-  kperp_lambda_conv = z_mpc_mean / (2.*!pi)
-  kperp_edges = u_edges / kperp_lambda_conv
-  delay_delta = 1./(max(freq_arr)-min(freq_arr))
-  delay_max = (ndelay-1) * delay_delta
-  ; Note extra 1e3 for hubble constant to get it in m/s/Mpc
-  kpar_delta = delay_delta * 2*!pi * 100. * hubble_param * 1e3 * z0_freq * mean(Ez) / (speed_of_light * (1+mean(redshifts))^2.)
-  kpar_edges = kpar_delta*findgen(ndelay+1)-kpar_delta/2.
   
   if keyword_set(plotfile) then begin
     wedge_amp = mean(wedge_factor) * !dpi / 180d * [20d, 90d]
@@ -96,6 +106,7 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
                        kperp_lambda_conv=kperp_lambda_conv, delay_params=1e9*[delay_delta, delay_max], $
                        hubble_param=hubble_param, plotfile=plotfile, /pdf, /hinv, /delay_axis, $
                        /baseline_axis, /plot_wedge_line, wedge_amp=wedge_amp, $
-                       kperp_plot_range=[.007, .3], kpar_plot_range=[.003,4]
+                       kperp_plot_range=[.007, .3], data_range=[1e3,2e15];, kpar_plot_range=[.003,4]
+    ; Note kpar_plot_range doesn't quite work right now - setting it prevents the DC mode from plotting.
   endif
 end
