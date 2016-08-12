@@ -940,6 +940,10 @@ case version of
        recalculate_all=1
        mapfn_recalculate=0
    end
+      'nb_pytest': begin
+       recalculate_all=1
+       mapfn_recalculate=0
+   end
       'nb_pytest_before_versioncontrol': begin
        recalculate_all=1
        mapfn_recalculate=0
@@ -1033,6 +1037,20 @@ case version of
        calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
        uvfits_version=5
        uvfits_subversion=1
+   end
+   'nb_Sep14_2014': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+   end
+   'nb_Sep10_2015': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+       recalculate_all=1
+       mapfn_recalculate=0
    end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
@@ -1131,6 +1149,8 @@ case version of
    end
    
    'rlb_diffuse_survey_oneobs_nodiffuse': begin ;;July 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
@@ -1139,10 +1159,27 @@ case version of
    end
    
    'rlb_diffuse_survey_oneobs': begin ;;July 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+   
+   'rlb_diffuse_survey_threeobs_nodiffuse': begin ;;August 2016
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_diffuse_survey_threeobs': begin ;;August 2016
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
    end
 
 
@@ -1189,7 +1226,7 @@ case version of
    
 endcase
    
-if version EQ 'nb_pytest_after_versioncontrol' then begin
+if version EQ 'nb_pytest' then begin
   vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
 endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
