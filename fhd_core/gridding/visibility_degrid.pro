@@ -99,6 +99,12 @@ ENDIF
 bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0)) ;should miss any (xmin,ymin)=(-1,-1) from weights
 bin_i=Long(where(bin_n,n_bin_use));+bin_min
 
+IF interp_flag THEN BEGIN
+    bin_i = where((xmin GE 0) AND (ymin GE 0), n_bin_use)
+    bin_n = Lonarr(max(bin_i)+1)
+    bin_n[bin_i]=1
+ENDIF
+
 ind_ref=Lindgen(max(bin_n))
 
 CASE 1 OF
@@ -129,8 +135,13 @@ ENDIF
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
-    inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
-    ind0=inds[0]
+    IF interp_flag THEN BEGIN
+        inds = bin_i[bi]
+        ind0 = inds[0]
+    ENDIF ELSE BEGIN 
+        inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
+        ind0=inds[0]
+    ENDELSE
     
     x_off=x_offset[inds]
     y_off=y_offset[inds]
@@ -187,13 +198,30 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) 
     
-    box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
+    IF interp_flag THEN BEGIN
+        interp_box01 = Complex(0,0)
+        interp_box10 = Complex(0,0)
+        interp_box11 = Complex(0,0)
+        
+        interp_box00 = image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]
+        IF ymin_use+1:ymin_use+psf_dim-1+1 LT elements THEN y_flag=1 ELSE y_flag=0
+        IF xmin_use+1:xmin_use+psf_dim-1+1 LT dimension THEN x_flag=1 ELSE x_flag=0
+        IF y_flag THEN $
+            interp_box01 = image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use+1:ymin_use+psf_dim-1+1]
+        IF x_flag THEN $
+            interp_box10 = image_uv_use[xmin_use+1:xmin_use+psf_dim-1+1,ymin_use:ymin_use+psf_dim-1]
+        IF x_flag AND y_flag THEN $
+            interp_box11 = image_uv_use[xmin_use+1:xmin_use+psf_dim-1+1,ymin_use+1:ymin_use+psf_dim-1+1]
+        box_arr_2d = interp_box00 * dx0dy0[0] + interp_box10 * dx1dy0[0] + interp_box01 * dx0dy1[0] + interp_box11 * dx1dy1[0]
+        box_arr = Reform(box_arr_2d, psf_dim3)
+    ENDIF ELSE $
+        box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
     
     IF interp_flag THEN $
         FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
-            interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii],dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
+            *(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[0],y_off[0]] $
         ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 
     t4_0=Systime(1)
