@@ -749,18 +749,6 @@ case version of
         split_ps_export=0
         n_avg=2
    end
-   'apb_test_zenith_phase':begin
-      uvfits_version=5
-      uvfits_subversion=0
-      saved_run_bp=0
-   end
-   'apb_test_zenith_phase_std':begin
-      saved_run_bp=0 ; using far off pointing, don't have bp
-   end
-   'apb_std_July2016_200obsids':begin
-      foo = 1 ; Don't do anything
-    end
-
 
    ; Abraham's versions
 
@@ -952,6 +940,11 @@ case version of
    'nb_gleam_firstpass': begin
        saved_run_bp=0
        calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+   'nb_std_test_twopolyquad_extrafancymodeobs_Oct2015':begin 
+      saved_run_twopoly_meanmode=1
+   end
+   'nb_vis_integration_4sec':begin 
+      debug_evenoddsplit_integration=4
    end
    'nb_gleam_firstpass_100mJy': begin
        saved_run_bp=0
@@ -973,6 +966,7 @@ case version of
        undefine, diffuse_calibrate, diffuse_model
        calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
    end
+
    'nb_patti_catalog_nocaldiffuse': begin
        saved_run_bp=0
        undefine, diffuse_calibrate
@@ -1072,154 +1066,25 @@ case version of
    'nb_twopolyquad_extrafancy_meanphase':begin
    saved_run_std_test_polyquad=1
    end
-   
-   'nb_sim_overfit_cal_beamperchannel_modelnoflag_recalc_flagcalkey':begin 
-      over_calibrate=1
-      unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      flag_calibration=0
-      recalculate_all=1
-   end
-      'nb_sim_overfit_cal_beamperchannel_modelnoflag_recalc_allkeys':begin 
-      over_calibrate=1
-      unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      no_frequency_flagging=1
-      flag_visibilities=0
-      flag_calibration=0
-   end
-      'nb_sim_overfit_cal_beamperchannel_modelnoflag_recalc_autoscale':begin 
-      over_calibrate=1
-      ;unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      ;no_frequency_flagging=1
-      ;flag_visibilities=0
-      ;flag_calibration=0
-      restore_last=1
-      instrument='mwa'
-   end
-         'nb_sim_overfit_cal_beamperchannel_modelnoflag_recalc_noauto':begin 
-      over_calibrate=1
-      unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      no_frequency_flagging=1
-      flag_visibilities=0
-      flag_calibration=0
-      calibration_auto_initialize=0
-    end
+
     'nb_sim_beamperchannel_unflagged_nodiffuse':begin 
       nfreq_avg=1
       no_frequency_flagging=1
       recalculate_all=1
       undefine, diffuse_calibrate, diffuse_model
-   end   
-
-
-      
-   'nb_sim_perfect_cal_beamperchannel_rightflag':begin 
-      calibrate_visibilities=0
-      export_images=0
+      ;turn_off_visflagbasic=1
       unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-   end
-   'nb_sim_perfect_cal_beamperchannel_test':begin 
-      calibrate_visibilities=0
-      export_images=0
+   end    
+   'nb_sim_beamperchannel_unflagged_nofreqdepbeam':begin 
+      nfreq_avg=384
+      no_frequency_flagging=1
+      recalculate_all=1
+      ;turn_off_visflagbasic=1
       unflag_all=1
-      cal_sim=1
    end
    
-   'nb_sim_orig_cal_beamperchannel_rightflag':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      unflag_all=1
-      cal_sim=1
-      no_frequency_flagging=1
-   end
-   'nb_sim_overfit_cal_beamperchannel_rightflag':begin 
-      over_calibrate=1
-      unflag_all=1
-      cal_sim=1
-      no_frequency_flagging=1
-   end
-   'nb_sim_cable_cal_beamperchannel_rightflag':begin 
-      cable_bandpass_fit=1
-      saved_run_bp=0
-      unflag_all=1
-      cal_sim=1
-      no_frequency_flagging=1
-   end
+   
 
-   'nb_sim_overfit_fitphase_cal_beamperchannel_rightflag':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      unflag_all=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate_just_amp=1
-   end
-   'nb_sim_overfit_cal_beamperchannel_nofreqflagonly':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      ;unflag_all=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-   end
-     'nb_sim_overfit_cal_beamperchannel_modelnoflag_noeor':begin 
-            saved_run_bp=0
-      cable_bandpass_fit=0
-      unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      no_frequency_flagging=1
-      remove_eor=1
-   end
-      'nb_sim_overfit_cal_beamperchannel_novisflagbasic':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-   end
-      'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      remove_eor=1
-      input_unflagged=1
-   end
-         'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_beamperchannelforreal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end
-            'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_beamperchannelforreal_test':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      over_calibrate=1
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end
                'nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -1754,47 +1619,7 @@ case version of
       no_frequency_flagging=1
       remove_eor=1
    end
-   'nb_sim_perfect_cal_beamperchannel_modelnoflag_dnr':begin 
-      unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      perfect_cal_dnr=1
-      ;recalculate_all=1
-   end
-      'nb_sim_perfect_cal_beamperchannel_modelnoflag_ones':begin 
-      unflag_all=1
-      cal_sim=1
-      nfreq_avg=1
-      perfect_cal_ones=1
-      ;recalculate_all=1
-   end
-            'nb_sim_perfect_cal_beamperchannel_modelnoflag_noeor_modelnoflagforreal_ones':begin 
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end
-               'nb_sim_perfect_cal_beamperchannel_modelnoflag_eor_modelnoflagforreal_ones':begin 
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_ones=1
-      ;remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end
-       'nb_sim_perfect_cal_beamperchannel_modelnoflag_noeor_modelnoflagforreal_dnr':begin 
-      turn_off_visflagbasic=1
-      cal_sim=1
-      no_frequency_flagging=1
-      perfect_cal_dnr=1
-      remove_eor=1
-      input_unflagged=1
-      nfreq_avg=1
-   end
+
                'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_weightfix_dnr':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
@@ -1897,6 +1722,19 @@ case version of
       recalculate_all=1
    end
                         'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim=1
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      input_unflagged=1
+      max_calibration_sources=4000
+      nfreq_avg=1
+      recalculate_all=1
+   end
+                           'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_test':begin 
       saved_run_bp=0
       cable_bandpass_fit=0
       turn_off_visflagbasic=1
@@ -2302,6 +2140,21 @@ case version of
       ;recalculate_all=1
       no_diffuse=1
       undefine, diffuse_calibrate, diffuse_model
+      recalculate_all=1
+   end
+   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_nofreqdepbeam':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim=1
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      ;input_unflagged=1
+      max_calibration_sources=4000
+      nfreq_avg=384
+      ;recalculate_all=1
+      nofreqdepbeam=1
       recalculate_all=1
    end
                                  'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_nodiffuse_double':begin 

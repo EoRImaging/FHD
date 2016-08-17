@@ -177,53 +177,53 @@ undefine_fhd,cal_base
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-	cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
-	IF Keyword_Set(calibration_polyfit) THEN BEGIN
-		IF Keyword_Set(calibration_bandpass_iterate) THEN BEGIN
-			cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=1,_Extra=extra)
-			cal_poly_sub=vis_cal_divide(cal_base,cal_polyfit)
-			cal_bandpass2=vis_cal_bandpass(cal_poly_sub,obs,file_path_fhd=file_path_fhd,_Extra=extra)
-			cal_remainder2=vis_cal_divide(cal_base,cal_bandpass2)
-			cal_polyfit2=vis_cal_polyfit(cal_remainder2,obs,degree=calibration_polyfit,_Extra=extra)
-			cal=vis_cal_combine(cal_polyfit2,cal_bandpass2)
-		ENDIF ELSE BEGIN
-			cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
-			
-			If keyword_set(saved_run_std_test_polyquad) then begin
-				;saved_run location
-				print, 'Saved poly run saved_run_std_test_polyquad activated!'
-				
-				if keyword_set(cal) then cal_store=cal
-				
-				;filename_poly='/nfs/eor-00/h1/nbarry/Aug23_nodig_quad_polyscaled/forinput/'+obs.obsname+'_cal.sav
-				filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_extrafancymodeobs_meanphase/'+obs.obsname+'_cal.sav
-				restore,filename_poly
-				(*cal_polyfit.gain[0])=(*cal.gain[0])
-				(*cal_polyfit.gain[1])=(*cal.gain[1])
-				
-				if keyword_set(cal_store) then cal=cal_store
-				
-			endif
-			
-			If keyword_set(saved_run_twopoly_meanmode) then begin
-				;saved_run location
-				print, 'Saved poly run saved_run_std_test_polyquad activated!'
-				
-				if keyword_set(cal) then cal_store=cal
-				
-				filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_nox2fix_updatedcompare_dirtyphase/'+obs.obsname+'_cal.sav
-				;filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_meanphase_nox2fix_updatedcompare_zeromean/'+obs.obsname+'_cal.sav
-				restore,filename_poly
-				(*cal_polyfit.gain[0])=(*cal.gain[0])
-				(*cal_polyfit.gain[1])=(*cal.gain[1])
-				
-				if keyword_set(cal_store) then cal=cal_store
-				
-			endif
-			
-			cal=vis_cal_combine(cal_polyfit,cal_bandpass)
-		ENDELSE
-	ENDIF ELSE cal=cal_bandpass
+  cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
+  IF Keyword_Set(calibration_polyfit) THEN BEGIN
+    IF Keyword_Set(calibration_bandpass_iterate) THEN BEGIN
+      cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=1,_Extra=extra)
+      cal_poly_sub=vis_cal_divide(cal_base,cal_polyfit)
+      cal_bandpass2=vis_cal_bandpass(cal_poly_sub,obs,file_path_fhd=file_path_fhd,_Extra=extra)
+      cal_remainder2=vis_cal_divide(cal_base,cal_bandpass2)
+      cal_polyfit2=vis_cal_polyfit(cal_remainder2,obs,degree=calibration_polyfit,_Extra=extra)
+      cal=vis_cal_combine(cal_polyfit2,cal_bandpass2)
+    ENDIF ELSE BEGIN
+      cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
+      
+      If keyword_set(saved_run_std_test_polyquad) then begin
+        ;saved_run location
+        print, 'Saved poly run saved_run_std_test_polyquad activated!'
+        
+        if keyword_set(cal) then cal_store=cal
+        
+        ;filename_poly='/nfs/eor-00/h1/nbarry/Aug23_nodig_quad_polyscaled/forinput/'+obs.obsname+'_cal.sav
+        filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_extrafancymodeobs_meanphase/'+obs.obsname+'_cal.sav
+        restore,filename_poly
+        (*cal_polyfit.gain[0])=(*cal.gain[0])
+        (*cal_polyfit.gain[1])=(*cal.gain[1])
+        
+        if keyword_set(cal_store) then cal=cal_store
+        
+      endif
+      
+      If keyword_set(saved_run_twopoly_meanmode) then begin
+        ;saved_run location
+        print, 'Saved poly run saved_run_std_test_polyquad activated!'
+        
+        if keyword_set(cal) then cal_store=cal
+        
+        filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_x2fix_updatecompare_amponly/combined/'+obs.obsname+'_cal.sav
+        ;filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_meanphase_nox2fix_updatedcompare_zeromean/'+obs.obsname+'_cal.sav
+        restore,filename_poly
+        (*cal_polyfit.gain[0])=(*cal.gain[0])
+        (*cal_polyfit.gain[1])=(*cal.gain[1])
+        
+        if keyword_set(cal_store) then cal=cal_store
+        
+      endif
+      
+      cal=vis_cal_combine(cal_polyfit,cal_bandpass)
+    ENDELSE
+  ENDIF ELSE cal=cal_bandpass
 ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit,_Extra=extra)
 
 ;****My changes
