@@ -37,8 +37,8 @@ dist_test=0
 
 conj_i=where(ky_arr GT 0,n_conj)
 IF n_conj GT 0 THEN BEGIN
-    kx_arr[conj_i]=-kx_arr[conj_i]
-    ky_arr[conj_i]=-ky_arr[conj_i]
+	kx_arr[conj_i]=-kx_arr[conj_i]
+	ky_arr[conj_i]=-ky_arr[conj_i]
 ENDIF
 
 xcen=frequency_array#kx_arr
@@ -55,19 +55,19 @@ IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 range_test_y_i=0
 
 IF n_dist_flag GT 0 THEN BEGIN
-    xmin[flag_dist_i]=-1
-    ymin[flag_dist_i]=-1
-    flag_dist_i=0
+	xmin[flag_dist_i]=-1
+	ymin[flag_dist_i]=-1
+	flag_dist_i=0
 ENDIF
 
 IF Keyword_Set(no_frequency_flagging) THEN (*obs.baseline_info).freq_use=Replicate(1,n_freq) ELSE BEGIN
-    freq_cut_i=where(b_info.freq_use EQ 0,n_freq_cut)
-    IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[freq_cut_i,*]=0
+	freq_cut_i=where(b_info.freq_use EQ 0,n_freq_cut)
+	IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[freq_cut_i,*]=0
 ENDELSE
 tile_cut_i=where(b_info.tile_use EQ 0,n_tile_cut)
 IF n_tile_cut GT 0 THEN BEGIN
-    bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
-    IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,bi_cut]=0
+	bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
+	IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,bi_cut]=0
 ENDIF
 
 time_use=b_info.time_use
@@ -78,21 +78,21 @@ bin_offset=[bin_offset,n_baselines]
 time_bin=Lonarr(n_baselines)
 FOR ti=0L,nt-1 DO time_bin[bin_offset[ti]:bin_offset[ti+1]-1]=ti
 FOR ti=0L,n_time_cut-1 DO BEGIN
-    ti_cut=where(time_bin EQ time_cut_i[ti],n_ti_cut)
-    IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,ti_cut]=0
+	ti_cut=where(time_bin EQ time_cut_i[ti],n_ti_cut)
+	IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,ti_cut]=0
 ENDFOR
 
 flag_i=where(*vis_weight_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
 flag_i_new=where(xmin LT 0,n_flag_new)
 IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[flag_i_new]=0
 IF n_flag GT 0 THEN BEGIN
-    xmin[flag_i]=-1
-    ymin[flag_i]=-1
+	xmin[flag_i]=-1
+	ymin[flag_i]=-1
 ENDIF
 
 IF max(xmin)<max(ymin) LT 0 THEN BEGIN
-    obs.n_vis=0
-    RETURN
+	obs.n_vis=0
+	RETURN
 ENDIF
 ;match all visibilities that map from and to exactly the same pixels
 bin_n=histogram(Temporary(xmin)+Temporary(ymin)*dimension,binsize=1,min=0) ;should miss any (xmin,ymin)=(-1,-1) from weights

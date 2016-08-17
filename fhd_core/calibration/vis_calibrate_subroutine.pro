@@ -104,6 +104,7 @@
 ;  
 ;end
 
+
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
     calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,_Extra=extra
     
@@ -572,7 +573,10 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
 ;      
 ;    endelse
     
+    
     nan_i=where(Finite(gain_arr,/nan),n_nan)
+    ;My changes!!!
+    if keyword_set(cal_sim) then n_nan=0
     IF n_nan GT 0 THEN BEGIN
       ;any gains with NANs -> all tiles for that freq will have NANs
       freq_nan_i=nan_i mod n_freq

@@ -9,7 +9,9 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     weights_grid=weights_grid, save_visibilities=save_visibilities, return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
-    transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, _Extra=extra
+    transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
+    cal_sim=cal_sim,remove_eor=remove_eor,enhance_eor=enhance_eor,turn_off_visflagbasic=turn_off_visflagbasic,input_unflagged=input_unflagged, $
+    bubbles=bubbles,real_data_add_eor=real_data_add_eor,no_diffuse=no_diffuse,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -32,8 +34,9 @@ data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
     snapshot_healpix_export=snapshot_healpix_export,log_store=log_store,_Extra=extra)
-
+    
 IF data_flag LE 0 THEN BEGIN
+  
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
     
@@ -42,6 +45,89 @@ IF data_flag LE 0 THEN BEGIN
         print,"Error occured while reading uvfits data. Returning."
         RETURN
     ENDIF
+    
+    If keyword_set(cal_sim) then begin
+        (*vis_weights[0])[*,*]=1.
+        (*vis_weights[1])[*,*]=1.
+      
+        vis_arr=PTRARR(2,/allocate) ;correct pol format
+      
+        ;restore model visibilities from the latest standard
+        vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
+        vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
+      
+        if keyword_set(input_unflagged) then begin
+            ;restore model visibilities from the latest standard
+            vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
+            vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
+        endif
+      
+        if keyword_Set(no_diffuse) then begin
+            vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nodiffuse/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
+            vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_nodiffuse/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
+        endif
+      
+        ;restore EoR visibilities from the latest standard
+        vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
+        vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_YY.sav', 'vis_ptr')
+      
+        if keyword_set(bubbles) then begin
+      
+            input_unflagged=1
+            if keyword_set(input_unflagged) then begin
+                ;restore model visibilities from the latest standard
+                ;vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_novisflagbasic/vis_data/1061316296_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
+                ;vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged_novisflagbasic/vis_data/1061316296_vis_model_YY.sav', 'vis_model_ptr')
+                vis_XX_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_XX.sav', 'vis_model_ptr') ;restore array of calibrated visibilities
+                vis_YY_model = GETVAR_SAVEFILE('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_beamperchannel_unflagged/vis_data/1061316176_vis_model_YY.sav', 'vis_model_ptr')
+            endif
+        
+            ;restore EoR visibilities from the latest standard
+            vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_bubbles_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
+            vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_bubbles_YY.sav', 'vis_ptr')
+        endif
+      
+        If keyword_set(enhance_eor) then begin
+            If enhance_eor EQ 1 then begin
+                *vis_XX_eor=*vis_XX_eor*1000.
+                *vis_YY_eor=*vis_YY_eor*1000.
+            endif
+        
+            If enhance_eor EQ 2 then begin
+                *vis_XX_eor=*vis_XX_eor*100000.
+                *vis_YY_eor=*vis_YY_eor*100000.
+            endif
+        endif
+        If keyword_set(remove_eor) then begin
+            *vis_XX_eor=0.
+            *vis_YY_eor=0.
+        endif
+      
+        ;Combine the calibrated visibilities in the correct format for the script
+        *vis_arr[0] = *vis_XX_model+*vis_XX_eor
+        *vis_arr[1] = *vis_YY_model+*vis_YY_eor
+      
+    endif
+    
+    If keyword_set(real_data_add_eor) then begin
+    
+        ;restore EoR visibilities from the latest standard
+        vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
+        vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_YY.sav', 'vis_ptr')
+        *vis_XX_eor=*vis_XX_eor*1000.
+        *vis_YY_eor=*vis_YY_eor*1000.
+      
+        flag_zero1=where(*vis_weights[0] EQ 0, flag_count1)
+        If flag_count1 GT 0 then (*vis_XX_eor)[flag_zero1]=0
+        flag_zero2=where(*vis_weights[1] EQ 0, flag_count2)
+        If flag_count2 GT 0 then (*vis_YY_eor)[flag_zero2]=0
+      
+        ;Combine the calibrated visibilities in the correct format for the script
+        *vis_arr[0] = *vis_arr[0]+*vis_XX_eor
+        *vis_arr[1] = *vis_arr[1]+*vis_YY_eor
+    endif
+    
+    
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
         IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
         SAVE,vis_arr,vis_weights,hdr,params,filename=file_path_vis_sav
@@ -63,6 +149,7 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
     
+
     IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;
         transfer_weights_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
@@ -74,8 +161,10 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
     ENDIF
     
-    vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
-        freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
+    If ~keyword_set(turn_off_visflagbasic) then begin
+        vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
+            freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
+    endif
     vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
@@ -148,7 +237,7 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF
     
     IF N_Elements(source_array) GT 0 THEN BEGIN
-        fhd_save_io,status_str,source_array,var='source_array',/compress,file_path_fhd=file_path_fhd,path_use=path_use,_Extra=extra 
+        fhd_save_io,status_str,source_array,var='source_array',/compress,file_path_fhd=file_path_fhd,path_use=path_use,_Extra=extra
         source_array_export,source_array,obs,file_path=path_use
     ENDIF
     
@@ -165,8 +254,8 @@ IF data_flag LE 0 THEN BEGIN
         error=1
         IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
         RETURN
-    ENDIF    
-
+    ENDIF
+    
     IF Keyword_Set(return_decon_visibilities) THEN save_visibilities=1
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
@@ -188,12 +277,13 @@ IF data_flag LE 0 THEN BEGIN
     IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,vis_weights,vis_model_arr
     IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
 ENDIF
-
+  
 IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
+
     fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,silent=silent,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
         vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,$
@@ -239,4 +329,5 @@ timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
 print,''
 !except=except
+
 END

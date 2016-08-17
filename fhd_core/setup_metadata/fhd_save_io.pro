@@ -109,6 +109,7 @@ IF ~Keyword_Set(name_error) THEN BEGIN
         IF Keyword_Set(force_path) THEN path_sav=force_path
         ;do NOT check with file_test() here! We want getvar_savefile to throw the error if it's not found
         param=getvar_savefile(path_sav,var_name_use, compatibility_mode = compatibility_mode)
+        IF file_test(path_sav) THEN param=getvar_savefile(path_sav,var_name_use, compatibility_mode = compatibility_mode)
         RETURN
     ENDIF
     

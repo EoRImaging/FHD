@@ -14,7 +14,14 @@ vis_model_auto=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,au
 n_tile_use=N_Elements(auto_tile_i)
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-freq_i_use=where((*obs.baseline_info).freq_use)
+
+;My changes
+;obs_flagged=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_beamperchannel/metadata/1061316176_obs.sav','obs')
+;freq_i_use=where((*obs_flagged.baseline_info).freq_use)
+freq_i_use=INDGEN(384)
+;End of my changes
+
+;freq_i_use=where((*obs.baseline_info).freq_use)
 tile_i_use=where((*obs.baseline_info).tile_use)
 
 auto_scale=Fltarr(n_pol)
