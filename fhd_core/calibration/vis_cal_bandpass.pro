@@ -166,6 +166,7 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     cal_remainder.gain=gain_arr_ptr3
     
     ;Add the Levine memo bandpass to the gain solutions if applicable
+
 ;    IF keyword_set(uvfits_version) AND keyword_set(uvfits_subversion) then if (uvfits_version EQ 5) AND (uvfits_subversion EQ 1) then begin
 ;      for pol_i=0, n_pol-1 do for tile_i=0, n_tile-1 do cal_bandpass.gain[pol_i] = (cal_bandpass.gain[pol_i])[*,tile_i] * ave_bp_gains_fullband
 ;    endif
