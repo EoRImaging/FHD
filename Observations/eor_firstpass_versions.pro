@@ -1092,6 +1092,7 @@ case version of
       recalculate_all=1
       ;turn_off_visflagbasic=1
       unflag_all=1
+      nfreq_avg=384
    end
    
    
@@ -2152,6 +2153,20 @@ case version of
       no_diffuse=1
       undefine, diffuse_calibrate, diffuse_model
       recalculate_all=1
+   end
+   'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_tenthgrid':begin 
+      saved_run_bp=0
+      cable_bandpass_fit=0
+      turn_off_visflagbasic=1
+      cal_sim=1
+      no_frequency_flagging=1
+      perfect_cal_ones=1
+      ;remove_eor=1
+      ;input_unflagged=1
+      max_calibration_sources=4000
+      nfreq_avg=1
+      tenthgrid=1
+      ;recalculate_all=1
    end
    'nb_sim_perfect_cal_beamperchannel_novisflagbasic_modelnoflag_eor_weightfix_ones_maxcalsources_nofreqdepbeam':begin 
       saved_run_bp=0
