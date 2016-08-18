@@ -11,7 +11,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
     cal_sim_input=cal_sim_input, bubbles=bubbles, enhance_eor=enhance_eor, make_grid_beam=make_grid_beam,$
-    remove_eor=remove_eor, real_data_add_eor=real_data_add_eor, turn_off_visflagbasic=turn_off_visflagbasic,make_grid_psf=make_grid_psf, $
+    remove_eor=remove_eor,  turn_off_visflagbasic=turn_off_visflagbasic,make_grid_psf=make_grid_psf, $
     add_sim_noise=add_sim_noise,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
@@ -48,34 +48,9 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF
     
     ;Calibration simulations given input model visibilities as dirty visilibilities
-    If keyword_set(cal_sim_input) then begin
-        calibration_sim_setup, cal_sim_input, vis_arr, flag_arr, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis, $
-           add_sim_noise=add_sim_noise,stokesV=stokesV, _Extra=extra
-    endif
-    ;End of calibration simulation read in and input visibility manipulation
-    
-    ;Enhancing and adding an eor signal to real data in order to ask questions about signal loss through calibration
-    If keyword_set(real_data_add_eor) then begin
-      ;restore EoR visibilities from the latest standard
-      vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
-      vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_eor_YY.sav', 'vis_ptr')
-      
-      ;Enchance the eor visibilities by 1000
-      *vis_XX_eor=*vis_XX_eor*1000.
-      *vis_YY_eor=*vis_YY_eor*1000.
-      
-      ;Zero the eor visibilities that correspond to flagged visibilities in real data
-      flag_zero1=where(*flag_arr[0] EQ 0, flag_count1)
-      If flag_count1 GT 0 then (*vis_XX_eor)[flag_zero1]=0
-      flag_zero2=where(*flag_arr[1] EQ 0, flag_count2)
-      If flag_count2 GT 0 then (*vis_YY_eor)[flag_zero2]=0
-      
-      ;Combine the eor visibilities and real data visibilities in the correct format for the script
-      *vis_arr[0] = *vis_arr[0]+*vis_XX_eor
-      *vis_arr[1] = *vis_arr[1]+*vis_YY_eor
-    endif
-    ;End of enhancing and adding an eor signal to real data in order to ask questions about signal loss through calibration
-    
+    If keyword_set(cal_sim_input) then $
+        calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis, $
+           add_sim_noise=add_sim_noise, _Extra=extra
     
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
         IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
