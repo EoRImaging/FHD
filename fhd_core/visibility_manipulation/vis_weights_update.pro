@@ -102,4 +102,5 @@ obs.n_vis=Total(bin_n)
 obs.n_time_flag=Total(1L-(*obs.baseline_info).time_use)
 obs.n_tile_flag=Total(1L-(*obs.baseline_info).tile_use)
 obs.n_freq_flag=Total(1L-(*obs.baseline_info).freq_use)
+
 END

@@ -43,8 +43,8 @@ IF data_flag LE 0 THEN BEGIN
     
     uvfits_read,hdr,params,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,error=error,_Extra=extra
     IF Keyword_Set(error) THEN BEGIN
-        print,"Error occured while reading uvfits data. Returning."
-        RETURN
+      print,"Error occured while reading uvfits data. Returning."
+      RETURN
     ENDIF
     
     ;Calibration simulations given input model visibilities as dirty visilibilities
@@ -64,9 +64,10 @@ IF data_flag LE 0 THEN BEGIN
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra) 
     n_pol=obs.n_pol
     n_freq=obs.n_freq
-    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end 
+    
+    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end
     IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(obs,params,vis_arr,direction=deproject_w_term)
-       
+    
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     If ~keyword_set(make_grid_psf) then begin
@@ -97,8 +98,12 @@ IF data_flag LE 0 THEN BEGIN
     endif
 
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
+    ;My changes!!
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
+    ;jones=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_dimcalsources_nod/beams/1061316176_jones.sav','jones')
+    ;jones=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_eor_maxcalsources_nod/beams/1061316176_jones.sav','jones')
     
+    ;End
 
     IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;
@@ -109,6 +114,7 @@ IF data_flag LE 0 THEN BEGIN
             print,"Error occured while attempting to transfer weights. Returning."
             RETURN
         ENDIF
+
     ENDIF
     
     ;An option to bypass main flagging, especially useful for calibration simulation with no flagged frequencies
@@ -119,12 +125,12 @@ IF data_flag LE 0 THEN BEGIN
     vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
-        IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
-        IF ~Keyword_Set(calibration_source_list) THEN $
-            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)        
-        skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,diffuse_model=diffuse_calibrate,_Extra=extra)
-        cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
-            catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
+      IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
+      IF ~Keyword_Set(calibration_source_list) THEN $
+        calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)
+      skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,diffuse_model=diffuse_calibrate,_Extra=extra)
+      cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
+        catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
     ENDIF
     
     ;Put initial beam here
@@ -150,8 +156,8 @@ IF data_flag LE 0 THEN BEGIN
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'  ;write preliminary settings file for debugging, in case later steps crash
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
-        calibrate_visibilities=1
-        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd ;this will not modify string or structure types, but will over-write it if set to a numerical type
+      calibrate_visibilities=1
+      IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd ;this will not modify string or structure types, but will over-write it if set to a numerical type
     ENDIF
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
@@ -194,15 +200,15 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF
     
     IF Keyword_Set(skymodel_cal) OR Keyword_Set(skymodel_update) THEN $
-        skymodel=fhd_struct_combine_skymodel(obs, skymodel_cal, skymodel_update,calibration_flag=(Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract)))
+      skymodel=fhd_struct_combine_skymodel(obs, skymodel_cal, skymodel_update,calibration_flag=(Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract)))
     fhd_save_io,status_str,skymodel,var='skymodel',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but not be used
     model_flag=min(Ptr_valid(vis_model_arr))
     
     IF Keyword_Set(error) THEN BEGIN
-        print,"Error occured during source modeling"
-        RETURN
+      print,"Error occured during source modeling"
+      RETURN
     ENDIF
     
     IF N_Elements(source_array) GT 0 THEN BEGIN
@@ -241,7 +247,7 @@ IF data_flag LE 0 THEN BEGIN
             save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,$
             return_decon_visibilities=return_decon_visibilities,_Extra=extra)
     ENDIF ELSE BEGIN
-        print,'Visibilities not re-gridded'
+      print,'Visibilities not re-gridded'
     ENDELSE
     IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,vis_weights,vis_model_arr
     IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present

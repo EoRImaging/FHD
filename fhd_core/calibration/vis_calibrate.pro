@@ -93,7 +93,9 @@ fill_model_vis=1
 
 vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
 	timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
+
 t1=Systime(1)-t0_0
+
 
 IF Keyword_Set(cal.auto_initialize) THEN $
   initial_calibration=vis_cal_auto_init(obs,psf,cal,vis_arr=vis_ptr,vis_model_arr=vis_model_arr,_Extra=extra)
@@ -120,6 +122,7 @@ CASE size(initial_calibration,/type) OF
 		cal.gain=cal_init.gain
 		print,'Using initial calibration solution from '+initial_calibration
 	ENDIF else print, 'Initial calibration file not found'
+
 END
 8:cal.gain=initial_calibration.gain ;type code 8 is structure
 10:cal.gain=initial_calibration ;type code 10 is pointer
@@ -290,6 +293,7 @@ endif
 
 
 ;****end of my changes
+
 IF Keyword_Set(vis_auto_model) THEN cal_auto=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
 IF Keyword_Set(calibration_auto_fit) THEN cal_res=vis_cal_subtract(cal_base,cal_auto) ELSE cal_res=vis_cal_subtract(cal_base,cal)
 basename=file_basename(file_path_fhd)
@@ -299,7 +303,6 @@ image_path=filepath(basename,root=dirpath,sub='output_images')
 if ~keyword_set(skip_cal_plots) then plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
 
 If keyword_set(perfect_cal_ones) then begin
-
   one_arr=complex(FLTARR(384,128))
   one_arr[*,*]=1.
   *cal.gain[0]=one_arr

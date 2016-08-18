@@ -9,6 +9,7 @@ PRO fhd_save_io,status_str,param,file_path_fhd=file_path_fhd,pol_i=pol_i,compres
   ENDIF
   
   IF N_Elements(compress) EQ 0 THEN compress=0
+
   ;;;;;;;;;;;;;;;;;;;;;;;
   ;If keyword_set(compatibility_mode) then begin
   ;  pol_names=['xx','yy','xy','yx','I','Q','U','V']
