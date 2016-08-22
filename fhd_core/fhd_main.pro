@@ -49,7 +49,7 @@ IF data_flag LE 0 THEN BEGIN
     
     ;Calibration simulations given input model visibilities as dirty visilibilities
     If keyword_set(cal_sim_input) then $
-        calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis, $
+        calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis, $
            add_sim_noise=add_sim_noise, _Extra=extra
     
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
@@ -75,35 +75,10 @@ IF data_flag LE 0 THEN BEGIN
     endif else psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_dimcalsources_nod/beams/1061316176_beams.sav','psf')
     ;endif else 
     ;psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_eor_maxcalsources_nod/beams/1061316176_beams.sav','psf')
-    
-    ;My changes!!
-    If keyword_set(temp_make_grid_beam) then begin
-      dimension=obs.dimension
-      elements=obs.elements
-      ;undefine, antenna,vis_arr,hdr,params,flag_arr,status_str
-      beam2_xx_image = fltarr(dimension, elements, n_freq)
-      beam2_yy_image = fltarr(dimension, elements, n_freq)
-      beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
-      for freq_i=0,n_freq-1 do begin
-        beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
-        beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
-      endfor
-      print, 'Trying to save beam2'
-      initial_beam_filepath = file_path_fhd + '_initial_beam2_image.sav'
-      save, file=initial_beam_filepath, beam2_xx_image, beam2_yy_image, obs
-      undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
-    ;psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_beamperchannel_novisflagbasic_modelnoflag_noeor_beamperchannelforreal/beams/1061316176_beams.sav','psf')
-    ;End
-    ;RETURN
-    endif
 
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
-    ;My changes!!
+
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
-    ;jones=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_dimcalsources_nod/beams/1061316176_jones.sav','jones')
-    ;jones=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_eor_maxcalsources_nod/beams/1061316176_jones.sav','jones')
-    
-    ;End
 
     IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;
@@ -132,24 +107,6 @@ IF data_flag LE 0 THEN BEGIN
       cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
         catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
     ENDIF
-    
-    ;Put initial beam here
-    If keyword_set(make_grid_beam) then begin
-      dimension=obs.dimension
-      elements=obs.elements
-      undefine, antenna,vis_arr,hdr,params,flag_arr,status_str
-      beam2_xx_image = fltarr(dimension, elements, n_freq)
-      beam2_yy_image = fltarr(dimension, elements, n_freq)
-      beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
-      for freq_i=0,n_freq-1 do begin
-        beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
-        beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
-      endfor
-      print, 'Trying to save beam2'
-      save, file='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_maxcalsources_nod/1061316176_initial_beam2_image.sav', beam2_xx_image, beam2_yy_image, obs
-      undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
-    endif
-    ;End of intial beam
     
     ;print informational messages
     obs_status,obs
