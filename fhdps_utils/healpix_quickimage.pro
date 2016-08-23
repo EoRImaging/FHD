@@ -177,7 +177,6 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     endif
     
     if not keyword_set(noplot) then begin
-      stop
       quick_image, map_out, missing_val = bad_val, data_range = data_range, xtitle = 'ra (degrees)', ytitle = 'dec (degrees)', $
         title = title, note = note, charsize = charsize, noerase = noerase, xrange = ra_range, yrange = dec_range, $
         savefile = savefile, png = png, eps = eps, pdf = pdf, $

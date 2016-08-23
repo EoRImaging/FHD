@@ -104,8 +104,6 @@ pro quick_image, image, xvals, yvals, data_range = data_range, data_min_abs = da
     if abs(data_range[0] - data_range[1]) lt 1e-15 and data_range[0] ne 0 then data_range = minmax([data_range[0], 0])
     
     cgloadct, 25, /brewer, /reverse, BOTTOM = 0, NCOLORS = 256, clip = [0, 235]
-    ;cgloadct, 25, /brewer, BOTTOM = 0, NCOLORS = 256, clip = [0, 235]
-    
     
     color_range = [0, 255]
     if n_elements(missing_value) ne 0 then begin
