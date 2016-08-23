@@ -10,7 +10,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
-    cal_sim_input=cal_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise_savefile=sim_noise_savefile,_Extra=extra
+    cal_sim_input=cal_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise=sim_noise,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -48,7 +48,7 @@ IF data_flag LE 0 THEN BEGIN
     ;Calibration simulations given input model visibilities as dirty visilibilities
     If keyword_set(cal_sim_input) then $
         calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, eor_savefile=eor_savefile, $
-          file_path_vis=file_path_vis, sim_noise_savefile=sim_noise_savefile, _Extra=extra
+          file_path_vis=file_path_vis, sim_noise=sim_noise, _Extra=extra
     
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
         IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
