@@ -94,8 +94,11 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     astr=obs.astr    
     degpix = obs.degpix        
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
-    fhd_save_io,status_str,cal,file_path_fhd=file_path_fhd,var='cal',/restore
-    IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,file_path_fhd=file_path_fhd)
+    IF status_str.skymodel GT 0 THEN BEGIN
+        fhd_save_io,status_str,skymodel,file_path_fhd=file_path_fhd,var='skymodel',/restore
+        source_array = skymodel.source_list
+        IF skymodel.n_sources EQ 0 THEN source_flag = 0 ELSE source_flag = 1
+    ENDIF ELSE source_flag = 0
     
     image_uv_arr=Ptrarr(n_pol)
     weights_arr=Ptrarr(n_pol)
@@ -123,12 +126,6 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             IF N_Elements(grid_uv_model) GT 0 THEN model_uv_holo[pol_i]=Ptr_new(grid_uv_model)
             undefine_fhd,grid_uv_model
         ENDFOR
-        IF tag_exist(cal,n_cal_src,/quiet) EQ 1 THEN BEGIN
-            IF cal.n_cal_src GT 0 THEN BEGIN
-                source_flag=1
-                source_array=cal.source_list
-            ENDIF ELSE source_flag=0
-        ENDIF ELSE source_flag=0
         
         IF status_str.psf THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd $
             ELSE psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=1,no_save=1,_Extra=extra)
@@ -156,9 +153,9 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         ;we want ALL images in the beam^2 holographic frame
         instr_dirty_arr[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
-            image_filter_fn=image_filter_fn,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra))
+            image_filter_fn=image_filter_fn,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],beam_ptr=beam_base[pol_i],_Extra=extra))
         IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_holo[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
-            image_filter_fn=image_filter_fn,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],_Extra=extra))
+            image_filter_fn=image_filter_fn,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],beam_ptr=beam_base[pol_i],_Extra=extra))
         IF source_flag THEN instr_sources[pol_i]=Ptr_new(source_image_generate(source_array,obs,pol_i=pol_i,resolution=16.,$
             dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)*(*beam_base[pol_i]))
     ENDFOR
@@ -168,25 +165,27 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     IF source_flag THEN stokes_sources=stokes_cnv(instr_sources,jones,obs,beam_arr=beam_base,/square)
     stokes_weights_ptr=stokes_cnv(beam_base2,jones,obs)
     npix=nside2npix(nside)
-    pixel_area_cnv= (4.*!Pi*!RaDeg^2. / npix) * weight_invert(pixel_area(obs))
+
     stokes_weights=*stokes_weights_ptr[0]
     Ptr_free,stokes_weights_ptr
     
     ; renormalize based on weights
     renorm_factor = get_image_renormalization(obs,weights_arr=weights_arr,beam_base=beam_base,filter_arr=filter_arr,$
-        image_filter_fn=image_filter_fn,degpix=degpix,/antialias) * pixel_area_cnv
+        image_filter_fn=image_filter_fn,degpix=degpix,/antialias)
     undefine_fhd,instr_dirty_arr,instr_model_arr,instr_sources,beam_base,beam_base2,filter_arr,jones
     
     ;multiply by stokes_weights so that observations can be added weighted by their variance. 
     ;We will divide by the sum of the variances at the end to make this a variance-weighted average
+    pixel_area_cnv=(4.*!Pi / npix) * weight_invert(pixel_area(obs))
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *stokes_dirty[pol_i]*=renorm_factor*stokes_weights
-        IF model_flag THEN *stokes_model[pol_i]*=renorm_factor*stokes_weights 
-        IF source_flag THEN *stokes_sources[pol_i]*=stokes_weights
+        *stokes_dirty[pol_i]*=renorm_factor*stokes_weights * pixel_area_cnv
+        IF model_flag THEN *stokes_model[pol_i]*=renorm_factor*stokes_weights * pixel_area_cnv
+        IF source_flag THEN *stokes_sources[pol_i]*=stokes_weights * pixel_area_cnv
     ENDFOR
     
     hpx_cnv=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside,$
-        mask=beam_mask,restore_last=0,restrict_hpx_inds=restrict_hpx_inds,/no_save,_Extra=extra)
+        mask=beam_mask,restore_last=0,restrict_hpx_inds=restrict_hpx_inds,/no_save,$
+        divide_pixel_area=0,_Extra=extra)
     hpx_inds1=hpx_cnv.inds 
     
     IF fit_inds_flag THEN BEGIN
