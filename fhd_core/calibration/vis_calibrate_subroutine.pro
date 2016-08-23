@@ -103,9 +103,10 @@
 ;  return, grad
 ;  
 ;end
-FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
-    calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,cal_sim_input=cal_sim_input,_Extra=extra
 
+FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
+    calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,_Extra=extra
+    
   IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
   reference_tile=cal.ref_antenna
   min_baseline=obs.min_baseline
@@ -571,10 +572,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
 ;      
 ;    endelse
     
-    
     nan_i=where(Finite(gain_arr,/nan),n_nan)
-    ;My changes!!!
-    if keyword_set(cal_sim_input) then n_nan=0
     IF n_nan GT 0 THEN BEGIN
       ;any gains with NANs -> all tiles for that freq will have NANs
       freq_nan_i=nan_i mod n_freq

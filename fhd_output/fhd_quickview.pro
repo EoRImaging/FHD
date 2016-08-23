@@ -8,7 +8,7 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,beam_threshold=beam_threshold,$
     beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,$
     image_mask_horizon=image_mask_horizon,write_healpix_fits=write_healpix_fits,nside=nside,$
-    model_recalculate=model_recalculate,map_fn_arr=map_fn_arr,skip_cal_plots=skip_cal_plots,_Extra=extra
+    model_recalculate=model_recalculate,map_fn_arr=map_fn_arr,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
@@ -279,7 +279,7 @@ IF N_Elements(cal) GT 0 THEN BEGIN
          vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
          plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist
       ENDIF ELSE BEGIN
-         If ~keyword_set(skip_cal_plots) then plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
+         plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
       ENDELSE
    ENDIF
 ENDIF
