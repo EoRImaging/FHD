@@ -353,6 +353,7 @@ fi
 
 ########End of resubmitting the firstpass jobs that failed and might benefit from a rerun
 
+
 #Delete PS directory if it exists to force eppsilon to run
 #It is assumed that if you are rerunning FHD, PS will need to be rerun as well.
 if [[ -d ${outdir}/fhd_${version}/ps ]]; then 

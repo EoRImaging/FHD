@@ -21,7 +21,7 @@ unset outdir
 unset version
 
 #Parse flags for inputs
-while getopts ":f:s:e:o:v:p:w:n:m:t:h:" option
+while getopts ":f:s:e:o:v:p:w:n:m:t:" option
 do
    case $option in
 	f) obs_file_name="$OPTARG";;	#text file of observation id's
@@ -35,7 +35,6 @@ do
 	n) nslots=$OPTARG;;		#Number of slots for grid engine
 	m) mem=$OPTARG;;		#Memory per core for grid engine
 	t) thresh=$OPTARG;;		#Wedge threshold to use to determine whether or not to run
-        h) id=$OPTARG;;                 #hold on this id
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), "
 	    echo "-v (version input for FHD), -p (priority in grid engine), -w (wallclock time in grid engine), -n (number of slots to use),"
 	    echo "and -m (memory per core for grid engine)." 
