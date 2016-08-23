@@ -1,19 +1,21 @@
-PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles, file_path_vis=file_path_vis, $
-		add_sim_noise=add_sim_noise
+PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, eor_savefile=eor_savefile, file_path_vis=file_path_vis, $
+		sim_noise_savefile=sim_noise_savefile
 		
 	if ~keyword_set(n_pol) then n_pol=2
 	if n_pol EQ 2 then pol_name=['XX','YY'] else pol_name=['XX','YY','XY','YX']
 	
+	;Remove all weighting to remove pfb effects and flagged channels
 	for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
 	
 	vis_arr=PTRARR(n_pol,/allocate)
 	vis_model=PTRARR(n_pol,/allocate)
 	obs_id = file_basename(file_path_vis, '.uvfits')
 	
-	;restore model visibilities given the cal_sim_input
+	;restore model visibilities given the cal_sim_input to act as the input data visibilities
 	for pol_i=0, n_pol-1 do $
 		vis_model[pol_i] = GETVAR_SAVEFILE(cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
 		
+	;***Begin in-situ model making to act as input data visibilities if read-in is not available
 	IF ~ptr_valid(vis_model) then begin
 		print, "Read-in file not found/provided in cal_sim_input. Creating model"
 		
@@ -44,54 +46,62 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, enhance_eor=enha
 			
 		vis_export,obs,status_str,vis_model_arr,vis_weights,file_path_fhd=file_path_fhd,/compress,/model
 		
-		vis_XX_model = PTR_NEW(vis_model_arr[0])
-		vis_YY_model = PTR_NEW(vis_model_arr[1])
+		;Save model here!
 		
-		undefine, vis_model_arr, psf, jones, skymodel_cal, cal, calibration_source_list
+		undefine, psf, jones, skymodel_cal, cal, calibration_source_list
 		
 	endif
-	
+	;***End in-situ model making to act as input data visibilities if read-in is not available
 	
 	;restore EoR visibilities
-	If ~keyword_set(bubbles_eor) then begin
-		;Hash eor
-		plusone=['1061317272','1061317400','1061317520','1061317640','1061317760','1061317888','1061318008','1061318128','1061318248', $
-			'1061318376','1061318496','1061318616','1061318736','1061318864','1061318984']
-			
-		zenith = ['1061315448','1061315568','1061315688','1061315808','1061315936','1061316056','1061316176','1061316296','1061316424', $
-			'1061316544','1061316664','1061316784','1061316912','1061317032','1061317152']
-			
-		match_index=where(STRMATCH(plusone, obs_id),n_count)
-		If n_count GT 0 then obs_temp = zenith[match_index] else obs_temp=obs_id
+	If keyword_set(eor_savefile) then begin
+		vis_eor=PTRARR(n_pol,/allocate)
 		
-		vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/'+obs_temp+'_vis_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
-		vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/'+obs_temp+'_vis_YY.sav', 'vis_ptr')
-	endif else begin
-		;Bubble eor from Adam Lidz
-		vis_XX_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_bubbles_XX.sav', 'vis_ptr') ;restore array of calibrated visibilities
-		vis_YY_eor = GETVAR_SAVEFILE('/nfs/eor-00/h1/nbarry/1061316176_vis_bubbles_YY.sav', 'vis_ptr')
-	endelse
-	
-	If keyword_set(enhance_eor) then begin
-		print, "Enhancing input EoR by "+enhance_eor+"x"
-		for pol_i=0,n_pol-1 do *vis_eor[pol_i]=*vis_eor[pol_i]*enhance_eor
+		;*Search for the specified eor savefile
+		if total(file_test(eor_savefile)) GT 0 then begin
+			size_savefile=(size(eor_savefile))[1]
+			
+			void = GETVAR_SAVEFILE(eor_savefile[0], names=names)
+			vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]  ;assumption: visibilities in sav file have "vis" in the name
+			
+			;Restore visibilities that are in different polarization save files, or restore the all-pol save file
+			if size_savefile EQ n_pol then $
+				for pol_i=0,n_pol-1 do vis_eor[pol_i] = GETVAR_SAVEFILE(eor_savefile[pol_i], vis_varname) $
+			else vis_eor = GETVAR_SAVEFILE(eor_savefile, vis_varname)
+			
+		endif else begin
+			if total(file_test(eor_savefile + obs_id + '_vis_' + pol_name[0] + '.sav')) GT 0 then begin
+				void = GETVAR_SAVEFILE(eor_savefile + obs_id + '_vis_' + pol_name[0] + '.sav', names=names)
+				vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]  ;assumption: visibilities in sav file have "vis" in the name
+				
+				;Restore visibilities that are in the <obsid>_vis_XX/vis_YY format
+				for pol_i=0,n_pol-1 do vis_eor[pol_i] = GETVAR_SAVEFILE(eor_savefile + obs_id + '_vis_' + pol_name[pol_i] + '.sav', vis_varname)
+			endif else message, "eor_savefile not found! Tried " + eor_savefile + " and " + eor_savefile + obs_id + "_vis_" + pol_name[0] + ".sav (for all pol)"
+		endelse
+		;*End of search for the specified eor savefile
+		
+		;Boost the eor signal by a specified amount
+		If keyword_set(enhance_eor) then begin
+			print, "Enhancing input EoR by "+enhance_eor+"x"
+			for pol_i=0,n_pol-1 do *vis_eor[pol_i]=*vis_eor[pol_i]*enhance_eor
+		endif
+		
+		;Combine the calibrated visibilities in the correct format for the script
+		for pol_i=0,n_pol-1 do *vis_arr[pol_i] = *vis_model_arr[pol_i]+*vis_eor[pol_i]
+		
 	endif
-	
-	If keyword_set(remove_eor) then begin
-		*vis_XX_eor=0.
-		*vis_YY_eor=0.
-	endif
-	
-	;Combine the calibrated visibilities in the correct format for the script
-	*vis_arr[0] = *vis_XX_model+*vis_XX_eor
-	*vis_arr[1] = *vis_YY_model+*vis_YY_eor
-	
-	If keyword_set(add_sim_noise) then begin
-		vis_noise=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_noise/'+obs_id+'_noise.sav','vis_noise')
-		zero_xx_i = where(real_part(*vis_arr[0]) NE 0)
-		(*vis_arr[0])[zero_xx_i] = (*vis_arr[0])[zero_xx_i]+(*vis_noise[0])[zero_xx_i]
-		zero_yy_i = where(real_part(*vis_arr[1]) NE 0)
-		(*vis_arr[1])[zero_yy_i] = (*vis_arr[1])[zero_yy_i]+(*vis_noise[1])[zero_yy_i]
+
+	;Optionally add noise to the visibilities (from a save file)
+	If keyword_set(sim_noise_savefile) then begin	
+		;Restore the noise visibilities
+		void = getvar_savefile(sim_noise_savefile,names=names)
+		vis_noise = getvar_savefile(sim_noise_savefile,names)
+		
+		;Add the noise to the visibilities, but keeping zeroed visibilities fully zero
+		for pol_i=0, n_pol-1 do begin
+			nonzero_i = where(real_part(*vis_arr[pol_i]) NE 0)
+			(*vis_arr[pol_i])[nonzero_i] = (*vis_arr[pol_i])[nonzero_i]+(*vis_noise[pol_i])[nonzero_i]
+		endfor
 	endif
 	
 END

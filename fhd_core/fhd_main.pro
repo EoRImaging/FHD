@@ -10,9 +10,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
-    cal_sim_input=cal_sim_input, bubbles=bubbles, enhance_eor=enhance_eor, make_grid_beam=make_grid_beam,$
-    remove_eor=remove_eor,  turn_off_visflagbasic=turn_off_visflagbasic,make_grid_psf=make_grid_psf, $
-    add_sim_noise=add_sim_noise,_Extra=extra
+    cal_sim_input=cal_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise_savefile=sim_noise_savefile,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -49,8 +47,8 @@ IF data_flag LE 0 THEN BEGIN
     
     ;Calibration simulations given input model visibilities as dirty visilibilities
     If keyword_set(cal_sim_input) then $
-        calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, remove_eor=remove_eor,bubbles=bubbles,file_path_vis=file_path_vis, $
-           add_sim_noise=add_sim_noise, _Extra=extra
+        calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, eor_savefile=eor_savefile, $
+          file_path_vis=file_path_vis, sim_noise_savefile=sim_noise_savefile, _Extra=extra
     
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
         IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
@@ -70,14 +68,8 @@ IF data_flag LE 0 THEN BEGIN
     
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
-    If ~keyword_set(make_grid_psf) then begin
-      psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
-    endif else psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_perfect_cal_eor_ones_dimcalsources_nod/beams/1061316176_beams.sav','psf')
-    ;endif else 
-    ;psf=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_sim_overfit_cal_eor_maxcalsources_nod/beams/1061316176_beams.sav','psf')
-
+    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
-
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
 
     IF Keyword_Set(transfer_weights) THEN BEGIN
@@ -92,11 +84,10 @@ IF data_flag LE 0 THEN BEGIN
 
     ENDIF
     
-    ;An option to bypass main flagging, especially useful for calibration simulation with no flagged frequencies
-    If ~keyword_set(turn_off_visflagbasic) then begin
+    ;Bypass main flagging for calibration simulations
+    If ~keyword_set(cal_sim_input) then $
         vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
-            freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
-    endif
+           freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
     vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN

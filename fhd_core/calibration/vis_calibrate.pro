@@ -5,8 +5,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,calibration_bandpass_iterate=calibration_bandpass_iterate,$
-    calibration_auto_fit=calibration_auto_fit,saved_run_std_test_polyquad=saved_run_std_test_polyquad,$
-    saved_run_twopoly_meanmode=saved_run_twopoly_meanmode,over_calibrate=over_calibrate,$
+    calibration_auto_fit=calibration_auto_fit,$
+    over_calibrate=over_calibrate,$
     perfect_cal_ones=perfect_cal_ones,perfect_cal_dnr=perfect_cal_dnr,_Extra=extra
 t0_0=Systime(1)
 error=0
@@ -194,38 +194,6 @@ IF Keyword_Set(bandpass_calibrate) THEN BEGIN
       cal=vis_cal_combine(cal_polyfit2,cal_bandpass2)
     ENDIF ELSE BEGIN
       cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit,_Extra=extra)
-      
-      If keyword_set(saved_run_std_test_polyquad) then begin
-        ;saved_run location
-        print, 'Saved poly run saved_run_std_test_polyquad activated!'
-        
-        if keyword_set(cal) then cal_store=cal
-        
-        ;filename_poly='/nfs/eor-00/h1/nbarry/Aug23_nodig_quad_polyscaled/forinput/'+obs.obsname+'_cal.sav
-        filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_extrafancymodeobs_meanphase/'+obs.obsname+'_cal.sav
-        restore,filename_poly
-        (*cal_polyfit.gain[0])=(*cal.gain[0])
-        (*cal_polyfit.gain[1])=(*cal.gain[1])
-        
-        if keyword_set(cal_store) then cal=cal_store
-        
-      endif
-      
-      If keyword_set(saved_run_twopoly_meanmode) then begin
-        ;saved_run location
-        print, 'Saved poly run saved_run_std_test_polyquad activated!'
-        
-        if keyword_set(cal) then cal_store=cal
-        
-        filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_automodeinput/'+obs.obsname+'_cal.sav
-        ;filename_poly='/nfs/eor-00/h1/nbarry/Aug23_twopolyquad_meanphase_nox2fix_updatedcompare_zeromean/'+obs.obsname+'_cal.sav
-        restore,filename_poly
-        (*cal_polyfit.gain[0])=(*cal.gain[0])
-        (*cal_polyfit.gain[1])=(*cal.gain[1])
-        
-        if keyword_set(cal_store) then cal=cal_store
-        
-      endif
       
       cal=vis_cal_combine(cal_polyfit,cal_bandpass)
       If keyword_set(saved_run_twopoly_meanmode) then cal=cal_polyfit
