@@ -97,7 +97,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 			void = getvar_savefile(sim_noise,names=names)
 			vis_noise = getvar_savefile(sim_noise,names)
 			;Or create the noise visibilities
-		endif else vis_noise = vis_add_noise_simulation(cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol, fhd_file_list=fhd_file_list)
+		endif else vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol, fhd_file_list=fhd_file_list)
 		
 		;Add the noise to the visibilities, but keeping zeroed visibilities fully zero
 		for pol_i=0, n_pol-1 do begin
