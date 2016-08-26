@@ -1,5 +1,8 @@
 PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, eor_savefile=eor_savefile, $
-		fhd_file_list=fhd_file_list, file_path_vis=file_path_vis, sim_noise=sim_noise
+		fhd_file_vis=fhd_file_vis, file_path_vis=file_path_vis, sim_noise=sim_noise, hdr=hdr, params=params, $
+		calibration_catalog_file_path=calibration_catalog_file_path,diffuse_calibrate=diffuse_calibrate,$
+		transfer_calibration=transfer_calibration,freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,$
+		deproject_w_term=deproject_w_term,dft_threshold=dft_threshold,_Extra=extra
 		
 	if ~keyword_set(n_pol) then n_pol=2
 	if n_pol EQ 2 then pol_name=['XX','YY'] else pol_name=['XX','YY','XY','YX']
@@ -11,11 +14,11 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 	obs_id = file_basename(file_path_vis, '.uvfits')
 	
 	;restore model visibilities given the cal_sim_input to act as the input data visibilities
-	for pol_i=0, n_pol-1 do $
+	if isa(cal_sim_input,'String') then for pol_i=0, n_pol-1 do $
 		vis_model_arr[pol_i] = GETVAR_SAVEFILE(cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
 		
 	;***Begin in-situ model making to act as input data visibilities if read-in is not available
-	IF ~ptr_valid(vis_model_arr) then begin
+	IF ~ptr_valid(*vis_model_arr[0]) then begin
 		print, "Read-in file not found/provided in cal_sim_input. Creating model"
 		
 		;Note: explicitly reference dft_threshold here to remove it from EXTRA, which would be passed on to lower-level routines
@@ -43,7 +46,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 		vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weights,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=1,$
 			timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
 		
-		save, vis_model_arr, filename=file_dirname(fhd_file_list) +'/sim_outputs/'+obs_id+'_input_model.sav'
+		save, vis_model_arr, filename=file_dirname(fhd_file_vis) +'/sim_outputs/'+obs_id+'_input_model.sav'
 		vis_arr = Ptr_new(vis_model_arr) 
 		
 		undefine, psf, jones, skymodel_cal, cal, calibration_source_list
@@ -97,7 +100,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 			void = getvar_savefile(sim_noise,names=names)
 			vis_noise = getvar_savefile(sim_noise,names)
 			;Or create the noise visibilities
-		endif else vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol, fhd_file_list=fhd_file_list)
+		endif else vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol, fhd_file_vis=fhd_file_vis)
 		
 		;Add the noise to the visibilities, but keeping zeroed visibilities fully zero
 		for pol_i=0, n_pol-1 do begin
