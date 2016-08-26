@@ -1,5 +1,5 @@
 PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, eor_savefile=eor_savefile, $
-		fhd_file_vis=fhd_file_vis, file_path_vis=file_path_vis, sim_noise=sim_noise, hdr=hdr, params=params, $
+		file_path_vis=file_path_vis, file_path_vis=file_path_vis, sim_noise=sim_noise, hdr=hdr, params=params, $
 		calibration_catalog_file_path=calibration_catalog_file_path,diffuse_calibrate=diffuse_calibrate,$
 		transfer_calibration=transfer_calibration,freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,$
 		deproject_w_term=deproject_w_term,dft_threshold=dft_threshold,_Extra=extra
@@ -46,7 +46,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 		vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weights,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=1,$
 			timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
 		
-		save, vis_model_arr, filename=file_dirname(fhd_file_vis) +'/sim_outputs/'+obs_id+'_input_model.sav'
+		save, vis_model_arr, filename=file_dirname(file_path_vis) +'/sim_outputs/'+obs_id+'_input_model.sav'
 		vis_arr = Ptr_new(vis_model_arr) 
 		
 		undefine, psf, jones, skymodel_cal, cal, calibration_source_list
@@ -100,7 +100,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 			void = getvar_savefile(sim_noise,names=names)
 			vis_noise = getvar_savefile(sim_noise,names)
 			;Or create the noise visibilities
-		endif else vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol, fhd_file_vis=fhd_file_vis)
+		endif else vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol, file_path_vis=file_path_vis)
 		
 		;Add the noise to the visibilities, but keeping zeroed visibilities fully zero
 		for pol_i=0, n_pol-1 do begin
