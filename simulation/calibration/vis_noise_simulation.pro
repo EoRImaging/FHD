@@ -1,4 +1,4 @@
-function vis_noise_simulation, cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol , file_path_vis=file_path_vis
+function vis_noise_simulation, cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol , file_path_fhd=file_path_fhd
 
 	if ~keyword_set(n_pol) then n_pol=2
 	
@@ -36,7 +36,7 @@ function vis_noise_simulation, cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol 
 	undefine, imaginary_noise, real_noise
 	
 	if keyword_set(file_path_vis) then begin
-		save, vis_noise, filename=file_dirname(file_path_vis) +'/sim_outputs/'+obs_id+'_noise.sav'
+		save, vis_noise, filename=file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_noise.sav'
 	endif
 	
 	return, vis_noise

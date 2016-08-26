@@ -48,7 +48,7 @@ IF data_flag LE 0 THEN BEGIN
     ;Calibration simulations given input model visibilities as dirty visilibilities
     If keyword_set(cal_sim_input) then $
         calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, eor_savefile=eor_savefile, $
-          file_path_vis=file_path_vis, sim_noise=sim_noise, hdr=hdr, params=params, $
+          file_path_vis=file_path_vis, file_path_fhd=file_path_fhd,sim_noise=sim_noise, hdr=hdr, params=params, $
           calibration_catalog_file_path=calibration_catalog_file_path,diffuse_calibrate=diffuse_calibrate,$
 		  transfer_calibration=transfer_calibration,freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,$
 		  deproject_w_term=deproject_w_term,dft_threshold=dft_threshold,_Extra=extra
