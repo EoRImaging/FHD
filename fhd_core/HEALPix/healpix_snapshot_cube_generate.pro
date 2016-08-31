@@ -97,7 +97,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     if keyword_set(save_imagecube) then imagecube_filepath = file_path_fhd+['_even','_odd'] + '_gridded_imagecube.sav'
   ENDIF ELSE BEGIN
     n_iter=1
-    bi_use=Ptrarr(n_iter)
+    bi_use=Ptrarr(n_iter,/allocate_heap)
    *bi_use[0]=0
     vis_noise_calc,obs_out,vis_arr,vis_weights_use
     uvf_name = ''

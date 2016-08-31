@@ -1032,6 +1032,7 @@ case version of
        uvfits_version=5
        uvfits_subversion=1
    end
+
    'nb_Aug24_2014': begin
        saved_run_bp=0
        calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -1049,6 +1050,8 @@ case version of
        calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
        uvfits_version=5
        uvfits_subversion=1
+       recalculate_all=1
+       mapfn_recalculate=0
    end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
