@@ -1173,12 +1173,17 @@ case version of
       undefine, diffuse_calibrate, diffuse_model
    end
    
-   'rlb_diffuse_survey_threeobs': begin ;;August 2016
+   'rlb_golden_set_oneobs_nodiffuse': begin ;;August 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
-      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      undefine, diffuse_calibrate, diffuse_model
    end
+
+
 
 
    ;Khang's Stuff:
