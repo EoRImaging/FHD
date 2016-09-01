@@ -17,6 +17,8 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 	if isa(cal_sim_input,'String') then for pol_i=0, n_pol-1 do $
 		vis_model_arr[pol_i] = GETVAR_SAVEFILE(cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
 		
+	file_mkdir, file_dirname(file_path_fhd) +'/sim_outputs'	
+		
 	;***Begin in-situ model making to act as input data visibilities if read-in is not available
 	IF ~ptr_valid(*vis_model_arr[0]) then begin
 		print, "Read-in file not found/provided in cal_sim_input. Creating model"
@@ -46,6 +48,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 		vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weights,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=1,$
 			timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
 		
+		print, "Saving input model visibilities to " + file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
 		save, vis_model_arr, filename=file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
 		vis_arr = Ptr_new(vis_model_arr) 
 		
