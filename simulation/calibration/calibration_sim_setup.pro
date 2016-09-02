@@ -50,12 +50,13 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 		
 		print, "Saving input model visibilities to " + file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
 		save, vis_model_arr, filename=file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
-		vis_arr = Ptr_new(vis_model_arr) 
 		
 		undefine, psf, jones, skymodel_cal, cal, calibration_source_list
 		
 	endif
 	;***End in-situ model making to act as input data visibilities if read-in is not available
+	
+		vis_arr=temporary(vis_model_arr)
 	
 	;restore EoR visibilities
 	If keyword_set(eor_savefile) then begin
