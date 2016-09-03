@@ -6,9 +6,6 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 		
 	if ~keyword_set(n_pol) then n_pol=2
 	if n_pol EQ 2 then pol_name=['XX','YY'] else pol_name=['XX','YY','XY','YX']
-	
-	;Remove all weighting to remove pfb effects and flagged channels
-	for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
 
 	vis_model_arr=PTRARR(n_pol,/allocate)
 	obs_id = file_basename(file_path_vis, '.uvfits')
@@ -56,7 +53,10 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 	endif
 	;***End in-situ model making to act as input data visibilities if read-in is not available
 	
-		vis_arr=temporary(vis_model_arr)
+	vis_arr=temporary(vis_model_arr)
+		
+	;Remove all weighting to remove pfb effects and flagged channels
+	for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
 	
 	;restore EoR visibilities
 	If keyword_set(eor_savefile) then begin
