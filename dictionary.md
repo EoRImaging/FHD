@@ -100,13 +100,6 @@ bandpass_calibrate=1 <br />
 calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
-## Instrument Parameters
-**lat**: Latitude of the instrument, in decimal degrees. <br />
-  -*Default*: <br /> 
-  
-**lon**: Longitude of the instrument, in decimal degrees.  <br />
-  -*Default*: <br />
-
 ## Deconvolution
 
 **deconvolve**: run fast holgraphic deconvolution. <br />
@@ -151,6 +144,29 @@ ps_export=0
 split_ps_export=1
 snapshot_healpix_export=1
 
+## Flagging
+
+**tile_flag_list**: a string array of tile names to manually flag tiles. Note that this is an array of tile names, not tile indices! <br />
+  -*Default*: not set <br />
+
+
+## Instrument Parameters
+
+**alt**: altitude of the instrument, in meters.  <br />
+  -*Default*: 377.827 (MWA, from Tingay et al. 2013)<br />
+  
+**lat**: latitude of the instrument, in decimal degrees. <br />
+  -*Default*: -26.7033194 (MWA, from Tingay et al. 2013)<br /> 
+  
+**lon**: longitude of the instrument, in decimal degrees.  <br />
+  -*Default*: 116.67081524 (MWA, from Tingay et al. 2013)<br />
+
+**override_target_phasera**: RA of the target phase center, which overrides the value supplied in the metafits under the header keyword RAPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword RA.<br />
+  -*Default*: not set<br />
+
+**override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
+  -*Default*: not set<br />
+
 ## Recalculation
 
 **recalculate_all**: forces FHD to recalculate all values instead of reading in save files. This is the same as setting `mapfn_recalculate`, `healpix_recalculate` , ... to 1. <br />
@@ -160,6 +176,8 @@ snapshot_healpix_export=1
 
 mapfn_recalculate=0
 healpix_recalculate=0
+
+
 
 
 cleanup=0
