@@ -1185,6 +1185,19 @@ case version of
       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
       undefine, diffuse_calibrate, diffuse_model
    end
+   
+   'rlb_diffuse_survey_oneobs_nodiffuse_flag_rec14': begin ;;September 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      tile_flag_list = ['141','142','143','144','145','146','147','148']
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
+      undefine, diffuse_calibrate, diffuse_model
+   end
 
 
 
