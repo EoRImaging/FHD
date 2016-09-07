@@ -10,7 +10,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 <br />
   -*Range*: 0-# of seconds in an observation <br />
 
-**nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. 
+**nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. <br />
   -*EoR_firstpass settings*: 16 (<br />
   -*Default*: 1 <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
@@ -219,7 +219,6 @@ no_ps=1
 min_baseline=1.
 
 ring_radius=10.*pad_uv_image
-nfreq_avg=16
 no_rephase=1
 combine_obs=0
 smooth_width=32.
