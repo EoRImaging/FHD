@@ -5,12 +5,19 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 ## Beam
 
-**beam_offset_time**: calculate the beam at a specific time within the observation. An observation has 112 seconds, with 0 seconds indicating the start of the observation and 112 indicating the end of the observation. <br />
+**beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
   -*EoR_firstpass settings*: 56 <br />
-  -*Default*: !Q <br />
-  -*Range*: 0-112 <br />
+  -*Default*: 0 <br />
+  -*Range*: 0-# of seconds in an observation <br />
+
+**nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. 
+  -*EoR_firstpass settings*: 16 (<br />
+  -*Default*: 1 <br />
+  -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
   
 **psf_resolution**
+
+
 
 ## Calibration
 
