@@ -10,7 +10,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: !Q <br />
   -*Range*: 0-112 <br />
   
-**psf_resultion**
+**psf_resolution**
 
 ## Calibration
 
@@ -121,6 +121,8 @@ no_restrict_cal_sources=1 <br />
   
 **return_decon_visibilities**: <br />
 
+**subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
+  -*Default*: not set <br />
 
 
 ## Diffuse
@@ -149,6 +151,8 @@ snapshot_healpix_export=1
 **tile_flag_list**: a string array of tile names to manually flag tiles. Note that this is an array of tile names, not tile indices! <br />
   -*Default*: not set <br />
 
+**time_cut**: seconds to cut (rounded up to next time integration step) from the beginning of the observation. Can also specify a negative time to cut off the end of the observation. Specify a vector to cut at both the start and end. <br />
+  -*Default*: not set <br />
 
 ## Instrument Parameters
 
