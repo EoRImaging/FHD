@@ -1,8 +1,9 @@
-PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enhance_eor=enhance_eor, eor_savefile=eor_savefile, $
-		file_path_vis=file_path_vis, file_path_fhd=file_path_fhd,sim_noise=sim_noise, hdr=hdr, params=params, $
-		calibration_catalog_file_path=calibration_catalog_file_path,diffuse_calibrate=diffuse_calibrate,$
-		transfer_calibration=transfer_calibration,freq_start=freq_start,freq_end=freq_end,tile_flag_list=tile_flag_list,$
-		deproject_w_term=deproject_w_term,dft_threshold=dft_threshold,_Extra=extra
+PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration, n_pol=n_pol, enhance_eor=enhance_eor, $
+		eor_savefile=eor_savefile, file_path_vis=file_path_vis, file_path_fhd=file_path_fhd,sim_noise=sim_noise, $
+		hdr=hdr, params=params, calibration_catalog_file_path=calibration_catalog_file_path, $
+		diffuse_calibrate=diffuse_calibrate,transfer_calibration=transfer_calibration,freq_start=freq_start, $
+		freq_end=freq_end,tile_flag_list=tile_flag_list,deproject_w_term=deproject_w_term,dft_threshold=dft_threshold, $
+		_Extra=extra
 		
 	if ~keyword_set(n_pol) then n_pol=2
 	if n_pol EQ 2 then pol_name=['XX','YY'] else pol_name=['XX','YY','XY','YX']
@@ -58,8 +59,9 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 	
 	vis_arr=temporary(vis_model_arr)
 		
-	;Remove all weighting to remove pfb effects and flagged channels
+	;Remove all weighting to remove pfb effects and flagged channels. Remove calibration flagging.
 	for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
+	flag_calibration=0
 	
 	;restore EoR visibilities
 	If keyword_set(eor_savefile) then begin
@@ -117,4 +119,5 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, n_pol=n_pol, enh
 		
 	endif
 	
+	return
 END
