@@ -10,12 +10,15 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 <br />
   -*Range*: 0-# of seconds in an observation <br />
 
+**complex_beam**: !Q <br />
+  -*Default*: 1 <br />
+
 **nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. <br />
   -*EoR_firstpass settings*: 16 (<br />
   -*Default*: 1 <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
   
-**psf_resolution**
+**psf_resolution** : !Q
 
 
 
@@ -107,6 +110,9 @@ bandpass_calibrate=1 <br />
 calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
+**include_catalog_sources**: !Q <br />
+   -*Default* : 0
+
 ## Deconvolution
 
 **deconvolve**: run fast holgraphic deconvolution. <br />
@@ -187,8 +193,6 @@ snapshot_healpix_export=1
 
 mapfn_recalculate=0
 healpix_recalculate=0
-
-
 
 
 cleanup=0
