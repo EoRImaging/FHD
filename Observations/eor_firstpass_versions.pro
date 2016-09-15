@@ -1156,6 +1156,8 @@ case version of
       uvfits_subversion = 1
       saved_run_bp = 0
       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
       undefine, diffuse_calibrate, diffuse_model
    end
    
@@ -1169,10 +1171,14 @@ case version of
    end
    
    'rlb_diffuse_survey_threeobs_nodiffuse': begin ;;August 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
       undefine, diffuse_calibrate, diffuse_model
    end
    
