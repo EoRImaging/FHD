@@ -16,7 +16,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration
 		vis_model_arr[pol_i] = GETVAR_SAVEFILE(cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
 		
 	;***Begin in-situ model making to act as input data visibilities if read-in is not available
-	IF ~ptr_valid(vis_model_arr[0]) then begin
+	IF *vis_model_arr[0] EQ !NULL then begin
 		print, "Read-in file not found/provided in cal_sim_input. Creating model"
 		
 		;Note: explicitly reference dft_threshold here to remove it from EXTRA, which would be passed on to lower-level routines
