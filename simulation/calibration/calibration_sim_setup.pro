@@ -52,6 +52,8 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration
 		file_mkdir, file_dirname(file_path_fhd) +'/sim_outputs'	
 		save, vis_model_arr, filename=file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
 		
+		fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,skymodel=skymodel,cmd_args=cmd_args,/overwrite,sub_dir='sim_outputs'
+		
 		undefine, psf, jones, skymodel_cal, cal, calibration_source_list
 		
 	endif
