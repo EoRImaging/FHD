@@ -5,6 +5,13 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 ## Beam
 
+**beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989 (!Q Ian, dipole looks flipped from what Sutinjo has in paper?), 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there is currently one option: !Q. <br />
+  -*EoR_firstpass settings*: 2 <br />
+  -*Default*: 1 <br />
+  -*MWA range*: 0,1 (or anything else captured in the `else` statement),2 <br />
+  -*PAPER range*: 1 (or anything else captured in the `else` statement),2 <br />
+  -*HERA range*: automatically defaults <br />
+
 **beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
   -*EoR_firstpass settings*: 56 <br />
   -*Default*: 0 <br />
@@ -13,13 +20,18 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **complex_beam**: !Q <br />
   -*Default*: 1 <br />
 
+**dipole_mutual_coupling_factor**: allows a modification to the beam as a result of mutual coupling between dipoles calculated in `mwa_dipole_mutual_coupling.pro` (See Sutinjo 2015 for more details). <br />
+  -*Needs updating*: calculation is done for the MWA setup, even if a different instrument is being used if `dipole_mutual_coupling_factor` is set. Needs to have an extra check !Q<br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 1 <br />
+
 **nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. <br />
-  -*EoR_firstpass settings*: 16 (<br />
+  -*EoR_firstpass settings*: 16 <br />
   -*Default*: 1 <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
   
 **psf_resolution** : !Q
-
 
 
 ## Calibration
