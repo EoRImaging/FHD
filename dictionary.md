@@ -147,6 +147,8 @@ no_restrict_cal_sources=1 <br />
 **return_decon_visibilities**: <br />
 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
+  -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
+  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 
 
@@ -164,6 +166,16 @@ no_restrict_cal_sources=1 <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. If `return_cal_visibilities` is set, then the final model will include all calibration sources and all model sources (duplicates are caught and included only once). <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: All valid sources are used. !Q <br />
+
+**model_catalog_file_path**: a catalog of sources to be used to make model visibilities for subtraction. <br />
+  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect.  <br />
+  -*EoR_firstpass settings*: filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+  -*Default*: not set <br />
+
+**model_visibilities**: make visibilities for the subtraction model separately from the model used in calibration. This is useful if the user sets keywords to make the subtraction model different from the model used in calibration. If not set, the model used for calibration is the same as the subtraction model. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*: 0 <br />
 
 ## Export
 
@@ -244,10 +256,6 @@ restrict_hpx_inds=1
 
 kbinsize=0.5
 psf_resolution=100
-
-; some new defaults (possibly temporary)
-beam_model_version=2
-dipole_mutual_coupling_factor=1
 calibration_flag_iterate = 0
 
 no_calibration_frequency_flagging=1
@@ -256,7 +264,5 @@ no_calibration_frequency_flagging=1
 export_images=1
 ;cal_cable_reflection_correct=150
 cal_cable_reflection_mode_fit=150
-model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-model_visibilities=0
 
-allow_sidelobe_model_sources=1
+
