@@ -8,8 +8,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989 (!Q Ian, dipole looks flipped from what Sutinjo has in paper?), 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there is currently one option: !Q. <br />
   -*EoR_firstpass settings*: 2 <br />
   -*Default*: 1 <br />
-  -*MWA range*: 0,1 (or anything else captured in the `else` statement),2 <br />
-  -*PAPER range*: 1 (or anything else captured in the `else` statement),2 <br />
+  -*MWA range*: 0, 1 (or anything else captured in the `else` statement), 2 <br />
+  -*PAPER range*: 1 (or anything else captured in the `else` statement), 2 <br />
   -*HERA range*: automatically defaults <br />
 
 **beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
@@ -185,6 +185,18 @@ snapshot_healpix_export=1
 
 ## Flagging
 
+**dead_dipole_list**: an array of 3 x # of dead dipoles, where column 0 is the tile name, column 1 is the polarization (0:x, 1:y), and column 2 is the dipole number. These dipoles are flagged, which greatly increases memory usage due to the creation of many separate tile beams. <br />
+  -*Default*: not set <br />  
+
+**flag_dead_dipoles**: flag the dead dipoles listed in `<instrument>_dead_dipole_list.txt` for the golden set of Aug 23, 2013. This greatly increases memory usage due to the creation of many separate tile beams. <br />
+  -*Default*: not set <br />  
+
+**no_calibration_frequency_flagging**: do not flag frequencies based off of zeroed calibration gains. <br />
+  -*Needs updating*: might be better if changed to calibration_frequency_flagging and change the logic (avoid the double negative) !Q.
+  -*Turn off/on*: 0/1 (flag/don't flag) <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: not set <br />
+
 **tile_flag_list**: a string array of tile names to manually flag tiles. Note that this is an array of tile names, not tile indices! <br />
   -*Default*: not set <br />
 
@@ -207,6 +219,11 @@ snapshot_healpix_export=1
 
 **override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
   -*Default*: not set<br />
+
+## Import
+
+uvfits_version=4
+uvfits_subversion=1
 
 ## Recalculation
 
@@ -235,10 +252,6 @@ ps_kspan=600.
 image_filter_fn='filter_uv_uniform'
 deconvolution_filter='filter_uv_uniform'
 
-uvfits_version=4
-uvfits_subversion=1
-
-
 dimension=2048
 max_sources=20000
 pad_uv_image=1.
@@ -258,11 +271,7 @@ kbinsize=0.5
 psf_resolution=100
 calibration_flag_iterate = 0
 
-no_calibration_frequency_flagging=1
-
 ; even newer defaults
 export_images=1
-;cal_cable_reflection_correct=150
-cal_cable_reflection_mode_fit=150
 
 
