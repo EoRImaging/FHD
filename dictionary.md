@@ -5,12 +5,34 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 ## Beam
 
-**beam_offset_time**: calculate the beam at a specific time within the observation. An observation has 112 seconds, with 0 seconds indicating the start of the observation and 112 indicating the end of the observation. <br />
+**beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989 (!Q Ian, dipole looks flipped from what Sutinjo has in paper?), 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there is currently one option: !Q. <br />
+  -*EoR_firstpass settings*: 2 <br />
+  -*Default*: 1 <br />
+  -*MWA range*: 0, 1 (or anything else captured in the `else` statement), 2 <br />
+  -*PAPER range*: 1 (or anything else captured in the `else` statement), 2 <br />
+  -*HERA range*: automatically defaults <br />
+
+**beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
   -*EoR_firstpass settings*: 56 <br />
-  -*Default*: !Q <br />
-  -*Range*: 0-112 <br />
+  -*Default*: 0 <br />
+  -*Range*: 0-# of seconds in an observation <br />
+
+**complex_beam**: !Q <br />
+  -*Default*: 1 <br />
+
+**dipole_mutual_coupling_factor**: allows a modification to the beam as a result of mutual coupling between dipoles calculated in `mwa_dipole_mutual_coupling.pro` (See Sutinjo 2015 for more details). <br />
+  -*Needs updating*: calculation is done for the MWA setup, even if a different instrument is being used if `dipole_mutual_coupling_factor` is set. Needs to have an extra check !Q<br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 1 <br />
+
+**nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. <br />
+  -*EoR_firstpass settings*: 16 <br />
+  -*Default*: 1 <br />
+  -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
   
-**psf_resultion**
+**psf_resolution** : !Q
+
 
 ## Calibration
 
@@ -100,12 +122,8 @@ bandpass_calibrate=1 <br />
 calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
-## Instrument Parameters
-**lat**: Latitude of the instrument, in decimal degrees. <br />
-  -*Default*: <br /> 
-  
-**lon**: Longitude of the instrument, in decimal degrees.  <br />
-  -*Default*: <br />
+**include_catalog_sources**: !Q <br />
+   -*Default* : 0
 
 ## Deconvolution
 
@@ -128,6 +146,10 @@ no_restrict_cal_sources=1 <br />
   
 **return_decon_visibilities**: <br />
 
+**subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
+  -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set <br />
 
 
 ## Diffuse
@@ -145,11 +167,63 @@ no_restrict_cal_sources=1 <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: All valid sources are used. !Q <br />
 
+**model_catalog_file_path**: a catalog of sources to be used to make model visibilities for subtraction. <br />
+  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect.  <br />
+  -*EoR_firstpass settings*: filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+  -*Default*: not set <br />
+
+**model_visibilities**: make visibilities for the subtraction model separately from the model used in calibration. This is useful if the user sets keywords to make the subtraction model different from the model used in calibration. If not set, the model used for calibration is the same as the subtraction model. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*: 0 <br />
+
 ## Export
 
 ps_export=0
 split_ps_export=1
 snapshot_healpix_export=1
+
+## Flagging
+
+**dead_dipole_list**: an array of 3 x # of dead dipoles, where column 0 is the tile name, column 1 is the polarization (0:x, 1:y), and column 2 is the dipole number. These dipoles are flagged, which greatly increases memory usage due to the creation of many separate tile beams. <br />
+  -*Default*: not set <br />  
+
+**flag_dead_dipoles**: flag the dead dipoles listed in `<instrument>_dead_dipole_list.txt` for the golden set of Aug 23, 2013. This greatly increases memory usage due to the creation of many separate tile beams. <br />
+  -*Default*: not set <br />  
+
+**no_calibration_frequency_flagging**: do not flag frequencies based off of zeroed calibration gains. <br />
+  -*Needs updating*: might be better if changed to calibration_frequency_flagging and change the logic (avoid the double negative) !Q.
+  -*Turn off/on*: 0/1 (flag/don't flag) <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: not set <br />
+
+**tile_flag_list**: a string array of tile names to manually flag tiles. Note that this is an array of tile names, not tile indices! <br />
+  -*Default*: not set <br />
+
+**time_cut**: seconds to cut (rounded up to next time integration step) from the beginning of the observation. Can also specify a negative time to cut off the end of the observation. Specify a vector to cut at both the start and end. <br />
+  -*Default*: not set <br />
+
+## Instrument Parameters
+
+**alt**: altitude of the instrument, in meters.  <br />
+  -*Default*: 377.827 (MWA, from Tingay et al. 2013)<br />
+  
+**lat**: latitude of the instrument, in decimal degrees. <br />
+  -*Default*: -26.7033194 (MWA, from Tingay et al. 2013)<br /> 
+  
+**lon**: longitude of the instrument, in decimal degrees.  <br />
+  -*Default*: 116.67081524 (MWA, from Tingay et al. 2013)<br />
+
+**override_target_phasera**: RA of the target phase center, which overrides the value supplied in the metafits under the header keyword RAPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword RA.<br />
+  -*Default*: not set<br />
+
+**override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
+  -*Default*: not set<br />
+
+## Import
+
+uvfits_version=4
+uvfits_subversion=1
 
 ## Recalculation
 
@@ -178,10 +252,6 @@ ps_kspan=600.
 image_filter_fn='filter_uv_uniform'
 deconvolution_filter='filter_uv_uniform'
 
-uvfits_version=4
-uvfits_subversion=1
-
-
 dimension=2048
 max_sources=20000
 pad_uv_image=1.
@@ -190,7 +260,6 @@ no_ps=1
 min_baseline=1.
 
 ring_radius=10.*pad_uv_image
-nfreq_avg=16
 no_rephase=1
 combine_obs=0
 smooth_width=32.
@@ -200,19 +269,9 @@ restrict_hpx_inds=1
 
 kbinsize=0.5
 psf_resolution=100
-
-; some new defaults (possibly temporary)
-beam_model_version=2
-dipole_mutual_coupling_factor=1
 calibration_flag_iterate = 0
-
-no_calibration_frequency_flagging=1
 
 ; even newer defaults
 export_images=1
-;cal_cable_reflection_correct=150
-cal_cable_reflection_mode_fit=150
-model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-model_visibilities=0
 
-allow_sidelobe_model_sources=1
+
