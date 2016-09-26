@@ -1204,6 +1204,45 @@ case version of
       override_target_phasedec = -27.0
       undefine, diffuse_calibrate, diffuse_model
    end
+      
+   'rlb_diffuse_survey_threeobs_flag_rec14': begin ;;September 2016
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      tile_flag_list = ['141','142','143','144','145','146','147','148']
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_diffuse_survey_decon_Sept2016_sidelobe_subtract': begin ;;September 2016
+      uvfits_version = 5
+      uvfits_subversion = 1
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
+      max_sources = 200000
+      calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold = 1
+      gain_factor = 0.1
+      deconvolve = 1
+      return_decon_visibilities = 1
+      smooth_width = 32
+      deconvolution_filter = 'filter_uv_uniform'
+      filter_background = 1
+      dimension = 2048
+      return_cal_visibilities = 0
+      FoV = 0
+      pad_uv_image = 1
+      snapshot_healpix_export = 1
+      snapshot_recalculate = 1
+      recalculate_all = 1
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp = 0
+      subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      allow_sidelobe_model_sources = 1
+      allow_sidelobe_cal_sources = 1
+    end
 
 
 
