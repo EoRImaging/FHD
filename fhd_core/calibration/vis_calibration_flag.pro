@@ -1,9 +1,9 @@
-PRO vis_calibration_flag,obs,cal,error=error,degree=degree,phase_degree=phase_degree,$
+PRO vis_calibration_flag,obs,cal,error=error,$
     no_frequency_flagging=no_frequency_flagging,n_tile_cut=n_tile_cut,$
     no_calibration_frequency_flagging=no_calibration_frequency_flagging
 
-IF ~Keyword_Set(degree) THEN degree=2.
-IF ~Keyword_Set(phase_degree) THEN phase_degree=degree-1.
+IF Tag_exist(cal,"amp_degree") THEN amp_degree = cal.amp_degree ELSE amp_degree=2
+IF Tag_exist(cal,"phase_degree") THEN phase_degree = cal.phase_degree ELSE phase_degree=1
 amp_sigma_threshold=5.
 amp_threshold=2.
 phase_sigma_threshold=5.
@@ -34,7 +34,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     gain_tile_avg=fltarr(n_tile_use) 
     FOR tile_i=0,n_tile_use-1 DO BEGIN
         amp_sub2=amp_sub[*,tile_i]
-        fit_params=poly_fit(freq_use_i0,amp_sub2,degree,yfit=amp_sub2_fit)
+        fit_params=poly_fit(freq_use_i0,amp_sub2,amp_degree,yfit=amp_sub2_fit)
         gain_tile_fom[tile_i]=Stddev(amp_sub2-amp_sub2_fit)
         gain_tile_avg[tile_i]=Median(amp_sub2)
     ENDFOR
