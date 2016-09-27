@@ -178,10 +178,21 @@ no_restrict_cal_sources=1 <br />
   -*Default*: 0 <br />
 
 ## Export
+  
+**snapshot_healpix_export**: <br />
+  -*EoR_firstpass settings*: 1 <br />
 
-ps_export=0
-split_ps_export=1
-snapshot_healpix_export=1
+**pad_uv_image**: pad the UV image by this factor with 0's along the outside so that output images are at a higher resolution. <br />
+  -*EoR_firstpass settings*: 1. <br />
+  -*Default*: 1. <br /> 
+  
+**ps_export**: not used !Q<br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*:  <br /> 
+  
+**split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: not set <br /> 
 
 ## Flagging
 
@@ -254,7 +265,6 @@ deconvolution_filter='filter_uv_uniform'
 
 dimension=2048
 max_sources=20000
-pad_uv_image=1.
 FoV=0
 no_ps=1
 min_baseline=1.
