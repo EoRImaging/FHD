@@ -71,7 +71,7 @@ IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use),doub
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     CASE image_filter_fn OF
-        'filter_uv_weighted': IF Pointer_valid(beam_ptr) THEN dirty_image *= *beam_ptr
+        'filter_uv_weighted': IF Ptr_valid(beam_ptr) THEN dirty_image *= *beam_ptr
         ELSE:
     ENDCASE
 ENDIF

@@ -2,7 +2,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
     beam_mask_electric_field=beam_mask_electric_field,beam_mask_threshold=beam_mask_threshold,$
     xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
-    debug_beam_clipping=debug_beam_clipping,debug_beam_conjugate=debug_beam_conjugate
+    interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clipping=debug_beam_clipping,debug_beam_conjugate=debug_beam_conjugate
     
 freq_center=antenna1.freq[freq_i]
 dimension_super=(size(xvals_uv_superres,/dimension))[0]
@@ -63,7 +63,23 @@ ENDELSE
 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
 psf_base_superres/=beam_norm
 psf_val_ref=Total(psf_base_superres)
-psf_base_superres*=uv_mask_superres
+IF Keyword_Set(interpolate_beam_threshold) THEN BEGIN
+    uv_mask_superres_taper = smooth(uv_mask_superres, 5*psf_intermediate_res)
+    numeric_threshold = 1e-8
+    psf_log_vals_real = Fltarr(size(psf_base_superres, /dimension))
+    psf_log_vals_real[beam_i] = Alog(real_part(psf_base_superres[beam_i]))
+    psf_log_vals_real_smooth = smooth(psf_log_vals_real, 11*psf_intermediate_res)
+    psf_vals_real = Exp(psf_log_vals_real*uv_mask_superres_taper + psf_log_vals_real_smooth*(1-uv_mask_superres_taper))
+    ;psf_vals_real = Exp(interpol_2d(psf_log_vals_real, uv_mask_superres))>numeric_threshold
+    psf_vals_im = Fltarr(size(psf_base_superres, /dimension))
+    psf_vals_im[beam_i] = imaginary(psf_base_superres[beam_i])
+    psf_vals_im_smooth = smooth(psf_log_vals_real, 11*psf_intermediate_res)
+    psf_vals_im = psf_vals_im*uv_mask_superres_taper + psf_vals_im_smooth*(1-uv_mask_superres_taper)
+    ;psf_vals_im = interpol_2d(psf_vals_im, uv_mask_superres)
+    psf_base_superres = Complex(psf_vals_real, psf_vals_im)
+    zero_i = where(abs(psf_base_superres) LE numeric_threshold, n_zero)
+    IF n_zero GT 0 THEN psf_base_superres[zero_i] = 0.
+ENDIF ELSE psf_base_superres*=uv_mask_superres
 psf_base_superres*=psf_val_ref/Total(psf_base_superres)
 IF Keyword_Set(debug_beam_conjugate) THEN psf_base_superres=Conj(psf_base_superres)
 RETURN,psf_base_superres
