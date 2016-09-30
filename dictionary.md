@@ -230,6 +230,11 @@ no_restrict_cal_sources=1 <br />
 
 **override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
   -*Default*: not set<br />
+  
+**rephase_weights**: if turned off, target phase center is the pointing center (as defined by Cotter). Setting rephase_weights=0 overrides override_target_phasera and override_target_phasedec. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
+
 
 ## Import
 
