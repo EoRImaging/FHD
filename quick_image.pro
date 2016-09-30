@@ -1,6 +1,6 @@
 pro quick_image, image, xvals, yvals, data_range = data_range, data_min_abs = data_min_abs, $
     xrange = xrange, yrange = yrange, data_aspect=data_aspect, $
-    log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title,
+    log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
     cb_title = cb_title,  note = note, charsize = charsize_in, xlog = xlog, ylog = ylog, $
     window_num = window_num, multi_pos = multi_pos, start_multi_params = start_multi_params, $
     no_ps_close = no_ps_close, alphabackgroundimage = alphabackgroundimage, $
