@@ -32,7 +32,8 @@ FOR t_i=0L,n_time-1 DO BEGIN
     bi_hist[*,t_i]=histogram(bi_arr[bin_start[t_i]:bin_end[t_i]],min=1,max=bi_max,/binsize)
 ;    ri_arr[t_i]=Ptr_new(Temporary(ri))
 ENDFOR
-bi_hist_tot=Total(bi_hist,2)
+IF n_time GT 1 THEN bi_hist_tot=Total(bi_hist,2)
+IF n_time EQ 1 THEN bi_hist_tot = bi_hist
 
 ;name_mod=2.^((Ceil(Alog(Sqrt(Max(bin_width)*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(bi_arr))/Alog(2.)))
 ;tile_A=Long(Floor(bi_arr/name_mod)) ;tile numbers start from 1
