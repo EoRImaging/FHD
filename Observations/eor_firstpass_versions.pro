@@ -1243,6 +1243,28 @@ case version of
       allow_sidelobe_model_sources = 1
       allow_sidelobe_cal_sources = 1
     end
+        
+   'rlb_master_catalog_cal_Sept2016': begin
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_GLEAM_cal_Sept2016': begin
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      undefine, diffuse_calibrate, diffuse_model
+   end
 
 
 
