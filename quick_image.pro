@@ -1,10 +1,11 @@
 pro quick_image, image, xvals, yvals, data_range = data_range, data_min_abs = data_min_abs, $
     xrange = xrange, yrange = yrange, data_aspect=data_aspect, $
-    log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
-    note = note, charsize = charsize_in, xlog = xlog, ylog = ylog, window_num = window_num, $
-    multi_pos = multi_pos, start_multi_params = start_multi_params, no_ps_close = no_ps_close, $
-    alphabackgroundimage = alphabackgroundimage, missing_value = missing_value, $
-    noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf
+    log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title,
+    cb_title = cb_title,  note = note, charsize = charsize_in, xlog = xlog, ylog = ylog, $
+    window_num = window_num, multi_pos = multi_pos, start_multi_params = start_multi_params, $
+    no_ps_close = no_ps_close, alphabackgroundimage = alphabackgroundimage, $
+    missing_value = missing_value, noerase = noerase, savefile = savefile, $
+    png = png, eps = eps, pdf = pdf
     
   if n_elements(window_num) eq 0 then window_num = 1
   
@@ -391,7 +392,7 @@ pro quick_image, image, xvals, yvals, data_range = data_range, data_min_abs = da
     
   if keyword_set(log) then begin
     cgcolorbar, /vertical, position = cb_pos, bottom = color_range[0], ncolors = n_colors, minor = 0, $
-      ticknames = cb_ticknames, ytickv = cb_ticks, yticks = n_elements(cb_ticks) -1, $
+      ticknames = cb_ticknames, ytickv = cb_ticks, yticks = n_elements(cb_ticks) -1, title = cb_title, $
       charsize = charsize, font = font, oob_low = oob_low
       
   endif else begin
