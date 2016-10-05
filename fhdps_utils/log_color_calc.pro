@@ -1,6 +1,6 @@
 pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_colors, data_range = data_range, $
     color_profile = color_profile, log_cut_val = log_cut_val, min_abs = min_abs, oob_low = oob_low, $
-    missing_value = missing_value, missing_color = missing_color, invert_colorbar = invert_colorbar
+    missing_value = missing_value, missing_color = missing_color, invert_colorbar = invert_colorbar, label_lt_0 = label_lt_0
     
   color_profile_enum = ['log_cut', 'sym_log', 'abs']
   if n_elements(color_profile) eq 0 then color_profile = 'log_cut'
@@ -325,7 +325,7 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       tick_vals = 10^exp_vals
     endwhile
     
-    if min_pos_color gt 0 then begin
+    if min_pos_color gt 0 and keyword_set(lable_lt_0) then begin
       new_tick_vals = [10^log_data_range[0], tick_vals]
       
       min_tick_color = (alog10(min(tick_vals))-log_data_range[0])*n_colors/(log_data_range[1]-log_data_range[0]) + color_range[0]
@@ -345,16 +345,32 @@ pro log_color_calc, data, data_log_norm, cb_ticks, cb_ticknames, color_range, n_
       names = temp_names[order]
     endif
     
-    
-    if (alog10(tick_vals[0]) - log_data_range[0]) lt 10^(-3d) then begin
-      cb_ticknames = [' ', names]
-      cb_ticks = [color_range[0]-1, (alog10(tick_vals) - log_data_range[0]) * n_colors / $
-        (log_data_range[1] - log_data_range[0]) + color_range[0]] - color_range[0]
-        
+    if min_pos_color gt 0 then begin
+      ;; when the negative arrow is at the bottom of the colorbar, the color of the arrow 
+      ;; bleeds into the bottom of the colorbar. If the tick should be at the bottom of the
+      ;; color bar, an extra unnotated tick is added so it isn't in the part that's the
+      ;; color of the arrow.
+      if (alog10(tick_vals[0]) - log_data_range[0s]) lt 10^(-3d) then begin
+        cb_ticknames = [' ', names]
+        cb_ticks = [color_range[0]-1, (alog10(tick_vals) - log_data_range[0]) * n_colors / $
+          (log_data_range[1] - log_data_range[0]) + color_range[0]] - color_range[0]
+          
+      endif else begin
+        cb_ticknames = names
+        cb_ticks = ((alog10(tick_vals) - log_data_range[0]) * (n_colors+1) / $
+          (log_data_range[1] - log_data_range[0]) + color_range[0]) - color_range[0]
+      endelse
     endif else begin
-      cb_ticknames = names
-      cb_ticks = ((alog10(tick_vals) - log_data_range[0]) * (n_colors+1) / $
-        (log_data_range[1] - log_data_range[0]) + color_range[0]) - color_range[0]
+      if (alog10(tick_vals[0]) - log_data_range[0]) lt 10^(-3d) then begin
+        cb_ticknames = names
+        cb_ticks = [(alog10(tick_vals) - log_data_range[0]) * n_colors / $
+          (log_data_range[1] - log_data_range[0]) + color_range[0]] - color_range[0]
+          
+      endif else begin
+        cb_ticknames = names
+        cb_ticks = ((alog10(tick_vals) - log_data_range[0]) * (n_colors+1) / $
+          (log_data_range[1] - log_data_range[0]) + color_range[0]) - color_range[0]
+      endelse
     endelse
     
     if (log_data_range[1] - alog10(max(tick_vals))) gt 10^(-3d) then begin
