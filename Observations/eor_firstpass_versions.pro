@@ -1263,6 +1263,7 @@ case version of
       saved_run_bp = 0
       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
       rephase_weights = 0
+      restrict_hpx_inds = 0
       undefine, diffuse_calibrate, diffuse_model
    end
 
