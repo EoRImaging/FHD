@@ -650,15 +650,10 @@ def run_cotter(version,subversion,save_paths,obs_chunk,task_jobid,node):
 		'flagfiles_zip=(0 ' + " ".join(flagfiles_zip) + ')\n' + \
 		'flagfiles_dir=(0 ' + " ".join(flagfiles_dir) + ')\n' + \
 		'ls ${gpubox_path[$SGE_TASK_ID]} > /dev/null\n' + \
-<<<<<<< Updated upstream:data_download.py
 		'ls $HOME > /dev/null \n\n' + \
 		'echo JOB_ID $JOB_ID \n' + \
 		'echo TASK_ID $SGE_TASK_ID \n' + \
 		'if [ "$(ls -l ${gpubox_path[$SGE_TASK_ID]}*gpubox*_00.fits | wc -l)" -ne "24" ] ; then exit ; fi\n')	#Check to make sure gpubox files exist before queuing up 
-=======
-		'ls $HOME > /dev/null \n' + \
-		'if [ "$(ls -l ${gpubox_path[$SGE_TASK_ID]}*gpubox*.fits | wc -l)" -ne "48" ] ; then exit ; fi\n')	#Check to make sure gpubox files exist before queuing up 
->>>>>>> Stashed changes:scripttest.py
 
 	if '-flagfiles' in cotter_args[str(version)+','+str(subversion)]:
 		cotter_commands_file.write('unzip -o ${flagfiles_zip[$SGE_TASK_ID]} -d ${flagfiles_dir[$SGE_TASK_ID]}\n')
