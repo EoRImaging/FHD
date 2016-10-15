@@ -94,7 +94,7 @@ def main():
 	download_tries = 4 #number of times a obsid will attempt to download correctly
 	for download_try in range(download_tries):
 		if download_try > 0:
-			print "Reprocessing failed obsids: Download attempt number " + str(download_try+1)
+			print "Reprocessing failed obsids: Download attempt number " + str(download_try+1) + "/" + str(download_tries)
 
 		#Find which nodes are available for downloads
 		free_nodes = filespace(all_nodes)
@@ -291,6 +291,7 @@ def main():
 		else:
 			for failed in failed_obs:
 				obs_submitted[obsids.index(failed)] = False 
+			print str(len(obsids)-len(failed_obs)) + "/" + str(len(obsids)) + " obsids downloaded successfully."
 
 
 #********************************
