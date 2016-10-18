@@ -1,7 +1,7 @@
 PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,vis_model_arr=vis_model_arr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
-    rephase_weights=rephase_weights,n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
+    n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
     obs_out=obs_out,psf_out=psf_out,_Extra=extra
     
@@ -131,7 +131,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     obs_in=obs_in_ref
     psf=psf_out
     
-    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,vis_weights_use,obs_out=obs,psf_out=psf,/rephase_weights,$
+    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,vis_weights_use,obs_out=obs,psf_out=psfs,$
       weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
       file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_arr,$
       save_uvf=save_uvf, uvf_name=uvf_name[iter],bi_use=*bi_use[iter], _Extra=extra)
