@@ -17,10 +17,12 @@
 
 
 
-pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, map_out = map_out, noplot = noplot, $
-    dec_range = dec_range, ra_range = ra_range, noerase = noerase, savefile = savefile, png = png, eps = eps, pdf = pdf, $
+pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ordering, $
+    map_out = map_out, noplot = noplot, dec_range = dec_range, ra_range = ra_range, noerase = noerase, $
+    savefile = savefile, png = png, eps = eps, pdf = pdf, $
     plot_as_map = plot_as_map, $;mollwiede=mollwiede,cartesian=cartesian,gnomic=gnomic,orthographic=orthographic,_Extra=extra,$
-    data_range = data_range, silent=silent, title=title, note = note, charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
+    data_range = data_range, silent=silent, title=title, units_str=units_str, note = note, $
+    charsize = charsize, degpix=degpix, hist_equal=hist_equal,$
     projection=projection, coord_in=coord_in, coord_out = coord_out, $
     color_profile = color_profile, data_min_abs = data_min_abs, log = log, window_num = window_num
     
@@ -132,7 +134,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     data_plot, 0, pix_type, nside, do_conv, do_rot, coord_in_use, coord_out_use, eul_mat, $
     planmap, Tmax, Tmin, color_bar, $
     PXSIZE=pxsize, HIST_EQUAL=hist_equal, MAX=max, MIN=min, $
-    UNITS='Jy', DATA_plot = data_plot, GAL_CUT=gal_cut, $
+    UNITS=units_str, DATA_plot = data_plot, GAL_CUT=gal_cut, $
     POLARIZATION=polarization, HALF_SKY=half_sky, SILENT=silent, PIXEL_LIST=pixels, $
     TRUECOLORS=truecolors, DATA_TC=data_tc, MAP_OUT=map_out, ROT=rot, FITS=fits, STAGGER=stagger
     
@@ -177,7 +179,8 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
     endif
     
     if not keyword_set(noplot) then begin
-      quick_image, map_out, missing_val = bad_val, data_range = data_range, xtitle = 'ra (degrees)', ytitle = 'dec (degrees)', $
+      quick_image, map_out, missing_val = bad_val, data_range = data_range, $
+        xtitle = 'ra (degrees)', ytitle = 'dec (degrees)', cb_title=units_str, $
         title = title, note = note, charsize = charsize, noerase = noerase, xrange = ra_range, yrange = dec_range, $
         savefile = savefile, png = png, eps = eps, pdf = pdf, $
         log = log, color_profile = color_profile, data_min_abs = data_min_abs, window_num = window_num
@@ -195,7 +198,7 @@ pro healpix_quickimage, data, pixels, nside, slice_ind = slice_ind, ordering=ord
       
       proj2out, $
         planmap, Tmax, Tmin, color_bar, 0., title, $
-        'Jy', coord_out, do_rot, eul_mat, $
+        units_str, coord_out, do_rot, eul_mat, $
         CHARSIZE=charsize, COLT=colt, CROP=crop, GIF = gif, GRATICULE = 20., $
         HXSIZE=hxsize, NOBAR = nobar, NOLABELS = nolabels, PNG = png_filename, PREVIEW = 0, PS=ps_filename, PXSIZE=pxsize, $
         SUBTITLE = subtitle, TITLEPLOT = titleplot, XPOS = xpos, YPOS = ypos, $
