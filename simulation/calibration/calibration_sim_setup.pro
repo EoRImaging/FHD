@@ -5,16 +5,22 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration
 		freq_end=freq_end,tile_flag_list=tile_flag_list,deproject_w_term=deproject_w_term,dft_threshold=dft_threshold, $
 		_Extra=extra
 		
+	print, "Performing in-situ simulation"
+	
 	if ~keyword_set(n_pol) then n_pol=2
 	if n_pol EQ 2 then pol_name=['XX','YY'] else pol_name=['XX','YY','XY','YX']
-
+	
 	vis_model_arr=PTRARR(n_pol,/allocate)
 	obs_id = file_basename(file_path_vis, '.uvfits')
 	
 	;restore model visibilities given the cal_sim_input to act as the input data visibilities
-	if isa(cal_sim_input,'String') then for pol_i=0, n_pol-1 do $
-		vis_model_arr[pol_i] = GETVAR_SAVEFILE(cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
-		
+	if isa(cal_sim_input,'String') then begin
+		for pol_i=0, n_pol-1 do begin
+			vis_model_arr[pol_i] = GETVAR_SAVEFILE(cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
+			print, "Using " + cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav as input model'
+		endfor
+	endif
+	
 	;***Begin in-situ model making to act as input data visibilities if read-in is not available
 	IF *vis_model_arr[0] EQ !NULL then begin
 		print, "Read-in file not found/provided in cal_sim_input. Creating model"
@@ -49,7 +55,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration
 		endfor
 		
 		print, "Saving input model visibilities to " + file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
-		file_mkdir, file_dirname(file_path_fhd) +'/sim_outputs'	
+		file_mkdir, file_dirname(file_path_fhd) +'/sim_outputs'
 		save, vis_model_arr, filename=file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
 		
 		undefine, psf, jones, skymodel_cal, cal, calibration_source_list
@@ -58,7 +64,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration
 	;***End in-situ model making to act as input data visibilities if read-in is not available
 	
 	vis_arr=temporary(vis_model_arr)
-		
+	
 	;Remove all weighting to remove pfb effects and flagged channels. Remove calibration flagging.
 	for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
 	flag_calibration=0
@@ -108,7 +114,7 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration
 			;Restore the noise visibilities
 			void = getvar_savefile(sim_noise,names=names)
 			vis_noise = getvar_savefile(sim_noise,names)
-			;Or create the noise visibilities
+		;Or create the noise visibilities
 		endif else vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol, file_path_fhd=file_path_fhd)
 		
 		;Add the noise to the visibilities, but keeping zeroed visibilities fully zero
