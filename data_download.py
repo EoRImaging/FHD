@@ -809,7 +809,8 @@ def fill_database(obs_chunk,version,subversion,save_paths,cotter_version,db_comm
 		#Check to make sure the uvfits and metafits specified exist
 		if not os.path.isfile(save_path + obsid + '.uvfits'):
 			print "ERROR: " + save_path + obsid + ".uvfits does not exist! Database not updated"
-			sys.exit(1)
+			#sys.exit(1)
+			return # Was there a reason sys.exit(1) was used instead? I don't think this should be a fatal error -RB, 10/16
 		if not os.path.isfile(save_path + obsid + '.metafits'):
 			print "WARNING: " + save_path + obsid + ".metafits does not exist! Database not updated"
 			return
