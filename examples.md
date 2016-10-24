@@ -19,6 +19,8 @@ FHD is very flexible, and has been designed to encompass a wide variety of instr
 
 ###PAPER <br />
 
+**In progress testing by Josh**
+
 ###HERA <br />
 
 ###HERA x PAPER imaging array <br />
@@ -68,6 +70,12 @@ bandpass_calibrate=0 <br />
 ###MWA <br />
 
 ###PAPER <br />
+
+**In progress testing by Adam L** <br />
+
+###In-situ <br />
+
+**Nichole will fill in**  <br />
 
 ###HERA <br />
 
