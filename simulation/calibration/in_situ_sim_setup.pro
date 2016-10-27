@@ -1,4 +1,4 @@
-PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration, n_pol=n_pol, enhance_eor=enhance_eor, $
+PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration, n_pol=n_pol, enhance_eor=enhance_eor, $
 		eor_savefile=eor_savefile, file_path_vis=file_path_vis, file_path_fhd=file_path_fhd,sim_noise=sim_noise, $
 		hdr=hdr, params=params, calibration_catalog_file_path=calibration_catalog_file_path, $
 		diffuse_calibrate=diffuse_calibrate,transfer_calibration=transfer_calibration,freq_start=freq_start, $
@@ -13,17 +13,17 @@ PRO calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration
 	vis_model_arr=PTRARR(n_pol,/allocate)
 	obs_id = file_basename(file_path_vis, '.uvfits')
 	
-	;restore model visibilities given the cal_sim_input to act as the input data visibilities
-	if isa(cal_sim_input,'String') then begin
+	;restore model visibilities given the in_situ_sim_input to act as the input data visibilities
+	if isa(in_situ_input,'String') then begin
 		for pol_i=0, n_pol-1 do begin
-			vis_model_arr[pol_i] = GETVAR_SAVEFILE(cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
-			print, "Using " + cal_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav as input model'
+			vis_model_arr[pol_i] = GETVAR_SAVEFILE(in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
+			print, "Using " + in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav as input model'
 		endfor
 	endif
 	
 	;***Begin in-situ model making to act as input data visibilities if read-in is not available
 	IF *vis_model_arr[0] EQ !NULL then begin
-		print, "Read-in file not found/provided in cal_sim_input. Creating model"
+		print, "Read-in file not found/provided in in_situ_sim_input. Creating model"
 		
 		;Note: explicitly reference dft_threshold here to remove it from EXTRA, which would be passed on to lower-level routines
 		obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra)
