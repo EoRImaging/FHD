@@ -10,7 +10,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
-    cal_sim_input=cal_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise=sim_noise,_Extra=extra
+    in_situ_sim_input=in_situ_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise=sim_noise,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -45,9 +45,9 @@ IF data_flag LE 0 THEN BEGIN
       RETURN
     ENDIF
     
-    ;Calibration simulations given input model visibilities as dirty visilibilities
-    If keyword_set(cal_sim_input) then $
-        calibration_sim_setup, cal_sim_input, vis_arr, vis_weights, flag_calibration,n_pol=n_pol,enhance_eor=enhance_eor, $
+    ;In situ simulations given input model visibilities as dirty visilibilities
+    If keyword_set(in_situ_sim_input) then $
+        in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration,n_pol=n_pol,enhance_eor=enhance_eor, $
           eor_savefile=eor_savefile,file_path_vis=file_path_vis,file_path_fhd=file_path_fhd,sim_noise=sim_noise, $
           hdr=hdr,params=params,calibration_catalog_file_path=calibration_catalog_file_path, $
           diffuse_calibrate=diffuse_calibrate,transfer_calibration=transfer_calibration,freq_start=freq_start,$
@@ -88,8 +88,8 @@ IF data_flag LE 0 THEN BEGIN
 
     ENDIF
     
-    ;Bypass main flagging for calibration simulations
-    If ~keyword_set(cal_sim_input) then $
+    ;Bypass main flagging for in situ simulations
+    If ~keyword_set(in_situ_sim_input) then $
         vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
            freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
     vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
