@@ -9,7 +9,8 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     weights_grid=weights_grid, save_visibilities=save_visibilities, return_cal_visibilities=return_cal_visibilities,$
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
-    transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, _Extra=extra
+    transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
+    in_situ_sim_input=in_situ_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise=sim_noise,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -32,16 +33,27 @@ data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
     weights_grid=weights_grid,save_visibilities=save_visibilities,$
     snapshot_healpix_export=snapshot_healpix_export,log_store=log_store,_Extra=extra)
-
+    
 IF data_flag LE 0 THEN BEGIN
+  
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
     
     uvfits_read,hdr,params,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,error=error,_Extra=extra
     IF Keyword_Set(error) THEN BEGIN
-        print,"Error occured while reading uvfits data. Returning."
-        RETURN
+      print,"Error occured while reading uvfits data. Returning."
+      RETURN
     ENDIF
+    
+    ;In situ simulations given input model visibilities as dirty visilibilities
+    If keyword_set(in_situ_sim_input) then $
+        in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration,n_pol=n_pol,enhance_eor=enhance_eor, $
+          eor_savefile=eor_savefile,file_path_vis=file_path_vis,file_path_fhd=file_path_fhd,sim_noise=sim_noise, $
+          hdr=hdr,params=params,calibration_catalog_file_path=calibration_catalog_file_path, $
+          diffuse_calibrate=diffuse_calibrate,transfer_calibration=transfer_calibration,freq_start=freq_start,$
+          freq_end=freq_end,tile_flag_list=tile_flag_list,deproject_w_term=deproject_w_term,dft_threshold=dft_threshold,$
+          _Extra=extra
+    
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
         IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
         SAVE,vis_arr,vis_weights,hdr,params,filename=file_path_vis_sav
@@ -54,15 +66,16 @@ IF data_flag LE 0 THEN BEGIN
     obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra) 
     n_pol=obs.n_pol
     n_freq=obs.n_freq
-    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end 
+    
+    fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end
     IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(obs,params,vis_arr,direction=deproject_w_term)
-       
+    
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
-    
+
     IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;
         transfer_weights_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
@@ -72,19 +85,22 @@ IF data_flag LE 0 THEN BEGIN
             print,"Error occured while attempting to transfer weights. Returning."
             RETURN
         ENDIF
+
     ENDIF
     
-    vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
-        freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
+    ;Bypass main flagging for in situ simulations
+    If ~keyword_set(in_situ_sim_input) then $
+        vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
+           freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
     vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
-        IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
-        IF ~Keyword_Set(calibration_source_list) THEN $
-            calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)        
-        skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,diffuse_model=diffuse_calibrate,_Extra=extra)
-        cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
-            catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
+      IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
+      IF ~Keyword_Set(calibration_source_list) THEN $
+        calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)
+      skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,diffuse_model=diffuse_calibrate,_Extra=extra)
+      cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
+        catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
     ENDIF
     
     ;print informational messages
@@ -92,8 +108,8 @@ IF data_flag LE 0 THEN BEGIN
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'  ;write preliminary settings file for debugging, in case later steps crash
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
-        calibrate_visibilities=1
-        IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd ;this will not modify string or structure types, but will over-write it if set to a numerical type
+      calibrate_visibilities=1
+      IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd ;this will not modify string or structure types, but will over-write it if set to a numerical type
     ENDIF
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
@@ -136,19 +152,19 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF
     
     IF Keyword_Set(skymodel_cal) OR Keyword_Set(skymodel_update) THEN $
-        skymodel=fhd_struct_combine_skymodel(obs, skymodel_cal, skymodel_update,calibration_flag=(Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract)))
+      skymodel=fhd_struct_combine_skymodel(obs, skymodel_cal, skymodel_update,calibration_flag=(Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract)))
     fhd_save_io,status_str,skymodel,var='skymodel',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF N_Elements(vis_model_arr) LT n_pol THEN vis_model_arr=Ptrarr(n_pol) ;supply as array of null pointers to allow it to be indexed, but not be used
     model_flag=min(Ptr_valid(vis_model_arr))
     
     IF Keyword_Set(error) THEN BEGIN
-        print,"Error occured during source modeling"
-        RETURN
+      print,"Error occured during source modeling"
+      RETURN
     ENDIF
     
     IF N_Elements(source_array) GT 0 THEN BEGIN
-        fhd_save_io,status_str,source_array,var='source_array',/compress,file_path_fhd=file_path_fhd,path_use=path_use,_Extra=extra 
+        fhd_save_io,status_str,source_array,var='source_array',/compress,file_path_fhd=file_path_fhd,path_use=path_use,_Extra=extra
         source_array_export,source_array,obs,file_path=path_use
     ENDIF
     
@@ -165,8 +181,8 @@ IF data_flag LE 0 THEN BEGIN
         error=1
         IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
         RETURN
-    ENDIF    
-
+    ENDIF
+    
     IF Keyword_Set(return_decon_visibilities) THEN save_visibilities=1
     IF Keyword_Set(save_visibilities) THEN BEGIN
         t_save0=Systime(1)
@@ -183,17 +199,18 @@ IF data_flag LE 0 THEN BEGIN
             save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,$
             return_decon_visibilities=return_decon_visibilities,_Extra=extra)
     ENDIF ELSE BEGIN
-        print,'Visibilities not re-gridded'
+      print,'Visibilities not re-gridded'
     ENDELSE
     IF ~Keyword_Set(snapshot_healpix_export) THEN Ptr_free,vis_arr,vis_weights,vis_model_arr
     IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
 ENDIF
-
+  
 IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
+
     fhd_wrap,obs,status_str,psf,params,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,silent=silent,$
         transfer_mapfn=transfer_mapfn,map_fn_arr=map_fn_arr,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
         vis_model_arr=vis_model_arr,return_decon_visibilities=return_decon_visibilities,model_uv_arr=model_uv_arr,$
@@ -239,4 +256,5 @@ timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
 print,''
 !except=except
+
 END

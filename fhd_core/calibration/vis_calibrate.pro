@@ -168,7 +168,8 @@ FOR iter=0,calibration_flag_iterate DO BEGIN
     t2+=t3_a-t2_a
     
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
-    IF n_tile_cut EQ 0 THEN BREAK
+    IF Keyword_Set(n_tile_cut) THEN BREAK
+
 ENDFOR
 undefine_fhd,cal_base
 cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
