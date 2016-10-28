@@ -1,4 +1,4 @@
-FUNCTION paper_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
+FUNCTION paper_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,jdate_use=jdate_use,$
     za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim
 
 n_ant_pol=Max(antenna.n_pol)

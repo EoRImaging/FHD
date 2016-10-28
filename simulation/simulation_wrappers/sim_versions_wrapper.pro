@@ -91,10 +91,22 @@ case version of
 
    'sim_mwa_golden': begin
 	instrument='mwa'
-	reorder_visibilities=1
-	max_sources=10000
-        max_model_sources=10000
-	max_calibration_sources=10000
+	;reorder_visibilities=1
+	;max_sources=10000
+        max_model_sources=7000
+	dft_threshold=1
+	nfreq_avg=16
+	;max_calibration_sources=10000
+    end
+
+   'sim_mwa_golden2': begin
+	instrument='mwa'
+	;reorder_visibilities=1
+	;max_sources=10000
+        max_model_sources=7000
+	dft_threshold=0
+	nfreq_avg=16
+	;max_calibration_sources=10000
     end
 
    'sim_hera128': begin
@@ -105,6 +117,13 @@ case version of
    'sim_hera37_1src': begin
         instrument='hera'
         sources_file_name="zem_simulation_sources/sim_source_list1"
+   end
+
+   'sim_hera37_3hour': begin
+	instrume='hera'
+	max_model_sources=10000
+	dft_threshold=1
+	nfreq_avg=203
    end
 
    'sim_paper128_at_MRO': begin
@@ -285,7 +304,7 @@ case version of
 	max_model_sources=10
 	max_calibration_sources=10
 	max_sources=10
-	instrument='paper'
+	instrument='hera'
 	dft_threshold=1
 	dimension=512
 	nfreq_avg=203
