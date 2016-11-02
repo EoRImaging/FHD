@@ -6,8 +6,9 @@
 #############################################################################
 
 #SBATCH -J array_sim
-# #SBATCH --mail-type=ALL
-# #SBATCH --mail-user=adam_lanman@brown.edu
+# Email if the job fails
+#SBATCH --mail-type=FAIL     
+#SBATCH --mail-user=adam_lanman@brown.edu
 
 # obs_id, outdir, version, and thresh and ncores expected to be passed from sbatch call
 # in sim_pipe_slurm.sh

@@ -132,6 +132,16 @@ case version of
    end
 
 
+   'sim_paper128_hiuvres': begin
+	instrument='paper'
+	dft_threshold=0
+	max_model_sources=100
+	kbinsize=0.1
+	nfreq_avg=203
+	no_extend=1
+   end
+
+
    'sim_paper128_1hour': begin
 	; 1 hour total, in 2 min files
 	;simulate_header=1
@@ -298,6 +308,12 @@ case version of
 	nfreq_avg=384    		; 1
    end
 
+
+   'sim_hera19_test': begin
+	max_model_sources=300
+	dft_threshold=1
+	nfreq_avg=203
+   end
 
    'test': begin
 	include_catalog_sources=1
