@@ -1,7 +1,7 @@
 # FHD Keyword Dictionary
 FHD uses keywords to create unique run-specific settings. This dictionary describes the purpose of each keyword, as well as their logic or applicable ranges. Some keywords can override others, which is also documentated. The FHD default is listed when applicable, which can be overriden by EoR_firstpass settings in the top-level script eor_firstpass_version.pro.
 
-This is a work in progress; please add keywords as you find them in alphabetical order with their corresponding definition.
+This is a work in progress; please add keywords as you find them in alphabetical order with their corresponding definition. If there's a question about a definition or keyword, label it with !Q.
 
 ## Beam
 
@@ -153,6 +153,28 @@ no_restrict_cal_sources=1 <br />
 
 
 ## Diffuse
+
+## In situ simulation
+
+**enhance_eor**: input a multiplicative factor to boost the signal of the EoR in the dirty input visibilities. <br />
+  -*Dependency*: `eor_savefile` must be set to an EoR sav file path in order for the keyword to take effect. <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set<br />
+
+**eor_savefile**: input a path to a savefile of EoR visibilities to include the EoR in the dirty input visibilities. <br />
+  -*Dependency*: `in_situ_input` must be set to 1 or a sav file path in order for the keyword to take effect. <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set<br />
+
+**in_situ_input**: run an in situ simulation, where model visibilities are made and input as the dirty visibilities (see Barry et. al. 2016 for more information on use-cases). Setting to 1 forces the visibilities to be made within the current run. Setting to a sav file path inputs model visibilities from a previous run, which is the preferred method since that run is independently documented.<br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set<br />
+  
+**sim_noise**: add a uncorrelated thermal noise to the input dirty visibilities from a specified sav file, or create them for the run. <br />
+  -*Dependency*: `in_situ_input` must be set to 1 or a sav file path in order for the keyword to take effect. <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set<br />
+  
 
 ## Model
 

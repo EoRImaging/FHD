@@ -11,7 +11,26 @@ FHD is very flexible, and has been designed to encompass a wide variety of instr
 
 ###MWA <br />
 
-**Put in standard keywords with explanations and outputs from NBarry**
+**Put in standard keywords with explanations and outputs from NBarry** <br />
+
+**Drift scan-like observations not from the EoR fields -- in-progress notes** <br />
+Based on analysis of the "diffuse survey" observations. These are the in-progress notes by RByrne. <br />
+
+-*Recalculate keywords* <br />
+recalculate_all = 0 <br />
+mapfn_recalculate = 0 <br />
+-*Cotter versioning, bandpass handled by FHD calibration* <br />
+uvfits_version = 5 <br />
+uvfits_subversion = 1 <br />
+saved_run_bp = 0 <br />
+-*Calibrate to the GLEAM catalog (default only works for the EoR0 field)* <br />
+calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+-*Set the observation center to the pointing center, i.e. do not rephase (this is for drift-like scans)* <br />
+rephase_weights = 0 <br />
+restrict_hpx_inds = 0 <br />
+hpx_radius = 10 <br />
+-*No diffuse* <br />
+undefine, diffuse_calibrate, diffuse_model <br />
 
 ###MWA Phase 2 <br />
 

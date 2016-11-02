@@ -719,6 +719,7 @@ def make_metafits(obs_chunk, save_paths, task_jobid, python_path, node, metafits
 	#Setup the path to make_metafits.py and to the metafits file
 	make_metafits_path = mwa_tools_path[0:mwa_tools_path.find("MWA_Tools")+9] + '/scripts/make_metafits.py'
 	metafits_path = [save_paths[obs_elements[i]] + obs_chunk[obs_elements[i]] + '/' + obs_chunk[obs_elements[i]] + '.metafits' for i in range(len(obs_elements))]
+	metafits_dir = [save_paths[obs_elements[i]] + obs_chunk[obs_elements[i]] for i in range(len(obs_elements))]
 
 	#Setup the log path for Grid Engine
 	log_path = (save_paths[0])[0:(save_paths[0]).rfind("jd")] + "log_files/"
@@ -730,8 +731,9 @@ def make_metafits(obs_chunk, save_paths, task_jobid, python_path, node, metafits
 	metafits_commands_file.write('#!/bin/bash\n\n' + \
 		'#$ -S /bin/bash\n\n' + \
 		'save_paths_metafits=(0 '+" ".join(metafits_path) + ')\n' + \
+		'metafits_dir=(0 '+" ".join(metafits_dir) + ')\n' + \
 		'obs_chunk_metafits=(0 ' +  " ".join([obs_chunk[obs_element] for obs_element in obs_elements]) + ')\n' + \
-		'ls ${save_paths_metafits[$SGE_TASK_ID]} > /dev/null\n' + \
+		'ls ${metafits_dir[$SGE_TASK_ID]} > /dev/null\n' + \
 		python_path.strip('\n') + ' ' + make_metafits_path + ' -o ${save_paths_metafits[$SGE_TASK_ID]} --gps ${obs_chunk_metafits[$SGE_TASK_ID]} ')
 	#Close the file
 	metafits_commands_file.close() 
