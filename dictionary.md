@@ -171,7 +171,7 @@ no_restrict_cal_sources=1 <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set<br />
 
-**in_situ_input**: run an in situ simulation, where model visibilities are made and input as the dirty visibilities (see Barry et. al. 2016 for more information on use-cases). Setting to 1 forces the visibilities to be made within the current run. Setting to a sav file path inputs model visibilities from a previous run, which is the preferred method since that run is independently documented.<br />
+**in_situ_sim_input**: run an in situ simulation, where model visibilities are made and input as the dirty visibilities (see Barry et. al. 2016 for more information on use-cases). Setting to 1 forces the visibilities to be made within the current run. Setting to a sav file path inputs model visibilities from a previous run, which is the preferred method since that run is independently documented.<br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set<br />
   
@@ -286,14 +286,20 @@ healpix_recalculate=0
 
 ## Resolution
 
-**kbinsize**: size of UV pixels in wavelengths !Q (more to add?). <br />
+**dimension**: the number of pixels in the UV plane along one axis. <br />
+  -*EoR_firstpass settings*: 2048 <br />
+  -*Default*: 2 to the power of the rounded result of log&#8322;(k_span/k_binsize).<br />
+
+**kbinsize**: size of UV pixels in wavelengths. Given a defined number of pixels in `dimension`, this sets the UV space extent. This will supersede `degpix` if `dimension` is also set. <br />
   -*Dependency*: will only go into effect if `FoV` is not set. <br />
   -*EoR_firstpass settings*: 0.5 <br />
   -*Default*: 0.5 if `FoV` not set !Q <br />
 
+**FoV**: the field of view in degrees, which determines the UV resolution given a defined number of pixels in `dimension`. If set to 0, then `kbinsize` determines the UV resolution. <br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*: not set <br />
 
-FoV=0
-dimension=2048
+
 ps_kbinsize=0.5
 ps_kspan=600.
 
@@ -314,9 +320,7 @@ ps_kspan=600.
 image_filter_fn='filter_uv_uniform'
 deconvolution_filter='filter_uv_uniform'
 
-dimension=2048
 max_sources=20000
-FoV=0
 no_ps=1
 min_baseline=1.
 
@@ -327,7 +331,6 @@ smooth_width=32.
 
 restrict_hpx_inds=1
 
-kbinsize=0.5
 psf_resolution=100
 calibration_flag_iterate = 0
 
