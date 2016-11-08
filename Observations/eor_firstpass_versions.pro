@@ -1296,6 +1296,35 @@ case version of
       allow_sidelobe_model_sources = 1
       allow_sidelobe_cal_sources = 1
     end
+    
+    'rlb_GLEAM_cal_decon_Nov2016': begin
+      uvfits_version = 5
+      uvfits_subversion = 1
+      max_sources = 200000
+      calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold = 1
+      gain_factor = 0.1
+      deconvolve = 1
+      return_decon_visibilities = 1
+      smooth_width = 32
+      deconvolution_filter = 'filter_uv_uniform'
+      filter_background = 1
+      dimension = 2048
+      return_cal_visibilities = 0
+      FoV = 0
+      pad_uv_image = 1
+      snapshot_healpix_export = 1
+      snapshot_recalculate = 1
+      recalculate_all = 1
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp = 0
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      return_sidelobe_catalog = 1
+      dft_threshold = 0   
+    end
 
 
 
