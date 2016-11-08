@@ -146,6 +146,11 @@ no_restrict_cal_sources=1 <br />
   
 **return_decon_visibilities**: <br />
 
+**return_sidelobe_catalog**: include sidelobes sources from the `subtract_sidelobe_catalog` in the source list. This will include the sidelobe sources in foreground subtraction. <br />
+  -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. `subtract_sidelobe_catalog` must also be set. <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set <br />
+
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
   -*EoR_firstpass settings*: not set <br />
@@ -166,7 +171,7 @@ no_restrict_cal_sources=1 <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set<br />
 
-**in_situ_input**: run an in situ simulation, where model visibilities are made and input as the dirty visibilities (see Barry et. al. 2016 for more information on use-cases). Setting to 1 forces the visibilities to be made within the current run. Setting to a sav file path inputs model visibilities from a previous run, which is the preferred method since that run is independently documented.<br />
+**in_situ_sim_input**: run an in situ simulation, where model visibilities are made and input as the dirty visibilities (see Barry et. al. 2016 for more information on use-cases). Setting to 1 forces the visibilities to be made within the current run. Setting to a sav file path inputs model visibilities from a previous run, which is the preferred method since that run is independently documented.<br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set<br />
   
@@ -247,6 +252,12 @@ no_restrict_cal_sources=1 <br />
 **lon**: longitude of the instrument, in decimal degrees.  <br />
   -*Default*: 116.67081524 (MWA, from Tingay et al. 2013)<br />
 
+**no_rephase**: set to use the observation phase center rather than the predefined phase center in the metafits. This forces the phase center to be determined from the header keywords RA and Dec, rather than RAPHASE and DECPHASE. <br />
+  -*needs updating*: double logical negative !Q  <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 0 <br />
+
 **override_target_phasera**: RA of the target phase center, which overrides the value supplied in the metafits under the header keyword RAPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword RA.<br />
   -*Default*: not set<br />
 
@@ -273,6 +284,25 @@ uvfits_subversion=1
 mapfn_recalculate=0
 healpix_recalculate=0
 
+## Resolution
+
+**dimension**: the number of pixels in the UV plane along one axis. <br />
+  -*EoR_firstpass settings*: 2048 <br />
+  -*Default*: 2 to the power of the rounded result of log&#8322;(k_span/k_binsize).<br />
+
+**kbinsize**: size of UV pixels in wavelengths. Given a defined number of pixels in `dimension`, this sets the UV space extent. This will supersede `degpix` if `dimension` is also set. <br />
+  -*Dependency*: will only go into effect if `FoV` is not set. <br />
+  -*EoR_firstpass settings*: 0.5 <br />
+  -*Default*: 0.5 if `FoV` not set !Q <br />
+
+**FoV**: the field of view in degrees, which determines the UV resolution given a defined number of pixels in `dimension`. If set to 0, then `kbinsize` determines the UV resolution. <br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*: not set <br />
+
+
+ps_kbinsize=0.5
+ps_kspan=600.
+
 
 cleanup=0
 combine_healpix=0
@@ -290,21 +320,17 @@ ps_kspan=600.
 image_filter_fn='filter_uv_uniform'
 deconvolution_filter='filter_uv_uniform'
 
-dimension=2048
 max_sources=20000
-FoV=0
 no_ps=1
 min_baseline=1.
 
 ring_radius=10.*pad_uv_image
-no_rephase=1
 combine_obs=0
 smooth_width=32.
 
 
 restrict_hpx_inds=1
 
-kbinsize=0.5
 psf_resolution=100
 calibration_flag_iterate = 0
 
