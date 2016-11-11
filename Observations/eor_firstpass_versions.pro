@@ -7,15 +7,21 @@ heap_gc
 ; using firstpass.
 
 ; parse command line args
-compile_opt strictarr
-args = Command_Line_Args(count=nargs)
-obs_id = args[0]
-;obs_id = '1061311664'
-output_directory = args[1]
-;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
-version = args[2]
-;version = 'nb_decon_Feb2016'
-cmd_args={version:version}
+  compile_opt strictarr
+  args = Command_Line_Args(count=nargs)
+  IF keyword_set(args) then begin
+    obs_id = args[0]
+    ;obs_id = '1061316296'
+    output_directory = args[1]
+    ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+    version = args[2]
+  ;version = 'nb_temp'
+  endif else begin
+     obs_id = '1061667176'
+     output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+     version = 'nb_decon_July2016_presidelobe_Aug27'
+  endelse
+  cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
@@ -1053,6 +1059,96 @@ case version of
        recalculate_all=1
        mapfn_recalculate=0
    end
+'nb_decon_July2016_presidelobe_Aug27':begin
+max_sources=200000
+calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+;dft_threshold=1
+gain_factor=0.1
+deconvolve=1
+return_decon_visibilities=1
+smooth_width=32
+deconvolution_filter='filter_uv_uniform'
+filter_background=1
+dimension=2048
+return_cal_visibilities=0
+FoV=0
+pad_uv_image=1
+;time_cut=[2,-2]
+snapshot_healpix_export=1
+;snapshot_recalculate=1
+recalculate_all=1
+subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
+ALLOW_SIDELOBE_MODEL_SOURCES =1
+ALLOW_SIDELOBE_CAL_SOURCES =1
+return_sidelobe_catalog=1
+undefine, diffuse_calibrate, diffuse_model
+debug_region_grow=1
+;saved_run_bp=0
+;double memory, time
+end
+'nb_decon_July2016_presidelobe_Aug26low':begin
+max_sources=200000
+calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+;dft_threshold=1
+gain_factor=0.1
+deconvolve=1
+return_decon_visibilities=1
+smooth_width=32
+deconvolution_filter='filter_uv_uniform'
+filter_background=1
+dimension=2048
+return_cal_visibilities=0
+FoV=0
+pad_uv_image=1
+;time_cut=[2,-2]
+snapshot_healpix_export=1
+;snapshot_recalculate=1
+recalculate_all=1
+subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
+ALLOW_SIDELOBE_MODEL_SOURCES =1
+ALLOW_SIDELOBE_CAL_SOURCES =1
+return_sidelobe_catalog=1
+undefine, diffuse_calibrate, diffuse_model
+saved_run_bp=1
+;double memory, time
+end
+'nb_decon_July2016_presidelobe_Oct23_EoR1':begin
+max_sources=200000
+calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+;dft_threshold=1
+gain_factor=0.1
+deconvolve=1
+return_decon_visibilities=1
+smooth_width=32
+deconvolution_filter='filter_uv_uniform'
+filter_background=1
+dimension=2048
+return_cal_visibilities=0
+FoV=0
+pad_uv_image=1
+;time_cut=[2,-2]
+snapshot_healpix_export=1
+;snapshot_recalculate=1
+;recalculate_all=1
+subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
+ALLOW_SIDELOBE_MODEL_SOURCES =1
+ALLOW_SIDELOBE_CAL_SOURCES =1
+return_sidelobe_catalog=1
+undefine, diffuse_calibrate, diffuse_model
+saved_run_bp=1
+grid_recalculate=1
+;double memory, time
+end
+
+'nb_bubble_test':begin
+  in_situ_sim_input = '/nfs/mwa-00/h1/nbarry/'
+  calibrate_visibilities=0
+  model_visibilities=1
+  max_model_sources=100
+  recalculate_all=1
+  mapfn_recalculate=0
+  return_cal_visibilities=0
+  end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
