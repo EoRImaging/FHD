@@ -53,11 +53,11 @@ ENDIF ELSE BEGIN
     IF N_Elements(beam_cal_threshold) GT 0 THEN beam_threshold=beam_cal_threshold
 ENDELSE
 
-IF Keyword_Set(no_restrict_sources) THEN fft_alias_range=dimension/32. ELSE fft_alias_range=dimension/4.
-
 dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
+
+IF Keyword_Set(no_restrict_sources) THEN fft_alias_range=dimension/32. ELSE fft_alias_range=dimension/4.
 
 FoV=!RaDeg/obs.kpix
 freq_arr=psf.freq
