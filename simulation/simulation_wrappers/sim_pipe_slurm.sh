@@ -393,7 +393,20 @@ fi
 ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 PSpath=$(idl -e 'print,rootdir("eppsilon")')
 
-${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+
+if [ -z ${ending_obs} ]; then
+    if [-z ${starting_obs} ]; then	
+	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -e ${ending_obs} -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+    else
+	    ${PSpath}ps_wrappers/ps_slurm.sh -e ${ending_obs} -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+    fi
+elif [-z ${starting_obs} ]; then
+	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+else
+    ${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+fi
+
+
 
 
 echo "Cube integration and PS submitted"

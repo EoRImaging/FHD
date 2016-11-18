@@ -141,6 +141,14 @@ case version of
 	no_extend=1
    end
 
+   'sim_paper128_louvres': begin
+	instrument='paper'
+	dft_threshold=0
+	max_model_sources=100
+	kbinsize=0.5
+	nfreq_avg=203
+	no_extend=1
+   end
 
    'sim_paper128_1hour': begin
 	; 1 hour total, in 2 min files
@@ -253,6 +261,13 @@ case version of
    end
 
 
+   'sim_ewbase_phasetest': begin
+	instrument='mwa'
+	dft_threshold=1
+        max_model_sources=10000
+   end
+
+
    'sim_ewbase_10000src_onecoarse': begin
 	;simulate_header=1
 	instrument='mwa'
@@ -296,6 +311,25 @@ case version of
 	nfreq_avg=203
    end
 
+   'sim_eor_paper128_2': begin
+	eor_sim=1
+	save_uvf=1
+	max_model_sources=0
+	instrument='paper'
+	dft_threshold=0
+;        sources_file_name="zem_simulation_sources/sim_source_list1"
+	include_catalog_sources=0
+	nfreq_avg=203
+   end
+
+   'sim_eor_paper128_at_MRO': begin
+	instrument='paper'
+	dft_threshold=0
+	eor_sim=1
+	max_model_sources=0
+	include_catalog_sources=0
+	nfreq_avg=384
+   end
 
    'sim_eor_mwa128': begin
 	eor_sim=1
@@ -309,11 +343,31 @@ case version of
    end
 
 
-   'sim_hera19_test': begin
-	max_model_sources=300
-	dft_threshold=1
+   'sim_hera19_9hour': begin
+	instrument='hera'
+	max_model_sources=7000
+	dft_threshold=0
 	nfreq_avg=203
    end
+
+   'sim_hera19_9hour_medUVres': begin
+	instrument='hera'
+	max_model_sources=7000
+	dft_threshold=0
+	nfreq_avg=203
+	kbinsize=0.1
+   end
+
+
+   'sim_hera19_9hour_hiUVres': begin
+	;requires over 120G of memory per job!
+	instrument='hera'
+	max_model_sources=7000
+	dft_threshold=0
+	nfreq_avg=203
+	kbinsize=0.05
+   end
+
 
    'test': begin
 	include_catalog_sources=1
