@@ -57,7 +57,7 @@ def main():
 	obs_per_chunk = 4 #number of obsids to run in parallel
 
 	#find which nodes have enough space for downloads:
-	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12"]
+	all_nodes = ["eor-02", "eor-03", "eor-04", "eor-05","eor-07", "eor-08", "eor-10", "eor-11", "eor-12", "eor-13", "eor-14"]
 	#eor06 temporarly dropped
 	all_nodes = ["/nfs/" + nodename + "/r1/" for nodename in all_nodes]
 
@@ -385,7 +385,9 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 			gpubox00 = 0
 			gpubox01 = 0
 			flags = 0
+			metafits_ppds = 0
 			metafits = 0
+			uvfits = 0
 
 			for filename in directory_contents: #counts how many of each type of file exists
 				if filename.endswith("_00.fits"):
@@ -395,14 +397,23 @@ def chunk_complete(download_script_path, metafits_script_path, cotter_script_pat
 				if filename.endswith("_flags.zip"):
 					flags += 1
 				if filename.endswith("_metafits_ppds.fits"):
+					metafits_ppds += 1
+				if filename.endswith(".metafits"):
 					metafits += 1
 				if filename.endswith(".uvfits"):
 					#Check to see if the uvfits has any information in it
 					if os.stat(save_paths[i] + obsid + '/' + obsid + '.uvfits').st_size == 0:
 						failed = True
+					else:
+						uvfits += 1
 
-			if gpubox00 < 24 or (gpubox01 < 24 and gpubox01 != 0) or flags < 1 or metafits < 1:
+			if gpubox00 < 24 or (gpubox01 < 24 and gpubox01 != 0) or flags < 1 or metafits_ppds < 1 or metafits < 1:
 				failed = True
+
+			#If only the uvfits file was to be downloaded and it was successful, reset the failed variable
+			if uvfits_download_check and (metafits > 0) and (uvfits > 0):
+				failed = False
+
 		else:
 			failed = True
 		if failed:
@@ -860,6 +871,7 @@ def fill_database(obs_chunk,version,subversion,save_paths,cotter_version,db_comm
 def delete_gpubox(obs_chunk,save_paths):
 
 	iteration = 0
+	gpubox_flag = False
 	for obsid in obs_chunk:
 		save_path = save_paths[iteration]
 		iteration = iteration + 1

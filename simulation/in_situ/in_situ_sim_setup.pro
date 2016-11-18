@@ -14,7 +14,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 	obs_id = file_basename(file_path_vis, '.uvfits')
 	
 	;restore model visibilities given the in_situ_sim_input to act as the input data visibilities
-	if isa(in_situ_input,'String') then begin
+	if isa(in_situ_sim_input,'String') then begin
 		for pol_i=0, n_pol-1 do begin
 			vis_model_arr[pol_i] = GETVAR_SAVEFILE(in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
 			print, "Using " + in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav as input model'
