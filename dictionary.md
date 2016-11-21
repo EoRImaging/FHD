@@ -310,8 +310,14 @@ no_restrict_cal_sources=1 <br />
 
 ## Import
 
-uvfits_version=4
-uvfits_subversion=1
+**uvfits_version**: the version number of the uvfits. `eor_firstpass_versions.pro` will use this keyword in conjuction with `uvfits_subversion` to query the mwa_qc database to find the location of the uvfits file on the MIT cluster. See `uvfits_subversion` for the current uvfits versions available. <br />
+  -*Range*: currently 3 to 5 <br />
+  -*EoR_firstpass settings*: 4 <br />
+
+**uvfits_subversion**: the subversion number of the uvfits. `eor_firstpass_versions.pro` will use this keyword in conjuction with `uvfits_version` to query the mwa_qc database to find the location of the uvfits file on the MIT cluster. Here are the available uvfits versions, ordered by version number and subversion number: 3,3 was used to test compressed fits; 3,4 was a rerun of 3,1 with a newer version of cotter before that version was recorded; 4,0 went back to old settings for an industrial run; 4,1 was the same as 4,0 but for running on compressed gpubox files; 5,0 was a test to phase all obs to zenith (phasing needs to be added per obs currently); 5,1 incorperates flag files and runs cotter without the bandpass applied, with all the other default settings. Many of these uvfits versions were removed for space reasons, and so only 4,1 and 5,0 are reliable.<br />
+  -*Range*: currently 0 to 4 <br />
+  -*EoR_firstpass settings*: 1 <br />
+
 
 ## Recalculation
 
