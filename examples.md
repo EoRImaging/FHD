@@ -32,6 +32,44 @@ hpx_radius = 10 <br />
 -*No diffuse* <br />
 undefine, diffuse_calibrate, diffuse_model <br />
 
+**Deconvolving drift scan-like observations not from the EoR fields -- in-progress notes** <br />
+Based on analysis of the "diffuse survey" observations. These are the in-progress notes by RByrne. <br />
+
+-*Cotter versioning, bandpass handled by FHD calibration* <br />
+uvfits_version = 5
+uvfits_subversion = 1
+saved_run_bp = 0
+-*Calibrate to the GLEAM catalog* <br />
+calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+return_cal_visibilities = 0
+-*Deconvolution settings* <br />
+deconvolve = 1
+gain_factor = 0.1
+max_sources = 200000
+return_decon_visibilities = 1
+deconvolution_filter = 'filter_uv_uniform'
+subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+return_sidelobe_catalog = 1
+-*Export keywords* <br />
+pad_uv_image = 1
+-*Recalculate run* <br />
+recalculate_all = 1
+snapshot_recalculate = 1
+-*No diffuse* <br />
+undefine, diffuse_calibrate, diffuse_model
+-*Set the observation center to the pointing center, i.e. do not rephase (this is for drift-like scans)* <br />
+rephase_weights = 0
+restrict_hpx_inds = 0
+hpx_radius = 10
+-*Not sure what these do* <br />
+dft_threshold = 0  
+snapshot_healpix_export = 1
+smooth_width = 32
+filter_background = 1
+dimension = 2048
+FoV = 0
+
+
 ###MWA Phase 2 <br />
 
 **In progress testing by Wenyang**
