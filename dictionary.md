@@ -90,6 +90,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
   
+**calibration_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the calibration sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set <br />
+  
 **diffuse_calibrate**: a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. <br />
   -*EoR_firstpass settings*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*Default*: undefined (off) <br />
@@ -198,6 +202,11 @@ no_restrict_cal_sources=1 <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect.  <br />
   -*EoR_firstpass settings*: filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*Default*: not set <br />
+  
+**model_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the model sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
+  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect.  <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set <br />
 
 **model_visibilities**: make visibilities for the subtraction model separately from the model used in calibration. This is useful if the user sets keywords to make the subtraction model different from the model used in calibration. If not set, the model used for calibration is the same as the subtraction model. <br />
   -*Turn off/on*: 0/1 <br />
@@ -206,8 +215,19 @@ no_restrict_cal_sources=1 <br />
 
 ## Export
   
+**export_images**: export fits files and images of the sky. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 1 <br /> 
+  
 **snapshot_healpix_export**: <br />
   -*EoR_firstpass settings*: 1 <br />
+  
+**no_fits**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
+  -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
+  -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect.  <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br /> 
 
 **pad_uv_image**: pad the UV image by this factor with 0's along the outside so that output images are at a higher resolution. <br />
   -*EoR_firstpass settings*: 1. <br />
@@ -216,6 +236,16 @@ no_restrict_cal_sources=1 <br />
 **ps_export**: not used !Q<br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*:  <br /> 
+
+**save_visibililties**: save the calibrated data visibilities, the model visibilities, and the visibility flags. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 1 probably <br /> 
+
+**silent**: do not print messages. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*: 0 probably <br /> 
   
 **split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. <br />
   -*EoR_firstpass settings*: 1 <br />
@@ -229,6 +259,10 @@ no_restrict_cal_sources=1 <br />
 **flag_dead_dipoles**: flag the dead dipoles listed in `<instrument>_dead_dipole_list.txt` for the golden set of Aug 23, 2013. This greatly increases memory usage due to the creation of many separate tile beams. <br />
   -*Default*: not set <br />  
 
+**flag_visibilities**: <br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*:  <br />  
+
 **no_calibration_frequency_flagging**: do not flag frequencies based off of zeroed calibration gains. <br />
   -*Needs updating*: might be better if changed to calibration_frequency_flagging and change the logic (avoid the double negative) !Q.
   -*Turn off/on*: 0/1 (flag/don't flag) <br />
@@ -240,6 +274,11 @@ no_restrict_cal_sources=1 <br />
 
 **time_cut**: seconds to cut (rounded up to next time integration step) from the beginning of the observation. Can also specify a negative time to cut off the end of the observation. Specify a vector to cut at both the start and end. <br />
   -*Default*: not set <br />
+
+**unflag_all**: unflag all tiles/antennas and frequencies. While not practical for real data, this is useful for creating unflagged model visibilities for the input of an in-situ simulations. <br />
+  -*Turn off/on*: 0/1 (<br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*: 0 <br />
 
 ## Instrument Parameters
 
@@ -271,8 +310,14 @@ no_restrict_cal_sources=1 <br />
 
 ## Import
 
-uvfits_version=4
-uvfits_subversion=1
+**uvfits_version**: the version number of the uvfits. `eor_firstpass_versions.pro` will use this keyword in conjuction with `uvfits_subversion` to query the mwa_qc database to find the location of the uvfits file on the MIT cluster. See `uvfits_subversion` for the current uvfits versions available. <br />
+  -*Range*: currently 3 to 5 <br />
+  -*EoR_firstpass settings*: 4 <br />
+
+**uvfits_subversion**: the subversion number of the uvfits. `eor_firstpass_versions.pro` will use this keyword in conjuction with `uvfits_version` to query the mwa_qc database to find the location of the uvfits file on the MIT cluster. Here are the available uvfits versions, ordered by version number and subversion number: 3,3 was used to test compressed fits; 3,4 was a rerun of 3,1 with a newer version of cotter before that version was recorded; 4,0 went back to old settings for an industrial run; 4,1 was the same as 4,0 but for running on compressed gpubox files; 5,0 was a test to phase all obs to zenith (phasing needs to be added per obs currently); 5,1 incorperates flag files and runs cotter without the bandpass applied, with all the other default settings. Many of these uvfits versions were removed for space reasons, and so only 4,1 and 5,0 are reliable.<br />
+  -*Range*: currently 0 to 4 <br />
+  -*EoR_firstpass settings*: 1 <br />
+
 
 ## Recalculation
 
@@ -308,10 +353,7 @@ cleanup=0
 combine_healpix=0
 deconvolve=0
 
-flag_visibilities=0
 vis_baseline_hist=1
-silent=0
-save_visibilities=1
 calibration_visibilities_subtract=0
 
 n_avg=2
@@ -333,8 +375,5 @@ restrict_hpx_inds=1
 
 psf_resolution=100
 calibration_flag_iterate = 0
-
-; even newer defaults
-export_images=1
 
 

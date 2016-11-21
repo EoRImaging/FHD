@@ -21,13 +21,18 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   ;for poli=0,1 do flags[*,*,poli] = *flag_arr[poli] ; TODO: handle backward compatibility
   ;undefine_fhd,flag_arr
   for poli=0,1 do flags[*,*,poli] = *vis_weights[poli]
-  undefine_fhd,vis_weights
+  dataptr = ptrarr(2)
   data = Complex(fltarr(nfreq,nbl,2)) ; Stack pols
   restore, dir+'/vis_data/'+obsid+'_vis_XX.sav'
-  data[*,*,0] = *vis_ptr
+  dataptr[0] = vis_ptr
   restore, dir+'/vis_data/'+obsid+'_vis_YY.sav'
-  data[*,*,1] = *vis_ptr
+  dataptr[1] = vis_ptr
+  vis_delay_filter, dataptr, vis_weights, params, obs
+  data[*,*,0] = *dataptr[0]
+  data[*,*,1] = *dataptr[1]
   undefine_fhd,vis_ptr
+  undefine_fhd,vis_weights
+  undefine_fhd,dataptr
   ; Only keep unflagged baselines
   flag_test = Total(Total(flags>0,1),2)
   bi_use=where(flag_test eq 2*nfreq)
@@ -40,7 +45,7 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   ; Phase to zenith (see Danny for explanation)
   w_mat = freq_arr#params.ww ; This should now be in wavelengths
   for poli=0,1 do data[*,*,poli] *= exp(i_comp * 2. * !pi * w_mat)
-  
+
   ;;;; Get physical units
   speed_of_light = 299792458.
   z0_freq = 1420.40e6 ;; Hz
@@ -59,7 +64,7 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   window_int = (z_mpc_mean * speed_of_light/mean(freq_arr))^2. / Aeff * (max(comov_dist_los)-min(comov_dist_los))
   window_int = window_int / 4. ; Checking back-of-the-envelope against eppsilon calcuation, I was off by ~4x
   data = data / sqrt(window_int) ; Should divide by window int after fft, but doing all units here instead.
-  
+
   ;;;;; Do the FFT
   ; First, apply spectral window function
   if n_elements(spec_window_type) ne 0 then begin
@@ -100,13 +105,38 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
     endif
   endfor
   
+  ; Repeat for slice
+  slice_width = 0.1e-7
+  slice_ind = where(abs(uu) le slice_width)
+  spectra_slice = spectra[*, slice_ind, *]
+  umag_slice = umag[slice_ind]
+  uhist_slice = histogram(umag_slice, binsize=ubin_slice, min=umin, omax=umax, locations=u_locs_slice, reverse_indices=u_ri_slice)
+  u_centers_slice = u_locs_slice + ubin/2d
+  u_edges_slice = [u_locs_slice, max(u_locs_slice) + ubin]
+  nbins_slice = n_elements(uhist_slice)
+  kperp_edges_slice = u_edges_slice / kperp_lambda_conv
+  ; Make 2D image
+  delay2d_slice = fltarr(nbins_slice,ndelay,2)
+  for i=0,nbins_slice-1 do begin
+    if uhist_slice[i] gt 0 then begin
+      delay2d_slice[i,*,*] = mean(spectra_slice[*,u_ri_slice[u_ri_slice[i]:u_ri_slice[i+1]-1],*],dim=2)
+    endif
+  endfor
+  
+  
   if keyword_set(plotfile) then begin
     wedge_amp = mean(wedge_factor) * !dpi / 180d * [20d, 90d]
     kpower_2d_plots, power=delay2d, kperp_edges=kperp_edges, kpar_edges=kpar_edges, $
                        kperp_lambda_conv=kperp_lambda_conv, delay_params=1e9*[delay_delta, delay_max], $
-                       hubble_param=hubble_param, plotfile=plotfile, /pdf, /hinv, /delay_axis, $
+                       hubble_param=hubble_param, plotfile=plotfile, /png, /hinv, /delay_axis, $
                        /baseline_axis, /plot_wedge_line, wedge_amp=wedge_amp, $
                        kperp_plot_range=[.007, .3], data_range=[1e3,2e15];, kpar_plot_range=[.003,4]
     ; Note kpar_plot_range doesn't quite work right now - setting it prevents the DC mode from plotting.
+    plotfile=dir+'/2d_delay_slice'
+    kpower_2d_plots, power=delay2d_slice, kperp_edges=kperp_edges_slice, kpar_edges=kpar_edges, $
+                       kperp_lambda_conv=kperp_lambda_conv, delay_params=1e9*[delay_delta, delay_max], $
+                       hubble_param=hubble_param, plotfile=plotfile, /png, /hinv, /delay_axis, $
+                       /baseline_axis, /plot_wedge_line, wedge_amp=wedge_amp, $
+                       kperp_plot_range=[.007, .3], data_range=[1e3,2e15];, kpar_plot_range=[.003,4]
   endif
 end
