@@ -36,38 +36,38 @@ undefine, diffuse_calibrate, diffuse_model <br />
 Based on analysis of the "diffuse survey" observations. These are the in-progress notes by RByrne. <br />
 
 -*Cotter versioning, bandpass handled by FHD calibration* <br />
-uvfits_version = 5
-uvfits_subversion = 1
-saved_run_bp = 0
+uvfits_version = 5 <br />
+uvfits_subversion = 1 <br />
+saved_run_bp = 0 <br />
 -*Calibrate to the GLEAM catalog* <br />
-calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
-return_cal_visibilities = 0
+calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+return_cal_visibilities = 0 <br />
 -*Deconvolution settings* <br />
-deconvolve = 1
-gain_factor = 0.1
-max_sources = 200000
-return_decon_visibilities = 1
-deconvolution_filter = 'filter_uv_uniform'
-subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
-return_sidelobe_catalog = 1
+deconvolve = 1 <br />
+gain_factor = 0.1 <br />
+max_sources = 200000 <br />
+return_decon_visibilities = 1 <br />
+deconvolution_filter = 'filter_uv_uniform' <br />
+subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+return_sidelobe_catalog = 1 <br />
 -*Export keywords* <br />
-pad_uv_image = 1
+pad_uv_image = 1 <br />
 -*Recalculate run* <br />
-recalculate_all = 1
-snapshot_recalculate = 1
+recalculate_all = 1 <br />
+snapshot_recalculate = 1 <br />
 -*No diffuse* <br />
-undefine, diffuse_calibrate, diffuse_model
+undefine, diffuse_calibrate, diffuse_model <br />
 -*Set the observation center to the pointing center, i.e. do not rephase (this is for drift-like scans)* <br />
-rephase_weights = 0
-restrict_hpx_inds = 0
-hpx_radius = 10
+rephase_weights = 0 <br />
+restrict_hpx_inds = 0 <br />
+hpx_radius = 10 <br />
 -*Not sure what these do* <br />
-dft_threshold = 0  
-snapshot_healpix_export = 1
-smooth_width = 32
-filter_background = 1
-dimension = 2048
-FoV = 0
+dft_threshold = 0   <br />
+snapshot_healpix_export = 1 <br />
+smooth_width = 32 <br />
+filter_background = 1 <br />
+dimension = 2048 <br />
+FoV = 0 <br />
 
 
 ###MWA Phase 2 <br />
