@@ -50,7 +50,7 @@ module load git/2.2.1
 obsids=("$@")
 obs_id=${obsids[$SLURM_ARRAY_TASK_ID]}
 
-/usr/local/bin/idl -IDL_DEVICE ps -quiet -IDL_CPU_TPOOL_NTHREADS $ncores -e eor_firstpass_versions -args $obs_id $outdir $version 
+/usr/local/bin/idl -IDL_DEVICE ps -quiet -IDL_CPU_TPOOL_NTHREADS $ncores -e firstpass_versions_wrapper -args $obs_id $outdir $version 
 
 if [ $? -eq 0 ]
 then
