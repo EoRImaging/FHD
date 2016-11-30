@@ -1398,7 +1398,6 @@ end
       uvfits_subversion = 1
       max_sources = 200000
       calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
-      dft_threshold = 1
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
@@ -1421,6 +1420,19 @@ end
       return_sidelobe_catalog = 1
       dft_threshold = 0   
     end
+    
+   'rlb_GLEAM_cal_Nov2016': begin
+      recalculate_all = 1
+      mapfn_recalculate = 1
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      undefine, diffuse_calibrate, diffuse_model
+   end
 
 
 
