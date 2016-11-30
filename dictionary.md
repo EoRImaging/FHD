@@ -109,6 +109,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: undefined (off) <br />
+
+**max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: equal to max_baseline <br />
   
 **min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
   -*EoR_firstpass settings*: 50 <br />
@@ -119,6 +123,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
 
+**transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a <obsid>_cal.sav is located, the full file path with the obsid (file/path/<obsid>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, or the full file path to a npy file. (Which formats is the gain array expected in for these file types? !Q) <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set <br />
 
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data') <br />
 calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
@@ -344,6 +351,16 @@ healpix_recalculate=0
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: not set <br />
 
+**max_baseline**: the maximum baseline length in wavelengths to include in the analysis. <br />
+  -*EoR_firstpass settings*: net set <br />
+  -*Default*: the maximum baseline length in wavelengths of the instrument, specifically calculated from the params structure  <br />
+
+**min_baseline**: the minimum baseline length in wavelengths to include in the analysis. <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: the minimum baseline length in wavelengths of the instrument, specifically calculated from the params structure. This includes autocorrelations (!Q is that right Ian?) <br />
+  
+
+
 
 ps_kbinsize=0.5
 ps_kspan=600.
@@ -364,7 +381,6 @@ deconvolution_filter='filter_uv_uniform'
 
 max_sources=20000
 no_ps=1
-min_baseline=1.
 
 ring_radius=10.*pad_uv_image
 combine_obs=0
