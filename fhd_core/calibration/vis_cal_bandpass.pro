@@ -1,5 +1,6 @@
 FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
-    bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,saved_run_bp=saved_run_bp,_Extra=extra
+    bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,saved_run_bp=saved_run_bp,$
+    uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,debug_region_grow=debug_region_grow,_Extra=extra
   ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.
     
   ;Extract needed elements from the input structures
@@ -22,13 +23,43 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
   nt_use=N_Elements(tile_use)
   n_pol=N_Elements(gain_arr_ptr)
   
+  ;Select out the uvfits versions that did not apply a sub-bandpass to the data
+;  IF keyword_set(uvfits_version) AND keyword_set(uvfits_subversion) then begin
+;    If (uvfits_version EQ 5) AND (uvfits_subversion EQ 1) then begin
+;    
+;      ;Setup is for the Levine memo
+;      bp_filename = filepath('bandpass_Levine.txt',root=rootdir('FHD'),subdir='instrument_config')
+;      readcol, bp_filename, memo_bp_gains
+;      
+;      ;The memo gains have 128 fine frequency channels, so break the fine frequencies into sets that fit the data resolution
+;      range_memo_low = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ 0)
+;      range_memo_high = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ ULONG(obs.freq_res / 10000.)-1)
+;      
+;      ;Average the memo gains in sets to create the correct freq resolution
+;      num_bp_channels = ULONG(1.28E6 / obs.freq_res)
+;      ave_bp_gains = FLTARR(num_bp_channels)
+;      for channel_i=0,num_bp_channels-1 do $
+;        ave_bp_gains[channel_i] = mean(memo_bp_gains[range_memo_low[channel_i]:range_memo_high[channel_i]])
+;      ;Create bandpass effects over the whole band
+;      ave_bp_gains_fullband = ave_bp_gains
+;      for band_i=1,n_freq/num_bp_channels-1 do ave_bp_gains_fullband = [ave_bp_gains_fullband,ave_bp_gains]
+;      
+;      ;Apply the bandpass values to the input gains. Calibration solutions are applied via division to the gains 
+;      ;after cal solutions are found, so apply these gains by multiplication.
+;      for pol_i=0,n_pol-1 do $
+;        for tile_i=0, n_tile-1 do $
+;          (*gain_arr_ptr[pol_i])[*,tile_i] = (*gain_arr_ptr[pol_i])[*,tile_i] * ave_bp_gains_fullband
+;      
+;    endif
+;  endif
+  
   ;Initialize arrays
   gain_arr_ptr2=Ptrarr(n_pol,/allocate)
   gain_arr_ptr3=Ptrarr(n_pol,/allocate)
   
   IF Keyword_Set(cable_bandpass_fit) THEN BEGIN
-
-    
+  
+  
     ;Using preexisting file to extract information about which tiles have which cable length
     mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=rootdir('FHD'),subdir='instrument_config')
     textfast,data_array,/read,file_path=mode_filepath,first_line=1
@@ -45,12 +76,13 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     If keyword_set(saved_run_bp) then begin
       print, 'Bandpass saved run activated!'
       
-      ;parse out which pointing the obsid is in 
+      ;parse out which pointing the obsid is in
       pointing_num=mwa_get_pointing_number(obs,/string)
       
       ;saved bandpass location
-      If mean(freq_arr) LT 165.e6 THEN bandsuffix='_lowband_order4' ELSE bandsuffix=''
-      filename=filepath(pointing_num+'_bandpass'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
+      If mean(freq_arr) LT 165.e6 THEN bandsuffix='_lowband' ELSE bandsuffix=''
+      filename=filepath(pointing_num+'_bandpass_highband_EoR1'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
+      if keyword_set(debug_region_grow) then filename=filepath(pointing_num+'_bandpass'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
       
       ;reinstate the saved solution into the proper format for replacing bandpass_single later
       textfast,bandpass_saved_sol,/read,file=filename ;columns are: freq_arr_input, cable90xx, cable90yy, cable150xx, cable150yy, cable230xx, cable230yy, cable320xx, cable320yy, cable400xx, cable400yy, cable524xx, cable524yy
@@ -134,6 +166,13 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     cal_remainder=cal
     cal_remainder.gain=gain_arr_ptr3
     
+    ;Add the Levine memo bandpass to the gain solutions if applicable
+
+;    IF keyword_set(uvfits_version) AND keyword_set(uvfits_subversion) then if (uvfits_version EQ 5) AND (uvfits_subversion EQ 1) then begin
+;      for pol_i=0, n_pol-1 do for tile_i=0, n_tile-1 do cal_bandpass.gain[pol_i] = (cal_bandpass.gain[pol_i])[*,tile_i] * ave_bp_gains_fullband
+;    endif
+
+    
   ENDIF ELSE BEGIN
     bandpass_arr=Fltarr(n_pol+1,n_freq)
     bandpass_arr[0,*]=freq_arr
@@ -171,7 +210,7 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
   ENDELSE
   
   IF Keyword_Set(file_path_fhd) THEN bandpass_plots,obs,bandpass_arr,file_path_fhd=file_path_fhd,$
-      cable_length_ref=cable_length_ref,tile_use_arr=tile_use_arr
-  
+    cable_length_ref=cable_length_ref,tile_use_arr=tile_use_arr
+    
   RETURN,cal_bandpass
 END

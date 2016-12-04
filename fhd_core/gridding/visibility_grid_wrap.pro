@@ -1,4 +1,4 @@
-FUNCTION visibility_grid_wrap,vis_arr,flag_arr,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
+FUNCTION visibility_grid_wrap,vis_arr,vis_weights,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
     deconvolve=deconvolve,model_flag=model_flag,snapshot_healpix_export=snapshot_healpix_export,mapfn_recalculate=mapfn_recalculate,$
     save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,_Extra=extra
     
@@ -19,7 +19,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF Keyword_Set(mapfn_recalculate) AND Keyword_Set(save_visibilities) THEN preserve_vis_grid=0 ELSE preserve_vis_grid=preserve_visibilities
     IF pol_i EQ 0 THEN uniform_filter=1 ELSE uniform_filter=0
     IF pol_i GT 1 THEN no_conjugate=1 ELSE no_conjugate=0 
-    grid_uv=visibility_grid(vis_arr[pol_i],flag_arr[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
+    grid_uv=visibility_grid(vis_arr[pol_i],vis_weights[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
         timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,uniform_filter=uniform_filter,$
         mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
         model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_vis_grid,$

@@ -7,15 +7,21 @@ heap_gc
 ; using firstpass.
 
 ; parse command line args
-compile_opt strictarr
-args = Command_Line_Args(count=nargs)
-obs_id = args[0]
-;obs_id = '1061311664'
-output_directory = args[1]
-;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
-version = args[2]
-;version = 'nb_decon_Feb2016'
-cmd_args={version:version}
+  compile_opt strictarr
+  args = Command_Line_Args(count=nargs)
+  IF keyword_set(args) then begin
+    obs_id = args[0]
+    ;obs_id = '1061316296'
+    output_directory = args[1]
+    ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+    version = args[2]
+  ;version = 'nb_temp'
+  endif else begin
+     obs_id = '1061667176'
+     output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+     version = 'nb_decon_July2016_presidelobe_Aug27'
+  endelse
+  cmd_args={version:version}
 
 ; Set default values for everything
 calibrate_visibilities=1
@@ -91,8 +97,8 @@ cable_bandpass_fit=1
 saved_run_bp=1
 
 ;Defaults added - July2016
-amp_degree=2
-phase_degree=1
+cal_amp_degree_fit=2
+cal_phase_degree_fit=1
 
 case version of
    'apb_test_restrict_hpx_inds_1': begin
@@ -332,18 +338,6 @@ case version of
       show_beam_contour=1
       contour_levels=[0.01]
    end
-
-   ;;;; Nichole's versions!!! Only Nichole may edit this section!!!
-
-   'nb_test_new_cotter_2': begin
-      uvfits_version=3
-      uvfits_subversion=1
-      ;n_avg=4
-      ;rerun without averaging for cubes
-      n_avg=1
-      snapshot_recalculate=1
-   end
-
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
 
@@ -788,90 +782,11 @@ case version of
       no_calibration_frequency_flagging=1
    end
 
-   ; Nichole's versions
-   'nb_test_debug_direction':begin
-      debug_direction=1
-   end
-   
-   'nb_subtract_sidelobes_nocal':begin
-      model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-      model_visibilities=1
-      return_cal_visibilities=0
-      allow_sidelobe_cal_sources=0
-      allow_sidelobe_model_sources=1
-   end
-
-   'nb_test_transfercal_on_devel':begin
-      model_catalog_file_path=filepath('mwa_commissioning_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-      model_visibilities=1
-      transfer_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_apb_pp_deep_9/'
-   end
-
-   'nb_std_Oct2014':begin
-      max_cal_iter=10
-      cal_convergence_threshold=1E-3
-      dipole_mutual_coupling=0
-      beam_model=0
-      calibration_flag_iterate=0
-   end
-
-   'nb_database_test':begin
-      production=1
-   end
-
-   'nb_cable_cal_ps':begin
-   end
-   
-   'nb_cable_cal_pointing_ps':begin
-   end
-   
-   'nb_cable_cal_min_cal_5lambda':begin
-     min_cal_baseline=5.
-     cable_bandpass_fit=1
-   end
-   
-   'nb_cable_cal_min_cal_5lambda_with_diffuse':begin
-     min_cal_baseline=5.
-     cable_bandpass_fit=1
-     diffuse_calibrate=filepath('EoR0_polarized_diffuse.sav',root=rootdir('FHD'),subdir='catalog_data')
-   end
-   
-   'nb_no_cable_cal_min_cal_5lambda_with_diffuse':begin
-     min_cal_baseline=5.
-     diffuse_calibrate=filepath('EoR0_polarized_diffuse.sav',root=rootdir('FHD'),subdir='catalog_data')
-   end
-
-   'nb_local_min_flag_test':begin
-     initial_calibration='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_no_cable_cal_std/calibration/1061312640_cal.sav'
-   end
-   
-   'nb_devel_test_Mar2015':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-   end
-   
-   'nb_cable_cal_pointing_gainrescor':begin
-      cable_bandpass_fit=1
-   end
-   
-   'nb_80kHz_std_Mar2015':begin
-      n_avg=1
-   end
-   
-   'nb_std_May2015':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-   end
+  ;Nichole's versions
    'nb_no_long_tiles':begin
       diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
       cable_bandpass_fit=1
       tile_flag_list=[78,79,87,88,95,96,97,98,104,112,113,122,123,124]
-   end
-   'nb_pointing_May2015':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      ;no long tiles used in calculating saved bp
    end
    'nb_autogainsonly_May2015':begin
       diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -879,134 +794,6 @@ case version of
       undefine,export_images
       calibration_auto_fit=1
    end   
-   'nb_autogainsonly_Aug27_May2015':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      ;cable_bandpass_fit=1
-      undefine,export_images
-      calibration_auto_fit=1
-   end  
-   'nb_missingobs_Aug27_May2015':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      undefine,export_images
-      ;calibration_auto_fit=1
-   end 
-   'nb_poly_saved_run':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_v2':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly=1
-      ;no long tiles used in calculating saved bp, poly over pointing, modefit by obs
-   end
-   'nb_poly_saved_run_v2_plusmodesplit':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly_split=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_v2_plusmodeunsplit':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly_unsplit=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_v2_minustwo':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly_unsplit=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_v2_onemode':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly_unsplit=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_v2_messy':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly_unsplit=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_inputfromautos_scaled':begin 
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly_unsplit=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_autoinput_scalebypoly':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_poly_unsplit=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_auto_scalebypoly_quad':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_phasetransfer_quad=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_polysplit_onemode':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_polysplit_onemode=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_nodig_quad_polyscaled':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_nodig_quad_polyscaled=1
-      production=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_poly_saved_run_onequad_polyscaled_90150':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_nodig_quad_polyscaled=1
-      production=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_devel_June2015':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      production=1
-      ;no long tiles used in calculating saved bp
-   end   
-   
-'nb_devel_June2015':begin
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      ;production=1
-      ;no long tiles used in calculating saved bp
-      
-      allow_sidelobe_image_output=1
-      beam_output_threshold=0.002
-      ;ring_radius=30.*pad_uv_image
-      show_beam_contour=1
-      contour_levels=[0.01]
-      recalculate_all=0
-      stokes_high=1.
-   end 
    'nb_devel_June2015_diffuseright':begin
       diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
       diffuse_model=diffuse_calibrate
@@ -1076,49 +863,6 @@ case version of
       allow_sidelobe_cal_sources=0
       allow_sidelobe_model_sources=1
    end     
-   'nb_std_test_polyquad':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_std_test_polyquad=1
-      ;production=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_std_test_twopolyquad':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_std_test_polyquad=1
-      ;production=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_std_test_twopolyquad_fancymodeobs':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_std_test_polyquad=1
-      recalculate_all=1
-      ;production=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_std_test_twopolyquad_fancymodeobs_crossamp':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_polysplit_onemode=1
-      recalculate_all=1
-      ;production=1
-      ;no long tiles used in calculating saved bp
-   end
-   'nb_std_test_nodigtwopolyquad':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_std_test_polyquad=1
-      recalculate_all=1
-      ;production=1
-      ;no long tiles used in calculating saved bp
-   end   
    'nb_sidelobe_calibration_july2015': begin
    diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
    cable_bandpass_fit=1
@@ -1138,173 +882,15 @@ case version of
    beam_output_threshold=0.01
    diffuse_model=diffuse_calibrate
    recalculate_all=1
-   end   
-   'nb_std_test_twopolyquad_fancymodeobs_150only':begin ;remade
-      diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-      cable_bandpass_fit=1
-      saved_run_bp=1
-      saved_run_std_test_polyquad=1
-      recalculate_all=1
-      ;production=1
-      ;no long tiles used in calculating saved bp
-   end 
-   'nb_catalog_July2015':begin 
-      calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
-      saved_run_bp=0
-      recalculate_all=1
-   end   
-   'nb_catalog_redonebp_July2015':begin 
-      calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_no_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
-      saved_run_bp=1 ;reading in a special by pointing bp calculated from by obs tests above
-   end   
-   'nb_std_test_twopolyquad_extrafancymodeobs':begin 
-      ;recalculate_all=1
-      saved_run_std_test_polyquad_extrafancy=1
-      filename_bp=1 ;temp solution to running multiple tests at once
-   end   
-   'nb_decon_July2015':begin 
-      max_sources=200000
-      dft_threshold=1
-      gain_factor=0.1
-      deconvolve=1
-      return_decon_visibilities=1
-      smooth_width=32
-      deconvolution_filter='filter_uv_uniform'
-      filter_background=1
-      dimension=3072
-      FoV=80.
-      pad_uv_image=1
-      time_cut=[2,-2]
-      snapshot_healpix_export=1
-      ;double memory, time
-   end   
-   'nb_decon_July2015_through_firstpass': begin
-      ;max_calibration_sources=1000
-      calibration_catalog_file_path='/nfs/eor-03/r1/EoR2013/fhd_nb_decon_July2015/output_data/'+obs_id+'_source_array.sav'
-   end
+   end       
     'nb_spec_indices': begin
       ;will shift bp, bp will need 1,2
        calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_fhd_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
        degrid_spectral=1
        flatten_spectrum=1
        diffuse_spectral_index=-0.5
-   end
-   'nb_std_test_twopolyquad_extrafancymodeobs_restricted':begin 
-      saved_run_std_test_polyquad_1=1
-   end
-   'nb_std_test_twopolyquad_extrafancymodeobs_onemode':begin 
-      saved_run_std_test_polyquad_onemode=1
-   end
-   'nb_vis_integration_4sec':begin 
-      debug_evenoddsplit_integration=4
-   end
-   'nb_vis_integration_6sec':begin 
-      debug_evenoddsplit_integration=6
-   end
-   'nb_vis_integration_8sec':begin 
-      debug_evenoddsplit_integration=8
-   end
-   'nb_vis_integration_10sec':begin 
-      debug_evenoddsplit_integration=10
-   end
-   'nb_vis_integration_12sec':begin 
-      debug_evenoddsplit_integration=12
-   end
-    'nb_sim_perfect_cal':begin 
-      calibrate_visibilities=0
-      export_images=0
-   end
-   'nb_sim_orig_cal':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-   end
-   'nb_sim_cable_cal':begin 
-       saved_run_bp=0
-   end
-   'nb_sim_savedbp_cal':begin 
-;No keywords needed
-   end
-   'nb_sim_savedbp_twopolyquadpointing_cal':begin 
-       saved_run_std_test_polyquad=1
-   end
-   'nb_sim_overfit_cal':begin 
-      over_calibrate=1
-   end
-   'nb_sim_overfit_cal_enhanced':begin 
-      over_calibrate=1
-      enhance_eor=1
-   end
-   'nb_sim_perfect_cal_enhanced':begin 
-      calibrate_visibilities=0
-      export_images=0
-      enhance_eor=1
-   end
-   'nb_sim_orig_cal_enhanced':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      enhance_eor=1
-   end
-   'nb_sim_orig_cal_noflag':begin 
-      saved_run_bp=0
-      cable_bandpass_fit=0
-      unflag_all=1
-   end
-   'nb_sim_perfect_cal_noflag':begin 
-      calibrate_visibilities=0
-      export_images=0
-      unflag_all=1
-   end   
-   'nb_sim_overfit_cal_noflag':begin 
-      over_calibrate=1
-      unflag_all=1
    end 
-   'nb_polarized_diffuse_Oct2015':begin
-      diffuse_calibrate=filepath('diffuse_maps_polarized_Oct2015.sav',root=rootdir('FHD'),subdir='catalog_data')
-      production=1
-      ;no long tiles used in calculating saved bp
-   end  
-   
-      'nb_decon_Jan2016':begin 
-      max_sources=200000
-      ;dft_threshold=1
-      gain_factor=0.1
-      deconvolve=1
-      return_decon_visibilities=1
-      smooth_width=32
-      deconvolution_filter='filter_uv_uniform'
-      filter_background=1
-      dimension=3072
-      return_cal_visibilities=0
-      FoV=0
-      pad_uv_image=1
-      ;time_cut=[2,-2]
-      snapshot_healpix_export=1
-      ;double memory, time
-   end
-   
-         'nb_decon_Feb2016_2':begin 
-      max_sources=200000
-      ;dft_threshold=1
-      gain_factor=0.1
-      deconvolve=1
-      return_decon_visibilities=1
-      smooth_width=32
-      deconvolution_filter='filter_uv_uniform'
-      filter_background=1
-      dimension=3072
-      return_cal_visibilities=0
-      FoV=0
-      pad_uv_image=1
-      ;time_cut=[2,-2]
-      snapshot_healpix_export=1
-      snapshot_recalculate=1
-      recalculate_all=1
-      
-      undefine, diffuse_calibrate, diffuse_model
-      saved_run_bp=0
-      ;double memory, time
-   end
-            'nb_decon_March2016':begin 
+   'nb_decon_March2016':begin 
       max_sources=200000
       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
       dft_threshold=1
@@ -1328,7 +914,7 @@ case version of
       saved_run_bp=0
       ;double memory, time
    end
-               'nb_decon_March2016_presidelobe':begin 
+   'nb_decon_March2016_presidelobe':begin 
       max_sources=200000
       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
       ;dft_threshold=1
@@ -1350,17 +936,7 @@ case version of
             undefine, diffuse_calibrate, diffuse_model
       saved_run_bp=0
       ;double memory, time
-   end
-   
-   'nb_decon_Feb2016_through_firstpass': begin
-      ;max_calibration_sources=1000
-      undefine, diffuse_calibrate, diffuse_model
-      calibration_catalog_file_path='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_Feb2016/output_data/'+obs_id+'_source_array2.sav'
-      saved_run_bp=0
-      recalculate_all=1
-      mapfn_recalculate=0
-   end
-   
+   end   
    'nb_decon_March2016_small_through_firstpass': begin
       ;max_calibration_sources=1000
       undefine, diffuse_calibrate, diffuse_model
@@ -1369,12 +945,213 @@ case version of
       recalculate_all=1
       mapfn_recalculate=0
    end
-   
-   'nb_whitening': begin
-      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-      saved_run_bp=0
-
+   'nb_pytest_after_versioncontrol': begin
+       recalculate_all=1
+       mapfn_recalculate=0
    end
+      'nb_pytest': begin
+       recalculate_all=1
+       mapfn_recalculate=0
+   end
+      'nb_pytest_before_versioncontrol': begin
+       recalculate_all=1
+       mapfn_recalculate=0
+   end 
+   'nb_gleam_firstpass': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+   'nb_gleam_firstpass_100mJy': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+       calibration_flux_threshold = .1
+   end
+   'nb_gleam_firstpass_100mJy_nodiffuse': begin
+       saved_run_bp=0
+       undefine, diffuse_calibrate, diffuse_model
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+       calibration_flux_threshold = .1
+   end
+   'nb_patti_catalog': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+   'nb_patti_catalog_nodiffuse': begin
+       saved_run_bp=0
+       undefine, diffuse_calibrate, diffuse_model
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+   'nb_patti_catalog_nocaldiffuse': begin
+       saved_run_bp=0
+       undefine, diffuse_calibrate
+       diffuse_model=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       model_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       model_visibilities=1
+      return_cal_visibilities=0
+   end
+   'nb_patti_catalog_nosidelobes': begin
+      allow_sidelobe_cal_sources=0
+      allow_sidelobe_model_sources=0
+      saved_run_bp=0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+             recalculate_all=1
+       mapfn_recalculate=0
+   end
+      'nb_gleam_firstpass_nosidelobes': begin
+      allow_sidelobe_cal_sources=0
+      allow_sidelobe_model_sources=0
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+              recalculate_all=1
+       mapfn_recalculate=0
+   end 
+   'nb_decon_July2016_presidelobe':begin 
+      max_sources=200000
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      ;dft_threshold=1
+      gain_factor=0.1
+      deconvolve=1
+      return_decon_visibilities=1
+      smooth_width=32
+      deconvolution_filter='filter_uv_uniform'
+      filter_background=1
+      dimension=2048
+      return_cal_visibilities=0
+      FoV=0
+      pad_uv_image=1
+      ;time_cut=[2,-2]
+      snapshot_healpix_export=1
+      snapshot_recalculate=1
+      recalculate_all=1
+      
+            undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp=0
+      ;double memory, time
+   end
+  'nb_bandpass_division_test': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+   end
+   'nb_no_bandpass_division_test': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+   end
+
+   'nb_Aug24_2014': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+   end
+   'nb_Sep14_2014': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+   end
+   'nb_Sep10_2015': begin
+       saved_run_bp=0
+       calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+       uvfits_version=5
+       uvfits_subversion=1
+       recalculate_all=1
+       mapfn_recalculate=0
+   end
+'nb_decon_July2016_presidelobe_Aug27':begin
+max_sources=200000
+calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+;dft_threshold=1
+gain_factor=0.1
+deconvolve=1
+return_decon_visibilities=1
+smooth_width=32
+deconvolution_filter='filter_uv_uniform'
+filter_background=1
+dimension=2048
+return_cal_visibilities=0
+FoV=0
+pad_uv_image=1
+;time_cut=[2,-2]
+snapshot_healpix_export=1
+;snapshot_recalculate=1
+recalculate_all=1
+subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
+ALLOW_SIDELOBE_MODEL_SOURCES =1
+ALLOW_SIDELOBE_CAL_SOURCES =1
+return_sidelobe_catalog=1
+undefine, diffuse_calibrate, diffuse_model
+debug_region_grow=1
+;saved_run_bp=0
+;double memory, time
+end
+'nb_decon_July2016_presidelobe_Aug26low':begin
+max_sources=200000
+calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+;dft_threshold=1
+gain_factor=0.1
+deconvolve=1
+return_decon_visibilities=1
+smooth_width=32
+deconvolution_filter='filter_uv_uniform'
+filter_background=1
+dimension=2048
+return_cal_visibilities=0
+FoV=0
+pad_uv_image=1
+;time_cut=[2,-2]
+snapshot_healpix_export=1
+;snapshot_recalculate=1
+recalculate_all=1
+subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
+ALLOW_SIDELOBE_MODEL_SOURCES =1
+ALLOW_SIDELOBE_CAL_SOURCES =1
+return_sidelobe_catalog=1
+undefine, diffuse_calibrate, diffuse_model
+saved_run_bp=1
+;double memory, time
+end
+'nb_decon_July2016_presidelobe_Oct23_EoR1':begin
+max_sources=200000
+calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+;dft_threshold=1
+gain_factor=0.1
+deconvolve=1
+return_decon_visibilities=1
+smooth_width=32
+deconvolution_filter='filter_uv_uniform'
+filter_background=1
+dimension=2048
+return_cal_visibilities=0
+FoV=0
+pad_uv_image=1
+;time_cut=[2,-2]
+snapshot_healpix_export=1
+;snapshot_recalculate=1
+;recalculate_all=1
+subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
+ALLOW_SIDELOBE_MODEL_SOURCES =1
+ALLOW_SIDELOBE_CAL_SOURCES =1
+return_sidelobe_catalog=1
+undefine, diffuse_calibrate, diffuse_model
+saved_run_bp=1
+grid_recalculate=1
+;double memory, time
+end
+
+'nb_bubble_test':begin
+  in_situ_sim_input = '/nfs/mwa-00/h1/nbarry/'
+  calibrate_visibilities=0
+  model_visibilities=1
+  max_model_sources=100
+  recalculate_all=1
+  mapfn_recalculate=0
+  return_cal_visibilities=0
+  end
 
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
@@ -1468,8 +1245,198 @@ case version of
    
    'rlb_pipe_dream': begin ;;July 2015
       dft_threshold = 1
-      healpix_recalculate = 1
+      snapshot_recalculate = 1
    end
+   
+   'rlb_diffuse_survey_oneobs_nodiffuse': begin ;;July 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_diffuse_survey_oneobs': begin ;;July 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+   end
+   
+   'rlb_diffuse_survey_threeobs_nodiffuse': begin ;;August 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_golden_set_oneobs_nodiffuse': begin ;;August 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_diffuse_survey_oneobs_nodiffuse_flag_rec14': begin ;;September 2016
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      tile_flag_list = ['141','142','143','144','145','146','147','148']
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+      
+   'rlb_diffuse_survey_threeobs_flag_rec14': begin ;;September 2016
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      tile_flag_list = ['141','142','143','144','145','146','147','148']
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_diffuse_survey_decon_Sept2016_sidelobe_subtract': begin ;;September 2016
+      uvfits_version = 5
+      uvfits_subversion = 1
+      override_target_phasera = 0.0
+      override_target_phasedec = -27.0
+      max_sources = 200000
+      calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold = 1
+      gain_factor = 0.1
+      deconvolve = 1
+      return_decon_visibilities = 1
+      smooth_width = 32
+      deconvolution_filter = 'filter_uv_uniform'
+      filter_background = 1
+      dimension = 2048
+      return_cal_visibilities = 0
+      FoV = 0
+      pad_uv_image = 1
+      snapshot_healpix_export = 1
+      snapshot_recalculate = 1
+      recalculate_all = 1
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp = 0
+      subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      allow_sidelobe_model_sources = 1
+      allow_sidelobe_cal_sources = 1
+    end
+        
+   'rlb_master_catalog_cal_Sept2016': begin
+      recalculate_all = 1
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_GLEAM_cal_Sept2016': begin
+      recalculate_all = 0
+      mapfn_recalculate = 0
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_GLEAM_cal_decon_Oct2016': begin
+      uvfits_version = 5
+      uvfits_subversion = 1
+      max_sources = 200000
+      calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold = 1
+      gain_factor = 0.1
+      deconvolve = 1
+      return_decon_visibilities = 1
+      smooth_width = 32
+      deconvolution_filter = 'filter_uv_uniform'
+      filter_background = 1
+      dimension = 2048
+      return_cal_visibilities = 0
+      FoV = 0
+      pad_uv_image = 1
+      snapshot_healpix_export = 1
+      snapshot_recalculate = 1
+      recalculate_all = 1
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp = 0
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      allow_sidelobe_model_sources = 1
+      allow_sidelobe_cal_sources = 1
+    end
+    
+    'rlb_GLEAM_cal_decon_Nov2016': begin
+      uvfits_version = 5
+      uvfits_subversion = 1
+      max_sources = 200000
+      calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      gain_factor = 0.1
+      deconvolve = 1
+      return_decon_visibilities = 1
+      smooth_width = 32
+      deconvolution_filter = 'filter_uv_uniform'
+      filter_background = 1
+      dimension = 2048
+      return_cal_visibilities = 0
+      FoV = 0
+      pad_uv_image = 1
+      snapshot_healpix_export = 1
+      snapshot_recalculate = 1
+      recalculate_all = 1
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp = 0
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      return_sidelobe_catalog = 1
+      dft_threshold = 0   
+    end
+    
+   'rlb_GLEAM_cal_Nov2016': begin
+      recalculate_all = 1
+      mapfn_recalculate = 1
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      undefine, diffuse_calibrate, diffuse_model
+   end
+
 
 
    ;Khang's Stuff:
@@ -1509,20 +1476,20 @@ case version of
    end
 
 
-
+   ;;;;;; Jon R's Stuff ;;;;;;;
+    'jonr_barebones_aws':begin
+     end
+   
 endcase
    
-if version EQ 'nb_whitening' then begin
-  vis_file_list = '/nfs/mwa-03/r1/EoRuvfits/whitening_change/uvfits/'+strtrim(string(obs_id),2)+'.uvfits'
+if version EQ 'nb_pytest' then begin
+  vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
 endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
-;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-  undefine,uvfits_version ; don't need these passed further
-  undefine,uvfits_subversion
-  undefine,obs_id
+  ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
 endelse
-
+undefine, uvfits_subversion, uvfits_version
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 

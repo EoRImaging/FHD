@@ -1,10 +1,10 @@
-FUNCTION visibility_count,obs,psf,params,flag_ptr=flag_ptr,file_path_fhd=file_path_fhd,$
+FUNCTION visibility_count,obs,psf,params,vis_weight_ptr=vis_weight_ptr,file_path_fhd=file_path_fhd,$
     no_conjugate=no_conjugate,fill_model_vis=fill_model_vis,_Extra=extra
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(psf) EQ 0 THEN fhd_save_io,status_str,psf,var='psf',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 IF N_Elements(params) EQ 0 THEN fhd_save_io,status_str,params,var='params',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-IF Min(ptr_valid(flag_ptr)) EQ 0 THEN fhd_save_io,status_str,flag_ptr,var='flag_arr',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF Min(ptr_valid(vis_weight_ptr)) EQ 0 THEN fhd_save_io,status_str,vis_weight_ptr,var='vis_weights',/restore,file_path_fhd=file_path_fhd,_Extra=extra
 
 ;extract information from the structures
 n_pol=obs.n_pol
@@ -71,21 +71,21 @@ range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 range_test_y_i=0
 
-IF Keyword_Set(flag_ptr) THEN BEGIN
-    flag_i=where(*flag_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
+IF Keyword_Set(vis_weight_ptr) THEN BEGIN
+    flag_i=where(*vis_weight_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
     IF Keyword_Set(fill_model_vis) THEN n_flag=0L
     IF n_flag GT 0 THEN BEGIN
         xmin[flag_i]=-1
         ymin[flag_i]=-1
     ENDIF
-    IF ~Arg_present(flag_ptr) THEN undefine_fhd,flag_ptr
+    IF ~Arg_present(vis_weight_ptr) THEN undefine_fhd,vis_weight_ptr
 ENDIF
 IF ~Arg_present(obs) THEN undefine_fhd,obs
 IF ~Arg_present(params) THEN undefine_fhd,params
 IF ~Arg_present(psf) THEN undefine_fhd,psf
 
 ;match all visibilities that map from and to exactly the same pixels
-bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from flags
+bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should miss any (xmin,ymin)=(-1,-1) from weights
 bin_i=where(bin_n,n_bin_use)
 
 weights=fltarr(dimension,elements)

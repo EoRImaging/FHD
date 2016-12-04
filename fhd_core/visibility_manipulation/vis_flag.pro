@@ -5,7 +5,7 @@
 ; :Params:
 ;    data_array - [# of polarizations, # of frequencies, (# of baselines) * (# of time integrations)] complex array of visibilty data  
 ;    
-;    flag_arr - Same dimensions as data_array. Values LE 0 are considered flagged as bad data!
+;    vis_weights - Same dimensions as data_array. Values LE 0 are considered flagged as bad data!
 ;    
 ;    obs - structure containing details of the observation
 ;    
@@ -17,7 +17,7 @@
 ;
 ; :Author: isullivan 2012
 ;-
-PRO vis_flag,vis_arr,flag_ptr,obs,psf,params,flag_nsigma=flag_nsigma,flag_sparse_uv_coverage=flag_sparse_uv_coverage,_Extra=extra
+PRO vis_flag,vis_arr,vis_weight_ptr,obs,psf,params,flag_nsigma=flag_nsigma,flag_sparse_uv_coverage=flag_sparse_uv_coverage,_Extra=extra
 
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
@@ -39,7 +39,7 @@ n_baselines=N_Elements(tile_A)
 
 uv_dist=Sqrt(params.uu^2.+params.vv^2.)*median(freq)
 cut_baselines_i=where((uv_dist LT min_baseline) OR (uv_dist GT max_baseline),n_baselines_cut)
-IF N_baselines_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,cut_baselines_i]=0
+IF N_baselines_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,cut_baselines_i]=0
 
 tile_fom=fltarr(n_tiles_use)
 FOR tile_i=0L,n_tiles_use-1 DO BEGIN
@@ -49,7 +49,7 @@ FOR tile_i=0L,n_tiles_use-1 DO BEGIN
     IF nB GT 0 THEN IF nA GT 0 THEN tile_ABi=[tile_Ai,tile_Bi] ELSE tile_ABi=tile_Bi ELSE IF nA GT 0 THEN tile_ABi=tile_Ai 
     data_subset=data_abs[*,tile_ABi]
     FOR pol_i=0,n_pol<2-1 DO BEGIN
-        i_use=where(((*flag_ptr[pol_i])[*,tile_ABi] GT 0) AND (data_subset GT 0),n_use)
+        i_use=where(((*vis_weight_ptr[pol_i])[*,tile_ABi] GT 0) AND (data_subset GT 0),n_use)
         IF n_use GT 10 THEN tile_fom[tile_i]+=Stddev(data_subset[i_use]);/Median(data_subset[i_use])
     ENDFOR
 ENDFOR
@@ -58,7 +58,7 @@ freq_fom=fltarr(n_freq)
 FOR freq_i=0,n_freq-1 DO BEGIN
     data_subset=Reform(data_abs[freq_i,*])
     FOR pol_i=0,n_pol<2-1 DO BEGIN
-        i_use=where(((*flag_ptr[pol_i])[freq_i,*] GT 0) AND (data_subset GT 0),n_use)
+        i_use=where(((*vis_weight_ptr[pol_i])[freq_i,*] GT 0) AND (data_subset GT 0),n_use)
         IF n_use GT 10 THEN freq_fom[freq_i]+=Stddev(data_subset[i_use]);/Median(data_subset[i_use])
     ENDFOR
 ENDFOR
@@ -71,7 +71,7 @@ ENDFOR
 ;    FOR freq_i=0,n_freq-1 DO BEGIN
 ;        data_subset=Reform(data_abs[freq_i,tile_ABi])
 ;        FOR pol_i=0,n_pol<2-1 DO BEGIN
-;            i_use=where(((*flag_ptr[pol_i])[freq_i,tile_ABi] GT 0) AND (data_subset GT 0),n_use)
+;            i_use=where(((*vis_weight_ptr[pol_i])[freq_i,tile_ABi] GT 0) AND (data_subset GT 0),n_use)
 ;            IF n_use GT 10 THEN tile_freq_fom[tile_i,freq_i]+=Stddev(data_subset[i_use])
 ;        ENDFOR
 ;    ENDFOR
@@ -99,8 +99,8 @@ IF n_tile_cut GT 0 THEN BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             cut_A_i=where(tile_A EQ (tile_cut[bad_i]+1),n_cut_A)
             cut_B_i=where(tile_B EQ (tile_cut[bad_i]+1),n_cut_B)
-            IF n_cut_A GT 0 THEN (*flag_ptr[pol_i])[*,cut_A_i]=0
-            IF n_cut_B GT 0 THEN (*flag_ptr[pol_i])[*,cut_B_i]=0
+            IF n_cut_A GT 0 THEN (*vis_weight_ptr[pol_i])[*,cut_A_i]=0
+            IF n_cut_B GT 0 THEN (*vis_weight_ptr[pol_i])[*,cut_B_i]=0
         ENDFOR
     ENDFOR
     tile_use1=b_info.tile_use
@@ -108,7 +108,7 @@ IF n_tile_cut GT 0 THEN BEGIN
     b_info.tile_use=tile_use1
 ENDIF
 IF n_freq_cut GT 0 THEN BEGIN
-    FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[freq_cut,*]=0
+    FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[freq_cut,*]=0
     freq_use1=b_info.freq_use
     freq_use1[freq_cut]=0
     b_info.freq_use=freq_use1
@@ -125,7 +125,7 @@ time_fom=Fltarr(nt)
 FOR ti=0,nt-1 DO BEGIN
     data_subset=data_abs[*,bin_offset[ti]:bin_offset[ti+1]-1]
     FOR pol_i=0,n_pol<2-1 DO BEGIN
-        i_use=where((*flag_ptr[pol_i])[*,bin_offset[ti]:bin_offset[ti+1]-1] GT 0,n_use)
+        i_use=where((*vis_weight_ptr[pol_i])[*,bin_offset[ti]:bin_offset[ti+1]-1] GT 0,n_use)
         IF n_use GT 10 THEN time_fom[ti]+=Stddev(data_subset[i_use])
     ENDFOR
 ENDFOR
@@ -137,10 +137,10 @@ time_dev2=Stddev(time_fom[time_i_use0])
 time_cut=where((Abs(time_mean2-time_fom) GT flag_nsigma*time_dev2) OR (time_fom EQ 0),n_time_cut,complement=time_i_use)
 FOR ti=0L,n_time_cut-1 DO BEGIN
     ti_cut=where(time_bin EQ time_cut[ti],n_ti_cut)
-    IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*flag_ptr[pol_i])[*,ti_cut]=0
+    IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,ti_cut]=0
 ENDFOR
 
-IF Keyword_Set(flag_sparse_uv_coverage) THEN sparse_uv_flag,obs,psf,params,flag_ptr,flag_sparse_uv_coverage=flag_sparse_uv_coverage
+IF Keyword_Set(flag_sparse_uv_coverage) THEN sparse_uv_flag,obs,psf,params,vis_weight_ptr,flag_sparse_uv_coverage=flag_sparse_uv_coverage
 
-obs.n_vis=N_Elements(where(*flag_ptr[0] GT 0))
+obs.n_vis=N_Elements(where(*vis_weight_ptr[0] GT 0))
 END

@@ -221,10 +221,12 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
     endif else begin
       if nside ne nside_use then begin
         print, 'file ' + filenames[i] + 'does not have the same nside as the other files. It will not be included in the integration.'
+        undefine_fhd, cube_struct
         continue
       endif
       if n_avg ne n_avg_use then begin
         print, 'file ' + filenames[i] + 'does not have the same n_avg as the other files. It will not be included in the integration.'
+        undefine_fhd, cube_struct
         continue
       endif
       
@@ -236,6 +238,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
         if keyword_set(discard_unmatched_pix) then begin
           if count_pix_match lt n_elements(pixels_use)*0.1 then begin
             print, 'file ' + filenames[i] + 'has less than 10% of the same pixels as the other files and discard_unmatched_pix is set. This file will not be included in the integration.'
+            undefine_fhd, cube_struct
             continue
           endif
           if count_pix_match ne n_elements(pixels_use) then begin
@@ -275,6 +278,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
         if keyword_set(discard_unmatched_freq) then begin
           if count_freq_match lt n_elements(frequencies_use)*0.1 then begin
             print, 'file ' + filenames[i] + 'has less than 10% of the same frequencies as the other files and discard_unmatched_freq is set. This file will not be included in the integration.'
+            undefine_fhd, cube_struct
             continue
           endif
           if count_freq_match ne n_elements(frequencies_use) then begin

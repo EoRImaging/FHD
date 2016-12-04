@@ -1,7 +1,7 @@
 PRO fhd_cleanup,file_path_fhd
 
 pol_names=['xx','yy','xy','yx','I','Q','U','V']
-product_list = ['hdr','hpx_cnv','params','psf','cal','jones','flag_arr','fhd','skymodel','antenna']
+product_list = ['hdr','hpx_cnv','params','psf','cal','jones','vis_weights','fhd','skymodel','antenna']
 product_pol_list = ['map_fn']
 FOR i=0,N_Elements(product_list)-1 DO BEGIN
     fhd_save_io,var=product_list[i],file_path_fhd=file_path_fhd,path_use=path_use,/no_save

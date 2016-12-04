@@ -5,7 +5,7 @@ pol_dim=2
 freq_dim=4
 real_index=0
 imaginary_index=1
-flag_index=2
+weights_index=2
 
 n_extensions=sxpar(header,'nextend')
 naxis=sxpar(header,'naxis') ;6
@@ -36,9 +36,21 @@ if count_dec eq 1 then dec_cnum = wh_dec[0]+1 else message, 'DEC CTYPE not found
 obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
 obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
 
-IF N_Elements(lon) EQ 0 THEN lon=116.67081524 & lon=Float(lon);degrees (MWA, from Tingay et al. 2013)
-IF N_Elements(lat) EQ 0 THEN lat=-26.7033194 & lat=Float(lat);degrees (MWA, from Tingay et al. 2013)
-IF N_Elements(alt) EQ 0 THEN alt=377.827 & alt=Float(alt);altitude (meters) (MWA, from Tingay et al. 2013)
+IF N_Elements(lon) EQ 0 THEN BEGIN
+    lon = sxpar(header,'LON',count=found_lon) 
+    IF found_lon EQ 0 THEN lon=116.67081524 ;degrees (MWA, from Tingay et al. 2013)
+ENDIF
+lon=Float(lon)
+IF N_Elements(lat) EQ 0 THEN BEGIN
+    lat = sxpar(header,'LAT',count=found_lat) 
+    IF found_lat EQ 0 THEN lat=-26.7033194 ;degrees (MWA, from Tingay et al. 2013)
+ENDIF
+lat=Float(lat)
+IF N_Elements(alt) EQ 0 THEN BEGIN
+    alt = sxpar(header,'ALT',count=found_alt) 
+    IF found_alt EQ 0 THEN alt=377.827 ;altitude (meters) (MWA, from Tingay et al. 2013)
+ENDIF
+alt=Float(alt)
 
 baseline_i=(where(Strmatch(param_list,'BASELINE', /fold_case),found_baseline))[0] & IF found_baseline NE 1 THEN print,"WARNING: Group parameter BASELINE not found within uvfits header PTYPE keywords" 
 uu_i=(where(Strmatch(param_list,'UU', /fold_case),found_uu))[0] & IF found_uu NE 1 THEN print,"WARNING: Group parameter UU not found within uvfits header PTYPE keywords"
@@ -64,7 +76,7 @@ hdr=fhd_struct_init_hdr(n_grp_params=n_grp_params,nbaselines=nbaselines,n_tile=n
     freq_res=freq_res,freq_arr=frequency_array,lon=lon,lat=lat,alt=alt,obsra=obsra,obsdec=obsdec,$
     uu_i=uu_i,vv_i=vv_i,ww_i=ww_i,baseline_i=baseline_i,date_i=date_i,jd0=Jdate0,date_obs=date_obs,$
     pol_dim=pol_dim,freq_dim=freq_dim,real_index=real_index,imaginary_index=imaginary_index,$
-    flag_index=flag_index, ant1_i=ant1_i, ant2_i=ant2_i)
+    weights_index=weights_index, ant1_i=ant1_i, ant2_i=ant2_i)
 
 RETURN,hdr
 END

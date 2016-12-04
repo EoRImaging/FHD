@@ -152,7 +152,7 @@ if keyword_set(sim_baseline_density) then begin
 endif
 ;End Baseline Simulation
 
-array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $    
+array_simulator, vis_arr, vis_weights, obs, status_str, psf, params, jones, $    
     recalculate_all=recalculate_all, $
     grid_recalculate=grid_recalculate, $
     file_path_fhd=file_path_fhd, $

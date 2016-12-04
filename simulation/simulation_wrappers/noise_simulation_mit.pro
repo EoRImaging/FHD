@@ -129,7 +129,7 @@ pro noise_simulation_mit, cleanup=cleanup,recalculate_all=recalculate_all,export
       if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
     endif
         
-    array_simulator,vis_arr,flag_arr,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
+    array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=error, unflag_all=unflag_all, $
       sim_from_uvfits_filepath=vis_file_list[fi],file_path_fhd=fhd_file_list[fi], $
       simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, $
       n_time = n_time, sim_baseline_time=sim_baseline_time, $
