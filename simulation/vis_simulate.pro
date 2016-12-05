@@ -11,7 +11,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
   dimension=obs.dimension
   elements=obs.elements
   degpix=obs.degpix
-  
+
   IF ~Keyword_Set(file_path_fhd) THEN BEGIN no_save=1 & file_path_fhd='' & recalculate_all=1 & ENDIF
   input_model_filepath = file_path_fhd + '_input_model.sav'
   coarse_input_model_filepath = file_path_fhd + '_input_model_coarse.sav'
@@ -26,6 +26,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
     if n_elements(source_array) gt 0 then source_array = [source_array, catalog_source_array] else source_array = catalog_source_array
   endif    
   n_sources=N_Elements(source_array)
+  print, 'n_sources: '+string(n_sources)
   skymodel=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_path=catalog_file_path,return_cal=0,_Extra=extra)
   
   if keyword_set(recalculate_all) then begin

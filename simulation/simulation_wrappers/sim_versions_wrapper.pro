@@ -307,6 +307,7 @@ case version of
 	max_model_sources=0
 	instrument='mwa'
 	nfreq_avg=203
+	include_catalog_sources=0
    end
 
    'sim_eor_hera19_test': begin
@@ -455,7 +456,7 @@ IF N_Elements(precess) EQ 0 THEN precess=0 ;set to 1 ONLY for X16 PXX scans (i.e
 ;IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
 
 extra=var_bundle()
-    
+
 array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $   
     instrument=instrument, $ 
     recalculate_all=recalculate_all, $
