@@ -300,6 +300,22 @@ case version of
 	max_calibration_sources=1
    end
 
+
+   'sim_eor_hera19_mwabeam': begin
+	eor_sim=1
+	save_uvf=1
+	max_model_sources=0
+	instrument='mwa'
+	nfreq_avg=203
+   end
+
+   'sim_eor_hera19_test': begin
+	eor_sim=1
+	max_model_sources=0
+	instrument='hera'
+	nfreq_avg=203
+   end
+
    'sim_eor_paper128_9hour': begin
 	eor_sim=1
 	save_uvf=1
@@ -350,6 +366,14 @@ case version of
 	nfreq_avg=203
    end
 
+   'sim_heraplat_30min': begin
+	instrument='hera'
+	max_model_sources=1000
+	dft_threshold=1
+	nfreq_avg=1024
+	n_pol=1    ; Unsure why... but these files only have one pol
+   end
+
    'sim_hera19_9hour_medUVres': begin
 	instrument='hera'
 	max_model_sources=7000
@@ -370,15 +394,15 @@ case version of
 
 
    'test': begin
-	include_catalog_sources=1
-	max_model_sources=10
-	max_calibration_sources=10
-	max_sources=10
+	include_catalog_sources=0
+	max_model_sources=0
+	max_calibration_sources=0
+	max_sources=0
 	instrument='hera'
 	dft_threshold=1
 	dimension=512
 	nfreq_avg=203
-	eor_sim=0
+	eor_sim=1
    end
 
 endcase

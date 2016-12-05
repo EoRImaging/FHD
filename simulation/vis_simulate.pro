@@ -40,7 +40,10 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
     beam_arr=beam_image_cube(obs,psf, n_freq_bin = n_freq,/square)
     for freq_i=0,n_freq-1 do begin
       beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
-      beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
+    ;  beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
+      if n_pol gt 1 THEN beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i]) $
+      else beam2_yy_image[*,*,freq_i] = beam2_xx_image[*,*,freq_i]
+
     endfor
     IF ~Keyword_Set(no_save) THEN save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
     undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
@@ -153,7 +156,15 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
     if n_elements(source_model_uv_arr) gt 0 then begin
       if n_elements(model_uvf_arr) gt 0 then begin
         ;; if there is also a uvf cube, add the uv from the sources to the cube at each freq.
-        FOR pol_i=0,n_pol-1 DO *model_uvf_arr[pol_i]+=Rebin(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
+	IF size(*source_model_uv_arr[0],/type) eq 6 then begin     ;; If array is complex
+	        FOR pol_i=0,n_pol-1 DO BEGIN
+			j = Complex(0,1)
+			*model_uvf_arr[pol_i]+=Rebin(Real_part(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample)$
+							+j*(Rebin(imaginary(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample))
+		ENDFOR
+	ENDIF ELSE BEGIN
+	        FOR pol_i=0,n_pol-1 DO *model_uvf_arr[pol_i]+=Rebin(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
+	ENDELSE
       endif else model_uvf_arr = Pointer_copy(source_model_uv_arr) ;; otherwise just use the uv from the sources
       undefine_fhd, source_model_uv_arr
     endif
