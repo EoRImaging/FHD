@@ -1,4 +1,4 @@
-pro eor_firstpass_versions
+pro firstpass_versions_wrapper
 except=!except
 !except=0
 heap_gc 
@@ -17,11 +17,11 @@ heap_gc
     ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
     version = args[2]
   ;version = 'nb_temp'
-  endif else begin
-     obs_id = '1061667176'
-     output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
-     version = 'nb_decon_July2016_presidelobe_Aug27'
-  endelse
+  endif; else begin
+;     obs_id = '1061667176'
+;    output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
+;     version = 'nb_decon_July2016_presidelobe_Aug27'
+;  endelse
   cmd_args={version:version}
 
 ; Set default values for everything
@@ -95,27 +95,32 @@ beam_offset_time=56 ; make this a default. But it won't compound with setting it
 ;New defaults - July2015
 diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
 cable_bandpass_fit=1
-saved_run_bp=1
+saved_run_bp=0		;Set to 1, because I don't have the highband saves (AEL 11/30/16)
 
 ;Defaults added - July2016
 cal_amp_degree_fit=2
 cal_phase_degree_fit=1
 
 case version of
-  'ael_test_0': begin
+  'mwa_goldensubset': begin
 	max_model_sources=1000
 	dft_threshold=1
 	no_ps=0
+	bandpass_calibrate=0
   end
 endcase
    
-if version EQ 'nb_pytest' then begin
-  vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
-endif else begin
-  SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
-    STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
+;if version EQ 'nb_pytest' then begin
+;  vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
+;endif else begin
+
+SPAWN, 'locate_uvfits_oscar.py -o ' + STRING(obs_id), vis_file_list
+
+;SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+;    STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
+
   ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-endelse
+;endelse
 undefine, uvfits_subversion, uvfits_version
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
