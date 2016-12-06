@@ -93,8 +93,8 @@ case version of
 	instrument='mwa'
 	;reorder_visibilities=1
 	;max_sources=10000
-        max_model_sources=7000
-	dft_threshold=1
+        max_model_sources=10000
+	dft_threshold=0
 	nfreq_avg=16
 	;max_calibration_sources=10000
     end
@@ -301,9 +301,9 @@ case version of
    end
 
 
-   'sim_eor_hera19_mwabeam': begin
+   'sim_eor_hera19_mwabeam_test': begin
 	eor_sim=1
-	save_uvf=1
+	save_uvf=0
 	max_model_sources=0
 	instrument='mwa'
 	nfreq_avg=203
@@ -373,6 +373,21 @@ case version of
 	dft_threshold=1
 	nfreq_avg=1024
 	n_pol=1    ; Unsure why... but these files only have one pol
+   end
+   
+   'sim_heraplat_30min_fake': begin
+	instrument='hera'
+	max_model_sources=1000
+	dft_threshold=1
+	nfreq_avg=203
+   end
+
+
+   'sim_heraplat_30min_fake_morebeams': begin
+	instrument='hera'
+	max_model_sources=1000
+	dft_threshold=1
+	nfreq_avg=29    ; 7 beam models
    end
 
    'sim_hera19_9hour_medUVres': begin

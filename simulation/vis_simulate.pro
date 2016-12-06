@@ -42,8 +42,11 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
     for freq_i=0,n_freq-1 do begin
       beam2_xx_image[*,*, freq_i] = Temporary(*beam_arr[0,freq_i])
     ;  beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
-      if n_pol gt 1 THEN beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i]) $
-      else beam2_yy_image[*,*,freq_i] = beam2_xx_image[*,*,freq_i]
+      IF n_pol gt 1 THEN BEGIN
+	 beam2_yy_image[*,*, freq_i] = Temporary(*beam_arr[1,freq_i])
+      ENDIF ELSE BEGIN 
+	beam2_yy_image[*,*,freq_i] = beam2_xx_image[*,*,freq_i]
+      ENDELSE
 
     endfor
     IF ~Keyword_Set(no_save) THEN save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
@@ -159,9 +162,10 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
         ;; if there is also a uvf cube, add the uv from the sources to the cube at each freq.
 	IF size(*source_model_uv_arr[0],/type) eq 6 then begin     ;; If array is complex
 	        FOR pol_i=0,n_pol-1 DO BEGIN
-			j = Complex(0,1)
-			*model_uvf_arr[pol_i]+=Rebin(Real_part(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample)$
-							+j*(Rebin(imaginary(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample))
+			*model_uvf_arr[pol_i]+=rebin_complex(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
+			;j = Complex(0,1)
+			;*model_uvf_arr[pol_i]+=Rebin(Real_part(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample)$
+			;				+j*(Rebin(imaginary(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample))
 		ENDFOR
 	ENDIF ELSE BEGIN
 	        FOR pol_i=0,n_pol-1 DO *model_uvf_arr[pol_i]+=Rebin(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
@@ -222,6 +226,10 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
           
           this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_vis_weight_ptr,model_uv_arr=this_model_uv,$
             timing=model_timing,silent=silent,error=error,_Extra=extra)
+        ;FOR pol_i=0,n_pol-1 DO BEGIN
+         ;   vis_model_arr[pol_i]=visibility_degrid(*this_model_uv[pol_i],this_vis_weight_ptr[pol_i],obs,psf,params,silent=silent,$
+         ;       polarization=pol_i,_Extra=extra)
+        ;ENDFOR
           print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
           
           for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
