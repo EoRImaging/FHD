@@ -27,7 +27,7 @@ pro vis_delay_spectrum, dir, obsid=obsid,spec_window_type=spec_window_type, plot
   dataptr[0] = vis_ptr
   restore, dir+'/vis_data/'+obsid+'_vis_YY.sav'
   dataptr[1] = vis_ptr
-  vis_delay_filter, dataptr, vis_weights, params, obs
+  ;vis_delay_filter, dataptr, vis_weights, params, obs
   data[*,*,0] = *dataptr[0]
   data[*,*,1] = *dataptr[1]
   undefine_fhd,vis_ptr
