@@ -1,0 +1,14 @@
+IDL Version 8.5.1 (linux x86_64 m64). (c) 2015, Exelis Visual Information Solutions, Inc., a subsidiary of Harris Corporation.
+Installation number: 5501393-2.
+Licensed for use by: Brown University
+
+% Compiled module: INIT_HEALPIX.
+% Compiled module: DEFINED.
+% LOADCT: Loading table Rainbow + white
+% Compiled module: ROOTDIR.
+Starting on observation HERA19_22
+Ending on observation HERA19_26
+Using default output directory: /gpfs/data/jpober/alanman/FHD_out
+Output located at /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam
+Submitted batch job 14355210
+14355210

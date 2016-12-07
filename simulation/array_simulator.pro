@@ -16,7 +16,6 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
   IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
   IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
   IF N_Elements(silent) EQ 0 THEN silent=0
-  
   fhd_save_io,status_str,file_path_fhd=file_path_fhd
   
   print,systime()
@@ -75,7 +74,7 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
     recalculate_all=recalculate_all, include_eor = eor_sim, include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra)
-  
+   
   ; This is a persistent problem! Mostly due to misnaming of the array that is to be passed out whenever vis_simulate is edited. So here is a quick test...
   test_vis = max(abs(*vis_arr[0]))
   if test_vis eq 0 then print, "Visiblities are probably identically zero, you should check very carefully!"
