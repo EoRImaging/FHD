@@ -48,7 +48,7 @@ do
 	s) starting_obs=$OPTARG;;	#starting observation in text file for choosing a range
 	e) ending_obs=$OPTARG;;		#ending observation in text file for choosing a range
         o) outdir=$OPTARG;;		#output directory for FHD output folder
-        v) version=$OPTARG;;		#FHD folder name and case for eor_firstpass_versions
+        v) version=$OPTARG;;		#FHD folder name and case for firstpass_versions_wrapper
 					#Example: nb_foo creates folder named fhd_nb_foo
 	w) wallclock_time=$OPTARG;;	#Time for execution in slurm
 	n) ncores=$OPTARG;;		#Number of cores for slurm
@@ -108,11 +108,11 @@ if [ -z ${version} ]; then
    exit 1
 fi
 
-if grep -q \'${version}\' ${FHDpath}Observations/eor_firstpass_versions.pro
+if grep -q \'${version}\' ${FHDpath}Observations/firstpass_versions_wrapper.pro
 then
     echo Using version $version
 else
-    echo Version \'${version}\' was not found in ${FHDpath}Observations/eor_firstpass_versions.pro
+    echo Version \'${version}\' was not found in ${FHDpath}Observations/firstpass_versions_wrapper.pro
     exit 1
 fi
 
@@ -211,7 +211,6 @@ message=$(sbatch --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(($nobs
 #Run the command
 message=($message)
 
-exit
 echo ${message[@]}
 
 #Gather the job id from the job for later use

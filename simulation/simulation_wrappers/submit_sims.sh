@@ -42,7 +42,7 @@
 ##### Simulate MWA-128
 
 
-#nohup ./sim_pipe_slurm.sh -f MWAGolden -s '1061311664' -e '1061312520' -m 60G -w 02:30:00  -v 'sim_mwa_golden' > nohup_mwa128.out &
+#nohup ./sim_pipe_slurm.sh -f MWAGolden -s '1061311664' -e '1061312520' -m 60G -w 03:30:00  -v 'sim_mwa_golden' > nohup_mwa128.out &
 #nohup ./sim_pipe_slurm.sh -f MWAGolden -s '1061311664' -e '1061312520' -m 65G -w 03:30:00  -v 'sim_mwa_golden2' > nohup_mwa128.out &
 
 
@@ -58,7 +58,7 @@
 #nohup ./sim_pipe_slurm.sh -f HERA19 -m 30G  -w 03:30:00  -v 'sim_hera19_9hour' > nohup_hera19.out &
 
 #EoR tests
-nohup ./sim_pipe_slurm.sh -f HERA19 -s "HERA19_22" -e "HERA19_26" -v 'sim_eor_hera19_mwabeam' -m 50G -w 02:00:00 > nohup_hera19_eor.out &
+nohup ./sim_pipe_slurm.sh -f HERA19 -s "HERA19_22" -e "HERA19_26" -v 'sim_eor_hera19_mwabeam_test' -m 50G -w 02:00:00 > nohup_hera19_eor.out &
 #nohup ./sim_pipe_slurm.sh -f HERA19 -s "HERA19_22" -e "HERA19_22" -v 'sim_eor_hera19_test' -m 50G -w 02:00:00 > nohup_hera19_eor_t.out &
 
 #nohup ./sim_pipe_slurm.sh -f HERA19 -m 120G  -w 03:30:00  -v 'sim_hera19_9hour_hiUVres' > nohup_hera19.out &
@@ -69,4 +69,6 @@ nohup ./sim_pipe_slurm.sh -f HERA19 -s "HERA19_22" -e "HERA19_26" -v 'sim_eor_he
 
 #### Simulate HERA platinum set
 #nohup ./sim_pipe_slurm.sh -f HeraPlatinum -s 'zen.2457458.17389.xx.HH.uvcU' -e 'zen.2457458.19477.xx.HH.uvcU' -v 'sim_heraplat_30min' -m 60G -w 02:00:00 > nohup_heraplat.out &
+
+#nohup ./sim_pipe_slurm.sh -f HeraPlatinumFake -s 'hera_platinum_fine_0' -e 'hera_platinum_fine_15' -v 'sim_heraplat_30min_fake_morebeams' -m 60G -w 02:00:00 > nohup_heraplat.out &
 

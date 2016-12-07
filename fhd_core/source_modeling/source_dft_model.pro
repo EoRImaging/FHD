@@ -6,6 +6,9 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 
+print, 'Source List:'
+print, size(source_list)
+
 IF N_Elements(uv_mask) EQ 0 THEN uv_mask=fltarr(dimension,elements)+1
 uv_i_use=where(uv_mask)
 xvals=Float(uv_i_use mod dimension)-dimension/2

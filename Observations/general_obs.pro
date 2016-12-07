@@ -15,7 +15,7 @@ n_routine=N_Elements(routine_stack)
 general_obs_i=where(routine_stack EQ routine_stack[n_routine-1],n_general_obs_match)
 IF n_general_obs_match GT 1 THEN BEGIN
     print,"ERROR! Nested call to general_obs.pro! This is most likely the result of starting a new run after a previous run crashed and did not exit cleanly."
-    print,'This is a problem because memory from the previous run is still in use. Clean up your IDL session with a RETALL or .RESET_SESSION and try again."
+    print,"This is a problem because memory from the previous run is still in use. Clean up your IDL session with a RETALL or .RESET_SESSION and try again."
     print,"Returning..."
     RETURN
 ENDIF
@@ -97,6 +97,7 @@ CASE 1 OF
     Keyword_Set(transfer_calibration):transfer_file=transfer_calibration
     ELSE:transfer_file=''
 ENDCASE
+
 IF N_Elements(combine_healpix) EQ 0 THEN combine_healpix=0
 
 ;Set up gridding and deconvolution parameters
@@ -147,6 +148,8 @@ ENDIF
 WHILE fi LT n_files DO BEGIN
     IF ~Keyword_Set(silent) THEN print,String(format='("On observation ",A," of ",A)',Strn(Floor(fi-start_fi+1)),Strn(Floor(n_files-start_fi)))
     undefine_fhd,status_str
+    print, fhd_file_list[fi]
+    
     fhd_main,vis_file_list[fi],status_str,file_path_fhd=fhd_file_list[fi],n_pol=n_pol,recalculate_all=recalculate_all,$
         independent_fit=independent_fit,transfer_mapfn=transfer_mapfn,transfer_weights=transfer_weights,$
         mapfn_recalculate=mapfn_recalculate,flag_visibilities=flag_visibilities,grid_recalculate=grid_recalculate,$

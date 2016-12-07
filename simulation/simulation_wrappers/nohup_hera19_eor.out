@@ -9,6 +9,185 @@ Licensed for use by: Brown University
 Starting on observation HERA19_22
 Ending on observation HERA19_26
 Using default output directory: /gpfs/data/jpober/alanman/FHD_out
-Output located at /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam
-Submitted batch job 14355210
-14355210
+Output located at /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test
+Submitted batch job 14366411
+14366411
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_5.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_6.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_7.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_8.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_9.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_10.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_11.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_12.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_13.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_14.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_15.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_16.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_17.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_18.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_19.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_20.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_21.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_22.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_23.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_24.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_25.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_26.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_27.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_28.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_29.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_30.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_31.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_32.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_33.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_34.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_35.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_36.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_37.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_38.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_39.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_40.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_41.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_42.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_43.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_44.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_45.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_46.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_47.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_48.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_49.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_50.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_51.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_52.err: No such file or directory
+grep: /gpfs/data/jpober/alanman/FHD_out/fhd_sim_eor_hera19_mwabeam_test/grid_out/array_sim-14366411_53.err: No such file or directory
+Observation HERA19_0 is missing one or more Healpix cubes
+Observation HERA19_1 is missing one or more Healpix cubes
+Observation HERA19_2 is missing one or more Healpix cubes
+Observation HERA19_3 is missing one or more Healpix cubes
+Observation HERA19_4 is missing one or more Healpix cubes
+Observation HERA19_5 is missing one or more Healpix cubes
+Observation HERA19_6 is missing one or more Healpix cubes
+Observation HERA19_7 is missing one or more Healpix cubes
+Observation HERA19_8 is missing one or more Healpix cubes
+Observation HERA19_9 is missing one or more Healpix cubes
+Observation HERA19_10 is missing one or more Healpix cubes
+Observation HERA19_11 is missing one or more Healpix cubes
+Observation HERA19_12 is missing one or more Healpix cubes
+Observation HERA19_13 is missing one or more Healpix cubes
+Observation HERA19_14 is missing one or more Healpix cubes
+Observation HERA19_15 is missing one or more Healpix cubes
+Observation HERA19_16 is missing one or more Healpix cubes
+Observation HERA19_17 is missing one or more Healpix cubes
+Observation HERA19_18 is missing one or more Healpix cubes
+Observation HERA19_19 is missing one or more Healpix cubes
+Observation HERA19_20 is missing one or more Healpix cubes
+Observation HERA19_21 is missing one or more Healpix cubes
+Observation HERA19_22 is missing one or more Healpix cubes
+Observation HERA19_23 is missing one or more Healpix cubes
+Observation HERA19_24 is missing one or more Healpix cubes
+Observation HERA19_25 is missing one or more Healpix cubes
+Observation HERA19_26 is missing one or more Healpix cubes
+Observation HERA19_27 is missing one or more Healpix cubes
+Observation HERA19_28 is missing one or more Healpix cubes
+Observation HERA19_29 is missing one or more Healpix cubes
+Observation HERA19_30 is missing one or more Healpix cubes
+Observation HERA19_31 is missing one or more Healpix cubes
+Observation HERA19_32 is missing one or more Healpix cubes
+Observation HERA19_33 is missing one or more Healpix cubes
+Observation HERA19_34 is missing one or more Healpix cubes
+Observation HERA19_35 is missing one or more Healpix cubes
+Observation HERA19_36 is missing one or more Healpix cubes
+Observation HERA19_37 is missing one or more Healpix cubes
+Observation HERA19_38 is missing one or more Healpix cubes
+Observation HERA19_39 is missing one or more Healpix cubes
+Observation HERA19_40 is missing one or more Healpix cubes
+Observation HERA19_41 is missing one or more Healpix cubes
+Observation HERA19_42 is missing one or more Healpix cubes
+Observation HERA19_43 is missing one or more Healpix cubes
+Observation HERA19_44 is missing one or more Healpix cubes
+Observation HERA19_45 is missing one or more Healpix cubes
+Observation HERA19_46 is missing one or more Healpix cubes
+Observation HERA19_47 is missing one or more Healpix cubes
+Observation HERA19_48 is missing one or more Healpix cubes
+Observation HERA19_49 is missing one or more Healpix cubes
+Observation HERA19_50 is missing one or more Healpix cubes
+Observation HERA19_51 is missing one or more Healpix cubes
+Observation HERA19_52 is missing one or more Healpix cubes
+Observation HERA19_53 is missing one or more Healpix cubes
+IDL Version 8.5.1 (linux x86_64 m64). (c) 2015, Exelis Visual Information Solutions, Inc., a subsidiary of Harris Corporation.
+Installation number: 5501393-2.
+Licensed for use by: Brown University
+
+% Compiled module: INIT_HEALPIX.
+% Compiled module: DEFINED.
+% LOADCT: Loading table Rainbow + white
+% Compiled module: ROOTDIR.
+./sim_pipe_slurm.sh: line 403: [-z: command not found
+module: loading 'git/2.2.1'
+IDL Version 8.5.1 (linux x86_64 m64). (c) 2015, Exelis Visual Information Solutions, Inc., a subsidiary of Harris Corporation.
+Installation number: 5501393-2.
+Licensed for use by: Brown University
+
+% Compiled module: INIT_HEALPIX.
+% Compiled module: DEFINED.
+% LOADCT: Loading table Rainbow + white
+% Compiled module: ROOTDIR.
+Version is HERA19
+Starting observation not specified: Starting at minimum of 
+Ending observation not specified: Ending at maximum of 
+Missing save file for HERA19_0
+Missing save file for HERA19_1
+Missing save file for HERA19_2
+Missing save file for HERA19_3
+Missing save file for HERA19_4
+Missing save file for HERA19_5
+Missing save file for HERA19_6
+Missing save file for HERA19_7
+Missing save file for HERA19_8
+Missing save file for HERA19_9
+Missing save file for HERA19_10
+Missing save file for HERA19_11
+Missing save file for HERA19_12
+Missing save file for HERA19_13
+Missing save file for HERA19_14
+Missing save file for HERA19_15
+Missing save file for HERA19_16
+Missing save file for HERA19_17
+Missing save file for HERA19_18
+Missing save file for HERA19_19
+Missing save file for HERA19_20
+Missing save file for HERA19_21
+Missing save file for HERA19_22
+Missing save file for HERA19_23
+Missing save file for HERA19_24
+Missing save file for HERA19_25
+Missing save file for HERA19_26
+Missing save file for HERA19_27
+Missing save file for HERA19_28
+Missing save file for HERA19_29
+Missing save file for HERA19_30
+Missing save file for HERA19_31
+Missing save file for HERA19_32
+Missing save file for HERA19_33
+Missing save file for HERA19_34
+Missing save file for HERA19_35
+Missing save file for HERA19_36
+Missing save file for HERA19_37
+Missing save file for HERA19_38
+Missing save file for HERA19_39
+Missing save file for HERA19_40
+Missing save file for HERA19_41
+Missing save file for HERA19_42
+Missing save file for HERA19_43
+Missing save file for HERA19_44
+Missing save file for HERA19_45
+Missing save file for HERA19_46
+Missing save file for HERA19_47
+Missing save file for HERA19_48
+Missing save file for HERA19_49
+Missing save file for HERA19_50
+Missing save file for HERA19_51
+Missing save file for HERA19_52
+Missing save file for HERA19_53
+Cube integration and PS submitted
