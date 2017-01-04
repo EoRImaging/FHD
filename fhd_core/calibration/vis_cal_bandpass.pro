@@ -1,6 +1,6 @@
 FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
     bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,saved_run_bp=saved_run_bp,$
-    uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,debug_region_grow=debug_region_grow,_Extra=extra
+    uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,_Extra=extra
   ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.
     
   ;Extract needed elements from the input structures
@@ -74,15 +74,14 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     
     ;Reload a saved bandpass by pointing for a specific pointing. Currently only capable of golden set. (Is this still true?)
     If keyword_set(saved_run_bp) then begin
-      print, 'Bandpass saved run activated!'
-      
       ;parse out which pointing the obsid is in
       pointing_num=mwa_get_pointing_number(obs,/string)
       
       ;saved bandpass location
       If mean(freq_arr) LT 165.e6 THEN bandsuffix='_lowband' ELSE bandsuffix=''
-      filename=filepath(pointing_num+'_bandpass_highband_EoR1'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
-      if keyword_set(debug_region_grow) then filename=filepath(pointing_num+'_bandpass'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
+      filename=filepath(pointing_num+'_bandpass_2013longrun_Jan2017'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
+      
+      print, 'Bandpass saved run activated, using ' + filename
       
       ;reinstate the saved solution into the proper format for replacing bandpass_single later
       textfast,bandpass_saved_sol,/read,file=filename ;columns are: freq_arr_input, cable90xx, cable90yy, cable150xx, cable150yy, cable230xx, cable230yy, cable320xx, cable320yy, cable400xx, cable400yy, cable524xx, cable524yy
