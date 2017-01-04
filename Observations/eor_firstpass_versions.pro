@@ -1553,6 +1553,13 @@ end
 uvfits_subversion=1
 restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
 end  
+'nb_2013longrun_savedbp': begin
+     saved_run_bp=1
+   undefine, diffuse_calibrate, diffuse_model
+   uvfits_version=4
+uvfits_subversion=1
+restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+end
       
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
