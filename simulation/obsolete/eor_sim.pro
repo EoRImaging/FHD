@@ -1,7 +1,7 @@
 
 
 function eor_sim, u_arr, v_arr, freq_arr, seed = seed, real_sky = real_sky, flat_sigma = flat_sigma, $
-    no_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc
+    No_distrib = no_distrib, delta_power = delta_power, delta_uv_loc = delta_uv_loc
     
   if n_elements(seed) eq 0 then seed = systime(1)
   

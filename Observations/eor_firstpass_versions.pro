@@ -19,7 +19,7 @@ heap_gc
   endif else begin
      obs_id = '1061316296'
      output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
-     version = 'nb_sim_nodelay'
+     version = 'nb_rts_amp_cal_fit'
   endelse
   cmd_args={version:version}
 
@@ -1527,6 +1527,39 @@ end
   mapfn_recalculate=0
     return_cal_visibilities=0
 end 
+'nb_fhd_amp_cal': begin
+   ;rts_cal=1
+   saved_run_bp=0
+   undefine, diffuse_calibrate, diffuse_model
+end 
+'nb_rts_amp_cal': begin
+   rts_cal=1
+   saved_run_bp=0
+   ;recalculate_all=1
+   ;mapfn_recalculate=0
+   undefine, diffuse_calibrate, diffuse_model
+end  
+'nb_rts_amp_cal_fit': begin
+   fit_rts_cal=1
+   saved_run_bp=0
+   undefine, diffuse_calibrate, diffuse_model
+   ;   recalculate_all=1
+   ;mapfn_recalculate=0
+end          
+'nb_2013longrun': begin
+     saved_run_bp=0
+   undefine, diffuse_calibrate, diffuse_model
+   uvfits_version=4
+uvfits_subversion=1
+restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+end  
+'nb_2013longrun_savedbp': begin
+     saved_run_bp=1
+   undefine, diffuse_calibrate, diffuse_model
+   uvfits_version=4
+uvfits_subversion=1
+restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+end
       
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
