@@ -5,7 +5,8 @@ FUNCTION generate_source_cal_list,obs,psf,source_array,catalog_path=catalog_path
     max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,delicate_calibration_catalog=delicate_calibration_catalog,$
     no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
     allow_sidelobe_model_sources=allow_sidelobe_model_sources,beam_model_threshold=beam_model_threshold,beam_threshold=beam_threshold,$
-    preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra
+    preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,$
+    calibration_subtract_sidelobe_catalog=calibration_subtract_sidelobe_catalog,model_subtract_sidelobe_catalog=model_subtract_sidelobe_catalog,_Extra=extra
 
 IF size(source_array,/type) EQ 8 THEN BEGIN
     catalog=source_array ;If a valid structure is supplied, use that 
@@ -31,13 +32,32 @@ ENDIF ELSE BEGIN
     RESTORE,catalog_path_full,/relaxed ;catalog
 ENDELSE
 
+dimension=obs.dimension
+elements=obs.elements
+degpix=obs.degpix
+
+FoV=!RaDeg/obs.kpix
+freq_arr=psf.freq
+freq_use=obs.freq_center
+IF freq_use GT 1E5 THEN freq_use/=1E6
+n_pol=obs.n_pol
+    
+IF N_Elements(beam_arr) LT (n_pol<2) THEN BEGIN 
+    beam_arr=Ptrarr(n_pol<2)
+    FOR pol_i=0,(n_pol<2)-1 DO beam_arr[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,square=0)>0.)
+ENDIF
+beam=fltarr(dimension,elements)
+FOR pol_i=0,(n_pol<2)-1 DO beam+=*beam_arr[pol_i]^2.
+beam=Sqrt(beam/(n_pol<2))
+
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
+no_restrict_sources_default = 1
 
 IF Keyword_Set(model_visibilities) THEN BEGIN
     IF N_Elements(model_flux_threshold) GT 0 THEN flux_threshold=model_flux_threshold ELSE flux_threshold=0.
     IF N_Elements(allow_sidelobe_model_sources) GT 0 THEN allow_sidelobe_sources=allow_sidelobe_model_sources ELSE allow_sidelobe_sources=0
     IF Keyword_Set(allow_sidelobe_sources) THEN IF N_Elements(no_restrict_model_sources) EQ 0 THEN no_restrict_sources=1 ELSE no_restrict_sources=no_restrict_model_sources $
-        ELSE no_restrict_sources=1
+        ELSE no_restrict_sources=no_restrict_sources_default
     IF N_Elements(max_model_sources) GT 0 THEN max_sources=max_model_sources ELSE max_sources=0 ;0 turns it off
     IF N_Elements(model_spectral_index) GT 0 THEN spectral_index=model_spectral_index ELSE spectral_index=catalog.alpha
     IF Keyword_Set(allow_sidelobe_sources) THEN beam_threshold=0.01
@@ -46,30 +66,52 @@ ENDIF ELSE BEGIN
     IF N_Elements(calibration_flux_threshold) GT 0 THEN flux_threshold=calibration_flux_threshold ELSE flux_threshold=0.
     IF N_Elements(allow_sidelobe_cal_sources) GT 0 THEN allow_sidelobe_sources=allow_sidelobe_cal_sources ELSE allow_sidelobe_sources=0
     IF Keyword_Set(allow_sidelobe_sources) THEN IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_sources=1 ELSE no_restrict_sources=no_restrict_cal_sources $
-        ELSE no_restrict_sources=1
+        ELSE no_restrict_sources=no_restrict_sources_default
     IF N_Elements(max_calibration_sources) GT 0 THEN max_sources=max_calibration_sources ELSE max_sources=0 ;0 turns it off
     IF N_Elements(calibration_spectral_index) GT 0 THEN spectral_index=calibration_spectral_index ELSE spectral_index=catalog.alpha
     IF Keyword_Set(allow_sidelobe_sources) THEN beam_threshold=0.01
     IF N_Elements(beam_cal_threshold) GT 0 THEN beam_threshold=beam_cal_threshold
 ENDELSE
 
-dimension=obs.dimension
-elements=obs.elements
-degpix=obs.degpix
+beam_test_i=where(beam GT beam_threshold)
+beam_primary_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
+beam_test_mask=fltarr(dimension,elements) & beam_test_mask[beam_test_i]=1.
+beam_primary_mask=fltarr(dimension,elements) & beam_primary_mask[beam_primary_i]=1.
+beam_sidelobe_mask = beam_test_mask*(1 - beam_primary_mask)
+IF Keyword_Set(model_visibilities) THEN BEGIN
+    IF N_Elements(model_subtract_sidelobe_catalog) GT 0 THEN BEGIN
+        IF N_Elements(no_restrict_model_sources) EQ 0 THEN no_restrict_sources=no_restrict_sources_default $
+            ELSE no_restrict_sources=no_restrict_model_sources
+        allow_sidelobe_sources=0
+        sidelobe_catalog = generate_source_cal_list(obs,psf,catalog_path=model_subtract_sidelobe_catalog,$
+            mask=beam_sidelobe_mask,/allow_sidelobe_model_sources,/model_visibilities,$
+            beam_arr=beam_arr, no_extend=no_extend,$
+            max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,$
+            no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
+            beam_model_threshold=beam_model_threshold,beam_threshold=beam_threshold,$
+            preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra)
+    ENDIF
+ENDIF ELSE BEGIN
+    IF N_Elements(calibration_subtract_sidelobe_catalog) GT 0 THEN BEGIN
+        IF N_Elements(no_restrict_model_sources) EQ 0 THEN no_restrict_sources=no_restrict_sources_default $
+            ELSE no_restrict_sources=no_restrict_model_sources
+        allow_sidelobe_sources=0
+        sidelobe_catalog = generate_source_cal_list(obs,psf,catalog_path=calibration_subtract_sidelobe_catalog,$
+            mask=beam_sidelobe_mask,/allow_sidelobe_cal_sources,$
+            calibration_spectral_index=calibration_spectral_index,beam_arr=beam_arr,$
+            max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
+            no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,beam_cal_threshold=beam_cal_threshold,$
+            delicate_calibration_catalog=delicate_calibration_catalog,beam_threshold=beam_threshold,$
+            preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra)
+    ENDIF
+ENDELSE
 
 IF Keyword_Set(no_restrict_sources) THEN fft_alias_range=dimension/32. ELSE fft_alias_range=dimension/4.
-
-FoV=!RaDeg/obs.kpix
-freq_arr=psf.freq
-freq_use=obs.freq_center
-IF freq_use GT 1E5 THEN freq_use/=1E6
-n_pol=obs.n_pol
 
 ra0=obs.obsra
 dec0=obs.obsdec
 angs=angle_difference(dec0,ra0,catalog.dec,catalog.ra,/degree)
 i_use=where(Abs(angs) LE FoV/2.,n_use)
-
 
 IF N_Elements(spectral_index) GT 1 AND (not Keyword_Set(preserve_zero_spectral_indices)) THEN BEGIN
     zero_i=where(spectral_index EQ 0,n_zero,complement=nonzero_i,ncomplement=n_nonzero)
@@ -90,14 +132,6 @@ IF n_use GT 0 THEN BEGIN
     source_list.y=y_arr
     FOR i=0,7 DO source_list.flux.(i)=catalog.flux.(i)*(freq_use/catalog.freq)^spectral_index
     source_list.alpha=spectral_index
-    
-    IF N_Elements(beam_arr) LT (n_pol<2) THEN BEGIN 
-        beam_arr=Ptrarr(n_pol<2)
-        FOR pol_i=0,(n_pol<2)-1 DO beam_arr[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,square=0)>0.)
-    ENDIF
-    beam=fltarr(dimension,elements)
-    FOR pol_i=0,(n_pol<2)-1 DO beam+=*beam_arr[pol_i]^2.
-    beam=Sqrt(beam/(n_pol<2))
 
     IF Keyword_Set(allow_sidelobe_sources) THEN beam_i=where(beam GT beam_threshold) $
         ELSE beam_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
@@ -137,6 +171,9 @@ IF n_use GT 0 THEN BEGIN
         ENDFOR
     ENDELSE
 ENDIF ELSE RETURN,source_comp_init(n_sources=0,freq=obs.freq_center)
+
+IF Keyword_Set(sidelobe_catalog) THEN $
+    source_list = source_list_append(obs,source_list,sidelobe_catalog,/exclude)
 
 IF Keyword_Set(max_sources) THEN IF N_Elements(source_list) GT max_sources $
     THEN source_list=source_list[0:max_sources-1]
