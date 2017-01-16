@@ -1852,10 +1852,12 @@ end
       uvfits_subversion = 1
       saved_run_bp = 0
       calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/1130789944_run1_catalog.sav'
+      calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
       rephase_weights = 0
       restrict_hpx_inds = 0
       hpx_radius = 10
       undefine, diffuse_calibrate, diffuse_model
+      ring_radius = 0
    end
    
    'rlb_1130781304_run1_cal_Dec2016': begin
@@ -1865,12 +1867,71 @@ end
       uvfits_subversion = 1
       saved_run_bp = 0
       calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/1130781304_run1_catalog.sav'
+      calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
       rephase_weights = 0
       restrict_hpx_inds = 0
       hpx_radius = 10
       undefine, diffuse_calibrate, diffuse_model
+      ring_radius = 0
    end
 
+   'rlb_1130789944_run1_cal_decon_Jan2017': begin
+      uvfits_version = 5
+      uvfits_subversion = 1
+      max_sources = 200000
+      calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/1130789944_run1_catalog.sav'
+      gain_factor = 0.1
+      deconvolve = 1
+      return_decon_visibilities = 1
+      smooth_width = 32
+      deconvolution_filter = 'filter_uv_uniform'
+      filter_background = 1
+      dimension = 2048
+      return_cal_visibilities = 0
+      FoV = 0
+      pad_uv_image = 1
+      snapshot_healpix_export = 1
+      snapshot_recalculate = 1
+      recalculate_all = 1
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp = 0
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      return_sidelobe_catalog = 1
+      dft_threshold = 0
+      ring_radius = 0
+   end
+   
+   'rlb_1130781304_run1_cal_decon_Jan2017': begin
+      uvfits_version = 5
+      uvfits_subversion = 1
+      max_sources = 200000
+      calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/1130781304_run1_catalog.sav'
+      gain_factor = 0.1
+      deconvolve = 1
+      return_decon_visibilities = 1
+      smooth_width = 32
+      deconvolution_filter = 'filter_uv_uniform'
+      filter_background = 1
+      dimension = 2048
+      return_cal_visibilities = 0
+      FoV = 0
+      pad_uv_image = 1
+      snapshot_healpix_export = 1
+      snapshot_recalculate = 1
+      recalculate_all = 1
+      undefine, diffuse_calibrate, diffuse_model
+      saved_run_bp = 0
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      return_sidelobe_catalog = 1
+      dft_threshold = 0
+      ring_radius = 0
+   end
 
 
    ;Khang's Stuff:
