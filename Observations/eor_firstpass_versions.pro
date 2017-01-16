@@ -1553,6 +1553,13 @@ end
 uvfits_subversion=1
 restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
 end  
+'nb_2013longrun_savedbp': begin
+     saved_run_bp=1
+   undefine, diffuse_calibrate, diffuse_model
+   uvfits_version=4
+uvfits_subversion=1
+restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+end
       
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
@@ -1845,6 +1852,19 @@ end
       uvfits_subversion = 1
       saved_run_bp = 0
       calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/1130789944_run1_catalog.sav'
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      undefine, diffuse_calibrate, diffuse_model
+   end
+   
+   'rlb_1130781304_run1_cal_Dec2016': begin
+      recalculate_all = 1
+      mapfn_recalculate = 1
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/1130781304_run1_catalog.sav'
       rephase_weights = 0
       restrict_hpx_inds = 0
       hpx_radius = 10
