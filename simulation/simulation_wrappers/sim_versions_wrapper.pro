@@ -30,8 +30,8 @@ sources_file_name="mwa_calibration_source_list_gleam_kgs_fhd_fornax"
 export_images = 1 ; toggles the output of images from fhd_quickview
 save_visibilities= 1
 model_visibilities=1
+make_regular_bls=0
 save_antenna_model=1
-restore_last=1
 snapshot_healpix_export = 1
 ps_export=1
 split_ps_export=1
@@ -89,336 +89,54 @@ endif else print, 'Using sources: ' + sources_file_name
 
 case version of
 
-   'sim_mwa_golden': begin
-	instrument='mwa'
-	;reorder_visibilities=1
-	;max_sources=10000
-        max_model_sources=10000
-	dft_threshold=0
-	nfreq_avg=16
-	;max_calibration_sources=10000
-    end
 
-   'sim_mwa_golden2': begin
-	instrument='mwa'
-	;reorder_visibilities=1
-	;max_sources=10000
-        max_model_sources=7000
-	dft_threshold=0
-	nfreq_avg=16
-	;max_calibration_sources=10000
-    end
-
-   'sim_hera128': begin
-	instrument='hera'
-        dft_threshold=0
-   end
-
-   'sim_hera37_1src': begin
-        instrument='hera'
-        sources_file_name="zem_simulation_sources/sim_source_list1"
-   end
-
-   'sim_hera37_3hour': begin
-	instrume='hera'
-	max_model_sources=10000
-	dft_threshold=1
-	nfreq_avg=203
-   end
-
-   'sim_paper128_at_MRO': begin
-	instrument='paper'
-	dft_threshold=0
-   end
-
-
-   'sim_paper128_hiuvres': begin
-	instrument='paper'
-	dft_threshold=0
-	max_model_sources=100
-	kbinsize=0.1
-	nfreq_avg=203
-	no_extend=1
-   end
-
-   'sim_paper128_louvres': begin
-	instrument='paper'
-	dft_threshold=0
-	max_model_sources=100
-	kbinsize=0.5
-	nfreq_avg=203
-	no_extend=1
-   end
-
-   'sim_paper128_1hour': begin
-	; 1 hour total, in 2 min files
-	;simulate_header=1
-	instrument='paper'
-	dft_threshold=0
-	reorder_visibilities=1      ;Necessary for plot_uv to make sense of the results.
-	beam_offset_time = 60.		; calculate beam model at the center tmie
-	max_sources=10000
-        max_model_sources=10000
-	max_calibration_sources=10000
-   end
-
-   'sim_paper128_9hour': begin
-	instrument='paper'
-	dft_threshold=0
-	max_model_sources=10000
-	nfreq_avg=203
-	
-   end
-
-   'sim_paper128_9hour_noextend': begin
-	instrument='paper'
-	dft_threshold=1
-	max_model_sources=10000
-	nfreq_avg=203    ;One beam model only
-	no_extend=1	;Treat extended sources as point.
-   end
-
-   'sim_paper128_9hour_nofornax': begin
-	instrument='paper'
-	dft_threshold=1
-	max_model_sources=10000
-	sources_file_name="mwa_calibration_source_list_gleam_kgs_no_fornax"
-   end
-
-
-   'sim_paper128_9hour_1coarse': begin
-	instrument='paper'
-	dft_threshold=1
- 	nfreq_avg=203
-	max_model_sources=10000
-   end
-
-
-   'sim_paper128_onlyfornax2': begin
-	instrument='paper'
-	dft_threshold=1
- 	nfreq_avg=203
-	no_extend=0
-	max_model_sources=1
-	max_calibration_sources=1
-   end
-
-   'sim_paper128_1src': begin
-	instrument='paper'
-	dft_threshold=1
-	sources_file_name="point_source2_paper"
-	reorder_visibilities=1
-	max_sources=1
-	max_model_sources=1
-	max_calibration_sources=1
-   end
-
-
-   'sim_paper128_10000src_diffuse': begin
-	instrument='paper'
-	dft_threshold=1
-	max_sources=10000
-	max_model_sources=10000
-	max_calibration_sources=10000
-        diffuse_file_name='EoR0_diffuse_model.sav'
-        diffuse_model = filepath(string(format='(A,".sav")',diffuse_file_name),root=rootdir('FHD'), subdir='catalog_data')
-   end
-
-   'sim_ewbase_onesrc': begin
-	;simulate_header=1
-	instrument='mwa'
-	dft_threshold=1
-	reorder_visibilities=1      ;Necessary for plot_uv to make sense of the results.
-	max_sources=1
-        max_model_sources=1
-	max_calibration_sources=1
-   end
-
-
-   'sim_ewbase_100src': begin
-	;simulate_header=1
-	instrument='mwa'
-	split_ps_export=0
-;	beam_offset_time=408     ; 408 seconds. about halfway through one PAPER "obsID"
-	dft_threshold=1
-;	reorder_visibilities=1      ;Necessary for plot_uv to make sense of the results.
-	max_sources=100
-        max_model_sources=100
-	max_calibration_sources=100
-   end
-
-
-   'sim_ewbase_10000src_halftime': begin
-	;simulate_header=1
-	instrument='mwa'
-	split_ps_export=0
-;	beam_offset_time=408     ; 408 seconds. about halfway through one PAPER "obsID"
-	dft_threshold=1
-;	reorder_visibilities=1      ;Necessary for plot_uv to make sense of the results.
-	max_sources=10000
-        max_model_sources=10000
-	max_calibration_sources=10000
-   end
-
-
-   'sim_ewbase_phasetest': begin
-	instrument='mwa'
-	dft_threshold=1
-        max_model_sources=10000
-   end
-
-
-   'sim_ewbase_10000src_onecoarse': begin
-	;simulate_header=1
-	instrument='mwa'
-	split_ps_export=0
-;	beam_offset_time=408     ; 408 seconds. about halfway through one PAPER "obsID"
-	dft_threshold=1
-	nfreq_avg=384             ; Fine frequencies per coarse channel.
-;	reorder_visibilities=1      ;Necessary for plot_uv to make sense of the results.
-	max_sources=10000
-        max_model_sources=10000
-	max_calibration_sources=10000
-   end
-
-   'sim_ewbase-mwa_onesrc': begin
-	;simulate_header=1
-	instrument='mwa'
-	dft_threshold=1
-	reorder_visibilities=1      ;Necessary for plot_uv to make sense of the results.
-	max_sources=1
-        max_model_sources=1
-	max_calibration_sources=1
-   end
-
-   'sim_paper128_test': begin
-        ;simulate_header=1
-        instrument='paper'
-        dft_threshold=1
-	max_sources=1
-        max_model_sources=1
-	max_calibration_sources=1
-   end
-
-
-   'sim_eor_hera19_mwabeam_test': begin
-	eor_sim=1
-	save_uvf=0
-	max_model_sources=0
-	instrument='mwa'
-	nfreq_avg=203
-	include_catalog_sources=0
-   end
-
-   'sim_eor_hera19_test': begin
-	eor_sim=1
-	max_model_sources=0
-	instrument='hera'
-	nfreq_avg=203
-   end
-
-   'sim_eor_paper128_9hour': begin
-	eor_sim=1
-	save_uvf=1
-	max_model_sources=0
-	instrument='paper'
-	dft_threshold=0
-;        sources_file_name="zem_simulation_sources/sim_source_list1"
-	include_catalog_sources=0
-	nfreq_avg=203
-   end
-
-   'sim_eor_paper128_2': begin
-	eor_sim=1
-	save_uvf=1
-	max_model_sources=0
-	instrument='paper'
-	dft_threshold=0
-;        sources_file_name="zem_simulation_sources/sim_source_list1"
-	include_catalog_sources=0
-	nfreq_avg=203
-   end
-
-   'sim_eor_paper128_at_MRO': begin
-	instrument='paper'
-	dft_threshold=0
-	eor_sim=1
-	max_model_sources=0
-	include_catalog_sources=0
-	nfreq_avg=384
-   end
-
-   'sim_eor_mwa128': begin
-	eor_sim=1
-	max_model_sources=0
-	instrument='mwa'
-	dft_threshold=0
+   'sim_hera19': begin
 	dimension=1024
-;        sources_file_name="zem_simulation_sources/sim_source_list1"
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+   end
+
+   'sim_paper19': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+   end
+
+   'sim_mwa_fornax_eor_nometa': begin
+	dimension=1024
+	instrument='mwa'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=0
+	dft_threshold=0
+	nfreq_avg=16
 	include_catalog_sources=0
-	nfreq_avg=384    		; 1
+	eor_sim=1	
    end
 
-
-   'sim_hera19_9hour': begin
-	instrument='hera'
-	max_model_sources=7000
+   'sim_mwa_fornax_eor_meta': begin
+	dimension=1024
+	instrument='mwa'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=0
 	dft_threshold=0
-	nfreq_avg=203
+	nfreq_avg=16
+	include_catalog_sources=0
+	eor_sim=1
    end
-
-   'sim_heraplat_30min': begin
-	instrument='hera'
-	max_model_sources=1000
-	dft_threshold=1
-	nfreq_avg=1024
-	n_pol=1    ; Unsure why... but these files only have one pol
-   end
-   
-   'sim_heraplat_30min_fake': begin
-	instrument='hera'
-	max_model_sources=1000
-	dft_threshold=1
-	nfreq_avg=203
-   end
-
-
-   'sim_heraplat_30min_fake_morebeams': begin
-	instrument='hera'
-	max_model_sources=1000
-	dft_threshold=1
-	nfreq_avg=29    ; 7 beam models
-   end
-
-   'sim_hera19_9hour_medUVres': begin
-	instrument='hera'
-	max_model_sources=7000
-	dft_threshold=0
-	nfreq_avg=203
-	kbinsize=0.1
-   end
-
-
-   'sim_hera19_9hour_hiUVres': begin
-	;requires over 120G of memory per job!
-	instrument='hera'
-	max_model_sources=7000
-	dft_threshold=0
-	nfreq_avg=203
-	kbinsize=0.05
-   end
-
 
    'test': begin
-	include_catalog_sources=0
-	max_model_sources=0
-	max_calibration_sources=0
+	include_catalog_sources=1
+	max_model_sources=10
+;	max_calibration_sources=0
 	max_sources=0
-	instrument='hera'
+	instrument='mwa'
 	dft_threshold=1
 	dimension=512
 	nfreq_avg=203
-	eor_sim=1
    end
 
 endcase
@@ -439,6 +157,8 @@ SPAWN, 'locate_uvfits_oscar.py -o ' + STRING(obs_id), vis_file_list
 temp_path=vis_file_list[0] ; vis_file_list needs needs to be a scalar each time it is passed to array_simulator. For now, we are only using one file.:
 undefine, vis_file_list
 sim_from_uvfits_filepath = temp_path ; used in array_simulator_init.pro
+
+print, 'Reading from file: ' + sim_from_uvfits_filepath
 
 file_path_fhd = fhd_path_setup(sim_from_uvfits_filepath,output_directory=output_directory,version=version,_Extra=extra) ;Creates output directories for each obsid
 temp_path2 = file_path_fhd[0]
@@ -463,7 +183,34 @@ allow_sidelobe_cal_sources=set_sidelobe_keywords
 IF N_Elements(complex_beam) EQ 0 THEN complex_beam=1
 IF N_Elements(precess) EQ 0 THEN precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
 
+if make_regular_bls eq 1 THEN BEGIN
+;	uvw = hera_baselines()
+	ps_kspan=600
+	simulate_baselines=1
+	nsample=100
+	sim_uu = findgen(nsample)*ps_kspan/nsample - ps_kspan/2
+	sim_vv = findgen(nsample)*ps_kspan/nsample - ps_kspan/2
+	f_use = 150e6
+	sim_uu = sim_uu / f_use
+	sim_vv = sim_vv / f_use
 
+	max_n_baseline = 8000
+	n_time = 2*ceil(nsample/float(max_n_baseline))
+	n_per_time = floor(nsample/(n_time/2.))
+	if n_per_time*n_time ne nsample then begin
+	  nsample = n_per_time*n_time/2.
+	  sim_uu = sim_uu[0:nsample-1]
+	  sim_vv = sim_vv[0:nsample-1]
+	endif
+	sim_uu = reform(sim_uu, n_per_time, 1, n_time/2)
+	sim_vv = reform(sim_vv, n_per_time, 1, n_time/2)
+	
+	sim_baseline_uu = reform([[sim_uu], [sim_uu]], n_per_time*n_time)
+	sim_baseline_vv = reform([[sim_vv], [sim_vv]], n_per_time*n_time)
+	
+	sim_baseline_time = [intarr(n_per_time), intarr(n_per_time)+1]
+	if n_time gt 2 then for i=1, n_time/2-1 do sim_baseline_time = [sim_baseline_time, intarr(n_per_time)+2*i, intarr(n_per_time)+2*i+1]
+endif
 
 ;; Baseline Simulation
 ;IF N_Elements(n_avg) EQ 0 THEN n_avg=2

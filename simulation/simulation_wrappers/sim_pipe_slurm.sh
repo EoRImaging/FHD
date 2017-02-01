@@ -39,7 +39,7 @@ unset resubmit_index
 #######Gathering the input arguments and applying defaults if necessary
 
 #Parse flags for inputs
-while getopts ":f:s:e:o:v:p:w:n:m:t:" option
+while getopts ":f:s:e:o:v:p:w:n:m:t" option
 do
    case $option in
 	f) obs_file_name="$OPTARG";;	#text file of observation id's
@@ -51,7 +51,7 @@ do
 	w) wallclock_time=$OPTARG;;	#Time for execution in slurm
 	n) cores=$OPTARG;;		#Number of cores for slurm
 	m) mem=$OPTARG;;		#Memory per node for slurm
-	t) firstpass_only=$OPTARG;;	#Firstpass only, or also do power spectrum?
+	t) firstpass_only=1;;	#Firstpass only, or also do power spectrum?
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), "
 	    echo "-v (version input for FHD), -w (wallclock time in slurm), -n (number of cores to use),"
 	    echo "and -m (memory per core for slurm)." 
@@ -143,6 +143,7 @@ mkdir -p ${outdir}/fhd_${version}
 mkdir -p ${outdir}/fhd_${version}/grid_out
 echo Output located at ${outdir}/fhd_${version}
 
+
 #Read the obs file and put into an array, skipping blank lines if they exist
 i=0
 while read line
@@ -157,20 +158,6 @@ done < "$obs_file_name"
 max=${obs_id_array[$((i-1))]}
 min=${obs_id_array[0]}
 #
-#for obs_id in "${obs_id_array[@]}"
-#do
-#   #Update max if applicable
-#   if [[ "$obs_id" -gt "$max" ]]
-#   then
-#	max="$obs_id"
-#   fi
-#
-#   #Update min if applicable
-#   if [[ "$obs_id" -lt "$min" ]]
-#   then
-#	min="$obs_id"
-#   fi
-#done
 #
 #If minimum not specified, start at minimum of obs_file
 if [ -z ${starting_obs} ]
@@ -239,7 +226,6 @@ message=($message)
 echo ${message[@]}
 #Gather the slurm id from the job for later use
 id=`echo ${message[3]}`
-echo $id
 
 while [ `myq | grep $id | wc -l` -ge 1 ]; do
     sleep 10
@@ -248,7 +234,7 @@ done
 
 ########End of submitting the firstpass job and waiting for output
 
-if [ $firstpass_only = 1 ]; then
+if [ $firstpass_only -eq 1 ]; then
    exit 0
 fi
 
@@ -265,7 +251,7 @@ fi
 i=0
 for obs_id in "${obs_id_array[@]}"; do
    exec_num=$(grep "slurmstepd:" $outdir"/fhd_"$version"/grid_out/array_sim-"$id"_"$i".err" | wc -l)
-   if [ "$exec_num" -gt 1 ]; then
+   if [ "$exec_num" -ge 1 ]; then
       echo $obs_id encountered code error during firstpass run
       resubmit_list+=($obs_id)
       resubmit_index+=($i)
@@ -275,11 +261,12 @@ done
 
 #Exit if all jobs errored. Otherwise, if not all jobs errored, it is assumed that a pull happened sometime
 #during the run, and that resubmission is desired.
-n_resubmit=${#resubmit_list[@]}
-if [ "$nobs" -eq "$n_resubmit" ]; then
-   echo All jobs encountered code errors or halts during array_sim run. Exiting
-   exit 1
-fi
+### This has been cut, because pulls don't introduce the "slurmstepd" errors into the grid_out files. 
+#n_resubmit=${#resubmit_list[@]}
+#if [ "$nobs" -eq "$n_resubmit" ]; then
+#   echo All jobs encountered code errors or halts during array_sim run. Exiting
+#   exit 1
+#fi
 
 
 #Check to see if Healpix cubes exist for all obsids
@@ -299,8 +286,15 @@ done
 
 #Check to see if Healpix-less cubes ran out of time
 wallclock_resubmit_flag=0
+
 for index in "${resubmit_index[@]}"; do
-   wallclock_used_total="$(sacct --format='JobID,CPUTime,MaxRSS' -j $id | grep $id"_"$index -m 1 | awk '{print $2}' )"
+  #All times must be in seconds for comparison
+   wallclock_used="$(sacct --format='JobID,Elapsed,MaxRSS' -j $id | grep $id"_"$index -m 1 | awk '{print $2}' )"
+   wallclock_used_hrs="$(echo $wallclock_used | awk -F':' '{print $1}')"
+   wallclock_used_min="$(echo $wallclock_used | awk -F':' '{print $2}')"
+   wallclock_used_sec="$(echo $wallclock_used | awk -F':' '{print $3}')"
+   wallclock_used_total=$(echo ${wallclock_used_hrs} ${wallclock_used_min} ${wallclock_used_sec} | awk '{printf "%8f\n",$1*3600+$2*60+$3}')
+
    wallclock_given_hrs="$(echo $wallclock_time | awk -F':' '{print $1}')"
    wallclock_given_min="$(echo $wallclock_time | awk -F':' '{print $2}')"
    wallclock_given_sec="$(echo $wallclock_time | awk -F':' '{print $3}')"
@@ -323,6 +317,8 @@ done
 
 #Check to see if Healpix-less cubes ran out of memory
 #First check total alloted memory (mem * Nnodes) ---- for now, Nnodes = 1
+
+
 if echo $mem | grep G -q; then
    totalmem="$((${mem%G}*1))"
 elif echo $mem | grep M -q; then
@@ -331,14 +327,18 @@ fi
 #Now check what was actually used
 resubmit_mem_flag=0
 for index in "${resubmit_index[@]}"; do
-   taskmem_used_total="$(sacct --format='JobID,CPUTime,MaxRSS' -j $id | grep $id"\."$index -m 1 | awk '{print $3}' )"
+   taskmem_used_full="$(sacct --format='JobID,CPUTime,MaxRSS' -j $id | grep $id"_"$index | tail -1  | awk '{print $3}' )"
+   echo $taskmem_used_full
    if echo $taskmem_used_full | grep G -q; then
       taskmem_used=${taskmem_used_full%G}
    elif echo $taskmem_used_full | grep M -q; then
       taskmem_used=$(echo ${taskmem_used_full%M} 1000 | awk '{printf "%5.3f\n",$1/$2}')
+   elif echo $taskmem_used_full | grep K -q; then
+      taskmem_used=$(echo ${taskmem_used_full%K} 1000000 | awk '{printf "%5.3f\n",$1/$2}')
    else
       taskmem_used=0
    fi
+
 
 #Check to see if what was used is bigger than the allotment (what happens right before mem error)
 #If it is bigger than the allotment, try adding 2G per slot
@@ -382,12 +382,20 @@ if [ "$rerun_flag" -ne 1 ];then
    message=$(sbatch --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 )) --export=ncores=$ncores,outdir=$outdir,version=$version,thresh=$thresh -o ${outdir}/fhd_${version}/grid_out/array_sim-%A_%a.out -e ${outdir}/fhd_${version}/grid_out/array_sim-%A_%a.err ${FHDpath}Observations/eor_simulation_slurm_job.sh ${resubmit_list[@]})
    message=($message)
    id=`echo ${message[3]}`
-
+   while [ `myq | grep $id | wc -l` -ge 1 ]; do
+      sleep 10
+   done
 fi
+
 
 ########End of resubmitting the firstpass jobs that failed and might benefit from a rerun
 
 
+# Submit a job to convert model visibilities to uvfits and MIRIAD formats
+curdir=`pwd -P`
+cd ${outdir}/fhd_${version}
+uvconvert.py
+cd $curdir
 
 
 ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
@@ -400,7 +408,7 @@ if [ -z ${ending_obs} ]; then
     else
 	    ${PSpath}ps_wrappers/ps_slurm.sh -e ${ending_obs} -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
     fi
-elif [-z ${starting_obs} ]; then
+elif [ -z ${starting_obs} ]; then
 	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
 else
     ${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
