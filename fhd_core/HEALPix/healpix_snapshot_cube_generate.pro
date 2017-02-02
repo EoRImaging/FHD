@@ -3,7 +3,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
     n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
-    obs_out=obs_out,psf_out=psf_out,_Extra=extra
+    obs_out=obs_out,psf_out=psf_out,ps_tile_flag_list=ps_tile_flag_list,_Extra=extra
     
   t0=Systime(1)
   
@@ -73,6 +73,9 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   IF Min(Ptr_valid(vis_weights)) LT n_pol THEN fhd_save_io,status_str,vis_weights_use,var='vis_weights',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
     ELSE vis_weights_use=Pointer_copy(vis_weights)
   
+  IF Keyword_Set(ps_tile_flag_list) THEN BEGIN
+    vis_flag_tiles, obs_out, vis_weights_use, tile_flag_list=ps_tile_flag_list
+  ENDIF
   vis_weights_update,vis_weights_use,obs_out,psf_out,params,_Extra=extra
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
   IF N_Elements(*vis_arr[0]) EQ 0 THEN BEGIN
