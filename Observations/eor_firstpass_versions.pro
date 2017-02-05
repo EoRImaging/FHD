@@ -1560,6 +1560,22 @@ end
 uvfits_subversion=1
 restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
 end
+'nb_notimeavg': begin
+     saved_run_bp=0
+   undefine, diffuse_calibrate, diffuse_model
+   uvfits_version=4
+uvfits_subversion=1
+restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+cal_time_average=0
+snapshot_recalculate=1
+mapfn_recalculate=0
+end
+'nb_dirty_test': begin
+     calibrate_visibilities=0
+     model_visibilities=0
+   uvfits_version=4
+uvfits_subversion=1
+end
       
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    

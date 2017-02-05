@@ -90,6 +90,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
   
+**calibration_subtract_sidelobe_catalog**: set to subtract a catalog in the sidelobes that is different from that used in the primary beam <br />
+  
 **calibration_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the calibration sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
