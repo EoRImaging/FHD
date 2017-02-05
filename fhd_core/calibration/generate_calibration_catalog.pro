@@ -1,4 +1,4 @@
-PRO generate_calibration_catalog,source_list,file_path=file_path,spectral_index=spectral_index,$
+PRO generate_calibration_catalog,source_list=source_list,file_path=file_path,spectral_index=spectral_index,$
     no_polarization=no_polarization,no_extend=no_extend,flux_threshold=flux_threshold,$
     combined_obs=combined_obs,frequency=frequency,ston_threshold=ston_threshold
 
