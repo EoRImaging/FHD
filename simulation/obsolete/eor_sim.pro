@@ -14,7 +14,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, real_sky = real_sky, flat
   
   z0_freq = 1420.40 ;; MHz
   ;; make sure frequencies are in MHz
-  if min(freq_arr) gt 1e8 then frequencies = freq_arr / 1e6 else frequencies = freq_arr
+  if mean(freq_arr) ge 1e8 then frequencies = freq_arr / 1e6 else frequencies = freq_arr
   
   redshifts = z0_freq/frequencies - 1
   cosmology_measures, redshifts, comoving_dist_los = comov_dist_los
