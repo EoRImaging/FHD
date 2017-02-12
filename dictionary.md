@@ -17,7 +17,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 <br />
   -*Range*: 0-# of seconds in an observation <br />
 
-**complex_beam**: !Q <br />
+**complex_beam**: set if the beam is complex. Affects how gridding is handled. <br />
+  -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
 
 **dipole_mutual_coupling_factor**: allows a modification to the beam as a result of mutual coupling between dipoles calculated in `mwa_dipole_mutual_coupling.pro` (See Sutinjo 2015 for more details). <br />
@@ -137,7 +138,7 @@ calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
 **include_catalog_sources**: !Q <br />
-   -*Default* : 0
+   -*Default* : 0 <br />
 
 ## Deconvolution
 
@@ -230,7 +231,7 @@ no_restrict_cal_sources=1 <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br /> 
   
-**snapshot_healpix_export**: <br />
+**snapshot_healpix_export**: appears to be preserving visibilities !Q<br />
   -*EoR_firstpass settings*: 1 <br />
   
 **no_fits**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
@@ -246,6 +247,10 @@ no_restrict_cal_sources=1 <br />
 **ps_export**: not used !Q<br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*:  <br /> 
+  
+**restrict_hpx_inds**: only allow gridding of the output healpix cubes to include the healpix pixels specified in a save file. This is useful for restricting many observations to have consistent healpix pixels during integration, and saves on memory and walltime. Set to a string to specify the name of the save file in the Observations subdirectory. <br />
+  -*EoR_firstpass settings*: 1, which defaults to `EoR0_high_healpix_inds.idlsave`, `EoR0_low_healpix_inds.idlsave`, `EoR1_high_healpix_inds.idlsave`, or `EoR1_low_healpix_inds.idlsave` depending on obs parameters.<br />
+  -*Default*: not set <br /> 
 
 **save_visibililties**: save the calibrated data visibilities, the model visibilities, and the visibility flags. <br />
   -*Turn off/on*: 0/1 <br />
@@ -266,12 +271,19 @@ no_restrict_cal_sources=1 <br />
 **dead_dipole_list**: an array of 3 x # of dead dipoles, where column 0 is the tile name, column 1 is the polarization (0:x, 1:y), and column 2 is the dipole number. These dipoles are flagged, which greatly increases memory usage due to the creation of many separate tile beams. <br />
   -*Default*: not set <br />  
 
+**flag_calibration**: flags antennas based on calculations in `vis_calibration_flag.pro`.<br />
+  -*Needs update*: keyword check both in general_obs and vis_calibrate !Q <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: 1 <br />  
+
 **flag_dead_dipoles**: flag the dead dipoles listed in `<instrument>_dead_dipole_list.txt` for the golden set of Aug 23, 2013. This greatly increases memory usage due to the creation of many separate tile beams. <br />
   -*Default*: not set <br />  
 
-**flag_visibilities**: <br />
+**flag_visibilities**: flag visibilities based on calculations in `vis_flag.pro`. <br />
+  -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 0 <br />
-  -*Default*:  <br />  
+  -*Default*: 0 <br />  
 
 **no_calibration_frequency_flagging**: do not flag frequencies based off of zeroed calibration gains. <br />
   -*Needs updating*: might be better if changed to calibration_frequency_flagging and change the logic (avoid the double negative) !Q.
@@ -286,7 +298,7 @@ no_restrict_cal_sources=1 <br />
   -*Default*: not set <br />
 
 **unflag_all**: unflag all tiles/antennas and frequencies. While not practical for real data, this is useful for creating unflagged model visibilities for the input of an in-situ simulations. <br />
-  -*Turn off/on*: 0/1 (<br />
+  -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
 
@@ -388,9 +400,6 @@ no_ps=1
 ring_radius=10.*pad_uv_image
 combine_obs=0
 smooth_width=32.
-
-
-restrict_hpx_inds=1
 
 psf_resolution=100
 calibration_flag_iterate = 0
