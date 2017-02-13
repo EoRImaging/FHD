@@ -3,7 +3,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
     beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
-    interpolate_kernel=interpolate_kernel,_Extra=extra
+    interpolate_kernel=interpolate_kernel, debug_clip_beam_mask=debug_clip_beam_mask,_Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -143,13 +143,19 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             n_grp_use+=baseline_group_n
             t_beam_int+=Systime(1)-t_bint
             IF ~double_flag THEN psf_base_superres=Complex(psf_base_superres)
+            beam_mask = Fltarr(psf_dim, psf_dim) + 1
+            IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
+                beam_mask_superres = Fltarr(psf_dim, psf_dim)
+                beam_mask_superres[where(real_part(psf_base_superres) GT 0)] = 1
+                FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO beam_mask *= beam_mask_superres[xvals_i+i,yvals_i+j]
+            ENDIF
             psf_single=Ptrarr(psf_resolution+1,psf_resolution+1)
 ;            NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
 ;               the first element, shifted by one pixel. This allows efficient subscripting for interpolation during gridding
-            FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]) 
-            FOR i=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+i,yvals_i+psf_resolution-1],psf_dim,psf_dim),0,1),psf_dim^2.))
-            FOR j=0,psf_resolution-1 DO psf_single[psf_resolution,psf_resolution-1-j]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+psf_resolution-1,yvals_i+j],psf_dim,psf_dim),1,0),psf_dim^2.))
-            psf_single[psf_resolution,psf_resolution]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+psf_resolution-1,yvals_i+psf_resolution-1],psf_dim,psf_dim),1,1),psf_dim^2.))
+            FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j]*beam_mask) 
+            FOR i=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+i,yvals_i+psf_resolution-1]*beam_mask,psf_dim,psf_dim),0,1),psf_dim^2.))
+            FOR j=0,psf_resolution-1 DO psf_single[psf_resolution,psf_resolution-1-j]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+psf_resolution-1,yvals_i+j]*beam_mask,psf_dim,psf_dim),1,0),psf_dim^2.))
+            psf_single[psf_resolution,psf_resolution]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+psf_resolution-1,yvals_i+psf_resolution-1]*beam_mask,psf_dim,psf_dim),1,1),psf_dim^2.))
             psf_single=Ptr_new(psf_single)
             FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
         ENDFOR
