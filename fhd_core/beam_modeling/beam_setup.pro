@@ -145,9 +145,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             IF ~double_flag THEN psf_base_superres=Complex(psf_base_superres)
             beam_mask = Fltarr(psf_dim, psf_dim) + 1
             IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
-                beam_mask_superres = Fltarr(psf_dim, psf_dim)
+                beam_mask_superres = Fltarr(size(psf_base_superres,/dimension))
                 beam_mask_superres[where(real_part(psf_base_superres) GT 0)] = 1
-                FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO beam_mask *= beam_mask_superres[xvals_i+i,yvals_i+j]
+                FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO beam_mask *= $
+                    reform(beam_mask_superres[xvals_i+i,yvals_i+j], psf_dim, psf_dim)
             ENDIF
             psf_single=Ptrarr(psf_resolution+1,psf_resolution+1)
 ;            NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
