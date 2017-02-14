@@ -77,16 +77,10 @@ psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case
 psf_base_superres/=beam_norm
 psf_val_ref=Total(psf_base_superres)
 IF Keyword_Set(interpolate_beam_threshold) THEN BEGIN
-    uv_mask_superres_taper = smooth(uv_mask_superres, 5*psf_intermediate_res)
-    numeric_threshold = 1e-8
-    psf_log_amp = Fltarr(size(psf_base_superres, /dimension))
-    psf_log_amp[beam_i] = Alog(abs(psf_base_superres[beam_i]))
+    psf_amp = interpol_2d(abs(psf_base_superres*uv_mask_superres), uv_mask_superres) > 0
     psf_phase = Fltarr(size(psf_base_superres, /dimension))
     psf_phase[beam_i] = Atan(psf_base_superres[beam_i], /phase)
-    psf_log_amp = interpol_2d(psf_log_amp, uv_mask_superres)
     psf_phase = interpol_2d(psf_phase, uv_mask_superres)
-    psf_amp = Fltarr(size(psf_base_superres, /dimension))
-    psf_amp[beam_i] = Exp(psf_log_amp[beam_i])
     psf_base_superres = psf_amp*Cos(psf_phase) + icomp*psf_amp*Sin(psf_phase)
 ENDIF ELSE psf_base_superres*=uv_mask_superres
 

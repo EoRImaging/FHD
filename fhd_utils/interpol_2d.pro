@@ -18,7 +18,7 @@ ENDIF ELSE BEGIN
     mask[i_use] = 1
 ENDELSE
 
-mask_i_threshold = 1
+mask_i_threshold = dimension/2
 FOR i=0, dimension-1 DO BEGIN
     mask_sum = Total(mask[i, *])
     IF mask_sum LE mask_i_threshold THEN CONTINUE
@@ -31,7 +31,7 @@ FOR j=0, elements-1 DO BEGIN
     result_y[*, j] = interpol(image_use[*, j], elements)
     weights_y[*, j] = mask_sum
 ENDFOR
+;i_cut = where((weights_x + weights_y) 
 result = (result_x*weights_x + result_y*weights_y) * weight_invert(weights_x + weights_y)
-result[i_use] = image[i_use]
 RETURN,result
 END
