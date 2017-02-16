@@ -1,5 +1,5 @@
-FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i=freq_i,$
-    psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
+FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i=freq_i,psf_dim=psf_dim,$
+    psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,$
     beam_mask_electric_field=beam_mask_electric_field,beam_mask_threshold=beam_mask_threshold,$
     xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
     interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
@@ -59,7 +59,7 @@ uv_mask_superres[beam_i]=1
 IF Keyword_Set(debug_beam_clip_grow) THEN BEGIN
     mask_dist_test = morph_distance(uv_mask_superres, neighbor=3, /background)
     uv_mask_superres_int=Fltarr(dimension_super,dimension_super)
-    uv_mask_superres_int[where(mask_dist_test LT psf_intermediate_res*2)] = 1
+    uv_mask_superres_int[where(mask_dist_test LT psf_resolution)] = 1
     inds_ring = where(uv_mask_superres_int - uv_mask_superres, n_ring)
     
     psf_base_real = real_part(psf_base_superres) > 0
@@ -78,8 +78,10 @@ psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case
 psf_base_superres/=beam_norm
 psf_val_ref=Total(psf_base_superres)
 
-beam_mask = Fltarr(size(beam_mask_superres[xvals_i,yvals_i], /dimension)) + 1
 IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
+    xvals_i=Reform(meshgrid(psf_dim,psf_dim,1)*psf_resolution,psf_dim^2.)
+    yvals_i=Reform(meshgrid(psf_dim,psf_dim,2)*psf_resolution,psf_dim^2.)
+    beam_mask = Fltarr(size(psf_base_superres[xvals_i,yvals_i], /dimension)) + 1
     beam_mask_superres = Fltarr(size(psf_base_superres,/dimension))
     beam_mask_superres[where(real_part(psf_base_superres) GT 0)] = 1
     FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO beam_mask *= $
