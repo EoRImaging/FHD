@@ -3,7 +3,8 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     beam_mask_electric_field=beam_mask_electric_field,beam_mask_threshold=beam_mask_threshold,$
     xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
     interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
-    debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor
+    debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
+    debug_clip_beam_mask=debug_clip_beam_mask
     
 icomp = Complex(0, 1)
 freq_center=antenna1.freq[freq_i]
@@ -76,6 +77,17 @@ ENDIF
 psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
 psf_base_superres/=beam_norm
 psf_val_ref=Total(psf_base_superres)
+
+beam_mask = Fltarr(size(beam_mask_superres[xvals_i,yvals_i], /dimension)) + 1
+IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
+    beam_mask_superres = Fltarr(size(psf_base_superres,/dimension))
+    beam_mask_superres[where(real_part(psf_base_superres) GT 0)] = 1
+    FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO beam_mask *= $
+        beam_mask_superres[xvals_i+i,yvals_i+j]
+    FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
+        beam_mask_superres[xvals_i+i,yvals_i+j] *= beam_mask
+ENDIF
+
 IF Keyword_Set(interpolate_beam_threshold) THEN BEGIN
     psf_amp = interpol_2d(abs(psf_base_superres*uv_mask_superres), uv_mask_superres) > 0
     psf_phase = Fltarr(size(psf_base_superres, /dimension))
