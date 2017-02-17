@@ -82,12 +82,10 @@ IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
     xvals_i=Reform(meshgrid(psf_dim,psf_dim,1)*psf_resolution,psf_dim^2.)
     yvals_i=Reform(meshgrid(psf_dim,psf_dim,2)*psf_resolution,psf_dim^2.)
     beam_mask = Fltarr(size(psf_base_superres[xvals_i,yvals_i], /dimension)) + 1
-    beam_mask_superres = Fltarr(size(psf_base_superres,/dimension))
-    beam_mask_superres[where(real_part(psf_base_superres) GT 0)] = 1
     FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO beam_mask *= $
-        beam_mask_superres[xvals_i+i,yvals_i+j]
+        uv_mask_superres[xvals_i+i,yvals_i+j]
     FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO $
-        beam_mask_superres[xvals_i+i,yvals_i+j] *= beam_mask
+        uv_mask_superres[xvals_i+i,yvals_i+j] *= beam_mask
 ENDIF
 
 IF Keyword_Set(interpolate_beam_threshold) THEN BEGIN
