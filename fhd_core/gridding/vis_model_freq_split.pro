@@ -7,7 +7,6 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
   t0=Systime(1)
   
   IF N_Elements(silent) EQ 0 THEN silent=0
-  IF N_Elements(rephase_weights) EQ 0 THEN rephase_weights=1
   pol_names=obs.pol_names
   vis_filepath=file_path_fhd+'_vis_'
   
