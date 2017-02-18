@@ -1570,6 +1570,20 @@ cal_time_average=0
 snapshot_recalculate=1
 mapfn_recalculate=0
 end
+'nb_notimeavg_delaymodel_quarter': begin
+     saved_run_bp=0
+     kbinsize=.25
+     dimension=4096
+   undefine, diffuse_calibrate, diffuse_model
+   uvfits_version=4
+uvfits_subversion=1
+restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+cal_time_average=0
+;recalculate_all=1
+mapfn_recalculate=0
+model_delay_filter=1
+snapshot_recalculate=1
+end
 'nb_dirty_test': begin
      calibrate_visibilities=0
      model_visibilities=0
