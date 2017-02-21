@@ -1560,6 +1560,36 @@ end
 uvfits_subversion=1
 restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
 end
+'nb_notimeavg': begin
+     saved_run_bp=0
+   undefine, diffuse_calibrate, diffuse_model
+   uvfits_version=4
+uvfits_subversion=1
+restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+cal_time_average=0
+snapshot_recalculate=1
+mapfn_recalculate=0
+end
+'nb_notimeavg_delaymodel_quarter': begin
+     saved_run_bp=0
+     kbinsize=.25
+     dimension=4096
+   undefine, diffuse_calibrate, diffuse_model
+   uvfits_version=4
+uvfits_subversion=1
+restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+cal_time_average=0
+;recalculate_all=1
+mapfn_recalculate=0
+model_delay_filter=1
+snapshot_recalculate=1
+end
+'nb_dirty_test': begin
+     calibrate_visibilities=0
+     model_visibilities=0
+   uvfits_version=4
+uvfits_subversion=1
+end
       
    ;;; Patti's versions!!! Only Patti may edit this section!!!
    
@@ -1763,8 +1793,8 @@ end
    end
    
    'rlb_GLEAM_cal_Sept2016': begin
-      recalculate_all = 0
-      mapfn_recalculate = 0
+      recalculate_all = 1
+      mapfn_recalculate = 1
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
@@ -1773,6 +1803,7 @@ end
       restrict_hpx_inds = 0
       hpx_radius = 10
       undefine, diffuse_calibrate, diffuse_model
+      ring_radius = 0
    end
    
    'rlb_GLEAM_cal_decon_Oct2016': begin
@@ -1821,7 +1852,7 @@ end
       pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
-      recalculate_all = 1
+      recalculate_all = 0
       undefine, diffuse_calibrate, diffuse_model
       saved_run_bp = 0
       rephase_weights = 0
@@ -1829,25 +1860,15 @@ end
       hpx_radius = 10
       subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
       return_sidelobe_catalog = 1
-      dft_threshold = 0   
+      dft_threshold = 0
+      ring_radius = 0
+      export_image = 1   
     end
-    
-   'rlb_GLEAM_cal_Nov2016': begin
-      recalculate_all = 1
-      mapfn_recalculate = 1
-      uvfits_version = 5
-      uvfits_subversion = 1
-      saved_run_bp = 0
-      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
-      rephase_weights = 0
-      restrict_hpx_inds = 0
-      hpx_radius = 10
-      undefine, diffuse_calibrate, diffuse_model
-   end
    
    'rlb_1130789944_run1_cal_Dec2016': begin
-      recalculate_all = 1
-      mapfn_recalculate = 1
+      recalculate_all = 0
+      mapfn_recalculate = 0
+      export_image = 1
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
@@ -1861,8 +1882,9 @@ end
    end
    
    'rlb_1130781304_run1_cal_Dec2016': begin
-      recalculate_all = 1
-      mapfn_recalculate = 1
+      recalculate_all = 0
+      mapfn_recalculate = 0
+      export_image = 1
       uvfits_version = 5
       uvfits_subversion = 1
       saved_run_bp = 0
@@ -1930,6 +1952,36 @@ end
       subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
       return_sidelobe_catalog = 1
       dft_threshold = 0
+      ring_radius = 0
+   end
+   
+   'rlb_1130789944_run2_cal_Feb2017': begin
+      recalculate_all = 1
+      mapfn_recalculate = 1
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/1130789944_run2_catalog.sav'
+      calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      undefine, diffuse_calibrate, diffuse_model
+      ring_radius = 0
+   end
+   
+   'rlb_1130781304_run2_cal_Feb2017': begin
+      recalculate_all = 1
+      mapfn_recalculate = 1
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/1130781304_run2_catalog.sav'
+      calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      undefine, diffuse_calibrate, diffuse_model
       ring_radius = 0
    end
 

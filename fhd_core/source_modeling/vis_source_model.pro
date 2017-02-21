@@ -157,10 +157,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid)
 
-if keyword_set(model_delay_filter) then begin
-  obs = replicate(obs_original,1)
-  params = replicate(params_original,1)
+if keyword_set(model_delay_filter) then begin  
+  ;params = replicate(params_original,1)
   vis_delay_filter, vis_arr, params, obs
+  obs = replicate(obs_original,1)
 endif
 timing=Systime(1)-t0
 

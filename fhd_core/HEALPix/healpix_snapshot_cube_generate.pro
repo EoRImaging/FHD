@@ -1,14 +1,15 @@
 PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,vis_model_arr=vis_model_arr,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
-    n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
+    rephase_weights=rephase_weights,n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
-    obs_out=obs_out,psf_out=psf_out,_Extra=extra
+    obs_out=obs_out,psf_out=psf_out,ps_tile_flag_list=ps_tile_flag_list,_Extra=extra
     
   t0=Systime(1)
   
   IF N_Elements(silent) EQ 0 THEN silent=0
   IF N_Elements(status_str) EQ 0 THEN fhd_save_io,status_str,file_path_fhd=file_path_fhd,/no_save
+  IF N_Elements(rephase_weights) EQ 0 THEN rephase_weights=1
   
   IF Keyword_Set(split_ps_export) THEN cube_name=['hpx_even','hpx_odd'] $
     ELSE cube_name='healpix_cube'
@@ -73,6 +74,9 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   IF Min(Ptr_valid(vis_weights)) LT n_pol THEN fhd_save_io,status_str,vis_weights_use,var='vis_weights',/restore,file_path_fhd=file_path_fhd,_Extra=extra $
     ELSE vis_weights_use=Pointer_copy(vis_weights)
   
+  IF Keyword_Set(ps_tile_flag_list) THEN BEGIN
+    vis_flag_tiles, obs_out, vis_weights_use, tile_flag_list=ps_tile_flag_list
+  ENDIF
   vis_weights_update,vis_weights_use,obs_out,psf_out,params,_Extra=extra
   IF Min(Ptr_valid(vis_arr)) EQ 0 THEN vis_arr=Ptrarr(n_pol,/allocate)
   IF N_Elements(*vis_arr[0]) EQ 0 THEN BEGIN
@@ -131,7 +135,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     obs_in=obs_in_ref
     psf=psf_out
     
-    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,vis_weights_use,obs_out=obs,psf_out=psfs,$
+    residual_arr1=vis_model_freq_split(obs_in,status_str,psf_in,params,vis_weights_use,obs_out=obs,psf_out=psf,rephase_weights=rephase_weights,$
       weights_arr=weights_arr1,variance_arr=variance_arr1,model_arr=model_arr1,n_avg=n_avg,timing=t_split1,/fft,$
       file_path_fhd=file_path_fhd,vis_n_arr=vis_n_arr,/preserve_visibilities,vis_data_arr=vis_arr,vis_model_arr=vis_model_arr,$
       save_uvf=save_uvf, uvf_name=uvf_name[iter],bi_use=*bi_use[iter], _Extra=extra)

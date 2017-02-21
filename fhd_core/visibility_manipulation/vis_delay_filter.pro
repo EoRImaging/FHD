@@ -10,8 +10,8 @@ pro vis_delay_filter, vis_model_arr,  params, obs
 
   ; u,v,w are in light travel time in seconds
   freq_arr = (*obs.baseline_info).freq
-  for i=1,floor(obs.n_freq/2) do freq_arr = [freq_arr[0]-obs.freq_res*i,freq_arr]
-  for i=1,floor(obs.n_freq/2) do freq_arr = [freq_arr,freq_arr[obs.n_freq-1]+obs.freq_res*i]
+  ;for i=1,floor(obs.n_freq/2) do freq_arr = [freq_arr[0]-obs.freq_res*i,freq_arr]
+  ;for i=1,floor(obs.n_freq/2) do freq_arr = [freq_arr,freq_arr[obs.n_freq-1]+obs.freq_res*i]
   
   freq_res = obs.freq_res
   n_pol = obs.n_pol
@@ -81,8 +81,8 @@ pro vis_delay_filter, vis_model_arr,  params, obs
   ; UnPhase from zenith and cut to the desired band 
   for pol_i=0,n_pol-1 do begin
     masked_data[*,*,pol_i] *= 1./rephase_vals
-    (*vis_model_arr[pol_i]) = (*vis_model_arr[pol_i])[obs.n_freq/2:LONG(3./2.*obs.n_freq-1),*]
-    (*vis_model_arr[pol_i])[*,bi_use] = masked_data[obs.n_freq/2:LONG(3./2.*obs.n_freq-1),*,pol_i]
+    (*vis_model_arr[pol_i]) = (*vis_model_arr[pol_i])[obs.n_freq/4:LONG(3./4.*obs.n_freq-1),*]
+    (*vis_model_arr[pol_i])[*,bi_use] = masked_data[obs.n_freq/4:LONG(3./4.*obs.n_freq-1),*,pol_i]
   endfor
 
   return
