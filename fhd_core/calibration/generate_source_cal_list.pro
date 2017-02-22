@@ -173,7 +173,7 @@ IF n_use GT 0 THEN BEGIN
 ENDIF ELSE RETURN,source_comp_init(n_sources=0,freq=obs.freq_center)
 
 IF Keyword_Set(sidelobe_catalog) THEN $
-    source_list = source_list_append(obs,source_list,sidelobe_catalog,/exclude)
+    source_list = source_list_append(obs,source_list,sidelobe_catalog)
 
 IF Keyword_Set(max_sources) THEN IF N_Elements(source_list) GT max_sources $
     THEN source_list=source_list[0:max_sources-1]
