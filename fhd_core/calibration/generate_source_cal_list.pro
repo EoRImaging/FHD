@@ -88,7 +88,7 @@ IF Keyword_Set(model_visibilities) THEN BEGIN
             beam_arr=beam_arr, no_extend=no_extend,$
             max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,$
             no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
-            beam_model_threshold=beam_model_threshold,beam_threshold=beam_threshold,$
+            beam_model_threshold=beam_model_threshold,$
             preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra)
     ENDIF
 ENDIF ELSE BEGIN
@@ -101,7 +101,7 @@ ENDIF ELSE BEGIN
             calibration_spectral_index=calibration_spectral_index,beam_arr=beam_arr,$
             max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
             no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,beam_cal_threshold=beam_cal_threshold,$
-            delicate_calibration_catalog=delicate_calibration_catalog,beam_threshold=beam_threshold,$
+            delicate_calibration_catalog=delicate_calibration_catalog,$
             preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra)
     ENDIF
 ENDELSE
