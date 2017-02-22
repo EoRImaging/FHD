@@ -235,7 +235,11 @@ done
 ########End of submitting the firstpass job and waiting for output
 
 if [ $firstpass_only -eq 1 ]; then
-   exit 0
+	curdir=`pwd -P`
+	cd ${outdir}/fhd_${version}
+	uvconvert.py -o miriad
+	cd $curdir
+	exit 0
 fi
 
 
@@ -394,7 +398,7 @@ fi
 # Submit a job to convert model visibilities to uvfits and MIRIAD formats
 curdir=`pwd -P`
 cd ${outdir}/fhd_${version}
-uvconvert.py
+uvconvert.py -o miriad
 cd $curdir
 
 

@@ -12,6 +12,13 @@ args = Command_Line_Args(count=nargs)
 obs_id = args[0]
 output_directory = args[1]
 version = args[2]
+
+if nargs eq 4 then begin
+	; This will be used if being run in variation mode. For this, I'll need to set an obs_id_suffix
+	print, "Passed successfully"
+	param_set=args[3]
+endif
+
 cmd_args={version:version}
 
 if n_elements(obs_id) eq 0 then begin
@@ -89,6 +96,374 @@ endif else print, 'Using sources: ' + sources_file_name
 
 case version of
 
+   'sim_mwa_fornax_mwabeams': begin
+	dimension=1024
+	instrument='mwa'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=7000
+	dft_threshold=0
+	nfreq_avg=16
+   end
+
+   'sim_mwa_fornax_herabeams': begin
+	dimension=1024
+	instrument='paper'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=7000
+	dft_threshold=0
+	nfreq_avg=16
+   end
+
+
+   'sim_mwa_fornax_paperbeams': begin
+	dimension=1024
+	instrument='paper'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=7000
+	dft_threshold=0
+	nfreq_avg=16
+   end
+
+
+
+   'sim_ewbase_hera_psf-80': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	psf_resolution=80
+   end
+   'sim_ewbase_hera_psf-50': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	psf_resolution=50
+   end
+   'sim_ewbase_hera_psf-20': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	psf_resolution=20
+   end
+
+
+   'sim_ewbase_hera_psf-120': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	psf_resolution=120
+   end
+   'sim_ewbase_hera_psf-150': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	psf_resolution=150
+   end
+   'sim_ewbase_hera_psf-200': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	psf_resolution=200
+   end
+
+
+
+   'sim_ewbase_paper_0.08': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.08
+   end
+   'sim_ewbase_paper_0.07': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.07
+   end
+   'sim_ewbase_paper_0.06': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.06
+   end
+   'sim_ewbase_paper_0.5': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.5
+   end
+   'sim_ewbase_paper_0.2': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.2
+   end
+   'sim_ewbase_paper_0.1': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.1
+   end
+   'sim_ewbase_paper_0.05': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.05
+   end
+
+
+
+
+   'sim_ewbase_hera_v2_0.15': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.15
+   end
+   'sim_ewbase_hera_v2_0.09': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.09
+   end
+   'sim_ewbase_hera_v2_0.08': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.08
+   end
+   'sim_ewbase_hera_v2_0.07': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.07
+   end
+   'sim_ewbase_hera_v2_0.06': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.06
+   end
+   'sim_ewbase_hera_v2_0.5': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.5
+   end
+   'sim_ewbase_hera_v2_0.2': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.2
+   end
+   'sim_ewbase_hera_v2_0.1': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.1
+   end
+   'sim_ewbase_hera_v2_0.05': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	kbinsize=0.05
+   end
+
+
+
+
+
+   'sim_ewbase_hera_0.08': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.08
+   end
+   'sim_ewbase_hera_0.07': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.07
+   end
+   'sim_ewbase_hera_0.06': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.06
+   end
+   'sim_ewbase_hera_0.5': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.5
+   end
+   'sim_ewbase_hera_0.2': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.2
+   end
+   'sim_ewbase_hera_0.1': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.1
+   end
+   'sim_ewbase_hera_0.05': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.05
+   end
+
+
+   'sim_paper19_lowres': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=2.0
+   end
+
+
+   'sim_hera19_lidz_eor': begin
+	;First platinum file, compressed frequencies
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=0
+	dft_threshold=0
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+   end
+
+   'sim_hera19_eor': begin
+	;First platinum file, compressed frequencies
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=0
+	dft_threshold=0
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+   end
+
+   'sim_mwa_fornax_eor_herabeam': begin
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=0
+	dft_threshold=0
+	nfreq_avg=16
+	include_catalog_sources=0
+	eor_sim=1
+   end
+
+
+   'sim_mwa_fornax_eor_paperbeam': begin
+	dimension=1024
+	instrument='paper'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=0
+	dft_threshold=0
+	nfreq_avg=16
+	include_catalog_sources=0
+	eor_sim=1
+   end
+
+   'sim_hera19_hires': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	kbinsize=0.25
+   end
+
+   'sim_paper128': begin
+	dimension=1024
+	instrument='paper'
+	max_model_sources=7000
+	sources_file_name="GLEAM_EGC_catalog"
+	nfreq_avg=203
+   end
+
+   'sim_hera37': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name="GLEAM_EGC_catalog"
+	nfreq_avg=203
+   end
 
    'sim_hera19': begin
 	dimension=1024
@@ -129,10 +504,11 @@ case version of
    end
 
    'test': begin
-	include_catalog_sources=1
-	max_model_sources=10
+	include_catalog_sources=0
+	eor_sim=1
+	max_model_sources=0
 ;	max_calibration_sources=0
-	max_sources=0
+;	max_sources=0
 	instrument='mwa'
 	dft_threshold=1
 	dimension=512
@@ -140,6 +516,8 @@ case version of
    end
 
 endcase
+
+
 
 
 ;print, 'max_sources = '+ String(max_model_sources)
@@ -164,6 +542,15 @@ file_path_fhd = fhd_path_setup(sim_from_uvfits_filepath,output_directory=output_
 temp_path2 = file_path_fhd[0]
 undefine, file_path_fhd
 file_path_fhd = temp_path2
+
+
+if isa(param_set, /String) then begin
+	test=execute(param_set,1)
+	print, 'kbinsize set to ', kbinsize
+	param_set = StrJoin( StrSplit(param_set, '=', /Extract), '-')
+	file_path_fhd = file_path_fhd + "_" + param_set
+endif
+
 
 undefine,uvfits_version ; don't need these passed further
 undefine,uvfits_subversion
