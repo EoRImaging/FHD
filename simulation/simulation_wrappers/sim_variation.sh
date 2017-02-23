@@ -45,9 +45,9 @@ done
 shift $(($OPTIND - 1))
 
 #Specify the FHD file path that is used in IDL (generally specified in idl_startup)
-#FHDpath=$(idl -e 'print,rootdir("fhd")') ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
+FHDpath=$(idl -e 'print,rootdir("fhd")') ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 ## It's slow:
-FHDpath="/users/alanman/FHD/"
+#FHDpath="/users/alanman/FHD/"
 
 #Throw error if no obs_id.
 if [ -z ${obs_id} ]; then
@@ -66,7 +66,7 @@ fi
 #set default output directory if one is not supplied and update user
 if [ -z ${outdir} ]
 then
-    outdir=/gpfs/data/jpober/alanman/fhd_out
+    outdir=/gpfs/data/jpober/alanman/FHD_out
     echo using default output directory: $outdir
 else
     #strip the last / if present in output directory filepath

@@ -96,6 +96,24 @@ endif else print, 'Using sources: ' + sources_file_name
 
 case version of
 
+   'sim_ewbase_hera_kbin_v2': begin
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=7000
+	beam_model_version=2
+	nfreq_avg=203
+   end
+
+   'sim_ewbase_hera_kbin_v1': begin
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=7000
+	beam_model_version=2
+	nfreq_avg=203
+   end
+
    'sim_mwa_fornax_mwabeams': begin
 	dimension=1024
 	instrument='mwa'

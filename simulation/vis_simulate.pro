@@ -131,13 +131,13 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
           print, 'Generating model EoR cube'
           uv_locs = findgen(101)*4.-200.
           eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
-            delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky)
+            delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky);, /lidz)
           IF ~Keyword_Set(no_save) THEN save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, $
             freq_arr, /compress
             
           time0 = systime(1)
           eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
-            delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky)
+            delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky);, /lidz)
           time1 = systime(1)
           print, 'time for eor modelling (min): ' + number_formatter((time1-time0)/60.)
           if n_elements(model_uvf_cube) gt 0 then model_uvf_cube = model_uvf_cube + temporary(eor_uvf_cube) $
