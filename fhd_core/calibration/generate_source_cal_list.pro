@@ -73,11 +73,9 @@ ENDIF ELSE BEGIN
     IF N_Elements(beam_cal_threshold) GT 0 THEN beam_threshold=beam_cal_threshold
 ENDELSE
 
-beam_test_i=where(beam GT beam_threshold)
 beam_primary_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
-beam_test_mask=fltarr(dimension,elements) & beam_test_mask[beam_test_i]=1.
 beam_primary_mask=fltarr(dimension,elements) & beam_primary_mask[beam_primary_i]=1.
-beam_sidelobe_mask = beam_test_mask*(1 - beam_primary_mask)
+beam_sidelobe_mask = 1 - beam_primary_mask
 IF Keyword_Set(model_visibilities) THEN BEGIN
     IF N_Elements(model_subtract_sidelobe_catalog) GT 0 THEN BEGIN
         IF N_Elements(no_restrict_model_sources) EQ 0 THEN no_restrict_sources=no_restrict_sources_default $
@@ -88,7 +86,7 @@ IF Keyword_Set(model_visibilities) THEN BEGIN
             beam_arr=beam_arr, no_extend=no_extend,$
             max_model_sources=max_model_sources,model_flux_threshold=model_flux_threshold,$
             no_restrict_model_sources=no_restrict_model_sources,model_spectral_index=model_spectral_index,$
-            beam_model_threshold=beam_model_threshold,beam_threshold=beam_threshold,$
+            beam_model_threshold=beam_model_threshold,$
             preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra)
     ENDIF
 ENDIF ELSE BEGIN
@@ -101,7 +99,7 @@ ENDIF ELSE BEGIN
             calibration_spectral_index=calibration_spectral_index,beam_arr=beam_arr,$
             max_calibration_sources=max_calibration_sources,calibration_flux_threshold=calibration_flux_threshold,$
             no_restrict_cal_sources=no_restrict_cal_sources,no_extend=no_extend,beam_cal_threshold=beam_cal_threshold,$
-            delicate_calibration_catalog=delicate_calibration_catalog,beam_threshold=beam_threshold,$
+            delicate_calibration_catalog=delicate_calibration_catalog,$
             preserve_zero_spectral_indices=preserve_zero_spectral_indices,flatten_spectrum=flatten_spectrum,_Extra=extra)
     ENDIF
 ENDELSE
@@ -173,7 +171,7 @@ IF n_use GT 0 THEN BEGIN
 ENDIF ELSE RETURN,source_comp_init(n_sources=0,freq=obs.freq_center)
 
 IF Keyword_Set(sidelobe_catalog) THEN $
-    source_list = source_list_append(obs,source_list,sidelobe_catalog,/exclude)
+    source_list = source_list_append(obs,source_list,sidelobe_catalog)
 
 IF Keyword_Set(max_sources) THEN IF N_Elements(source_list) GT max_sources $
     THEN source_list=source_list[0:max_sources-1]

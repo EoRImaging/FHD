@@ -362,7 +362,7 @@ healpix_recalculate=0
   -*EoR_firstpass settings*: 0.5 <br />
   -*Default*: 0.5 if `FoV` not set !Q <br />
 
-**FoV**: the field of view in degrees, which determines the UV resolution given a defined number of pixels in `dimension`. If set to 0, then `kbinsize` determines the UV resolution. <br />
+**FoV**: A proxy for the field of view in degrees. `FoV` is actually used to determine `kbinsize`, which will be set to `!RaDeg/FoV`. This means that the pixel size at phase center times `dimension` is approximately equal to `FoV`, which is not equal to the actual field of view owing to larger pixel sizes away from phase center. If set to 0, then `kbinsize` determines the UV resolution. <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: not set <br />
 
