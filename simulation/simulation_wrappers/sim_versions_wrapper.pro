@@ -96,6 +96,25 @@ endif else print, 'Using sources: ' + sources_file_name
 
 case version of
 
+   'sim_ewbase_hera_nfreqavg': begin
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=7000
+	beam_model_version=2
+	kbinsize=0.5
+   end
+
+
+   'sim_ewbase_hera_kbin_v2': begin
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=7000
+	beam_model_version=2
+	nfreq_avg=203
+   end
+
    'sim_ewbase_hera_kbin_v2': begin
 	dimension=1024
 	instrument='hera'
@@ -143,262 +162,6 @@ case version of
    end
 
 
-
-   'sim_ewbase_hera_psf-80': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	psf_resolution=80
-   end
-   'sim_ewbase_hera_psf-50': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	psf_resolution=50
-   end
-   'sim_ewbase_hera_psf-20': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	psf_resolution=20
-   end
-
-
-   'sim_ewbase_hera_psf-120': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	psf_resolution=120
-   end
-   'sim_ewbase_hera_psf-150': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	psf_resolution=150
-   end
-   'sim_ewbase_hera_psf-200': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	psf_resolution=200
-   end
-
-
-
-   'sim_ewbase_paper_0.08': begin
-	dimension=1024
-	instrument='paper'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.08
-   end
-   'sim_ewbase_paper_0.07': begin
-	dimension=1024
-	instrument='paper'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.07
-   end
-   'sim_ewbase_paper_0.06': begin
-	dimension=1024
-	instrument='paper'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.06
-   end
-   'sim_ewbase_paper_0.5': begin
-	dimension=1024
-	instrument='paper'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.5
-   end
-   'sim_ewbase_paper_0.2': begin
-	dimension=1024
-	instrument='paper'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.2
-   end
-   'sim_ewbase_paper_0.1': begin
-	dimension=1024
-	instrument='paper'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.1
-   end
-   'sim_ewbase_paper_0.05': begin
-	dimension=1024
-	instrument='paper'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.05
-   end
-
-
-
-
-   'sim_ewbase_hera_v2_0.15': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.15
-   end
-   'sim_ewbase_hera_v2_0.09': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.09
-   end
-   'sim_ewbase_hera_v2_0.08': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.08
-   end
-   'sim_ewbase_hera_v2_0.07': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.07
-   end
-   'sim_ewbase_hera_v2_0.06': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.06
-   end
-   'sim_ewbase_hera_v2_0.5': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.5
-   end
-   'sim_ewbase_hera_v2_0.2': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.2
-   end
-   'sim_ewbase_hera_v2_0.1': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.1
-   end
-   'sim_ewbase_hera_v2_0.05': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	beam_model_version=2
-	kbinsize=0.05
-   end
-
-
-
-
-
-   'sim_ewbase_hera_0.08': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.08
-   end
-   'sim_ewbase_hera_0.07': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.07
-   end
-   'sim_ewbase_hera_0.06': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.06
-   end
-   'sim_ewbase_hera_0.5': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.5
-   end
-   'sim_ewbase_hera_0.2': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.2
-   end
-   'sim_ewbase_hera_0.1': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.1
-   end
-   'sim_ewbase_hera_0.05': begin
-	dimension=1024
-	instrument='hera'
-	max_model_sources=7000
-	sources_file_name='GLEAM_EGC_catalog'
-	nfreq_avg=203
-	kbinsize=0.05
-   end
 
 
    'sim_paper19_lowres': begin
@@ -481,6 +244,16 @@ case version of
 	max_model_sources=7000
 	sources_file_name="GLEAM_EGC_catalog"
 	nfreq_avg=203
+   end
+
+
+   'sim_hera19_v2': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
    end
 
    'sim_hera19': begin

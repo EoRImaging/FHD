@@ -1,7 +1,9 @@
 
+#nohup ./sim_variation.sh -t -f ewbase_28m_plat_0 -m 60G -w 04:30:00 -v 'sim_ewbase_hera_nfreqavg' -p 'nfreq_avg=203,101,50,25' > nohup_28m_ewbase_2.out &
 
-nohup ./sim_variation.sh -t -f ewbase_28m_plat_0 -m 50G -w 03:30:00 -v 'sim_ewbase_hera_kbin_v2' -p 'kbinsize=0.1,0.2,0.5' > nohup_28m_ewbase_1.out &
-nohup ./sim_variation.sh -t -f ewbase_28m_plat_0 -m 150G -w 03:30:00 -v 'sim_ewbase_hera_kbin_v2' -p 'kbinsize=0.05,0.06,0.07,0.08' > nohup_28m_ewbase_2.out &
+
+#nohup ./sim_variation.sh -t -f ewbase_28m_plat_0 -m 50G -w 03:30:00 -v 'sim_ewbase_hera_kbin_v2' -p 'kbinsize=0.1,0.2,0.5' > nohup_28m_ewbase_1.out &
+#nohup ./sim_variation.sh -t -f ewbase_28m_plat_0 -m 150G -w 03:30:00 -v 'sim_ewbase_hera_kbin_v2' -p 'kbinsize=0.05,0.06,0.07,0.08' > nohup_28m_ewbase_2.out &
 
 
 #nohup ./sim_pipe_slurm.sh -f EoR1_selected  -m 50G -w 6:30:00  -v 'sim_mwa_fornax_mwabeams' > nohup_mwa128.out &
@@ -75,6 +77,7 @@ nohup ./sim_variation.sh -t -f ewbase_28m_plat_0 -m 150G -w 03:30:00 -v 'sim_ewb
 #nohup ./sim_pipe_slurm.sh -t -s 'hera_platinum_0' -e 'hera_platinum_19' -f HeraPlatinumFake -m 30G  -w 03:30:00  -v 'sim_paper19' > nohup_paper19.out &
 #nohup ./sim_pipe_slurm.sh -t -s 'hera_platinum_0' -e 'hera_platinum_19' -f HeraPlatinumFake -m 30G  -w 03:30:00  -v 'sim_paper19_lowres' > nohup_paper19.out &
 #nohup ./sim_pipe_slurm.sh -t -s 'hera_platinum_0' -e 'hera_platinum_19' -f HeraPlatinumFake -m 30G  -w 03:30:00  -v 'sim_hera19' > nohup_hera19.out &
+nohup ./sim_pipe_slurm.sh -t -s 'hera_platinum_0' -e 'hera_platinum_19' -f obsid_list_files/HeraPlatinumFake -m 30G  -w 03:30:00  -v 'sim_hera19_v2' > nohup_hera19.out &
 
 #nohup ./sim_pipe_slurm.sh -t  -s 'hera37_platinum_0' -e 'hera37_platinum_19' -f Hera37PlatinumFake -m 30G  -w 03:30:00  -v 'sim_hera37' > nohup_hera37.out &
 
