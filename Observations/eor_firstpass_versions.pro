@@ -2027,6 +2027,21 @@ end
     'jonr_barebones_aws':begin
      end
    
+   ;;;;;;; Mike Wilensky's Stuff ;;;;;;;;
+   'mwilensky_test_3_6_2017' :begin
+    recalculate_all = 1
+      mapfn_recalculate = 1
+      uvfits_version = 5
+      uvfits_subversion = 1
+      saved_run_bp = 0
+      calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      undefine, diffuse_calibrate, diffuse_model
+      ring_radius = 0
+    end
+
 endcase
    
 if version EQ 'nb_pytest' then begin
