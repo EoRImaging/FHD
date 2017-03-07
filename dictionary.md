@@ -42,6 +42,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
   
+**bandpass_calibrate**: calculates a bandpass. This is an average of tiles by frequency by polarization (default), beamformer-to-LNA cable types by frequency by polarization (see `cable_bandpass_fit`), or over the whole season by pointing by by cable type by frequency by polarization via a read-in file (see `saved_run_bp`). If unset, no by-frequency bandpass is used. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 1 <br />  
+  
 **cable_bandpass_fit**: average the calibration solutions across tiles within a cable grouping for the particular instrument. <br />
   -*Dependency*: instrument_config/<instrument>_cable_length.txt <br />
   -*Turn off/on*: 0/1 <br />
@@ -85,6 +90,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 150 <br />
   -*Default*: 150 !Q <br />
+
+**cal_time_average**: performs a time average of the model/data visibilities over the time steps in the observation to reduce the number of equations that are used in the linear-least squares solver. This improves computation time, but will downweight longer baseline visibilities due to their faster phase variation. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: 1 <br />
   
 **calibrate_visibilities**: turn on or turn off calibration of the visibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur and an uncalibrated dirty cube is output. <br />
   -*Turn off/on*: 0/1 <br />
@@ -96,6 +106,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **calibration_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the calibration sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
+  
+**calibration_polyfit**: calculates a polynomial fit across the frequency band for the gain, and allows a cable reflection to be fit. The orders of the polynomial fit are determined by `cal_phase_degree_fit` and `cal_amp_degree_fit`. If unset, no polynomial fit or cable reflection fit are used. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 1 <br />  
   
 **diffuse_calibrate**: a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. <br />
   -*EoR_firstpass settings*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
@@ -296,6 +311,9 @@ no_restrict_cal_sources=1 <br />
 
 **time_cut**: seconds to cut (rounded up to next time integration step) from the beginning of the observation. Can also specify a negative time to cut off the end of the observation. Specify a vector to cut at both the start and end. <br />
   -*Default*: not set <br />
+  
+**transfer_weights**: transfers weights information from another run. Set to a filename of the flags save file in the vis_data directory.  <br />
+  -*Default*: not set <br />
 
 **unflag_all**: unflag all tiles/antennas and frequencies. While not practical for real data, this is useful for creating unflagged model visibilities for the input of an in-situ simulations. <br />
   -*Turn off/on*: 0/1 <br />
@@ -324,6 +342,9 @@ no_restrict_cal_sources=1 <br />
 
 **override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
   -*Default*: not set<br />
+  
+**time_offset**: time offset of phase center in seconds from start time of the observation. <br />
+  -*Default*: 0 second offset <br />
   
 **rephase_weights**: if turned off, target phase center is the pointing center (as defined by Cotter). Setting rephase_weights=0 overrides override_target_phasera and override_target_phasedec. <br />
   -*Turn off/on*: 0/1 <br />
