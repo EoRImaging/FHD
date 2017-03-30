@@ -43,10 +43,6 @@ IF Keyword_Set(no_frequency_flagging) OR Keyword_Set(unflag_all) THEN do_nothing
               (*vis_weight_ptr[pol_i])[channel_edge_flag,*]=0
               (*vis_weight_ptr[pol_i])[channel_center_flag,*]=0
           ENDFOR
-  ;        freq_use=(*obs.baseline_info).freq_use 
-  ;        freq_use[channel_edge_flag]=0
-  ;        freq_use[channel_center_flag]=0
-  ;        (*obs.baseline_info).freq_use=freq_use
       END
       'mwa':BEGIN
           freq_avg=Round(768./n_freq)
@@ -55,9 +51,6 @@ IF Keyword_Set(no_frequency_flagging) OR Keyword_Set(unflag_all) THEN do_nothing
           fine_channel_i=lindgen(n_freq) mod coarse_channel_width
           channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
           FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[channel_edge_flag,*]=0
-  ;        freq_use=(*obs.baseline_info).freq_use
-  ;        freq_use[channel_edge_flag]=0
-  ;        (*obs.baseline_info).freq_use=freq_use
       END
       ELSE:
   END
@@ -117,6 +110,22 @@ IF Keyword_Set(no_frequency_flagging) THEN BEGIN
     freq_use=Replicate(1,n_freq) 
 ENDIF ELSE freq_use=0>freq_use<1
 tile_use=0>tile_use<1
+
+;Time-based flagging
+time_use=(*obs.baseline_info).time_use
+n_time = obs.n_time
+IF Min(time_use) LE 0 THEN BEGIN
+    bin_offset=(*obs.baseline_info).bin_offset
+    bin_offset=[bin_offset,n_baselines]
+    time_bin=Lonarr(n_baselines)
+    FOR ti=0L,n_time-1 DO BEGIN
+        IF time_use[ti] LE 0 THEN BEGIN
+            FOR pol_i=0, n_pol-1 DO BEGIN
+                (*vis_weight_ptr[pol_i])[*, bin_offset[ti]:bin_offset[ti+1]-1] = 0
+            ENDFOR
+        ENDIF
+    ENDFOR
+ENDIF
 
 IF Keyword_Set(unflag_all) THEN BEGIN
     tile_use[*]=1
