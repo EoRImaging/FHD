@@ -58,6 +58,7 @@ ENDELSE
 
 tile_A_i=(*obs.baseline_info).tile_A-1
 tile_B_i=(*obs.baseline_info).tile_B-1
+n_baselines = N_Elements(tile_A_i)
 freq_use=Replicate(1,n_freq)
 tile_use=Replicate(1,n_tile)
 FOR pol_i=0,n_pol-1 DO BEGIN
