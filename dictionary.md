@@ -162,17 +162,25 @@ no_restrict_cal_sources=1 <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
   
-**deconvolution_filter**:  !Q <br />
+**deconvolution_filter**: filter applied to images from deconvolution. <br />
   -*EoR_firstpass settings*: filter_uv_uniform <br />
-  -*Default*: filter_uv_uniform !Q <br />
+  -*Default*: filter_uv_uniform <br />
+
+**deconvolution_horizon_threshold**: degrees above the horizon to exclude from deconvolution. <br />
+  -*Default*: 10 <br />
   
-**gain_factor**: a percent amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
-  -*EoR_firstpass settings*: <br />
-  -*Default*: !Q <br />
+**gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
+  -*EoR_firstpass settings*: not set<br />
+  -*Default*: 0.15 <br />
   
 **max_sources**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
   -*EoR_firstpass settings*: 20000 <br />
   -*Default*: 20000 !Q <br />
+  
+**reject_pol_sources**: rejects source candidates that have a high Stokes Q to Stokes I ratio.<br />
+  -*Needs updating*: not used in code! <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
   
 **return_decon_visibilities**: <br />
 
@@ -180,6 +188,10 @@ no_restrict_cal_sources=1 <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. `subtract_sidelobe_catalog` must also be set. <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
+
+**sigma_cut**: only include source components detected with signal to noise greater than the specified standard deviation. Also used when condensing components to sources after deconvolution. <br />
+  -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
+  -*Default*: 2 <br />
 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
@@ -267,6 +279,10 @@ no_restrict_cal_sources=1 <br />
   -*EoR_firstpass settings*: 1, which defaults to `EoR0_high_healpix_inds.idlsave`, `EoR0_low_healpix_inds.idlsave`, `EoR1_high_healpix_inds.idlsave`, or `EoR1_low_healpix_inds.idlsave` depending on obs parameters.<br />
   -*Default*: not set <br /> 
 
+**save_uvf**: saves the gridded uv plane as a function of frequency for dirty, model, weights, and variance cubes. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br /> 
+
 **save_visibililties**: save the calibrated data visibilities, the model visibilities, and the visibility flags. <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 1 <br />
@@ -299,6 +315,12 @@ no_restrict_cal_sources=1 <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />  
+
+**freq_end**: Frequency in MHz to end the observation. Flags frequencies greater than it.  <br />
+  -*Default*: not set<br /> 
+
+**freq_start**: Frequency in MHz to begin the observation. Flags frequencies less than it.  <br />
+  -*Default*: not set<br />  
 
 **no_calibration_frequency_flagging**: do not flag frequencies based off of zeroed calibration gains. <br />
   -*Needs updating*: might be better if changed to calibration_frequency_flagging and change the logic (avoid the double negative) !Q.
