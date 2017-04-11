@@ -39,7 +39,7 @@ if count_spw eq 1 then begin
   n_spw = sxpar(header,'naxis' + strn(spw_cnum))
   if n_spw gt 1 then message, 'uvfits files with more than one spectral window are not currently supported'
 endif
-  
+
 obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
 obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
 
