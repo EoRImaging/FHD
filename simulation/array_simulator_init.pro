@@ -1,4 +1,4 @@
-PRO array_simulator_init,obs,params,error=error,sim_from_uvfits_filepath=sim_from_uvfits_filepath,$
+PRO array_simulator_init,obs,params,layout,error=error,sim_from_uvfits_filepath=sim_from_uvfits_filepath,$
     sim_from_fhd_filepath=sim_from_fhd_filepath,simulate_header=simulate_header,$
     simulate_baselines=simulate_baselines, sim_baseline_time_inds=sim_baseline_time_inds, $
     instrument=instrument,n_pol=n_pol,_Extra=extra
@@ -18,7 +18,7 @@ PRO array_simulator_init,obs,params,error=error,sim_from_uvfits_filepath=sim_fro
     END
     Keyword_Set(sim_from_uvfits_filepath): BEGIN
       file_path_vis=sim_from_uvfits_filepath
-      uvfits_read,hdr_in,params_in,file_path_vis=file_path_vis,n_pol=0,silent=silent,_Extra=extra
+      uvfits_read,hdr_in,params_in,layout,file_path_vis=file_path_vis,n_pol=0,silent=silent,_Extra=extra
     END
     ELSE: ;do nothing
   ENDCASE

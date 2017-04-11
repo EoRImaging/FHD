@@ -42,7 +42,7 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
   ENDIF
   
   ;set up the obs and params structure. Will generate arbitary array layout if supplied
-  array_simulator_init,obs,params,error=error,instrument=instrument,n_pol=n_pol,_Extra=extra
+  array_simulator_init,obs,params,layout,error=error,instrument=instrument,n_pol=n_pol,_Extra=extra
   n_pol=obs.n_pol
   n_freq=obs.n_freq
   jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0)
@@ -67,7 +67,8 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
   ;save and output settings here for debugging, though they should be re-saved later in case things change
   fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
   fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-  fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
+  fhd_save_io,status_str,layout,var='layout',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+  fhd_log_settings,file_path_fhd,obs=obs,layout=layout,psf=psf,cal=cal
       
   IF Size(source_array,/type) EQ 8 THEN source_array=generate_source_cal_list(obs,psf,source_array,_Extra=extra)   
   vis_arr=vis_simulate(obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,vis_weights=vis_weights,$
@@ -90,7 +91,7 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
   fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
   fhd_save_io,status_str,skymodel,var='skymodel',/compress,file_path_fhd=file_path_fhd,_Extra=extra
   fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-  fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,skymodel=skymodel
+  fhd_log_settings,file_path_fhd,obs=obs,layout=layout,psf=psf,cal=cal,skymodel=skymodel
   
   IF obs.n_vis EQ 0 THEN BEGIN
     print,"All data flagged! Returning."
