@@ -50,7 +50,7 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     error=1
     return
   ENDIF
-  uvfits_read,hdr,params,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
+  uvfits_read,hdr,params,layout,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,_Extra=extra
   
   obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,_Extra=extra)
   n_pol=obs.n_pol
@@ -198,7 +198,8 @@ PRO fhd_sim,file_path_vis,export_images=export_images,cleanup=cleanup,recalculat
     
   fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
   fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-  fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal
+  fhd_save_io,status_str,layout,var='layout',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+  fhd_log_settings,file_path_fhd,obs=obs,layout=layout,psf=psf,cal=cal
   
   IF obs.n_vis EQ 0 THEN BEGIN
     print,"All data flagged! Returning."

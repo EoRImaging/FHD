@@ -38,7 +38,7 @@ IF size(status_str,/type) NE 8 THEN BEGIN
 ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
-IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,psf:0,antenna:0,jones:0,cal:0,skymodel:0,source_array:0,vis_weights:0,auto_corr:0,$
+IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,layout:0,psf:0,antenna:0,jones:0,cal:0,skymodel:0,source_array:0,vis_weights:0,auto_corr:0,$
     vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),vis_count:0,$
     map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4),complete:0}
 IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str', compatibility_mode = compatibility_mode)
@@ -57,6 +57,7 @@ CASE var_name OF ;listed in order typically generated
     'hdr':BEGIN status_use.hdr=1 & path_add='_hdr' & subdir='metadata'& END
     'obs':BEGIN status_use.obs=1 & path_add='_obs' & subdir='metadata'& END
     'params':BEGIN status_use.params=1 & path_add='_params' & subdir='metadata'& END
+    'layout':BEGIN status_use.layout=1 & path_add='_layout' & subdir='metadata'& END
     'psf':BEGIN status_use.psf=1 & path_add='_beams' & subdir='beams'& END
     'antenna':BEGIN status_use.antenna=1 & path_add='_antenna' & subdir='beams'& END
     'jones':BEGIN status_use.jones=1 & path_add='_jones' & subdir='beams'& END

@@ -39,11 +39,12 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
     
-    uvfits_read,hdr,params,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,error=error,_Extra=extra
+    uvfits_read,hdr,params,layout,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,error=error,_Extra=extra
     IF Keyword_Set(error) THEN BEGIN
       print,"Error occured while reading uvfits data. Returning."
       RETURN
     ENDIF
+    fhd_save_io,status_str,layout,var='layout',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save layout structure right away for debugging. Will be overwritten a few times before the end
     
     ;In situ simulations given input model visibilities as dirty visilibilities
     If keyword_set(in_situ_sim_input) then $
@@ -105,7 +106,7 @@ IF data_flag LE 0 THEN BEGIN
     
     ;print informational messages
     obs_status,obs
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'  ;write preliminary settings file for debugging, in case later steps crash
+    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,layout=layout,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'  ;write preliminary settings file for debugging, in case later steps crash
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
       calibrate_visibilities=1
@@ -172,7 +173,8 @@ IF data_flag LE 0 THEN BEGIN
     IF ~Keyword_Set(silent) THEN flag_status,obs
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,skymodel=skymodel,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
+    fhd_save_io,status_str,layout,var='layout',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+    fhd_log_settings,file_path_fhd,obs=obs,layout=layout,psf=psf,cal=cal,antenna=antenna,skymodel=skymodel,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
     undefine_fhd,antenna
     auto_corr=vis_extract_autocorr(obs,status_str,vis_arr=vis_arr,file_path_fhd=file_path_fhd,_Extra=extra)
     
@@ -250,7 +252,7 @@ IF Keyword_Set(production) THEN BEGIN
 ENDIF
 
 undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,vis_weights,vis_model_arr
-undefine_fhd,obs,cal,jones,psf,antenna,fhd_params,skymodel,skymodel_cal,skymodel_update
+undefine_fhd,obs,cal,jones,layout,psf,antenna,fhd_params,skymodel,skymodel_cal,skymodel_update
 
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
