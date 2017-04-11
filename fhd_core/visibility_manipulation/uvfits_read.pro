@@ -1,4 +1,4 @@
-PRO uvfits_read,hdr,params,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,$
+PRO uvfits_read,hdr,params,layout,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,$
     restore_vis_savefile=restore_vis_savefile,reorder_visibilities=reorder_visibilities,$
     vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,error=error,$
     uvfits_spectral_dimension=uvfits_spectral_dimension,_Extra=extra
@@ -24,7 +24,8 @@ ENDIF ELSE BEGIN
     ENDIF
     
     t_readfits=Systime(1)
-    data_struct=mrdfits(file_path_vis,0,data_header0,/silent)
+    lun = fxposit(file_path_vis, 0)
+    data_struct=mrdfits(lun,0,data_header0,/silent)
     hdr=vis_header_extract(data_header0, params = data_struct.params,error=error,_Extra=extra)    
     IF Keyword_Set(error) THEN RETURN
     IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
@@ -94,5 +95,16 @@ ENDIF ELSE BEGIN
         IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
     ENDIF
     
+    ;; now read extensions one by one until we find the antenna table
+    t_read_ant=Systime(1)
+    ext_name = ''
+    while ext_name ne 'AIPS AN' do begin
+        ext_data = mrdfits(lun, 0, ext_header)
+        ext_name=strtrim(sxpar(ext_header, 'extname'))
+    endwhile
+    layout = fhd_struct_init_layout(ext_header, ext_data)
+    t_read_ant=Systime(1)-t_read_ant
+    print,"Time finding and reading antenna table in UVFITS file and extracting header: "+Strn(t_read_ant)
+        
 ENDELSE    
 END

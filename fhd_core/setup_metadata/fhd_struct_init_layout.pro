@@ -1,0 +1,269 @@
+function fhd_struct_init_layout, ant_table_header, ant_table_data, $
+    array_center = array_center, coordinate_frame = coordinate_frame, $
+    gst0 = gst0, earth_degpd = earth_degpd, ref_date = ref_date, time_system = time_system, $
+    dut1 = dut1, diff_utc = diff_utc, nleap_sec = nleap_sec, $
+    pol_type = pol_type, n_pol_cal_params = n_pol_cal_params, n_antenna = n_antenna, $
+    antenna_names = antenna_names, antenna_numbers = antenna_numbers, antenna_coords = antenna_coords, $
+    mount_type = mount_type, axis_offset = axis_offset, pola = pola, pola_orientation = pola_orientation, $
+    pola_cal_params = pola_cal_params, polb = polb, polb_orientation = polb_orientation, polb_cal_params = polb_cal_params
+    
+    
+  if n_elements(ant_table_header) ne 0 then begin
+    ;; first get values out of header
+    keyword_list = list()
+    for si = 0, n_elements(ant_table_header)-1 do begin
+      keyword_list.add, strlowcase(strtrim(strmid(ant_table_header[si], 0, 8)))
+    endfor
+    if keyword_list.count('arrayx') gt 0 and keyword_list.count('arrayy') gt 0 and keyword_list.count('arrayz') gt 0 then $
+      array_center = [sxpar(ant_table_header,'arrayx'), sxpar(ant_table_header,'arrayy'), sxpar(ant_table_header,'arrayz')]
+      
+    if keyword_list.count('frame') gt 0 then coordinate_frame = sxpar(ant_table_header,'frame')
+    if keyword_list.count('gstiao') gt 0 then gst0 = sxpar(ant_table_header,'gstiao')
+    if keyword_list.count('degpdy') gt 0 then earth_degpd = sxpar(ant_table_header,'degpdy')
+    if keyword_list.count('rdate') gt 0 then ref_date = sxpar(ant_table_header,'rdate')
+    if keyword_list.count('timesys') gt 0 then begin
+      time_system = sxpar(ant_table_header,'timesys')
+    endif else if keyword_list.count('timsys') gt 0 then begin
+      time_system = sxpar(ant_table_header,'timsys')
+    endif
+    if keyword_list.count('ut1utc') gt 0 then dut1 = sxpar(ant_table_header,'ut1utc')
+    if keyword_list.count('datutc') gt 0 then diff_utc = sxpar(ant_table_header,'datutc')
+    if n_elements(time_system) gt 0 then begin
+      if time_system eq 'IAT' then begin
+        nleap_sec = diff_utc
+      endif
+    endif
+    ;; 'iatutc' is a non-standard fits keyword, but cotter provides it and it contains the
+    ;; number of leap seconds, so we capture it here
+    if n_elements(nleap_sec) eq 0 then begin
+      if keyword_list.count('iatutc') gt 0 then nleap_sec = sxpar(ant_table_header,'iatutc')
+    endif
+    if keyword_list.count('poltype') gt 0 then pol_type = sxpar(ant_table_header,'poltype')
+    if keyword_list.count('nopcal') gt 0 then n_pol_cal_params = sxpar(ant_table_header,'nopcal')
+    if keyword_list.count('naxis2') gt 0 then n_antenna = sxpar(ant_table_header,'naxis2')
+    
+    ;; now get values out of table data
+    tag_list = list(tag_names(ant_table_data), /extract)
+    if tag_list.count('anname') gt 0 then antenna_names = ant_table_data.anname
+    if tag_list.count('nosta') gt 0 then antenna_numbers = ant_table_data.nosta
+    if tag_list.count('stabxyz') gt 0 then antenna_coords = ant_table_data.stabxyz
+    if tag_list.count('mntsta') gt 0 then mount_type = ant_table_data.mntsta
+    if tag_list.count('staxof') gt 0 then axis_offset = ant_table_data.staxof
+    if tag_list.count('poltya') gt 0 then pola = ant_table_data.poltya
+    if tag_list.count('polaa') gt 0 then pola_orientation = ant_table_data.polaa
+    if tag_list.count('polcala') gt 0 then pola_cal_params = ant_table_data.polcala
+    if tag_list.count('poltyb') gt 0 then polb = ant_table_data.poltyb
+    if tag_list.count('polab') gt 0 then polb_orientation = ant_table_data.polab
+    if tag_list.count('polcalb') gt 0 then polb_cal_params = ant_table_data.polcalb
+    
+  endif
+  
+  
+  ;; if no center given, assume MWA center (Tingay et al. 2013, converted from lat/lon using pyuvdata)
+  mwa_center = [-2559454.07880307,  5095372.14368305, -2849057.18534633]
+  if n_elements(array_center) EQ 0 then begin
+    array_center=mwa_center
+    coordinate_frame = 'ITRF'
+  endif else if n_elements(array_center) NE 3 then message, 'array_center must be a 3 element array.'
+  if n_elements(coordinate_frame) EQ 0 then begin
+    ;; cotter often leaves this header value out, so test if the array center is close to the
+    ;; mwa_center. if it is we're in ITRF.
+    if max(abs(array_center - mwa_center)) lt 10 then begin
+      coordinate_frame = 'ITRF'
+    endif else begin
+      coordinate_frame = '????'
+    endelse
+  endif
+  ;; gst0 is the Greenwich sidereal time at midnight on reference date
+  if n_elements(gst0) EQ 0 then gst0=-1 ;; set to something that should be obvious it was a default
+  ;; earth_degpd is the rotation rate of the earth in degrees per day on the reference date for the array
+  if n_elements(earth_degpd) EQ 0 then earth_degpd=360.985 ;; this is approximately correct
+  ;; ref_date is the reference date on which other parameters apply
+  if n_elements(ref_date) EQ 0 then ref_date='-1' ;; set to something that should be obvious it was a default
+  if n_elements(time_system) EQ 0 then time_system='UTC' ;; assume UTC
+  if n_elements(dut1) EQ 0 then dut1=0 ;; google it. uvfits calls this UT1UTC
+  if n_elements(diff_utc) EQ 0 then diff_utc=0 ;; difference between the time_system and UTC
+  if n_elements(nleap_sec) EQ 0 then begin
+    if time_systemp eq 'IAT' then begin
+      nleap_sec=diff_utc
+    endif else begin
+      nleap_sec=-1 ;; set to something that should be obvious it was a default
+    endelse
+  endif
+  
+  ;; pol_type options are (from AIPS memo 117):
+  ;; ’APPROX’: Linear approximation for circular feeds
+  ;; ’X-Y LIN’: Linear approximation for linear feeds
+  ;; ’ORI-ELP’: Orientation and ellipticity
+  ;; ’VLBI’: VLBI solution form
+  if n_elements(pol_type) EQ 0 then pol_type='X-Y LIN'
+  ;; the antenna table may carry info about polarization characteristics of the feed if known.
+  ;; n_pol_cal_params is the number of such parameters, 0 if no info, 2 if there is info.
+  ;; if there is info, the info is in pola_cal_params & polb_cal_params.
+  if n_elements(n_pol_cal_params) EQ 0 then n_pol_cal_params=0
+  if n_elements(n_antenna) EQ 0 then n_antenna=128
+  
+  
+  if n_elements(antenna_names) EQ 0 then begin
+    antenna_names=string(indgen(n_antenna))
+  endif else begin
+    if n_elements(antenna_names) ne n_antenna then message, 'length of antenna_names must match n_antenna'
+  endelse
+  if n_elements(antenna_numbers) EQ 0 then begin
+    antenna_numbers=indgen(n_antenna)
+  endif else begin
+    if n_elements(antenna_numbers) ne n_antenna then message, 'length of antenna_names must match n_antenna'
+  endelse
+  ;; antenna_coords are relative to the array center in the coordinate_frame
+  if n_elements(antenna_coords) EQ 0 then begin
+    antenna_coords=fltarr(3, n_antenna)
+  endif else begin
+    sz = size(antenna_coords)
+    if sz[0] ne 2 or sz[1] ne 3 or sz[2] ne n_antenna then message, 'antenna_coords must have shape (3, n_antenna)'
+  endelse
+  
+  ;; mount_type codes (from AIPS memo 117): 0 for alt-azimuth, 1 for equatorial, 2 for orbiting, 3 for X-Y,
+  ;; 4 for right-handed Naismith, and 5 for left-handed Naismith are defined. Aperture arrays, which are
+  ;; steered electronically rather than mechanically, are assigned code 6.
+  if n_elements(mount_type) EQ 0 then begin
+    mount_type=0
+  endif else begin
+    if n_elements(mount_type) gt 1 then begin
+      if n_elements(mount_type) ne n_antenna then message, 'mount_type must be a single integer or an array the length of n_antenna'
+      if min(mount_type) eq max(mount_type) then mount_type = mount_type[0]
+    endif
+  endelse
+  ;; from AIPS memo 117:
+  ;; The axis_offset is the position of the antenna phase reference point in the Yoke,
+  ;; relative to the antenna pedestal reference point. This is an antenna characteristic
+  ;; that should be unchanged when the antenna is moved to a new station. The X component
+  ;; of the offset is horizontal along the elevation axis and has no effect on
+  ;; interferometer phase. The Z component is vertical and approximately the nominal height
+  ;; of the elevation axis above ground for the antenna’s mount. Small variations from the
+  ;; nominal value have the same phase effect as the Z component of position, so they can
+  ;; be ignored. The value of the STAXOF column gives the value of the Y component of the
+  ;; axis offset. That component is horizontal and perpendicular to the elevation axis.
+  ;; It produces an elevation-dependent interferometer phase term and, thus, has to be
+  ;; accurately calibrated.
+  if n_elements(axis_offset) EQ 0 then begin
+    axis_offset=0
+  endif else begin
+    if n_elements(axis_offset) gt 1 then begin
+      if n_elements(axis_offset) ne n_antenna then message, 'axis_offset must be a single integer or an array the length of n_antenna'
+      if min(axis_offset) eq max(axis_offset) then axis_offset = axis_offset[0]
+    endif
+  endelse
+  
+  ;; pola and polb are the feed polarization of feed A & B respectively. Options include:
+  ;; A,B: 'X', 'Y'
+  ;; A,B: 'R', 'L'
+  ;; maybe others if feeds are not orthogonal (?)
+  if n_elements(pola) EQ 0 then begin
+    pola='X'
+  endif else begin
+    if n_elements(pola) gt 1 then begin
+      if n_elements(pola) ne n_antenna then message, 'pola must be a single integer or an array the length of n_antenna'
+      wh_diff = where(pola ne pola[0], count_diff)
+      if count_diff eq 0 then pola = pola[0]
+    endif
+  endelse
+  ;; pola/polb_orientation are the orientations given in degrees (unclear where this is measured from in AIPS memo 117)
+  if n_elements(pola_orientation) EQ 0 then begin
+    pola_orientation=0
+  endif else begin
+    if n_elements(pola_orientation) gt 1 then begin
+      if n_elements(pola_orientation) ne n_antenna then message, 'pola_orientation must be a single integer or an array the length of n_antenna'
+      if min(pola_orientation) eq max(pola_orientation) then pola_orientation = pola_orientation[0]
+    endif
+  endelse
+  ;; pola/polb_cal_params are the polarization characteristics of the feed and should have shape (n_pol_cal_params, n_antenna)
+  ;; if n_pol_cal_params eq 2, the meanings depend on pol_type. if the value of the POLTYPE keyword is ’APPROX’ or ’X-Y LIN’,
+  ;; then the first parameter shall be the real part of the leakage term and the second shall be the imaginary part of the
+  ;; leakage term. if the value of the POLTYPE keyword is ’OTI-ELP’, then the first parameter shall be the orientation and
+  ;; the second shall be the ellipticity and both shall be given in radians.
+  if n_elements(pola_cal_params) EQ 0 then begin
+    if n_pol_cal_params gt 0 then begin
+      pola_cal_params=fltarr(n_pol_cal_params, n_antenna)
+    endif else begin
+      pola_cal_params=0
+    endelse
+  endif else begin
+    if n_pol_cal_params lt 2 then begin
+      if n_elements(pola_cal_params) gt 1 then begin
+        if n_elements(pola_cal_params) ne n_antenna then $
+          message, 'n_pol_cal_params is 0 or 1, so pola_cal_params must be a single integer or an array the length of n_antenna'
+        if min(pola_cal_params) eq max(pola_cal_params) then pola_cal_params = pola_cal_params[0]
+      endif
+    endif else begin
+      sz = size(pola_cal_params)
+      if sz[0] gt 1 then begin
+        if sz[1] ne n_pol_cal_params or sz[2] ne n_antenna then message, 'pola_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
+        n_diff = 0
+        for pi = 0, n_pol_cal_params-1 do begin
+          wh_diff = where(pola_cal_params[i,*] ne pola_cal_params[i, 0], count_diff)
+          n_diff += count_diff
+        endfor
+        if n_diff eq 0 then pola_cal_params = pola_cal_params[*, 0]
+      endif else begin
+        if sz[1] ne n_pol_cal_params then message, 'pola_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
+      endelse
+    endelse
+  endelse
+  
+  ;; same set of things for polb
+  if n_elements(polb) EQ 0 then begin
+    polb='Y'
+  endif else begin
+    if n_elements(polb) gt 1 then begin
+      if n_elements(polb) ne n_antenna then message, 'polb must be a single integer or an array the length of n_antenna'
+      wh_diff = where(polb ne polb[0], count_diff)
+      if count_diff eq 0 then polb = polb[0]
+    endif
+  endelse
+  if n_elements(polb_orientation) EQ 0 then begin
+    polb_orientation=90
+  endif else begin
+    if n_elements(polb_orientation) gt 1 then begin
+      if n_elements(polb_orientation) ne n_antenna then message, 'polb_orientation must be a single integer or an array the length of n_antenna'
+      if min(polb_orientation) eq max(polb_orientation) then polb_orientation = polb_orientation[0]
+    endif
+  endelse
+  if n_elements(polb_cal_params) EQ 0 then begin
+    if n_pol_cal_params gt 0 then begin
+      polb_cal_params=fltarr(n_pol_cal_params, n_antenna)
+    endif else begin
+      polb_cal_params=0
+    endelse
+  endif else begin
+    if n_pol_cal_params lt 2 then begin
+      if n_elements(polb_cal_params) gt 1 then begin
+        if n_elements(polb_cal_params) ne n_antenna then $
+          message, 'n_pol_cal_params is 0 or 1, so polb_cal_params must be a single integer or an array the length of n_antenna'
+        if min(polb_cal_params) eq max(polb_cal_params) then polb_cal_params = polb_cal_params[0]
+      endif
+    endif else begin
+      sz = size(polb_cal_params)
+      if sz[0] gt 1 then begin
+        if sz[1] ne n_pol_cal_params or sz[2] ne n_antenna then message, 'polb_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
+        n_diff = 0
+        for pi = 0, n_pol_cal_params-1 do begin
+          wh_diff = where(polb_cal_params[i,*] ne polb_cal_params[i, 0], count_diff)
+          n_diff += count_diff
+        endfor
+        if n_diff eq 0 then polb_cal_params = polb_cal_params[*, 0]
+      endif else begin
+        if sz[1] ne n_pol_cal_params then message, 'polb_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
+      endelse
+    endelse
+  endelse
+  
+  layout={array_center: array_center, coordinate_frame: coordinate_frame, $
+    gst0: gst0, earth_degpd: earth_degpd, ref_date: ref_date, time_system: time_system, $
+    dut1: dut1, diff_utc: diff_utc, nleap_sec: nleap_sec, $
+    pol_type: pol_type, n_pol_cal_params: n_pol_cal_params, n_antenna: n_antenna, $
+    antenna_names: antenna_names, antenna_numbers: antenna_numbers, antenna_coords: antenna_coords, $
+    mount_type: mount_type, axis_offset: axis_offset, pola: pola, pola_orientation: pola_orientation, $
+    pola_cal_params: pola_cal_params, polb: polb, polb_orientation: polb_orientation, polb_cal_params: polb_cal_params}
+    
+  return, layout
+end
