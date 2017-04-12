@@ -1,3 +1,37 @@
+function set_pol_cal_params, pol_cal_params, name, n_pol_cal_params, n_antenna
+  if n_elements(pol_cal_params) EQ 0 then begin
+    if n_pol_cal_params gt 1 then begin
+      pol_cal_params=fltarr(n_pol_cal_params)
+    endif else begin
+      pol_cal_params=0.
+    endelse
+  endif else begin
+    if n_pol_cal_params lt 2 then begin
+      if n_elements(pol_cal_params) gt 1 then begin
+        if n_elements(pol_cal_params) ne n_antenna then $
+          message, 'n_pol_cal_params is 0 or 1, so pol' + name + '_cal_params must be a single integer or an array the length of n_antenna'
+        if min(pol_cal_params) eq max(pol_cal_params) then pol_cal_params = pol_cal_params[0]
+      endif
+    endif else begin
+      sz = size(pol_cal_params)
+      if sz[0] gt 1 then begin
+        if sz[1] ne n_pol_cal_params or sz[2] ne n_antenna then $
+          message, 'pol' + name + '_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
+        n_diff = 0
+        for pi = 0, n_pol_cal_params-1 do begin
+          wh_diff = where(pol_cal_params[pi, *] ne pol_cal_params[pi, 0], count_diff)
+          n_diff += count_diff
+        endfor
+        if n_diff eq 0 then pol_cal_params = pol_cal_params[*, 0]
+      endif else begin
+        if sz[1] ne n_pol_cal_params then $
+          message, 'pol' + name + '_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
+      endelse
+    endelse
+  endelse
+  return, pol_cal_params
+end
+
 function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     array_center = array_center, coordinate_frame = coordinate_frame, $
     gst0 = gst0, earth_degpd = earth_degpd, ref_date = ref_date, time_system = time_system, $
@@ -54,7 +88,7 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
       n_pol_cal_params = sxpar(ant_table_header,'nopcal')
     if n_elements(n_antenna) eq 0 and keyword_list.count('naxis2') gt 0 then $
       n_antenna = sxpar(ant_table_header,'naxis2')
-    
+      
     ;; now get values out of table data
     tag_list = list(strlowcase(tag_names(ant_table_data)), /extract)
     if n_elements(pol_type) eq 0 and tag_list.count('anname') gt 0 then $
@@ -79,7 +113,7 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
       polb_orientation = ant_table_data.polab
     if n_elements(pol_type) eq 0 and tag_list.count('polcalb') gt 0 then $
       polb_cal_params = ant_table_data.polcalb
-    
+      
   endif
   
   ;; if no center given, assume MWA center (Tingay et al. 2013, converted from lat/lon using pyuvdata)
@@ -130,19 +164,22 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
   if n_elements(antenna_names) EQ 0 then begin
     antenna_names=string(indgen(n_antenna))
   endif else begin
-    if n_elements(antenna_names) ne n_antenna then message, 'length of antenna_names must match n_antenna'
+    if n_elements(antenna_names) ne n_antenna then $
+      message, 'length of antenna_names must match n_antenna'
   endelse
   if n_elements(antenna_numbers) EQ 0 then begin
     antenna_numbers=indgen(n_antenna)
   endif else begin
-    if n_elements(antenna_numbers) ne n_antenna then message, 'length of antenna_names must match n_antenna'
+    if n_elements(antenna_numbers) ne n_antenna then $
+      message, 'length of antenna_names must match n_antenna'
   endelse
   ;; antenna_coords are relative to the array center in the coordinate_frame
   if n_elements(antenna_coords) EQ 0 then begin
     antenna_coords=fltarr(3, n_antenna)
   endif else begin
     sz = size(antenna_coords)
-    if sz[0] ne 2 or sz[1] ne 3 or sz[2] ne n_antenna then message, 'antenna_coords must have shape (3, n_antenna)'
+    if sz[0] ne 2 or sz[1] ne 3 or sz[2] ne n_antenna then $
+      message, 'antenna_coords must have shape (3, n_antenna)'
   endelse
   
   ;; mount_type codes (from AIPS memo 117): 0 for alt-azimuth, 1 for equatorial, 2 for orbiting, 3 for X-Y,
@@ -152,7 +189,8 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     mount_type=0
   endif else begin
     if n_elements(mount_type) gt 1 then begin
-      if n_elements(mount_type) ne n_antenna then message, 'mount_type must be a single integer or an array the length of n_antenna'
+      if n_elements(mount_type) ne n_antenna then $
+        message, 'mount_type must be a single integer or an array the length of n_antenna'
       if min(mount_type) eq max(mount_type) then mount_type = mount_type[0]
     endif
   endelse
@@ -172,7 +210,8 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     axis_offset=0
   endif else begin
     if n_elements(axis_offset) gt 1 then begin
-      if n_elements(axis_offset) ne n_antenna then message, 'axis_offset must be a single integer or an array the length of n_antenna'
+      if n_elements(axis_offset) ne n_antenna then $
+        message, 'axis_offset must be a single integer or an array the length of n_antenna'
       if min(axis_offset) eq max(axis_offset) then axis_offset = axis_offset[0]
     endif
   endelse
@@ -185,17 +224,19 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     pola='X'
   endif else begin
     if n_elements(pola) gt 1 then begin
-      if n_elements(pola) ne n_antenna then message, 'pola must be a single integer or an array the length of n_antenna'
+      if n_elements(pola) ne n_antenna then $
+        message, 'pola must be a single string or an array the length of n_antenna'
       wh_diff = where(pola ne pola[0], count_diff)
       if count_diff eq 0 then pola = pola[0]
     endif
   endelse
   ;; pola/polb_orientation are the orientations given in degrees (unclear where this is measured from in AIPS memo 117)
   if n_elements(pola_orientation) EQ 0 then begin
-    pola_orientation=0
+    pola_orientation=0.
   endif else begin
     if n_elements(pola_orientation) gt 1 then begin
-      if n_elements(pola_orientation) ne n_antenna then message, 'pola_orientation must be a single integer or an array the length of n_antenna'
+      if n_elements(pola_orientation) ne n_antenna then $
+        message, 'pola_orientation must be a single integer or an array the length of n_antenna'
       if min(pola_orientation) eq max(pola_orientation) then pola_orientation = pola_orientation[0]
     endif
   endelse
@@ -204,82 +245,31 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
   ;; then the first parameter shall be the real part of the leakage term and the second shall be the imaginary part of the
   ;; leakage term. if the value of the POLTYPE keyword is ’OTI-ELP’, then the first parameter shall be the orientation and
   ;; the second shall be the ellipticity and both shall be given in radians.
-  if n_elements(pola_cal_params) EQ 0 then begin
-    if n_pol_cal_params gt 0 then begin
-      pola_cal_params=fltarr(n_pol_cal_params, n_antenna)
-    endif else begin
-      pola_cal_params=0
-    endelse
-  endif else begin
-    if n_pol_cal_params lt 2 then begin
-      if n_elements(pola_cal_params) gt 1 then begin
-        if n_elements(pola_cal_params) ne n_antenna then $
-          message, 'n_pol_cal_params is 0 or 1, so pola_cal_params must be a single integer or an array the length of n_antenna'
-        if min(pola_cal_params) eq max(pola_cal_params) then pola_cal_params = pola_cal_params[0]
-      endif
-    endif else begin
-      sz = size(pola_cal_params)
-      if sz[0] gt 1 then begin
-        if sz[1] ne n_pol_cal_params or sz[2] ne n_antenna then message, 'pola_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
-        n_diff = 0
-        for pi = 0, n_pol_cal_params-1 do begin
-          wh_diff = where(pola_cal_params[pi, *] ne pola_cal_params[pi, 0], count_diff)
-          n_diff += count_diff
-        endfor
-        if n_diff eq 0 then pola_cal_params = pola_cal_params[*, 0]
-      endif else begin
-        if sz[1] ne n_pol_cal_params then message, 'pola_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
-      endelse
-    endelse
-  endelse
+  pola_cal_params = set_pol_cal_params(pola_cal_params, 'a', n_pol_cal_params, n_antenna)
   
   ;; same set of things for polb
   if n_elements(polb) EQ 0 then begin
     polb='Y'
   endif else begin
     if n_elements(polb) gt 1 then begin
-      if n_elements(polb) ne n_antenna then message, 'polb must be a single integer or an array the length of n_antenna'
+      if n_elements(polb) ne n_antenna then $
+        message, 'polb must be a single string or an array the length of n_antenna'
       wh_diff = where(polb ne polb[0], count_diff)
       if count_diff eq 0 then polb = polb[0]
     endif
   endelse
   if n_elements(polb_orientation) EQ 0 then begin
-    polb_orientation=90
+    polb_orientation=90.
   endif else begin
     if n_elements(polb_orientation) gt 1 then begin
-      if n_elements(polb_orientation) ne n_antenna then message, 'polb_orientation must be a single integer or an array the length of n_antenna'
+      if n_elements(polb_orientation) ne n_antenna then $
+        message, 'polb_orientation must be a single integer or an array the length of n_antenna'
       if min(polb_orientation) eq max(polb_orientation) then polb_orientation = polb_orientation[0]
     endif
   endelse
-  if n_elements(polb_cal_params) EQ 0 then begin
-    if n_pol_cal_params gt 0 then begin
-      polb_cal_params=fltarr(n_pol_cal_params, n_antenna)
-    endif else begin
-      polb_cal_params=0
-    endelse
-  endif else begin
-    if n_pol_cal_params lt 2 then begin
-      if n_elements(polb_cal_params) gt 1 then begin
-        if n_elements(polb_cal_params) ne n_antenna then $
-          message, 'n_pol_cal_params is 0 or 1, so polb_cal_params must be a single integer or an array the length of n_antenna'
-        if min(polb_cal_params) eq max(polb_cal_params) then polb_cal_params = polb_cal_params[0]
-      endif
-    endif else begin
-      sz = size(polb_cal_params)
-      if sz[0] gt 1 then begin
-        if sz[1] ne n_pol_cal_params or sz[2] ne n_antenna then message, 'polb_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
-        n_diff = 0
-        for pi = 0, n_pol_cal_params-1 do begin
-          wh_diff = where(polb_cal_params[pi, *] ne polb_cal_params[pi, 0], count_diff)
-          n_diff += count_diff
-        endfor
-        if n_diff eq 0 then polb_cal_params = polb_cal_params[*, 0]
-      endif else begin
-        if sz[1] ne n_pol_cal_params then message, 'polb_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
-      endelse
-    endelse
-  endelse
-  
+  polb_cal_params = set_pol_cal_params(polb_cal_params, 'b', n_pol_cal_params, n_antenna)
+
+
   layout={array_center: array_center, coordinate_frame: coordinate_frame, $
     gst0: gst0, earth_degpd: earth_degpd, ref_date: ref_date, time_system: time_system, $
     dut1: dut1, diff_utc: diff_utc, nleap_sec: nleap_sec, $
