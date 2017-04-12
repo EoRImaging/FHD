@@ -43,7 +43,7 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     if keyword_list.count('naxis2') gt 0 then n_antenna = sxpar(ant_table_header,'naxis2')
     
     ;; now get values out of table data
-    tag_list = list(tag_names(ant_table_data), /extract)
+    tag_list = list(strlowcase(tag_names(ant_table_data)), /extract)
     if tag_list.count('anname') gt 0 then antenna_names = ant_table_data.anname
     if tag_list.count('nosta') gt 0 then antenna_numbers = ant_table_data.nosta
     if tag_list.count('stabxyz') gt 0 then antenna_coords = ant_table_data.stabxyz
@@ -56,8 +56,7 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     if tag_list.count('polab') gt 0 then polb_orientation = ant_table_data.polab
     if tag_list.count('polcalb') gt 0 then polb_cal_params = ant_table_data.polcalb
     
-  endif
-  
+  endif  
   
   ;; if no center given, assume MWA center (Tingay et al. 2013, converted from lat/lon using pyuvdata)
   mwa_center = [-2559454.07880307,  5095372.14368305, -2849057.18534633]
@@ -200,7 +199,7 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
         if sz[1] ne n_pol_cal_params or sz[2] ne n_antenna then message, 'pola_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
         n_diff = 0
         for pi = 0, n_pol_cal_params-1 do begin
-          wh_diff = where(pola_cal_params[i,*] ne pola_cal_params[i, 0], count_diff)
+          wh_diff = where(pola_cal_params[pi, *] ne pola_cal_params[pi, 0], count_diff)
           n_diff += count_diff
         endfor
         if n_diff eq 0 then pola_cal_params = pola_cal_params[*, 0]
@@ -247,7 +246,7 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
         if sz[1] ne n_pol_cal_params or sz[2] ne n_antenna then message, 'polb_cal_params must have shape (n_pol_cal_params) or (n_pol_cal_params, n_antenna)'
         n_diff = 0
         for pi = 0, n_pol_cal_params-1 do begin
-          wh_diff = where(polb_cal_params[i,*] ne polb_cal_params[i, 0], count_diff)
+          wh_diff = where(polb_cal_params[pi, *] ne polb_cal_params[pi, 0], count_diff)
           n_diff += count_diff
         endfor
         if n_diff eq 0 then polb_cal_params = polb_cal_params[*, 0]
