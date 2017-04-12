@@ -102,7 +102,7 @@ ENDIF ELSE BEGIN
         ext_data = mrdfits(lun, 0, ext_header)
         ext_name=strtrim(sxpar(ext_header, 'extname'))
     endwhile
-    layout = fhd_struct_init_layout(ext_header, ext_data)
+    layout = fhd_struct_init_layout(ext_header, ext_data,_Extra=extra)
     t_read_ant=Systime(1)-t_read_ant
     print,"Time finding and reading antenna table in UVFITS file and extracting header: "+Strn(t_read_ant)
         
