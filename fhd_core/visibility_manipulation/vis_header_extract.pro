@@ -33,6 +33,13 @@ if count_ra eq 1 then ra_cnum = wh_ra[0]+1 else message, 'RA CTYPE not found'
 wh_dec = where(param_names eq 'dec', count_dec)
 if count_dec eq 1 then dec_cnum = wh_dec[0]+1 else message, 'DEC CTYPE not found'
 
+wh_spw = where(param_names eq 'if', count_spw)
+if count_spw eq 1 then begin
+  spw_cnum = wh_spw[0]+1
+  n_spw = sxpar(header,'naxis' + strn(spw_cnum))
+  if n_spw gt 1 then message, 'uvfits files with more than one spectral window are not currently supported'
+endif
+  
 obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
 obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
 
