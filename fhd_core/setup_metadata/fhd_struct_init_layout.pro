@@ -91,27 +91,27 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
       
     ;; now get values out of table data
     tag_list = list(strlowcase(tag_names(ant_table_data)), /extract)
-    if n_elements(pol_type) eq 0 and tag_list.count('anname') gt 0 then $
+    if n_elements(antenna_names) eq 0 and tag_list.count('anname') gt 0 then $
       antenna_names = ant_table_data.anname
-    if n_elements(pol_type) eq 0 and tag_list.count('nosta') gt 0 then $
+    if n_elements(antenna_numbers) eq 0 and tag_list.count('nosta') gt 0 then $
       antenna_numbers = ant_table_data.nosta
-    if n_elements(pol_type) eq 0 and tag_list.count('stabxyz') gt 0 then $
+    if n_elements(antenna_coords) eq 0 and tag_list.count('stabxyz') gt 0 then $
       antenna_coords = ant_table_data.stabxyz
-    if n_elements(pol_type) eq 0 and tag_list.count('mntsta') gt 0 then $
+    if n_elements(mount_type) eq 0 and tag_list.count('mntsta') gt 0 then $
       mount_type = ant_table_data.mntsta
-    if n_elements(pol_type) eq 0 and tag_list.count('staxof') gt 0 then $
+    if n_elements(axis_offset) eq 0 and tag_list.count('staxof') gt 0 then $
       axis_offset = ant_table_data.staxof
-    if n_elements(pol_type) eq 0 and tag_list.count('poltya') gt 0 then $
+    if n_elements(pola) eq 0 and tag_list.count('poltya') gt 0 then $
       pola = ant_table_data.poltya
-    if n_elements(pol_type) eq 0 and tag_list.count('polaa') gt 0 then $
+    if n_elements(pola_orientation) eq 0 and tag_list.count('polaa') gt 0 then $
       pola_orientation = ant_table_data.polaa
-    if n_elements(pol_type) eq 0 and tag_list.count('polcala') gt 0 then $
+    if n_elements(pola_cal_params) eq 0 and tag_list.count('polcala') gt 0 then $
       pola_cal_params = ant_table_data.polcala
-    if n_elements(pol_type) eq 0 and tag_list.count('poltyb') gt 0 then $
+    if n_elements(polb) eq 0 and tag_list.count('poltyb') gt 0 then $
       polb = ant_table_data.poltyb
-    if n_elements(pol_type) eq 0 and tag_list.count('polab') gt 0 then $
+    if n_elements(polb_orientation) eq 0 and tag_list.count('polab') gt 0 then $
       polb_orientation = ant_table_data.polab
-    if n_elements(pol_type) eq 0 and tag_list.count('polcalb') gt 0 then $
+    if n_elements(polb_cal_params) eq 0 and tag_list.count('polcalb') gt 0 then $
       polb_cal_params = ant_table_data.polcalb
       
   endif
