@@ -27,6 +27,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br />
 
+**interpolate_beam_threshold**: set to smoothly interpolate the UV beam model to zero (in amplitude) beyond the clip set by `beam_mask_threshold`. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: Not set (same as 0) <br />
+
 **nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. <br />
   -*EoR_firstpass settings*: 16 <br />
   -*Default*: 1 <br />
@@ -139,6 +143,20 @@ no_restrict_cal_sources=1 <br />
 
 **include_catalog_sources**: !Q <br />
    -*Default* : 0 <br />
+
+## Debug
+WARNING! Options in this section may change without notice, and should never be turned on by default. <br />
+
+# Beam debugging options
+
+**debug_beam_clip_grow**: Set to grow the UV beam mask by one full-resolution pixel in all directions, after applying the clip set by `beam_mask_threshold` <br />
+  -*Turn on*:: 1
+
+**debug_clip_beam_mask**: Set to mask pixels in the UV beam model if the pixel would be masked for any super-resolution offset. <br />
+  -*Turn on*: 1
+
+**debug_beam_clip_floor**: Set to subtract the minimum non-zero value of the beam model from all pixels, and rescale to preserve normalization. <br />
+  -*Turn on*: 1
 
 ## Deconvolution
 
