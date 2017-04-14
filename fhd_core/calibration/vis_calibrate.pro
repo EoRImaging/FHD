@@ -158,7 +158,9 @@ IF N_Elements(calibration_flag_iterate) EQ 0 THEN calibration_flag_iterate=0
 ;    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 
 t2=0
-cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
+cal_base=cal
+cal_base.gain = Pointer_copy(cal.gain)
+cal_base.skymodel = Pointer_copy(cal.skymodel)
 FOR iter=0,calibration_flag_iterate DO BEGIN
     t2_a=Systime(1)
     IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
@@ -172,7 +174,9 @@ FOR iter=0,calibration_flag_iterate DO BEGIN
 
 ENDFOR
 undefine_fhd,cal_base
-cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
+cal_base=cal
+cal_base.gain = Pointer_copy(cal.gain)
+cal_base.skymodel = Pointer_copy(cal.skymodel)
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
     cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
@@ -202,7 +206,7 @@ plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_E
 IF Keyword_Set(calibration_auto_fit) THEN cal=cal_auto
 vis_cal=vis_calibration_apply(vis_ptr,cal)
 cal.gain_residual=cal_res.gain
-;undefine_fhd,cal_base
+undefine_fhd,cal_base
 
 IF Keyword_Set(vis_baseline_hist) THEN $
     vis_baseline_hist,obs,params,vis_arr=vis_cal,vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd
