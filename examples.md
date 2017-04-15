@@ -3,13 +3,13 @@ FHD is very flexible, and has been designed to encompass a wide variety of instr
 
 ## Accuracy vs. Speed <br />
 
-###Fast Holographic Deconvolution <br />
+### Fast Holographic Deconvolution <br />
 
-###Firstpass -- New name forthcoming <br />
+### Firstpass -- New name forthcoming <br />
 
 ## Instruments <br />
 
-###MWA <br />
+### MWA <br />
 
 **Put in standard keywords with explanations and outputs from NBarry** <br />
 
@@ -70,13 +70,62 @@ dimension = 2048 <br />
 FoV = 0 <br />
 
 
-###MWA Phase 2 <br />
+### MWA Phase 2 <br />
 
 **In progress testing by Wenyang**
 
-###PAPER <br />
+### PAPER imaging array<br />
 
-**In progress testing by Josh**
+- `instrument = 'paper'`<br />
+Specify the paper array<br />
+- `calibration_auto_initialize=1`<br />
+The default set of 1's is not a good estimate to begin the calibration convergence loop. Scaled auto-correlations must be used<br />
+- `ref_antenna = 1`<br />
+Since many antennas are flagged in this data set, make sure an unflagged antenna is specified for the reference<br />
+- `time_offset=5.*60.`<br />
+Time offset of phase center from start time. PAPER data are phased to 5 minutes after the start time.<br />
+- `hera_inds = [80,104,96,64,53,31,65,88,9,20,89,43,105,22,81,10,72,112,97]+1`<br />
+Specify indices of HERA antennas for flagging array. Antennas are indexed from 1. (Not a FHD keyword)<br />
+- `paper_inds = [1,3,4,13,15,16,23,26,37,38,41,42,46,47,49,50,56,54,58,59,61,63,66,67,70,71,73,74,82,83,87,90,98,99,103,106,124,123,122,121,120,119,118,117,0,14,44,113,126,127]+1`<br />
+Specify indices of PAPER imaging antennas. Antennas are indexed from 1. (Not a FHD keyword)<br />
+- `paper_hex = [2,21,45,17,68,62,116,125,84,100,85,57,69,40,101,102,114,115,86]+1`<br />
+Specify indices of PAPER hex antennas. Antennas are indexed from 1. (Not a FHD keyword)<br />
+- `paper_pol = [25,19,48,29,24,28,55,34,27,51,35,75,18,76,5,77,32,78,30,79,33,91,6,92,52,93,7,94,12,95,8,107,11,108,36,109,60,110,39,111]+1`<br />
+Specify indices of PAPER polarization antennas. Antennas are indexed from 1. (Not a FHD keyword)<br />
+- `tile_flag_list = [paper_hex,paper_pol,hera_inds]`<br />
+Specify antennas to flag, leaving only the PAPER imaging antennas<br />
+- `cal_time_average=0`<br />
+Use all times in the calibration loop. Currently not default, and is technically more correct.<br />
+- `nfreq_avg=1024`<br />
+There are 1024 frequency channels. Only create one beam for the full set for testing purposes.<br />
+- `calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')`<br />
+Use GLEAM as the calibration/model catalog. Needs updating so that the proper frequency band is used for the catalog (currently is set at 181MHz for the center of the band, future band will depend on the frequency subset chosen).<br />
+- `cable_bandpass_fit=0`<br />
+Cable averaging keyword is only for MWA at the moment.<br />
+- `saved_run_bp=0`<br />
+Saved bandpass keyword is only for MWA at the moment.<br />
+- `cal_mode_fit=0`<br />
+Cable reflection keyword is only for MWA at the moment.<br />
+- `max_calibration_sources=500`<br />
+Cut out dim sources from the calibration/model for quicker testing.<br />
+- `undefine, diffuse_calibrate,diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct`<br />
+Remove the default settings for the diffuse model and other cable reflection keywords since they are MWA specific.<br />
+- `beam_offset_time=300`<br />
+Move the beam calculation to be 300 seconds into the observation to be centered<br />
+- `flag_calibration=0`<br />
+Turn off extra flagging for testing purposes.<br />
+- `min_cal_baseline = 10`<br />
+Set the minimum calibration baseline to 10 wavelengths. This will definitely be in a region where a diffuse model is required for precision astrophysics, but there are very few baselines to calibrate on at the moment.<br />
+- `calibration_polyfit=0`<br />
+Remove typical calibration procedures; use per-freq calibration for testing purposes.<br />
+- `bandpass_calibrate=0`<br />
+Remove typical calibration procedures; use per-freq calibration for testing purposes.<br />
+- `flag_visibilities=1`<br />
+Unknown if needed. Was hoping to remove wild baselines.<br />
+- `dimension=4096`<br />
+Unknown if needed. Was concerned about long baselines being removed since there are so few to begin with.<br />
+- `elements=4096`<br />
+Unknown if needed. Was concerned about long baselines being removed since there are so few to begin with.<br />
 
 ###HERA <br />
 
