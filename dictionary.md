@@ -5,7 +5,14 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 ## Beam
 
-**beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989 (!Q Ian, dipole looks flipped from what Sutinjo has in paper?), 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there is currently one option: !Q. <br />
+**beam_cal_threshold**: the fractional power response relative to the peak from which to include sources for calibration.<br />
+  -*Default*: 0.05, or 0.01 if `allow_sidelobe_sources` set <br />
+
+**beam_model_threshold**: the fractional power response relative to the peak from which to include sources for the model.<br />
+  -*Dependency*: `model_visibilities` must be set <br />
+  -*Default*: 0.05, or 0.01 if `allow_sidelobe_sources` set <br />
+
+**beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989, 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there is currently two options: !Q. <br />
   -*EoR_firstpass settings*: 2 <br />
   -*Default*: 1 <br />
   -*MWA range*: 0, 1 (or anything else captured in the `else` statement), 2 <br />
@@ -52,7 +59,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 1 <br />  
   
 **cable_bandpass_fit**: average the calibration solutions across tiles within a cable grouping for the particular instrument. <br />
-  -*Dependency*: instrument_config/<instrument>_cable_length.txt <br />
+  -*Dependency*: instrument_config/\<instrument\>_cable_length.txt <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
@@ -97,7 +104,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **cal_time_average**: performs a time average of the model/data visibilities over the time steps in the observation to reduce the number of equations that are used in the linear-least squares solver. This improves computation time, but will downweight longer baseline visibilities due to their faster phase variation. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: 1 <br />
   
 **calibrate_visibilities**: turn on or turn off calibration of the visibilities. If turned on, calibration of the dirty, modelling, and subtraction to make a residual occurs. Otherwise, none of these occur and an uncalibrated dirty cube is output. <br />
@@ -127,13 +133,12 @@ This is a work in progress; please add keywords as you find them in alphabetical
   
 **saved_run_bp**: use a saved bandpass for bandpass calibration. Reads in a text file saved in instrument config which is dependent on pointing number at the moment. Needs updating. <br />
   -*Needs updating*: File name needs more information to descriminate between instruments and bands. Need to have capability to read in saved bandpasses not dependent on cable type.<br />
-  -*Dependency*: instrument_config/<pointing number>_bandpass.txt <br />
+  -*Dependency*: instrument_config/\<pointing number\>_bandpass.txt <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: undefined (off) <br />
 
 **max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: equal to max_baseline <br />
   
 **min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
@@ -145,7 +150,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
 
-**transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a <obsid>_cal.sav is located, the full file path with the obsid (file/path/<obsid>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, or the full file path to a npy file. (Which formats is the gain array expected in for these file types? !Q). Note that this will calibrate, but not generate a model. <br />
+**transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, or the full file path to a npy file. (Which formats is the gain array expected in for these file types? !Q). Note that this will calibrate, but not generate a model. <br />
   -*Needs updating*: will not generate a model for subtraction in the current setup. <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
@@ -162,7 +167,7 @@ no_restrict_cal_sources=1 <br />
 ## Debug
 WARNING! Options in this section may change without notice, and should never be turned on by default. <br />
 
-# Beam debugging options
+### Beam debugging options
 
 **debug_beam_clip_grow**: Set to grow the UV beam mask by one full-resolution pixel in all directions, after applying the clip set by `beam_mask_threshold` <br />
   -*Turn on*:: 1
@@ -177,7 +182,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **deconvolve**: run fast holgraphic deconvolution. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
   
 **deconvolution_filter**: filter applied to images from deconvolution. <br />
@@ -188,7 +192,6 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 10 <br />
   
 **gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
-  -*EoR_firstpass settings*: not set<br />
   -*Default*: 0.15 <br />
   
 **max_sources**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
@@ -223,21 +226,17 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **enhance_eor**: input a multiplicative factor to boost the signal of the EoR in the dirty input visibilities. <br />
   -*Dependency*: `eor_savefile` must be set to an EoR sav file path in order for the keyword to take effect. <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set<br />
 
 **eor_savefile**: input a path to a savefile of EoR visibilities to include the EoR in the dirty input visibilities. <br />
   -*Dependency*: `in_situ_input` must be set to 1 or a sav file path in order for the keyword to take effect. <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set<br />
 
 **in_situ_sim_input**: run an in situ simulation, where model visibilities are made and input as the dirty visibilities (see Barry et. al. 2016 for more information on use-cases). Setting to 1 forces the visibilities to be made within the current run. Setting to a sav file path inputs model visibilities from a previous run, which is the preferred method since that run is independently documented.<br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set<br />
   
 **sim_noise**: add a uncorrelated thermal noise to the input dirty visibilities from a specified sav file, or create them for the run. <br />
   -*Dependency*: `in_situ_input` must be set to 1 or a sav file path in order for the keyword to take effect. <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set<br />
   
 
@@ -251,7 +250,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **max_model_sources**: limits the number of sources used in the model. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. If `return_cal_visibilities` is set, then the final model will include all calibration sources and all model sources (duplicates are caught and included only once). <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: All valid sources are used. !Q <br />
 
 **model_catalog_file_path**: a catalog of sources to be used to make model visibilities for subtraction. <br />
@@ -261,12 +259,10 @@ WARNING! Options in this section may change without notice, and should never be 
   
 **model_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the model sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect.  <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 
 **model_visibilities**: make visibilities for the subtraction model separately from the model used in calibration. This is useful if the user sets keywords to make the subtraction model different from the model used in calibration. If not set, the model used for calibration is the same as the subtraction model. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
 
 ## Export
@@ -308,7 +304,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **silent**: do not print messages. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 probably <br /> 
   
 **split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. <br />
@@ -323,7 +318,6 @@ WARNING! Options in this section may change without notice, and should never be 
 **flag_calibration**: flags antennas based on calculations in `vis_calibration_flag.pro`.<br />
   -*Needs update*: keyword check both in general_obs and vis_calibrate !Q <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: 1 <br />  
 
 **flag_dead_dipoles**: flag the dead dipoles listed in `<instrument>_dead_dipole_list.txt` for the golden set of Aug 23, 2013. This greatly increases memory usage due to the creation of many separate tile beams. <br />
@@ -331,7 +325,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **flag_visibilities**: flag visibilities based on calculations in `vis_flag.pro`. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />  
 
 **freq_end**: Frequency in MHz to end the observation. Flags frequencies greater than it.  <br />
@@ -357,7 +350,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **unflag_all**: unflag all tiles/antennas and frequencies. While not practical for real data, this is useful for creating unflagged model visibilities for the input of an in-situ simulations. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
 
 ## Instrument Parameters
@@ -395,7 +387,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **uvfits_version**: the version number of the uvfits. `eor_firstpass_versions.pro` will use this keyword in conjuction with `uvfits_subversion` to query the mwa_qc database to find the location of the uvfits file on the MIT cluster. See `uvfits_subversion` for the current uvfits versions available. <br />
   -*Range*: currently 3 to 5 <br />
-  -*EoR_firstpass settings*: 4 <br />
+  -*EoR_firstpass settings*: 5 <br />
 
 **uvfits_subversion**: the subversion number of the uvfits. `eor_firstpass_versions.pro` will use this keyword in conjuction with `uvfits_version` to query the mwa_qc database to find the location of the uvfits file on the MIT cluster. Here are the available uvfits versions, ordered by version number and subversion number: 3,3 was used to test compressed fits; 3,4 was a rerun of 3,1 with a newer version of cotter before that version was recorded; 4,0 went back to old settings for an industrial run; 4,1 was the same as 4,0 but for running on compressed gpubox files; 5,0 was a test to phase all obs to zenith (phasing needs to be added per obs currently); 5,1 incorperates flag files and runs cotter without the bandpass applied, with all the other default settings. Many of these uvfits versions were removed for space reasons, and so only 4,1 and 5,0 are reliable.<br />
   -*Range*: currently 0 to 4 <br />
@@ -450,8 +442,6 @@ vis_baseline_hist=1
 calibration_visibilities_subtract=0
 
 n_avg=2
-ps_kbinsize=0.5
-ps_kspan=600.
 image_filter_fn='filter_uv_uniform'
 deconvolution_filter='filter_uv_uniform'
 
