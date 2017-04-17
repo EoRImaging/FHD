@@ -158,9 +158,6 @@ IF N_Elements(calibration_flag_iterate) EQ 0 THEN calibration_flag_iterate=0
 ;    IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 
 t2=0
-cal_base=cal
-cal_base.gain = Pointer_copy(cal.gain)
-cal_base.skymodel = Pointer_copy(cal.skymodel)
 FOR iter=0,calibration_flag_iterate DO BEGIN
     t2_a=Systime(1)
     IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
@@ -173,10 +170,7 @@ FOR iter=0,calibration_flag_iterate DO BEGIN
     IF Keyword_Set(n_tile_cut) THEN BREAK
 
 ENDFOR
-undefine_fhd,cal_base
-cal_base=cal
-cal_base.gain = Pointer_copy(cal.gain)
-cal_base.skymodel = Pointer_copy(cal.skymodel)
+cal_base=Pointer_copy(cal)
 
 IF Keyword_Set(bandpass_calibrate) THEN BEGIN
     cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
