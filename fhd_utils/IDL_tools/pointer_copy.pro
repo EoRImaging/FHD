@@ -3,12 +3,13 @@ FUNCTION pointer_copy,param
 type=size(param,/type)
 CASE type OF
     8: BEGIN ;structure type
+        param_out = param
         FOR t_i=0L,N_tags(param)-1 DO BEGIN
             type1=size(param.(t_i),/type)
             IF (type1 EQ 8) OR (type1 EQ 10) THEN BEGIN
-                param_out=pointer_copy(param.(t_i))
+                param_out.(t_i)=pointer_copy(param.(t_i))
             ENDIF ELSE BEGIN
-                param_out = param
+                param_out.(t_i) = param.(t_i)
             ENDELSE
         ENDFOR
     END
@@ -16,7 +17,7 @@ CASE type OF
         IF N_Elements(param) EQ 1 THEN param_out=Ptr_new() ELSE param_out=Ptrarr(size(param,/dimension))
         ptr_i=where(Ptr_valid(param),n_valid)
         FOR p_i=0L,n_valid-1 DO BEGIN
-            param_out[p_i] = Ptr_new(pointer_copy(*param[ptr_i[p_i]]))
+            param_out[ptr_i[p_i]] = Ptr_new(pointer_copy(*param[ptr_i[p_i]]))
         ENDFOR
     END
     ELSE: param_out = param
