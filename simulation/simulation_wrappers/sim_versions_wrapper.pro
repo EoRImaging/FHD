@@ -88,13 +88,53 @@ if n_elements(version) eq 0 then begin ;version provides a name for the output s
 endif
 
 ;;** Setting up the source_array structure that contains the sources to be used in the simulation
-if n_elements(sources_file_name) eq 0 then begin 
-    print, 'Please supply the name of an input file with sources to simulate.'
-    return
-endif else print, 'Using sources: ' + sources_file_name
+;if n_elements(sources_file_name) eq 0 then begin 
+;    print, 'Please supply the name of an input file with sources to simulate.'
+;    return
+;endif else print, 'Using sources: ' + sources_file_name
 
 
 case version of
+
+
+   'sim_hera19_fine_uncomp_1hour': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=10000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=1024
+	beam_model_version=2
+;	set_sidelobe_keywords=1
+   end
+
+   'sim_mwa_diffuse': begin
+	diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+	dimension=2048
+	instrument='mwa'
+        include_catalog_sources=0
+;	sources_file_name='GLEAM_EGC_catalog'
+;	max_model_sources=0
+    end
+
+   'sim_hera19_v2_sidelobes': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	set_sidelobe_keywords=1
+   end
+
+
+   'sim_ewbase_hera_diffuse': begin
+	diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+	dimension=1024
+	instrument='hera'
+;	sources_file_name='GLEAM_EGC_catalog'
+	beam_model_version=2
+;	max_model_sources=0
+    end
 
    'sim_ewbase_hera_nfreqavg': begin
 	dimension=1024
