@@ -64,19 +64,21 @@ ENDIF
 IF Keyword_Set(ad2xy) THEN BEGIN    
     ra_arr_new = ra_arr
     dec_arr_new = dec_arr
+    i_nan=where(Finite(ra_arr_new,/nan),n_nan,complement=i_use)
+    Eq2Hor,ra_arr_new[i_use], dec_arr_new[i_use], JDate, alt_arr, az_arr, nutate=precess_reverse,precess=precess_reverse,aberration=precess_reverse, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+    horizon_i = where(alt_arr LE 0, n_horizon, complement=h_use)
+    IF n_horizon GT 0 THEN BEGIN
+        alt_arr = alt_arr[h_use]
+        az_arr = az_arr[h_use]
+        i_use = i_use[h_use]
+        IF n_nan GT 0 THEN i_nan = [i_nan, horizon_i] ELSE i_nan = horizon_i
+        ra_arr_new[horizon_i] = !Values.F_NAN
+        dec_arr_new[horizon_i] = !Values.F_NAN
+    ENDIF
     IF ~Keyword_Set(ignore_refraction) THEN BEGIN
-        i_nan=where(Finite(ra_arr_new,/nan),n_nan,complement=i_use)
-        IF n_nan EQ 0 THEN BEGIN
-            Eq2Hor,ra_arr_new, dec_arr_new, JDate, alt_arr, az_arr, nutate=precess_reverse,precess=precess_reverse,aberration=precess_reverse, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed, _Extra=extra)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_arr_new, dec_arr_new, precess=precess_forward, nutate=precess_forward,aberration=precess_forward, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-        ENDIF ELSE BEGIN
-            ra_vals=ra_arr_new[i_use] & dec_vals=dec_arr_new[i_use]
-            Eq2Hor,ra_vals, dec_vals, JDate, alt_arr, az_arr, nutate=precess_reverse,precess=precess_reverse,aberration=precess_reverse, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-            alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed, _Extra=extra)
-            Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=precess_forward, nutate=precess_forward,aberration=precess_forward, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-            ra_arr_new[i_use]=ra_vals & dec_arr_new[i_use]=dec_vals
-        ENDELSE
+        alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed, _Extra=extra)
+        Hor2Eq, alt_arr_new, az_arr, JDate, ra_vals, dec_vals, precess=precess_forward, nutate=precess_forward,aberration=precess_forward, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+        ra_arr_new[i_use]=ra_vals & dec_arr_new[i_use]=dec_vals
     ENDIF
     ad2xy, ra_arr_new, dec_arr_new, astr, x_arr, y_arr
 ENDIF
