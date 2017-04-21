@@ -7,24 +7,24 @@ FUNCTION source_array_import,file_path=file_path,no_extend=no_extend,$
     flux_U_column=flux_U_column,flux_V_column=flux_V_column,_Extra=extra
 
 textfast,source_array,header,first_line=1,file_path=file_path,/read
-IF N_Elements(id_column) EQ 0 THEN id_column=(where(header EQ '#id'))[0]
-IF N_Elements(x_column) EQ 0 THEN x_column=(where(header EQ 'x_loc'))[0]
-IF N_Elements(y_column) EQ 0 THEN y_column=(where(header EQ 'y_loc'))[0]
-IF N_Elements(ra_column) EQ 0 THEN ra_column=(where(header EQ 'RA'))[0]
-IF N_Elements(dec_column) EQ 0 THEN dec_column=(where(header EQ 'Dec'))[0]
-IF N_Elements(ston_column) EQ 0 THEN ston_column=(where(header EQ 'S/N'))[0]
-IF N_Elements(frequency_column) EQ 0 THEN frequency_column=(where(header EQ 'frequency'))[0]
-IF N_Elements(flag_column) EQ 0 THEN flag_column = (where(header EQ 'Flag'))[0]
-IF N_Elements(parent_column) EQ 0 THEN parent_column = (where(header EQ 'Parent'))[0]
+id_column = header_column(header, column_use=id_column, colname='#id')
+x_column = header_column(header, column_use=x_column, colname='x_loc')
+y_column = header_column(header, column_use=y_column, colname='y_loc')
+ra_column = header_column(header, column_use=ra_column, colname='RA')
+dec_column = header_column(header, column_use=dec_column, colname='Dec')
+ston_column = header_column(header, column_use=ston_column, colname='S/N')
+frequency_column = header_column(header, column_use=frequency_column, colname='frequency')
+flag_column = header_column(header, column_use=flag_column, colname='Flag')
+parent_column = header_column(header, column_use=parent_column, colname='Parent')
 
-IF N_Elements(flux_xx_column) EQ 0 THEN flux_xx_column=(where(header EQ 'XX_apparent'))[0]
-IF N_Elements(flux_yy_column) EQ 0 THEN flux_yy_column=(where(header EQ 'YY_apparent'))[0]
-IF N_Elements(flux_xy_column) EQ 0 THEN flux_xy_column=(where(header EQ 'XY_apparent'))[0]
-IF N_Elements(flux_yx_column) EQ 0 THEN flux_yx_column=(where(header EQ 'YX_apparent'))[0]
-IF N_Elements(flux_I_column) EQ 0 THEN flux_I_column=(where(header EQ 'Stokes_I'))[0]
-IF N_Elements(flux_Q_column) EQ 0 THEN flux_Q_column=(where(header EQ 'Stokes_Q'))[0]
-IF N_Elements(flux_U_column) EQ 0 THEN flux_U_column=(where(header EQ 'Stokes_U'))[0]
-IF N_Elements(flux_V_column) EQ 0 THEN flux_V_column=(where(header EQ 'Stokes_V'))[0]
+flux_xx_column = header_column(header, column_use=flux_xx_column, colname='XX_apparent')
+flux_yy_column = header_column(header, column_use=flux_yy_column, colname='YY_apparent')
+flux_xy_column = header_column(header, column_use=flux_xy_column, colname='XY_apparent')
+flux_yx_column = header_column(header, column_use=flux_yx_column, colname='YX_apparent')
+flux_I_column = header_column(header, column_use=flux_I_column, colname='Stokes_I')
+flux_Q_column = header_column(header, column_use=flux_Q_column, colname='Stokes_Q')
+flux_U_column = header_column(header, column_use=flux_U_column, colname='Stokes_U')
+flux_V_column = header_column(header, column_use=flux_V_column, colname='Stokes_V')
 
 parent_id = Reform(source_array[parent_column,*])
 parent_i = where(parent_id EQ -1, n_parent)
@@ -85,3 +85,15 @@ sa.flux.U = Reform(source_array[flux_U_column,*])
 sa.flux.V = Reform(source_array[flux_V_column,*])
 RETURN, sa
 END
+
+FUNCTION header_column, header, column_use=column_use, colname=colname
+
+    header_entry = where(header EQ colname, n_match)
+    IF N_Elements(column_use) EQ 0 THEN BEGIN
+        IF n_match NE 1 THEN $
+            message,String(format='("Source list header has missing or duplicate entries for ",A)', colname)
+        column_use = header_entry[0]
+    ENDIF
+    RETURN, column_use
+END
+
