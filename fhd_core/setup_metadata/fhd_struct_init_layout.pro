@@ -141,7 +141,7 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
   if n_elements(dut1) EQ 0 then dut1=0 ;; google it. uvfits calls this UT1UTC
   if n_elements(diff_utc) EQ 0 then diff_utc=0 ;; difference between the time_system and UTC
   if n_elements(nleap_sec) EQ 0 then begin
-    if time_systemp eq 'IAT' then begin
+    if time_system eq 'IAT' then begin
       nleap_sec=diff_utc
     endif else begin
       nleap_sec=-1 ;; set to something that should be obvious it was a default
