@@ -1,40 +1,3 @@
-PRO source_array_export,source_array,obs,beam=beam,stokes_images=stokes_images,file_path=file_path
-
-IF N_Elements(file_path) EQ 0 THEN RETURN 
-header=['#id',$ ; 0
-        'x_loc',$ ; 1
-        'y_loc',$ ; 2
-        'RA',$ ; 3
-        'Dec',$ ; 4
-        'S/N',$ ; 5
-        'radius',$ ; 6
-        'avg_beam',$ ; 7
-        'frequency',$ ; 8
-        'XX_apparent',$ ; 9
-        'YY_apparent',$ ; 10
-        'XY_apparent',$ ; 11
-        'YX_apparent',$ ; 12
-        'Stokes_I',$ ; 13
-        'Stokes_Q',$ ; 14
-        'Stokes_U',$ ; 15
-        'Stokes_V',$ ; 16
-        'Stokes_I_res',$ ; 17
-        'Stokes_Q_res',$ ; 18
-        'Flag',$ ; 19
-        'Parent'] ; 20
-source_arr_out = source_array_reformat(source_array,obs,parent=-1,beam=beam,stokes_images=stokes_images)
-
-extend_flag = where(Ptr_valid(source_array.extend),n_ext)
-FOR i=0, n_ext-1 DO BEGIN
-    ext_i = extend_flag[i]
-    id = source_array[ext_i].id
-    source_arr_out = source_array_reformat(*source_array[ext_i].extend,obs,parent=id,$
-        base=source_arr_out,beam=beam,stokes_images=stokes_images)
-ENDFOR
-Textfast,source_arr_out,header,/write,file_path=file_path
-
-END
-
 FUNCTION source_array_reformat,source_array,obs,base=base,parent=parent,beam=beam,stokes_images=stokes_images
 
 radius=angle_difference(obs.obsdec,obs.obsra,source_array.dec,source_array.ra,/degree)
@@ -75,4 +38,41 @@ source_arr_out[19,*]=source_array.flag
 source_arr_out[20,*]=parent
 IF Keyword_Set(base) THEN source_arr_out = [[base], [source_arr_out]]
 RETURN,source_arr_out
+END
+
+PRO source_array_export,source_array,obs,beam=beam,stokes_images=stokes_images,file_path=file_path
+
+IF N_Elements(file_path) EQ 0 THEN RETURN 
+header=['#id',$ ; 0
+        'x_loc',$ ; 1
+        'y_loc',$ ; 2
+        'RA',$ ; 3
+        'Dec',$ ; 4
+        'S/N',$ ; 5
+        'radius',$ ; 6
+        'avg_beam',$ ; 7
+        'frequency',$ ; 8
+        'XX_apparent',$ ; 9
+        'YY_apparent',$ ; 10
+        'XY_apparent',$ ; 11
+        'YX_apparent',$ ; 12
+        'Stokes_I',$ ; 13
+        'Stokes_Q',$ ; 14
+        'Stokes_U',$ ; 15
+        'Stokes_V',$ ; 16
+        'Stokes_I_res',$ ; 17
+        'Stokes_Q_res',$ ; 18
+        'Flag',$ ; 19
+        'Parent'] ; 20
+source_arr_out = source_array_reformat(source_array,obs,parent=-1,beam=beam,stokes_images=stokes_images)
+
+extend_flag = where(Ptr_valid(source_array.extend),n_ext)
+FOR i=0, n_ext-1 DO BEGIN
+    ext_i = extend_flag[i]
+    id = source_array[ext_i].id
+    source_arr_out = source_array_reformat(*source_array[ext_i].extend,obs,parent=id,$
+        base=source_arr_out,beam=beam,stokes_images=stokes_images)
+ENDFOR
+Textfast,source_arr_out,header,/write,file_path=file_path
+
 END
