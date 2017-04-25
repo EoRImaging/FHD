@@ -194,6 +194,10 @@ WARNING! Options in this section may change without notice, and should never be 
 **gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
   -*Default*: 0.15 <br />
   
+**independent_fit**: fit source components in 4 Stokes parameters I, Q, U, V instead of only Stokes I. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+  
 **max_sources**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
   -*EoR_firstpass settings*: 20000 <br />
   -*Default*: 20000 !Q <br />
@@ -426,6 +430,10 @@ healpix_recalculate=0
 **min_baseline**: the minimum baseline length in wavelengths to include in the analysis. <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: the minimum baseline length in wavelengths of the instrument, specifically calculated from the params structure. This includes autocorrelations (!Q is that right Ian?) <br />
+  
+**n_pol**: number of polarizations to use (XX, YY versus XX, YY, XY, YX). <br />
+  -*Set*: 2/4 <br />
+  -*Default*: 2 <br />
   
 
 
