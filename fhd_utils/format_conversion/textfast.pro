@@ -42,15 +42,18 @@ CASE action OF
     END
     'read':BEGIN
         IF Keyword_Set(string) THEN BEGIN
-            Data=Read_Ascii(file_path_use,data_start=first_line,delimiter=delimiter)
+            Data=Read_Ascii(file_path_use,data_start=first_line,delimiter=delimiter,header=header)
             n_dims=size(data.(0),/n_dim)
             IF n_dims EQ 1 THEN n_columns=1 ELSE n_columns=(size(data.(0),/dimension))[0]            
             template={version:1,datastart:first_line,delimiter:delimiter,missingvalue:!Values.F_NAN,Commentsymbol:'',fieldcount:n_columns,$
                 fieldtypes:lonarr(n_columns)+7,fieldlocations:indgen(n_columns),fieldnames:string(indgen(n_columns)),fieldgroups:indgen(n_columns)}
-            Data=Read_Ascii(file_path_use,data_start=first_line,template=template)
+            Data=Read_Ascii(file_path_use,data_start=first_line,template=template,header=header)
         ENDIF ELSE BEGIN
-            Data=Read_Ascii(file_path_use,data_start=first_line)
+            Data=Read_Ascii(file_path_use,data_start=first_line,header=header)
         ENDELSE
+        IF N_Elements(header) EQ 1 THEN BEGIN
+            header = strsplit(header,String(9B),/extract)
+        ENDIF
         IF N_tags(data) GT 1 THEN BEGIN
             length=N_Elements(data.(0))
             IF Keyword_Set(string) THEN temp=Strarr(n_columns,length) ELSE temp=Fltarr(n_columns,length)
