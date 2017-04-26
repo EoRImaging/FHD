@@ -107,7 +107,7 @@ case version of
 ;	set_sidelobe_keywords=1
    end
 
-   'sim_mwa_diffuse': begin
+   'sim_mwa_diffuse_3': begin
 	diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
 	dimension=2048
 	instrument='mwa'

@@ -1,5 +1,3 @@
-;;;; Because I'm paranoid, I'm saving a backup copy of the original vis_simulate before I start messing with it.
-
 FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,vis_weights=vis_weights,$
     recalculate_all=recalculate_all,$
     include_eor=include_eor, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $

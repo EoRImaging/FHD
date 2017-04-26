@@ -1,7 +1,7 @@
 
 #nohup ./sim_pipe_slurm.sh -t -e 'hera_plat_uncomp_fine_33' -f obsid_list_files/HeraPlatUncompFine -m 50G -w 03:30:00 -v 'sim_hera19_fine_uncomp_1hour'  > nohup_hera.out &
 
-#nohup ./sim_pipe_slurm.sh -t -f obsid_list_files/MWA128GalaxyTransit -m 30G -w 03:30:00 -v 'sim_mwa_diffuse'  > nohup_mwa_diffuse.out &
+nohup ./sim_pipe_slurm.sh -t -f obsid_list_files/MWA128GalaxyTransit -m 50G -w 03:30:00 -v 'sim_mwa_diffuse_3'  > nohup_mwa_diffuse.out &
 
 #nohup ./sim_pipe_slurm.sh -t -f obsid_list_files/EWBase_14m_plat -m 30G -w 03:30:00 -v 'sim_ewbase_hera_diffuse'  > nohup_14m_ewbase_0.out &
 
