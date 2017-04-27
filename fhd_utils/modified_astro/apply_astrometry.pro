@@ -70,10 +70,9 @@ IF Keyword_Set(ad2xy) THEN BEGIN
     IF n_horizon GT 0 THEN BEGIN
         alt_arr = alt_arr[h_use]
         az_arr = az_arr[h_use]
-        i_use = i_use[h_use]
-        IF n_nan GT 0 THEN i_nan = [i_nan, horizon_i] ELSE i_nan = horizon_i
         ra_arr_new[horizon_i] = !Values.F_NAN
         dec_arr_new[horizon_i] = !Values.F_NAN
+        i_nan=where(Finite(ra_arr_new,/nan),n_nan,complement=i_use)
     ENDIF
     IF ~Keyword_Set(ignore_refraction) THEN BEGIN
         alt_arr_new=CO_REFRACT(alt_arr, altitude=obs.alt, /to_observed, _Extra=extra)
