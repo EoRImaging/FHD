@@ -49,7 +49,7 @@ do
         v) version=$OPTARG;;		#FHD folder name and case for eor_firstpass_versions
 					#Example: nb_foo creates folder named fhd_nb_foo
 	w) wallclock_time=$OPTARG;;	#Time for execution in slurm
-	n) cores=$OPTARG;;		#Number of cores for slurm
+	n) ncores=$OPTARG;;		#Number of cores for slurm
 	m) mem=$OPTARG;;		#Memory per node for slurm
 	t) firstpass_only=1;;	#Firstpass only, or also do power spectrum?
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), "
@@ -127,7 +127,7 @@ if [ -z ${wallclock_time} ]; then
 fi
 #Set typical cores needed for standard FHD firstpass if not set.
 if [ -z ${ncores} ]; then
-    ncores=10
+    ncores=15
 fi
 #Set typical memory needed for standard FHD firstpass if not set.
 if [ -z ${mem} ]; then
@@ -190,7 +190,6 @@ for obs_id in "${obs_id_array[@]}"; do
 	endflag=1
      fi
 done	
-
 
 #echo ${good_obs_list[@]}
 

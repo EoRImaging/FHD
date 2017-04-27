@@ -1,7 +1,45 @@
 
-#nohup ./sim_pipe_slurm.sh -t -e 'hera_plat_uncomp_fine_33' -f obsid_list_files/HeraPlatUncompFine -m 50G -w 03:30:00 -v 'sim_hera19_fine_uncomp_1hour'  > nohup_hera.out &
+#obsid_list_files/HeraPlatinumFakeShort
 
-nohup ./sim_pipe_slurm.sh -t -f obsid_list_files/MWA128GalaxyTransit -m 50G -w 03:30:00 -v 'sim_mwa_diffuse_3'  > nohup_mwa_diffuse.out &
+
+nohup ./sim_pipe_slurm.sh -t -e 'hera19_platinum_short_1' -f obsid_list_files/HeraPlatinumFakeShort -m 40G -w 03:30:00 -v 'sim_hera19_point_doubles'  > nohup_hera_point.out &
+
+#nohup ./sim_pipe_slurm.sh -t  -f obsid_list_files/SemiCirc_comp_1hour -n 5 -m 30G  -w 02:30:00  -v 'sim_semicircle_point' > nohup_semicircle.out &
+
+#nohup ./sim_pipe_slurm.sh -t -f obsid_list_files/SemiCirc_comp_1hour -n 5 -m 30G  -w 02:30:00  -v 'sim_semicircle_point_interp' > nohup_semicircle.out &
+
+#nohup ./sim_pipe_slurm.sh -t -s 'hera19_platinum_short_0' -n 40 -f obsid_list_files/HeraPlatinumFakeShort -m 40G -w 1:30:00  -v 'sim_paper19_eor_comp_more' > nohup_eor.out &
+
+#nohup ./sim_pipe_slurm.sh -t -s 'hera19_platinum_short_0' -n 40 -f obsid_list_files/HeraPlatinumFakeShort -m 40G -w 1:30:00  -v 'sim_hera19_eor_comp_more' > nohup_eor.out &
+
+#nohup ./sim_pipe_slurm.sh -t -s 'hera19_platinum_short_0' -e 'hera19_platinum_short_33' -n 40 -f obsid_list_files/HeraPlatinumFakeShort -m 40G -w 1:30:00  -v 'sim_hera19_eflat_comp' > nohup_flat.out &
+
+#nohup ./sim_pipe_slurm.sh -t -s 'hera19_platinum_short_0' -n 40 -f obsid_list_files/HeraPlatinumFakeShort -m 40G -w 1:30:00  -v 'sim_hera19_eflat_comp_more' > nohup_flat_more.out &
+
+#nohup ./sim_variation.sh -t -f ewbase_14m_plat -n 20 -m 80G -w 03:30:00 -v 'sim_ewbase_hera_beam-mask-thresh' -p 'beam_mask_threshold=50.0,75.0,100.0,125.0,150.0' > nohup_14m_ewbase.out &
+
+#nohup ./sim_pipe_slurm.sh -t -e 'hera19_platinum_short_2' -f obsid_list_files/HeraPlatinumFakeShort -m 50G -w 03:30:00 -v 'sim_hera19_point_interp-kern'  > nohup_hera_point.out &
+
+#nohup ./sim_pipe_slurm.sh -t  -f redo -n 5 -m 30G  -w 02:30:00  -v 'sim_semicircle_point' > nohup_semicircle.out &
+
+#nohup ./sim_variation.sh -t -f ewbase_14m_plat -m 150G -w 03:30:00 -v 'sim_ewbase_hera_kbin_t2_v2' -p 'kbinsize=0.050' > nohup_14m_ewbase_2.out &
+#nohup ./sim_variation.sh -t -f ewbase_14m_plat -m 180G -w 03:30:00 -v 'sim_ewbase_hera_kbin_t2_v2' -p 'kbinsize=0.050,0.054,0.057' > nohup_14m_ewbase_2.out &
+
+#nohup ./sim_variation.sh -t -f ewbase_14m_plat -m 70G -w 03:30:00 -v 'sim_ewbase_mwa_kbin_few-src' -p 'kbinsize=0.075,0.078,0.081,0.08,40.086,0.088' > nohup_14m_ewbase_1.out &
+
+#nohup ./sim_variation.sh -t -f ewbase_14m_plat -m 70G -w 03:30:00 -v 'sim_ewbase_hera_kbin_t2_v2' -p 'kbinsize=0.075,0.078,0.081,0.084' > nohup_14m_ewbase_1.out &
+
+#nohup ./sim_variation.sh -t -f ewbase_14m_plat -m 90G -w 03:30:00 -v 'sim_ewbase_mwa_kbin_few-src' -p 'kbinsize=0.063,0.066,0.069,0.072' > nohup_14m_ewbase_2.out &
+
+#nohup ./sim_pipe_slurm.sh -t  -s 'hera37_platinum_0' -e 'hera37_platinum_19' -f obsid_list_files/Hera37PlatinumFake -n 50 -m 50G  -w 02:30:00  -v 'sim_hera37_eflat' > nohup_hera37.out &
+
+#nohup ./sim_pipe_slurm.sh -t -s 'hera19_platinum_short_0' -e 'hera19_platinum_short_33' -n 50 -f obsid_list_files/HeraPlatinumFakeShort -m 40G -w 1:30:00  -v 'sim_paper19_eflat_comp' > nohup_eor.out &
+
+#nohup ./sim_pipe_slurm.sh -t -s 'hera19_platinum_short_1' -e 'hera19_platinum_short_33' -f obsid_list_files/HeraPlatinumFakeShort -m 50G -w 03:30:00 -v 'sim_hera19_diffuse_kelvin-convert'  > nohup_hera_diffuse.out &
+
+#nohup ./sim_pipe_slurm.sh -t -e 'hera19_platinum_short_33' -f obsid_list_files/HeraPlatinumFakeShort -m 50G -w 03:30:00 -v 'sim_hera19_point_fine_comp_1hour'  > nohup_hera_point.out &
+
+#nohup ./sim_pipe_slurm.sh -t -e 'mwa_galaxy_compressed_1' -f  obsid_list_files/MWA128GalaxyTransit -m 50G -w 03:30:00 -v 'sim_mwa_diffuse_new-FHD'  > nohup_mwa_diffuse.out &
 
 #nohup ./sim_pipe_slurm.sh -t -f obsid_list_files/EWBase_14m_plat -m 30G -w 03:30:00 -v 'sim_ewbase_hera_diffuse'  > nohup_14m_ewbase_0.out &
 
