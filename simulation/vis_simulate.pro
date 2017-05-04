@@ -161,7 +161,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
     IF Keyword_Set(diffuse_model) THEN BEGIN
       IF file_test(diffuse_model) EQ 0 THEN diffuse_model=(file_search(diffuse_model+'*'))[0]
          print,"Reading diffuse model file: "+diffuse_model
-      diffuse_model_uv=fhd_diffuse_model(obs,jones,skymodel,spectral_model_arr=diffuse_spectral_model_uv,/uv_return,model_filepath=diffuse_model,_Extra=extra)
+      diffuse_model_uv=fhd_diffuse_model(obs,jones,skymodel,spectral_model_arr=diffuse_spectral_model_uv,/uv_return,/diffuse_units_kelvin,model_filepath=diffuse_model,_Extra=extra)
       IF Max(Ptr_valid(diffuse_model_uv)) EQ 0 THEN print,"Error reading or building diffuse model. Null pointer returned!"
     ENDIF
 
