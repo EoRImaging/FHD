@@ -12,12 +12,12 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Dependency*: `model_visibilities` must be set <br />
   -*Default*: 0.05, or 0.01 if `allow_sidelobe_sources` set <br />
 
-**beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989, 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there is currently two options: !Q. <br />
+**beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989, 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there are currently two options: 2) 2016 version by Dave Deboer saved as cross and co-pol, 0) an earlier version !Q saved as X and Y pols. <br />
   -*EoR_firstpass settings*: 2 <br />
   -*Default*: 1 <br />
   -*MWA range*: 0, 1 (or anything else captured in the `else` statement), 2 <br />
   -*PAPER range*: 1 (or anything else captured in the `else` statement), 2 <br />
-  -*HERA range*: automatically defaults <br />
+  -*HERA range*: 2 (or anything else captured in the `else` statement) <br />
 
 **beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
   -*EoR_firstpass settings*: 56 <br />
@@ -43,7 +43,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 1 <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
   
-**psf_resolution** : !Q
+**psf_resolution** : Super-resolution factor of the psf. The psf will be interpolated to a grid of dimension (psf_superres_dim,psf_superres_dim). !Q <br />
+  -*Default*: 16 <br />
 
 
 ## Calibration
@@ -161,8 +162,9 @@ bandpass_calibrate=1 <br />
 calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
-**include_catalog_sources**: !Q <br />
+**include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
+   -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q
 
 ## Debug
 WARNING! Options in this section may change without notice, and should never be turned on by default. <br />
@@ -226,6 +228,15 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Diffuse
 
+**diffuse_model**: File path to the diffuse model sav file. <br />
+  -*Currently only on diffuse_simulations branch* <br />
+  -*Default*: filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')<br />
+  -Replace gsm_150MHz.sav with any other diffuse .sav file. This file should contain the following:<br />
+  - MODEL_ARR = A healpix map with the diffuse model<br />
+  - NSIDE = The corresponding NSIDE parameter<br />
+  - HPX_INDS = The corresponding healpix indices of the model_arr<br />
+  - coord_sys = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
+
 ## In situ simulation
 
 **enhance_eor**: input a multiplicative factor to boost the signal of the EoR in the dirty input visibilities. <br />
@@ -246,7 +257,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Model
 
-**allow_sidelobe_model_sources**: allows FHD to model sources in the sidelobes for subtraction. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of amodel alibration source catalog for the particular observation. <br />
+**allow_sidelobe_model_sources**: allows FHD to model sources in the sidelobes for subtraction. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of a model calibration source catalog for the particular observation. <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: Additional sidelobe sources are not included. If `return_cal_visibilities` and `allow_sidelobe_cal_sources` are both set, then the model will include those sources in the sidelobes that were used in calibration. <br />
@@ -276,7 +287,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br /> 
   
-**snapshot_healpix_export**: appears to be preserving visibilities !Q<br />
+**snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
   -*EoR_firstpass settings*: 1 <br />
   
 **no_fits**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
@@ -355,6 +366,9 @@ WARNING! Options in this section may change without notice, and should never be 
 **unflag_all**: unflag all tiles/antennas and frequencies. While not practical for real data, this is useful for creating unflagged model visibilities for the input of an in-situ simulations. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
+
+**no_ps** : Do not save output images in postscript format. Only png and fits.<br /> 
+  -*Default*: 1 <br />
 
 ## Instrument Parameters
 
@@ -435,11 +449,14 @@ healpix_recalculate=0
   -*Set*: 2/4 <br />
   -*Default*: 2 <br />
   
+**ps_kbinsize** : UV pixel size in wavelengths which overrides kbinsize when doing healpix_snapshot_cube_generate. Overrides ps_fov if set. <br />
+  -*Default*: 0.5<br />
 
+**ps_fov** : Field of view in degrees which overrides FoV in healpix_snapshot_cube_generate. Only used if ps_fov is not set.<br />
+  -*Default*: !Q<br />
 
-
-ps_kbinsize=0.5
-ps_kspan=600.
+**ps_kspan** :  UV plane dimension to override dimension when diong healpix_snapshot_cube_generate.<br />
+  -*Default*: 600.<br />
 
 
 cleanup=0
@@ -453,14 +470,13 @@ n_avg=2
 image_filter_fn='filter_uv_uniform'
 deconvolution_filter='filter_uv_uniform'
 
-max_sources=20000
-no_ps=1
+max_sources=20000   (Cut this -- Only max_calibration_sources or max_model_sources is used)
+
 
 ring_radius=10.*pad_uv_image
 combine_obs=0
 smooth_width=32.
 
-psf_resolution=100
 calibration_flag_iterate = 0
 
 

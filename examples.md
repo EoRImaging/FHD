@@ -169,6 +169,12 @@ bandpass_calibrate=0 <br />
 
 ## Simulations <br />
 
+On Oscar (Brown University cluster), simulations may be run via one of two wrapper scripts. These are written to run on clusters managed by the Simple Linux Utility for Resource Management (SLURM) job scheduler.
+  - 'sim_pipe_slurm.sh' is analogous to "pipe_dream.sh", and allows a simple simulation to be run off a set of ObsIDs. This will start an array task, with each parallel job simulating off a specified ObsID file. All outputs will go to the same fhd_directory.
+  - 'sim_variation.sh' must be passed a parameter "-p 'param=opt1,opt2,opt3,...'", and can only be run for one ObsID at a time. This allows for a single simulation parameter to be varied. All the results will be stored in the same output directory, but files corresponding with each value of param will have 'param=opt_i' appended to the filename (where opt_i is the i'th value).<br />
+
+The parameters for the simulation are specified by the version string, which matches an entry in the "case" statement in sim_versions_wrapper.pro (analogous to eor_firstpass_versions.pro). Each wrapper must be given a version string, obs_id list file, and other SLURM parameters (see examples in submit_sims.sh).
+
 ###EoR <br />
 
 eor_sim=1
@@ -178,20 +184,14 @@ include_catalog_sources=0
 
 ###Diffuse <br />
 
-diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
-  -*Currently only on diffuse_simulations branch * <br />
-  -*Replace gsm_150MHz.sav with any other diffuse .sav file. This file should contain the following:
-  ..- MODEL_ARR = A healpix map with the diffuse model
-  ..- NSIDE = The corresponding NSIDE parameter
-  ..- HPX_INDS = The corresponding healpix indices of the model_arr
-  ..- coord_sys = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, dfefaults to equatorial.
+diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')<br />
+  -*This is a full-sky map in galactic coordinates of the Global Sky Model at 150 MHz only. *
 
 ###Point sources <br />
 
-sources_file_name='GLEAM_EGC_catalog'
-  -*Specifies to use the publicly-released GLEAM extragalactic point source catalog*
-max_model_sources=10000
-  -*Limits the number of sources under consideration. The number of included sources is also limitd by the beam threshold and whether or not sidelobe sources are included, but this is a hard cutoff.*
+sources_file_name='GLEAM_EGC_catalog'<br />
+  -*Specifies to use the publicly-released GLEAM extragalactic point source catalog*<br />
+max_model_sources=10000<br />
 
 ###MWA <br />
 
