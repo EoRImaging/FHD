@@ -45,15 +45,65 @@ FHD outputs various data products. We outline and describe these below. <br />
 
    SOURCE_LIST     STRUCT    -> <Anonymous> Array[11051]
 
+### \<obsids\>_bandpass.txt <br />
+
 
 ## Grid Data<br />
 
+### \<obsids\>_uv_\<pol\>.sav <br />
+
+### \<obsids\>_uv_model_\<pol\>.sav <br />
+
+### \<obsids\>_uv_weights_\<pol\>.sav <br />
+
+### \<obsids\>_vis_count.sav <br />
+
 ##  Healpix<br />
+
+### \<obsids\>_even_cube\<pol\>.sav / \<obsids\>_even_cube\<pol\>.sav <br />
 
 ##  Metadata<br />
 
+### \<obsids\>_obs.sav <br />
+
+### \<obsids\>_params.sav <br />
+
+### \<obsids\>_settings.txt <br />
+
+### \<obsids\>_ps_settings.txt <br />
+
+### \<obsids\>_status.sav <br />
+
+### \<obsids\>_status.txt <br />
+
 ##  Output Data<br />
+
+### \<obsids\>_Beam_\<pol\>.sav <br />
+
+### \<obsids\>_\<filter\>_Dirty_\<pol\>.fits / \<obsids\>_\<filter\>_Model_\<pol\>.fits / \<obsids\>_\<filter\>_Residual_\<pol\>.fits <br />
+
+### \<obsids\>_\<filter\>_Restored_rings_\<pol\>.fits <br />
+
+### \<obsids\>_\<filter\>_UV_weights_\<pol\>.fits <br />
 
 ##  Output Images<br />
 
+### \<obsids\>_cal_amp.png / \<obsids\>_cal_autocorr.png / \<obsids\>_cal_phase.png<br />
+
+### \<obsids\>_Beam_\<pol\>.png <br />
+
+### \<obsids\>_\<filter\>_Dirty_\<pol\>.png / \<obsids\>_\<filter\>_Model_\<pol\>.png / \<obsids\>_\<filter\>_Residual_\<pol\>.png <br />
+
+### \<obsids\>_\<filter\>_Restored_rings_\<pol\>.png <br />
+
+### \<obsids\>_\<filter\>_Sources_\<pol\>.png <br />
+
+### \<obsids\>_\<filter\>_UV_weights_\<pol\>.png <br />
+
 ##  Vis Data<br />
+
+### \<obsids\>_autos.sav <br />
+
+### \<obsids\>_flags.sav <br />
+
+### \<obsids\>_vis_model_\<pol\>.sav / \<obsids\>_vis_\<pol\>.sav <br />
