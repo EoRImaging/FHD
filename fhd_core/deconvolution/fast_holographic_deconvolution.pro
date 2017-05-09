@@ -135,16 +135,19 @@ dirty_image_composite_Q=fltarr(dimension_fit,elements_fit)
 dirty_image_composite_U=fltarr(dimension_fit,elements_fit)
 dirty_image_composite_V=fltarr(dimension_fit,elements_fit)
 source_uv_mask=fltarr(dimension,elements)
-source_uv_mask2=fltarr(dimension,elements)
 
 FOR pol_i=0,n_pol-1 DO BEGIN
     weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
     weights_single_conj=conjugate_mirror(weights_single)
-    source_uv_mask[where(*image_uv_arr[pol_i])]=1.
-    source_uv_mask2[where(weights_single)]=1
+    source_uv_mask[where(weights_single)]=1
     weights_single=(weights_single+weights_single_conj)/2.
     *weights_arr[pol_i]=weights_single
 ENDFOR
+uv_i_use=where(source_uv_mask,n_uv_use)
+xvals_use=xvals[uv_i_use]
+yvals_use=yvals[uv_i_use]
+uv_use_frac=Float(n_uv_use)/(dimension*elements)
+print,"Fractional uv coverage: ",uv_use_frac
 
 filter_arr=Ptrarr(n_pol,/allocate)
 gain_normalization = get_image_renormalization(obs,psf=psf,params=params,weights_arr=weights_arr,$
@@ -183,12 +186,11 @@ IF Keyword_Set(galaxy_model_fit) THEN BEGIN
 ENDIF 
 
 uv_i_use=where(source_uv_mask,n_uv_use)
+xvals_use=xvals[uv_i_use]
+yvals_use=yvals[uv_i_use]
 uv_use_frac=Float(n_uv_use)/(dimension*elements)
 print,"Fractional uv coverage: ",uv_use_frac
 
-uv_i_use2=where(source_uv_mask2,n_uv_use2)
-xvals2=xvals[uv_i_use2]
-yvals2=yvals[uv_i_use2]
 
 t1=0 ;generation of model_images and image_use for source detection
 t2=0 ;filtering and source extraction
@@ -239,7 +241,7 @@ IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
             max_sources += n_sidelobe_src
             comp_i += n_sidelobe_src
         ENDIF ELSE print, 'Sidelobe sources not included in source list'
-        model_uv_sidelobe=source_dft_model(obs,jones,source_arr_sidelobe,t_model=t_model,uv_mask=source_uv_mask2,_Extra=extra)
+        model_uv_sidelobe=source_dft_model(obs,jones,source_arr_sidelobe,t_model=t_model,uv_mask=source_uv_mask,_Extra=extra)
         t3+=t_model
         FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_sidelobe[pol_i]
         FOR pol_i=0,n_pol-1 DO BEGIN
@@ -328,7 +330,7 @@ FOR iter=0L,max_iter-1 DO BEGIN
             ;Make sure to update source uv model in "true sky" instrumental polarization i.e. 1/beam^2 frame.
     t3_0=Systime(1)
     t2+=t3_0-t2_0
-    source_dft_multi,obs,jones,component_array1,model_uv_full,xvals=xvals2,yvals=yvals2,uv_i_use=uv_i_use2,$
+    source_dft_multi,obs,jones,component_array1,model_uv_full,xvals=xvals_use,yvals=yvals_use,uv_i_use=uv_i_use,$
         /silent,dft_threshold=dft_threshold,return_kernel=return_kernel,_Extra=extra
     
     t4_0=Systime(1)
@@ -404,10 +406,10 @@ t3_0=Systime(1)
 IF Keyword_Set(no_condense_sources) THEN BEGIN
     comp_i_use=where(component_array.id GE 0)
     component_array_use=component_array[comp_i_use]
-    model_uv_full=source_dft_model(obs,jones,component_array_use,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
+    model_uv_full=source_dft_model(obs,jones,component_array_use,t_model=t_model,uv_mask=source_uv_mask,return_kernel=return_kernel,$
         dft_threshold=dft_threshold,_Extra=extra) 
 ENDIF ELSE BEGIN
-    model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask2,return_kernel=return_kernel,$
+    model_uv_full=source_dft_model(obs,jones,source_array,t_model=t_model,uv_mask=source_uv_mask,return_kernel=return_kernel,$
         dft_threshold=dft_threshold,_Extra=extra)
 ENDELSE
 IF size(return_kernel,/type) EQ 10 THEN Ptr_free,return_kernel
