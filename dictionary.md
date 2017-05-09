@@ -226,6 +226,15 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Diffuse
 
+**diffuse_model**: File path to the diffuse model sav file.
+  -*Currently only on diffuse_simulations branch * <br />
+  -*Default*: filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+  -*Replace gsm_150MHz.sav with any other diffuse .sav file. This file should contain the following:
+  ..- MODEL_ARR = A healpix map with the diffuse model
+  ..- NSIDE = The corresponding NSIDE parameter
+  ..- HPX_INDS = The corresponding healpix indices of the model_arr
+  ..- coord_sys = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, dfefaults to equatorial.
+
 ## In situ simulation
 
 **enhance_eor**: input a multiplicative factor to boost the signal of the EoR in the dirty input visibilities. <br />
