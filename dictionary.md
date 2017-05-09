@@ -192,6 +192,11 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **deconvolution_horizon_threshold**: degrees above the horizon to exclude from deconvolution. <br />
   -*Default*: 10 <br />
+
+**filter_background**: filters out large-scale background fluctuations before deconvolving point sources. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 1 <br />
   
 **gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
   -*Default*: 0.15 <br />
@@ -219,6 +224,9 @@ WARNING! Options in this section may change without notice, and should never be 
 **sigma_cut**: only include source components detected with signal to noise greater than the specified standard deviation. Also used when condensing components to sources after deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: 2 <br />
+
+**smooth_width**: integer equal to the size of the region to smooth when filtering out large-scale background fluctuations. <br />
+  -*Dependency*: `filter_background` must be set to 1 in order for the keyword to take effect. <br />
 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
@@ -289,6 +297,7 @@ WARNING! Options in this section may change without notice, and should never be 
   
 **snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
   -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 0 <br />
   
 **no_fits**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
   -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
@@ -427,6 +436,8 @@ mapfn_recalculate=0
 healpix_recalculate=0
 
 ## Resolution
+
+**dft_threshold**: set equal to 1 to use the DFT approximation. When set equal to 0 the true DFT is calculated for each source. It can also be explicitly set to a value that determines the accuracy of the approximation. <br />
 
 **dimension**: the number of pixels in the UV plane along one axis. <br />
   -*EoR_firstpass settings*: 2048 <br />

@@ -50,6 +50,9 @@ return_decon_visibilities = 1 <br />
 deconvolution_filter = 'filter_uv_uniform' <br />
 subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
 return_sidelobe_catalog = 1 <br />
+-*Smooth background diffuse structure before deconvolving* <br />
+smooth_width = 32 <br />
+filter_background = 1 <br />
 -*Export keywords* <br />
 pad_uv_image = 1 <br />
 ring_radius = 0 <br />
@@ -67,11 +70,12 @@ dimension = 2048 <br />
 FoV = 0 <br />
 -*Polarization mode (set depending on whether full polarization is needed)* <br />
 n_pol = 2/4 <br />
--*Not sure what these do !Q* <br />
+-*Use DFT approximation* <br />
 dft_threshold = 0   <br />
+-*Create HEALPIX cubes for PS* <br />
 snapshot_healpix_export = 1 <br />
-smooth_width = 32 <br />
-filter_background = 1 <br />
+
+
 
 
 ### MWA Phase 2 <br />
