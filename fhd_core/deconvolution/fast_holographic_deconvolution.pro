@@ -168,8 +168,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    filter_arr[pol_i]=filter_single
 ENDFOR
 
-gain_array=replicate(gain_factor,dimension_fit,elements_fit)
-
 jones_fit=fhd_struct_init_jones(obs_fit,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
 dirty_stokes_arr=stokes_cnv(dirty_array,jones_fit,beam_arr=beam_base_fit,/square,_Extra=extra)
 dirty_image_composite=*dirty_stokes_arr[0]
@@ -347,7 +345,7 @@ FOR iter=0L,max_iter-1 DO BEGIN
    
     component_array1=fhd_source_detect(obs_fit,fhd_params,jones,source_find_image,image_I=image_filtered,$
         image_Q=image_use_Q,image_U=image_use_U,image_V=image_use_V,$
-        gain_array=gain_array,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
+        gain_factor=gain_factor,beam_mask=beam_mask,source_mask=source_mask,n_sources=n_sources,detection_threshold=detection_threshold,$
         beam_arr=beam_base,beam_corr_avg=beam_corr_avg,_Extra=extra)
     
     source_n_arr[iter]=n_sources
@@ -434,7 +432,6 @@ fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
 noise_map=fhd_params.convergence*beam_corr_avg
 IF over_resolution GT 1 THEN BEGIN
     noise_map=Rebin(noise_map,dimension,elements)
-    gain_array=Rebin(gain_array,dimension,elements)
     beam_width=beam_width_calculate(obs,min_restored_beam_width=1.,/FWHM)
 ENDIF
 ;noise_map*=gain_normalization
@@ -448,8 +445,8 @@ fhd_params.detection_threshold=detection_threshold
 source_n_arr=source_n_arr[0:iter-1]
 detection_threshold_arr=detection_threshold_arr[0:iter-1]
 source_mask=Rebin(source_mask,dimension,elements,/sample)
-source_array=Components2Sources(component_array,obs,fhd_params,radius=beam_width>1.5,noise_map=noise_map,$
-    gain_array=gain_array,source_mask=source_mask,_Extra=extra) ;;Note that gain_array=gain_factor*source_taper
+source_array=components2sources(component_array,obs,fhd_params,radius=beam_width>1.5,noise_map=noise_map,$
+    gain_factor=gain_factor,source_mask=source_mask,_Extra=extra)
 fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
 fhd_params.info=Ptr_new(info_struct)

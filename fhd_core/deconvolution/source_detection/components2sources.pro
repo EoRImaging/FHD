@@ -1,5 +1,5 @@
-FUNCTION Components2Sources,comp_arr,obs,fhd_params,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,$
-    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_array=gain_array,$
+FUNCTION components2sources,comp_arr,obs,fhd_params,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,$
+    reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_factor=gain_factor,$
     reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold,regrid_extended_sources=regrid_extended_sources,$
     source_mask=source_mask,max_sources=max_sources,_Extra=extra
 compile_opt idl2,strictarrsubs  
@@ -50,7 +50,7 @@ IF pregroup_flag THEN gi0=Max(comp_arr.id)+1 ELSE BEGIN
     gi0=0L
     comp_arr.id=-1
 ENDELSE
-group_id=group_source_components(obs,comp_arr,radius=radius,gain_array=gain_array)
+group_id=group_source_components(obs,comp_arr,radius=radius,gain_factor=gain_factor)
 
 IF max(group_id) LE 0 THEN BEGIN
     IF Keyword_Set(hpx_cnv) THEN undefine_fhd,hpx_cnv
@@ -64,7 +64,7 @@ IF n_ungroup GT 0 THEN BEGIN
     IF Tag_exist(comp_arr,'flag') THEN comp_arr[ungroup_i].flag=1
     IF ~Keyword_Set(reject_outlier_components)THEN BEGIN
         g0=Max(group_id)+1
-        group_id_sub=group_source_components(obs,comp_arr[ungroup_i],radius=radius,gain_array=gain_array)
+        group_id_sub=group_source_components(obs,comp_arr[ungroup_i],radius=radius,gain_factor=gain_factor)
         group_id_sub_i=where(group_id_sub GE 0,n_sub_use)
         IF n_sub_use GT 0 THEN BEGIN
             group_id[ungroup_i[group_id_sub_i]]=group_id_sub[group_id_sub_i]+g0
@@ -101,7 +101,6 @@ FOR gi=0L,ng-1 DO BEGIN
     ENDIF ELSE source_arr[gi].ston=Max(comp_arr[si_g].ston)
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
     source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)    
-    IF N_Elements(gain_array) EQ 1 THEN gain_factor=gain_array ELSE gain_factor=gain_array[Floor(sx),Floor(sy)]
     IF (1.-(1.-gain_factor)^N_Elements(si_g)) LT 0.5 THEN flag_min=1 ELSE flag_min=0 
     IF Tag_exist(comp_arr,'flag') THEN source_arr[gi].flag=Max(comp_arr[si_g].flag)>flag_min
     
@@ -129,7 +128,6 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     ns=N_Elements(source_arr)
     comp_gi=comp_arr_use.id
     hcomp_gi=histogram(comp_gi,min=0,/bin,reverse_ind=c_ri)
-    IF N_Elements(gain_array) EQ 1 THEN gain_factor=gain_array ELSE gain_factor=gain_array[source_arr.x,source_arr.y]
     gain_factor_arr=comp_arr_use.gain
     id_use=where(hcomp_gi,n_id_use)
     flux_frac_arr=Fltarr(ns)+1.

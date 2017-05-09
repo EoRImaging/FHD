@@ -1,6 +1,6 @@
 FUNCTION fhd_source_detect,obs,fhd_params,jones,source_find_image,image_I_flux=image_I_flux,image_Q_flux=image_Q_flux,$
     image_U_flux=image_U_flux,image_V_flux=image_V_flux,beam_arr=beam_arr,beam_corr_avg=beam_corr_avg,$
-    beam_mask=beam_mask,source_mask=source_mask,gain_array=gain_array,n_sources=n_sources,detection_threshold=detection_threshold,_Extra=extra
+    beam_mask=beam_mask,source_mask=source_mask,gain_factor=gain_factor,n_sources=n_sources,detection_threshold=detection_threshold,_Extra=extra
 
 add_threshold=fhd_params.add_threshold
 max_add_sources=fhd_params.max_add_sources
@@ -26,7 +26,6 @@ yvals=meshgrid(dimension,elements,2)
 
 IF N_Elements(beam_mask) EQ 0 THEN beam_mask=Fltarr(dimension,elements)+1.
 IF N_Elements(image_I_flux) EQ 0 THEN image_I_flux=source_find_image
-IF N_Elements(gain_array) EQ 1 THEN gain_array=replicate(gain_array[0],dimension,elements)
 converge_check=Stddev(source_find_image[where(beam_mask)],/nan)
 
 IF N_Elements(source_mask) EQ 0 THEN source_mask0=beam_mask ELSE source_mask0=source_mask
@@ -189,7 +188,7 @@ WHILE n_sources EQ 0 DO BEGIN
             CONTINUE
         ENDIF
         
-        gain_factor_use=gain_array[sx,sy]*gain_mod
+        gain_factor_use=gain_factor*gain_mod
         IF Keyword_Set(scale_gain) THEN BEGIN
             ston_single=flux_use/(converge_check*gain_normalization)
             gain_factor_use=(((1.-(1.-gain_factor)^(ston_single/2.-1))<(1.-1./ston_single))*gain_normalization)>gain_factor_use
@@ -199,7 +198,7 @@ WHILE n_sources EQ 0 DO BEGIN
         comp_arr[si].y=ycen/over_resolution
         comp_arr[si].ra=ra
         comp_arr[si].dec=dec
-        comp_arr[si].flux.I=flux_use*gain_factor_use;/beam_area
+        comp_arr[si].flux.I=flux_use*gain_factor_use
         comp_arr[si].gain=gain_factor_use
         IF Keyword_Set(independent_fit) AND (N_Elements(image_Q_flux) EQ N_Elements(source_find_image_use)) THEN comp_arr[si].flux.Q=$
             Interpolate(image_Q_flux[sx0-box_radius:sx0+box_radius,sy0-box_radius:sy0+box_radius],xcen0,ycen0,cubic=-0.5)*gain_factor_use
