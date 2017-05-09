@@ -279,7 +279,7 @@ IF N_Elements(cal) GT 0 THEN BEGIN
          vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
          plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist
       ENDIF ELSE BEGIN
-         plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
+         ;plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
       ENDELSE
    ENDIF
 ENDIF

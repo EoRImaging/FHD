@@ -177,5 +177,6 @@ fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_sa
 fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
 IF not antenna_flag THEN undefine_fhd,antenna
 timing=Systime(1)-t00
+
 RETURN,psf
 END

@@ -1,6 +1,6 @@
 FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,$
-    cal_cable_reflection_correct=cal_cable_reflection_correct,no_phase_calibration=no_phase_calibration,_Extra=extra
+    cal_cable_reflection_correct=cal_cable_reflection_correct,no_phase_calibration=no_phase_calibration,zero_debug_cal=zero_debug_cal,jump_longrun=jump_longrun,mode_debug=mode_debug,_Extra=extra
 
 IF Keyword_Set(cal_cable_reflection_fit) OR Keyword_Set(cal_cable_reflection_correct) THEN cal.mode_fit=1.
 cal_mode_fit=cal.mode_fit
@@ -59,6 +59,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             gain_fit=fltarr(n_freq)
             FOR di=0L,amp_degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
         ENDIF ELSE gain_fit=Reform(gain_amp[*,tile_i])
+        
+        IF keyword_set(jump_longrun) then begin
+          gain_fit=fltarr(n_freq)
+          fit_params1=poly_fit(freq_use[0:223],gain[0:223],1)
+          fit_params2=poly_fit(freq_use[224:335],gain[224:335],1)
+          gain_fit[freq_use[0]:freq_use[223]] = fit_params1[0]*findgen(freq_use[223])^0 +fit_params1[1]*findgen(freq_use[223])^1
+          gain_fit[freq_use[224]:freq_use[335]] = fit_params2[0]*(findgen(freq_use[335] - freq_use[224]+1) + freq_use[224])^0 +fit_params2[1]*(findgen(freq_use[335] - freq_use[224]+1) + freq_use[224])^1
+          fit_params = [fit_params1,fit_params2]
+          cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
+        endif  
         
         gain_residual[pol_i,tile_i]=Ptr_new(Reform(gain_amp[*,tile_i])-gain_fit)
         
@@ -128,11 +138,15 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
             cable_vf=Reform(data_array[3,*])
             tile_ref_flag=0>Reform(data_array[4,*])<1
 	    ; Choose which cable lengths to fit
-            IF cal_cable_reflection_fit GT 1 THEN BEGIN
-                cable_cut_i=where(cable_len NE cal_cable_reflection_fit,n_cable_cut)
+            IF total(cal_cable_reflection_fit) GT 1 THEN BEGIN
+
+                                  cable_cut_i=where(cable_len NE cal_cable_reflection_fit,n_cable_cut)
                 IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
-            ENDIF ELSE IF cal_cable_reflection_fit LT -1 THEN BEGIN
-                cable_cut_i=where(cable_len EQ Abs(cal_cable_reflection_fit),n_cable_cut)
+  
+            ENDIF ELSE IF total(cal_cable_reflection_fit) LT -1 THEN BEGIN
+                cable_cut_i=where(cable_len EQ Abs(cal_cable_reflection_fit[0]),n_cable_cut)
+                IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
+                cable_cut_i=where(cable_len EQ Abs(cal_cable_reflection_fit[1]),n_cable_cut)
                 IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
             ENDIF
             
@@ -207,8 +221,26 @@ IF Keyword_Set(cal_mode_fit) THEN BEGIN
                 phase_use=atan(mode_fit,/phase)
             ENDELSE
 	    ; Rebuild the reflection ripple, and add to polyfit gains
+	    if keyword_set(zero_debug_cal) then begin
+	     if zero_debug_cal EQ 1 then cal_restore = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_notimeavg_cal/calibration/1061316296_cal.sav','cal')
+	     if zero_debug_cal EQ 2 then cal_restore = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_notimeavg_cal_cableave/calibration/1061316296_cal.sav','cal')
+	     mode_i = (*cal_restore.mode_params[pol_i,tile_i])[0]
+	     amp_use = (*cal_restore.mode_params[pol_i,tile_i])[1]
+	     phase_use = (*cal_restore.mode_params[pol_i,tile_i])[2]
+	    endif
             gain_mode_fit=amp_use*exp(-i_comp*2.*!Pi*(mode_i*findgen(n_freq)/n_freq)+i_comp*phase_use)
-            gain_arr_fit[*,tile_i]+=gain_mode_fit
+            
+            if keyword_set(mode_debug) then begin
+                    longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_hyperfinemode.sav','fft_zero_longrun')
+                    gain_mode_fit_large = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_hyperfinemode.sav','gain_mode_fit')
+      pointing_num=mwa_get_pointing_number(obs,/string)
+      poi_name = ['-2','-1','0','1','2']
+      poi = where(pointing_num EQ poi_name)
+       gain_mode_fit =(reform(atan(gain_mode_fit_large[pol_i,poi,*,tile_i],/phase)+1.)/reform(atan(gain_mode_fit_large[pol_i,poi,*,1],/phase)+1.)-1.)
+     ; gain_mode_fit = abs(reform(gain_mode_fit_large[pol_i,poi,*,tile_i]))*exp(Complex(0,1)*reform(atan(conj(gain_mode_fit_large[pol_i,poi,*,1]),/phase)+atan((gain_mode_fit_large[pol_i,poi,*,tile_i]),/phase))) - 1. ;oops on the 1  
+              endif
+            
+            if ~keyword_set(mode_debug) then gain_arr_fit[*,tile_i]+=gain_mode_fit else gain_arr_fit[*,tile_i] = abs(gain_arr_fit[*,tile_i])*exp(Complex(0,1)*(atan(gain_arr_fit[*,tile_i],/phase)+gain_mode_fit))
             cal_return.mode_params[pol_i,tile_i]=Ptr_new([mode_i,amp_use,phase_use])
             debug=1
         ENDFOR

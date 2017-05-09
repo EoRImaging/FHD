@@ -116,6 +116,7 @@ tile_use=0>tile_use<1
 time_use=(*obs.baseline_info).time_use
 n_time = obs.n_time
 IF Min(time_use) LE 0 THEN BEGIN
+    n_baselines=N_Elements((*obs.baseline_info).tile_A)
     bin_offset=(*obs.baseline_info).bin_offset
     bin_offset=[bin_offset,n_baselines]
     time_bin=Lonarr(n_baselines)

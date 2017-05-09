@@ -1,7 +1,7 @@
 FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,$
     psf_image_resolution=psf_image_resolution,timing=timing,$
-    psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,_Extra=extra
+    psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
@@ -66,6 +66,7 @@ antenna=Call_function(tile_init_fn,obs,antenna_str,_Extra=extra) ;mwa_beam_setup
 
 psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
+if keyword_set(debug_dim) then psf_dim=20.
 
 IF Keyword_Set(psf_max_dim) THEN BEGIN
     psf_max_dim=Ceil(psf_max_dim/2.)*2 ;dimension MUST be even

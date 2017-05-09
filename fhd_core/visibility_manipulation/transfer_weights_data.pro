@@ -45,5 +45,5 @@ flag_calibration=0 ;make sure no flagging is done later
 ;reset tile/frequency/time flags in obs structure, then update with current values with a call to vis_flag_basic after this
 (*obs.baseline_info).tile_use=1L
 (*obs.baseline_info).freq_use=1L
-(*obs.baseline_info).time_use=1L
+;(*obs.baseline_info).time_use=1L ; TEMPORARY
 END

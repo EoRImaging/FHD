@@ -43,26 +43,50 @@ FHD outputs various data products. We outline and describe these below. <br />
 **cal.skymodel**: a structure of the various skymodel parameters used in calibration.
   * **include_calibration**: !Q, **n_sources**: number of sources included in the calibration skymodel, **catalog_name**: name of the catalog used in the calibration, **galaxy_model**: integer 1/0 value of whether or not a galaxy model was used, **galaxy_spectral_index**: the spectral index of the galaxy model used or NaN if no galaxy model was used, **diffuse_model**: name of the diffuse model used in the calibration, **diffuse_spectral_index**: the spectral index of the diffuse model used of NaN if no diffuse model was used. Source_list defined below.
 
-**cal.skymodel.source_list**: 
-
-   SOURCE_LIST     STRUCT    -> <Anonymous> Array[11051]
+**cal.skymodel.source_list**: an array of structures of dimension N<sub>sources</sub>.
+  * **x**: !Q, **y**: !Q, **ra**: the RA coordinate value of the source, **dec**: the DEC coordinate value of the source, **ston**: not used in the calibration source list (!Q right?), **freq**: frequency of the source model, **alpha**: spectral index of the source, **gain**: not used in the calibration source list (!Q right?), **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
+  * **extend**: !Q 
+  * **flux**: structure of the fluxes for that source, where the dimension depends on what polarizations are reported for that source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness.
 
 ### \<obsids\>_bandpass.txt <br />
 
+Text file of generated bandpass solutions. The first column is the frequency channels in Hz, and the following columns depend on the type of bandpass calibration used. For a global bandpass, the next columns are the average xx and yy instrumental polarization bandpass solutions. For a cable-dependent bandpass, the next columns are cable 90m xx, cable 90m yy, cable 150m xx, cable 150m yy, cable 230m xx, cable 230m yy, cable 320m xx, cable 320m yy, cable 400m xx, cable 400m yy, cable 524m xx, and cable 524m yy.
 
 ## Grid Data<br />
 
 ### \<obsids\>\_uv_\<pol\>.sav <br />
 
+  * **grid_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is the gridded UV plane of the calibrated data visibilities where all frequencies have been gridded together.<br /> 
+
+  * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
+
 ### \<obsids\>\_uv_model_\<pol\>.sav <br />
+
+  * **grid_uv_model**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is the gridded UV plane of the model visibilities where all frequencies have been gridded together.<br /> 
+
+  * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
 
 ### \<obsids\>\_uv_weights_\<pol\>.sav <br />
 
+  * **weights_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is a gridded UV plane where a value of 1 is gridded with the beam for each visibility wand where all frequencies have been gridded together.<br /> 
+
+  * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
+
 ### \<obsids\>_vis_count.sav <br />
 
-##  Healpix<br />
+  * **vis_count**: an image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). Each pixel value is how many visibilities contributed to that pixel, which is the same as our in-house uniform weighting. (!Q right?)
+
+##  HEALPix<br />
 
 ### \<obsids\>_even_cube\<pol\>.sav / \<obsids\>_even_cube\<pol\>.sav <br />
+
+  * **variance_cube/weights_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of 1's gridded with the beam for all visibilities (weights) or 1's gridded with the beam squared for all visibilities (variances).
+
+  * **dirty_cube*/model_cube*: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of the calibrated data (or model).
+
+  * **beam_squared_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of the beam squared, where the square has taken place in image space. Used for general diagnostic or image-space weighting.
+
+  * **hpx_inds**: the HEALPix indices of the output image cubes to be interpreted by HEALPix plotting code, **nside**: the HEALPix resolution factor that determines how many equal-area pixels are made, **n_avg**: the number of frequency channels that have been averaged over to generate these HEALPix cubes from the original data, **obs**: an obs structure to be handed around with the cubes for clarity.
 
 ##  Metadata<br />
 

@@ -76,7 +76,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 		vis_eor=PTRARR(n_pol,/allocate)
 		
 		;*Search for the specified eor savefile
-		if total(file_test(eor_savefile)) GT 0 then begin
+		if (total(file_test(eor_savefile)) GT 0) AND (file_test(eor_savefile,/directory) EQ 0) then begin
 			size_savefile=(size(eor_savefile))[1]
 			
 			void = GETVAR_SAVEFILE(eor_savefile[0], names=names)
@@ -88,13 +88,13 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 			else vis_eor = GETVAR_SAVEFILE(eor_savefile, vis_varname)
 			
 		endif else begin
-			if total(file_test(eor_savefile + obs_id + '_vis_' + pol_name[0] + '.sav')) GT 0 then begin
-				void = GETVAR_SAVEFILE(eor_savefile + obs_id + '_vis_' + pol_name[0] + '.sav', names=names)
+			if total(file_test(eor_savefile + '/' + obs_id + '_vis_' + pol_name[0] + '.sav')) GT 0 then begin
+				void = GETVAR_SAVEFILE(eor_savefile + '/' + obs_id + '_vis_' + pol_name[0] + '.sav', names=names)
 				vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]  ;assumption: visibilities in sav file have "vis" in the name
 				
 				;Restore visibilities that are in the <obsid>_vis_XX/vis_YY format
-				for pol_i=0,n_pol-1 do vis_eor[pol_i] = GETVAR_SAVEFILE(eor_savefile + obs_id + '_vis_' + pol_name[pol_i] + '.sav', vis_varname)
-			endif else message, "eor_savefile not found! Tried " + eor_savefile + " and " + eor_savefile + obs_id + "_vis_" + pol_name[0] + ".sav (for all pol)"
+				for pol_i=0,n_pol-1 do vis_eor[pol_i] = GETVAR_SAVEFILE(eor_savefile + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav', vis_varname)
+			endif else message, "eor_savefile not found! Tried " + eor_savefile + " and " + eor_savefile + '/' + obs_id + "_vis_" + pol_name[0] + ".sav (for all pol)"
 		endelse
 		;*End of search for the specified eor savefile
 		
@@ -105,7 +105,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 		endif
 		
 		;Combine the calibrated visibilities in the correct format for the script
-		for pol_i=0,n_pol-1 do *vis_arr[pol_i] = *vis_model_arr[pol_i]+*vis_eor[pol_i]
+		for pol_i=0,n_pol-1 do *vis_arr[pol_i] = *vis_arr[pol_i]+*vis_eor[pol_i]
 		
 	endif
 	

@@ -105,7 +105,7 @@
 ;end
 
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
-    calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,_Extra=extra
+    calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,no_ref_tile=no_ref_tile,_Extra=extra
     
   IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
   reference_tile=cal.ref_antenna
@@ -119,8 +119,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
   min_cal_baseline=cal.min_cal_baseline
   max_cal_baseline=cal.max_cal_baseline
   min_cal_solutions=cal.min_solns ;minimum number of calibration equations needed to solve for the gain of one baseline
-  time_average=cal.time_avg
-  max_cal_iter=cal.max_iter
+  time_average=cal.time_avg ;average the visibilities across time steps before solving for the gains
+  max_cal_iter=cal.max_iter ;maximum iterations to perform for the linear least-squares solver
   IF max_cal_iter LT 5 THEN print,'Warning! At least 5 calibration iterations recommended. Using '+Strn(Floor(max_cal_iter))
   conv_thresh=cal.conv_thresh
   
@@ -130,10 +130,10 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
   n_time=cal.n_time
   
   vis_weight_ptr_use=vis_weight_ptr ;weights WILL be over-written! (Only for NAN gain solutions)
-  tile_A_i=cal.tile_A-1
-  tile_B_i=cal.tile_B-1
+  tile_A_i=cal.tile_A-1 ;tile_A contribution indexed from 0
+  tile_B_i=cal.tile_B-1 ;tile_B contribution indexed from 0
   freq_arr=cal.freq
-  bin_offset=cal.bin_offset
+  bin_offset=cal.bin_offset ;FLAG FOR DELETION
   n_baselines=obs.nbaselines
   IF Tag_exist(cal,'phase_iter') THEN phase_fit_iter=cal.phase_iter ELSE phase_fit_iter=Floor(max_cal_iter/4.)<4
   
@@ -146,10 +146,11 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
     convergence=Fltarr(n_freq,n_tile)
     gain_arr=*cal.gain[pol_i]
     
+    ;***Average the visibilities over the time steps before solving for the gains solutions
+    ;   This is not recommended, as longer baselines will be downweighted artifically.
     IF Keyword_Set(time_average) THEN BEGIN
-      ;average over time
-      ;the visibilities have dimension nfreq x (n_baselines x n_time),
-      ; which can be reformed to nfreq x n_baselines x n_time
+      ;***The visibilities have dimension nfreq x (n_baselines x n_time),
+      ;   which can be reformed to nfreq x n_baselines x n_time
       tile_A_i=tile_A_i[0:n_baselines-1]
       tile_B_i=tile_B_i[0:n_baselines-1]
       vis_weight_use=0>Reform(*vis_weight_ptr_use[pol_i],n_freq,n_baselines,n_time)<1
@@ -195,7 +196,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
       ENDIF ELSE flag_dist_cut=where((Temporary(dist_arr) LT min_cal_baseline) OR (Temporary(xcen) GT dimension/2.) OR (Temporary(ycen) GT elements/2.),n_dist_cut)
     ENDELSE
     kx_arr=(ky_arr=(dist_arr=0))
+    ;***
     
+    ;Remove the weights from data and model after the optional time averaging above. FLAG FOR LOOP INCLUSION
     IF n_dist_cut GT 0 THEN weight[flag_dist_cut]=0.
     vis_avg*=weight_invert(weight)
     vis_model*=weight_invert(weight)
@@ -214,8 +217,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
     tile_A_i_use=Lonarr(n_baseline_use)
     tile_B_i_use=Lonarr(n_baseline_use)
     FOR tile_i=0L,n_tile_use-1 DO BEGIN
-      IF hist_tile_A[tile_use[tile_i]] GT 0 THEN tile_A_i_use[riA[riA[tile_use[tile_i]]:riA[tile_use[tile_i]+1]-1]]=tile_i
-      IF hist_tile_B[tile_use[tile_i]] GT 0 THEN tile_B_i_use[riB[riB[tile_use[tile_i]]:riB[tile_use[tile_i]+1]-1]]=tile_i
+      IF hist_tile_A[tile_use[tile_i]] GT 0 THEN tile_A_i_use[riA[riA[tile_use[tile_i]]:riA[tile_use[tile_i]+1]-1]]=tile_i  ;Calculate tile contributions for each
+      IF hist_tile_B[tile_use[tile_i]] GT 0 THEN tile_B_i_use[riB[riB[tile_use[tile_i]]:riB[tile_use[tile_i]+1]-1]]=tile_i  ; non-flagged baseline
     ENDFOR
     
     ref_tile_use=Min(where(reference_tile EQ tile_use))
@@ -224,6 +227,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
       cal.ref_antenna=tile_use[ref_tile_use]
       cal.ref_antenna_name=(*obs.baseline_info).tile_names[cal.ref_antenna]
     ENDIF
+    
+    ;Set NAN data to 0 in both the data and the model 
     nan_i=where(Finite(vis_avg,/nan),n_nan)
     IF n_nan GT 0 THEN vis_model[nan_i]=(vis_avg[nan_i]=0)
     
@@ -235,8 +240,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
         ;Reuse same gain solution between successive frequency channels IF input gains are default values
         ;        IF fii EQ 0 THEN gain_curr=Reform(gain_arr[fi,tile_use])
         ;        IF Stddev(gain_arr[fi,tile_use]) GT 0 THEN gain_curr=Reform(gain_arr[fi,tile_use])
-        vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)]
-        vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]
+        vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)]        ;Set up data and model arrays of the original and conjugated versions. This
+        vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]  ;provides twice as many equations into the linear least-squares solver.
         weight2=Reform(weight[fi,baseline_use]) & weight2=[weight2,weight2]
         IF Keyword_Set(calibration_weights) THEN BEGIN baseline_wts2=Reform(baseline_weights[fi,baseline_use]) & baseline_wts2=[baseline_wts2,baseline_wts2] & ENDIF 
         
@@ -286,7 +291,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,param
             diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
             IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
             IF nan_test(gain_curr) GT 0 THEN gain_curr[where(Finite(gain_curr,/nan))]=gain_old[where(Finite(gain_curr,/nan))]
-            gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
+            if ~keyword_set(no_ref_tile) then begin
+              gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
+            endif
             conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
             IF i GT phase_fit_iter THEN IF conv_test[fii,i] LE conv_thresh THEN BREAK
         ENDFOR

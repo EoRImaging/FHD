@@ -4,7 +4,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
     interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
     debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
-    debug_clip_beam_mask=debug_clip_beam_mask
+    debug_clip_beam_mask=debug_clip_beam_mask,debug_gauss=debug_gauss
     
 icomp = Complex(0, 1)
 freq_center=antenna1.freq[freq_i]
@@ -106,6 +106,30 @@ IF Keyword_Set(debug_beam_clip_floor) THEN BEGIN
     psf_base_superres = psf_amp*Cos(psf_phase) + icomp*psf_amp*Sin(psf_phase)
 ENDIF
 
+if keyword_set(debug_gauss) then begin
+  max_ind = where(abs(psf_base_superres) EQ max(abs(psf_base_superres)))
+  max_ind_col = max_ind mod N_elements(psf_base_superres[0,*])
+  max_val = abs(psf_base_superres[max_ind])
+  uvbeam_input_1D = FLTARR(N_elements(psf_base_superres[0,*]))
+  max_val_arr = FLTARR(N_elements(psf_base_superres[0,*]),N_elements(psf_base_superres[0,*]))
+  max_val_arr[*,*] = max_val
+
+  gauss = exp(-(INDGEN(1400,/float)-699.)^2./(2*200^2.))
+  uvbeam_input = gauss # transpose(gauss) * max_val_arr
+  singauss = FLTARR(1400)
+  singauss[100:1299]=sin(2.*!Pi*(1/1200.)*INDGEN(1200,/float))*.0009
+  singauss = singauss*gauss
+  uvbeam_imag = (Complex(0,1)*(singauss)) # transpose(gauss)
+  uvbeam_input = uvbeam_input + uvbeam_imag
+  
+  sub_level = min(abs(uvbeam_input[*,699]))
+  uvbeam_input2 = uvbeam_input - sub_level
+  zeroed = where(uvbeam_input2 LT 0,n_count)
+  if n_count GT 0 then uvbeam_input2[zeroed] = 0.
+  uvbeam_input=uvbeam_input2
+  
+  psf_base_superres = uvbeam_input
+endif else $
 psf_base_superres*=psf_val_ref/Total(psf_base_superres)
 IF Keyword_Set(debug_beam_conjugate) THEN psf_base_superres=Conj(psf_base_superres)
 RETURN,psf_base_superres
