@@ -171,19 +171,45 @@ bandpass_calibrate=0 <br />
 
 ###EoR <br />
 
+eor_sim=1
+include_catalog_sources=0
+
 **Needs updated by Bryna or Adam L** <br />
+
+###Diffuse <br />
+
+diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+  -*Currently only on diffuse_simulations branch * <br />
+  -*Replace gsm_150MHz.sav with any other diffuse .sav file. This file should contain the following:
+  ..- MODEL_ARR = A healpix map with the diffuse model
+  ..- NSIDE = The corresponding NSIDE parameter
+  ..- HPX_INDS = The corresponding healpix indices of the model_arr
+  ..- coord_sys = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, dfefaults to equatorial.
+
+###Point sources <br />
+
+sources_file_name='GLEAM_EGC_catalog'
+  -*Specifies to use the publicly-released GLEAM extragalactic point source catalog*
+max_model_sources=10000
+  -*Limits the number of sources under consideration. The number of included sources is also limitd by the beam threshold and whether or not sidelobe sources are included, but this is a hard cutoff.*
 
 ###MWA <br />
 
 ###PAPER <br />
 
-**In progress testing by Adam L** <br />
+instrument='paper'
+nfreq_avg=203
+  -*Calculate the psf at only one frequency bin.*
 
 ###In-situ <br />
 
 **Nichole will fill in**  <br />
 
 ###HERA <br />
+
+instrument='hera' <br />
+beam_model_version=2 <br />
+ -*For newest version of the beam model*
 
 
 
