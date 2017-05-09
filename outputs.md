@@ -11,6 +11,8 @@ FHD outputs various data products. We outline and describe these below. <br />
   <img src="https://github.com/nicholebarry/MWA_data_analysis/blob/master/image_docs/beam_ptr2-crop.pdf" width="350"/>
 </p>
 
+### \<obsid\>_jones.sav <br />
+
 ## Calibration <br />
 
 ### \<obsids\>_cal.sav <br />
@@ -50,107 +52,23 @@ FHD outputs various data products. We outline and describe these below. <br />
 
 ## Grid Data<br />
 
-### \<obsids\>_uv_\<pol\>.sav <br />
+### \<obsids\>\_uv_\<pol\>.sav <br />
 
-### \<obsids\>_uv_model_\<pol\>.sav <br />
+### \<obsids\>\_uv_model_\<pol\>.sav <br />
 
-### \<obsids\>_uv_weights_\<pol\>.sav <br />
+### \<obsids\>\_uv_weights_\<pol\>.sav <br />
 
 ### \<obsids\>_vis_count.sav <br />
 
 ##  Healpix<br />
 
 ### \<obsids\>_even_cube\<pol\>.sav / \<obsids\>_even_cube\<pol\>.sav <br />
-  * DIRTY_CUBE = Healpix cube of the dirty sky image, shape = (n_hpx_inds, n_freq)
-  * MODEL_CUBE = Healpix cube of the model sky image, shape = (n_hpx_inds, n_freq)
-  * WEIGHTS_CUBE = Healpix cube of weights, shape = (n_hpx_inds, n_freq)
-  * VARIANCE_CUBE = Healpix cube of variance, shape = (n_hpx_inds, n_freq)
-  * RES_CUBE = Healpix cube of residuals (dirty-model), shape = (n_hpx_inds, n_freq)
-  * BEAM_SQUARED_CUBE = Healpix cube of weights, shape = (n_hpx_inds, n_freq)
-  * OBS = obs object
-  * NSIDE = Healpix NSIDE parameter
-  * HPX_INDS. = Healpix indices corresponding with the saved cubes
-  * N_AVG = !Q
 
 ##  Metadata<br />
 
 ### \<obsids\>_obs.sav <br />
-  * obs = The obs structure, which holds observational parameters throughout analysis.  !Q When does it get saved here?
-
-        CODE_VERSION    STRING    'v3.5-625-gc3a70e6-dirty'
-        INSTRUMENT      STRING    'hera'
-        OBSNAME         STRING    'ewbase_14m_plat'
-        DIMENSION       FLOAT           1024.00
-        ELEMENTS        FLOAT           1024.00
-        NBASELINES      LONG                 3
-        DFT_THRESHOLD   FLOAT           0.00000
-        DOUBLE_PRECISION
-                        INT              0
-        KPIX            FLOAT         0.0830000
-        DEGPIX          FLOAT          0.674131
-        OBSAZ           FLOAT           190.130
-        OBSALT          FLOAT           89.9929
-        OBSRA           FLOAT           72.6386
-        OBSDEC          FLOAT          -30.7483
-        ZENRA           FLOAT           72.6400
-        ZENDEC          FLOAT          -30.7414
-        OBSX            FLOAT           512.000
-        OBSY            FLOAT           512.000
-        ZENX            FLOAT           512.002
-        ZENY            FLOAT           512.010
-        PHASERA         FLOAT           72.6386
-        PHASEDEC        FLOAT          -30.7483
-        ORIG_PHASERA    FLOAT           72.6386
-        ORIG_PHASEDEC   FLOAT          -30.7483
-        N_POL           INT              2
-        N_TILE          LONG                 2
-        N_TILE_FLAG     LONG                 0
-        N_FREQ          LONG               203
-        N_FREQ_FLAG     LONG                 0
-        N_TIME          LONG                56
-        N_TIME_FLAG     FLOAT           0.00000
-        N_VIS           LONG             11366
-        N_VIS_IN        LONG             34104
-        N_VIS_RAW       LONG             34104
-        NF_VIS          LONG      Array[203]
-        BEAM_INTEGRAL   POINTER   Array[4]
-        POL_NAMES       STRING    Array[8]
-        JD0             DOUBLE           2457458.2
-        MAX_BASELINE    FLOAT           9.31679
-        MIN_BASELINE    FLOAT           4.66654
-        DELAYS          POINTER   <NullPointer>
-        LON             FLOAT           21.4283
-        LAT             FLOAT          -30.7215
-        ALT             FLOAT           1073.00
-        FREQ_CENTER     FLOAT       1.49754e+08
-        FREQ_RES        FLOAT           492611.
-        TIME_RES        FLOAT           11.0001
-        ASTR            STRUCT    -> <Anonymous> Array[1]
-        ALPHA           FLOAT         -0.800000
-        PFLAG           INT              0
-        CAL             FLOAT     Array[4]
-        RESIDUAL        INT              0
-        VIS_NOISE       POINTER   <PtrHeapVar9>
-        BASELINE_INFO   POINTER   <PtrHeapVar6>
-        META_DATA       POINTER   <NullPointer>
-        META_HDR        POINTER   <NullPointer>
-        DEGRID_SPECTRAL_TERMS
-                        INT              0
-        GRID_SPECTRAL_TERMS
-                        INT              0
-        GRID_INFO       POINTER   <NullPointer>
-        HEALPIX         STRUCT    -> <Anonymous> Array[1]
 
 ### \<obsids\>_params.sav <br />
-  * params = Structure to do what? !Q
-
-        UU              DOUBLE    Array[168]
-        VV              DOUBLE    Array[168]
-        WW              DOUBLE    Array[168]
-        BASELINE_ARR    FLOAT     Array[168]
-        TIME            FLOAT     Array[168]
-        ANTENNA1        FLOAT     Array[168]
-        ANTENNA2        FLOAT     Array[168]
 
 ### \<obsids\>_settings.txt <br />
 
@@ -160,41 +78,34 @@ FHD outputs various data products. We outline and describe these below. <br />
 
 ### \<obsids\>_status.txt <br />
 
-
 ##  Output Data<br />
 
-### \<obsids\>_Beam_\<pol\>.sav <br />
+### \<obsids\>\_Beam_\<pol\>.sav <br />
 
-### \<obsids\>_\<filter\>_Dirty_\<pol\>.fits / \<obsids\>_\<filter\>_Model_\<pol\>.fits / \<obsids\>_\<filter\>_Residual_\<pol\>.fits <br />
+### \<obsids\>\_\<filter\>\_Dirty_\<pol\>.fits / \<obsids\>\_\<filter\>\_Model_\<pol\>.fits / \<obsids\>\_\<filter\>\_Residual_\<pol\>.fits <br />
 
-### \<obsids\>_\<filter\>_Restored_rings_\<pol\>.fits <br />
+### \<obsids\>\_\<filter\>\_Restored_rings_\<pol\>.fits <br />
 
-### \<obsids\>_\<filter\>_UV_weights_\<pol\>.fits <br />
+### \<obsids\>\_\<filter\>\_UV_weights_\<pol\>.fits <br />
 
 ##  Output Images<br />
 
 ### \<obsids\>_cal_amp.png / \<obsids\>_cal_autocorr.png / \<obsids\>_cal_phase.png<br />
 
-### \<obsids\>_Beam_\<pol\>.png <br />
+### \<obsids\>\_Beam_\<pol\>.png <br />
 
-### \<obsids\>_\<filter\>_Dirty_\<pol\>.png / \<obsids\>_\<filter\>_Model_\<pol\>.png / \<obsids\>_\<filter\>_Residual_\<pol\>.png <br />
+### \<obsids\>\_\<filter\>\_Dirty_\<pol\>.png / \<obsids\>\_\<filter\>_Model_\<pol\>.png / \<obsids\>\_\<filter\>\_Residual_\<pol\>.png <br />
 
-### \<obsids\>_\<filter\>_Restored_rings_\<pol\>.png <br />
+### \<obsids\>\_\<filter\>\_Restored_rings_\<pol\>.png <br />
 
-### \<obsids\>_\<filter\>_Sources_\<pol\>.png <br />
+### \<obsids\>\_\<filter\>\_Sources_\<pol\>.png <br />
 
-### \<obsids\>_\<filter\>_UV_weights_\<pol\>.png <br />
+### \<obsids\>\_\<filter\>\_UV_weights_\<pol\>.png <br />
 
 ##  Vis Data<br />
-   
-### \<obsids\>_vis_model_\<pol\>.sav / \<obsids\>_vis_\<pol\>.sav <br />
-  * vis_ptr = Pointer to a complex array of N_FREQ x NBlts entries, representing the visibilities of polarization \<pol\>
-  * obs = Obs object
-  * pol_i = Number representing polarization (0 = XX, 1 = YY)
 
 ### \<obsids\>_autos.sav <br />
-  * auto_corr = Pointer array of length 2. 0=X pol, 1 = Y pol. Each entry points to the (N_FREQ x NBlts) complex array of autocorrelations for that polarization.
-  * obs = Obs object
 
 ### \<obsids\>_flags.sav <br />
-  * vis_weights = Pointer array of length 2. 0=X pol, 1 = Y pol. Each entry points to the (N_FREQ x NBlts) complex array of flags (1 or 0) for that polarization. Visibility is flagged if the flag is <=0 !Q
+
+### \<obsids\>\_vis_model_\<pol\>.sav / \<obsids\>\_vis_\<pol\>.sav <br />
