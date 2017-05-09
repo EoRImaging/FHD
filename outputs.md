@@ -57,6 +57,18 @@ FHD outputs various data products. We outline and describe these below. <br />
 
 ##  Healpix<br />
 
+### \<obsids\>_{even,odd}_cube\<pol\>.sav<br />
+  * DIRTY_CUBE = Healpix cube of the dirty sky image, shape = (n_hpx_inds, n_freq)
+  * MODEL_CUBE = Healpix cube of the model sky image, shape = (n_hpx_inds, n_freq)
+  * WEIGHTS_CUBE = Healpix cube of weights, shape = (n_hpx_inds, n_freq)
+  * VARIANCE_CUBE = Healpix cube of variance, shape = (n_hpx_inds, n_freq)
+  * RES_CUBE = Healpix cube of residuals (dirty-model), shape = (n_hpx_inds, n_freq)
+  * BEAM_SQUARED_CUBE = Healpix cube of weights, shape = (n_hpx_inds, n_freq)
+  * OBS = obs object
+  * NSIDE = Healpix NSIDE parameter
+  * HPX_INDS. = Healpix indices corresponding with the saved cubes
+  * N_AVG = !Q
+
 ##  Metadata<br />
 
 ### \<obsids\>_obs.sav <br />
