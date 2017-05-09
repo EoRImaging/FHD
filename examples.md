@@ -41,7 +41,7 @@ uvfits_subversion = 1 <br />
 saved_run_bp = 0 <br />
 -*Calibrate to the GLEAM catalog* <br />
 calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
-return_cal_visibilities = 0 <br />
+return_cal_visibilities = 1 <br />
 -*Deconvolution settings* <br />
 deconvolve = 1 <br />
 gain_factor = 0.1 <br />
@@ -52,6 +52,7 @@ subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir
 return_sidelobe_catalog = 1 <br />
 -*Export keywords* <br />
 pad_uv_image = 1 <br />
+ring_radius = 0 <br />
 -*Recalculate run* <br />
 recalculate_all = 1 <br />
 snapshot_recalculate = 1 <br />
@@ -61,13 +62,16 @@ undefine, diffuse_calibrate, diffuse_model <br />
 rephase_weights = 0 <br />
 restrict_hpx_inds = 0 <br />
 hpx_radius = 10 <br />
--*Not sure what these do* <br />
+-*Set resolution (these are the EoR firstpass default)* <br />
+dimension = 2048 <br />
+FoV = 0 <br />
+-*Polarization mode (set depending on whether full polarization is needed)* <br />
+n_pol = 2/4 <br />
+-*Not sure what these do !Q* <br />
 dft_threshold = 0   <br />
 snapshot_healpix_export = 1 <br />
 smooth_width = 32 <br />
 filter_background = 1 <br />
-dimension = 2048 <br />
-FoV = 0 <br />
 
 
 ### MWA Phase 2 <br />

@@ -146,10 +146,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 50 <br />
   -*Default*: 50 !Q <br />
   
-**return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. <br />
+**return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. If n_pol = 4 (full pol mode), return_cal_visibilites must be set because the visibilites are required for calculating the mixing angle between Q and U. <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 1 <br />
-  -*Default*: 1 !Q <br />
+  -*Default*: 1 <br />
 
 **transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, or the full file path to a npy file. (Which formats is the gain array expected in for these file types? !Q). Note that this will calibrate, but not generate a model. <br />
   -*Needs updating*: will not generate a model for subtraction in the current setup. <br />
@@ -307,6 +307,10 @@ WARNING! Options in this section may change without notice, and should never be 
 **restrict_hpx_inds**: only allow gridding of the output healpix cubes to include the healpix pixels specified in a save file. This is useful for restricting many observations to have consistent healpix pixels during integration, and saves on memory and walltime. Set to a string to specify the name of the save file in the Observations subdirectory. <br />
   -*EoR_firstpass settings*: 1, which defaults to `EoR0_high_healpix_inds.idlsave`, `EoR0_low_healpix_inds.idlsave`, `EoR1_high_healpix_inds.idlsave`, or `EoR1_low_healpix_inds.idlsave` depending on obs parameters.<br />
   -*Default*: not set <br /> 
+
+**ring_radius**: sets the size of the rings around sources in the restored images. To generate restored images without rings, set ring_radius = 0. <br />
+  -*EoR_firstpass settings*: not 0 !Q<br />
+  -*Default*: not 0 !Q<br />
 
 **save_uvf**: saves the gridded uv plane as a function of frequency for dirty, model, weights, and variance cubes. <br />
   -*Turn off/on*: 0/1 <br />
