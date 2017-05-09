@@ -197,41 +197,9 @@ t4=0 ;Holographic mapping function
 i2=0. 
 t0=Systime(1)
 
-
 converge_check=Fltarr(Ceil(float(max_iter)/float(check_iter>1))>2+1)
 converge_check2=Fltarr(max_iter>2+1)
 
-sm_xmin=(Min(xvals_fit[where(beam_mask)])+dimension_fit/2.-smooth_width)>0
-sm_xmax=(Max(xvals_fit[where(beam_mask)])+dimension_fit/2.+smooth_width)<(dimension_fit-1)
-sm_ymin=(Min(yvals_fit[where(beam_mask)])+elements_fit/2.-smooth_width)>0
-sm_ymax=(Max(yvals_fit[where(beam_mask)])+elements_fit/2.+smooth_width)<(elements_fit-1)
-beam_avg_box=beam_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
-beam_corr_box=beam_corr_avg[sm_xmin:sm_xmax,sm_ymin:sm_ymax]
-
-image_filtered=dirty_image_composite
-IF Keyword_Set(filter_background) THEN BEGIN
-    IF smooth_width GT 11 AND (dimension/smooth_width EQ Floor(dimension/smooth_width)) THEN BEGIN
-        image_rebin=Rebin(image_filtered*source_mask,dimension/smooth_width,elements/smooth_width)
-        mask_rebin=Rebin(source_mask,dimension/smooth_width,elements/smooth_width)
-        mask_i_use=where(mask_rebin)
-        filter_i=where(Abs(image_rebin[mask_i_use]-Mean(image_rebin[mask_i_use])) GT 5.*Stddev(image_rebin[mask_i_use]),n_filter)
-
-        IF n_filter GT 0 THEN BEGIN
-            image_rebin2=Median(image_rebin,4,/even)
-            image_rebin[mask_i_use[filter_i]]=image_rebin2[mask_i_use[filter_i]]
-        ENDIF
-        image_smooth=Rebin(image_rebin,dimension_fit,elements_fit)
-        image_filtered=(image_filtered-image_smooth)*source_mask
-    ENDIF ELSE BEGIN
-        image_smooth=Median(image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-        image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-=image_smooth
-    ENDELSE
-ENDIF
-source_find_image=image_filtered*beam_avg*beam_mask*source_taper
-converge_check[0]=Stddev(source_find_image[where(beam_mask)],/nan)
-converge_check2[0]=Stddev(source_find_image[where(beam_mask)],/nan)
-print,"Gain factor used:",Strn(fhd_params.gain_factor)
-print,"Initial convergence:",Strn(converge_check[0])
 
 comp_i=0L
 model_holo_arr=Ptrarr(n_pol,/allocate)
@@ -280,6 +248,15 @@ IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
     ENDIF ELSE print, "Sidelobe catalog pre-subtraction was set, but no valid sources were found in catalog: " + subtract_sidelobe_catalog
 ENDIF
 
+IF Keyword_Set(filter_background) THEN BEGIN
+    image_filtered = background_subtraction(dirty_image_composite, dimension=dimension_fit, elements=elements_fit,$
+                    smooth_width=smooth_width, beam_mask=beam_mask)
+ENDIF ELSE image_filtered = dirty_image_composite
+source_find_image=image_filtered*beam_avg*beam_mask*source_taper
+converge_check[0]=Stddev(source_find_image[where(beam_mask)],/nan)
+converge_check2[0]=Stddev(source_find_image[where(beam_mask)],/nan)
+print,"Gain factor used:",Strn(fhd_params.gain_factor)
+print,"Initial convergence:",Strn(converge_check[0])
 IF ~Keyword_Set(silent) THEN print,'Iteration # : Component # : Elapsed time : Convergence'
 
 recalc_flag=1
@@ -301,25 +278,8 @@ FOR iter=0L,max_iter-1 DO BEGIN
         
         image_unfiltered=dirty_image_composite-model_image_composite
         IF Keyword_Set(filter_background) THEN BEGIN
-            IF smooth_width GT 11 AND (dimension/smooth_width EQ Floor(dimension/smooth_width)) THEN BEGIN
-                image_rebin=Rebin(image_unfiltered*beam_mask,dimension/smooth_width,elements/smooth_width)
-                mask_rebin=Rebin(beam_mask,dimension/smooth_width,elements/smooth_width)
-                mask_i_use=where(mask_rebin)
-                filter_i=where(Abs(image_rebin[mask_i_use]-Mean(image_rebin[mask_i_use])) GT 5.*Stddev(image_rebin[mask_i_use]),n_filter)
-
-                model_rebin=Rebin(model_image_composite,dimension/smooth_width,elements/smooth_width)
-                IF n_filter GT 0 THEN BEGIN
-                    image_rebin2=Median(image_rebin,4,/even)
-                    image_rebin[mask_i_use[filter_i]]=image_rebin2[mask_i_use[filter_i]]
-                ENDIF
-                image_smooth=Rebin(image_rebin,dimension_fit,elements_fit)
-                image_filtered=(image_unfiltered-image_smooth)*beam_mask
-            ENDIF ELSE BEGIN
-                image_smooth=Median(image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-                image_filtered=fltarr(dimension_fit,elements_fit)
-                image_filtered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]=image_unfiltered[sm_xmin:sm_xmax,sm_ymin:sm_ymax]-image_smooth
-                model_smooth=Median(model_image_composite[sm_xmin:sm_xmax,sm_ymin:sm_ymax]*beam_avg_box,smooth_width,/even)*beam_corr_box
-            ENDELSE
+            image_filtered = background_subtraction(image_unfiltered, dimension=dimension_fit, elements=elements_fit,$
+                smooth_width=smooth_width, beam_mask=beam_mask)
         ENDIF ELSE BEGIN
             image_filtered=image_unfiltered
         ENDELSE
