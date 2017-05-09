@@ -170,10 +170,10 @@ bandpass_calibrate=0 <br />
 ## Simulations <br />
 
 On Oscar (Brown University cluster), simulations may be run via one of two wrapper scripts. These are written to run on clusters managed by the Simple Linux Utility for Resource Management (SLURM) job scheduler.
-  - 'sim_pipe_slurm.sh' is analogous to "pipe_dream.sh", and allows a simple simulation to be run off a set of ObsIDs. This will start an array task, with each parallel job simulating off a specified ObsID file. All outputs will go to the same fhd_directory.
-  - 'sim_variation.sh' must be passed a parameter "-p 'param=opt1,opt2,opt3,...'", and can only be run for one ObsID at a time. This allows for a single simulation parameter to be varied. All the results will be stored in the same output directory, but files corresponding with each value of param will have 'param=opt_i' appended to the filename (where opt_i is the i'th value).<br />
+  - 'sim_pipe_slurm.sh' is analogous to "pipe_dream", and allows a simple simulation to be run off a set of ObsIDs.
+  - 'sim_variation.sh' must be passed a parameter "-p 'param=opt1,opt2,opt3,...'", and can only be run for one ObsID at a time. This allows for a single simulation parameter to be varied. All the results will be stored in the same output directory, but files corresponding with each value of param will have 'param=opt_i' appended to the filename (where opt_i is the i'th value).
 
-The parameters for the simulation are specified by the version string, which matches an entry in the "case" statement in sim_versions_wrapper.pro (analogous to eor_firstpass_versions.pro). Each wrapper must be given a version string, obs_id list file, and other SLURM parameters (see examples in submit_sims.sh).
+The parameters for the simulation are specified by the version string, which matches an entry in the "case" statement in sim_versions_wrapper (analogous to eor_firstpass_versions). Each wrapper must be given a version string, obs_id list file, and other SLURM parameters (see examples in submit_sims.sh).
 
 ###EoR <br />
 
@@ -184,7 +184,7 @@ include_catalog_sources=0
 
 ###Diffuse <br />
 
-diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')<br />
+diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
   -*This is a full-sky map in galactic coordinates of the Global Sky Model at 150 MHz only. *
 
 ###Point sources <br />
