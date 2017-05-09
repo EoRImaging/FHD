@@ -43,7 +43,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 1 <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
   
-**psf_resolution** : !Q
+**psf_resolution** : Super-resolution factor of the psf. The psf will be interpolated to a grid of dimension (psf_superres_dim,psf_superres_dim). !Q <br />
+  -*Default*: 16 <br />
 
 
 ## Calibration
@@ -161,8 +162,9 @@ bandpass_calibrate=1 <br />
 calibration_polyfit=2 <br />
 no_restrict_cal_sources=1 <br /> 
 
-**include_catalog_sources**: !Q <br />
+**include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
+   -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q
 
 ## Debug
 WARNING! Options in this section may change without notice, and should never be turned on by default. <br />
