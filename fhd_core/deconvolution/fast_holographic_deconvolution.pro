@@ -114,19 +114,9 @@ beam_avg=Sqrt(beam_avg>0.)
 beam_corr_avg=weight_invert(beam_avg,beam_threshold)
 source_taper=Sqrt((beam_avg*(beam_corr_avg<1./sqrt(beam_threshold)))>0.)
 
-horizon_mask=intarr(dimension,elements)+1
-
-;ignore refraction since it's only being used to calculate a pixel mask for the horizon
-apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
-nan_i=where(Finite(ra_arr,/nan),n_nan,complement=horizon_i)
-IF n_nan GT 0 THEN horizon_mask[nan_i]=0
-ra_use=ra_arr[horizon_i]
-dec_use=dec_arr[horizon_i]
-Eq2Hor,ra_use,dec_use,obs.Jd0,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate, refract=0
-IF Tag_exist(fhd_params,'horizon_threshold') THEN horizon_threshold=fhd_params.horizon_threshold ELSE horizon_threshold=10. ;degrees above the horizon to exclude
-horizon_cut=where(alt_arr1 LT horizon_threshold,n_hor_cut)
-IF n_hor_cut GT 0 THEN horizon_mask[horizon_i[horizon_cut]]=0
-beam_mask*=rebin(horizon_mask,dimension_fit,elements_fit,/sample)
+; Mask any regions close to or below the horizon
+horizon_mask_use = horizon_mask(obs, horizon_threshold=fhd_params.horizon_threshold)
+beam_mask*=rebin(horizon_mask_use,dimension_fit,elements_fit,/sample)
 
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
 weights_arr=Ptrarr(n_pol,/allocate)
