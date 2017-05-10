@@ -1,5 +1,7 @@
 FUNCTION group_source_components,obs,comp_arr,radius=radius,gain_factor=gain_factor
 
+; Source components are grouped by gridding and merging footprints above the threshold of the deconvolution gain_factor
+; Orphan components are culled
 gauss_sigma=beam_width_calculate(obs)
 gauss_width=beam_width_calculate(obs,/fwhm)
 IF N_Elements(radius) EQ 0 THEN radius=gauss_width
@@ -60,7 +62,7 @@ FOR c_i=0,n_candidates-1 DO BEGIN
     dist_arr=sqrt((xvals[c_i_i]-xvals[influence_i])^2.+(yvals[c_i_i]-yvals[influence_i])^2.)/gauss_width
     t2a=Systime(1)
     t1+=t2a-t1a
-    single_influence=candidate_vals[c_i]*Exp(-dist_arr);/(dist_arr+1)
+    single_influence=candidate_vals[c_i]*Exp(-dist_arr)
     t3a=Systime(1)
     t2+=t3a-t2a
     primary_i=where(single_influence GT influence_map[influence_i],n_primary)
@@ -149,7 +151,6 @@ FOR gi=0L,ng-1 DO BEGIN
     comp_i_sub=where(sub_use_test,n_sub_use,ncomplement=n_cut,complement=cut_i)
     
     IF n_cut GT 0 THEN group_id[si_g[cut_i]]=-1
-;    IF n_sub_use GT 0 THEN si_g=si_g[comp_i_sub]
 ENDFOR
 
 RETURN,group_id

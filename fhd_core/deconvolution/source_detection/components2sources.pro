@@ -83,14 +83,15 @@ FOR gi=0L,ng-1 DO BEGIN
     flux_I=(comp_arr[si_g].flux.I)>0.
     IF Total(flux_I) LE 0 THEN CONTINUE
     
+    ;flux_I is guaranteed to be non-zero from above
     sx=Total(comp_arr[si_g].x*flux_I)/Total(flux_I)
     sy=Total(comp_arr[si_g].y*flux_I)/Total(flux_I)
     
     apply_astrometry, obs, x_arr=sx, y_arr=sy, ra_arr=sra, dec_arr=sdec, /xy2ad
-    source_arr[gi].x=sx ;flux_I is guaranteed to be non-zero from above
-    source_arr[gi].y=sy ;flux_I is guaranteed to be non-zero from above
-    source_arr[gi].ra=sra ;flux_I is guaranteed to be non-zero from above
-    source_arr[gi].dec=sdec ;flux_I is guaranteed to be non-zero from above
+    source_arr[gi].x=sx
+    source_arr[gi].y=sy
+    source_arr[gi].ra=sra
+    source_arr[gi].dec=sdec
     FOR pol_i=0,7 DO source_arr[gi].flux.(pol_i)=Total(comp_arr[si_g].flux.(pol_i))
     source_arr[gi].id=gi+gi0
     comp_arr[si_g].id=gi+gi0
@@ -102,7 +103,7 @@ FOR gi=0L,ng-1 DO BEGIN
     source_arr[gi].alpha=Total(comp_arr[si_g].alpha*flux_I)/Total(flux_I)
     source_arr[gi].freq=Total(comp_arr[si_g].freq*flux_I)/Total(flux_I)    
     IF (1.-(1.-gain_factor)^N_Elements(si_g)) LT 0.5 THEN flag_min=1 ELSE flag_min=0 
-    IF Tag_exist(comp_arr,'flag') THEN source_arr[gi].flag=Max(comp_arr[si_g].flag)>flag_min
+    source_arr[gi].flag=Max(comp_arr[si_g].flag)>flag_min
     
     extend_test=Mean(Sqrt((sx-comp_arr[si_g].x)^2.+(sy-comp_arr[si_g].y)^2.))
     IF extend_test GE extend_threshold THEN BEGIN
@@ -130,12 +131,7 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     hcomp_gi=histogram(comp_gi,min=0,/bin,reverse_ind=c_ri)
     gain_factor_arr=comp_arr_use.gain
     id_use=where(hcomp_gi,n_id_use)
-    flux_frac_arr=Fltarr(ns)+1.
-    FOR i=0L,n_id_use-1 DO BEGIN
-        id_i=id_use[i]
-        ;What was this supposed to do???
-    ENDFOR
-;    product(
+    
     flux_frac_arr=1.-(1.-gain_factor)^hcomp_gi[source_arr.id]
     
     si_use=where(flux_frac_arr GE Abs(clean_bias_threshold) AND (hcomp_gi[source_arr.id] GT 1),n_use)
@@ -150,7 +146,6 @@ IF Keyword_Set(clean_bias_threshold) THEN BEGIN
     weight_img=source_image_generate(comp_weight,dimension=obs.dimension,restored_beam_width=gauss_sigma,pol=4,threshold=Mean(gain_factor_arr))
     undefine_fhd,comp_weight
     IF N_Elements(source_mask) NE dimension*elements THEN source_mask=replicate(1.,dimension,elements)
-;    extend_box_radius=3.*gauss_width
     FOR si = 0L,n_use-1L DO BEGIN
         gi=source_arr[si].id
         ncomp=hcomp_gi[gi]

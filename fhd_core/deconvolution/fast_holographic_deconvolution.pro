@@ -36,10 +36,7 @@ beam_threshold=fhd_params.beam_threshold
 add_threshold=fhd_params.add_threshold
 dft_threshold=fhd_params.dft_threshold
 over_resolution=fhd_params.over_resolution
-return_kernel=1
-max_add_sources=fhd_params.max_add_sources
-;local_max_radius=fhd_params.local_max_radius
-pol_use=fhd_params.pol_use
+return_kernel=1 ; This will be over-ridden later
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=fhd_params.sigma_cut
@@ -57,7 +54,6 @@ IF over_resolution GT 1 THEN obs_fit=fhd_struct_update_obs(obs,dimension=obs.dim
 icomp=Complex(0,1)
 beam_max_threshold=fhd_params.beam_max_threshold
 smooth_width=fhd_params.smooth_width
-;color_frequency_correction=fltarr(nfreq)+1. ;remove same component from all frequencies, but allow to be different in the future
 
 dimension=obs.dimension
 elements=obs.elements
@@ -65,9 +61,8 @@ dimension_fit=obs_fit.dimension
 elements_fit=obs_fit.elements
 degpix=obs.degpix
 astr=obs.astr
-beam_width=beam_width_calculate(obs_fit,min_restored_beam_width=1.,/FWHM)
-;beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)>1.
-local_max_radius=beam_width*2.
+pol_names=obs.pol_names
+local_max_radius=beam_width_calculate(obs_fit,min_restored_beam_width=1.,/FWHM)*2.
 box_radius=Ceil(local_max_radius)
 xvals=meshgrid(dimension,elements,1)-dimension/2
 yvals=meshgrid(dimension,elements,2)-elements/2
@@ -76,7 +71,6 @@ yvals_fit=meshgrid(dimension_fit,elements_fit,2)-elements_fit/2
 
 ;the particular set of beams read will be the ones specified by file_path_fhd.
 ;that will include all polarizations and frequencies, at ONE time snapshot
-;IF N_Elements(psf) EQ 0 THEN psf=beam_setup(obs,/restore_last,/silent)
 nfreq_beam=psf.n_freq
 beam_base=Ptrarr(n_pol,/allocate)
 beam_base_fit=Ptrarr(n_pol,/allocate)
@@ -91,12 +85,11 @@ alias_mask[dimension_fit/4:3.*dimension_fit/4.,elements_fit/4:3.*elements_fit/4.
 nbeam_avg=0
 FOR pol_i=0,n_pol-1 DO BEGIN ;this should be by frequency! and also by time
     *beam_base[pol_i]=Sqrt(beam_image(psf,obs,pol_i=pol_i,dimension=dimension,/square))
-    IF over_resolution GT 1 THEN *beam_base_fit[pol_i]=Rebin(*beam_base[pol_i],dimension_fit,elements_fit) ELSE *beam_base_fit[pol_i]=*beam_base[pol_i]
-;    *beam_base[pol_i]=beam_image(psf,obs,pol_i=pol_i,dimension=dimension,/square)
+    IF over_resolution GT 1 THEN *beam_base_fit[pol_i]=Rebin(*beam_base[pol_i],dimension_fit,elements_fit) $
+    ELSE *beam_base_fit[pol_i]=*beam_base[pol_i]
     beam_mask0=fltarr(dimension_fit,elements_fit)
     
     beam_mask_test=*beam_base_fit[pol_i]
-;    *beam_i[pol_i]=region_grow(beam_mask_test,dimension/2.+dimension*elements/2.,threshold=[beam_threshold,Max(beam_mask_test)])
     *beam_i[pol_i]=where(beam_mask_test GE beam_threshold)
     beam_mask0[*beam_i[pol_i]]=1.
     IF pol_i LE 1 THEN BEGIN
@@ -127,8 +120,6 @@ normalization_arr=fltarr(n_pol) ;factor to normalize holo_mapfn_apply
 model_uv_full=Ptrarr(n_pol,/allocate)
 model_uv_holo=Ptrarr(n_pol,/allocate)
 
-pol_names=obs.pol_names
-
 ;load holo map functions and initialize output arrays
 dirty_image_composite=fltarr(dimension_fit,elements_fit)
 dirty_image_composite_Q=fltarr(dimension_fit,elements_fit)
@@ -154,21 +145,17 @@ gain_normalization = get_image_renormalization(obs,psf=psf,params=params,weights
     beam_base=beam_base,filter_arr=filter_arr,image_filter_fn=decon_filter,degpix=degpix,file_path_fhd=file_path_fhd,/antialias)
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
-;    filter_single=filter_arr[pol_i]
     *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs_fit,psf=psf,params=params,$
         weights=*weights_arr[pol_i],image_filter=decon_filter,filter=filter_arr[pol_i],pad_uv=over_resolution,/antialias,$
-        norm=gain_normalization,beam_ptr=beam_base_fit[pol_i]);*(*beam_correction_fit[pol_i])
-;    filter_arr[pol_i]=filter_single
+        norm=gain_normalization,beam_ptr=beam_base_fit[pol_i])
 ENDFOR
 
 jones_fit=fhd_struct_init_jones(obs_fit,status_str,jones,file_path_fhd=file_path_fhd,mask=beam_mask,/update)
 dirty_stokes_arr=stokes_cnv(dirty_array,jones_fit,beam_arr=beam_base_fit,/square,_Extra=extra)
-dirty_image_composite=*dirty_stokes_arr[0]
+IF n_pol GT 3 THEN dirty_image_composite_V=*dirty_stokes_arr[3]
+IF n_pol GT 2 THEN dirty_image_composite_U=*dirty_stokes_arr[2]
 IF n_pol GT 1 THEN dirty_image_composite_Q=*dirty_stokes_arr[1]
-IF n_pol GT 2 THEN BEGIN
-    dirty_image_composite_V=*dirty_stokes_arr[3]
-    dirty_image_composite_U=*dirty_stokes_arr[2]
-ENDIF
+dirty_image_composite=*dirty_stokes_arr[0]
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
     *model_uv_full[pol_i]=complexarr(dimension,elements)
@@ -176,8 +163,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ENDFOR
 
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
-;    gal_model_holo=fhd_galaxy_deconvolve(obs,image_uv_arr,map_fn_arr=map_fn_arr,beam_base=beam_base,file_path_fhd=file_path_fhd,$
-;        galaxy_model_uv=galaxy_model_uv,restore=0,image_filter=decon_filter,filter_arr=filter_arr,_Extra=extra)
     gal_model_uv=fhd_galaxy_model(obs,jones,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
     FOR pol_i=0,n_pol-1 DO BEGIN
         *model_uv_full[pol_i]+=*gal_model_uv[pol_i]
@@ -382,13 +367,9 @@ converge_check=converge_check[0:i2]
 ;condense clean components
 fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
 noise_map=fhd_params.convergence*beam_corr_avg
-IF over_resolution GT 1 THEN BEGIN
-    noise_map=Rebin(noise_map,dimension,elements)
-    beam_width=beam_width_calculate(obs,min_restored_beam_width=1.,/FWHM)
-ENDIF
-;noise_map*=gain_normalization
+noise_map=Rebin(noise_map,dimension,elements)
+beam_width=beam_width_calculate(obs,min_restored_beam_width=1.,/FWHM)
 IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(n_pol)
-;component_array=component_array[0:comp_i]
 comp_i_use=where(component_array.flux.I GT 0)
 component_array=component_array[comp_i_use]
 fhd_params.n_iter=iter
@@ -435,6 +416,5 @@ print,String(format='("Filtering:",A,"[",A,"]")',Strn(Round(t2)),Strn(Round(t2*1
 print,String(format='("DFT source modeling:",A,"[",A,", or ",A," per 100 sources]")',Strn(Round(t3)),Strn(Round(t3*100/iter)/100.),Strn(Round(t3*10000./(comp_i+1))/100.))
 print,String(format='("Applying HMF:",A,"[",A,"]")',Strn(Round(t4)),Strn(Round(t4*100/iter)/100.))
 timing=[t00,t1,t2,t3,t4]
-;print,timing
 
 END  

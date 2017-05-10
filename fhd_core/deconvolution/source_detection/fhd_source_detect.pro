@@ -63,9 +63,6 @@ WHILE n_sources EQ 0 DO BEGIN
         n_sources=n_sources2
     ENDELSE
     
-    ;output={n_sources1:n_sources1,n_sources2:n_sources2,source_find_image:source_find_image,beam_mask:beam_mask,source_mask:source_mask,converge_check:converge_check}
-    ;save,output,filename=fhd.joint_obs+'_test_output.sav'
-    
     additional_i=additional_i[reverse(Sort(source_find_image_use[additional_i]))] ;order from brightest to faintest
     add_x=additional_i mod Long(dimension)
     add_y=Long(Floor(additional_i/dimension))
@@ -98,8 +95,6 @@ WHILE n_sources EQ 0 DO BEGIN
     add_dist=add_dist[additional_i_usei]
     extended_flag=extended_flag[additional_i_usei]
     
-    ;IF (n_sources<max_add_sources)+si GT max_sources THEN max_add_sources=max_sources-si
-    
     IF max_add_sources GT 0 THEN BEGIN
         IF n_sources GT max_add_sources THEN BEGIN
             additional_i=additional_i[0:max_add_sources-1]
@@ -112,10 +107,6 @@ WHILE n_sources EQ 0 DO BEGIN
     ;fit flux here, and fill comp_arr for each pol
     flux_arr=fltarr(4)
     fit_threshold=-2.*converge_check
-;    source_box_xvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,1)
-;    source_box_yvals=meshgrid(2.*local_max_radius+1,2.*local_max_radius+1,2)
-    ;source_fit_fn=Exp(-((source_box_xvals-local_max_radius)^2.+(source_box_yvals-local_max_radius)^2.)/(2.*local_max_radius))
-    ;source_fit_fn_ref=Total(source_fit_fn)/2.
     
     si_use=Lonarr(n_sources)-1
     sx_arr=additional_i mod Long(dimension)
@@ -138,31 +129,13 @@ WHILE n_sources EQ 0 DO BEGIN
         ENDELSE
         flux_interp_flag=extended_flag[src_i]
         IF Abs(sx-xcen) GT beam_width THEN BEGIN
-;            IF extended_flag[src_i] EQ 0 THEN BEGIN
-;                ;if NOT marked as an extended source, skip if centroiding failed for either pol
-;                source_mask1[sx,sy]=0
-;                CONTINUE 
-;            ENDIF
             IF xcen EQ -1 THEN xcen=sx
             flux_interp_flag=1
         ENDIF
         IF Abs(sy-ycen) GT beam_width THEN BEGIN
-;            IF extended_flag[src_i] EQ 0 THEN BEGIN
-;                ;if NOT marked as an extended source, skip if centroiding failed for either pol
-;                source_mask1[sx,sy]=0
-;                CONTINUE 
-;            ENDIF
             IF ycen EQ -1 THEN ycen=sy
             flux_interp_flag=1
         ENDIF
-;        IF Abs(sx-xcen)>Abs(sy-ycen) GE box_radius/2. THEN BEGIN
-;    ;            n_mask+=Total(source_mask1[sx-1:sx+1,sy-1:sy+1])
-;    ;            source_mask1[sx-1:sx+1,sy-1:sy+1]=0
-;    ;            CONTINUE
-;            xcen=sx
-;            ycen=sy
-;;            gain_mod=1./beam_width^2. ;divide by the area of the beam for diffuse sources
-;        ENDIF ;ELSE gain_mod=1./beam_width^2.
         gain_mod=1.
         sx0=Long(Floor(xcen))
         sy0=Long(Floor(ycen))
@@ -214,7 +187,6 @@ WHILE n_sources EQ 0 DO BEGIN
     IF iter GE max_iter THEN BREAK
 ENDWHILE
 
-;source_mask=source_mask1
 IF n_sources EQ 0 THEN RETURN,source_comp_init(n_sources=0,frequency=frequency,alpha=alpha_use)
 
 source_list=stokes_cnv(comp_arr[0:n_sources-1],jones,beam_arr=beam_arr,/inverse,_Extra=extra)
