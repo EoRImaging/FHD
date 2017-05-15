@@ -216,6 +216,28 @@ IF model_flag THEN IF skymodel.n_sources GT 0 THEN BEGIN
 ENDIF
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
+cal_source_flag=0
+IF cal.skymodel.n_sources GT 0 THEN BEGIN
+    cal_source_flag = 1
+    cal_source_array = cal.skymodel.source_list
+    cal_source_arr_out=cal_source_array
+    
+    apply_astrometry, obs_out, ra_arr=cal_source_array.ra, dec_arr=cal_source_array.dec, x_arr=sx, y_arr=sy, /ad2xy
+    cal_source_arr_out.x=sx & cal_source_arr_out.y=sy
+
+    extend_test=where(Ptr_valid(cal_source_arr_out.extend),n_extend)
+    IF n_extend GT 0 THEN BEGIN
+        FOR ext_i=0L,n_extend-1 DO BEGIN
+            component_array_out=*cal_source_array[extend_test[ext_i]].extend
+            apply_astrometry, obs_out, ra_arr=component_array_out.ra, dec_arr=component_array_out.dec, x_arr=cx, y_arr=cy, /ad2xy
+            component_array_out.x=cx & component_array_out.y=cy
+            
+            cal_source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)
+            *cal_source_arr_out[extend_test[ext_i]].extend=component_array_out
+        ENDFOR
+    ENDIF
+ENDIF
+
 gal_model_img=Ptrarr(n_pol)
 IF Keyword_Set(galaxy_model_fit) THEN BEGIN
     gal_model_uv=fhd_galaxy_model(obs,file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
@@ -245,6 +267,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
 ENDFOR
 
+IF Keyword_Set(cal_source_flag) THEN cal_sources = source_image_generate(cal_source_arr_out,obs_out,pol_i=4,resolution=16,$
+    dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)
+
 ; renormalize based on weights
 renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
   image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix,/antialias)
@@ -272,8 +297,6 @@ IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,sto
 
 ; plot calibration solutions, export to png
 if size(cal,/type) eq 8 then begin
-    
-IF N_Elements(cal) GT 0 THEN BEGIN
    IF cal.skymodel.n_sources GT 0 THEN BEGIN
       IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
          vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
@@ -282,9 +305,7 @@ IF N_Elements(cal) GT 0 THEN BEGIN
          ;plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
       ENDELSE
    ENDIF
-ENDIF
-
-endif ;end 
+endif
 
 ;Build a fits header
 mkhdr,fits_header,*instr_dirty_arr[0]
@@ -483,6 +504,13 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
         ENDIF
     ENDIF
+    IF ~Keyword_Set(no_png) AND Keyword_Set(cal_source_flag) AND (pol_i EQ 0) THEN BEGIN
+            Imagefast,cal_sources[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Calibration_Sources_'+pol_names[pol_i+4],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,log=log,low=0,high=stokes_high_use,/invert_color,$
+                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
+                title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_stokes,_Extra=extra
+    ENDIF
     
     IF Keyword_Set(write_healpix_fits) THEN BEGIN
         write_fits_cut4,file_path_weights+'.fits',hpx_inds_nest,stokes_weights,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
@@ -509,6 +537,7 @@ IF Keyword_Set(output_residual_histogram) THEN $
 undefine_fhd,beam_contour_arr,beam_contour_arr2,beam_correction_out,beam_base_out
 undefine_fhd,instr_residual_arr,instr_dirty_arr,instr_sources,instr_rings
 undefine_fhd,stokes_residual_arr,stokes_sources,stokes_rings
+undefine_fhd,cal_source_array, cal_source_arr_out
 undefine_fhd,gal_model_img
 
 timing=Systime(1)-t0
