@@ -43,6 +43,10 @@ degpix=.1
 image_filter_fn='filter_uv_uniform'
 deconvolution_filter='filter_uv_uniform'
 
+; here are some power spectrum settings to help hera sims
+hpx_radius=10
+nside=1024
+
 ; uvfits_version=5 ;updated by RB, 12/16
 ; uvfits_subversion=1
 
@@ -54,10 +58,10 @@ max_sources=20000
 pad_uv_image=1.
 ; FoV=0
 no_ps=1
-min_baseline=1.
+min_baseline=0.
 min_cal_baseline=7
 ring_radius=10.*pad_uv_image
-nfreq_avg=1
+nfreq_avg=32
 no_rephase=1
 combine_obs=0
 smooth_width=32.
@@ -81,6 +85,7 @@ return_cal_visibilities=0
 cal_amp_degree_fit=2
 cal_phase_degree_fit=1
 
+time_offset=330
 beam_offset_time=330 ; make this a default. But it won't compound with setting it directly in a version so I think it's ok.
 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
