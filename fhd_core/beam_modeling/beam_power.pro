@@ -4,7 +4,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
     interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
     debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
-    debug_clip_beam_mask=debug_clip_beam_mask,debug_gauss=debug_gauss
+    debug_clip_beam_mask=debug_clip_beam_mask,debug_gauss=debug_gauss, _Extra=extra
     
 icomp = Complex(0, 1)
 freq_center=antenna1.freq[freq_i]

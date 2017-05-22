@@ -188,27 +188,27 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         IF dirty_flag THEN BEGIN
           dirty_cube=fltarr(n_hpx,n_freq_use)
             ;write index in much more efficient memory access order
-          FOR fi=0L,n_freq_use-1 DO dirty_cube[n_hpx*fi]=Temporary(*dirty_hpx_arr[pol_i,fi])
+          FOR fi=Long64(0),n_freq_use-1 DO dirty_cube[n_hpx*fi]=Temporary(*dirty_hpx_arr[pol_i,fi])
         ENDIF
         
         IF model_flag THEN BEGIN
           model_cube=fltarr(n_hpx,n_freq_use)
-          FOR fi=0L,n_freq_use-1 DO model_cube[n_hpx*fi]=Temporary(*model_hpx_arr[pol_i,fi])
+          FOR fi=Long64(0),n_freq_use-1 DO model_cube[n_hpx*fi]=Temporary(*model_hpx_arr[pol_i,fi])
         ENDIF
         
         IF residual_flag THEN BEGIN
             res_cube=fltarr(n_hpx,n_freq_use)
-            FOR fi=0L,n_freq_use-1 DO res_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[pol_i,fi])
+            FOR fi=Long64(0),n_freq_use-1 DO res_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[pol_i,fi])
         ENDIF
         
         weights_cube=fltarr(n_hpx,n_freq_use)
-        FOR fi=0L,n_freq_use-1 DO weights_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[pol_i,fi])
+        FOR fi=Long64(0),n_freq_use-1 DO weights_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[pol_i,fi])
         
         variance_cube=fltarr(n_hpx,n_freq_use)
-        FOR fi=0L,n_freq_use-1 DO variance_cube[n_hpx*fi]=Temporary(*variance_hpx_arr[pol_i,fi])
+        FOR fi=Long64(0),n_freq_use-1 DO variance_cube[n_hpx*fi]=Temporary(*variance_hpx_arr[pol_i,fi])
         
         beam_squared_cube=fltarr(n_hpx,n_freq_use)
-        FOR fi=0L,n_freq_use-1 DO beam_squared_cube[n_hpx*fi]=Temporary(*beam_hpx_arr[pol_i,fi])
+        FOR fi=Long64(0),n_freq_use-1 DO beam_squared_cube[n_hpx*fi]=Temporary(*beam_hpx_arr[pol_i,fi])
         
         ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save,_Extra=extra 
