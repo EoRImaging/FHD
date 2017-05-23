@@ -33,7 +33,6 @@ psf_resolution=Long(psf.resolution)
 vis_weight_switch=Ptr_valid(vis_weight_ptr)
 kx_arr=params.uu/kbinsize
 ky_arr=params.vv/kbinsize
-;baseline_i=params.baseline_arr
 nbaselines=obs.nbaselines
 n_samples=obs.n_time
 n_freq_use=N_Elements(frequency_array)

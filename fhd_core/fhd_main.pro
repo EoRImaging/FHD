@@ -79,7 +79,7 @@ IF data_flag LE 0 THEN BEGIN
 
     IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;
-        transfer_weights_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
+        transfer_weights_data,vis_weights,obs,status_str,file_path_fhd=file_path_fhd,$
             transfer_filename=transfer_weights,error=error,flag_visibilities=flag_visibilities,$
             flag_calibration=flag_calibration,_Extra=extra
         IF Keyword_Set(error) THEN BEGIN
@@ -225,14 +225,9 @@ ENDELSE
 
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
-;    IF status_str.fhd GT 0 THEN BEGIN
-;        fhd_output,obs,status_str,fhd_params,cal,jones,skymodel,file_path_fhd=file_path_fhd,map_fn_arr=map_fn_arr,silent=silent,transfer_mapfn=transfer_mapfn,$
-;            image_uv_arr=image_uv_arr,weights_arr=weights_arr,beam_arr=beam_arr,_Extra=extra 
-;    ENDIF ELSE BEGIN
-        fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
-            model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,$
-            map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,_Extra=extra
-;    ENDELSE
+    fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
+        model_uv_holo=model_uv_holo,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,$
+        map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,_Extra=extra
 ENDIF
 
 ;optionally export frequency-splt Healpix cubes

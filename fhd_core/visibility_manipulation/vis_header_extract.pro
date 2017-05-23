@@ -59,14 +59,19 @@ IF N_Elements(alt) EQ 0 THEN BEGIN
 ENDIF
 alt=Float(alt)
 
-baseline_i=(where(Strmatch(param_list,'BASELINE', /fold_case),found_baseline))[0] & IF found_baseline NE 1 THEN print,"WARNING: Group parameter BASELINE not found within uvfits header PTYPE keywords" 
+ant1_i = where(Strmatch(param_list,'ANTENNA1', /fold_case),found_ant1)
+ant2_i = where(Strmatch(param_list,'ANTENNA2', /fold_case),found_ant2)
+baseline_i=(where(Strmatch(param_list,'BASELINE', /fold_case),found_baseline))[0] 
+IF found_baseline NE 1 THEN BEGIN
+    IF found_ant1 EQ 1 AND found_ant2 EQ 1 THEN BEGIN
+        found_baseline = 1 ; 'BASELINE' only needs to be present if the antennas are not included separately
+    ENDIF ELSE print,"WARNING: Group parameter BASELINE not found within uvfits header PTYPE keywords" 
+ENDIF
 uu_i=(where(Strmatch(param_list,'UU', /fold_case),found_uu))[0] & IF found_uu NE 1 THEN print,"WARNING: Group parameter UU not found within uvfits header PTYPE keywords"
 vv_i=(where(Strmatch(param_list,'VV', /fold_case),found_vv))[0] & IF found_vv NE 1 THEN print,"WARNING: Group parameter VV not found within uvfits header PTYPE keywords"
 ww_i=(where(Strmatch(param_list,'WW', /fold_case),found_ww))[0] & IF found_ww NE 1 THEN print,"WARNING: Group parameter WW not found within uvfits header PTYPE keywords"
 date_i=where(Strmatch(param_list,'DATE', /fold_case),found_date) & IF found_date LT 1 THEN print,"WARNING: Group parameter DATE not found within uvfits header PTYPE keywords"
 IF (found_baseline NE 1) OR (found_uu NE 1) OR (found_vv NE 1) OR (found_ww NE 1) OR (found_date LT 1) THEN error=1 
-ant1_i = where(Strmatch(param_list,'ANTENNA1', /fold_case),found_ant1)
-ant2_i = where(Strmatch(param_list,'ANTENNA2', /fold_case),found_ant2)
 
 IF found_date GT 1 THEN BEGIN
     Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i[0]+1))) + Double(params[date_i[0],0])

@@ -110,8 +110,8 @@ IF antenna_flag THEN BEGIN
         print,String(format='("Mis-matched n_tiles! Header: ",A," vs data: ",A)',Strn(n_tile),Strn(max(tile_A)>max(tile_B)))
         n_tile=max(tile_A)>max(tile_B)
     ENDIF
-    IF Tag_exist(params, "antenna1") THEN params.antenna1 = tile_A
-    IF Tag_exist(params, "antenna2") THEN params.antenna2 = tile_B
+    params.antenna1 = tile_A
+    params.antenna2 = tile_B
 ENDIF
 
 freq_use=Lonarr(n_freq)+1

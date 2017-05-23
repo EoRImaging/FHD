@@ -73,12 +73,8 @@ ENDIF ELSE BEGIN
     print,'### NOTE ###'
     print,'Metafits file not found! Calculating obs settings from the uvfits header instead'
     
-;    print,metafits_path+' not found. Calculating obs settings from the uvfits header instead'
-    ;256 tile upper limit is hard-coded in CASA format
-    ;these tile numbers have been verified to be correct
-    name_mod=2.^((Ceil(Alog(Sqrt(hdr.nbaselines*2.-n_tile))/Alog(2.)))>Floor(Alog(Min(params.baseline_arr))/Alog(2.)))
-    tile_A1=Long(Floor(params.baseline_arr/name_mod)) ;tile numbers start from 1
-    tile_B1=Long(Fix(params.baseline_arr mod name_mod))
+    tile_A1=params.antenna1 ; Set in `fhd_struct_init_obs` if not present in uvfits
+    tile_B1=params.antenna2 ; Set in `fhd_struct_init_obs` if not present in uvfits
     hist_A1=histogram(tile_A1,min=1,max=n_tile,/binsize,reverse_ind=ria)
     hist_B1=histogram(tile_B1,min=1,max=n_tile,/binsize,reverse_ind=rib)
     hist_AB=hist_A1+hist_B1
