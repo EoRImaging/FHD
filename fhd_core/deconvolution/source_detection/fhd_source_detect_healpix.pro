@@ -18,7 +18,6 @@ IF N_Elements(gain_factor_use) EQ 0 THEN gain_factor_use=fhd_params.gain_factor
 
 add_threshold=fhd_params.add_threshold
 max_add_sources=fhd_params.max_add_sources
-pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.

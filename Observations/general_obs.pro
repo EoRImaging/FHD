@@ -215,7 +215,7 @@ IF Keyword_Set(combine_healpix) THEN BEGIN
         output_path=healpix_path,image_filter_fn=image_filter_fn,_Extra=extra
 ENDIF
 
-IF Keyword_Set(cleanup) THEN FOR fi=0L,n_files_use-1 DO fhd_cleanup,fhd_file_list[fi],_Extra=extra
+IF Keyword_Set(cleanup) THEN FOR fi=0L,n_files_use-1 DO fhd_cleanup,fhd_file_list[fi]
 
 heap_gc
 !except=except

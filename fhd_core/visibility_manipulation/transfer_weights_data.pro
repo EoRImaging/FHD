@@ -1,4 +1,4 @@
-PRO transfer_weights_data,vis_weights,obs,status_str,params,file_path_fhd=file_path_fhd,$
+PRO transfer_weights_data,vis_weights,obs,status_str,file_path_fhd=file_path_fhd,$
     transfer_filename=transfer_filename,error=error,flag_visibilities=flag_visibilities,$
     flag_calibration=flag_calibration,_Extra=extra
 n_pol=obs.n_pol
@@ -6,10 +6,6 @@ n_freq=obs.n_freq
 n_tile=obs.n_tile
 n_time=obs.n_time
 IF file_basename(file_path_fhd) EQ transfer_filename THEN BEGIN 
-;    IF Keyword_Set(flag_visibilities) THEN BEGIN
-;        print,'Flagging anomalous data'
-;        vis_flag,vis_arr,vis_weights,obs,params,_Extra=extra
-;    ENDIF
     fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     RETURN
 ENDIF ELSE BEGIN

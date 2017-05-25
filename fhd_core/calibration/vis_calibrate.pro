@@ -37,33 +37,33 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
       ENDELSE
       CASE StrLowCase(Strmid(cal_file_use[0],3,/reverse)) OF
         '.sav':BEGIN
-        cal=getvar_savefile(cal_file_use,'cal')
-        gain_arr_ptr=cal.gain
-        IF ~Keyword_Set(cal.cal_origin) THEN cal.cal_origin=cal_file_use
-        cal=fhd_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
-      END
-      '.txt':BEGIN
-      textfast,gain_arr,/read,file_path=cal_file_use
-      gain_arr_ptr=Ptr_new(gain_arr)
-      cal=fhd_struct_init_cal(obs,params,calibration_origin=cal_file_use,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
-    END
-    '.npz':BEGIN
-    gain_arr=read_numpy(cal_file_use)
-    gain_arr_ptr=Ptr_new(gain_arr)
-    cal=fhd_struct_init_cal(obs,params,calibration_origin=cal_file_use,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
-  END
-  '.npy':BEGIN
-  gain_arr=read_numpy(cal_file_use)
-  gain_arr_ptr=Ptr_new(gain_arr)
-  cal=fhd_struct_init_cal(obs,params,calibration_origin=cal_file_use,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
-END
-ELSE: BEGIN
-  print,'Unknown file format: ',cal_file_use
-  error=1
-  RETURN,vis_ptr
-ENDELSE
-ENDCASE
-ENDIF
+          cal=getvar_savefile(cal_file_use,'cal')
+          gain_arr_ptr=cal.gain
+          IF ~Keyword_Set(cal.cal_origin) THEN cal.cal_origin=cal_file_use
+          cal=fhd_struct_init_cal(obs,params,calibration_origin=cal.cal_origin,gain_arr_ptr=cal.gain,_Extra=extra)
+        END
+        '.txt':BEGIN
+          textfast,gain_arr,/read,file_path=cal_file_use
+          gain_arr_ptr=Ptr_new(gain_arr)
+          cal=fhd_struct_init_cal(obs,params,calibration_origin=cal_file_use,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+        END
+        '.npz':BEGIN
+          gain_arr=read_numpy(cal_file_use)
+          gain_arr_ptr=Ptr_new(gain_arr)
+          cal=fhd_struct_init_cal(obs,params,calibration_origin=cal_file_use,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+        END
+        '.npy':BEGIN
+          gain_arr=read_numpy(cal_file_use)
+          gain_arr_ptr=Ptr_new(gain_arr)
+          cal=fhd_struct_init_cal(obs,params,calibration_origin=cal_file_use,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+        END
+        ELSE: BEGIN
+          print,'Unknown file format: ',cal_file_use
+          error=1
+          RETURN,vis_ptr
+        ENDELSE
+      ENDCASE
+    ENDIF
 ;    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,_Extra=extra
 ;    nc_pol=cal.n_pol
 ;    cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
@@ -83,10 +83,10 @@ ENDIF
 ;    IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
 ;
 ;    ENDIF
-vis_cal=vis_calibration_apply(vis_ptr,cal)
-timing=Systime(1)-t0_0
-RETURN,vis_cal
-ENDIF
+    vis_cal=vis_calibration_apply(vis_ptr,cal)
+    timing=Systime(1)-t0_0
+    RETURN,vis_cal
+  ENDIF
 
 fill_model_vis=1
 if N_elements(firstpass_model_recalculate) EQ 0 then firstpass_model_recalculate=1
@@ -110,7 +110,6 @@ ENDIF
 
 IF Keyword_Set(fill_model_vis) THEN vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
 
-;IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
 CASE size(initial_calibration,/type) OF
   0:;do nothing if undefined
   
@@ -170,7 +169,7 @@ t2=0
 FOR iter=0,calibration_flag_iterate DO BEGIN
   t2_a=Systime(1)
   IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
-  cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,vis_weight_ptr,obs,params,cal,$
+  cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,vis_weight_ptr,obs,cal,$
     preserve_visibilities=preserve_flag,_Extra=extra)
   if keyword_set(ave_ref) then begin
     ref_avg = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave.sav','ref_avg')

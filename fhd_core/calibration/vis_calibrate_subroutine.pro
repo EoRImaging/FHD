@@ -53,61 +53,9 @@
 ;  if total(abs(amp)) eq 0 then amp +=1. ;; for phase-only calibration
 ;  if total(abs(phase)) gt 0 then gain = amp * exp(complex(0,1)*phase) else gain = amp
 ;  
-;  return, gain
-;end
-;
-;function poly_cal_chi2, params
-;
-;  common poly_cal_data, model_vis, data_vis, poly_cal_gain_B, f_arr, mode_types, mode_num, mask
-;  
-;  dims = size(mask, /dimension)
-;  if n_elements(dims) gt 1 then n_vis = dims[1] else n_vis = 1
-;  
-;  if n_elements(params) eq 1 then params = [params[0]]
-;  if n_vis gt 1 then p = rebin(params, n_elements(params), n_vis) else p=params
-;  gain_A = poly_cal_gain(p, mode_types, mode_num, mask, amp=amp)
-;  
-;  data_use = data_vis*mask
-;  model_use = model_vis*mask
-;  
-;  diff = model_use*Conj(poly_cal_gain_B)*gain_A - data_use
-;  
-;  ;; discourage negative amplitudes
-;  if min(amp) lt 0 then return, total(abs(diff)^2.)*product(dims) else return, total(abs(diff)^2.)
-;  
-;end
-;
-;function poly_cal_grad, params
-;
-;  common poly_cal_data, model_vis, data_vis, poly_cal_gain_B, f_arr, mode_types, mode_num, mask
-;  
-;  dims = size(mask, /dimension)
-;  if n_elements(dims) gt 1 then n_vis = dims[1] else n_vis = 1
-;  
-;  if n_vis gt 1 then p = rebin(params, n_elements(params), n_vis) else p=params
-;  gain_A = poly_cal_gain(p, mode_types, mode_num, mask, phase=phase_A)
-;  
-;  data_use = data_vis*mask
-;  model_use = model_vis*mask
-;  
-;  amp_grad_factor = 2.*abs(model_use)^2.*abs(poly_cal_gain_B)^2.*abs(gain_A) - 2*Real_part(model_use*Conj(poly_cal_gain_B)*Conj(data_use)*exp(complex(0,1)*phase_A))
-;  phase_grad_factor = 2*Imaginary(model_use*gain_A*Conj(poly_cal_gain_B)*Conj(data_use))
-;  
-;  grad = params*0
-;  for i=0, n_elements(mode_types)-1 do begin
-;    if mode_types[i] eq 'amp' then grad[i] = total(amp_grad_factor*f_arr^(mode_num[i])) $
-;    else grad[i] = total(phase_grad_factor*f_arr^(mode_num[i]))
-;    
-;  endfor
-;  
-;  return, grad
-;  
-;end
-
-FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,params,cal,preserve_visibilities=preserve_visibilities,$
+FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,preserve_visibilities=preserve_visibilities,$
     calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,no_ref_tile=no_ref_tile,_Extra=extra
-    
-  IF N_Elements(cal) EQ 0 THEN cal=fhd_struct_init_cal(obs,params,_Extra=extra)
+
   reference_tile=cal.ref_antenna
   min_baseline=obs.min_baseline
   max_baseline=obs.max_baseline

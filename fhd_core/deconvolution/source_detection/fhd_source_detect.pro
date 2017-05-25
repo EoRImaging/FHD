@@ -3,7 +3,6 @@ FUNCTION fhd_source_detect,obs,fhd_params,jones,source_find_image,image_I_flux=i
     beam_mask=beam_mask,source_mask=source_mask,gain_factor=gain_factor,n_sources=n_sources,detection_threshold=detection_threshold,_Extra=extra
 
 add_threshold=fhd_params.add_threshold
-pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
