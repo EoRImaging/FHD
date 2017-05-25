@@ -35,7 +35,6 @@ beam_model_threshold=0.05
 add_threshold=fhd_params.add_threshold
 max_add_sources=fhd_params.max_add_sources
 ;local_max_radius=fhd_params.local_max_radius
-pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 beam_width=beam_width_calculate(obs_arr,min_restored_beam_width=1.,/FWHM)

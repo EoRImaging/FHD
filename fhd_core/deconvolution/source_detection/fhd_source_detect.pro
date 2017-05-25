@@ -4,7 +4,6 @@ FUNCTION fhd_source_detect,obs,fhd_params,jones,source_find_image,image_I_flux=i
 
 add_threshold=fhd_params.add_threshold
 max_add_sources=fhd_params.max_add_sources
-pol_use=fhd_params.pol_use
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
