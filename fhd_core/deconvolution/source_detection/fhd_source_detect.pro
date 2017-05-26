@@ -3,7 +3,6 @@ FUNCTION fhd_source_detect,obs,fhd_params,jones,source_find_image,image_I_flux=i
     beam_mask=beam_mask,source_mask=source_mask,gain_factor=gain_factor,n_sources=n_sources,detection_threshold=detection_threshold,_Extra=extra
 
 add_threshold=fhd_params.add_threshold
-max_add_sources=fhd_params.max_add_sources
 independent_fit=fhd_params.independent_fit
 reject_pol_sources=fhd_params.reject_pol_sources
 sigma_threshold=2.
@@ -36,8 +35,7 @@ source_find_image-=flux_offset
     
 ;    Find additional sources:
 ;       require that they be isolated ; This is local_max_radius
-;       should put some cap on the absolute number of them ; This is max_add_sources
-;       all within some range of the brightest pixels flux, say 95%; This is add_threshold
+;       all within some range of the brightest pixels flux, say 80%; This is add_threshold
 
 circle_i=where(Sqrt((xvals-dimension/2)^2.+(yvals-elements/2)^2.) LE local_max_radius*sqrt(2.))
 circle_i-=Long(dimension*(1.+elements)/2)
@@ -94,12 +92,6 @@ WHILE n_sources EQ 0 DO BEGIN
     add_dist=add_dist[additional_i_usei]
     extended_flag=extended_flag[additional_i_usei]
     
-    IF max_add_sources GT 0 THEN BEGIN
-        IF n_sources GT max_add_sources THEN BEGIN
-            additional_i=additional_i[0:max_add_sources-1]
-            n_sources=max_add_sources
-        ENDIF
-    ENDIF
     n_mask=0
     comp_arr=source_comp_init(n_sources=n_sources,frequency=frequency,alpha=alpha_use)
     
