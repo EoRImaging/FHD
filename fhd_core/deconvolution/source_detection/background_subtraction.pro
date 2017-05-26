@@ -15,3 +15,4 @@ image_smooth=Rebin(image_rebin,dimension,elements)
 image_filtered=(image_unfiltered-image_smooth)*beam_mask
 
 RETURN, image_filtered
+END
