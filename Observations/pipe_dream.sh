@@ -41,7 +41,7 @@ unset resubmit_index
 #######Gathering the input arguments and applying defaults if necessary
 
 #Parse flags for inputs
-while getopts ":f:s:e:o:v:p:w:n:m:t:" option
+while getopts ":f:s:e:o:v:p:w:n:m:t:h:" option
 do
    case $option in
 	f) obs_file_name="$OPTARG";;	#text file of observation id's
@@ -55,9 +55,10 @@ do
 	n) nslots=$OPTARG;;		#Number of slots for grid engine
 	m) mem=$OPTARG;;		#Memory per core for grid engine
 	t) thresh=$OPTARG;;		#Wedge threshold to use to determine whether or not to run
+        h) hold=$OPTARG;;               #Hold for a job to finish before running.
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), "
 	    echo "-v (version input for FHD), -p (priority in grid engine), -w (wallclock time in grid engine), -n (number of slots to use),"
-	    echo "and -m (memory per core for grid engine)." 
+	    echo "-m (memory per core for grid engine), -t (wedge threshold to run on), and -h (jobid to hold on)." 
 	    exit 1;;
 	:) echo "Missing option argument for input flag"
 	   exit 1;;
@@ -138,6 +139,9 @@ if [ -z ${thresh} ]; then
     thresh=-1
 fi
 
+# create hold string
+if [ -z ${hold} ]; then hold_str=""; else hold_str="-hold_jid ${hold}"; fi
+
 #Make directory if it doesn't already exist
 mkdir -p ${outdir}/fhd_${version}
 mkdir -p ${outdir}/fhd_${version}/grid_out
@@ -205,8 +209,8 @@ done
 nobs=${#good_obs_list[@]}
 
 #Make the qsub command given the input parameters. 
-message=$(qsub -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v nslots=$nslots,outdir=$outdir,version=$version,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots -sync y ${FHDpath}Observations/eor_firstpass_job.sh ${good_obs_list[@]})
-
+message=$(qsub ${hold_str} -p $priority -P FHD -l h_vmem=$mem,h_stack=512k,h_rt=${wallclock_time} -V -v nslots=$nslots,outdir=$outdir,version=$version,thresh=$thresh -e ${outdir}/fhd_${version}/grid_out -o ${outdir}/fhd_${version}/grid_out -t 1:${nobs} -pe chost $nslots -sync y ${FHDpath}Observations/eor_firstpass_job.sh ${good_obs_list[@]})
+#
 #Run the command
 message=($message)
 
