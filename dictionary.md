@@ -294,11 +294,12 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br /> 
+
   
-**snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: 0 <br />
-  
+**image_filter_fn**: weighting filter to be applyed to resulting snapshot images and fits files. Options include  filter_uv_hanning, filter_uv_natural, filter_uv_radial, filter_uv_tapered_uniform, filter_uv_uniform, and filter_uv_weighted. Specifics on these filters can be found in `FHD/fhd_output/fft_filters`.<br />
+  -*EoR_firstpass settings*: filter_uv_uniform <br />
+  -*Default*: filter_uv_uniform <br />
+
 **no_fits**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
   -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect.  <br />
@@ -329,6 +330,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 probably <br /> 
+  
+**snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 0 <br />
 
 **silent**: do not print messages. <br />
   -*Turn off/on*: 0/1 <br />
@@ -482,7 +487,6 @@ vis_baseline_hist=1
 calibration_visibilities_subtract=0
 
 n_avg=2
-image_filter_fn='filter_uv_uniform'
 deconvolution_filter='filter_uv_uniform'
 
 max_sources=20000   (Cut this -- Only max_calibration_sources or max_model_sources is used)
