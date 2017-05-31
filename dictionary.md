@@ -342,6 +342,11 @@ WARNING! Options in this section may change without notice, and should never be 
 **split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: not set <br /> 
+  
+**write_healpix_fits**: create Healpix fits files. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*: 0 <br />
 
 ## Flagging
 
