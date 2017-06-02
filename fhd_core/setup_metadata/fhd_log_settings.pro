@@ -1,6 +1,6 @@
 FUNCTION extract_settings,info_arr,delimiter=delimiter, filler=filler
 info_labels=Reform(info_arr[0,*])
-start_i=where(info_labels EQ delimeter, ind_present)
+start_i=where(info_labels EQ delimiter, ind_present)
 IF ~ind_present THEN RETURN,[delimiter, filler]
 ind_list = StrMatch(info_labels[start_i+1], filler)
 end_i = (where(ind_list))[0]
