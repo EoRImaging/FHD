@@ -8,6 +8,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **beam_cal_threshold**: the fractional power response relative to the peak from which to include sources for calibration.<br />
   -*Default*: 0.05, or 0.01 if `allow_sidelobe_sources` set <br />
 
+**beam_mask_threshold**: the factor at which to clip the beam model. For example, a factor of 100 would clip the beam model at 100x down from the maximum value. This removes extraneous and uncertain modelling at low levels.  <br />
+  -*Default*: 100 <br />
+
 **beam_model_threshold**: the fractional power response relative to the peak from which to include sources for the model.<br />
   -*Dependency*: `model_visibilities` must be set <br />
   -*Default*: 0.05, or 0.01 if `allow_sidelobe_sources` set <br />
