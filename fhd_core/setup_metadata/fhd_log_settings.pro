@@ -2,8 +2,8 @@ FUNCTION extract_settings,info_arr,delimiter=delimiter, filler=filler
 info_labels=Reform(info_arr[0,*])
 start_i=where(info_labels EQ delimiter, ind_present)
 IF ~ind_present THEN RETURN,[delimiter, filler]
-ind_list = StrMatch(info_labels[start_i+1], filler)
-end_i = (where(ind_list))[0]
+ind_list = StrMatch(info_labels[start_i+1:*], filler+"*")
+end_i = start_i+1 + (where(ind_list))[0]
 
 insert = info_arr[*, start_i:end_i-1]
 
@@ -18,7 +18,8 @@ descr_file_path=file_path_fhd+'_settings.txt'
 IF Keyword_Set(sub_directory) THEN descr_file_path=filepath(file_basename(descr_file_path),root=file_dirname(descr_file_path),sub=sub_directory)
 IF file_test(file_dirname(descr_file_path)) EQ 0 THEN file_mkdir,file_dirname(descr_file_path)
 
-delimiter=String(9B)
+delimiter=String(9B) ; Tab character.
+sub_delimiter = "  " ; Two spaces, not tab character, to differentiate from columns when reading back in.
 main_delimiter='##MAIN'
 cmd_delimiter='##COMMAND_LINE'
 obs_delimiter='##OBS'
@@ -49,7 +50,7 @@ main_insert[1,4]=date
 overwrite_test=file_test(descr_file_path)
 IF Keyword_Set(overwrite) THEN overwrite_test=0
 IF overwrite_test THEN BEGIN
-    textfast,info_arr,/read,file_path=descr_file_path,/string,delimiter=delimiter
+    textfast,info_arr,/read,file_path=descr_file_path,/string,delimiter=delimiter, column_list=[0,1]
     main_insert = extract_settings(info_arr, delimiter=main_delimiter, filler=filler)
     cmd_insert = extract_settings(info_arr, delimiter=cmd_delimiter, filler=filler)
     obs_insert = extract_settings(info_arr, delimiter=obs_delimiter, filler=filler)
@@ -61,14 +62,14 @@ IF overwrite_test THEN BEGIN
     fhd_insert = extract_settings(info_arr, delimiter=fhd_delimiter, filler=filler)
 ENDIF    
 
-IF Keyword_Set(cmd_args) THEN cmd_insert=structure_to_text(cmd_args,head=cmd_delimiter,delimiter=delimiter,max_len=max_len)
-IF Keyword_Set(obs) THEN obs_insert=structure_to_text(obs,head=obs_delimiter,delimiter=delimiter,max_len=max_len)
-IF Keyword_Set(layout) THEN layout_insert=structure_to_text(layout,head=layout_delimiter,delimiter=delimiter,max_len=max_len)
-IF Keyword_Set(antenna) THEN antenna_insert=structure_to_text(antenna,head=antenna_delimiter,delimiter=delimiter,max_len=max_len)
-IF Keyword_Set(psf) THEN psf_insert=structure_to_text(psf,head=psf_delimiter,delimiter=delimiter,max_len=max_len)
-IF Keyword_Set(cal) THEN cal_insert=structure_to_text(cal,head=cal_delimiter,delimiter=delimiter,max_len=max_len)
-IF Keyword_Set(skymodel) THEN skymodel_insert=structure_to_text(skymodel,head=skymodel_delimiter,delimiter=delimiter,max_len=max_len)
-IF Keyword_Set(fhd) THEN fhd_insert=structure_to_text(fhd,head=fhd_delimiter,delimiter=delimiter,max_len=max_len)
+IF Keyword_Set(cmd_args) THEN cmd_insert=structure_to_text(cmd_args,head=cmd_delimiter,delimiter=sub_delimiter,max_len=max_len)
+IF Keyword_Set(obs) THEN obs_insert=structure_to_text(obs,head=obs_delimiter,delimiter=sub_delimiter,max_len=max_len)
+IF Keyword_Set(layout) THEN layout_insert=structure_to_text(layout,head=layout_delimiter,delimiter=sub_delimiter,max_len=max_len)
+IF Keyword_Set(antenna) THEN antenna_insert=structure_to_text(antenna,head=antenna_delimiter,delimiter=sub_delimiter,max_len=max_len)
+IF Keyword_Set(psf) THEN psf_insert=structure_to_text(psf,head=psf_delimiter,delimiter=sub_delimiter,max_len=max_len)
+IF Keyword_Set(cal) THEN cal_insert=structure_to_text(cal,head=cal_delimiter,delimiter=sub_delimiter,max_len=max_len)
+IF Keyword_Set(skymodel) THEN skymodel_insert=structure_to_text(skymodel,head=skymodel_delimiter,delimiter=sub_delimiter,max_len=max_len)
+IF Keyword_Set(fhd) THEN fhd_insert=structure_to_text(fhd,head=fhd_delimiter,delimiter=sub_delimiter,max_len=max_len)
 
 IF N_Elements(cmd_insert) EQ 0 THEN cmd_insert=[cmd_delimiter,filler]
 IF N_Elements(obs_insert) EQ 0 THEN obs_insert=[obs_delimiter,filler]

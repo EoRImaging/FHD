@@ -2,7 +2,7 @@ FUNCTION structure_to_text,str,delimiter=delimiter,heading=heading,indent=indent
 IF N_Elements(str) EQ 0 THEN RETURN,''
 IF N_Elements(indent) EQ 0 THEN indent=0
 
-IF N_Elements(delimiter) NE 0 THEN delimiter_use=delimiter ELSE delimiter_use=String(9B) ;tab character
+IF N_Elements(delimiter) NE 0 THEN delimiter_use=delimiter ELSE delimiter_use="  " ; Two spaces, not tab.
 
 IF size(str,/type) EQ 10 THEN BEGIN ;if pointer
     n_tags=N_Elements(str)
@@ -69,25 +69,8 @@ FOR ti=0L,n_tags-1 DO BEGIN
             FOR dim_i=0,n_dims-1 DO dim_arr[dim_i]=Strn(dims[dim_i])
             format_code='("Pointer array (",'+Strn(n_dims)+'(A,:," x "))'
             result[1,ti_use]=String(format=format_code,dim_arr)+' elements)'
-;            IF n_dims LE 4 THEN BEGIN
-;                null_test=Max(Ptr_valid(tag_val))
-;                IF null_test EQ 0 THEN BEGIN
-;                    ti_use+=1
-;                    CONTINUE
-;                ENDIF
-;                result_insert=structure_to_text(tag_val,delimiter=delimiter_use,/indent,max_len=max_len-1)
-;                IF size(result_insert,/n_dim) LT 2 THEN BEGIN
-;                    ti_use+=1
-;                    CONTINUE
-;                ENDIF
-;                result=[[result],[Strarr(2,stretch)]]
-;                result[0,ti_use+1]=result_insert
-;                ti_use+=stretch+1
-;                CONTINUE
-;            ENDIF
         ENDELSE
         
-;        result[1,ti_use]=String(format='("Pointer (",A," elements)")',Strn(len))
         ti_use+=1
         CONTINUE
     ENDIF
@@ -107,6 +90,6 @@ FOR ti=0L,n_tags-1 DO BEGIN
     ti_use+=1
 ENDFOR
 
-IF Keyword_Set(indent) THEN result[0,*]=delimiter_use+result[0,*]
+IF Keyword_Set(indent) THEN result[0,*]= "  " + result[0,*]
 RETURN,result
 END
