@@ -217,7 +217,7 @@ ENDIF
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
 cal_source_flag=0
-IF cal.skymodel.n_sources GT 0 THEN BEGIN
+IF size(cal, /type) EQ 8 THEN IF cal.skymodel.n_sources GT 0 THEN BEGIN
     cal_source_flag = 1
     cal_source_array = cal.skymodel.source_list
     cal_source_arr_out=cal_source_array
