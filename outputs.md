@@ -54,19 +54,19 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ## Grid Data<br />
 
-### \<obsids\>\_uv_\<pol\>.sav <br />
+### \<obsids\>_uv_\<pol\>.sav <br />
 
   * **grid_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is the gridded UV plane of the calibrated data visibilities where all frequencies have been gridded together.<br /> 
 
   * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
 
-### \<obsids\>\_uv_model_\<pol\>.sav <br />
+### \<obsids\>_uv_model_\<pol\>.sav <br />
 
   * **grid_uv_model**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is the gridded UV plane of the model visibilities where all frequencies have been gridded together.<br /> 
 
   * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
 
-### \<obsids\>\_uv_weights_\<pol\>.sav <br />
+### \<obsids\>_uv_weights_\<pol\>.sav <br />
 
   * **weights_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is a gridded UV plane where a value of 1 is gridded with the beam for each visibility wand where all frequencies have been gridded together.<br /> 
 
@@ -104,27 +104,27 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ##  Output Data<br />
 
-### \<obsids\>\_Beam_\<pol\>.sav <br />
+### \<obsids\>_Beam_\<pol\>.sav <br />
 
-### \<obsids\>\_\<filter\>\_Dirty_\<pol\>.fits / \<obsids\>\_\<filter\>\_Model_\<pol\>.fits / \<obsids\>\_\<filter\>\_Residual_\<pol\>.fits <br />
+### \<obsids\>_\<filter\>_Dirty_\<pol\>.fits / \<obsids\>_\<filter\>_Model_\<pol\>.fits / \<obsids\>_\<filter\>_Residual_\<pol\>.fits <br />
 
-### \<obsids\>\_\<filter\>\_Restored_rings_\<pol\>.fits <br />
+### \<obsids\>_\<filter\>_Restored_rings_\<pol\>.fits <br />
 
-### \<obsids\>\_\<filter\>\_UV_weights_\<pol\>.fits <br />
+### \<obsids\>_\<filter\>_UV_weights_\<pol\>.fits <br />
 
 ##  Output Images<br />
 
 ### \<obsids\>_cal_amp.png / \<obsids\>_cal_autocorr.png / \<obsids\>_cal_phase.png<br />
 
-### \<obsids\>\_Beam_\<pol\>.png <br />
+### \<obsids\>_Beam_\<pol\>.png <br />
 
-### \<obsids\>\_\<filter\>\_Dirty_\<pol\>.png / \<obsids\>\_\<filter\>_Model_\<pol\>.png / \<obsids\>\_\<filter\>\_Residual_\<pol\>.png <br />
+### \<obsids\>_\<filter\>_Dirty_\<pol\>.png / \<obsids\>_\<filter\>_Model_\<pol\>.png / \<obsids\>_\<filter\>_Residual_\<pol\>.png <br />
 
-### \<obsids\>\_\<filter\>\_Restored_rings_\<pol\>.png <br />
+### \<obsids\>_\<filter\>_Restored_rings_\<pol\>.png <br />
 
-### \<obsids\>\_\<filter\>\_Sources_\<pol\>.png <br />
+### \<obsids\>_\<filter\>_Sources_\<pol\>.png <br />
 
-### \<obsids\>\_\<filter\>\_UV_weights_\<pol\>.png <br />
+### \<obsids\>_\<filter\>_UV_weights_\<pol\>.png <br />
 
 ##  Vis Data<br />
 
@@ -132,4 +132,4 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ### \<obsids\>_flags.sav <br />
 
-### \<obsids\>\_vis_model_\<pol\>.sav / \<obsids\>\_vis_\<pol\>.sav <br />
+### \<obsids\>_vis_model_\<pol\>.sav / \<obsids\>_vis_\<pol\>.sav <br />
