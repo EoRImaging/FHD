@@ -182,19 +182,16 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
       ref_avg = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave_byday.sav','ref_avg')
       gain0 = (*cal.gain[0])
       gain1 = (*cal.gain[1])
-
       unwrapped_phase = phunwrap(atan((*cal.gain[0]),/phase))
-      for tile_i=0,127 do (*cal.gain[0])[*,tile_i] = abs((*cal.gain[0])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[0,0,*]))))
+      for tile_i=0,127 do (*cal.gain[0])[*,tile_i] = abs((*cal.gain[0])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[0,obs_id,*]))))
       unwrapped_phase = phunwrap(atan((*cal.gain[1]),/phase))
-      for tile_i=0,127 do (*cal.gain[1])[*,tile_i] = abs((*cal.gain[1])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[1,0,*]))))
+      for tile_i=0,127 do (*cal.gain[1])[*,tile_i] = abs((*cal.gain[1])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[1,obs_id,*]))))
     endif  
-    t3_a=Systime(1)
-    t2+=t3_a-t2_a
-
-    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
-    IF Keyword_Set(n_tile_cut) THEN BREAK
-  
   ENDFOR
+  IF n_pol EQ 4 THEN $
+    cal = vis_calibrate_crosspol_phase(vis_ptr,vis_weight_ptr,obs,cal)
+  t3_a=Systime(1)
+  t2+=t3_a-t2_a
   cal_base=Pointer_copy(cal)
 
   ;Perform bandpass (amp and phase per fine freq) and polynomial fitting (low order amp and phase fit plus cable reflection fit)
