@@ -1726,6 +1726,7 @@ pro eor_firstpass_versions
     return_sidelobe_catalog = 1
     dft_threshold = 0
     ring_radius = 0
+    write_healpix_fits = 1
   end
   
   'rlb_1130789944_run1_cal_Dec2016': begin
@@ -1876,6 +1877,19 @@ pro eor_firstpass_versions
     n_pol = 4
   end
   
+  'rlb_HERA_May2017': begin
+    recalculate_all = 1
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+  end
+  
   ;;;;;;; Mike Wilensky's Stuff ;;;;;;;;
   'mwilensky_test_3_6_2017' : begin
     recalculate_all = 1
@@ -1898,8 +1912,12 @@ if version EQ 'nb_test' then begin
   ;vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
   vis_file_list = '/nfs/mwa-14/r1/EoRuvfits/jd2456528v4_1/1061311664.uvfits'
 endif else begin
+  if version eq 'rlb_HERA_May2017' then begin
+    vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
+  endif else begin
   SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
     STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
+  endelse
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
 endelse
 undefine, uvfits_subversion, uvfits_version

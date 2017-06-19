@@ -217,7 +217,7 @@ ENDIF
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
 cal_source_flag=0
-IF cal.skymodel.n_sources GT 0 THEN BEGIN
+IF size(cal, /type) EQ 8 THEN IF cal.skymodel.n_sources GT 0 THEN BEGIN
     cal_source_flag = 1
     cal_source_array = cal.skymodel.source_list
     cal_source_arr_out=cal_source_array
@@ -513,7 +513,18 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
     
     IF Keyword_Set(write_healpix_fits) THEN BEGIN
-        write_fits_cut4,file_path_weights+'.fits',hpx_inds_nest,stokes_weights,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        IF pol_i EQ 0 THEN err_map = healpix_cnv_apply(weight_invert(beam_avg),hpx_cnv)
+        IF source_flag THEN BEGIN
+            healpix_restored_path = output_path+filter_name+restored_name+pol_names[pol_i+4]+'_HEALPix.fits'
+            healpix_restored_stokes = healpix_cnv_apply(stokes_restored,hpx_cnv)
+            write_fits_cut4,healpix_restored_path,hpx_inds_nest,healpix_restored_stokes,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+            healpix_source_path = output_path+filter_name+'_Sources_'+pol_names[pol_i+4]+'_HEALPix.fits'
+            healpix_source_stokes = healpix_cnv_apply(stokes_source,hpx_cnv)
+            write_fits_cut4,healpix_source_path,hpx_inds_nest,healpix_source_stokes,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        ENDIF
+        healpix_residual_path = output_path+filter_name+res_name+pol_names[pol_i+4]+'_HEALPix.fits'
+        healpix_residual_stokes = healpix_cnv_apply(stokes_residual,hpx_cnv)
+        write_fits_cut4,healpix_residual_path,hpx_inds_nest,healpix_residual_stokes,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
     ENDIF
     
     IF Keyword_Set(gridline_image_show) THEN BEGIN
