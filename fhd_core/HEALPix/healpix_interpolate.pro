@@ -51,6 +51,8 @@ y_frac=1.-(yv_hpx-Floor(yv_hpx))
 IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=nside,freq=obs.freq_center) $
     ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/n_hpx) ; (steradian/new pixel)/(steradian/old pixel)
 ;pixel_area_cnv=1.
+pixel_area_cnv = 1./pixel_area_cnv
+print,pixel_area_cnv
 
 area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
 IF area_ratio GT 1 THEN BEGIN
@@ -114,10 +116,10 @@ ENDIF ELSE BEGIN
     ENDFOR
 ENDELSE
 
-pixel_area_factor=pixel_area(obs,/relative)
-IF Ptr_flag THEN BEGIN
-    FOR p_i=0L,N_Elements(map_interp)-1 DO *map_interp[p_i]*=weight_invert(pixel_area_factor)
-ENDIF ELSE map_interp*=weight_invert(pixel_area_factor)
+;pixel_area_factor=pixel_area(obs,/relative)
+;IF Ptr_flag THEN BEGIN
+;    FOR p_i=0L,N_Elements(map_interp)-1 DO *map_interp[p_i]*=weight_invert(pixel_area_factor)
+;ENDIF ELSE map_interp*=weight_invert(pixel_area_factor)
 
 RETURN,map_interp
 END

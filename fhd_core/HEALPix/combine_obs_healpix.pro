@@ -185,7 +185,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     hpx_cnv=healpix_cnv_generate(obs,status_str,file_path_fhd=file_path_fhd,nside=nside,$
         mask=beam_mask,restore_last=0,restrict_hpx_inds=restrict_hpx_inds,/no_save,$
-        divide_pixel_area=0,_Extra=extra)
+        divide_pixel_area=1,_Extra=extra)
     hpx_inds1=hpx_cnv.inds 
     
     IF fit_inds_flag THEN BEGIN
