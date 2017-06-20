@@ -52,8 +52,12 @@ IF N_neg GT 0 THEN hour_angle[h_neg] = hour_angle[h_neg] + 360.
 hour_angle = hour_angle mod 360.
 
 ;IF Keyword_Set(debug_jones_obs) THEN phi=obs.obsdec*!DtoR ELSE phi=obs.zendec*!DtoR
+;Convert observatory latitude to same coordinate system 
+apply_astrometry, obs, ra_arr=obs.obsra, dec_arr=obs.lat, x_arr=x_t, y_arr=y_t, /ad2xy
+apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad, /ignore_refraction
+
 phi=obs.obsdec*!DtoR
-;lat=obs.lat*!DtoR
+lat=lat*!DtoR
 dec=dec_use*!DtoR
 ha=hour_angle*!DtoR
 ;calculate the elements of the dipole projection matrix J ((J11, J12), (J21,J22))
@@ -64,9 +68,13 @@ ha=hour_angle*!DtoR
 ;J22=Cos(ha)
 
 ;NOTE!! RTS convention uses X for N-S dipoles, and Y for E-W, which is opposite everything else. So, we have to re-order the Jones matrix elements
-J21=Cos(phi)*Cos(dec)+Sin(phi)*Sin(dec)*Cos(ha)
-J22=-Sin(phi)*Sin(ha)
-J11=Sin(dec)*Sin(ha)
+;J21=Cos(phi)*Cos(dec)+Sin(phi)*Sin(dec)*Cos(ha)
+;J22=-Sin(phi)*Sin(ha)
+;J11=Sin(dec)*Sin(ha)
+;J12=Cos(ha)
+J21=Cos(lat)*Cos(dec)+Sin(lat)*Sin(dec)*Cos(ha)
+J22=-Sin(lat)*Sin(ha)
+J11=Sin(phi)*Sin(ha)
 J12=Cos(ha)
 
 p_map=Ptrarr(4,4,/allocate)
