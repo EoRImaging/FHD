@@ -635,53 +635,7 @@ catalog_file_path=sources_file_path
 
 extra=var_bundle()
 
-array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $   
-;    instrument=instrument, $ 
-;    recalculate_all=recalculate_all, $
-;    grid_recalculate=grid_recalculate, $
-;    file_path_fhd=file_path_fhd, $
-;    catalog_file_path=sources_file_path, $
-;    sim_from_uvfits_filepath=sim_from_uvfits_filepath, $
-;    source_array=source_array, $
-;    include_catalog_sources=include_catalog_sources, $
-;;    model_visibilities=model_visibilities, $
-;    error=error, $
-;    unflag_all=unflag_all, $
-;    eor_sim=eor_sim, $
-;    simulate_header=simulate_header, $
-;    complex=complex_beam, $
-;    double=double_precision_beam, $
-;    simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, n_time=n_time, sim_baseline_time_inds=sim_baseline_time, $
-;    export_images=export_images, $
-;    save_visibilities=save_visibilities, $
-;    beam_offset_time=beam_offset_time, $
-;    snapshot_healpix_export=snapshot_healpix_export, $
-;    split_ps_export=split_ps_export, $
-;    save_imagecube=save_imagecube, $
-;    save_uvf=save_uvf,$
-;    save_antenna_model=save_antenna_model,$
-;    include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
-;    n_pol=n_pol,$
-;    dimension=dimension, $
-;    fov=fov, $
-;    image_filter_fn=image_filter_fn, $
-;    nfreq_avg=nfreq_avg, $
-;    no_rephase=no_rephase, $
-;    obsra=obsra,$
-;    no_save=no_save,$
-;    allow_sidelobe_image_output=allow_sidelobe_image_output, $
-;    allow_sidelobe_sources=allow_sidelobe_sources,$
-;    allow_sidelobe_model_sources=allow_sidelobe_model_sources,$
-;    allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,$
-;    psf_resolution=psf_resolution,$
-;    kbinsize=kbinsize,$
-;    restore_last=restore_last,$
-;    max_sources=max_sources,$
-;    max_model_sources=max_model_sources,$
-;    max_calibration_sources=max_calibration_sources,$
-;    dft_threshold=dft_threshold,$
-;    diffuse_model=diffuse_model,$
-    _Extra=extra
+array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, _Extra=extra
     
 heap_gc
 

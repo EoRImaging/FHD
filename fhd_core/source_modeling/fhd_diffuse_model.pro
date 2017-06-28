@@ -39,6 +39,7 @@ var_name_inds=where((StrLowCase(var_names) NE 'hpx_inds') AND (StrLowCase(var_na
 var_names=var_names[var_name_inds]
 var_name_use=var_names[(where(StrLowCase(var_names) EQ 'model_arr',n_match))[0]>0] ;will pick 'model_arr' if present, or the first variable that is not 'hpx_inds' or 'nside'
 model_hpx_arr=getvar_savefile(model_filepath,var_name_use)
+
 model_spectra_i=where(StrLowCase(var_names) EQ 'model_spectral_arr',n_match)
 IF n_match GE 1 THEN diffuse_spectral_index=getvar_savefile(model_filepath,var_names[model_spectra_i])
 IF n_spectral LE 0 THEN undefine_fhd,diffuse_spectral_index
@@ -98,3 +99,4 @@ IF Keyword_Set(uv_return) THEN BEGIN
     RETURN,model_uv_arr 
 ENDIF ELSE RETURN,model_arr
 END
+
