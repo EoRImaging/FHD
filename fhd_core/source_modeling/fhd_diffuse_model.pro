@@ -44,12 +44,15 @@ model_spectra_i=where(StrLowCase(var_names) EQ 'model_spectral_arr',n_match)
 IF n_match GE 1 THEN diffuse_spectral_index=getvar_savefile(model_filepath,var_names[model_spectra_i])
 IF n_spectral LE 0 THEN undefine_fhd,diffuse_spectral_index
 
+coord_use=where(StrLowCase(var_names) EQ 'coord_sys',m_match) ;will pick 'coord_sys' if present
+IF m_match EQ 0 THEN coord_use = 'celestial' ELSE coord_use=getvar_savefile(model_filepath,'coord_sys')    ; Assume celestial if not defined otherwise
+
 IF size(diffuse_spectral_index,/type) EQ 10 THEN BEGIN ;check if pointer type
     ;need to write this!
     print,"A spectral index is defined in the saved diffuse model, but this is not yet supported!"
 ENDIF ;case of specifying a single scalar to be applied to the entire diffuse model is treated AFTER building the model in instrumental polarization
 
-model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=diffuse_units_kelvin)
+model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=diffuse_units_kelvin,coord_sys=coord_use)
 IF size(model_stokes_arr,/type) EQ 10 THEN BEGIN
     np_hpx=Total(Ptr_valid(model_hpx_arr))
     IF Keyword_Set(no_polarized_diffuse) THEN np_hpx=1
@@ -96,3 +99,4 @@ IF Keyword_Set(uv_return) THEN BEGIN
     RETURN,model_uv_arr 
 ENDIF ELSE RETURN,model_arr
 END
+

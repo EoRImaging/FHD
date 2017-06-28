@@ -4,7 +4,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
     delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
     include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
-    model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
+    model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file, diffuse_model=diffuse_model, _Extra=extra
     
   n_freq=obs.n_freq
   n_pol=obs.n_pol
@@ -27,7 +27,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
   endif    
   n_sources=N_Elements(source_array)
   print, 'n_sources: '+string(n_sources)
-  skymodel=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_path=catalog_file_path,return_cal=0,_Extra=extra)
+  skymodel=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_path=catalog_file_path,diffuse_model=diffuse_model, return_cal=0,_Extra=extra)
   
   if keyword_set(recalculate_all) then begin
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset,no_save=no_save
@@ -63,7 +63,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
         for i=0, n_freq-1 do model_uvf_cube[*,*,i] = fft_shift(FFT(fft_shift(model_image_use[*,*,1]),/inverse)) * (degpix*!DtoR)^2.
         undefine, model_image_use
       endif
-      
+
       if keyword_set(include_eor) then begin
         freq_arr = (*obs.baseline_info).freq
         delta_uv=obs.kpix
@@ -157,6 +157,20 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
       
     endif ;; end if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(include_eor)
     
+    ;; If diffuse model is included, calculate its contribution and add to the source_model_uv_arr
+    IF Keyword_Set(diffuse_model) THEN BEGIN
+      IF file_test(diffuse_model) EQ 0 THEN diffuse_model=(file_search(diffuse_model+'*'))[0]
+         print,"Reading diffuse model file: "+diffuse_model
+      diffuse_model_uv=fhd_diffuse_model(obs,jones,skymodel,spectral_model_arr=diffuse_spectral_model_uv,/uv_return,/diffuse_units_kelvin,model_filepath=diffuse_model,_Extra=extra)
+      IF Max(Ptr_valid(diffuse_model_uv)) EQ 0 THEN print,"Error reading or building diffuse model. Null pointer returned!"
+    ENDIF
+
+    IF Min(Ptr_valid(diffuse_model_uv)) GT 0 THEN BEGIN
+      IF n_elements(source_model_uv_arr) GT 0 then begin
+        FOR pol_i=0,n_pol-1 DO *source_model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i];*uv_mask_use
+      endif else source_model_uv_arr = Pointer_copy(diffuse_model_uv)
+    ENDIF
+
     if n_elements(source_model_uv_arr) gt 0 then begin
       if n_elements(model_uvf_arr) gt 0 then begin
         ;; if there is also a uvf cube, add the uv from the sources to the cube at each freq.
