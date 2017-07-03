@@ -108,6 +108,19 @@ case version of
 	no_ps=0
 	bandpass_calibrate=0
   end
+   'mwa_filtered': begin
+        no_ps=0
+        model_visibilities=1
+        max_model_sources=7000
+        sources_file_name="GLEAM_EGC_catalog"
+        model_catalog_file_path =filepath(string(format='(A,".sav")',sources_file_name),root=rootdir('FHD'), subdir='catalog_data')
+        instrument='mwa'
+        snapshot_healpix_export=1
+        return_cal_visibilities=0
+        calibrate_visibilities=0
+        export_images=0
+        nfreq_avg=16
+    end
 endcase
    
 ;if version EQ 'nb_pytest' then begin

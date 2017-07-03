@@ -88,13 +88,192 @@ if n_elements(version) eq 0 then begin ;version provides a name for the output s
 endif
 
 ;;** Setting up the source_array structure that contains the sources to be used in the simulation
-if n_elements(sources_file_name) eq 0 then begin 
-    print, 'Please supply the name of an input file with sources to simulate.'
-    return
-endif else print, 'Using sources: ' + sources_file_name
+;if n_elements(sources_file_name) eq 0 then begin 
+;    print, 'Please supply the name of an input file with sources to simulate.'
+;    return
+;endif else print, 'Using sources: ' + sources_file_name
 
 
 case version of
+; Add snapshot_healpix_export=0 for faster runtime if not doing eppsilon
+
+   'sim_hera19_point_doubles': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=10000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	snapshot_healpix_export=0
+   end
+
+   'sim_hera19_eflat_comp_more': begin
+	;Compressed frequencies
+        snapshot_healpix_export=0
+        restore_last=0
+	dimension=1024
+	instrument='hera'
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+        flat_sigma=1
+        ps_export=0
+        split_ps_export=0
+   end
+
+   'sim_hera19_eflat_comp': begin
+	;Compressed frequencies
+        snapshot_healpix_export=0
+        restore_last=0
+	dimension=1024
+	instrument='hera'
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+        flat_sigma=1
+        ps_export=0
+        split_ps_export=0
+   end
+
+   'sim_hera19_eor_comp_more': begin
+	;Compressed frequencies
+        snapshot_healpix_export=0
+        restore_last=0
+	dimension=1024
+	instrument='hera'
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+        ps_export=0
+        split_ps_export=0
+   end
+
+   'sim_paper19_eor_comp_more': begin
+	;Compressed frequencies; PAPER beams
+	dimension=1024
+	instrument='paper'
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+        ps_export=0
+        flat_sigma=0
+        split_ps_export=0
+        snapshot_healpix_export=0
+        restore_last=0
+   end
+
+   'sim_hera19_point_interp-kern': begin
+        interpolate_kernel=1
+	dimension=1024
+	instrument='hera'
+	max_model_sources=10000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+   end
+
+
+   'sim_ewbase_hera_beam-mask-thresh': begin
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=1000
+	beam_model_version=2
+	kbinsize=0.5
+   end
+
+
+   'sim_semicircle_point_interp': begin
+	interpolate_kernel=1    ; Turn off baseline binning
+	dimension=1024
+	instrument='hera'
+	max_model_sources=1000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	snapshot_healpix_export=0
+   end
+
+   'sim_semicircle_point': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=1000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+   end
+
+   'sim_hera19_diffuse_kelvin-convert': begin
+	dimension=1024
+	diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+	instrument='hera'
+        include_catalog_sources=0
+;	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+;	set_sidelobe_keywords=1
+   end
+
+   'sim_hera19_diffuse_fine_comp_1hour': begin
+	dimension=1024
+	diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+	instrument='hera'
+        include_catalog_sources=0
+;	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+;	set_sidelobe_keywords=1
+   end
+
+   'sim_hera19_diffuse_fine_uncomp_1hour': begin
+	dimension=1024
+	diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+	instrument='hera'
+        include_catalog_sources=0
+;	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=1024
+	beam_model_version=2
+;	set_sidelobe_keywords=1
+   end
+
+   'sim_hera19_point_fine_comp_1hour': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=10000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+;	set_sidelobe_keywords=1
+   end
+
+   'sim_mwa_diffuse_new-FHD': begin
+	diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+	dimension=512
+	instrument='mwa'
+        include_catalog_sources=0
+;	sources_file_name='GLEAM_EGC_catalog'
+;	max_model_sources=0
+    end
+
+   'sim_hera19_v2_sidelobes': begin
+	dimension=1024
+	instrument='hera'
+	max_model_sources=7000
+	sources_file_name='GLEAM_EGC_catalog'
+	nfreq_avg=203
+	beam_model_version=2
+	set_sidelobe_keywords=1
+   end
+
+
+   'sim_ewbase_hera_diffuse': begin
+	diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')
+	dimension=1024
+	instrument='hera'
+;	sources_file_name='GLEAM_EGC_catalog'
+	beam_model_version=2
+;	max_model_sources=0
+    end
 
    'sim_ewbase_hera_nfreqavg': begin
 	dimension=1024
@@ -105,8 +284,26 @@ case version of
 	kbinsize=0.5
    end
 
+   'sim_ewbase_mwa_kbin_few-src': begin  ;formerly _hera_
+	dimension=1024
+	;instrument='hera'
+	instrument='mwa'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=50
+	beam_model_version=2
+	nfreq_avg=203
+   end
 
-   'sim_ewbase_hera_kbin_v2': begin
+   'sim_ewbase_hera_kbin_more-src': begin
+	dimension=1024
+	instrument='hera'
+	sources_file_name='GLEAM_EGC_catalog'
+	max_model_sources=50000
+	beam_model_version=2
+	nfreq_avg=203
+   end
+
+   'sim_ewbase_hera_kbin_t2_v2': begin
 	dimension=1024
 	instrument='hera'
 	sources_file_name='GLEAM_EGC_catalog'
@@ -186,13 +383,53 @@ case version of
 	eor_sim=1
    end
 
-   'sim_hera19_eor': begin
-	;First platinum file, compressed frequencies
+   'sim_hera37_eflat': begin
 	dimension=1024
 	instrument='hera'
-	sources_file_name='GLEAM_EGC_catalog'
-	max_model_sources=0
-	dft_threshold=0
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+        ps_export=0
+        flat_sigma=1
+        split_ps_export=0
+   end
+
+   'sim_paper19_eflat_comp': begin
+	;Compressed frequencies; PAPER beams
+	dimension=1024
+	instrument='paper'
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+        ps_export=0
+        flat_sigma=1
+        split_ps_export=0
+   end
+
+   'sim_hera19_eor_comp': begin
+	;Compressed frequencies
+	dimension=1024
+	instrument='hera'
+	nfreq_avg=203
+	include_catalog_sources=0
+	eor_sim=1
+        ps_export=0
+        split_ps_export=0
+   end
+
+   'sim_hera19_eor_uncomp': begin
+	;Uncompressed frequencies
+	dimension=1024
+	instrument='hera'
+	nfreq_avg=1024
+	include_catalog_sources=0
+	eor_sim=1
+   end
+
+   'sim_hera19_eor': begin
+	;Uncompressed frequencies
+	dimension=1024
+	instrument='hera'
 	nfreq_avg=203
 	include_catalog_sources=0
 	eor_sim=1
@@ -394,56 +631,11 @@ endif
 ;IF N_Elements(n_avg) EQ 0 THEN n_avg=2
 ;IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=0.5
 ;IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
+catalog_file_path=sources_file_path
 
 extra=var_bundle()
 
-array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, $   
-    instrument=instrument, $ 
-    recalculate_all=recalculate_all, $
-    grid_recalculate=grid_recalculate, $
-    file_path_fhd=file_path_fhd, $
-    catalog_file_path=sources_file_path, $
-    sim_from_uvfits_filepath=sim_from_uvfits_filepath, $
-    source_array=source_array, $
-    include_catalog_sources=include_catalog_sources, $
-;    model_visibilities=model_visibilities, $
-    error=error, $
-    unflag_all=unflag_all, $
-    eor_sim=eor_sim, $
-    simulate_header=simulate_header, $
-    complex=complex_beam, $
-    double=double_precision_beam, $
-    simulate_baselines=simulate_baselines, sim_baseline_uu=sim_baseline_uu, sim_baseline_vv=sim_baseline_vv, n_time=n_time, sim_baseline_time_inds=sim_baseline_time, $
-    export_images=export_images, $
-    save_visibilities=save_visibilities, $
-    beam_offset_time=beam_offset_time, $
-    snapshot_healpix_export=snapshot_healpix_export, $
-    split_ps_export=split_ps_export, $
-    save_imagecube=save_imagecube, $
-    save_uvf=save_uvf,$
-    save_antenna_model=save_antenna_model,$
-    include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
-    n_pol=n_pol,$
-    dimension=dimension, $
-    fov=fov, $
-    image_filter_fn=image_filter_fn, $
-    nfreq_avg=nfreq_avg, $
-    no_rephase=no_rephase, $
-    obsra=obsra,$
-    no_save=no_save,$
-    allow_sidelobe_image_output=allow_sidelobe_image_output, $
-    allow_sidelobe_sources=allow_sidelobe_sources,$
-    allow_sidelobe_model_sources=allow_sidelobe_model_sources,$
-    allow_sidelobe_cal_sources=allow_sidelobe_cal_sources,$
-    psf_resolution=psf_resolution,$
-    kbinsize=kbinsize,$
-    restore_last=restore_last,$
-    max_sources=max_sources,$
-    max_model_sources=max_model_sources,$
-    max_calibration_sources=max_calibration_sources,$
-    dft_threshold=dft_threshold,$
-    diffuse_model=diffuse_model,$
-    _Extra=extra
+array_simulator, vis_arr, flag_arr, obs, status_str, psf, params, jones, _Extra=extra
     
 heap_gc
 
