@@ -5,8 +5,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,calibration_bandpass_iterate=calibration_bandpass_iterate,$
-    calibration_auto_fit=calibration_auto_fit,debug_selected_cal=debug_selected_cal,zero_debug_cal=zero_debug_cal,$
-    over_calibrate=over_calibrate,phase_longrun=phase_longrun,perf_calibrate=perf_calibrate,firstpass_model_recalculate=firstpass_model_recalculate,ave_ref=ave_ref,_Extra=extra
+    calibration_auto_fit=calibration_auto_fit,debug_selected_cal=debug_selected_cal,cal_stop=cal_stop, model_transfer=model_transfer,$
+    over_calibrate=over_calibrate,phase_longrun=phase_longrun,perf_calibrate=perf_calibrate,ave_ref=ave_ref,_Extra=extra
   t0_0=Systime(1)
   error=0
   timing=-1
@@ -89,17 +89,21 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   ENDIF
 
 fill_model_vis=1
-if N_elements(firstpass_model_recalculate) EQ 0 then firstpass_model_recalculate=1
-if keyword_set(firstpass_model_recalculate) then begin
-vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
-  timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
-  endif else begin
-    vis_model_arr=PTRARR(2,/allocate)
-    pol_names=['XX','YY']
-    for pol_i=0, 1 do $
-    vis_model_arr[pol_i] = getvar_savefile(file_dirname(file_path_fhd) + '/vis_data/' + obs.obsname + '_vis_model_'+pol_names[pol_i]+'.sav','vis_model_ptr')
-  endelse
+
+if ~keyword_set(model_transfer) then begin
+  vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
+    timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
+endif else begin
+  vis_model_arr=PTRARR(obs.n_pol-1,/allocate)
+  for pol_i=0, obs.n_pol-1 do begin
+    if ~file_test(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav') then $
+      message, model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav not found during model transfer.'
+    vis_model_arr[pol_i] = getvar_savefile(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav','vis_model_ptr')
+  endfor
+endelse
 t1=Systime(1)-t0_0
+
+if keyword_set(cal_stop) then vis_export,obs,status_str,vis_model_arr,file_path_fhd=file_dirname(file_path_fhd) + '/cal_prerun/' + file_basename(file_path_fhd) ,/compress,/model
 
 vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
 IF Keyword_Set(cal.auto_initialize) THEN BEGIN
@@ -172,17 +176,14 @@ FOR iter=0,calibration_flag_iterate DO BEGIN
   cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,vis_weight_ptr,obs,cal,$
     preserve_visibilities=preserve_flag,_Extra=extra)
   if keyword_set(ave_ref) then begin
-    ref_avg = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave.sav','ref_avg')
-    obsids = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave.sav','obsids')
+    ref_avg = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave_byday.sav','ref_avg')
     gain0 = (*cal.gain[0])
     gain1 = (*cal.gain[1])
-    obs_id = where(obs.obsname EQ obsids)
-    print, obs_id
-    unwrapped_phase = phunwrap(atan((*cal.gain[0]),/phase))
-    for tile_i=0,127 do (*cal.gain[0])[*,tile_i] = abs((*cal.gain[0])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[0,obs_id,*]))))
-    unwrapped_phase = phunwrap(atan((*cal.gain[1]),/phase))
-    for tile_i=0,127 do (*cal.gain[1])[*,tile_i] = abs((*cal.gain[1])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[1,obs_id,*]))))
 
+    unwrapped_phase = phunwrap(atan((*cal.gain[0]),/phase))
+    for tile_i=0,127 do (*cal.gain[0])[*,tile_i] = abs((*cal.gain[0])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[0,0,*]))))
+    unwrapped_phase = phunwrap(atan((*cal.gain[1]),/phase))
+    for tile_i=0,127 do (*cal.gain[1])[*,tile_i] = abs((*cal.gain[1])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[1,0,*]))))
   endif  
   t3_a=Systime(1)
   t2+=t3_a-t2_a
@@ -240,9 +241,7 @@ FOR iter=0,calibration_flag_iterate DO BEGIN
       for pol_i=0,1 do (*cal.gain[pol_i]) = reform(abs(cal_selected[pol_i,obs_id_current,*,*])) * exp(Complex(0,1)*atan((*cal.gain[pol_i]),/phase))
     endif
   endif
-  
-  if keyword_set(zero_debug_cal) then cal=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/selected_cal/1061316296_selected_cal_zero.sav','cal')
-  
+
   IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
   IF Keyword_Set(n_tile_cut) THEN BREAK
   
@@ -285,7 +284,7 @@ endif
 
 if keyword_set(phase_longrun) then begin
   ;longrun_gain  = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_plus_phase_dig_poi.sav', 'longrun_gain')
-  longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave.sav','longrun_gain')
+  longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave_byday.sav','longrun_gain')
       pointing_num=mwa_get_pointing_number(obs,/string)
       poi_name = ['-2','-1','0','1','2']
       poi = where(pointing_num EQ poi_name)
