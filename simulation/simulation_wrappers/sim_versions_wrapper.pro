@@ -97,7 +97,7 @@ endif
 case version of
 ; Add snapshot_healpix_export=0 for faster runtime if not doing eppsilon
 
-   'sim_hera19_point_doubles': begin
+   'sim_hera19_point_no-zombie': begin
 	dimension=1024
 	instrument='hera'
 	max_model_sources=10000
