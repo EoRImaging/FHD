@@ -2209,11 +2209,10 @@ pro eor_firstpass_versions
     undefine, diffuse_calibrate, diffuse_model
     uvfits_version=5
     uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
     cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    ;calibration_flux_threshold = .1
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
     recalculate_all=1
     mapfn_recalculate=0
     debug_beam_clip_floor=1
@@ -2224,6 +2223,27 @@ pro eor_firstpass_versions
     jump_longrun=1 
     no_ref_tile=1
     cal_stop=1
+  end
+  'nb_2013zenith_calonly': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=5
+    uvfits_subversion=1
+    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    no_ref_tile=1
+    cal_stop=1
+    time_cut=-4
   end
   'nb_longrun_timecuttest': begin
     saved_run_bp=0
