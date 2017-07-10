@@ -219,7 +219,7 @@ WARNING! Options in this section may change without notice, and should never be 
   
 **return_decon_visibilities**: <br />
 
-**return_sidelobe_catalog**: include sidelobes sources from the `subtract_sidelobe_catalog` in the source list. This will include the sidelobe sources in foreground subtraction. <br />
+**return_sidelobe_catalog**: include sidelobes sources from the `subtract_sidelobe_catalog` in the component/source list. Source finding will be performed on the input sidelobe sources. This will also include the sidelobe sources in foreground subtraction. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. `subtract_sidelobe_catalog` must also be set. <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
