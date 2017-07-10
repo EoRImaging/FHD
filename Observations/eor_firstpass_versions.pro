@@ -2978,6 +2978,7 @@ pro eor_firstpass_versions
     dft_threshold = 0
     ring_radius = 0
     write_healpix_fits = 1
+    debug_region_grow = 1
   end
   
   'rlb_1130789944_run1_cal_Dec2016': begin
