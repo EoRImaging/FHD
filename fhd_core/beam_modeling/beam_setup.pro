@@ -21,7 +21,18 @@ ENDIF
 IF Keyword_set(transfer_psf) then begin
     if ~file_test(transfer_psf + '/' + obs.obsname + '_beams.sav') then $
       message, transfer_psf + '/' + obs.obsname + '_beams.sav not found during psf transfer.'
+    if ~file_test(transfer_psf + '/' + obs.obsname + '_obs.sav') AND ~file_test(file_dirname(transfer_psf) $
+      + '/metadata/' + obs.obsname + '_obs.sav') then $
+      message, transfer_psf + '/' + obs.obsname + '_obs.sav or ' + file_dirname(transfer_psf) + $
+      '/metadata/' + obs.obsname + '_obs.sav not found during psf transfer. Beam_integral needed in PS.'
+      
     psf = getvar_savefile(transfer_psf + '/' + obs.obsname + '_beams.sav','psf')
+    if file_test(transfer_psf + '/' + obs.obsname + '_obs.sav') then $
+      obs_restore = getvar_savefile(transfer_psf + '/' + obs.obsname + '_obs.sav','obs')
+    if file_test(file_dirname(transfer_psf) + '/metadata/' + obs.obsname + '_obs.sav') then $
+      obs_restore = getvar_savefile(file_dirname(transfer_psf) + '/metadata/' + obs.obsname + '_obs.sav','obs')
+    obs.beam_integral = pointer_copy(obs_restore.beam_integral)
+    
     RETURN,psf
 ENDIF
 
