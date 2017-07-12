@@ -94,7 +94,7 @@ if ~keyword_set(model_transfer) then begin
   vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
     timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
 endif else begin
-  vis_model_arr=PTRARR(obs.n_pol-1,/allocate)
+  vis_model_arr=PTRARR(obs.n_pol,/allocate)
   for pol_i=0, obs.n_pol-1 do begin
     if ~file_test(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav') then $
       message, model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav not found during model transfer.'
