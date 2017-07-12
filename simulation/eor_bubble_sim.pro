@@ -3,8 +3,14 @@ PRO eor_bubble_sim ; , hdf5_fname, obs, jones, _Extra=extra
 ;; How to handle if the frequency structure is different? --- Import the frequency structure in the hdf5 file. Subselect if it's smaller than the range of obs, then interpolate after everything else is done. (loop over pol, interpolate in freq)
 
 ;Opening an HDF5 file and extract relevant data
-file = '/users/alanman/data/alanman/BubbleCube/TiledHpxCubes/light_cone_surfaces.hdf5'   ; For now
-f_id = H5F_OPEN(file)
+if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE hdf5_fname = '/users/alanman/data/alanman/BubbleCube/TiledHpxCubes/kelvin_light_cone_surfaces.hdf5'
+if not keyword_set(beam_threshold) then beam_threshold = 0.05
+if keyword_set(allow_sidelobe_sources) THEN beam_threshold = 0.01
+
+dimension=obs.dimension
+elements= obs.dimension
+
+f_id = H5F_OPEN(hdf5_fname)
 dset_id_eor  = H5D_OPEN(f_id, '/spectral_info/spectrum')
 dspace_id_eor = H5D_GET_SPACE(dset_id_eor)
 
@@ -58,7 +64,11 @@ n_pol=4
 
 model_uv_arr=Ptrarr(n_pol,obs.n_freq, /allocate)
 t0 = systime(/seconds)
+print, 'Healpix Interpolation'
+;resolve_routine, 'healpix_interpolate',/either
+;profiler
 model_stokes_arr = healpix_interpolate(hpx_arr,obs,nside=nside,hpx_inds=inds_select,/from_kelvin)
+;profiler, /report, /code_coverage, filename="/gpfs_home/alanman/000_healpix_interpolate_profile.out"
 print, 'Hpx_interpolate timing: ', systime(/seconds) - t0
 
 FOR fi=0, obs.n_freq-1 do begin    ; 30 seconds for 203 channels
