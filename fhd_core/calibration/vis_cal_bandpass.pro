@@ -70,7 +70,13 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     cable_length_ref=cable_len[Uniq(cable_len,Sort(cable_len))]
     n_cable=N_Elements(cable_length_ref)
     tile_use_arr=Ptrarr(n_cable)
-    FOR cable_i=0,n_cable-1 DO tile_use_arr[cable_i]=Ptr_new(where((*obs.baseline_info).tile_use AND cable_len EQ cable_length_ref[cable_i]))
+    FOR cable_i=0,n_cable-1 DO BEGIN
+       tile_use_arr[cable_i]=Ptr_new(where((*obs.baseline_info).tile_use AND cable_len EQ cable_length_ref[cable_i]))
+       if (N_elements(*tile_use_arr[cable_i]) EQ 0) AND ~keyword_set(saved_run_bp) then begin
+          print, 'WARNING: Too many flagged tiles to implement bandpass cable averaging. Using global bandpass.'
+          normal_bp_cal=1
+       endif 
+    ENDFOR
     
     ;Reload a saved bandpass by pointing for a specific pointing. Currently only capable of golden set. (Is this still true?)
     If keyword_set(saved_run_bp) then begin
