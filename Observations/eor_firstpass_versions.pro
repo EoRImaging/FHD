@@ -2264,7 +2264,7 @@ pro eor_firstpass_versions
   'nb_2013zenith_calonly': begin
     saved_run_bp=0
     undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
+    uvfits_version=4
     uvfits_subversion=1
     restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
     cal_time_average=0
@@ -3285,6 +3285,7 @@ endif else begin
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
 endelse
 undefine, uvfits_subversion, uvfits_version
+
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 
