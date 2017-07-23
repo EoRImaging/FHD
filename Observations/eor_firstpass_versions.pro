@@ -19,7 +19,7 @@ pro eor_firstpass_versions
   endif else begin
     obs_id = '1061316296'
     output_directory = '/nfs/mwa-10/r1/EoRuvfits/analysis/'
-    version = 'nb_2013zenith_test_stop22'
+    version = 'nb_autos_2'
   endelse
   cmd_args={version:version}
   
@@ -1354,7 +1354,7 @@ pro eor_firstpass_versions
     nfreq_avg=16
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
- 'nb_sim_beam_flagged_best16': begin
+ 'nb_sim_beam_flagged_best16_navg1': begin
     in_situ_sim_input = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_model_beam_flagged_best16'
     ;calibrate_visibilities=0
     ;model_visibilities=1
@@ -1368,6 +1368,7 @@ pro eor_firstpass_versions
     mapfn_recalculate=0
     healpix_recalculate=1
     nfreq_avg=16
+    n_avg=1
     ;cal_time_average=1 ;reseting the gains makes this unnecessary
     ;model_delay_filter=1
     calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -2260,6 +2261,7 @@ pro eor_firstpass_versions
     jump_longrun=1 
     no_ref_tile=1
     cal_stop=1
+    time_cut=-4
   end
   'nb_2013zenith_calonly': begin
     saved_run_bp=0
@@ -2368,6 +2370,151 @@ pro eor_firstpass_versions
     ;phase_longrun=1 ;add to github
     jump_longrun=1 
     no_ref_tile=1
+    ;time_cut=[2,-2]
+    ;cal_stop=1
+  end
+    'nb_autos': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    ;calibration_flux_threshold = .1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    ;nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    calibration_auto_fit=1
+    ;time_cut=[2,-2]
+    cal_stop=1
+  end
+    'nb_autos5': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=5
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    ;calibration_flux_threshold = .1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    ;nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    calibration_auto_fit=1
+    ;time_cut=[2,-2]
+    cal_stop=1
+  end
+      'nb_autos_2': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+       model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos/beams'
+    ;calibration_flux_threshold = .1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    ;nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    calibration_auto_fit=1
+    ;time_cut=[2,-2]
+    cal_stop=1
+  end
+      'nb_autos_3': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    ;   model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos/cal_prerun/vis_data'
+    ;transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos/beams'
+    ;calibration_flux_threshold = .1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    ;model_delay_filter=1
+    beam_mask_threshold=1e3
+    ;nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;calibration_auto_fit=1
+    ;time_cut=[2,-2]
+    cal_stop=1
+  end  
+    'nb_autos5_2': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=5
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+       model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos5/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos5/beams'
+    ;calibration_flux_threshold = .1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    ;nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    calibration_auto_fit=1
+    ;time_cut=[2,-2]
+    cal_stop=1
+  end
+    'nb_bart_test': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=5
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    ;model_transfer='/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_bart_test/vis_data'
+    transfer_psf='/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_bart_test/beams'
+    ;calibration_flux_threshold = .1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=16
+    ;phase_longrun=1 ;add to github
+    ;jump_longrun=1 
+    ;no_ref_tile=1
     ;time_cut=[2,-2]
     ;cal_stop=1
   end
@@ -3302,10 +3449,10 @@ pro eor_firstpass_versions
   
 endcase
 
-if version EQ 'nb_2013zenith_test_stop22' then begin
+if version EQ 'nb_autos_2' then begin
   print, 'Manual version input'
   ;vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
-  vis_file_list = '/nfs/eor-08/r1/EoRuvfits/jd2456528v5_1/1061316296/1061316296.uvfits'
+  vis_file_list = '/nfs/eor-11/r1/EoRuvfits/jd2456528v4_1/1061316296/1061316296.uvfits'
 endif else begin
   if version eq 'rlb_HERA_May2017' then begin
     vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
