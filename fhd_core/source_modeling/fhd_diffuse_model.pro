@@ -1,5 +1,5 @@
 FUNCTION fhd_diffuse_model,obs,jones,skymodel,model_filepath=model_filepath,uv_return=uv_return,$
-    spectral_model_arr=spectral_model_arr,diffuse_units_kelvin=diffuse_units_kelvin,$
+    spectral_model_arr=spectral_model_arr,diffuse_units_kelvin=diffuse_units_kelvin, select_radius=select_radius, $
     flatten_spectrum=flatten_spectrum,no_polarized_diffuse=no_polarized_diffuse,_Extra=extra
 
 dimension=obs.dimension
@@ -51,6 +51,20 @@ IF size(diffuse_spectral_index,/type) EQ 10 THEN BEGIN ;check if pointer type
     ;need to write this!
     print,"A spectral index is defined in the saved diffuse model, but this is not yet supported!"
 ENDIF ;case of specifying a single scalar to be applied to the entire diffuse model is treated AFTER building the model in instrumental polarization
+
+if keyword_set(select_radius) THEN BEGIN  ; Limit hpx_inds to those within the selection radius of the phase center
+    pix2vec_ring, nside, hpx_inds, pix_coords
+    vec2ang,pix_coords,pix_dec,pix_ra,/astro
+    IF coord_use EQ 'galactic'   THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /degree
+    IF coord_use EQ 'equatorial' THEN Hor2Eq,pix_dec,pix_ra,obs.JD0,pix_ra,pix_dec,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
+
+    phase_ra = obs.phasera
+    phase_dec = obs.phasedec
+
+    gcirc, 0, phase_ra, phase_dec, pix_ra, pix_dec, dists
+    hpx_inds = hpx_inds[where(dists LT select_radius)]
+    coord_use='celestial'    ; Conversion was done above, if necessary
+ENDIF
 
 model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=diffuse_units_kelvin,coord_sys=coord_use)
 IF size(model_stokes_arr,/type) EQ 10 THEN BEGIN

@@ -2,7 +2,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
     rephase_weights=rephase_weights,n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
-    restrict_hpx_inds=restrict_hpx_inds,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
+    restrict_hpx_inds=restrict_hpx_inds,hpx_radius=hpx_radius,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
     obs_out=obs_out,psf_out=psf_out,ps_tile_flag_list=ps_tile_flag_list,_Extra=extra
     
   t0=Systime(1)
@@ -61,9 +61,10 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   ENDIF ELSE  psf_out=beam_setup(obs_out,0,antenna_out,/no_save,psf_resolution=ps_psf_resolution,/silent,_Extra=extra)
   
   beam_arr=beam_image_cube(obs_out,psf_out,n_freq=n_freq_use,beam_mask=beam_mask,/square,beam_threshold=beam_threshold)
-  
+  if N_Elements(hpx_radius) EQ 0 then hpx_radius=FoV_use/sqrt(2.)
+  if N_Elements(restrict_hpx_inds) EQ 0 then restrict_hpx_inds=0
   hpx_cnv=healpix_cnv_generate(obs_out,file_path_fhd=file_path_fhd,nside=nside_use,restore_last=0,/no_save,$
-    mask=beam_mask,hpx_radius=FoV_use/sqrt(2.),restrict_hpx_inds=restrict_hpx_inds,_Extra=extra)
+    mask=beam_mask,hpx_radius=hpx_radius,restrict_hpx_inds=restrict_hpx_inds,_Extra=extra)
   IF Keyword_Set(restrict_hpx_inds) THEN nside=nside_use
   hpx_inds=hpx_cnv.inds
   n_hpx=N_Elements(hpx_inds)

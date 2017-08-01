@@ -1,11 +1,10 @@
-PRO eor_bubble_sim ; , hdf5_fname, obs, jones, _Extra=extra
-
-;; How to handle if the frequency structure is different? --- Import the frequency structure in the hdf5 file. Subselect if it's smaller than the range of obs, then interpolate after everything else is done. (loop over pol, interpolate in freq)
+FUNCTION eor_bubble_sim, obs, jones, select_radius=select_radius, bubble_fname=bubble_fname, beam_threshold=beam_threshold, allow_sidelobe_sources=allow_sidelobe_sources
 
 ;Opening an HDF5 file and extract relevant data
-if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE hdf5_fname = '/users/alanman/data/alanman/BubbleCube/TiledHpxCubes/kelvin_light_cone_surfaces.hdf5'
+if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE hdf5_fname = '/users/alanman/data/alanman/BubbleCube/TiledHpxCubes/light_cone_surfaces.hdf5'
 if not keyword_set(beam_threshold) then beam_threshold = 0.05
 if keyword_set(allow_sidelobe_sources) THEN beam_threshold = 0.01
+if not keyword_set(select_radius) THEN  select_radius = 20     ; Degrees
 
 dimension=obs.dimension
 elements= obs.dimension
@@ -27,10 +26,13 @@ restore, '/gpfs/data/jpober/alanman/FHD_out/fhd_sim_semicircle_point/beams/semic
 
 phase_ra = obs.phasera / !RaDeg
 phase_dec = obs.phasedec / !RaDeg
-; Identify the healpix pixels within 90\deg of the phase center.
-gcirc, 0, phase_ra, phase_dec, ra_hpx, dec_hpx, dists
-inds_select = where(dists LT !Pi/2.)
-npix_sel =  n_elements(inds_select)
+n_pol=obs.n_pol
+
+; Identify the healpix pixels within select_radius of the primary beam
+ang2vec,obs.obsdec,obs.obsra,cen_coords,/astro
+Query_disc,nside,cen_coords,select_radius,inds_select,npix_sel,/deg
+print, 'selection radius (degrees) ', select_radius
+print, "Npix_selected: ", npix_sel
 
 ; Limit the range of frequencies in the uvf cube to the range of the obs
 freq_arr = (*obs.baseline_info).freq
@@ -87,6 +89,6 @@ FOR fi=0, obs.n_freq-1 do begin    ; 30 seconds for 203 channels
 
 ENDFOR
 
-print, size(model_uv_arr)
+return, model_uvf_arr
 
 END

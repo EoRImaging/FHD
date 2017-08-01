@@ -51,7 +51,27 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
   IF ~silent THEN print,'Calculating beam model'
   psf=beam_setup(obs,status_str,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=0,_Extra=extra)
   IF Keyword_Set(t_beam) THEN IF ~silent THEN print,'Beam modeling time: ',t_beam
-  
+ 
+  ;; Get a selection radius based on the primary beam width  TODO --- Only do this if include_catalog_sources == 0, in which case get it from generate_source_cal_list
+  if not keyword_set(beam_threshold) then beam_threshold = 0.05
+  if keyword_set(allow_sidelobe_sources) THEN beam_threshold = 0.01
+
+  dimension=obs.dimension
+  elements=obs.elements
+  degpix=obs.degpix
+  print, 'Getting beam width'
+  IF N_Elements(beam_arr) LT (n_pol<2) THEN BEGIN 
+      beam_arr=Ptrarr(n_pol<2)
+      FOR pol_i=0,(n_pol<2)-1 DO beam_arr[pol_i]=Ptr_new(beam_image(psf,obs,pol_i=pol_i,square=0)>0.)
+  ENDIF
+  beam=fltarr(dimension,elements)
+  FOR pol_i=0,(n_pol<2)-1 DO beam+=*beam_arr[pol_i]^2.
+  beam=Sqrt(beam/(n_pol<2))
+  beam_primary_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
+  boundary=find_boundary(beam_primary_i,xsize=dimension, ysize=elements,perim_area=perim_area)
+  select_radius = (degpix*sqrt(perim_area)/2 + 3.)   ;Primary beam radius + 3 degrees
+
+ 
   vis_weights=Ptrarr(n_pol,/allocate)
   n_param=N_Elements(params.uu)
   FOR pol_i=0,n_pol-1 DO BEGIN
@@ -72,7 +92,7 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
       
   IF Size(source_array,/type) EQ 8 THEN source_array=generate_source_cal_list(obs,psf,source_array,_Extra=extra)   
   vis_arr=vis_simulate(obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,vis_weights=vis_weights,$
-    recalculate_all=recalculate_all, include_eor = eor_sim, include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
+    recalculate_all=recalculate_all, include_eor = eor_sim, select_radius=select_radius,  include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
     model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra)
    
@@ -162,7 +182,7 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
   IF Keyword_Set(snapshot_healpix_export) THEN begin
     IF ~Keyword_Set(n_avg) THEN n_avg=1
     IF Keyword_Set(snapshot_recalculate) THEN status_str.healpix_cube=(status_str.hpx_even=(status_str.hpx_odd=0))
-    healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,/restrict_hpx_inds,$
+    healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,hpx_radius=Float(select_radius),$
       vis_model_ptr=vis_model_ptr,file_path_fhd=file_path_fhd,vis_weights=vis_weights,n_avg=n_avg,$
       save_uvf=save_uvf,save_imagecube=save_imagecube,obs_out=obs_out,psf_out=psf_out,_Extra=extra
       
