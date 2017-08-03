@@ -115,6 +115,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
   
+**calibration_auto_fit**: use the autocorrelations to calibrate. This will suffer from increased, correlated noise and bit statistic errors. However, this will save the autos as the gain in the cal structure, which can be a useful diagnostic. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />  
+  
 **calibration_subtract_sidelobe_catalog**: set to subtract a catalog in the sidelobes that is different from that used in the primary beam <br />
   
 **calibration_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the calibration sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
@@ -219,7 +223,7 @@ WARNING! Options in this section may change without notice, and should never be 
   
 **return_decon_visibilities**: <br />
 
-**return_sidelobe_catalog**: include sidelobes sources from the `subtract_sidelobe_catalog` in the source list. This will include the sidelobe sources in foreground subtraction. <br />
+**return_sidelobe_catalog**: include sidelobes sources from the `subtract_sidelobe_catalog` in the component/source list. Source finding will be performed on the input sidelobe sources. This will also include the sidelobe sources in foreground subtraction. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. `subtract_sidelobe_catalog` must also be set. <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />

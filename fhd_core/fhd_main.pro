@@ -120,7 +120,7 @@ IF data_flag LE 0 THEN BEGIN
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,$
-             flag_calibration=flag_calibration,_Extra=extra)
+             flag_calibration=flag_calibration,cal_stop=cal_stop,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         IF Keyword_Set(error) THEN BEGIN
             print,"Error occured during calibration. Returning."
@@ -128,7 +128,10 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
         fhd_save_io,status_str,cal,var='cal',/compress,file_path_fhd=file_path_fhd,_Extra=extra
         vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
-        if keyword_set(cal_stop) then stop
+        if keyword_set(cal_stop) then begin
+          fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;need beam_integral for PS
+          message, "cal_stop initiated"
+        endif
     ENDIF
     
     IF Keyword_Set(flag_visibilities) THEN BEGIN
