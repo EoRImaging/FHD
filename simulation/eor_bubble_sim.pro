@@ -1,7 +1,7 @@
-FUNCTION eor_bubble_sim, obs, jones, select_radius=select_radius, bubble_fname=bubble_fname, beam_threshold=beam_threshold, allow_sidelobe_sources=allow_sidelobe_sources
+FUNCTION eor_bubble_sim, obs, jones, select_radius=select_radius, bubble_fname=bubble_fname, beam_threshold=beam_threshold, allow_sidelobe_sources=allow_sidelobe_sources, dat=dat 
 
 ;Opening an HDF5 file and extract relevant data
-if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE hdf5_fname = '/users/alanman/data/alanman/BubbleCube/TiledHpxCubes/light_cone_surfaces.hdf5'
+if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE hdf5_fname = '/users/alanman/data/alanman/BubbleCube/TiledHpxCubes/mwa_gaussian.hdf5'
 if not keyword_set(beam_threshold) then beam_threshold = 0.05
 if keyword_set(allow_sidelobe_sources) THEN beam_threshold = 0.01
 if not keyword_set(select_radius) THEN  select_radius = 20     ; Degrees
@@ -13,19 +13,14 @@ f_id = H5F_OPEN(hdf5_fname)
 dset_id_eor  = H5D_OPEN(f_id, '/spectral_info/spectrum')
 dspace_id_eor = H5D_GET_SPACE(dset_id_eor)
 
-freq_hpx = H5_GETDATA(file, '/spectral_info/freq')
-ra_hpx = H5_GETDATA(file, '/object/RA') / !RaDeg
-dec_hpx = H5_GETDATA(file, '/object/Dec') /!RaDeg
+freq_hpx = H5_GETDATA(hdf5_fname, '/spectral_info/freq')
+ra_hpx = H5_GETDATA(hdf5_fname, '/object/RA') 
+dec_hpx = H5_GETDATA(hdf5_fname, '/object/Dec') 
 
 dims = REVERSE(H5S_GET_SIMPLE_EXTENT_DIMS(dspace_id_eor))
 nside=NPIX2NSIDE(dims[0])
 nfreq_hpx = dims[1]
 
-restore, '/gpfs/data/jpober/alanman/FHD_out/fhd_sim_semicircle_point/metadata/semicircle_14m_comp_0_obs.sav'  ; For now.
-restore, '/gpfs/data/jpober/alanman/FHD_out/fhd_sim_semicircle_point/beams/semicircle_14m_comp_0_jones.sav'  ; For now.
-
-phase_ra = obs.phasera / !RaDeg
-phase_dec = obs.phasedec / !RaDeg
 n_pol=obs.n_pol
 
 ; Identify the healpix pixels within select_radius of the primary beam
@@ -47,13 +42,14 @@ nfreq_hpx = n_elements(freq_hpx)
 
 print, "Reading HDF5 file with EoR Healpix Cube"
 t0 = systime(/seconds)
-dat = H5D_READ(dset_id_eor, FILE_SPACE=dpsace_id_eor)
+if n_elements(dat) eq 0 then dat = H5D_READ(dset_id_eor, FILE_SPACE=dpsace_id_eor)  ; temporary --- allow for the data to be reused if already loaded
 print, 'HDF5 reading time = ', systime(/seconds) - t0, ' seconds'
 
 ; Interpolate in frequency:
 dat_interp = Fltarr(obs.n_freq,npix_sel)
-for hpx_i=0,npix_sel-1 DO dat_interp[*,hpx_i] = Interpol(dat[freq_inds,hpx_i],freq_hpx,freq_arr, /spline)
-
+t0=systime(/seconds)
+for hpx_i=0,npix_sel-1 DO dat_interp[*,hpx_i] = Interpol(dat[freq_inds,inds_select[hpx_i]],freq_hpx,freq_arr, /spline)
+print, 'Frequency interpolation complete: ', systime(/seconds) - t0
 hpx_arr = Ptrarr(obs.n_freq)
 for fi=0, obs.n_freq-1 DO hpx_arr[fi] = ptr_new(reform(dat_interp[fi,*]))
 
