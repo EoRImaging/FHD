@@ -3448,7 +3448,7 @@ pro eor_firstpass_versions
     uvfits_version = 5
     uvfits_subversion = 1
     saved_run_bp = 0
-    calibration_catalog_file_path = '/nfs/mwa-08/d1/DiffuseSurvey2015/fhd_rlb_GLEAM_cal_decon_Nov2016/output_data/1131454296_source_array.sav'
+    calibration_catalog_file_path = '/nfs/mwa-04/r1/EoRuvfits/DiffuseSurvey2015/1131454296_run1_catalog.sav'
     calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
     undefine, diffuse_calibrate, diffuse_model
     ring_radius = 0 
