@@ -3432,6 +3432,17 @@ pro eor_firstpass_versions
     debug_region_grow = 0
   end
   
+  'rlb_eor0_GLEAM_cal_Aug2017': begin
+    recalculate_all = 0
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+  end
+  
   ;;;;;;; Mike Wilensky's Stuff ;;;;;;;;
   'mwilensky_test_3_6_2017' : begin
     recalculate_all = 1
