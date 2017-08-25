@@ -46,8 +46,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 1 <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
   
-**psf_resolution** : Super-resolution factor of the psf. The psf will be interpolated to a grid of dimension (psf_superres_dim,psf_superres_dim). !Q <br />
+**psf_resolution**: super-resolution factor of the psf. The psf will be interpolated to a grid of dimension (psf_superres_dim,psf_superres_dim). !Q <br />
   -*Default*: 16 <br />
+
+**transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. <br />
+  -*Default*: not set <br />
 
 
 ## Calibration
@@ -99,12 +102,16 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 150 <br />
   -*Default*: 150 !Q <br />
   
-**cal_cable_reflection_mode_fit**: Fits residual gains to reflection mode and coefficient. <br />
+**cal_cable_reflection_mode_fit**: fits residual gains to reflection mode and coefficient. <br />
   -*Needs updating*: all cable keywords need a major overhaul <br />
   -Takes precidence over `cal_cable_reflection_correct`. <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 150 <br />
   -*Default*: 150 !Q <br />
+  
+**cal_stop**: stops the code right after calibration, and saves unflagged model visibilities along with the obs structure in a folder called cal_prerun in the FHD file structure. This allows for post-processing calibration steps like multi-day averaging, but still has all of the needed information for minimal reprocessing to get to the calibration step. To run a post-processing run, see keywords `model_transfer` and `transfer_psf`.<br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
 
 **cal_time_average**: performs a time average of the model/data visibilities over the time steps in the observation to reduce the number of equations that are used in the linear-least squares solver. This improves computation time, but will downweight longer baseline visibilities due to their faster phase variation. <br />
   -*Turn off/on*: 0/1 <br />
@@ -152,6 +159,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
   -*EoR_firstpass settings*: 50 <br />
   -*Default*: 50 !Q <br />
+  
+**model_transfer**: filepath to the FHD directory with model visbilities of the same obsid to be used instead of recalculating (i.e. `/path/to/the/FHD/dir/fhd_nb_test/cal_prerun/vis_data`). This is currently only an option for when the calibration model visibilities are the same as the subtraction model visibilities. The model visibilities can't have been flagged (see `cal_stop` on how to generate unflagged model visbilities). <br />
+  -*Default*: 50 <br />
   
 **return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. If n_pol = 4 (full pol mode), return_cal_visibilites must be set because the visibilites are required for calculating the mixing angle between Q and U. <br />
   -*Turn off/on*: 0/1 <br />
