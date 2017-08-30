@@ -3454,6 +3454,34 @@ pro eor_firstpass_versions
     ring_radius = 0 
   end
   
+  'rlb_eor0_GLEAM_cal_norephase_Aug2017': begin
+    recalculate_all = 0
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+  end
+  
+  'rlb_eor0_run1_cal_norephase_Aug2017': begin
+    recalculate_all = 0
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = '/nfs/mwa-04/r1/EoRuvfits/DiffuseSurvey2015/1131454296_run1_catalog.sav'
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0 
+  end
+  
   ;;;;;;; Mike Wilensky's Stuff ;;;;;;;;
   'mwilensky_test_3_6_2017' : begin
     recalculate_all = 1
