@@ -87,11 +87,10 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     timing=Systime(1)-t0_0
     RETURN,vis_cal
   ENDIF
-
-fill_model_vis=1
+  
 
 if ~keyword_set(model_transfer) then begin
-  vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=fill_model_vis,$
+  vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,/fill_model_vis,$
     timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
 endif else begin
   vis_model_arr=PTRARR(obs.n_pol,/allocate)
@@ -112,7 +111,7 @@ IF Keyword_Set(cal.auto_initialize) THEN BEGIN
   ELSE print,"calibration_auto_initialize is set, but autocorrelation visibilities are missing. Skipping."
 ENDIF
 
-IF Keyword_Set(fill_model_vis) THEN vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
+vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
 
 CASE size(initial_calibration,/type) OF
   0:;do nothing if undefined
