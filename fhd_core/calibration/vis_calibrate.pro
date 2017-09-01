@@ -4,9 +4,9 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     debug=debug,gain_arr_ptr=gain_arr_ptr,calibration_flag_iterate=calibration_flag_iterate,$
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
-    flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,calibration_bandpass_iterate=calibration_bandpass_iterate,$
+    flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,$
     calibration_auto_fit=calibration_auto_fit,debug_selected_cal=debug_selected_cal,cal_stop=cal_stop, model_transfer=model_transfer,$
-    over_calibrate=over_calibrate,phase_longrun=phase_longrun,perf_calibrate=perf_calibrate,ave_ref=ave_ref,amp_longrun=amp_longrun,_Extra=extra
+    sim_over_calibrate=sim_over_calibrate,phase_longrun=phase_longrun,sim_perf_calibrate=sim_perf_calibrate,ave_ref=ave_ref,amp_longrun=amp_longrun,_Extra=extra
     
   t0_0=Systime(1)
   error=0
@@ -65,25 +65,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
         ENDELSE
       ENDCASE
     ENDIF
-;    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,_Extra=extra
-;    nc_pol=cal.n_pol
-;    cal_base=cal & FOR pol_i=0,nc_pol-1 DO cal_base.gain[pol_i]=Ptr_new(*cal.gain[pol_i])
-;    IF tag_exist(cal,'bandpass') THEN bandpass_calibrate=cal.bandpass
-;    IF tag_exist(cal,'polyfit') THEN calibration_polyfit=cal.polyfit
-;
-;    IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-;        cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd)
-;        IF Keyword_Set(calibration_polyfit) THEN BEGIN
-;            cal_polyfit=vis_cal_polyfit(cal_remainder,obs,degree=calibration_polyfit)
-;            cal=vis_cal_combine(cal_polyfit,cal_bandpass)
-;        ENDIF ELSE cal=cal_bandpass
-;    ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,degree=calibration_polyfit)
-;    vis_cal=vis_calibration_apply(vis_ptr,cal)
-;    cal_res=vis_cal_subtract(cal_base,cal)
-;
-;    IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
-;
-;    ENDIF
+
     vis_cal=vis_calibration_apply(vis_ptr,cal)
     timing=Systime(1)-t0_0
     RETURN,vis_cal
@@ -170,7 +152,6 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) $
     OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
   IF N_Elements(calibration_flag_iterate) EQ 0 THEN calibration_flag_iterate=0
-; IF Keyword_Set(flag_calibration) THEN calibration_flag_iterate=1 ELSE calibration_flag_iterate=0
 
   t2=0
   FOR iter=0,calibration_flag_iterate DO BEGIN
@@ -192,56 +173,12 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     t2+=t3_a-t2_a
   
     if keyword_set(debug_selected_cal) then begin
-      if debug_selected_cal EQ 1 then begin
-        cal_selected=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/selected_cal/cableave_obsave.sav','cal_sel')
-        pointing_num=mwa_get_pointing_number(obs,/string)
-        pointing_val = ['-2','-1','0','1','2','3']
-        match, pointing_num, pointing_val, suba, subb
-      
-        mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=rootdir('FHD'),subdir='instrument_config')
-        textfast,data_array,/read,file_path=mode_filepath,first_line=1
-        cable_len=Reform(data_array[2,*])
-      
-        ;Taking tile information and cross-matching it with the nonflagged tiles array, resulting in nonflagged tile arrays
-        ;grouped by cable length
-        cable_length_ref=cable_len[Uniq(cable_len,Sort(cable_len))]
-        n_cable=N_Elements(cable_length_ref)
-      
-        freq_use = (*obs.baseline_info).freq_use
-        freq_use = where(freq_use)
-      
-        cal_old = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_notimeavg_cal/calibration/'+obs.obsname+'_cal.sav','cal')
-        gain_fit = FLTARR(2,384,128)
-        for pol_i=0, 1 do for tile_i=0,127 do $
-          if (*cal_old.amp_params[pol_i,tile_i]) NE !NULL then $
-          FOR di=0L,2 DO gain_fit[pol_i,*,tile_i]+=(*cal_old.amp_params[pol_i,tile_i])[di]*findgen(n_freq)^di
-        
-        FOR cable_i=0,n_cable-1 DO begin
-          cable_tiles = where(cable_len EQ cable_length_ref[cable_i])
-          for pol_i=0,1 do begin
-        
-          ;mean_cal = FLTARR(N_elements(freq_use))
-          ;for freq_i=0, N_elements(freq_use)-1 do mean_cal[freq_i] = mean(abs((*cal.gain[pol_i])[freq_use[freq_i],cable_tiles]))
-          ;mean_cal = mean(abs(gain[freq_use,cable_tiles]),dim=2)
-          ;fit_params=poly_fit(freq_use,mean_cal,2)
-          ;gain_fit=fltarr(n_freq)
-          ;FOR di=0L,2 DO gain_fit+=fit_params[di]*findgen(n_freq)^di
-        
-        
-            (*cal.gain[pol_i])[*,cable_tiles] = rebin(reform(abs(cal_selected[pol_i,subb,*,cable_i])),384,N_elements(cable_tiles))/mean(abs(cal_selected[pol_i,subb,freq_use,cable_i]))$
-              * reform(gain_fit[pol_i,*,cable_tiles]) * exp(Complex(0,1)*atan((*cal.gain[pol_i])[*,cable_tiles],/phase))
-          endfor
-        endfor
-      
-      endif
-      if debug_selected_cal EQ 2 then begin
         ;cal_selected=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/selected_cal/noave.sav','cal_sel')
         cal_selected=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/selected_cal/noave_zeroed.sav','updated_cal')
         filename2='/nfs/eor-00/h1/nbarry/MWA/IDL_code/obs_list/Aug23.txt'
         readcol, filename2, obs_ids, format='A', /silent
         obs_id_current = where(obs_ids EQ obs.obsname)
         for pol_i=0,1 do (*cal.gain[pol_i]) = reform(abs(cal_selected[pol_i,obs_id_current,*,*])) * exp(Complex(0,1)*atan((*cal.gain[pol_i]),/phase))
-      endif
     endif
 
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
@@ -255,18 +192,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
     
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
-      IF Keyword_Set(calibration_bandpass_iterate) THEN BEGIN
-        cal_remainder.amp_degree = 1 & cal_remainder.phase_degree=0
-        cal_polyfit=vis_cal_polyfit(cal_remainder,obs,_Extra=extra)
-        cal_poly_sub=vis_cal_divide(cal_base,cal_polyfit)
-        cal_bandpass2=vis_cal_bandpass(cal_poly_sub,obs,file_path_fhd=file_path_fhd,_Extra=extra)
-        cal_remainder2=vis_cal_divide(cal_base,cal_bandpass2)
-        cal_polyfit2=vis_cal_polyfit(cal_remainder2,obs,_Extra=extra)
-        cal=vis_cal_combine(cal_polyfit2,cal_bandpass2)
-      ENDIF ELSE BEGIN
         cal_polyfit=vis_cal_polyfit(cal_remainder,obs,_Extra=extra)
         cal=vis_cal_combine(cal_polyfit,cal_bandpass)
-      ENDELSE
     ENDIF ELSE cal=cal_bandpass
     
   ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,_Extra=extra)
@@ -282,11 +209,11 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
 
   ;In-situ simulation -- forced calibration solutions
-  if keyword_set(over_calibrate) then begin
+  if keyword_set(sim_over_calibrate) then begin
     *cal.gain[0] = (*cal_base.gain[0]); + atan(*cal.gain[0],/phase)
     *cal.gain[1] = (*cal_base.gain[1]); + atan(*cal.gain[1],/phase)
   endif
-  if keyword_set(perf_calibrate) then begin
+  if keyword_set(sim_perf_calibrate) then begin
     *cal.gain[0] = 1.
     *cal.gain[1] = 1.
   endif
