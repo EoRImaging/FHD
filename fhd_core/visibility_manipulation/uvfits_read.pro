@@ -24,7 +24,7 @@ ENDIF ELSE BEGIN
     ENDIF
     
     t_readfits=Systime(1)
-    lun = fxposit(file_path_vis, 0)
+    lun = fxposit(file_path_vis, 0,/readonly)
     data_struct=mrdfits(lun,0,data_header0,/silent)
     hdr=vis_header_extract(data_header0, params = data_struct.params,error=error,_Extra=extra)    
     IF Keyword_Set(error) THEN RETURN

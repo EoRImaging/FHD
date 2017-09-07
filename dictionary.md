@@ -141,6 +141,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*Default*: undefined (off) <br />
   
+**digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: undefined (off) <br />
+  
 **max_calibration_sources**: limits the number of sources used in the calibration. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
   -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set.
   -*EoR_firstpass settings*: 20000 <br />

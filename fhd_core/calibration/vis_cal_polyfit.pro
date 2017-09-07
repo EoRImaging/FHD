@@ -1,6 +1,7 @@
 FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_cable_reflection_mode_fit=cal_cable_reflection_mode_fit,cal_cable_reflection_fit=cal_cable_reflection_fit,$
-    cal_cable_reflection_correct=cal_cable_reflection_correct,no_phase_calibration=no_phase_calibration,zero_debug_cal=zero_debug_cal,jump_longrun=jump_longrun,mode_debug=mode_debug,_Extra=extra
+    cal_cable_reflection_correct=cal_cable_reflection_correct,no_phase_calibration=no_phase_calibration,zero_debug_cal=zero_debug_cal,$
+    digital_gain_jump_polyfit=digital_gain_jump_polyfit,mode_debug=mode_debug,_Extra=extra
 
 IF Keyword_Set(cal_cable_reflection_fit) OR Keyword_Set(cal_cable_reflection_correct) THEN cal.mode_fit=1.
 cal_mode_fit=cal.mode_fit
@@ -60,12 +61,20 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             FOR di=0L,amp_degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
         ENDIF ELSE gain_fit=Reform(gain_amp[*,tile_i])
         
-        IF keyword_set(jump_longrun) then begin
+        IF keyword_set(digital_gain_jump_polyfit) then begin
           gain_fit=fltarr(n_freq)
-          fit_params1=poly_fit(freq_use[0:223],gain[0:223],1)
-          fit_params2=poly_fit(freq_use[224:335],gain[224:335],1)
-          gain_fit[freq_use[0]:freq_use[223]] = fit_params1[0]*findgen(freq_use[223])^0 +fit_params1[1]*findgen(freq_use[223])^1
-          gain_fit[freq_use[224]:freq_use[335]] = fit_params2[0]*(findgen(freq_use[335] - freq_use[224]+1) + freq_use[224])^0 +fit_params2[1]*(findgen(freq_use[335] - freq_use[224]+1) + freq_use[224])^1
+          pre_dig_inds = where((*obs.baseline_info).freq[freq_use] LT 187.515E6,n_count)
+          if (obs.instrument NE 'mwa') OR (n_count LT 0) then begin
+            print, 'digital_gain_jump_polyfit keyword only works with highband mwa data. Full band polyfit applied instead'
+            continue
+          endif
+          f_d = max(pre_dig_inds)  
+          f_end = N_elements(freq_use)-1
+          fit_params1=poly_fit(freq_use[0:f_d],gain[0:f_d],amp_degree-1)
+          fit_params2=poly_fit(freq_use[f_d+1:f_end],gain[f_d+1:f_end],amp_degree-1)
+          FOR di=0L,amp_degree-1 DO gain_fit[freq_use[0]:freq_use[f_d]] += fit_params1[di]*findgen(freq_use[f_d])^di
+          FOR di=0L,amp_degree-1 DO gain_fit[freq_use[f_d+1]:freq_use[f_end]] += $
+            fit_params2[di]*(findgen(freq_use[f_end] - freq_use[f_d+1]+1) + freq_use[f_d+1])^di
           fit_params = [fit_params1,fit_params2]
           cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
         endif  
