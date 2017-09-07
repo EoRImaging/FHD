@@ -15,6 +15,7 @@ pro eor_firstpass_versions
     output_directory = args[1]
     ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
     version = args[2]
+    if nargs gt 3 then platform = args[3] else platform = '' ;indicates if running on AWS
   ;version = 'nb_temp'
   endif else begin
     obs_id = '1061316296'
@@ -3499,19 +3500,28 @@ pro eor_firstpass_versions
   
 endcase
 
-if version EQ 'nb_autos_2' then begin
-  print, 'Manual version input'
-  ;vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
-  vis_file_list = '/nfs/eor-11/r1/EoRuvfits/jd2456528v4_1/1061316296/1061316296.uvfits'
-endif else begin
-  if version eq 'rlb_HERA_May2017' then begin
+
+case version of 
+
+  'nb_autos_2': begin
+    ;vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
+    vis_file_list = '/nfs/eor-11/r1/EoRuvfits/jd2456528v4_1/1061316296/1061316296.uvfits'
+  end
+  
+  'rlb_HERA_May2017': begin 
     vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
-  endif else begin
-  SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
-    STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
-  endelse
+  end
+  
+  else: begin
+    if platform eq 'aws' then vis_file_list = '/uvfits/' + STRING(obs_id) + '.uvfits' else begin
+      SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+        STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
+    endelse
+  end
+  
+endcase
+
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-endelse
 undefine, uvfits_subversion, uvfits_version
 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
