@@ -3514,6 +3514,35 @@ pro eor_firstpass_versions
     debug_region_grow = 0
   end
   
+  'rlb_HERA_Sept2017': begin
+    recalculate_all = 1
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    n_pol = 1
+  end
+  
+  'rlb_HERA_Sept2017_2': begin
+    recalculate_all = 1
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    n_pol = 1
+    cable_bandpass_fit = 0
+  end
+  
   ;;;;;;; Mike Wilensky's Stuff ;;;;;;;;
   'mwilensky_test_3_6_2017' : begin
     recalculate_all = 1
@@ -3540,6 +3569,14 @@ case version of
   end
   
   'rlb_HERA_May2017': begin 
+    vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
+  end
+  
+  'rlb_HERA_Sept2017': begin 
+    vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
+  end
+  
+  'rlb_HERA_Sept2017_2': begin 
     vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
   end
   
