@@ -22,7 +22,7 @@ IF Keyword_Set(phase) THEN BEGIN
     yrange=[-1.5*!pi,1.5*!pi]
 ENDIF ELSE BEGIN
     IF N_Elements(yrange) NE 2 THEN BEGIN
-        IF n_pol EQ 1 THEN BEGIN
+        IF n_pol GT 1 THEN BEGIN
             yrange=Minmax(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]]))
         ENDIF ELSE BEGIN
             yrange=Minmax(abs(gains_A[*,tile_use_i]))
