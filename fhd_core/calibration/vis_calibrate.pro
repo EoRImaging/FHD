@@ -6,7 +6,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,$
     calibration_auto_fit=calibration_auto_fit,debug_selected_cal=debug_selected_cal,cal_stop=cal_stop, model_transfer=model_transfer,$
-    sim_over_calibrate=sim_over_calibrate,phase_longrun=phase_longrun,sim_perf_calibrate=sim_perf_calibrate,ave_ref=ave_ref,amp_longrun=amp_longrun,_Extra=extra
+    sim_over_calibrate=sim_over_calibrate,debug_phase_longrun=debug_phase_longrun,sim_perf_calibrate=sim_perf_calibrate,$
+    debug_ave_ref=debug_ave_ref,debug_amp_longrun=debug_amp_longrun,_Extra=extra
     
   t0_0=Systime(1)
   error=0
@@ -159,7 +160,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
     cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,vis_weight_ptr,obs,cal,$
       preserve_visibilities=preserve_flag,_Extra=extra)
-    if keyword_set(ave_ref) then begin
+    if keyword_set(debug_ave_ref) then begin
       ref_avg = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave_byday.sav','ref_avg')
       gain0 = (*cal.gain[0])
       gain1 = (*cal.gain[1])
@@ -218,8 +219,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     *cal.gain[1] = 1.
   endif
 
-  if keyword_set(phase_longrun) then begin
-
+  if keyword_set(debug_phase_longrun) then begin
     longrun_phase = getvar_savefile('/nfs/mwa-10/r1/EoRuvfits/analysis/ave_cals/full_ave_phase_dayref.sav','phase_mean_pointing') ;384, 5, 2, 128
     pointing_num=mwa_get_pointing_number(obs,/string)
     poi_name = ['-2','-1','0','1','2']
@@ -231,7 +231,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     *cal.gain[1] = abs(*cal.gain[1])*exp(Complex(0,1)*( atan((*cal_polyfit1.gain[1]),/phase)+reform(longrun_phase[*,poi,1,*])))
   endif
 
-  if keyword_set(amp_longrun) then begin
+  if keyword_set(debug_amp_longrun) then begin
     longrun_gain = getvar_savefile('/nfs/mwa-10/r1/EoRuvfits/analysis/ave_cals/full_ave_amp.sav','amp_mean_obs3') ;384, 5, 2, 128
     pointing_num=mwa_get_pointing_number(obs,/string)
     poi_name = ['-2','-1','0','1','2']

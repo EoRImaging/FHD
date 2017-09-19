@@ -768,6 +768,60 @@ pro eor_firstpass_versions
     model_delay_filter=1
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
+    'nb_model_tukeytest': begin
+    calibrate_visibilities=0
+    model_visibilities=1
+    unflag_all=1
+    recalculate_all=1
+    mapfn_recalculate=0
+    return_cal_visibilities=0
+    undefine, diffuse_model, diffuse_calibrate
+    nfreq_avg=384
+    ;eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/'
+    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+  end
+  'nb_model_goldenset': begin
+    debug_beam_clip_floor=1
+    calibrate_visibilities=0
+    model_visibilities=1
+    unflag_all=1
+    recalculate_all=1
+    mapfn_recalculate=0
+    return_cal_visibilities=0
+    undefine, diffuse_model, diffuse_calibrate
+    nfreq_avg=384
+    model_delay_filter=1
+    ;eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/'
+    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+  end
+  'nb_sim_goldenset': begin
+    in_situ_sim_input = '/nfs/mwa-04/r1/EoRuvfits/analysis/fhd_nb_model_goldenset'
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;calibrate_visibilities=0
+    ;model_visibilities=1
+    nfreq_avg=384
+    sim_perf_calibrate=1
+    undefine, diffuse_model, diffuse_calibrate
+    recalculate_all=1
+    mapfn_recalculate=0
+    healpix_recalculate=1
+    ;eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/'
+    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+  end
+  'nb_sim_tukeytest': begin
+    in_situ_sim_input = '/nfs/mwa-04/r1/EoRuvfits/analysis/fhd_nb_model_tukeytest'
+    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;calibrate_visibilities=0
+    ;model_visibilities=1
+    nfreq_avg=384
+    sim_perf_calibrate=1
+    undefine, diffuse_model, diffuse_calibrate
+    recalculate_all=1
+    mapfn_recalculate=0
+    healpix_recalculate=1
+    eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/'
+    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+  end
   'nb_model_phase2': begin
     calibrate_visibilities=0
     model_visibilities=1
@@ -2324,6 +2378,177 @@ pro eor_firstpass_versions
     ;cal_stop=1
     time_cut=-4
   end
+  'nb_Aug2017_std': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_Aug2017_globalbp': begin
+    saved_run_bp=0
+    cable_bandpass_fit=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    ;recalculate_all=1
+    ;mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_Aug2017_savedbp': begin
+    saved_run_bp=1
+    cable_bandpass_fit=1
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    ;recalculate_all=1
+    ;mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_Aug2017_autocal2': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    ;model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    ;model_delay_filter=1
+    channel_edge_flag_width=2
+    calibration_auto_fit=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    digital_gain_jump_polyfit=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_2013longrun_std': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_Aug2017_aveamp': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    ;tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
+    amp_longrun=1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+    'nb_Aug2017_aveampphase_dayref_tileflag': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
+    amp_longrun=1
+    phase_longrun=2
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
   'nb_longrun_timecuttest': begin
     saved_run_bp=0
     undefine, diffuse_calibrate, diffuse_model
@@ -2368,6 +2593,80 @@ pro eor_firstpass_versions
     ;time_cut=[2,-2]
     ;cal_stop=1
   end
+  'nb_eor0clusteredall': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('eor0clusteredall.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+        recalculate_all=1
+    mapfn_recalculate=0
+  end 
+    'nb_eor0clusteredall_clustercal': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('eor0clusteredall.sav',root=rootdir('FHD'),subdir='catalog_data')
+    model_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    model_visibilities=1
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+        recalculate_all=1
+    mapfn_recalculate=0
+  end  
+      'nb_eor0clusteredall_clustermodel': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    model_catalog_file_path = filepath('eor0clusteredall.sav',root=rootdir('FHD'),subdir='catalog_data')
+    model_visibilities=1
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+        recalculate_all=1
+    mapfn_recalculate=0
+  end  
+  'nb_eor0clustered': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('eor0_clustered_comp.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    recalculate_all=1
+    mapfn_recalculate=0
+  end  
+  'nb_eor0clustered_points': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('eor0_clustered_points.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+        recalculate_all=1
+    mapfn_recalculate=0
+  end  
     'nb_autos': begin
     saved_run_bp=0
     undefine, diffuse_calibrate, diffuse_model
@@ -2377,6 +2676,29 @@ pro eor_firstpass_versions
     cal_time_average=0
     calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
     model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
+    ;calibration_flux_threshold = .1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    ;model_delay_filter=1
+    ;beam_mask_threshold=1e3
+    ;nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    calibration_auto_fit=1
+    ;time_cut=[2,-2]
+    cal_stop=1
+  end
+   'nb_autos_noave': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
     ;calibration_flux_threshold = .1
     recalculate_all=1
     mapfn_recalculate=0
