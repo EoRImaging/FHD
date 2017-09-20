@@ -51,9 +51,9 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
       ENDELSE
 
     endfor
-    IF ~Keyword_Set(no_save) THEN save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
-    undefine_fhd, beam2_xx_image, beam2_yy_image,beam_arr
-    
+;    IF ~Keyword_Set(no_save) THEN save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
+    undefine_fhd, beam2_xx_image, beam2_yy_image, beam_arr
+
     if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(include_eor) then begin
       model_uvf_arr=Ptrarr(n_pol,/allocate)
       for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(dimension,elements, n_freq)
