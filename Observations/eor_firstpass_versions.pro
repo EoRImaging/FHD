@@ -19,8 +19,9 @@ pro eor_firstpass_versions
   ;version = 'nb_temp'
   endif else begin
     obs_id = '1061316296'
-    output_directory = '/nfs/mwa-10/r1/EoRuvfits/analysis/'
-    version = 'nb_autos_2'
+    output_directory = '/nfs/mwa-04/r1/EoRuvfits/analysis/'
+    version = 'nb_test'
+    platform=''
   endelse
   cmd_args={version:version}
   
@@ -1216,17 +1217,11 @@ pro eor_firstpass_versions
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
   'nb_test': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
+    instrument = ['hera','paper']
+    inst_tile_ptr = PTRARR(2,/allocate)
+    *inst_tile_ptr[0] = INDGEN(126)
+    *inst_tile_ptr[1] = [126,127]
     undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    beam_mask_threshold = 1e3
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
   'nb_model_beam_debug_beam_clip_floor_delay': begin
     debug_beam_clip_floor=1
@@ -1796,7 +1791,6 @@ pro eor_firstpass_versions
     model_delay_filter=1
     calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
-  
   
   'nb_sim_delay_4000_2017_nosidelobes': begin
     in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_nosidelobes'
@@ -3579,7 +3573,7 @@ endcase
 
 case version of 
 
-  'nb_autos_2': begin
+  'nb_test': begin
     ;vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
     vis_file_list = '/nfs/eor-11/r1/EoRuvfits/jd2456528v4_1/1061316296/1061316296.uvfits'
   end
