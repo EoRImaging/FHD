@@ -5,7 +5,7 @@ PRO generate_calibration_catalog,source_list=source_list,file_path=file_path,spe
 IF StrLowCase(Strmid(file_path,2,3,/reverse)) NE 'sav' THEN file_path_use=file_path+'.sav' $
     ELSE file_path_use=file_path
 
-IF size(source_list,/type) EQ 7 THEN catalog=getvar_savefile(source_list,'source_array') ELSE catalog=source_list
+IF size(source_list,/type) EQ 7 THEN catalog=getvar_savefile(source_list,'source_array',/compatibility_mode) ELSE catalog=source_list
 
 IF Keyword_Set(combined_obs) THEN BEGIN
    ; using combined obs sourcelist, must reformat

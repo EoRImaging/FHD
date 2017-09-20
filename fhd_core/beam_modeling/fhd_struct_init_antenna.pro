@@ -1,13 +1,15 @@
 FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,$
     psf_image_resolution=psf_image_resolution,timing=timing,$
-    psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,_Extra=extra
+    psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
+    inst_tile_ptr=inst_tile_ptr,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
 instrument=obs.instrument
 tile_gain_fn=instrument+'_beam_setup_gain' ;mwa_beam_setup_gain
 tile_init_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
+
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
 n_pol=obs.n_pol
@@ -62,7 +64,14 @@ antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_versi
     
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data
-antenna=Call_function(tile_init_fn,obs,antenna_str,_Extra=extra) ;mwa_beam_setup_init
+antenna=Call_function(tile_init_fn[0],obs,antenna_str,_Extra=extra) ;mwa_beam_setup_init
+if N_elements(instrument) GT 1 then begin
+  if ~isa(inst_tile_ptr, 'POINTER', /ARRAY) then message, 'instrument_tile_ptr must be filled in when there is more than one instrument. See dictionary.'
+  for inst_i=1, N_elements(instrument)-1 do begin
+    antenna_temp=Call_function(tile_init_fn[inst_i],obs,antenna_str,_Extra=extra)
+    antenna[*inst_tile_ptr[inst_i]] = antenna_temp[*inst_tile_ptr[inst_i]]
+  endfor  
+endif  
 
 psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
@@ -98,7 +107,13 @@ za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 
 ;now, update antenna structure to include gains
-antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+if N_elements(instrument) GT 1 then begin
+  for inst_i=0, N_elements(instrument)-1 do begin
+    antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+    antenna[*inst_tile_ptr[inst_i]] = antenna_temp[*inst_tile_ptr[inst_i]]
+    antenna[*inst_tile_ptr[inst_i]].antenna_type = instrument[inst_i] ;if more than one instrument, assign the correct antenna type for each subset for metadata purposes
+  endfor  
+endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
 
 ;Finally, update antenna structure to include the response of each antenna
 antenna=general_antenna_response(obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim)

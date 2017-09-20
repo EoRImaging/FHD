@@ -15,11 +15,13 @@ pro eor_firstpass_versions
     output_directory = args[1]
     ;output_directory = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/'
     version = args[2]
+    if nargs gt 3 then platform = args[3] else platform = '' ;indicates if running on AWS
   ;version = 'nb_temp'
   endif else begin
     obs_id = '1061316296'
-    output_directory = '/nfs/mwa-10/r1/EoRuvfits/analysis/'
-    version = 'nb_autos_2'
+    output_directory = '/nfs/mwa-04/r1/EoRuvfits/analysis/'
+    version = 'nb_test'
+    platform=''
   endelse
   cmd_args={version:version}
   
@@ -1215,17 +1217,11 @@ pro eor_firstpass_versions
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
   'nb_test': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
+    instrument = ['hera','paper']
+    inst_tile_ptr = PTRARR(2,/allocate)
+    *inst_tile_ptr[0] = INDGEN(126)
+    *inst_tile_ptr[1] = [126,127]
     undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    beam_mask_threshold = 1e3
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
   'nb_model_beam_debug_beam_clip_floor_delay': begin
     debug_beam_clip_floor=1
@@ -1795,7 +1791,6 @@ pro eor_firstpass_versions
     model_delay_filter=1
     calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
-  
   
   'nb_sim_delay_4000_2017_nosidelobes': begin
     in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_nosidelobes'
@@ -3432,6 +3427,116 @@ pro eor_firstpass_versions
     debug_region_grow = 0
   end
   
+  'rlb_eor0_GLEAM_cal_Aug2017': begin
+    recalculate_all = 0
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+  end
+  
+  'rlb_eor0_run1_cal_Aug2017': begin
+    recalculate_all = 0
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = '/nfs/mwa-04/r1/EoRuvfits/DiffuseSurvey2015/1131454296_run1_catalog.sav'
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0 
+  end
+  
+  'rlb_eor0_GLEAM_cal_norephase_Aug2017': begin
+    recalculate_all = 0
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+  end
+  
+  'rlb_eor0_run1_cal_norephase_Aug2017': begin
+    recalculate_all = 0
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = '/nfs/mwa-04/r1/EoRuvfits/DiffuseSurvey2015/1131454296_run1_catalog.sav'
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0 
+  end
+  
+  'rlb_GLEAM+Fornax_cal_decon_Nov2016': begin
+    uvfits_version = 5
+    uvfits_subversion = 1
+    max_sources = 200000
+    calibration_catalog_file_path = '/nfs/eor-00/h1/rbyrne/catalogs/GLEAM_plus_extended_fornax.sav'
+    gain_factor = 0.1
+    deconvolve = 1
+    return_decon_visibilities = 1
+    smooth_width = 32
+    deconvolution_filter = 'filter_uv_uniform'
+    filter_background = 1
+    dimension = 2048
+    return_cal_visibilities = 0
+    FoV = 0
+    pad_uv_image = 1
+    snapshot_healpix_export = 1
+    snapshot_recalculate = 1
+    recalculate_all = 0
+    undefine, diffuse_calibrate, diffuse_model
+    saved_run_bp = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    return_sidelobe_catalog = 1
+    dft_threshold = 0
+    ring_radius = 0
+    write_healpix_fits = 1
+    debug_region_grow = 0
+  end
+  
+  'rlb_HERA_Sept2017': begin
+    recalculate_all = 1
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    n_pol = 1
+  end
+  
+  'rlb_HERA_Sept2017_2': begin
+    recalculate_all = 1
+    uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    n_pol = 1
+    cable_bandpass_fit = 0
+  end
+  
   ;;;;;;; Mike Wilensky's Stuff ;;;;;;;;
   'mwilensky_test_3_6_2017' : begin
     recalculate_all = 1
@@ -3449,19 +3554,36 @@ pro eor_firstpass_versions
   
 endcase
 
-if version EQ 'nb_autos_2' then begin
-  print, 'Manual version input'
-  ;vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
-  vis_file_list = '/nfs/eor-11/r1/EoRuvfits/jd2456528v4_1/1061316296/1061316296.uvfits'
-endif else begin
-  if version eq 'rlb_HERA_May2017' then begin
+
+case version of 
+
+  'nb_test': begin
+    ;vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
+    vis_file_list = '/nfs/eor-11/r1/EoRuvfits/jd2456528v4_1/1061316296/1061316296.uvfits'
+  end
+  
+  'rlb_HERA_May2017': begin 
     vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
-  endif else begin
-  SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
-    STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
-  endelse
+  end
+  
+  'rlb_HERA_Sept2017': begin 
+    vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
+  end
+  
+  'rlb_HERA_Sept2017_2': begin 
+    vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
+  end
+  
+  else: begin
+    if platform eq 'aws' then vis_file_list = '/uvfits/' + STRING(obs_id) + '.uvfits' else begin
+      SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+        STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
+    endelse
+  end
+  
+endcase
+
 ;vis_file_list=vis_file_list ; this is silly, but it's so var_bundle sees it.
-endelse
 undefine, uvfits_subversion, uvfits_version
 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
