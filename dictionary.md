@@ -37,10 +37,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br />
 
-**inst_tile_ptr**: a pointer array to designate which tile indices belong to which instrument. The order of the pointer array is assumed to match the order of instruments specified in the keyword string array `instrument`. Only used if there is more than one instrument supplied. <br />
+**inst_tile_ptr**: a pointer array to designate which tile indices belong to which instrument. The order of the pointer array is assumed to match the order of instruments specified in the keyword string array `instrument`. Only used if there is more than one instrument supplied. Tiles are numbered from 0. <br />
   -*Example*: `inst_tile_ptr = PTRARR(2,/allocate)`<br />
   `*inst_tile_ptr[0] = [0,1,2,3]`<br />
-  `*inst_tile_ptr[0] = [4,5,6]`<br />
+  `*inst_tile_ptr[1] = [4,5,6]`<br />
   -*Default*: not set <br />
 
 **interpolate_beam_threshold**: set to smoothly interpolate the UV beam model to zero (in amplitude) beyond the clip set by `beam_mask_threshold`. <br />
