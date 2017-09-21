@@ -3538,7 +3538,6 @@ pro eor_firstpass_versions
   end
   
   'rlb_HERA_Sept2017_3': begin
-    instrument = 'hera'
     recalculate_all = 1
     uvfits_version = 5
     uvfits_subversion = 1
@@ -3547,10 +3546,20 @@ pro eor_firstpass_versions
     rephase_weights = 0
     restrict_hpx_inds = 0
     hpx_radius = 10
-    undefine, diffuse_calibrate, diffuse_model
+    undefine, diffuse_calibrate,diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
     ring_radius = 0
     n_pol = 1
     cable_bandpass_fit = 0
+    unflag_all = 1
+    instrument = ['hera','paper']
+    inst_tile_ptr = PTRARR(2,/allocate)
+    *inst_tile_ptr[0] = [80,104,96,64,53,31,65,88,9,20,89,43,105,22,81,10,72,112,97]
+    *inst_tile_ptr[1] = [1,3,4,13,15,16,23,26,37,38,41,42,46,47,49,50,56,54,58,59,61,63,66,67,70,71,73,74,82,83,87,90,98,99,103,106,124,123,122,121,120,119,118,117,0,14,44,113,126,127]
+    calibration_auto_initialize = 1
+    nfreq_avg = 1024
+    cal_mode_fit = 0
+    calibration_polyfit = 0
+    bandpass_calibrate = 0
   end
   
   ;;;;;;; Mike Wilensky's Stuff ;;;;;;;;
@@ -3587,6 +3596,10 @@ case version of
   end
   
   'rlb_HERA_Sept2017_2': begin 
+    vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
+  end
+  
+  'rlb_HERA_Sept2017_3': begin 
     vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
   end
   
