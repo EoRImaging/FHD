@@ -28,6 +28,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
   cal_return=cal
   FOR pol_i=0,n_pol-1 DO cal_return.gain[pol_i]=Ptr_new(*cal.gain[pol_i]) ;essential, to keep original cal gains from being overwritten!
   
+  ;Find any steps (i.e digital gain jumps) that are outliers beyond 5sigma, and remove them
   IF Keyword_Set(cal_step_fit) THEN BEGIN
     cal_bandpass=vis_cal_bandpass(cal_return,obs)
     bandpass_test=(*cal_bandpass.gain[0]+*cal_bandpass.gain[1])/2. ;average x and y together, since we're just looking for global steps
@@ -46,6 +47,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     ENDFOR
   ENDIF
   
+  ;*******************Begin polynomial fitting over the frequency band
   gain_residual=ptrarr(n_pol,n_tile)
   FOR pol_i=0,n_pol-1 DO BEGIN
     gain_arr=*cal_return.gain[pol_i]
@@ -54,6 +56,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     FOR tile_i=0L,n_tile-1 DO BEGIN
       gain=reform(gain_amp[freq_use,tile_i])
       
+      ;*****Fit for amplitude
       IF N_Elements(amp_degree) GT 0 THEN BEGIN
         fit_params=poly_fit(freq_use,gain,amp_degree)
         cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
@@ -61,6 +64,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         FOR di=0L,amp_degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
       ENDIF ELSE gain_fit=Reform(gain_amp[*,tile_i])
       
+      ;Fit pre- and post-digital gain jump separately in highband MWA data
       IF keyword_set(digital_gain_jump_polyfit) then begin
         gain_fit=fltarr(n_freq)
         pre_dig_inds = where((*obs.baseline_info).freq[freq_use] LT 187.515E6,n_count)
@@ -80,8 +84,10 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
       endif
       
       gain_residual[pol_i,tile_i]=Ptr_new(Reform(gain_amp[*,tile_i])-gain_fit)
-      
       IF Keyword_Set(cal_step_fit) THEN FOR si=0L,n_step-1 DO gain_fit[freq_use[step_i[si]]:*,*]+=jump_test[step_i[si]]
+      ;*****
+      
+      ;*****Fit for phase
       IF N_elements(phase_degree) GT 0 THEN BEGIN
         phase_use=PhUnwrap(reform(gain_phase[freq_use,tile_i]))
         phase_params=poly_fit(freq_use,phase_use,phase_degree,yfit=phase_fit)
@@ -90,14 +96,19 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         FOR di=0L,phase_degree DO phase_fit+=phase_params[di]*findgen(n_freq)^di
         gain_arr[*,tile_i]=gain_fit*Exp(i_comp*phase_fit)
       ENDIF ELSE gain_arr[*,tile_i]*=gain_fit*weight_invert(gain_amp[*,tile_i]) ;this preserves the original phase
+      ;*****
     ENDFOR
     *cal_return.gain[pol_i]=gain_arr
   ENDFOR
+  ;*******************End polynomial fitting over the frequency band
   
+  ;*******************Begin cable reflection fitting
   IF Keyword_Set(cal_mode_fit) THEN BEGIN
     CASE 1 OF
+    
       Keyword_Set(cal_cable_reflection_correct): BEGIN
-        ; Use the reflection fits from a text file.
+        ; Use predetermined nominal reflection modes from a text file.
+        
         IF size(cal_cable_reflection_correct,/type) EQ 7 THEN mode_filepath=cal_cable_reflection_correct ELSE $
           mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=rootdir('FHD'),subdir='instrument_config')
         ; read in the fit file and reorganize the data
@@ -113,6 +124,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         tile_mode_Y=Reform(data_array[8,*])
         tile_amp_Y=Reform(data_array[9,*])
         tile_phase_Y=Reform(data_array[10,*])
+        
+        ;Options to fit only certain cable lengths -- not used
         IF size(cal_cable_reflection_correct,/type) NE 7 THEN BEGIN
           IF cal_cable_reflection_correct GT 1 THEN BEGIN
             cable_cut_i=where(cable_len NE cal_cable_reflection_correct,n_cable_cut)
@@ -122,6 +135,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
             IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
           ENDIF
         ENDIF
+        
         reflect_time=2.*cable_len/(c_light*cable_vf)
         bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1) ; this is used to calculate frequency of reflection ripple, but overridden in this particular case.
         mode_i_arr=Fltarr(n_pol,n_tile)
@@ -136,8 +150,10 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         phase_arr[0,*]=tile_phase_X
         phase_arr[1,*]=tile_phase_Y
       END
+      
       Keyword_Set(cal_cable_reflection_fit): BEGIN
-        ; Set up to fit for the reflection amplitude and phase
+        ; Calculate nominal theoretical modes for the reflections
+        
         ; Get the nominal tile lengths and velocity factors:
         cable_filepath=filepath(obs.instrument+'_cable_length.txt',root=rootdir('FHD'),subdir='instrument_config')
         textfast,data_array,/read,file_path=cable_filepath,first_line=1
@@ -146,12 +162,11 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         cable_len=Reform(data_array[2,*])
         cable_vf=Reform(data_array[3,*])
         tile_ref_flag=0>Reform(data_array[4,*])<1
-        ; Choose which cable lengths to fit
-        IF total(cal_cable_reflection_fit) GT 1 THEN BEGIN
         
+        ;Options to fit only certain cable lengths
+        IF total(cal_cable_reflection_fit) GT 1 THEN BEGIN
           cable_cut_i=where(cable_len NE cal_cable_reflection_fit,n_cable_cut)
-          IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
-          
+          IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0        
         ENDIF ELSE IF total(cal_cable_reflection_fit) LT -1 THEN BEGIN
           cable_cut_i=where(cable_len EQ Abs(cal_cable_reflection_fit[0]),n_cable_cut)
           IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
@@ -164,7 +179,10 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         mode_i_arr=Fltarr(n_pol,n_tile) ; Modes in fourier transform units (see fit below)
         FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time*tile_ref_flag
       END
+      
       (cal_mode_fit EQ -1): BEGIN
+        ; Calculate nominal modes in calibration delay space
+      
         spec_mask=fltarr(n_freq)
         spec_mask[freq_use]=1
         freq_cut=where(spec_mask EQ 0,n_mask)
@@ -181,30 +199,34 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         ENDFOR
         mode_test=spectrum
         psf_mask=fltarr(n_freq/2)
+        
+        ;Remove channels contaminated from frequency flagging
         IF n_mask GT 0 THEN BEGIN
           psf_mask[where(spec_psf GT Max(spec_psf)/1E3)]=1
           psf_mask=smooth(psf_mask,5,/edge_truncate)
           mask_i=where(psf_mask,n_mask2)
           IF n_mask2 GT 0 THEN mode_test[mask_i]=0
         ENDIF
+        
         mode_max=Max(mode_test,mode_i)
         mode_i_arr=Fltarr(n_pol,n_tile)+mode_i
       END
+      
       ELSE: mode_i_arr=Fltarr(n_pol,n_tile)+cal_mode_fit
     ENDCASE
     
     FOR pol_i=0,n_pol-1 DO BEGIN
       gain_arr=*cal.gain[pol_i]
-      ;        gain_amp=Abs(gain_arr)
-      ;        gain_phase=Atan(gain_arr,/phase)
       gain_arr_fit=*cal_return.gain[pol_i]
       gain_arr-=gain_arr_fit ; Subtract the polyfit outright so they don't talk to one another
+      
       FOR ti=0L,nt_use-1 DO BEGIN
         tile_i=tile_use[ti]
         mode_i=mode_i_arr[pol_i,tile_i]
         IF mode_i EQ 0 THEN CONTINUE
+        
+        ;Options to hyperresolve or fit the reflection modes/amp/phase given the nominal calculations
         IF Keyword_Set(cal_cable_reflection_mode_fit) THEN BEGIN
-          ; We are going to fit the actual mode to subtract.
           mode0=mode_i ; start with nominal cable length
           dmode=0.05 ; overresolve the FT used for the fit (normal resolution would be dmode=1)
           nmodes=101 ; range around the central mode to test
@@ -229,7 +251,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
           amp_use=abs(mode_fit)/nf_use ;why factor of 2? Check FFT normalization
           phase_use=atan(mode_fit,/phase)
         ENDELSE
-        ; Rebuild the reflection ripple, and add to polyfit gains
+        
         if keyword_set(zero_debug_cal) then begin
           if zero_debug_cal EQ 1 then cal_restore = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_notimeavg_cal/calibration/1061316296_cal.sav','cal')
           if zero_debug_cal EQ 2 then cal_restore = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_notimeavg_cal_cableave/calibration/1061316296_cal.sav','cal')
@@ -237,6 +259,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
           amp_use = (*cal_restore.mode_params[pol_i,tile_i])[1]
           phase_use = (*cal_restore.mode_params[pol_i,tile_i])[2]
         endif
+        
+        ; Rebuild the reflection ripple, and add to polyfit gains
         gain_mode_fit=amp_use*exp(-i_comp*2.*!Pi*(mode_i*findgen(n_freq)/n_freq)+i_comp*phase_use)
         
         if keyword_set(mode_debug) then begin
@@ -256,6 +280,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
       *cal_return.gain[pol_i]=gain_arr_fit
     ENDFOR
   ENDIF
+  ;*******************End cable reflection fitting
   
   IF Keyword_Set(no_phase_calibration) THEN FOR pol_i=0,n_pol-1 DO *cal_return.gain[pol_i]=Abs(*cal_return.gain[pol_i])
   undefine_fhd,gain_residual
