@@ -3538,7 +3538,7 @@ pro eor_firstpass_versions
   end
   
   'rlb_HERA_Sept2017_3': begin
-    recalculate_all = 0
+    recalculate_all = 1
     uvfits_version = 5
     uvfits_subversion = 1
     saved_run_bp = 0
@@ -3551,10 +3551,10 @@ pro eor_firstpass_versions
     n_pol = 1
     cable_bandpass_fit = 0
     unflag_all = 1
-    instrument = ['hera','paper']
+    instrument = ['paper','hera']
     inst_tile_ptr = PTRARR(2,/allocate)
-    *inst_tile_ptr[0] = [80,104,96,64,53,31,65,88,9,20,89,43,105,22,81,10,72,112,97]
-    *inst_tile_ptr[1] = [1,3,4,13,15,16,23,26,37,38,41,42,46,47,49,50,56,54,58,59,61,63,66,67,70,71,73,74,82,83,87,90,98,99,103,106,124,123,122,121,120,119,118,117,0,14,44,113,126,127]
+    *inst_tile_ptr[1] = [80,104,96,64,53,31,65,88,9,20,89,43,105,22,81,10,72,112,97]
+    *inst_tile_ptr[0] = [1,3,4,13,15,16,23,26,37,38,41,42,46,47,49,50,56,54,58,59,61,63,66,67,70,71,73,74,82,83,87,90,98,99,103,106,124,123,122,121,120,119,118,117,0,14,44,113,126,127]
     calibration_auto_initialize = 1
     nfreq_avg = 1024
     cal_mode_fit = 0
