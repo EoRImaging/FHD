@@ -4,7 +4,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     no_phase_calibration=no_phase_calibration,zero_debug_cal=zero_debug_cal,$
     digital_gain_jump_polyfit=digital_gain_jump_polyfit,mode_debug=mode_debug,_Extra=extra
     
-  IF Keyword_Set(cal_reflection_mode_theory) OR Keyword_Set(cal_reflection_mode_file) THEN cal.mode_fit=1.
+  IF Keyword_Set(cal_reflection_mode_theory) OR Keyword_Set(cal_reflection_mode_file) $
+    OR Keyword_Set(cal_reflection_mode_delay) OR Keyword_Set(cal_reflection_hyperresolve) THEN cal.mode_fit=1.
   cal_mode_fit=cal.mode_fit
   IF Tag_exist(cal,"amp_degree") THEN amp_degree = cal.amp_degree ELSE amp_degree=2
   IF Tag_exist(cal,"phase_degree") THEN phase_degree = cal.phase_degree ELSE phase_degree=1
@@ -97,7 +98,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         FOR di=0L,phase_degree DO phase_fit+=phase_params[di]*findgen(n_freq)^di
         gain_arr[*,tile_i]=gain_fit*Exp(i_comp*phase_fit)
       ENDIF ELSE gain_arr[*,tile_i]*=gain_fit*weight_invert(gain_amp[*,tile_i]) ;this preserves the original phase
-      ;*****
+    ;*****
     ENDFOR
     *cal_return.gain[pol_i]=gain_arr
   ENDFOR
@@ -105,14 +106,26 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
   
   ;*******************Begin cable reflection fitting
   IF Keyword_Set(cal_mode_fit) THEN BEGIN
+    logic_test = keyword_set(cal_reflection_mode_file) + keyword_set(cal_reflection_mode_theory) + keyword_set(cal_reflection_mode_delay)
+    if logic_test GT 1 then begin
+      print, 'More than one nominal mode-fitting procedure specified for calibration reflection fits. Using cal_reflection_mode_theory'
+      undefine, cal_reflection_mode_file, cal_reflection_mode_delay
+      cal_reflection_mode_theory = 1
+    endif
+    if logic_test EQ 0 then begin
+      print, 'No nominal mode-fitting procedure was specified for calibration reflection fits. Using cal_reflection_mode_delay'
+      cal_reflection_mode_delay = 1
+    endif
+    
     CASE 1 OF
     
       Keyword_Set(cal_reflection_mode_file): BEGIN
         ; Use predetermined nominal reflection modes from a text file.
-        
+      
         IF size(cal_reflection_mode_file,/type) EQ 7 THEN mode_filepath=cal_reflection_mode_file ELSE $
           mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=rootdir('FHD'),subdir='instrument_config')
         ; read in text file and reorganize the data
+        print, 'Using calibration reflection fits from ' + mode_filepath
         textfast,data_array,/read,file_path=mode_filepath,first_line=1
         tile_i_file=Reform(data_array[0,*])
         tile_name_file=Reform(data_array[1,*])
@@ -125,17 +138,6 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         tile_mode_Y=Reform(data_array[8,*])
         tile_amp_Y=Reform(data_array[9,*])
         tile_phase_Y=Reform(data_array[10,*])
-        
-        ;Options to fit only certain cable lengths
-        IF size(cal_reflection_mode_file,/type) NE 7 THEN BEGIN
-          IF cal_reflection_mode_file GT 1 THEN BEGIN
-            cable_cut_i=where(cable_len NE cal_reflection_mode_file,n_cable_cut)
-            IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
-          ENDIF ELSE IF cal_reflection_mode_file LT -1 THEN BEGIN
-            cable_cut_i=where(cable_len EQ Abs(cal_reflection_mode_file),n_cable_cut)
-            IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
-          ENDIF
-        ENDIF
         
         mode_i_arr=Fltarr(n_pol,n_tile) ; Modes in fourier transform units
         mode_i_arr[0,*]=tile_mode_X*tile_ref_flag
@@ -151,6 +153,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
       
       Keyword_Set(cal_reflection_mode_theory): BEGIN
         ; Calculate nominal theoretical modes for the reflections
+        print, 'Using theory calculation in nominal reflection mode calibration'
         
         ; Get the nominal tile lengths and velocity factors:
         cable_filepath=filepath(obs.instrument+'_cable_length.txt',root=rootdir('FHD'),subdir='instrument_config')
@@ -161,17 +164,6 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         cable_vf=Reform(data_array[3,*])
         tile_ref_flag=0>Reform(data_array[4,*])<1
         
-        ;Options to fit only certain cable lengths
-        IF total(cal_reflection_mode_theory) GT 1 THEN BEGIN
-          cable_cut_i=where(cable_len NE cal_reflection_mode_theory,n_cable_cut)
-          IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0        
-        ENDIF ELSE IF total(cal_reflection_mode_theory) LT -1 THEN BEGIN
-          cable_cut_i=where(cable_len EQ Abs(cal_reflection_mode_theory[0]),n_cable_cut)
-          IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
-          cable_cut_i=where(cable_len EQ Abs(cal_reflection_mode_theory[1]),n_cable_cut)
-          IF n_cable_cut GT 0 THEN tile_ref_flag[cable_cut_i]=0
-        ENDIF
-        
         reflect_time=2.*cable_len/(c_light*cable_vf) ; nominal reflect time
         bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1)
         mode_i_arr=Fltarr(n_pol,n_tile) ; Modes in fourier transform units (see fit below)
@@ -180,7 +172,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
       
       keyword_set(cal_reflection_mode_delay): BEGIN
         ; Calculate nominal modes in calibration delay space
-      
+        print, 'Using calibration delay spectrum to calculate nominal reflection modes'
+        
         spec_mask=fltarr(n_freq)
         spec_mask[freq_use]=1
         freq_cut=where(spec_mask EQ 0,n_mask)
@@ -209,9 +202,34 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         mode_max=Max(mode_test,mode_i)
         mode_i_arr=Fltarr(n_pol,n_tile)+mode_i
       END
-      
-      ELSE: mode_i_arr=Fltarr(n_pol,n_tile)+cal_mode_fit
     ENDCASE
+    
+    
+    ;Option to fit only certain cable lengths, can specify more than one length
+    ;Positive length indicates fit mode, negative length indicates exclude mode
+    IF total(cal_mode_fit) NE 1 THEN BEGIN
+      tile_ref_logic = FLTARR(n_tile)
+      if ~keyword_set(cable_len) then begin
+        cable_filepath=filepath(obs.instrument+'_cable_length.txt',root=rootdir('FHD'),subdir='instrument_config')
+        textfast,data_array,/read,file_path=cable_filepath,first_line=1
+        cable_len=Reform(data_array[2,*])
+      endif
+      
+      for cable_i=0, N_elements(cal_mode_fit)-1 do begin
+        if cal_mode_fit[cable_i] GT 0 then begin
+          cable_cut_i=where(cable_len NE cal_mode_fit[cable_i],n_cable_cut)
+          IF n_cable_cut GT 0 THEN tile_ref_logic[cable_cut_i] -= 1
+        endif else begin
+          cable_cut_i=where(cable_len eq abs(cal_mode_fit[cable_i]),n_cable_cut)
+          IF n_cable_cut GT 0 THEN tile_ref_logic[cable_cut_i] = -N_elements(cal_mode_fit)
+        endelse
+      endfor
+      cable_cut = where(tile_ref_logic LE -N_elements(cal_mode_fit),n_count)
+      tile_ref_flag = FLTARR(n_tile) + 1.
+      if n_count GT 0 then tile_ref_flag[cable_cut] = 0
+      FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=mode_i_arr[pol_i,*]*tile_ref_flag
+    ENDIF
+    
     
     FOR pol_i=0,n_pol-1 DO BEGIN
       gain_arr=*cal.gain[pol_i]
