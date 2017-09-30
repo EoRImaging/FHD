@@ -111,7 +111,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         
         IF size(cal_cable_reflection_correct,/type) EQ 7 THEN mode_filepath=cal_cable_reflection_correct ELSE $
           mode_filepath=filepath(obs.instrument+'_cable_reflection_coefficients.txt',root=rootdir('FHD'),subdir='instrument_config')
-        ; read in the fit file and reorganize the data
+        ; read in text file and reorganize the data
         textfast,data_array,/read,file_path=mode_filepath,first_line=1
         tile_i_file=Reform(data_array[0,*])
         tile_name_file=Reform(data_array[1,*])
@@ -125,7 +125,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         tile_amp_Y=Reform(data_array[9,*])
         tile_phase_Y=Reform(data_array[10,*])
         
-        ;Options to fit only certain cable lengths -- not used
+        ;Options to fit only certain cable lengths
         IF size(cal_cable_reflection_correct,/type) NE 7 THEN BEGIN
           IF cal_cable_reflection_correct GT 1 THEN BEGIN
             cable_cut_i=where(cable_len NE cal_cable_reflection_correct,n_cable_cut)
@@ -136,12 +136,9 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
           ENDIF
         ENDIF
         
-        reflect_time=2.*cable_len/(c_light*cable_vf)
-        bandwidth=(Max(freq_arr)-Min(freq_arr))*n_freq/(n_freq-1) ; this is used to calculate frequency of reflection ripple, but overridden in this particular case.
-        mode_i_arr=Fltarr(n_pol,n_tile)
-        ;FOR pol_i=0,n_pol-1 DO mode_i_arr[pol_i,*]=bandwidth*reflect_time*tile_ref_flag
-        mode_i_arr[0,*]=tile_mode_X
-        mode_i_arr[1,*]=tile_mode_Y
+        mode_i_arr=Fltarr(n_pol,n_tile) ; Modes in fourier transform units
+        mode_i_arr[0,*]=tile_mode_X*tile_ref_flag
+        mode_i_arr[1,*]=tile_mode_Y*tile_ref_flag
         
         amp_arr=Fltarr(2,n_tile)
         phase_arr=Fltarr(2,n_tile)
@@ -232,15 +229,12 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
           nmodes=101 ; range around the central mode to test
           modes=(dindgen(nmodes)-nmodes/2)*dmode+mode0 ; array of modes to try
           modes=rebin(modes,nmodes,nf_use) ; reshape for ease of computing
-          ; These lines are silly. Need to rebin gain_arr, but can't do complex numbers directly.
-          gainr=rebin(transpose(reform(real_part(gain_arr[freq_use,tile_i]))),nmodes,nf_use) ; dimension manipulation, add dim for mode fitting
-          gaini=rebin(transpose(reform(imaginary(gain_arr[freq_use,tile_i]))),nmodes,nf_use) ; same for imaginary
-          gain_temp=gainr+i_comp*gaini ; Reform complex after restructuring array
+          gain_temp=rebin_complex(transpose(reform(gain_arr[freq_use,tile_i])),nmodes,nf_use) ; dimension manipulation, add dim for mode fitting
           freq_mat=rebin(transpose(freq_use),nmodes,nf_use) ; freq_use matrix to multiply/collapse in fit
           test_fits=Total(exp(i_comp*2.*!Pi/n_freq*modes*freq_mat)*gain_temp,2) ; Perform DFT of gains to test modes
           amp_use=max(abs(test_fits),mode_ind)/nf_use ; Pick out highest amplitude fit (mode_ind gives the index of the mode)
           phase_use=atan(test_fits[mode_ind],/phase) ; Phase of said fit
-          mode_i=modes[mode_ind,0] ; And the actualy mode
+          mode_i=modes[mode_ind,0] ; And the actual mode
         ENDIF ELSE IF Keyword_Set(amp_arr) OR Keyword_Set(phase_arr) THEN BEGIN
           ; use predetermined fits
           amp_use=amp_arr[pol_i,tile_i]
