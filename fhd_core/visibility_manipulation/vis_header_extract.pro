@@ -14,8 +14,8 @@ nbaselines=sxpar(header,'gcount') ;variable, based on length of observation
 n_complex=sxpar(header,'naxis2') ;3 columns are amplitude, phase (degrees), weights
 n_pol=sxpar(header,'naxis3') ;4 columns are xx, yy, xy, yx
 n_freq=sxpar(header,'naxis4') ;768
-freq_ref=sxpar(header,'crval4') ;1.5424E8
-freq_res=sxpar(header,'cdelt4') ;40000 
+freq_ref=float(sxpar(header,'crval4')) ;1.5424E8
+freq_res=float(sxpar(header,'cdelt4')) ;40000 
 IF freq_res EQ 0 THEN print,'WARNING: Invalid frequency resolution in uvfits header! Uses header keyword cdelt4'
 freq_ref_i=sxpar(header,'crpix4')-1  ;368-1 (Remember, FITS indices start from 1, IDL indices start from 0)
 date_obs=sxpar(header,'date-obs')
@@ -40,8 +40,8 @@ if count_spw eq 1 then begin
   if n_spw gt 1 then message, 'uvfits files with more than one spectral window are not currently supported'
 endif
 
-obsra=sxpar(header,'CRVAL' + strn(ra_cnum))
-obsdec=sxpar(header,'CRVAL' + strn(dec_cnum))  
+obsra=Double(sxpar(header,'CRVAL' + strn(ra_cnum)))
+obsdec=Double(sxpar(header,'CRVAL' + strn(dec_cnum)))  
 
 IF N_Elements(lon) EQ 0 THEN BEGIN
     lon = sxpar(header,'LON',count=found_lon) 
