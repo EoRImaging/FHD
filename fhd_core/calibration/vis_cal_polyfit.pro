@@ -1,8 +1,7 @@
 FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_reflection_hyperresolve=cal_reflection_hyperresolve,cal_reflection_mode_theory=cal_reflection_mode_theory,$
     cal_reflection_mode_file=cal_reflection_mode_file,cal_reflection_mode_delay=cal_reflection_mode_delay, $
-    no_phase_calibration=no_phase_calibration,zero_debug_cal=zero_debug_cal,$
-    digital_gain_jump_polyfit=digital_gain_jump_polyfit,mode_debug=mode_debug,_Extra=extra
+    no_phase_calibration=no_phase_calibration,digital_gain_jump_polyfit=digital_gain_jump_polyfit,_Extra=extra
     
   IF Keyword_Set(cal_reflection_mode_theory) OR Keyword_Set(cal_reflection_mode_file) $
     OR Keyword_Set(cal_reflection_mode_delay) OR Keyword_Set(cal_reflection_hyperresolve) THEN cal.mode_fit=1.
@@ -266,28 +265,10 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
           phase_use=atan(mode_fit,/phase)
         ENDELSE
         
-        if keyword_set(zero_debug_cal) then begin
-          if zero_debug_cal EQ 1 then cal_restore = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_notimeavg_cal/calibration/1061316296_cal.sav','cal')
-          if zero_debug_cal EQ 2 then cal_restore = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_notimeavg_cal_cableave/calibration/1061316296_cal.sav','cal')
-          mode_i = (*cal_restore.mode_params[pol_i,tile_i])[0]
-          amp_use = (*cal_restore.mode_params[pol_i,tile_i])[1]
-          phase_use = (*cal_restore.mode_params[pol_i,tile_i])[2]
-        endif
-        
         ; Rebuild the reflection ripple, and add to polyfit gains
         gain_mode_fit=amp_use*exp(-i_comp*2.*!Pi*(mode_i*findgen(n_freq)/n_freq)+i_comp*phase_use)
         
-        if keyword_set(mode_debug) then begin
-          longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_hyperfinemode.sav','fft_zero_longrun')
-          gain_mode_fit_large = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_hyperfinemode.sav','gain_mode_fit')
-          pointing_num=mwa_get_pointing_number(obs,/string)
-          poi_name = ['-2','-1','0','1','2']
-          poi = where(pointing_num EQ poi_name)
-          gain_mode_fit =(reform(atan(gain_mode_fit_large[pol_i,poi,*,tile_i],/phase)+1.)/reform(atan(gain_mode_fit_large[pol_i,poi,*,1],/phase)+1.)-1.)
-        ; gain_mode_fit = abs(reform(gain_mode_fit_large[pol_i,poi,*,tile_i]))*exp(Complex(0,1)*reform(atan(conj(gain_mode_fit_large[pol_i,poi,*,1]),/phase)+atan((gain_mode_fit_large[pol_i,poi,*,tile_i]),/phase))) - 1. ;oops on the 1
-        endif
-        
-        if ~keyword_set(mode_debug) then gain_arr_fit[*,tile_i]+=gain_mode_fit else gain_arr_fit[*,tile_i] = abs(gain_arr_fit[*,tile_i])*exp(Complex(0,1)*(atan(gain_arr_fit[*,tile_i],/phase)+gain_mode_fit))
+        gain_arr_fit[*,tile_i]+=gain_mode_fit
         cal_return.mode_params[pol_i,tile_i]=Ptr_new([mode_i,amp_use,phase_use])
         debug=1
       ENDFOR
