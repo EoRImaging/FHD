@@ -69,7 +69,7 @@ if N_elements(instrument) GT 1 then begin
   if ~isa(inst_tile_ptr, 'POINTER', /ARRAY) then message, 'instrument_tile_ptr must be filled in when there is more than one instrument. See dictionary.'
   for inst_i=1, N_elements(instrument)-1 do begin
     antenna_temp=Call_function(tile_init_fn[inst_i],obs,antenna_str,_Extra=extra)
-    antenna[*inst_tile_ptr[inst_i]] = antenna_temp[*inst_tile_ptr[inst_i]]
+    antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
   endfor  
 endif  
 
@@ -109,8 +109,9 @@ az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 ;now, update antenna structure to include gains
 if N_elements(instrument) GT 1 then begin
   for inst_i=0, N_elements(instrument)-1 do begin
-    antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
-    antenna[*inst_tile_ptr[inst_i]] = antenna_temp[*inst_tile_ptr[inst_i]]
+    antenna_temp = pointer_copy(antenna)
+    antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna_temp,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+    antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
     antenna[*inst_tile_ptr[inst_i]].antenna_type = instrument[inst_i] ;if more than one instrument, assign the correct antenna type for each subset for metadata purposes
   endfor  
 endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
