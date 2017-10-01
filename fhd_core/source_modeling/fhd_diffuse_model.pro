@@ -52,22 +52,15 @@ IF size(diffuse_spectral_index,/type) EQ 10 THEN BEGIN ;check if pointer type
     print,"A spectral index is defined in the saved diffuse model, but this is not yet supported!"
 ENDIF ;case of specifying a single scalar to be applied to the entire diffuse model is treated AFTER building the model in instrumental polarization
 
-;if keyword_set(select_radius) THEN BEGIN  ; Limit hpx_inds to those within the selection radius of the phase center
-;    pix2vec_ring, nside, hpx_inds, pix_coords
+;if keyword_set(select_radius) THEN BEGIN
+;    ang2vec,obs.obsdec,obs.obsra,cen_coords,/astro
+;    Query_disc,nside,cen_coords,select_radius,inds_select,npix_sel,/deg
+;    pix2vec_ring, nside, inds_select, pix_coords
 ;    vec2ang,pix_coords,pix_dec,pix_ra,/astro
 ;    IF coord_use EQ 'galactic'   THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /degree
 ;    IF coord_use EQ 'equatorial' THEN Hor2Eq,pix_dec,pix_ra,obs.JD0,pix_ra,pix_dec,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
-;
-;    phase_ra = obs.phasera
-;    phase_dec = obs.phasedec
-;
-;    gcirc, 0, phase_ra, phase_dec, pix_ra, pix_dec, dists
-;    hpx_inds = hpx_inds[where(dists LT select_radius)]
-;    coord_use='celestial'    ; Conversion was done above, if necessary
-;
-;    ang2vec,obs.obsdec,obs.obsra,cen_coords,/astro
-;    Query_disc,nside,cen_coords,select_radius,inds_select,npix_sel,/deg
-;    hpx_inds = inds_select
+;    ang2vec, pix_dec, pix_ra, vecs, /astro
+;    vec2pix_ring, nside, vecs, hpx_inds
 ;ENDIF
 
 model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=diffuse_units_kelvin,coord_sys=coord_use)
