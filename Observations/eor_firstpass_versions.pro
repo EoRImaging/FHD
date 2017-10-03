@@ -3696,6 +3696,34 @@ pro eor_firstpass_versions
     ring_radius = 0
   end
   
+  'rlb_HERA_only_Oct2017': begin
+    instrument = 'hera'
+    calibration_auto_initialize = 1
+    ref_antenna = 80
+    time_offset=5.*60.
+    hera_inds = [80,104,96,64,53,31,65,88,9,20,89,43,105,22,81,10,72,112,97]+1
+    paper_inds = [1,3,4,13,15,16,23,26,37,38,41,42,46,47,49,50,56,54,58,59,61,63,66,67,70,71,73,74,82,83,87,90,98,99,103,106,124,123,122,121,120,119,118,117,0,14,44,113,126,127]+1
+    paper_hex = [2,21,45,17,68,62,116,125,84,100,85,57,69,40,101,102,114,115,86]+1
+    paper_pol = [25,19,48,29,24,28,55,34,27,51,35,75,18,76,5,77,32,78,30,79,33,91,6,92,52,93,7,94,12,95,8,107,11,108,36,109,60,110,39,111]+1
+    tile_flag_list = [paper_hex,paper_pol,paper_inds] ;flag all but HERA
+    cal_time_average = 0
+    nfreq_average = 1024
+    calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    cable_bandpass_fit = 0
+    saved_run_bp = 0
+    cal_mode_fit = 0
+    max_calibration_sources = 500
+    undefine, diffuse_calibrate,diffuse_model,cal_cable_reflection_fit,cal_cable_reflection_mode_fit,cal_cable_reflection_correct
+    beam_offset_time = 300
+    flag_calibration = 0
+    min_cal_baseline = 0
+    calibration_polyfit = 0
+    bandpass_calibrate = 0
+    flag_visibilities = 1
+    dimension = 4096
+    elements = 4096
+  end
+  
   ;;;;;;; Mike Wilensky's Stuff ;;;;;;;;
   'mwilensky_test_3_6_2017' : begin
     recalculate_all = 1
@@ -3742,6 +3770,10 @@ case version of
   end
   
   'rlb_HERA_only_Sept2017': begin
+    vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
+  end
+  
+  'rlb_HERA_only_Oct2017': begin
     vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
   end
   
