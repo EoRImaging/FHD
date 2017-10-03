@@ -14,4 +14,6 @@
 
 #idl -args 'mwa_galaxy_compressed_0' '~/data/alanman/FHD_TEST'/ 'sim_mwa_diffuse'
 
-idl -args 'semicircle_14m_comp_0' '~/data/alanman/FHD_TEST'/ 'sim_semicircle_point'
+#idl -args 'semicircle_14m_comp_0' '~/data/alanman/FHD_TEST'/ 'sim_semicircle_point'
+
+idl -args 'hera19_comp_v001_test_0' '~/data/alanman/FHD_TEST'/ 'test'

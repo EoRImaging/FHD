@@ -532,12 +532,10 @@ case version of
    end
 
    'test': begin
-	include_catalog_sources=0
-	eor_sim=1
-	max_model_sources=0
-;	max_calibration_sources=0
-;	max_sources=0
-	instrument='mwa'
+	include_catalog_sources=1
+	eor_sim=0
+	max_model_sources=10
+	instrument='hera'
 	dft_threshold=1
 	dimension=512
 	nfreq_avg=203
