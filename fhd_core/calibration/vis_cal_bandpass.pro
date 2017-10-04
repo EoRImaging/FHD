@@ -1,6 +1,6 @@
 FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
-    bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,saved_run_bp=saved_run_bp,$
-    uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,_Extra=extra
+    bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,$
+    cal_bp_transfer=cal_bp_transfer,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,_Extra=extra
   ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.
     
   ;Extract needed elements from the input structures
@@ -54,19 +54,19 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
 ;  endif
   
   ;restoring saved bandpass
-  If keyword_set(saved_run_bp) then begin
-    if saved_run_bp EQ 1 then begin
-      saved_run_bp = filepath('mwa_eor0_highband_season1_cable_bandpass.fits',root=rootdir('FHD'),subdir='instrument_config')
-      print, 'saved_run_bp defaulting to ' + saved_run_bp
-    endif else if file_test(saved_run_bp) EQ 0 THEN message, saved_run_bp + ' not found.'
+  If keyword_set(cal_bp_transfer) then begin
+    if cal_bp_transfer EQ 1 then begin
+      cal_bp_transfer = filepath('mwa_eor0_highband_season1_cable_bandpass.fits',root=rootdir('FHD'),subdir='instrument_config')
+      print, 'cal_bp_transfer defaulting to ' + cal_bp_transfer
+    endif else if file_test(cal_bp_transfer) EQ 0 THEN message, cal_bp_transfer + ' not found.'
 
-    print, 'Bandpass saved run activated, using ' + saved_run_bp
-    CASE StrLowCase(Strmid(saved_run_bp[0],3,/reverse)) OF
+    print, 'Bandpass saved run activated, using ' + cal_bp_transfer
+    CASE StrLowCase(Strmid(cal_bp_transfer[0],3,/reverse)) OF
     
       ;can use a cal sav file to restore a bandpass
       '.sav':BEGIN
-        cal_bandpass=getvar_savefile(saved_run_bp,'cal')
-        IF ~Keyword_Set(cal_bandpass.cal_origin) THEN cal_bandpass.cal_origin=saved_run_bp
+        cal_bandpass=getvar_savefile(cal_bp_transfer,'cal')
+        IF ~Keyword_Set(cal_bandpass.cal_origin) THEN cal_bandpass.cal_origin=cal_bp_transfer
         cal_bandpass=fhd_struct_init_cal(obs,params,calibration_origin=cal_bandpass.cal_origin,gain_arr_ptr=cal_bandpass.gain,_Extra=extra)
         cal_remainder=cal
         for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
@@ -75,11 +75,11 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
         
       ;can use a txt file to read-in a gain array or a 13x384 cable bandpass (obsolete, please use cal fits)  
       '.txt':BEGIN
-        textfast,gain_arr,/read,file_path=saved_run_bp
+        textfast,gain_arr,/read,file_path=cal_bp_transfer
         if ~keyword_set(cable_bandpass_fit) AND (size(gain_arr))[1] NE 13 then begin
-          textfast,gain_arr,/read,file_path=saved_run_bp
+          textfast,gain_arr,/read,file_path=cal_bp_transfer
           gain_arr_ptr=Ptr_new(gain_arr)
-          cal_bandpass=fhd_struct_init_cal(obs,params,calibration_origin=saved_run_bp,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+          cal_bandpass=fhd_struct_init_cal(obs,params,calibration_origin=cal_bp_transfer,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
           cal_remainder=cal
           for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
           Return, cal_bandpass
@@ -90,7 +90,7 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
         
       ;can use a calfits file
       'fits':BEGIN
-        cal_bandpass = calfits_read(saved_run_bp,obs,params,silent=silent,_Extra=extra)
+        cal_bandpass = calfits_read(cal_bp_transfer,obs,params,silent=silent,_Extra=extra)
         cal_remainder=cal
         for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
         Return, cal_bandpass
@@ -120,14 +120,14 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
     tile_use_arr=Ptrarr(n_cable)
     FOR cable_i=0,n_cable-1 DO BEGIN
        tile_use_arr[cable_i]=Ptr_new(where((*obs.baseline_info).tile_use AND cable_len EQ cable_length_ref[cable_i]))
-       if (N_elements(*tile_use_arr[cable_i]) EQ 0) AND ~keyword_set(saved_run_bp) then begin
+       if (N_elements(*tile_use_arr[cable_i]) EQ 0) AND ~keyword_set(cal_bp_transfer) then begin
           print, 'WARNING: Too many flagged tiles to implement bandpass cable averaging. Using global bandpass.'
           normal_bp_cal=1
        endif 
     ENDFOR
     
     ;Reload a saved bandpass by pointing for a specific pointing. Currently only capable of golden set. (Is this still true?)
-    If keyword_set(saved_run_bp) then begin
+    If keyword_set(cal_bp_transfer) then begin
       ;parse out which pointing the obsid is in
       pointing_num=mwa_get_pointing_number(obs,/string)
       
@@ -187,7 +187,7 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
         ENDFOR
         
         ;Override calc with saved run for pointing
-        If keyword_set(saved_run_bp) then bandpass_single=bandpass_saved_sol[1+(cable_i*2)+(pol_i),freq_use]
+        If keyword_set(cal_bp_transfer) then bandpass_single=bandpass_saved_sol[1+(cable_i*2)+(pol_i),freq_use]
         
         ;Want iterative to start at 1 (to not overwrite freq) and store final bandpass per cable group.
         bandpass_col_count += 1

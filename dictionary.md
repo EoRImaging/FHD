@@ -83,6 +83,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 2 <br />
   -*Default*: 2 !Q <br />
   
+**cal_bp_transfer**: use a saved bandpass for bandpass calibration. Read in the specified file (.sav, .txt, or .fits), with calfits format greatly preferred. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: if set to 1, becomes `mwa_eor0_highband_season1_cable_bandpass.fits` <br />
+
 **cal_mode_fit**: determines whether calibration will fit for reflection in cables. This will be set if
 	`cal_reflection_mode_file`, `cal_reflection_mode_theory`, `cal_reflection_mode_delay`, or `cal_reflection_hyperresolve` is set. Setting it to a positive cable length (scalar or array) will specifically include the associated tiles for fitting. Setting it to a negative cable length (scalar or array) will specifically exclude the associated tiles from fitting. <br />
   -*Turn off/on*: 0/1 <br />
@@ -153,13 +158,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set.
   -*EoR_firstpass settings*: 20000 <br />
   -*Default*: All valid sources in the catalog are used. <br />
-  
-**saved_run_bp**: use a saved bandpass for bandpass calibration. Reads in a text file saved in instrument config which is dependent on pointing number at the moment. Needs updating. <br />
-  -*Needs updating*: File name needs more information to descriminate between instruments and bands. Need to have capability to read in saved bandpasses not dependent on cable type.<br />
-  -*Dependency*: instrument_config/\<pointing number\>_bandpass.txt <br />
-  -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: undefined (off) <br />
 
 **max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
   -*Default*: equal to max_baseline <br />
