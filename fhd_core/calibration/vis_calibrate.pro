@@ -59,6 +59,9 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
           gain_arr_ptr=Ptr_new(gain_arr)
           cal=fhd_struct_init_cal(obs,params,calibration_origin=cal_file_use,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
         END
+        'fits':BEGIN ;calfits format
+          cal = calfits_read(cal_file_use,obs,params,silent=silent,_Extra=extra)
+        END
         ELSE: BEGIN
           print,'Unknown file format: ',cal_file_use
           error=1
