@@ -97,7 +97,7 @@ endif
 case version of
 ; Add snapshot_healpix_export=0 for faster runtime if not doing eppsilon
 
-   'sim_hera19_point_doubles': begin
+   'sim_hera19_point_no-zombie': begin
 	dimension=1024
 	instrument='hera'
 	max_model_sources=10000
@@ -532,12 +532,10 @@ case version of
    end
 
    'test': begin
-	include_catalog_sources=0
-	eor_sim=1
-	max_model_sources=0
-;	max_calibration_sources=0
-;	max_sources=0
-	instrument='mwa'
+	include_catalog_sources=1
+	eor_sim=0
+	max_model_sources=10
+	instrument='hera'
 	dft_threshold=1
 	dimension=512
 	nfreq_avg=203

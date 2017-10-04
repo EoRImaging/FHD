@@ -2,7 +2,7 @@
 #obsid_list_files/HeraPlatinumFakeShort
 
 
-nohup ./sim_pipe_slurm.sh -t -e 'hera19_platinum_short_1' -f obsid_list_files/HeraPlatinumFakeShort -m 40G -w 03:30:00 -v 'sim_hera19_point_doubles'  > nohup_hera_point.out &
+nohup ./sim_pipe_slurm.sh -t -e 'hera19_platinum_simple_short_1' -f obsid_list_files/Hera19CompressedSimpleShort -m 40G -w 03:30:00 -v 'sim_hera19_point_no-zombie'  > nohup_hera_point.out &
 
 #nohup ./sim_pipe_slurm.sh -t  -f obsid_list_files/SemiCirc_comp_1hour -n 5 -m 30G  -w 02:30:00  -v 'sim_semicircle_point' > nohup_semicircle.out &
 
