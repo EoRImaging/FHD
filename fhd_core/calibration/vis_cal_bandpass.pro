@@ -1,6 +1,6 @@
-FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
+FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
     bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,saved_run_bp=saved_run_bp,$
-    uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,longrun_cal=longrun_cal,_Extra=extra
+    uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,_Extra=extra
   ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.
     
   ;Extract needed elements from the input structures
@@ -52,6 +52,54 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
 ;      
 ;    endif
 ;  endif
+  
+  ;restoring saved bandpass
+  If keyword_set(saved_run_bp) then begin
+    if saved_run_bp EQ 1 then begin
+      saved_run_bp = filepath('mwa_eor0_highband_season1_cable_bandpass.fits',root=rootdir('FHD'),subdir='instrument_config')
+      print, 'saved_run_bp defaulting to ' + saved_run_bp
+    endif else if file_test(saved_run_bp) EQ 0 THEN message, saved_run_bp + ' not found.'
+
+    print, 'Bandpass saved run activated, using ' + saved_run_bp
+    CASE StrLowCase(Strmid(saved_run_bp[0],3,/reverse)) OF
+    
+      ;can use a cal sav file to restore a bandpass
+      '.sav':BEGIN
+        cal_bandpass=getvar_savefile(saved_run_bp,'cal')
+        IF ~Keyword_Set(cal_bandpass.cal_origin) THEN cal_bandpass.cal_origin=saved_run_bp
+        cal_bandpass=fhd_struct_init_cal(obs,params,calibration_origin=cal_bandpass.cal_origin,gain_arr_ptr=cal_bandpass.gain,_Extra=extra)
+        cal_remainder=cal
+        for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
+        Return, cal_bandpass
+      END
+        
+      ;can use a txt file to read-in a gain array or a 13x384 cable bandpass (obsolete, please use cal fits)  
+      '.txt':BEGIN
+        textfast,gain_arr,/read,file_path=saved_run_bp
+        if ~keyword_set(cable_bandpass_fit) AND (size(gain_arr))[1] NE 13 then begin
+          textfast,gain_arr,/read,file_path=saved_run_bp
+          gain_arr_ptr=Ptr_new(gain_arr)
+          cal_bandpass=fhd_struct_init_cal(obs,params,calibration_origin=saved_run_bp,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
+          cal_remainder=cal
+          for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
+          Return, cal_bandpass
+        endif else begin 
+          bandpass_saved_sol = gain_arr ;columns are: freq_arr_input, cable90xx, cable90yy, cable150xx, cable150yy, cable230xx, cable230yy, cable320xx, cable320yy, cable400xx, cable400yy, cable524xx, cable524yy
+        endelse
+      END
+        
+      ;can use a calfits file
+      'fits':BEGIN
+        cal_bandpass = calfits_read(saved_run_bp,obs,params,silent=silent,_Extra=extra)
+        cal_remainder=cal
+        for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
+        Return, cal_bandpass
+      END
+          
+    ENDCASE
+
+  endif
+
   
   ;Initialize arrays
   gain_arr_ptr2=Ptrarr(n_pol,/allocate)
@@ -171,26 +219,6 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     cal_bandpass.gain=gain_arr_ptr2
     cal_remainder=cal
     cal_remainder.gain=gain_arr_ptr3
-    
-    If keyword_set(longrun_cal) then begin
-;      longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_conv_zero_lowerband.sav','fft_zero_longrun')
-;      pointing_num=mwa_get_pointing_number(obs,/string)
-;      poi_name = ['-2','-1','0','1','2']
-;      poi = where(pointing_num EQ poi_name)
-;      (*cal_bandpass.gain[0])[0:255,*] = reform(abs(longrun_gain[0,poi,*,*])) 
-;      (*cal_bandpass.gain[1])[0:255,*] = reform(abs(longrun_gain[1,poi,*,*]))
-;      (*cal_remainder.gain[0])[0:255,*] = (*gain_arr_ptr[0])[0:255,*] / reform(abs(longrun_gain[0,poi,*,*])) 
-;      (*cal_remainder.gain[1])[0:255,*] = (*gain_arr_ptr[1])[0:255,*] / reform(abs(longrun_gain[1,poi,*,*]))
-      ;longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_hyperfinemode.sav','fft_zero_longrun')
-      longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave.sav','longrun_gain')
-      pointing_num=mwa_get_pointing_number(obs,/string)
-      poi_name = ['-2','-1','0','1','2']
-      poi = where(pointing_num EQ poi_name)
-      (*cal_bandpass.gain[0])[*,*] = reform(abs(longrun_gain[0,poi,*,*])) 
-      (*cal_bandpass.gain[1])[*,*] = reform(abs(longrun_gain[1,poi,*,*]))
-      (*cal_remainder.gain[0])[*,*] = (*gain_arr_ptr[0])[*,*] / reform(abs(longrun_gain[0,poi,*,*])) 
-      (*cal_remainder.gain[1])[*,*] = (*gain_arr_ptr[1])[*,*] / reform(abs(longrun_gain[1,poi,*,*]))      
-    endif
     
     ;Add the Levine memo bandpass to the gain solutions if applicable
 

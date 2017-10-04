@@ -190,7 +190,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
 
   ;Perform bandpass (amp and phase per fine freq) and polynomial fitting (low order amp and phase fit plus cable reflection fit)
   IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-    cal_bandpass=vis_cal_bandpass(cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
+    cal_bandpass=vis_cal_bandpass(cal,obs,params,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,_Extra=extra)
     
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
         cal_polyfit=vis_cal_polyfit(cal_remainder,obs,_Extra=extra)
