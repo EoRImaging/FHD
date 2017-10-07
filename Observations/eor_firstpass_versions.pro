@@ -2006,6 +2006,8 @@ healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_
 
 extra=var_bundle() ; bundle all the variables into a structure
 
+fhd_depreciation_test, _Extra=extra
+
 print,""
 print,"Keywords set in wrapper:"
 print,structure_to_text(extra)
