@@ -68,7 +68,6 @@ pro eor_firstpass_versions
   bandpass_calibrate=1
   calibration_polyfit=2
   no_restrict_cal_sources=1
-  cal_cable_reflection_fit=150
   restrict_hpx_inds=1
   
   kbinsize=0.5
@@ -666,6 +665,27 @@ pro eor_firstpass_versions
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
  'nb_sim_beam_flagged_best16_bubbles': begin
+    in_situ_sim_input = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_model_beam_flagged_best16'
+    eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/fhd_nb_goldenset_bubbles/vis_data/'
+    ;calibrate_visibilities=0
+    ;model_visibilities=1
+    max_calibration_sources=4000
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    sim_perf_calibrate=1
+    undefine, diffuse_model, diffuse_calibrate
+    recalculate_all=1
+    mapfn_recalculate=0
+    healpix_recalculate=1
+    nfreq_avg=16
+    ;n_avg=384
+    cal_mode_fit=0
+    ;cal_time_average=1 ;reseting the gains makes this unnecessary
+    ;model_delay_filter=1
+    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+  end
+ 'nb_sim_beam_flagged_best16_bubbles_flagmodel': begin
     in_situ_sim_input = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_model_beam_flagged_best16'
     eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/fhd_nb_goldenset_bubbles/vis_data/'
     ;calibrate_visibilities=0
