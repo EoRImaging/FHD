@@ -4,7 +4,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     no_phase_calibration=no_phase_calibration,digital_gain_jump_polyfit=digital_gain_jump_polyfit,_Extra=extra
     
   IF Keyword_Set(cal_reflection_mode_theory) OR Keyword_Set(cal_reflection_mode_file) $
-    OR Keyword_Set(cal_reflection_mode_delay) OR Keyword_Set(cal_reflection_hyperresolve) THEN cal.mode_fit=1.
+    OR Keyword_Set(cal_reflection_mode_delay) OR Keyword_Set(cal_reflection_hyperresolve) AND $
+    (cal.mode_fit EQ 0) THEN cal.mode_fit=1.
   cal_mode_fit=cal.mode_fit
   IF (cal_mode_fit EQ 1) AND keyword_set(cal_reflection_mode_theory) then $
     if (abs(cal_reflection_mode_theory) GT 1) then cal_mode_fit = cal_reflection_mode_theory
