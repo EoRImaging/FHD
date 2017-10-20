@@ -83,37 +83,40 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 2 <br />
   -*Default*: 2 !Q <br />
   
-**cal_mode_fit**: Determines whether calibration will fit for reflection in cables (see following three entries). This will be set if
-	`cal_cable_reflection_correct` or `cal_cable_reflection_fit` is set. <br />
-  -*Obsolete* - use `cal_cable_reflection_correct` or `cal_cable_reflection_mode_fit` instead. <br />
+**cal_bp_transfer**: use a saved bandpass for bandpass calibration. Read in the specified file (.sav, .txt, or .fits), with calfits format greatly preferred. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: if set to 1, becomes `mwa_eor0_highband_season1_cable_bandpass.fits` <br />
+
+**cal_mode_fit**: determines whether calibration will fit for reflection in cables. This will be set if
+	`cal_reflection_mode_file`, `cal_reflection_mode_theory`, `cal_reflection_mode_delay`, or `cal_reflection_hyperresolve` is set. Setting it to a positive cable length (scalar or array) will specifically include the associated tiles for fitting. Setting it to a negative cable length (scalar or array) will specifically exclude the associated tiles from fitting. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: undefined <br />
+  -*Default*: 1 <br />
   
 **cal_phase_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
   -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
   -*Turn off/on*: undefined/defined <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
+
   
-**cal_cable_reflection_correct**: Use predetermined cable reflection parameters in calibration solutions. <br />
-  -*Needs updating*: all cable keywords need a major overhaul <br />
-  -Set to 1 to correct all antennas using default tile for instrument (e.g. `FHD/instrument_config/mwa_cable_reflection_coefficients.txt`) <br />
-  -OR set to cable length or array of cable lengths to only correct those lengths (e.g. [90,150]), again using default file. <br />
-  -OR set to file path with reflection coefficients. <br />
-  -*EoR_firstpass settings*: unset (off) <br />
-  -*Default*: unset (off) !Q <br />
-  
-**cal_cable_reflection_fit**: calculate theoretical cable reflection modes given the velocity and length data stored in a config file. <br />
-  -*Needs updating*: all cable keywords need a major overhaul <br />
-  -Set to length of cable to fit, or negative length of cable to omit. <br />
-  -*Must be used in conjunction with `cal_cable_reflection_mode_fit`* <br />
-  -*EoR_firstpass settings*: 150 <br />
-  -*Default*: 150 !Q <br />
-  
-**cal_cable_reflection_mode_fit**: fits residual gains to reflection mode and coefficient. <br />
-  -*Needs updating*: all cable keywords need a major overhaul <br />
-  -Takes precidence over `cal_cable_reflection_correct`. <br />
+**cal_reflection_hyperresolve**: hyperresolve and fit residual gains using nominal reflection modes (calculated from `cal_reflection_mode_delay` or `cal_reflection_mode_theory`) , producing a finetuned mode fit, amplitude, and phase. Will be ignored if `cal_reflection_mode_file` is set because it is assumed that a file read-in contains mode/amp/phase to use. <br />
   -*Turn off/on*: 0/1 <br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: not set <br />
+  
+**cal_reflection_mode_delay**: calculate cable reflection modes by Fourier transforming the residual gains, removing modes contaminated by frequency flagging, and choosing the maximum mode. <br />
+  -*EoR_firstpass settings*: not set <br />
+  -*Default*: not set <br />
+
+**cal_reflection_mode_file**: use predetermined cable reflection parameters (mode, amplitude, and phase) in the calibration solutions. Set to 1 to correct antennas using default tile for instrument (e.g. `FHD/instrument_config/mwa_cable_reflection_coefficients.txt`) or set to a filepath with the reflection coefficients. The specified format of the text file must have one header line and eleven columns (tile index, tile name, cable length, cable velocity factor, logic on whether to fit (1) or not (0), mode for X, amplitude for X, phase for X, mode for Y, amplitude for Y, phase for Y). See `vis_cal_polyfit.pro` for units. <br />
+  -*EoR_firstpass settings*: undefined <br />
+  -*Default*: undefined <br />
+  
+**cal_reflection_mode_theory**: calculate theoretical cable reflection modes given the velocity and length data stored in a config file named `<instrument>_cable_length.txt`. File must have a header line and at least five columns (tile index, tile name, cable length, cable velocity factor, logic on whether to fit (1) or not (0)). Can set it to positive/negative cable lengths (see `cal_mode_fit`) to include/exclude certain cable types. <br />
   -*EoR_firstpass settings*: 150 <br />
-  -*Default*: 150 !Q <br />
+  -*Default*: not set <br />
   
 **cal_stop**: stops the code right after calibration, and saves unflagged model visibilities along with the obs structure in a folder called cal_prerun in the FHD file structure. This allows for post-processing calibration steps like multi-day averaging, but still has all of the needed information for minimal reprocessing to get to the calibration step. To run a post-processing run, see keywords `model_transfer` and `transfer_psf`.<br />
   -*Turn off/on*: 0/1 <br />
@@ -155,13 +158,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set.
   -*EoR_firstpass settings*: 20000 <br />
   -*Default*: All valid sources in the catalog are used. <br />
-  
-**saved_run_bp**: use a saved bandpass for bandpass calibration. Reads in a text file saved in instrument config which is dependent on pointing number at the moment. Needs updating. <br />
-  -*Needs updating*: File name needs more information to descriminate between instruments and bands. Need to have capability to read in saved bandpasses not dependent on cable type.<br />
-  -*Dependency*: instrument_config/\<pointing number\>_bandpass.txt <br />
-  -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: undefined (off) <br />
 
 **max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
   -*Default*: equal to max_baseline <br />
@@ -178,8 +174,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br />
 
-**transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, or the full file path to a npy file. (Which formats is the gain array expected in for these file types? !Q). Note that this will calibrate, but not generate a model. <br />
-  -*Needs updating*: will not generate a model for subtraction in the current setup. <br />
+**transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, the full file path to a npy file, or the full file path to a fits file that adheres to calfits format. Note that this will calibrate, but not generate a model. Please set model visibility keywords separately to generate a subtraction model. <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 

@@ -1,6 +1,6 @@
-FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
-    bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,saved_run_bp=saved_run_bp,$
-    uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,longrun_cal=longrun_cal,_Extra=extra
+FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
+    bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,$
+    cal_bp_transfer=cal_bp_transfer,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,_Extra=extra
   ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.
     
   ;Extract needed elements from the input structures
@@ -23,35 +23,10 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
   nt_use=N_Elements(tile_use)
   n_pol=N_Elements(gain_arr_ptr)
   
-  ;Select out the uvfits versions that did not apply a sub-bandpass to the data
-;  IF keyword_set(uvfits_version) AND keyword_set(uvfits_subversion) then begin
-;    If (uvfits_version EQ 5) AND (uvfits_subversion EQ 1) then begin
-;    
-;      ;Setup is for the Levine memo
-;      bp_filename = filepath('bandpass_Levine.txt',root=rootdir('FHD'),subdir='instrument_config')
-;      readcol, bp_filename, memo_bp_gains
-;      
-;      ;The memo gains have 128 fine frequency channels, so break the fine frequencies into sets that fit the data resolution
-;      range_memo_low = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ 0)
-;      range_memo_high = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ ULONG(obs.freq_res / 10000.)-1)
-;      
-;      ;Average the memo gains in sets to create the correct freq resolution
-;      num_bp_channels = ULONG(1.28E6 / obs.freq_res)
-;      ave_bp_gains = FLTARR(num_bp_channels)
-;      for channel_i=0,num_bp_channels-1 do $
-;        ave_bp_gains[channel_i] = mean(memo_bp_gains[range_memo_low[channel_i]:range_memo_high[channel_i]])
-;      ;Create bandpass effects over the whole band
-;      ave_bp_gains_fullband = ave_bp_gains
-;      for band_i=1,n_freq/num_bp_channels-1 do ave_bp_gains_fullband = [ave_bp_gains_fullband,ave_bp_gains]
-;      
-;      ;Apply the bandpass values to the input gains. Calibration solutions are applied via division to the gains 
-;      ;after cal solutions are found, so apply these gains by multiplication.
-;      for pol_i=0,n_pol-1 do $
-;        for tile_i=0, n_tile-1 do $
-;          (*gain_arr_ptr[pol_i])[*,tile_i] = (*gain_arr_ptr[pol_i])[*,tile_i] * ave_bp_gains_fullband
-;      
-;    endif
-;  endif
+  ;restoring saved bandpass
+  If keyword_set(cal_bp_transfer) then begin
+    RETURN, transfer_bandpass(cal_bp_transfer,obs,params,silent=silent,_Extra=extra)
+  endif
   
   ;Initialize arrays
   gain_arr_ptr2=Ptrarr(n_pol,/allocate)
@@ -72,14 +47,14 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     tile_use_arr=Ptrarr(n_cable)
     FOR cable_i=0,n_cable-1 DO BEGIN
        tile_use_arr[cable_i]=Ptr_new(where((*obs.baseline_info).tile_use AND cable_len EQ cable_length_ref[cable_i]))
-       if (N_elements(*tile_use_arr[cable_i]) EQ 0) AND ~keyword_set(saved_run_bp) then begin
+       if (N_elements(*tile_use_arr[cable_i]) EQ 0) AND ~keyword_set(cal_bp_transfer) then begin
           print, 'WARNING: Too many flagged tiles to implement bandpass cable averaging. Using global bandpass.'
           normal_bp_cal=1
        endif 
     ENDFOR
     
     ;Reload a saved bandpass by pointing for a specific pointing. Currently only capable of golden set. (Is this still true?)
-    If keyword_set(saved_run_bp) then begin
+    If keyword_set(cal_bp_transfer) then begin
       ;parse out which pointing the obsid is in
       pointing_num=mwa_get_pointing_number(obs,/string)
       
@@ -139,7 +114,7 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
         ENDFOR
         
         ;Override calc with saved run for pointing
-        If keyword_set(saved_run_bp) then bandpass_single=bandpass_saved_sol[1+(cable_i*2)+(pol_i),freq_use]
+        If keyword_set(cal_bp_transfer) then bandpass_single=bandpass_saved_sol[1+(cable_i*2)+(pol_i),freq_use]
         
         ;Want iterative to start at 1 (to not overwrite freq) and store final bandpass per cable group.
         bandpass_col_count += 1
@@ -171,26 +146,6 @@ FUNCTION vis_cal_bandpass,cal,obs,cal_remainder=cal_remainder,file_path_fhd=file
     cal_bandpass.gain=gain_arr_ptr2
     cal_remainder=cal
     cal_remainder.gain=gain_arr_ptr3
-    
-    If keyword_set(longrun_cal) then begin
-;      longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_conv_zero_lowerband.sav','fft_zero_longrun')
-;      pointing_num=mwa_get_pointing_number(obs,/string)
-;      poi_name = ['-2','-1','0','1','2']
-;      poi = where(pointing_num EQ poi_name)
-;      (*cal_bandpass.gain[0])[0:255,*] = reform(abs(longrun_gain[0,poi,*,*])) 
-;      (*cal_bandpass.gain[1])[0:255,*] = reform(abs(longrun_gain[1,poi,*,*]))
-;      (*cal_remainder.gain[0])[0:255,*] = (*gain_arr_ptr[0])[0:255,*] / reform(abs(longrun_gain[0,poi,*,*])) 
-;      (*cal_remainder.gain[1])[0:255,*] = (*gain_arr_ptr[1])[0:255,*] / reform(abs(longrun_gain[1,poi,*,*]))
-      ;longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_hyperfinemode.sav','fft_zero_longrun')
-      longrun_gain = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave.sav','longrun_gain')
-      pointing_num=mwa_get_pointing_number(obs,/string)
-      poi_name = ['-2','-1','0','1','2']
-      poi = where(pointing_num EQ poi_name)
-      (*cal_bandpass.gain[0])[*,*] = reform(abs(longrun_gain[0,poi,*,*])) 
-      (*cal_bandpass.gain[1])[*,*] = reform(abs(longrun_gain[1,poi,*,*]))
-      (*cal_remainder.gain[0])[*,*] = (*gain_arr_ptr[0])[*,*] / reform(abs(longrun_gain[0,poi,*,*])) 
-      (*cal_remainder.gain[1])[*,*] = (*gain_arr_ptr[1])[*,*] / reform(abs(longrun_gain[1,poi,*,*]))      
-    endif
     
     ;Add the Levine memo bandpass to the gain solutions if applicable
 

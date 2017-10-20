@@ -68,7 +68,6 @@ pro eor_firstpass_versions
   bandpass_calibrate=1
   calibration_polyfit=2
   no_restrict_cal_sources=1
-  cal_cable_reflection_fit=150
   restrict_hpx_inds=1
   
   kbinsize=0.5
@@ -83,8 +82,8 @@ pro eor_firstpass_versions
   
   ; even newer defaults
   export_images=1
-  ;cal_cable_reflection_correct=150
-  cal_cable_reflection_mode_fit=150
+  cal_reflection_mode_theory=150
+  cal_reflection_hyperresolve=1
   model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
   model_visibilities=0
   return_cal_visibilities=1
@@ -96,7 +95,7 @@ pro eor_firstpass_versions
   ;New defaults - July2015
   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
   cable_bandpass_fit=1
-  saved_run_bp=1
+  cal_bp_transfer=1
   
   ;Defaults added - July2016
   cal_amp_degree_fit=2
@@ -416,41 +415,11 @@ pro eor_firstpass_versions
     cable_bandpass_fit=1
     tile_flag_list=[78,79,87,88,95,96,97,98,104,112,113,122,123,124]
   end
-  'nb_autogainsonly_May2015': begin
-    diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
-    ;cable_bandpass_fit=1
-    undefine,export_images
-    calibration_auto_fit=1
-  end
   'nb_spec_indices': begin
     calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_fhd_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
     degrid_spectral=1
     flatten_spectrum=1
     diffuse_spectral_index=-0.5
-  end
-  'nb_decon_March2016': begin
-    max_sources=200000
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    dft_threshold=1
-    gain_factor=0.1
-    deconvolve=1
-    return_decon_visibilities=1
-    smooth_width=32
-    deconvolution_filter='filter_uv_uniform'
-    filter_background=1
-    dimension=3072
-    return_cal_visibilities=0
-    FoV=0
-    pad_uv_image=1
-    conserve_memory=1
-    ;time_cut=[2,-2]
-    snapshot_healpix_export=1
-    snapshot_recalculate=1
-    recalculate_all=0
-    
-    undefine, diffuse_calibrate, diffuse_model
-    saved_run_bp=0
-  ;double memory, time
   end
   'nb_decon_March2016_small_through_firstpass': begin
     ;max_calibration_sources=1000
@@ -459,29 +428,6 @@ pro eor_firstpass_versions
     saved_run_bp=0
     recalculate_all=1
     mapfn_recalculate=0
-  end
-  'nb_decon_July2016_presidelobe': begin
-    max_sources=200000
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    ;dft_threshold=1
-    gain_factor=0.1
-    deconvolve=1
-    return_decon_visibilities=1
-    smooth_width=32
-    deconvolution_filter='filter_uv_uniform'
-    filter_background=1
-    dimension=2048
-    return_cal_visibilities=0
-    FoV=0
-    pad_uv_image=1
-    ;time_cut=[2,-2]
-    snapshot_healpix_export=1
-    snapshot_recalculate=1
-    recalculate_all=1
-    
-    undefine, diffuse_calibrate, diffuse_model
-    saved_run_bp=0
-  ;double memory, time
   end
   'nb_decon_July2016_presidelobe_Aug27': begin
     max_sources=200000
@@ -565,196 +511,6 @@ pro eor_firstpass_versions
   ;saved_run_bp=0
   ;double memory, time
   end
-  'nb_decon_gleamcal_sidelobe_3072': begin
-    max_sources=200000
-    calibration_catalog_file_path='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog.sav'
-    ;dft_threshold=1
-    gain_factor=0.1
-    deconvolve=1
-    return_decon_visibilities=1
-    smooth_width=32
-    deconvolution_filter='filter_uv_uniform'
-    filter_background=1
-    dimension=3072
-    return_cal_visibilities=0
-    FoV=0
-    pad_uv_image=1
-    ;time_cut=[2,-2]
-    snapshot_healpix_export=1
-    ;snapshot_recalculate=1
-    ;recalculate_all=1
-    ;subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog.sav'
-    ALLOW_SIDELOBE_MODEL_SOURCES =1
-    ALLOW_SIDELOBE_CAL_SOURCES =1
-    beam_threshold=0.01
-    ;return_sidelobe_catalog=1
-    undefine, diffuse_calibrate, diffuse_model
-    debug_region_grow=1
-  ;saved_run_bp=0
-  ;double memory, time
-  end
-    'nb_decon_gleamcal_sidelobe_skip': begin
-    max_sources=200000
-    calibration_catalog_file_path='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog.sav'
-    ;dft_threshold=1
-    gain_factor=0.1
-    deconvolve=1
-    return_decon_visibilities=1
-    smooth_width=32
-    deconvolution_filter='filter_uv_uniform'
-    filter_background=1
-    dimension=2048
-    return_cal_visibilities=0
-    FoV=0
-    pad_uv_image=1
-    ;time_cut=[2,-2]
-    snapshot_healpix_export=1
-    ;snapshot_recalculate=1
-    recalculate_all=1
-    ;subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog.sav'
-    ALLOW_SIDELOBE_MODEL_SOURCES =1
-    ALLOW_SIDELOBE_CAL_SOURCES =1
-    beam_threshold=0.02
-    ;return_sidelobe_catalog=1
-    undefine, diffuse_calibrate, diffuse_model
-    debug_region_grow=1
-    skip_beam_alias=1
-  ;saved_run_bp=0
-  ;double memory, time
-  end
-  'nb_decon_July2016_presidelobe_Aug26low': begin
-    max_sources=200000
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    ;dft_threshold=1
-    gain_factor=0.1
-    deconvolve=1
-    return_decon_visibilities=1
-    smooth_width=32
-    deconvolution_filter='filter_uv_uniform'
-    filter_background=1
-    dimension=2048
-    return_cal_visibilities=0
-    FoV=0
-    pad_uv_image=1
-    ;time_cut=[2,-2]
-    snapshot_healpix_export=1
-    ;snapshot_recalculate=1
-    recalculate_all=1
-    subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
-    ALLOW_SIDELOBE_MODEL_SOURCES =1
-    ALLOW_SIDELOBE_CAL_SOURCES =1
-    return_sidelobe_catalog=1
-    undefine, diffuse_calibrate, diffuse_model
-    saved_run_bp=1
-  ;double memory, time
-  end
-  'nb_decon_July2016_presidelobe_Oct23_EoR1': begin
-    max_sources=200000
-    calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
-    ;dft_threshold=1
-    gain_factor=0.1
-    deconvolve=1
-    return_decon_visibilities=1
-    smooth_width=32
-    deconvolution_filter='filter_uv_uniform'
-    filter_background=1
-    dimension=2048
-    return_cal_visibilities=0
-    FoV=0
-    pad_uv_image=1
-    ;time_cut=[2,-2]
-    snapshot_healpix_export=1
-    ;snapshot_recalculate=1
-    ;recalculate_all=1
-    subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
-    ALLOW_SIDELOBE_MODEL_SOURCES =1
-    ALLOW_SIDELOBE_CAL_SOURCES =1
-    return_sidelobe_catalog=1
-    undefine, diffuse_calibrate, diffuse_model
-    saved_run_bp=1
-    grid_recalculate=1
-  ;double memory, time
-  end
-  'nb_decon_July2016_presidelobe_CenA': begin
-    max_sources=200000
-    calibration_catalog_file_path=filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
-    ;dft_threshold=1
-    gain_factor=0.1
-    deconvolve=1
-    return_decon_visibilities=1
-    smooth_width=32
-    deconvolution_filter='filter_uv_uniform'
-    filter_background=1
-    dimension=2048
-    return_cal_visibilities=0
-    FoV=0
-    pad_uv_image=1
-    ;time_cut=[2,-2]
-    snapshot_healpix_export=1
-    ;snapshot_recalculate=1
-    ;recalculate_all=1
-    subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_181_consistent.sav'
-    ALLOW_SIDELOBE_MODEL_SOURCES =1
-    ALLOW_SIDELOBE_CAL_SOURCES =1
-    return_sidelobe_catalog=1
-    undefine, diffuse_calibrate, diffuse_model
-    saved_run_bp=0
-    calibration_flux_threshold = .1
-    grid_recalculate=1
-    uvfits_version=5
-    uvfits_subversion=1
-  ;double memory, time
-  end
-  'nb_decon_July2016_presidelobe_Oct24low': begin
-    max_sources=200000
-    calibration_catalog_file_path=filepath('GLEAMIDR4_158_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
-    ;dft_threshold=1
-    gain_factor=0.1
-    deconvolve=1
-    return_decon_visibilities=1
-    smooth_width=32
-    deconvolution_filter='filter_uv_uniform'
-    filter_background=1
-    dimension=2048
-    return_cal_visibilities=0
-    FoV=0
-    pad_uv_image=1
-    ;time_cut=[2,-2]
-    snapshot_healpix_export=1
-    ;snapshot_recalculate=1
-    recalculate_all=1
-    subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAMIDR4_158_consistent.sav'
-    ALLOW_SIDELOBE_MODEL_SOURCES =1
-    ALLOW_SIDELOBE_CAL_SOURCES =1
-    return_sidelobe_catalog=1
-    undefine, diffuse_calibrate, diffuse_model
-    calibration_flux_threshold = .05
-    saved_run_bp=1
-  ;double memory, time
-  end
-  
-  'nb_bubble_test': begin
-    in_situ_sim_input = '/nfs/mwa-00/h1/nbarry/'
-    calibrate_visibilities=0
-    model_visibilities=1
-    max_model_sources=100
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-  end
-  'nb_model_large_bandwidth_fullsource_eor': begin
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    enhance_eor=1
-    nfreq_avg=384
-    eor_savefile = '/nfs/eor-00/h1/nbarry/'
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
   'nb_model_large_bandwidth_fullsource_2017': begin
     calibrate_visibilities=0
     model_visibilities=1
@@ -768,7 +524,8 @@ pro eor_firstpass_versions
     model_delay_filter=1
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
-  'nb_model_phase2': begin
+  'nb_model_goldenset': begin
+    debug_beam_clip_floor=1
     calibrate_visibilities=0
     model_visibilities=1
     unflag_all=1
@@ -777,55 +534,60 @@ pro eor_firstpass_versions
     return_cal_visibilities=0
     undefine, diffuse_model, diffuse_calibrate
     nfreq_avg=384
-    cal_time_average=1
-    eor_savefile = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/calibration_sim/bubbles/'
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_large_bandwidth_fullsource_2017_4096': begin
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    dimension=4096
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    nfreq_avg=384
-    cal_time_average=0
     model_delay_filter=1
+    ;eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/'
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
-  'nb_model_large_bandwidth_fullsource_2017_gauss_norm': begin
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
+  'nb_sim_goldenset': begin
+    in_situ_sim_input = '/nfs/mwa-04/r1/EoRuvfits/analysis/fhd_nb_model_goldenset'
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;calibrate_visibilities=0
+    debug_beam_clip_floor=1
+    max_calibration_sources=4000
+    nfreq_avg=384
+    sim_over_calibrate=1
+    undefine, diffuse_model, diffuse_calibrate
     recalculate_all=1
     mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    nfreq_avg=384
-    cal_time_average=0
-    debug_gauss=1
-    ;psf_dim=1
-    model_delay_filter=1
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+    healpix_recalculate=1
+        model_delay_filter=1
+    ;eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/'
+    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
-  'nb_model_large_bandwidth_fullsource_2017_psfdim20_v2': begin
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
+  'nb_sim_goldenset_bubbles': begin
+    in_situ_sim_input = '/nfs/mwa-04/r1/EoRuvfits/analysis/fhd_nb_model_goldenset'
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;calibrate_visibilities=0
+    debug_beam_clip_floor=1
+    max_calibration_sources=4000
+    nfreq_avg=384
+    sim_over_calibrate=1
+    undefine, diffuse_model, diffuse_calibrate
+    cal_mode_fit=0
     recalculate_all=1
     mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    nfreq_avg=384
-    psf_dim=20.
-    debug_dim=1
-    cal_time_average=0
-    model_delay_filter=1
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+    healpix_recalculate=1
+        model_delay_filter=1
+    eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/fhd_nb_goldenset_bubbles/vis_data/'
+    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
-  
+  'nb_sim_goldenset_bubbles_perf': begin
+    in_situ_sim_input = '/nfs/mwa-04/r1/EoRuvfits/analysis/fhd_nb_model_goldenset'
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    ;calibrate_visibilities=0
+    debug_beam_clip_floor=1
+    max_calibration_sources=4000
+    nfreq_avg=384
+    sim_perf_calibrate=1
+    undefine, diffuse_model, diffuse_calibrate
+    cal_mode_fit=0
+    recalculate_all=1
+    mapfn_recalculate=0
+    healpix_recalculate=1
+        model_delay_filter=1
+    eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/fhd_nb_goldenset_bubbles/vis_data/'
+    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+  end
   'nb_model_large_bandwidth_fullsource_2017_nosidelobes': begin
     calibrate_visibilities=0
     model_visibilities=1
@@ -841,389 +603,7 @@ pro eor_firstpass_versions
     allow_sidelobe_cal_sources=0
     allow_sidelobe_model_sources=0
   end
-  'nb_model_beam_ref': begin
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_beam_ref': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_ref'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_debug_beam_clip_grow': begin
-    debug_beam_clip_grow=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_debug_beam_clip_grow_thresh': begin
-    debug_beam_clip_grow=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    beam_mask_threshold=1e3
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_debug_beam_clip_grow_thresh': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_grow_thresh'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_grow=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    beam_mask_threshold=1e3
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_debug_beam_clip_grow': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_grow'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_grow=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_debug_clip_beam_mask': begin
-    debug_clip_beam_mask=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_debug_beam_clip_floor': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_debug_beam_clip_floor_thresh': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    beam_mask_threshold=1e3
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_debug_beam_clip_floor_384': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    nfreq_avg=384
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_debug_beam_clip_floor_1': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    nfreq_avg=1
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-
-  'nb_model_beam_debug_beam_clip_floor_384_delay': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    nfreq_avg=384
-    model_delay_filter=1
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_floor_384_delay': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_floor_384_delay'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-       nfreq_avg=384
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_floor_1_delay': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_floor_1_delay'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-       nfreq_avg=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_floor_384_delay_full': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    nfreq_avg=384
-    model_delay_filter=1
-    model_catalog_file_path = filepath('uniform_full.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_floor_384_delay_full_nobt': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    nfreq_avg=384
-    model_delay_filter=1
-    beam_threshold=0
-    model_catalog_file_path = filepath('uniform_full.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_floor_384_delay_primary': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('uniform_primary.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_floor_384_delay_nulls': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('uniform_nulls.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_floor_384_delay_sidelobe': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('uniform_sidelobe.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_floor_384_delay_negative_primary': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('uniform_negative_primary.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_floor_384_delay_negative_nulls': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('uniform_negative_nulls.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_floor_384_delay_negative_sidelobe': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('uniform_negative_sidelobe.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  
-    'nb_sim_floor_384_delay_negative_primary_nobt': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full_nobt'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-        beam_threshold=0
-    calibration_catalog_file_path=filepath('uniform_negative_primary.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_floor_384_delay_negative_nulls_nobt': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full_nobt'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-        beam_threshold=0
-    calibration_catalog_file_path=filepath('uniform_negative_nulls.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_floor_384_delay_negative_sidelobe_nobt': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_floor_384_delay_full_nobt'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-        nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    beam_threshold=0
-    calibration_catalog_file_path=filepath('uniform_negative_sidelobe.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-
-  'nb_model_beam_debug_beam_clip_floor_1_delay': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    nfreq_avg=1
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
   'nb_test': begin
-    instrument = ['hera','paper']
-    inst_tile_ptr = PTRARR(2,/allocate)
-    *inst_tile_ptr[0] = INDGEN(126)
-    *inst_tile_ptr[1] = [126,127]
-    undefine, diffuse_model, diffuse_calibrate
-  end
-  'nb_model_beam_debug_beam_clip_floor_delay': begin
     debug_beam_clip_floor=1
     calibrate_visibilities=0
     model_visibilities=1
@@ -1233,74 +613,8 @@ pro eor_firstpass_versions
     return_cal_visibilities=0
     undefine, diffuse_model, diffuse_calibrate
     cal_time_average=0
-    model_delay_filter=1
+    beam_mask_threshold = 1e3
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_flagged_best2': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    ;unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=2
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
- 'nb_sim_beam_flagged_best2': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_flagged_best2'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=2
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_beam_flagged_best4': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    ;unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=4
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
- 'nb_sim_beam_flagged_best4': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_flagged_best4'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=4
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
   'nb_model_beam_flagged_best8': begin
     debug_beam_clip_floor=1
@@ -1350,700 +664,69 @@ pro eor_firstpass_versions
     nfreq_avg=16
     model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
- 'nb_sim_beam_flagged_best16_navg1': begin
+ 'nb_sim_beam_flagged_best16_bubbles': begin
     in_situ_sim_input = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_model_beam_flagged_best16'
+    eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/fhd_nb_goldenset_bubbles/vis_data/'
     ;calibrate_visibilities=0
     ;model_visibilities=1
     max_calibration_sources=4000
     debug_beam_clip_floor=1
     model_delay_filter=1
     beam_mask_threshold=1e3
-    perf_calibrate=1
+    sim_perf_calibrate=1
     undefine, diffuse_model, diffuse_calibrate
     recalculate_all=1
     mapfn_recalculate=0
     healpix_recalculate=1
     nfreq_avg=16
-    n_avg=1
+    ;n_avg=384
+    cal_mode_fit=0
     ;cal_time_average=1 ;reseting the gains makes this unnecessary
     ;model_delay_filter=1
     calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
-  'nb_model_beam_best1': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=1
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
- 'nb_sim_beam_best1': begin
-    in_situ_sim_input = '/nfs/eor-10/r1/EoRuvfits/analysis/fhd_nb_model_beam_best1'
+ 'nb_sim_beam_flagged_best16_bubbles_flagmodel': begin
+    in_situ_sim_input = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_model_beam_flagged_best16'
+    eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/fhd_nb_goldenset_bubbles/vis_data/'
     ;calibrate_visibilities=0
     ;model_visibilities=1
     max_calibration_sources=4000
     debug_beam_clip_floor=1
     model_delay_filter=1
     beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_model_beam_best2': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=2
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
- 'nb_sim_beam_best2': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_best2'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=2
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_model_beam_best4': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=4
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_beam_best4': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_best4'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=4
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-   'nb_model_beam_best6': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=6
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-
-  'nb_sim_beam_best6': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_best6'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=6
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-   'nb_model_beam_best8': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=8
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  'nb_sim_beam_best8': begin
-    in_situ_sim_input = '/nfs/eor-11/r1/EoRuvfits/analysis/fhd_nb_model_beam_best8'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=8
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-   'nb_model_beam_best12': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=12
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  'nb_sim_beam_best12': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_best12'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=12
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  
-   'nb_model_beam_softedge': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=384
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_beam_softedge': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_softedge'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-     
-  
-   'nb_model_beam_best16': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=16
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-   'nb_model_beam_best8_thresh': begin
-    debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    interpolate_threshold=1
-    unflag_all=1
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=8
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  'nb_sim_beam_best8_thresh': begin
-    in_situ_sim_input = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_model_beam_best8_thresh'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=8
-    interpolate_threshold=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end  
-      
-  'nb_sim_beam_best16': begin
-    in_situ_sim_input = '/nfs/mwa-11/r1/EoRuvfits/analysis/fhd_nb_model_beam_best16'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    perf_calibrate=1
+    sim_perf_calibrate=1
     undefine, diffuse_model, diffuse_calibrate
     recalculate_all=1
     mapfn_recalculate=0
     healpix_recalculate=1
     nfreq_avg=16
+    ;n_avg=384
+    cal_mode_fit=0
     ;cal_time_average=1 ;reseting the gains makes this unnecessary
     ;model_delay_filter=1
     calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
   end
-      
-  'nb_model_beam_debug_beam_clip_floor_thresh_res200': begin
+ 'nb_sim_beam_flagged_best16_bubbles_overfit': begin
+    in_situ_sim_input = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_model_beam_flagged_best16'
+    eor_savefile = '/nfs/mwa-04/r1/EoRuvfits/analysis/calibration_sim/fhd_nb_goldenset_bubbles/vis_data/'
+    ;calibrate_visibilities=0
+    ;model_visibilities=1
+    max_calibration_sources=4000
     debug_beam_clip_floor=1
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    cal_time_average=0
+    model_delay_filter=1
     beam_mask_threshold=1e3
-    psf_resolution=200
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_debug_beam_clip_floor_thresh_res200': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_floor_thresh_res200'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    perf_calibrate=1
+    sim_over_calibrate=1
     undefine, diffuse_model, diffuse_calibrate
     recalculate_all=1
     mapfn_recalculate=0
     healpix_recalculate=1
-    beam_mask_threshold=1e3
-    psf_resolution=200
+    nfreq_avg=16
+    ;n_avg=384
+    cal_mode_fit=0
     ;cal_time_average=1 ;reseting the gains makes this unnecessary
     ;model_delay_filter=1
     calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_debug_beam_clip_floor': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_floor'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_debug_beam_clip_floor_1': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_floor_1'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_debug_beam_clip_floor_384': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_floor_384'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    nfreq_avg=384
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_debug_beam_clip_floor_thresh': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_floor_thresh'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    beam_mask_threshold=1e3
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-    'nb_sim_debug_beam_clip_floor_delay': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_beam_debug_beam_clip_floor_delay'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    debug_beam_clip_floor=1
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    ;cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  'nb_sim_delay_4000_2017_nosidelobes': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_nosidelobes'
-    allow_sidelobe_cal_sources=0
-    allow_sidelobe_model_sources=0
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_delay_4000_2017_4096': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_4096'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    dimension=4096
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  'nb_sim_delay_4000_2017': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  'nb_sim_phase2_all_perf': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_phase2'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    ;max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    eor_savefile = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/calibration_sim/bubbles/'
-  end
-  'nb_sim_phase2_4000_perf': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_phase2'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    eor_savefile = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/calibration_sim/bubbles/'
-  end
-  'nb_sim_phase2_4000_over': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_phase2'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    over_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    ;model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    eor_savefile = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/calibration_sim/bubbles/'
-  end
-  
-  'nb_sim_delay_4000_2017_psfdim20_v2': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_psfdim20_v2'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    psf_dim=20.
-    debug_dim=1
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_delay_4000_2017_gauss': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_gauss'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    debug_gauss=1
-    ;psf_dim=1
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_sim_delay_4000_2017_gauss_norm': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_gauss_norm'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    debug_gauss=1
-    ;psf_dim=1
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_model_large_bandwidth_fullsource_2017_400psf': begin
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    nfreq_avg=384
-    cal_time_average=0
-    model_delay_filter=1
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    psf_resolution=400
-  end
-  'nb_sim_delay_4000_2017_400psf': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_400psf'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    psf_resolution=400
-  end
-  'nb_model_large_bandwidth_fullsource_2017_600psf': begin
-    calibrate_visibilities=0
-    model_visibilities=1
-    unflag_all=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-    undefine, diffuse_model, diffuse_calibrate
-    nfreq_avg=384
-    cal_time_average=0
-    model_delay_filter=1
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    psf_resolution=600
-  end
-  
-  'nb_sim_delay_4000_2017_600psf': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017_600psf'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    psf_resolution=600
-  end
-  'nb_sim_delay_4000_2017_largecube': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_2017'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    max_calibration_sources=4000
-    nfreq_avg=384
-    perf_calibrate=1
-    undefine, diffuse_model, diffuse_calibrate
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    cal_time_average=1 ;reseting the gains makes this unnecessary
-    model_delay_filter=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-  end
-  
-  'nb_sim_delay_all_eor': begin
-    in_situ_sim_input = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_model_large_bandwidth_fullsource_eor'
-    ;calibrate_visibilities=0
-    ;model_visibilities=1
-    ;max_calibration_sources=4000
-    nfreq_avg=384
-    undefine, diffuse_model, diffuse_calibrate
-    enhance_eor=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    healpix_recalculate=1
-    calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  
-  'nb_tenth_beam_threshold': begin
-    undefine, diffuse_calibrate, diffuse_model
-    saved_run_bp=0
-    beam_cal_threshold=0.001 ;tenth of a percent
-    cal_time_average=0
-    recalculate_all=1
-    mapfn_recalculate=0
-        calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-  end
+  end      
   'nb_four_tenths_beam_threshold': begin
     undefine, diffuse_calibrate, diffuse_model
     saved_run_bp=0
@@ -2053,60 +736,6 @@ pro eor_firstpass_versions
     mapfn_recalculate=0
         calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
     model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-  end
-    'nb_eight_tenths_beam_threshold': begin
-    undefine, diffuse_calibrate, diffuse_model
-    saved_run_bp=0
-    beam_cal_threshold=0.008 ;five tenths of a percent
-    cal_time_average=0
-        recalculate_all=1
-    mapfn_recalculate=0
-        calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-  end
-
-  'nb_baseline_cut_50_2017_beam': begin
-    ;transfer_calibration = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_pre_baseline_cut/calibration/1061316296_cal.sav'
-    undefine, diffuse_calibrate, diffuse_model
-    saved_run_bp=1
-    max_baseline=50.
-    calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    save_uvf=1
-    save_imagecube=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-  end
-  'nb_baseline_cut_80_2017': begin
-    transfer_calibration = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/calibration/1061316296_cal.sav'
-    model_visibilities=1
-    undefine, diffuse_calibrate, diffuse_model
-    max_baseline=80.
-    model_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
-    save_uvf=1
-    save_imagecube=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    return_cal_visibilities=0
-  end
-  'nb_fhd_amp_cal': begin
-    ;rts_cal=1
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-  end
-  'nb_rts_amp_cal': begin
-    rts_cal=1
-    saved_run_bp=0
-    ;recalculate_all=1
-    ;mapfn_recalculate=0
-    undefine, diffuse_calibrate, diffuse_model
-  end
-  'nb_rts_amp_cal_fit2': begin
-    fit_rts_cal=1
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-  ;   recalculate_all=1
-  ;mapfn_recalculate=0
   end
   'nb_2013longrun': begin
     saved_run_bp=0
@@ -2131,110 +760,6 @@ pro eor_firstpass_versions
     ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
     cal_time_average=0
     snapshot_recalculate=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_gleam_sidelobe_16': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_16perbrighter.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_16perbrighter.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-
-  'nb_notimeavg_gleam_sidelobe_16_ssextended': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_16percentbrighter_ssextended_20.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_16percentbrighter_ssextended_20.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_gleam_sidelobe_20_ssextended': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_20percentbrighter_ssextended_20.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_20percentbrighter_ssextended_20.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_241_ssextended': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/KGS_ssextended_241.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/KGS_ssextended_241.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_241_all': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_241_ssextended_all': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_241_ssextended_all_deaddipoles': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-    flag_dead_dipoles=1
-  end
-    'nb_notimeavg_kgs': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
     mapfn_recalculate=0
   end
   'nb_2014zenith_calonly': begin
@@ -2280,31 +805,10 @@ pro eor_firstpass_versions
     cal_stop=1
     time_cut=-4
   end
-  'nb_2013zenith_test_nostop': begin
+  'nb_Aug2017_std': begin
     saved_run_bp=0
     undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
-    recalculate_all=1
-    mapfn_recalculate=0
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=8
-    ;phase_longrun=1 ;add to github
-    jump_longrun=1 
-    no_ref_tile=1
-    ;cal_stop=1
-    time_cut=-4
-  end
-  'nb_2013zenith_test_stop': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
+    uvfits_version=4
     uvfits_subversion=1
     ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
     cal_time_average=0
@@ -2320,7 +824,181 @@ pro eor_firstpass_versions
     nfreq_avg=8
     ;phase_longrun=1 ;add to github
     jump_longrun=1 
-    no_ref_tile=1
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_Aug2017_globalbp': begin
+    saved_run_bp=0
+    cable_bandpass_fit=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    ;recalculate_all=1
+    ;mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_Aug2017_savedbp': begin
+    saved_run_bp=1
+    cable_bandpass_fit=1
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    ;recalculate_all=1
+    ;mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_Aug2017_savedbp_branchrun': begin
+    cal_bp_transfer = 1
+    cable_bandpass_fit=1
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    ;recalculate_all=1
+    ;mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    ;digital_gain_jump_polyfit=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+    cal_reflection_mode_theory=150
+    cal_reflection_hyperresolve=1
+  end
+  'nb_Aug2017_autocal2': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    ;model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    ;model_delay_filter=1
+    channel_edge_flag_width=2
+    calibration_auto_fit=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    digital_gain_jump_polyfit=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_2013longrun_std': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+  'nb_Aug2017_aveamp': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    ;tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
+    amp_longrun=1
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
+    ;cal_stop=1
+    time_cut=-4
+  end
+    'nb_Aug2017_aveampphase_dayref_tileflag': begin
+    saved_run_bp=0
+    undefine, diffuse_calibrate, diffuse_model
+    uvfits_version=4
+    uvfits_subversion=1
+    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
+    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/cal_prerun/vis_data'
+    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
+    amp_longrun=1
+    phase_longrun=2
+    recalculate_all=1
+    mapfn_recalculate=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    beam_mask_threshold=1e3
+    nfreq_avg=8
+    ;phase_longrun=1 ;add to github
+    jump_longrun=1 
+    ;no_ref_tile=1
     ;cal_stop=1
     time_cut=-4
   end
@@ -2368,411 +1046,80 @@ pro eor_firstpass_versions
     ;time_cut=[2,-2]
     ;cal_stop=1
   end
-    'nb_autos': begin
-    saved_run_bp=0
+  'nb_eor0clusteredall': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('eor0clusteredall.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
     undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+        recalculate_all=1
     mapfn_recalculate=0
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    ;nfreq_avg=8
-    ;phase_longrun=1 ;add to github
-    jump_longrun=1 
-    ;no_ref_tile=1
-    calibration_auto_fit=1
-    ;time_cut=[2,-2]
-    cal_stop=1
-  end
-    'nb_autos5': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    ;nfreq_avg=8
-    ;phase_longrun=1 ;add to github
-    jump_longrun=1 
-    ;no_ref_tile=1
-    calibration_auto_fit=1
-    ;time_cut=[2,-2]
-    cal_stop=1
-  end
-      'nb_autos_2': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    ;cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-       model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos/cal_prerun/vis_data'
-    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos/beams'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    ;nfreq_avg=8
-    ;phase_longrun=1 ;add to github
-    jump_longrun=1 
-    ;no_ref_tile=1
-    calibration_auto_fit=1
-    ;time_cut=[2,-2]
-    cal_stop=1
-  end
-      'nb_autos_3': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    ;cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    ;   model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos/cal_prerun/vis_data'
-    ;transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos/beams'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-    debug_beam_clip_floor=1
-    ;model_delay_filter=1
-    beam_mask_threshold=1e3
-    ;nfreq_avg=8
-    ;phase_longrun=1 ;add to github
-    jump_longrun=1 
-    ;no_ref_tile=1
-    ;calibration_auto_fit=1
-    ;time_cut=[2,-2]
-    cal_stop=1
-  end  
-    'nb_autos5_2': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    ;cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-       model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos5/cal_prerun/vis_data'
-    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_autos5/beams'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    ;nfreq_avg=8
-    ;phase_longrun=1 ;add to github
-    jump_longrun=1 
-    ;no_ref_tile=1
-    calibration_auto_fit=1
-    ;time_cut=[2,-2]
-    cal_stop=1
-  end
-    'nb_bart_test': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=5
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_241brighter_ssextended.sav'
-    ;model_transfer='/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_bart_test/vis_data'
-    transfer_psf='/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_bart_test/beams'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-    debug_beam_clip_floor=1
-    model_delay_filter=1
-    beam_mask_threshold=1e3
-    nfreq_avg=16
-    ;phase_longrun=1 ;add to github
-    ;jump_longrun=1 
-    ;no_ref_tile=1
-    ;time_cut=[2,-2]
-    ;cal_stop=1
-  end
-  'nb_notimeavg_ssextended': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_catalog_file_path='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/master_sgal_cat_ssextended.sav'
-    ;model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_16perbrighter.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_ssextended_16': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_catalog_file_path='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/master_sgal_cat_ssextended_16.sav'
-    ;model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_16perbrighter.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_ssextended_20': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    calibration_catalog_file_path='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/master_sgal_cat_ssextended_20.sav'
-    ;model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_16perbrighter.sav'
-    ;calibration_flux_threshold = .1
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  
-  'nb_notimeavg_delaymodel': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    ;recalculate_all=1
-    mapfn_recalculate=0
-    model_delay_filter=1
-    snapshot_recalculate=1
-  end
-  'nb_notimeavg_delaymodel_quarter': begin
-    saved_run_bp=0
-    kbinsize=.25
-    dimension=4096
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    ;recalculate_all=1
-    mapfn_recalculate=0
-    model_delay_filter=1
-    snapshot_recalculate=1
-    ps_kbinsize=.25
-  end
-  'nb_notimeavg_selected_cal_cableave': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    flag_calibration=0
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/1061316296_flags.sav'
-    debug_selected_cal=1
-  end
-  'nb_notimeavg_selected_cal_amp': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    flag_calibration=0
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/'+strtrim(obs_id,2)+'_flags.sav'
-    debug_selected_cal=1
-    cable_bandpass_fit=0
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_selected_cal': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    flag_calibration=0
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/'+strtrim(obs_id,2)+'_flags.sav'
-    debug_selected_cal=2
-    cable_bandpass_fit=0
-    recalculate_all=1
-    mapfn_recalculate=0
-    bandpass_calibrate=0
-  end
-  'nb_notimeavg_cal': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    flag_calibration=0
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/'+strtrim(obs_id,2)+'_flags.sav'
-    cable_bandpass_fit=0
-    bandpass_calibrate=0
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_notimeavg_cal_cableave': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    flag_calibration=0
-    transfer_weights ='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/'+strtrim(obs_id,2)+'_flags.sav'
-  end
-  'nb_notimeavg_cal_cableave_flippedbeam_calconstrained': begin
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    debug_flip=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    ;cal_time_average=0
-    recalculate_all=1
-    mapfn_recalculate=0
-    flag_calibration=0
-    transfer_weights ='/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/'+strtrim(obs_id,2)+'_flags.sav'
-    transfer_calibration = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_notimeavg_cal_cableave/calibration/'+strtrim(obs_id,2)+'_cal.sav'
+  end 
+    'nb_eor0clusteredall_clustercal': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('eor0clusteredall.sav',root=rootdir('FHD'),subdir='catalog_data')
+    model_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
     model_visibilities=1
-    model_catalog_file_path = filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
-  end
-  'nb_notimeavg_selected_cal_cableave_zero': begin
-    zero_debug_cal=2
-    saved_run_bp=0
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
     undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    flag_calibration=0
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/1061316296_flags.sav'
-  end
-  'nb_notimeavg_selected_cal_zero': begin
-    zero_debug_cal=1
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=0
-    flag_calibration=0
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/1061316296_flags.sav'
-    cable_bandpass_fit=0
-  end
-  'nb_selected_cal_zero2': begin
-    debug_selected_cal=2
-    over_calibrate=1
-    saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
-    cal_time_average=1
-    flag_calibration=0
-    ;transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/vis_data/1061316296_flags.sav'
-    cable_bandpass_fit=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    bandpass_calibrate=1
-    healpix_recalculate=1
-  ;recalculate_all=1
-  ;mapfn_recalculate=0
-  end
-  'nb_longrun_cal_amponly3': begin
-    longrun_cal=1
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=0
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+        recalculate_all=1
     mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-  end
-  'nb_longrun_cal_ampphase2': begin
-    longrun_cal=1
-    ;cal_time_average=0
+  end  
+      'nb_eor0clusteredall_clustermodel': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    model_catalog_file_path = filepath('eor0clusteredall.sav',root=rootdir('FHD'),subdir='catalog_data')
+    model_visibilities=1
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
     undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+        recalculate_all=1
+    mapfn_recalculate=0
+  end  
+  'nb_eor0clustered': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('eor0_clustered_comp.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+    undefine, diffuse_calibrate, diffuse_model
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
     recalculate_all=1
     mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    phase_longrun=1
-  end
-  'nb_longrun_cal_ampphase2_dig': begin
-    longrun_cal=1
-    ;cal_time_average=0
+  end  
+  'nb_eor0clustered_points': begin
+  uvfits_version = 5
+    uvfits_subversion = 1
+    saved_run_bp = 0
+    calibration_catalog_file_path = filepath('eor0_clustered_points.sav',root=rootdir('FHD'),subdir='catalog_data')
+    calibration_subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
     undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=1
+    ring_radius = 0
+    rephase_weights = 0
+    restrict_hpx_inds = 0
+    hpx_radius = 10
+        recalculate_all=1
     mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    phase_longrun=1
-    jump_longrun=1
-  end
-  'nb_longrun_cal_phaseaveref': begin
-    longrun_cal=1
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    phase_longrun=1
-    jump_longrun=1
-  end
-  'nb_phaseaveref_full': begin
-    ;longrun_cal=1
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    phase_longrun=1
-    ;jump_longrun=1
-    saved_run=0
-    ave_ref=1
-  end
-  
-  'nb_longrun_cal_amp_dig': begin
-    longrun_cal=1
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    ;phase_longrun=1
-    jump_longrun=1
-  end
+  end 
   'nb_notileref': begin
     ;longrun_cal=1
     cal_time_average=0 ;to match longrun
@@ -2787,74 +1134,6 @@ pro eor_firstpass_versions
     no_ref_tile = 1
     cal_stop=1
   ;jump_longrun=1
-  end
-  'nb_longrun_cal_amp_dig_conv': begin
-    longrun_cal=1
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    ;phase_longrun=1
-    jump_longrun=1
-  end
-  'nb_longrun_cal_amp_dig_conv_lowerband': begin
-    longrun_cal=1
-    saved_run_bp=0
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    ;phase_longrun=1
-    ;jump_longrun=1
-    ;max_calibration_sources=2
-    freq_start=167.0
-    freq_end=187.475
-  end
-  'nb_longrun_cal_amp_dig_zeroend': begin
-    longrun_cal=1
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    ;phase_longrun=1
-    jump_longrun=1
-  end
-  'nb_longrun_cal_amp_dig_zeroend3': begin
-    longrun_cal=1
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    recalculate_all=1
-    mapfn_recalculate=0
-    undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    ;phase_longrun=1
-    jump_longrun=1
-  end
-  'nb_longrun_cal_amp_dig_hyperfine': begin
-    longrun_cal=1
-    ;cal_time_average=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-    ;firstpass_model_recalculate = 0
-    recalculate_all=1
-    mapfn_recalculate=0
-    ;undefine, cal_cable_reflection_correct,cal_cable_reflection_fit,cal_cable_reflection_mode_fit
-    mode_debug=1
-    jump_longrun=1
-    cal_cable_reflection_fit=[-400,-524]
-  ;force_data=1
-  ;restore_last=1
   end
   'nb_channel_7': begin ;run on 1061313496
     save_imagecube=1
@@ -2881,52 +1160,6 @@ pro eor_firstpass_versions
     mapfn_recalculate=0
     image_filter_fn='filter_uv_natural'
   end
-  'nb_channel_7_midobs2': begin ;run on 1061313496
-    save_imagecube=1
-    save_uvf=1
-    split_ps_export=1
-    freq_end = 187
-    freq_start = 181
-    time_cut=[54,-56] ;2seconds before the middle
-    ;flag_visibilities=1
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_July2016_presidelobe/vis_data/1061313496_flags.sav'
-    transfer_calibration = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_July2016_presidelobe/calibration/1061313496_cal.sav'
-    recalculate_all=1
-    mapfn_recalculate=0
-    image_filter_fn='filter_uv_natural'
-  end
-  'nb_channel_7_midobs4': begin ;run on 1061313496
-    save_imagecube=1
-    save_uvf=1
-    split_ps_export=1
-    freq_end = 187
-    freq_start = 181
-    time_cut=[52,-58] ;4seconds before the middle
-    ;flag_visibilities=1
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_July2016_presidelobe/vis_data/1061313496_flags.sav'
-    transfer_calibration = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_July2016_presidelobe/calibration/1061313496_cal.sav'
-    recalculate_all=1
-    mapfn_recalculate=0
-    image_filter_fn='filter_uv_natural'
-  end
-  'nb_guardlow_channel_7': begin ;run on 1061313496
-    save_imagecube=1
-    save_uvf=1
-    split_ps_export=1
-    freq_end = 181
-    freq_start = 175
-    transfer_weights = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_July2016_presidelobe/vis_data/1061313496_flags.sav'
-    transfer_calibration = '/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_decon_July2016_presidelobe/calibration/1061313496_cal.sav'
-    recalculate_all=1
-    mapfn_recalculate=0
-  end
-  'nb_time_cut': begin
-    time_cut=[2,-2]
-       saved_run_bp=0
-    undefine, diffuse_calibrate, diffuse_model
-    uvfits_version=4
-    uvfits_subversion=1
-  end  
   
   
   ;;; Patti's versions!!! Only Patti may edit this section!!!
@@ -3741,7 +1974,6 @@ pro eor_firstpass_versions
   
 endcase
 
-
 case version of 
 
   'nb_test': begin
@@ -3793,6 +2025,8 @@ fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=outp
 healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
 
 extra=var_bundle() ; bundle all the variables into a structure
+
+fhd_depreciation_test, _Extra=extra
 
 print,""
 print,"Keywords set in wrapper:"

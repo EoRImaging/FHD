@@ -19,86 +19,114 @@ IF not Keyword_Set(cal_plot_charsize) THEN cal_plot_charsize=0.5
 IF not Keyword_Set(cal_plot_symsize) THEN cal_plot_symsize=1
 IF not Keyword_Set(cal_plot_resize) THEN cal_plot_resize=100.
 no_ps=1
-
 IF Keyword_Set(no_ps) THEN ext_name='.png' ELSE ext_name='.ps'
-phase_filename=file_path_base+'_cal_phase'+ext_name
-amp_filename=file_path_base+'_cal_amp'+ext_name
-auto_filename=file_path_base+'_cal_autocorr'+ext_name
-res_filename=file_path_base+'_cal_residual'+ext_name
-res_real_im_filename0=file_path_base+'_cal_residual_'+pol_names[0]+ext_name
-res_real_im_filename1=file_path_base+'_cal_residual_'+pol_names[1]+ext_name
-orig_amp_filename=file_path_base+'_cal_unfit_'+ext_name
-vis_hist_filename=file_path_base+'_cal_hist'+ext_name
-IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
-gains0 = *cal.gain[0] ; save on typing
-IF n_pol GT 1 THEN gains1 = *cal.gain[1]
+page_tile_max = 128.
+page_num = ceil(n_tiles/page_tile_max)
 
-gains0=gains0[freq_i_use,*]
-IF n_pol GT 1 THEN gains1=gains1[freq_i_use,*]
-freq=cal.freq[freq_i_use]
-freq=freq/10^6. ; in MHz
+;Make multiple plot pages if there are a large number of tiles
+for file_i=0, page_num-1 do begin
+  
+    if page_num GT 1 then pagename='_page' + strtrim(file_i,2) else pagename=''
 
-plot_pos=calculate_plot_positions(.8, nplots=128, /no_colorbar, ncol=17, nrow=9, plot_margin = [.05, .05, .02, .25]); use 1 extra row/column to leave room for title and axes
-plot_pos=reform(plot_pos.plot_pos,17,9,4)
-; Now remove unwanted row/column
-plot_pos = plot_pos[1:*,*,*]
-plot_pos = plot_pos[*,1:*,*]
-plot_pos = reform(plot_pos,128,4)
-; Shift a half a width over and up
-width = plot_pos[1,0]-plot_pos[0,0]
-height = abs(plot_pos[16,1]-plot_pos[0,1])
-plot_pos[*,0] -= width/2
-plot_pos[*,1] += height/2
-plot_pos[*,2] -= width/2
-plot_pos[*,3] += height/2
+    phase_filename=file_path_base+'_cal_phase'+pagename+ext_name
+    amp_filename=file_path_base+'_cal_amp'+pagename+ext_name
+    auto_filename=file_path_base+'_cal_autocorr'+pagename+ext_name
+    res_filename=file_path_base+'_cal_residual'+pagename+ext_name
+    res_real_im_filename0=file_path_base+'_cal_residual_'+pol_names[0]+pagename+ext_name
+    res_real_im_filename1=file_path_base+'_cal_residual_'+pol_names[1]+pagename+ext_name
+    orig_amp_filename=file_path_base+'_cal_unfit'+pagename+ext_name
+    vis_hist_filename=file_path_base+'_cal_hist'+ext_name
+    IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
-n_baselines=obs.nbaselines
-tile_A=obs2.tile_A[0:n_baselines-1]
-tile_B=obs2.tile_B[0:n_baselines-1]
-tile_exist=(histogram(tile_A,min=1,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=1,/bin,max=(max(tile_A)>max(tile_B))))<1
-
-;plot fitted phase solutions
-plot_cals_sub,freq,gains0,gains1,filename=phase_filename,/phase,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-    obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
-
-;plot fitted amplitude solutions
-plot_cals_sub,freq,gains0,gains1,filename=amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-    obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
+    gains0 = *cal.gain[0] ; save on typing
+    IF n_pol GT 1 THEN gains1 = *cal.gain[1]
+    gains0=gains0[freq_i_use,*]
+    IF n_pol GT 1 THEN gains1=gains1[freq_i_use,*]
     
-IF Keyword_Set(cal_auto) THEN BEGIN
-    gains0_auto = (*cal_auto.gain[0])[freq_i_use,*] ; save on typing
-    IF n_pol GT 1 THEN gains1_auto = (*cal_auto.gain[1])[freq_i_use,*]
-    plot_cals_sub,freq,gains0_auto,gains1_auto,filename=auto_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+    if page_num GT 1 then begin
+        gains0=gains0[*,file_i*page_tile_max:(file_i+1)*page_tile_max<(size(gains0))[2]-1]
+        IF n_pol GT 1 THEN gains1=gains1[*,file_i*page_tile_max:(file_i+1)*page_tile_max<(size(gains1))[2]-1]
+    endif
+    
+    freq=cal.freq[freq_i_use]
+    freq=freq/10^6. ; in MHz
+
+    plot_pos=calculate_plot_positions(.8, nplots=page_tile_max, /no_colorbar, ncol=17, nrow=ceil(page_tile_max/16.)+1, plot_margin = [.05, .05, .02, .25]); use 1 extra row/column to leave room for title and axes
+    plot_pos=reform(plot_pos.plot_pos,17,ceil(page_tile_max/16.)+1,4)
+    ; Now remove unwanted row/column
+    plot_pos = plot_pos[1:*,*,*]
+    plot_pos = plot_pos[*,1:*,*]
+    plot_pos = reform(plot_pos,page_tile_max,4)
+    ; Shift a half a width over and up
+    width = plot_pos[1,0]-plot_pos[0,0]
+    height = abs(plot_pos[16,1]-plot_pos[0,1])
+    plot_pos[*,0] -= width/2
+    plot_pos[*,1] += height/2
+    plot_pos[*,2] -= width/2
+    plot_pos[*,3] += height/2
+
+    n_baselines=obs.nbaselines
+    tile_A=obs2.tile_A[0:n_baselines-1]
+    tile_B=obs2.tile_B[0:n_baselines-1]
+    tile_exist=(histogram(tile_A,min=1,/bin,max=(max(tile_A)>max(tile_B)))+histogram(tile_B,min=1,/bin,max=(max(tile_A)>max(tile_B))))<1
+
+    if page_num GT 1 then begin
+        tile_names=cal.tile_names[file_i*page_tile_max:(file_i+1)*page_tile_max<(size(cal.tile_names))[1]-1]
+        tile_use=obs2.tile_use[file_i*page_tile_max:(file_i+1)*page_tile_max<(size(obs2.tile_use))[1]-1]
+        tile_exist=tile_exist[file_i*page_tile_max:(file_i+1)*page_tile_max<(size(tile_exist))[1]-1]
+    endif
+
+    ;plot fitted phase solutions
+    plot_cals_sub,freq,gains0,gains1,filename=phase_filename,/phase,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+        obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+
+    ;plot fitted amplitude solutions
+    plot_cals_sub,freq,gains0,gains1,filename=amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
         obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
-ENDIF
-
-IF Keyword_Set(res_gain_arr) THEN BEGIN
-    gains0_res=*res_gain_arr[0]
-    gains0_res=gains0_res[freq_i_use,*]
     
-    gains0_orig=gains0_res+gains0
-    gains0_res_abs=Abs(gains0_orig)-Abs(gains0)
-    IF n_pol GT 1 THEN BEGIN    
-        gains1_res=*res_gain_arr[1]
-        gains1_res=gains1_res[freq_i_use,*]
-        gains1_orig=gains1_res+gains1
-        gains1_res_abs=Abs(gains1_orig)-Abs(gains1)
-        max_amp_res = mean(abs([gains0_res_abs,gains1_res_abs])) + 3*stddev(abs([gains0_res_abs,gains1_res_abs]))
-    ENDIF ELSE max_amp_res = mean(abs(gains0_res_abs)) + 3*stddev(abs(gains0_res_abs))
-    
-    ;plot amplitude residuals
-    IF max_amp_res GT 0 THEN BEGIN
-        plot_cals_sub,freq,gains0_orig,gains1_orig,filename=orig_amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+    IF Keyword_Set(cal_auto) THEN BEGIN
+        gains0_auto = (*cal_auto.gain[0])[freq_i_use,*] ; save on typing
+        IF n_pol GT 1 THEN gains1_auto = (*cal_auto.gain[1])[freq_i_use,*]
+        if page_num GT 1 then begin
+            gains0_auto=gains0_auto[*,file_i*page_tile_max:(file_i+1)*page_tile_max<(size(gains0_auto))[2]-1]
+            IF n_pol GT 1 THEN gains1_auto=gains1_auto[*,file_i*page_tile_max:(file_i+1)*page_tile_max<(size(gains1_auto))[2]-1]
+        endif
+        plot_cals_sub,freq,gains0_auto,gains1_auto,filename=auto_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
             obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
-        plot_cals_sub,freq,gains0_res_abs,gains1_res_abs,filename=res_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
-        plot_cals_sub,freq,gains0_res,filename=res_real_im_filename0,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
-        IF n_pol GT 1 THEN plot_cals_sub,freq,gains1_res,filename=res_real_im_filename1,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
-            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
     ENDIF
-ENDIF
+
+    IF Keyword_Set(res_gain_arr) THEN BEGIN
+        gains0_res=*res_gain_arr[0]
+        gains0_res=gains0_res[freq_i_use,*]
+        
+        if page_num GT 1 then gains0_res=gains0_res[*,file_i*page_tile_max:(file_i+1)*page_tile_max<(size(gains0_res))[2]-1]
+    
+        gains0_orig=gains0_res+gains0
+        gains0_res_abs=Abs(gains0_orig)-Abs(gains0)
+        IF n_pol GT 1 THEN BEGIN    
+            gains1_res=*res_gain_arr[1]
+            gains1_res=gains1_res[freq_i_use,*]
+            if page_num GT 1 then gains1_res=gains1_res[*,file_i*page_tile_max:(file_i+1)*page_tile_max<(size(gains1_res))[2]-1]
+            gains1_orig=gains1_res+gains1
+            gains1_res_abs=Abs(gains1_orig)-Abs(gains1)
+            max_amp_res = mean(abs([gains0_res_abs,gains1_res_abs])) + 3*stddev(abs([gains0_res_abs,gains1_res_abs]))
+        ENDIF ELSE max_amp_res = mean(abs(gains0_res_abs)) + 3*stddev(abs(gains0_res_abs))
+    
+        ;plot amplitude residuals
+        IF max_amp_res GT 0 THEN BEGIN
+            plot_cals_sub,freq,gains0_orig,gains1_orig,filename=orig_amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+                obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
+            plot_cals_sub,freq,gains0_res_abs,gains1_res_abs,filename=res_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+                obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
+            plot_cals_sub,freq,gains0_res,filename=res_real_im_filename0,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+                obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
+            IF n_pol GT 1 THEN plot_cals_sub,freq,gains1_res,filename=res_real_im_filename1,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+                obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
+        ENDIF
+    ENDIF
+    
+ENDFOR
 
 IF size(vis_baseline_hist,/type) EQ 8 THEN BEGIN
    ratio=vis_baseline_hist.vis_res_ratio_mean ; just save some typing
