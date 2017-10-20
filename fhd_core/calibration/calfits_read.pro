@@ -31,11 +31,11 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   data_types = STRARR(naxis)
   for naxis_i=0, naxis - 1  do data_types[naxis_i] = strtrim(sxpar(data_header0,'ctype'+strtrim((naxis_i+1),2)),2) ;type of each data axis
   ;Find out which axis is which
-  data_index = where(strmatch(data_types, 'Narrays', /FOLD_CASE) EQ 1)
-  ant_index = where(strmatch(data_types, 'antaxis', /FOLD_CASE) EQ 1)
-  freq_index = where(strmatch(data_types, 'freqs', /FOLD_CASE) EQ 1)
-  time_index = where(strmatch(data_types, 'time', /FOLD_CASE) EQ 1)
-  jones_index = where(strmatch(data_types, 'jones', /FOLD_CASE) EQ 1)
+  data_index = Min(where(strmatch(data_types, 'Narrays', /FOLD_CASE) EQ 1))
+  ant_index = Min(where(strmatch(data_types, 'antaxis', /FOLD_CASE) EQ 1))
+  freq_index = Min(where(strmatch(data_types, 'freqs', /FOLD_CASE) EQ 1))
+  time_index = Min(where(strmatch(data_types, 'time', /FOLD_CASE) EQ 1))
+  jones_index = Min(where(strmatch(data_types, 'jones', /FOLD_CASE) EQ 1))
   data_narray = sxpar(data_header0,strjoin('crval'+strtrim((data_index+1),2))) ;real(gain), imag(gain), flags, (optional input flags), quality
   freq_start = sxpar(data_header0,strjoin('crval'+strtrim((freq_index+1),2)))
   time_start = sxpar(data_header0,strjoin('crval'+strtrim((time_index+1),2)))
@@ -50,7 +50,7 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   if ~keyword_set(gain_convention) then gain_convention = 'divide' ;default of the gain convention if undefined
   
   ;Check whether the number of polarizations specified matches the observation analysis run
-  jones_type_matrix = INTARR(data_dims[1])
+  jones_type_matrix = LONARR(data_dims[1])
   for jones_i=1, data_dims[1] do jones_type_matrix[jones_i-1] = jones_start+(jones_delt*jones_i)
   IF data_dims[1] GT obs.n_pol then begin
     if ~keyword_set(silent) then print, 'More polarizations in calibration fits file than in observation analysis. Reducing calibration to match obs.'
@@ -87,17 +87,18 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
     if freq_factor GT 1 then begin
       if ~keyword_set(silent) then print, 'Calfits input freq channel width is different by a factor of ' + strtrim(freq_factor,2) + '. Averaging down.'
       
-      ;Zero flagged data, and set those indices to NAN to remove them from mean calculation
-      data_array[0,*,*,*,*] *= abs(data_array[2,*,*,*,*]-1.)
-      data_array[1,*,*,*,*] *= abs(data_array[2,*,*,*,*]-1.)
-      zeros = where(data_array EQ 0,n_count)
-      data_array[zeros] = !VALUES.F_NAN
+      ;Set flagged indices to NAN to remove them from mean calculation
+      flag_inds = where(abs(reform(data_array[2,*,*,*,*])) EQ 1, n_flags) ;value of 1 is flagged data
+      for real_imag_i=0,1 do begin
+        data_array_temp = reform(data_array[real_imag_i,*,*,*,*])
+        if n_flags GT 0 then data_array_temp[flag_inds] = !VALUES.F_NAN
+        data_array[real_imag_i,*,*,*,*] = temporary(data_array_temp)
+      endfor
       
       data_array_temp = DBLARR(data_dims[0],data_dims[1],data_dims[2],obs.n_freq,data_dims[4])
       for channel_i=0, obs.n_freq -1 do data_array_temp[*,*,*,channel_i,*] = $
         mean(data_array[*,*,*,(channel_i*freq_factor-floor(freq_factor/2.))>0:channel_i*freq_factor+floor(freq_factor/2.),*],/NAN)
-      data_array = data_array_temp
-      undefine, data_array_temp
+      data_array = temporary(data_array_temp)
       
     ;Upselect the data array
     endif else if freq_factor LT 1 then begin
@@ -108,8 +109,7 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
         for channel_i=0, n_freq -2 do data_array_temp[data_i,jones_i,times_i,channel_i*(1./freq_factor):(channel_i+1)*(1./freq_factor)-1,tile_i] = $
         interpolate(reform(data_array[data_i,jones_i,times_i,channel_i:channel_i+1,tile_i]),FLTARR(1./freq_factor)*freq_factor)
       data_array_temp[*,*,*,obs.n_freq-1,*] = data_array[*,*,*,n_freq-1,*]
-      data_array = data_array_temp
-      undefine, data_array_temp
+      data_array = temporary(data_array_temp)
     endif
   endif
   ;*********
@@ -117,7 +117,11 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   ;*********Check to see what time range this needs to be applied to, and if pointings are necessary
   if n_time NE 1 then begin
   
-    If ((time_integration LT 2000.) AND (time_integration GT 1600.)) OR ((time_delt LT 2000.) AND (time_delt GT 1600.)) then begin
+    sec_upperlimit = 2000.
+    sec_lowerlimit = 1600.
+    
+    If ((time_integration LT sec_upperlimit) AND (time_integration GT sec_lowerlimit)) OR $
+      ((time_delt LT sec_upperlimit) AND (time_delt GT sec_lowerlimit)) then begin
       ;Calibration fits are per-pointing
       obs_pointing = mwa_get_pointing_number(obs)
       obs_julian_date = obs.astr.mjdobs + 2400000.5D
@@ -135,11 +139,11 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
       if (pointing_jdhms_calfits GT (max(pointing_jdhms_ref) + (pointing_jdhms_ref[1] - pointing_jdhms_ref[0]))) OR $
         (pointing_jdhms_calfits LT (min(pointing_jdhms_ref) - (pointing_jdhms_ref[1] - pointing_jdhms_ref[0]))) then $
         message, 'Calfits does not start between five-pointings-before-zenith and four-pointings-after-zenith. Not suitable for pointing cal at this time.'
-      pointing_calfits_start = pointing_num_ref[pointing_calfits_index]
+      pointing_calfits_start = pointing_num_ref[pointing_calfits_index] ;find which pointing is the start of the calfits data
       if obs_pointing LT pointing_calfits_start then message, 'Calfits file does not contain pointing of obsid'
-      obs_pointing_index = abs(pointing_calfits_start - obs_pointing)
+      obs_pointing_index = abs(pointing_calfits_start - obs_pointing) ;select pointing index in calfits that matches observation
       
-      data_array = data_array[*,*,obs_pointing_index,*,*]
+      data_array = data_array[*,*,obs_pointing_index,*,*] ;choose the corresponding pointing from the calfits data array
       
     endif else begin
       IF (floor(time_delt) EQ floor(obs.time_res)) then begin
@@ -152,8 +156,11 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
         ;Calibration fits are for a random set of times
         if ~keyword_set(silent) then print, 'Finding closest match in time between calfits and obs. Obs metadata assumed to report start time, calfits metadata assumed to report center time.'
         time_array = DBLARR(n_time)
-        for time_i=0, n_time-1 do time_array[time_i] = time_start + ((time_integration/60D/60D)/24D)
+        time_delta = ((time_integration/60D/60D)/24D)
+        for time_i=0, n_time-1 do time_array[time_i] = time_start + time_delta
         obs_julian_date = obs.astr.mjdobs + 2400000.5D + (double((obs.n_time * obs.time_res)/2.)/60D/60D)/24D
+        if (obs_julian_date LT (time_array[0]-2.*time_delta)) OR (obs_julian_date GT (time_array[n_time-1]+2.*time_delta)) then $
+          message, 'Observation does not seem to fit within the time frame of the calfits'
         temp = Min(Abs(obs_julian_date - time_array), time_index) ;find the closest index between calfits and observation
         data_array = data_array[*,*,time_index,*,*]
       endelse
@@ -171,7 +178,7 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   
   ;return the proper format
   cal=fhd_struct_init_cal(obs,params,skymodel,_Extra=extra)
-  for pol_i=0, obs.n_pol-1 do (*cal.gain[pol_i])[*,*] = reform(data_array[0,pol_i,0,*,*]) + Complex(0,1)*reform(data_array[1,pol_i,0,*,*]) 
+  for pol_i=0, obs.n_pol-1 do (*cal.gain[pol_i])[*,*] = reform(data_array[0,pol_i,0,*,*]) + Complex(0,1)*reform(data_array[1,pol_i,0,*,*])
   
   t_readfits=Systime(1)-t_readfits
   if ~keyword_set(silent) then print,"Time reading calfits files: "+Strn(t_readfits)
