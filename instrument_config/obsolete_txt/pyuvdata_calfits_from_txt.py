@@ -51,8 +51,7 @@ index400 = np.where(cable_length == 400)
 index524 = np.where(cable_length == 524)
 ###
 
-for poi_i in range(len(poi_array)):
-	poi = poi_array[poi_i]
+for poi_i, poi in enumerate(poi_array)):
 
 	### Get cable fits
 	#

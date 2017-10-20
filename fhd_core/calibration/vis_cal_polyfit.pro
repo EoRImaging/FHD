@@ -4,8 +4,9 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     no_phase_calibration=no_phase_calibration,digital_gain_jump_polyfit=digital_gain_jump_polyfit,_Extra=extra
     
   IF Keyword_Set(cal_reflection_mode_theory) OR Keyword_Set(cal_reflection_mode_file) $
-    OR Keyword_Set(cal_reflection_mode_delay) OR Keyword_Set(cal_reflection_hyperresolve) AND $
-    (cal.mode_fit EQ 0) THEN cal.mode_fit=1.
+    OR Keyword_Set(cal_reflection_mode_delay) OR Keyword_Set(cal_reflection_hyperresolve) THEN BEGIN
+    IF (cal.mode_fit EQ 0) THEN cal.mode_fit=1.
+  ENDIF
   cal_mode_fit=cal.mode_fit
   IF (cal_mode_fit EQ 1) AND keyword_set(cal_reflection_mode_theory) then $
     if (abs(cal_reflection_mode_theory) GT 1) then cal_mode_fit = cal_reflection_mode_theory
@@ -30,7 +31,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
   c_light=299792458.
   i_comp=Complex(0,1)
   cal_return=cal
-  FOR pol_i=0,n_pol-1 DO cal_return.gain[pol_i]=Ptr_new(*cal.gain[pol_i]) ;essential, to keep original cal gains from being overwritten!
+  cal_return.gain=Pointer_copy(*cal.gain) ;essential, to keep original cal gains from being overwritten!
   
   ;Find any steps (i.e digital gain jumps) that are outliers beyond 5sigma, and remove them
   IF Keyword_Set(cal_step_fit) THEN BEGIN
@@ -111,7 +112,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     logic_test = keyword_set(cal_reflection_mode_file) + keyword_set(cal_reflection_mode_theory) + keyword_set(cal_reflection_mode_delay)
     if logic_test GT 1 then begin
       print, 'More than one nominal mode-fitting procedure specified for calibration reflection fits. Using cal_reflection_mode_theory'
-      undefine, cal_reflection_mode_file, cal_reflection_mode_delay
+      cal_reflection_mode_file = 0
+      cal_reflection_mode_delay = 0
       cal_reflection_mode_theory = 1
     endif
     if logic_test EQ 0 then begin

@@ -5,7 +5,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     return_cal_visibilities=return_cal_visibilities,silent=silent,initial_calibration=initial_calibration,$
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,$
-    calibration_auto_fit=calibration_auto_fit,debug_selected_cal=debug_selected_cal,cal_stop=cal_stop, model_transfer=model_transfer,$
+    calibration_auto_fit=calibration_auto_fit,cal_stop=cal_stop, model_transfer=model_transfer,$
     sim_over_calibrate=sim_over_calibrate,debug_phase_longrun=debug_phase_longrun,sim_perf_calibrate=sim_perf_calibrate,$
     debug_ave_ref=debug_ave_ref,debug_amp_longrun=debug_amp_longrun,_Extra=extra
     
@@ -175,15 +175,6 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     endif  
     t3_a=Systime(1)
     t2+=t3_a-t2_a
-  
-    if keyword_set(debug_selected_cal) then begin
-        ;cal_selected=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/selected_cal/noave.sav','cal_sel')
-        cal_selected=getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/selected_cal/noave_zeroed.sav','updated_cal')
-        filename2='/nfs/eor-00/h1/nbarry/MWA/IDL_code/obs_list/Aug23.txt'
-        readcol, filename2, obs_ids, format='A', /silent
-        obs_id_current = where(obs_ids EQ obs.obsname)
-        for pol_i=0,1 do (*cal.gain[pol_i]) = reform(abs(cal_selected[pol_i,obs_id_current,*,*])) * exp(Complex(0,1)*atan((*cal.gain[pol_i]),/phase))
-    endif
 
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
     IF Keyword_Set(n_tile_cut) THEN BREAK
@@ -214,20 +205,22 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
 
   ;In-situ simulation -- forced calibration solutions
   if keyword_set(sim_over_calibrate) then begin
-    *cal.gain[0] = (*cal_base.gain[0]); + atan(*cal.gain[0],/phase)
-    *cal.gain[1] = (*cal_base.gain[1]); + atan(*cal.gain[1],/phase)
+    *cal.gain[0] = (*cal_base.gain[0])
+    *cal.gain[1] = (*cal_base.gain[1])
   endif
   if keyword_set(sim_perf_calibrate) then begin
-    *cal.gain[0] = 1.
-    *cal.gain[1] = 1.
+    (*cal.gain[0])[*,*] = 1.
+    (*cal.gain[1])[*,*] = 1.
   endif
 
   if keyword_set(debug_phase_longrun) then begin
-    longrun_phase = getvar_savefile('/nfs/mwa-10/r1/EoRuvfits/analysis/ave_cals/full_ave_phase_dayref.sav','phase_mean_pointing') ;384, 5, 2, 128
+    if ~file_test(debug_phase_longrun) then message, 'debug_phase_longrun file not found. Set to filepath of save file' 
+    longrun_phase = getvar_savefile(debug_phase_longrun,'phase_mean_pointing') ;384, 5, 2, 128
     pointing_num=mwa_get_pointing_number(obs,/string)
     poi_name = ['-2','-1','0','1','2']
     poi = where(pointing_num EQ poi_name)
       
+    cal_base.mode_fit=0  
     cal_polyfit1 = vis_cal_polyfit(cal_base,obs)
       
     *cal.gain[0] = abs(*cal.gain[0])*exp(Complex(0,1)*( atan((*cal_polyfit1.gain[0]),/phase)+reform(longrun_phase[*,poi,0,*])))
@@ -235,13 +228,14 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   endif
 
   if keyword_set(debug_amp_longrun) then begin
-    longrun_gain = getvar_savefile('/nfs/mwa-10/r1/EoRuvfits/analysis/ave_cals/full_ave_amp.sav','amp_mean_obs3') ;384, 5, 2, 128
+    if ~file_test(debug_amp_longrun) then message, 'debug_amp_longrun file not found. Set to filepath of save file' 
+    longrun_gain = getvar_savefile(debug_amp_longrun,'amp_mean_obs3') ;384, 5, 2, 128
     pointing_num=mwa_get_pointing_number(obs,/string)
     poi_name = ['-2','-1','0','1','2']
     poi = where(pointing_num EQ poi_name)
       
     cal_base.amp_degree = 4
-    cal_polyfit2 = vis_cal_polyfit(cal_base,obs,jump_longrun=1)
+    cal_polyfit2 = vis_cal_polyfit(cal_base,obs,digital_gain_jump_polyfit=1)
       
     *cal.gain[0] = abs(*cal_polyfit2.gain[0])*abs(reform(longrun_gain[*,poi,0,*]))*exp(Complex(0,1)* atan((*cal.gain[0]),/phase) ) 
     *cal.gain[1] = abs(*cal_polyfit2.gain[1])*abs(reform(longrun_gain[*,poi,1,*]))*exp(Complex(0,1)* atan((*cal.gain[1]),/phase) )
