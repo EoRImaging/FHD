@@ -23,83 +23,10 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
   nt_use=N_Elements(tile_use)
   n_pol=N_Elements(gain_arr_ptr)
   
-  ;Select out the uvfits versions that did not apply a sub-bandpass to the data
-;  IF keyword_set(uvfits_version) AND keyword_set(uvfits_subversion) then begin
-;    If (uvfits_version EQ 5) AND (uvfits_subversion EQ 1) then begin
-;    
-;      ;Setup is for the Levine memo
-;      bp_filename = filepath('bandpass_Levine.txt',root=rootdir('FHD'),subdir='instrument_config')
-;      readcol, bp_filename, memo_bp_gains
-;      
-;      ;The memo gains have 128 fine frequency channels, so break the fine frequencies into sets that fit the data resolution
-;      range_memo_low = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ 0)
-;      range_memo_high = where((findgen(128) mod ULONG(obs.freq_res / 10000.)) EQ ULONG(obs.freq_res / 10000.)-1)
-;      
-;      ;Average the memo gains in sets to create the correct freq resolution
-;      num_bp_channels = ULONG(1.28E6 / obs.freq_res)
-;      ave_bp_gains = FLTARR(num_bp_channels)
-;      for channel_i=0,num_bp_channels-1 do $
-;        ave_bp_gains[channel_i] = mean(memo_bp_gains[range_memo_low[channel_i]:range_memo_high[channel_i]])
-;      ;Create bandpass effects over the whole band
-;      ave_bp_gains_fullband = ave_bp_gains
-;      for band_i=1,n_freq/num_bp_channels-1 do ave_bp_gains_fullband = [ave_bp_gains_fullband,ave_bp_gains]
-;      
-;      ;Apply the bandpass values to the input gains. Calibration solutions are applied via division to the gains 
-;      ;after cal solutions are found, so apply these gains by multiplication.
-;      for pol_i=0,n_pol-1 do $
-;        for tile_i=0, n_tile-1 do $
-;          (*gain_arr_ptr[pol_i])[*,tile_i] = (*gain_arr_ptr[pol_i])[*,tile_i] * ave_bp_gains_fullband
-;      
-;    endif
-;  endif
-  
   ;restoring saved bandpass
   If keyword_set(cal_bp_transfer) then begin
-    if cal_bp_transfer EQ 1 then begin
-      cal_bp_transfer = filepath('mwa_eor0_highband_season1_cable_bandpass.fits',root=rootdir('FHD'),subdir='instrument_config')
-      print, 'cal_bp_transfer defaulting to ' + cal_bp_transfer
-    endif else if file_test(cal_bp_transfer) EQ 0 THEN message, cal_bp_transfer + ' not found.'
-
-    print, 'Bandpass saved run activated, using ' + cal_bp_transfer
-    CASE StrLowCase(Strmid(cal_bp_transfer[0],3,/reverse)) OF
-    
-      ;can use a cal sav file to restore a bandpass
-      '.sav':BEGIN
-        cal_bandpass=getvar_savefile(cal_bp_transfer,'cal')
-        IF ~Keyword_Set(cal_bandpass.cal_origin) THEN cal_bandpass.cal_origin=cal_bp_transfer
-        cal_bandpass=fhd_struct_init_cal(obs,params,calibration_origin=cal_bandpass.cal_origin,gain_arr_ptr=cal_bandpass.gain,_Extra=extra)
-        cal_remainder=cal
-        for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
-        Return, cal_bandpass
-      END
-        
-      ;can use a txt file to read-in a gain array or a 13x384 cable bandpass (obsolete, please use cal fits)  
-      '.txt':BEGIN
-        textfast,gain_arr,/read,file_path=cal_bp_transfer
-        if ~keyword_set(cable_bandpass_fit) AND (size(gain_arr))[1] NE 13 then begin
-          textfast,gain_arr,/read,file_path=cal_bp_transfer
-          gain_arr_ptr=Ptr_new(gain_arr)
-          cal_bandpass=fhd_struct_init_cal(obs,params,calibration_origin=cal_bp_transfer,gain_arr_ptr=gain_arr_ptr,_Extra=extra)
-          cal_remainder=cal
-          for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
-          Return, cal_bandpass
-        endif else begin 
-          bandpass_saved_sol = gain_arr ;columns are: freq_arr_input, cable90xx, cable90yy, cable150xx, cable150yy, cable230xx, cable230yy, cable320xx, cable320yy, cable400xx, cable400yy, cable524xx, cable524yy
-        endelse
-      END
-        
-      ;can use a calfits file
-      'fits':BEGIN
-        cal_bandpass = calfits_read(cal_bp_transfer,obs,params,silent=silent,_Extra=extra)
-        cal_remainder=cal
-        for pol_i=0, n_pol-1 do *cal_remainder.gain[pol_i]=(*cal.gain[pol_i])/(*cal_bandpass.gain[pol_i])
-        Return, cal_bandpass
-      END
-          
-    ENDCASE
-
+    RETURN, transfer_bandpass(cal_bp_transfer,obs,params,silent=silent,_Extra=extra)
   endif
-
   
   ;Initialize arrays
   gain_arr_ptr2=Ptrarr(n_pol,/allocate)
