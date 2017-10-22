@@ -1,4 +1,4 @@
-function transfer_bandpass, cal_bp_transfer,obs,params,silent=silent,_Extra=extra
+function transfer_bandpass, cal_bp_transfer,cal,obs,params,silent=silent,cal_remainder=cal_remainder,_Extra=extra
 
     if cal_bp_transfer EQ 1 then begin
       cal_bp_transfer = filepath('mwa_eor0_highband_season1_cable_bandpass.fits',root=rootdir('FHD'),subdir='instrument_config')
