@@ -31,7 +31,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
   c_light=299792458.
   i_comp=Complex(0,1)
   cal_return=cal
-  cal_return.gain=Pointer_copy(*cal.gain) ;essential, to keep original cal gains from being overwritten!
+  cal_return.gain=Pointer_copy(cal.gain) ;essential, to keep original cal gains from being overwritten!
   
   ;Find any steps (i.e digital gain jumps) that are outliers beyond 5sigma, and remove them
   IF Keyword_Set(cal_step_fit) THEN BEGIN
