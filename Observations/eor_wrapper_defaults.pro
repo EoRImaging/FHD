@@ -47,7 +47,7 @@ PRO eor_wrapper_defaults,extra
   bandpass_calibrate=1
   calibration_polyfit=2
   no_restrict_cal_sources=1
-  cal_cable_reflection_fit=150
+  cal_reflection_mode_theory=150
   restrict_hpx_inds=1
   
   kbinsize=0.5
@@ -62,8 +62,7 @@ PRO eor_wrapper_defaults,extra
   
   ; even newer defaults
   export_images=1
-  ;cal_cable_reflection_correct=150
-  cal_cable_reflection_mode_fit=150
+  cal_reflection_hyperresolve=150
   model_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data')
   model_visibilities=0
   return_cal_visibilities=1
@@ -75,7 +74,7 @@ PRO eor_wrapper_defaults,extra
   ;New defaults - July2015
   diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
   cable_bandpass_fit=1
-  saved_run_bp=1
+  cal_bp_transfer=1
   
   ;Defaults added - July2016
   cal_amp_degree_fit=2
