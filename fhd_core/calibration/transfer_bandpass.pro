@@ -1,5 +1,7 @@
 function transfer_bandpass, cal_bp_transfer,cal,obs,params,silent=silent,cal_remainder=cal_remainder,_Extra=extra
 
+    n_pol=cal.n_pol
+
     if cal_bp_transfer EQ 1 then begin
       cal_bp_transfer = filepath('mwa_eor0_highband_season1_cable_bandpass.fits',root=rootdir('FHD'),subdir='instrument_config')
       if ~keyword_set(silent) then print, 'cal_bp_transfer defaulting to ' + cal_bp_transfer
