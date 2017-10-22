@@ -53,22 +53,6 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
        endif 
     ENDFOR
     
-    ;Reload a saved bandpass by pointing for a specific pointing. Currently only capable of golden set. (Is this still true?)
-    If keyword_set(cal_bp_transfer) then begin
-      ;parse out which pointing the obsid is in
-      pointing_num=mwa_get_pointing_number(obs,/string)
-      
-      ;saved bandpass location
-      If mean(freq_arr) LT 165.e6 THEN bandsuffix='_lowband' ELSE bandsuffix=''
-      filename=filepath(pointing_num+'_bandpass_2013longrun_Jan2017'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
-      if (file_test(filename) EQ 0) then filename = filepath(pointing_num+'_bandpass'+bandsuffix+'.txt',root=rootdir('FHD'),subdir='instrument_config')
-      
-      print, 'Bandpass saved run activated, using ' + filename
-      
-      ;reinstate the saved solution into the proper format for replacing bandpass_single later
-      textfast,bandpass_saved_sol,/read,file=filename ;columns are: freq_arr_input, cable90xx, cable90yy, cable150xx, cable150yy, cable230xx, cable230yy, cable320xx, cable320yy, cable400xx, cable400yy, cable524xx, cable524yy
-    endif
-    
     ;n_freq x 13 array. columns are frequency, 90m xx, 90m yy, 150m xx, 150m yy, 230m xx, 230m yy, 320m xx, 320m yy, 400m xx, 400m yy, 524m xx, 524m yy
     bandpass_arr=Fltarr((n_pol)*n_cable+1,n_freq)
     bandpass_arr[0,*]=freq_arr
