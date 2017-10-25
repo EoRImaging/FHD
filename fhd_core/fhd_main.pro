@@ -10,7 +10,8 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     return_decon_visibilities=return_decon_visibilities, snapshot_healpix_export=snapshot_healpix_export, cmd_args=cmd_args, log_store=log_store,$
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
-    in_situ_sim_input=in_situ_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise=sim_noise,cal_stop=cal_stop,_Extra=extra
+    in_situ_sim_input=in_situ_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise=sim_noise,cal_stop=cal_stop, $
+    remove_sim_flags=remove_sim_flags,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -53,7 +54,7 @@ IF data_flag LE 0 THEN BEGIN
           hdr=hdr,params=params,calibration_catalog_file_path=calibration_catalog_file_path, $
           diffuse_calibrate=diffuse_calibrate,transfer_calibration=transfer_calibration,freq_start=freq_start,$
           freq_end=freq_end,tile_flag_list=tile_flag_list,deproject_w_term=deproject_w_term,dft_threshold=dft_threshold,$
-          _Extra=extra
+          remove_sim_flags=remove_sim_flags,_Extra=extra
     
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
         IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
@@ -90,7 +91,7 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF
     
     ;Bypass main flagging for in situ simulations
-    If ~keyword_set(in_situ_sim_input) then $
+    If ~keyword_set(remove_sim_flags) then $
         vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
            freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,_Extra=extra)
     vis_weights_update,vis_weights,obs,psf,params,_Extra=extra

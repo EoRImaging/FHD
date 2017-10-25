@@ -5,12 +5,11 @@ function vis_noise_simulation, cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol 
 	;Clear important variables
 	undefine, random_arr, real_noise, imaginary_noise
 	
-	;Restore the obs structure to get the noise standard deviation per visibility, and set it to the mean
+	;Restore the obs structure to get the noise standard deviation per visibility
 	vis_noise  =*obs.vis_noise
-	freq_use = where((*obs.baseline_info).freq_use)
-	tile_use = where((*obs.baseline_info).tile_use)
+	;freq_use = where((*obs.baseline_info).freq_use)
+	;tile_use = where((*obs.baseline_info).tile_use)
 	n_freq = obs.n_freq
-	vis_noise[*,*] = mean(vis_noise[freq_use,tile_use])
 	
 	undefine, obs
 	

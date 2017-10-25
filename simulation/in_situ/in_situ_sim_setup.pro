@@ -3,7 +3,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 		hdr=hdr, params=params, calibration_catalog_file_path=calibration_catalog_file_path, $
 		diffuse_calibrate=diffuse_calibrate,transfer_calibration=transfer_calibration,freq_start=freq_start, $
 		freq_end=freq_end,tile_flag_list=tile_flag_list,deproject_w_term=deproject_w_term,dft_threshold=dft_threshold, $
-		_Extra=extra
+		remove_sim_flags=remove_sim_flags,_Extra=extra
 		
 	print, "Performing in-situ simulation"
 	
@@ -68,7 +68,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 	vis_arr=temporary(vis_model_arr)
 	
 	;Remove all weighting to remove pfb effects and flagged channels. Remove calibration flagging.
-	for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
+	if keyword_set(remove_sim_flags) then for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
 	flag_calibration=0
 	
 	;restore EoR visibilities
@@ -113,11 +113,14 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 	If keyword_set(sim_noise) then begin
 	
 		if total(file_test(sim_noise)) GT 0 then begin
-			;Restore the noise visibilities
+			;Restore or create the noise visibilities
 			void = getvar_savefile(sim_noise,names=names)
-			vis_noise = getvar_savefile(sim_noise,names)
-		;Or create the noise visibilities
-		endif else vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol, file_path_fhd=file_path_fhd)
+			if strmatch(names, 'obs', /FOLD_CASE) then begin
+			  obs_restore = getvar_savefile(sim_noise,strjoin((names[where(strmatch(names, 'obs', /FOLD_CASE) EQ 1)])[0]))
+			  vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs_restore, n_pol=n_pol, file_path_fhd=file_path_fhd)
+			endif else vis_noise = getvar_savefile(sim_noise,strjoin(names[0]))
+
+		endif else message, 'Need to specify either a filepath to an obs with vis_noise calculation or a noise simulation.'
 		
 		;Add the noise to the visibilities, but keeping zeroed visibilities fully zero
 		for pol_i=0, n_pol-1 do begin

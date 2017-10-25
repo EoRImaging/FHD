@@ -197,12 +197,6 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   IF Keyword_Set(vis_auto_model) THEN cal_auto=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
   IF Keyword_Set(calibration_auto_fit) THEN cal_res=vis_cal_subtract(cal_base,cal_auto) ELSE cal_res=vis_cal_subtract(cal_base,cal)
   
-  basename=file_basename(file_path_fhd)
-  dirpath=file_dirname(file_path_fhd)
-  image_path=filepath(basename,root=dirpath,sub='output_images')
-  ;make sure to plot both, if autocorrelations are used for the calibration solution
-  plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
-
   ;In-situ simulation -- forced calibration solutions
   if keyword_set(sim_over_calibrate) then begin
     *cal.gain[0] = (*cal_base.gain[0])
@@ -212,6 +206,12 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     (*cal.gain[0])[*,*] = 1.
     (*cal.gain[1])[*,*] = 1.
   endif
+  
+  basename=file_basename(file_path_fhd)
+  dirpath=file_dirname(file_path_fhd)
+  image_path=filepath(basename,root=dirpath,sub='output_images')
+  ;make sure to plot both, if autocorrelations are used for the calibration solution
+  plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
 
   if keyword_set(debug_phase_longrun) then begin
     if ~file_test(debug_phase_longrun) then message, 'debug_phase_longrun file not found. Set to filepath of save file' 
