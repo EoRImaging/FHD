@@ -50,14 +50,8 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
 ENDFOR
 n_time_cut = n_time - Total(time_use)
 
-IF Tag_exist(hdr,'freq_arr') THEN BEGIN
-    freq_res=hdr.freq_res
-    frequency_array=hdr.freq_arr
-ENDIF ELSE BEGIN
-    freq_res=hdr.freq_width
-    ;frequency_array=(findgen(n_freq)-(hdr.freq_ref_i-1))*freq_res+hdr.freq_ref ;FITS header indices start at 1
-    frequency_array=(findgen(n_freq)-(hdr.freq_ref_i))*freq_res+hdr.freq_ref ;LEAVE unchanged for now to allow comparison!
-ENDELSE
+freq_res=hdr.freq_res
+frequency_array=hdr.freq_arr
 IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=1.
 
 IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*freq_res  ;Hz
@@ -117,8 +111,8 @@ ENDIF
 freq_use=Lonarr(n_freq)+1
 tile_use=Lonarr(n_tile)+1
 
-kx_arr=params.uu#frequency_array
-ky_arr=params.vv#frequency_array
+kx_arr=Float(params.uu#frequency_array)
+ky_arr=Float(params.vv#frequency_array)
 kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr)) $
     ELSE max_baseline_use=max_baseline
@@ -185,7 +179,7 @@ ENDIF
 pol_names=['XX','YY','XY','YX','I','Q','U','V']
 healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
 
-arr={tile_A:Long(tile_A),tile_B:Long(tile_B),bin_offset:Long(bin_offset),Jdate:meta.Jdate,freq:Float(frequency_array),fbin_i:Long(freq_bin_i),$
+arr={tile_A:Long(tile_A),tile_B:Long(tile_B),bin_offset:Long(bin_offset),Jdate:meta.Jdate,freq:Double(frequency_array),fbin_i:Long(freq_bin_i),$
     freq_use:Fix(freq_use),tile_use:Fix(tile_use),time_use:Fix(time_use),tile_names:String(meta.tile_names),tile_height:Float(meta.tile_height),tile_flag:meta.tile_flag}
 struct={code_version:String(code_version),instrument:String(instrument),obsname:String(obsname),$
     dimension:Float(dimension),elements:Float(elements),nbaselines:Long(nbaselines),dft_threshold:Float(dft_threshold),double_precision:double_precision,$

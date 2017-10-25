@@ -73,10 +73,6 @@ IF Ptr_valid(model_ptr) THEN BEGIN
     ENDELSE
 ENDIF
 frequency_array=(*obs.baseline_info).freq
-freq_norm=frequency_array^(-alpha)
-;freq_norm/=Sqrt(Mean(freq_norm^2.))
-freq_norm/=Mean(freq_norm) 
-freq_norm=Float(freq_norm[fi_use])
 frequency_array=frequency_array[fi_use]
 
 complex_flag=psf.complex_flag
@@ -113,7 +109,7 @@ IF Keyword_Set(mapfn_recalculate) THEN BEGIN
 ENDIF ELSE map_flag=0
 
 dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
-dist_test=frequency_array#dist_test
+dist_test=Float(frequency_array#dist_test)
 flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
 dist_test=0
 
@@ -126,11 +122,11 @@ IF n_conj GT 0 THEN BEGIN
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
     IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
 ENDIF
-xcen=frequency_array#Temporary(kx_arr)
-ycen=frequency_array#Temporary(ky_arr)
+xcen=Float(frequency_array#Temporary(kx_arr))
+ycen=Float(frequency_array#Temporary(ky_arr))
  
-x_offset=Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution    
-y_offset=Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution 
+x_offset=Fix(Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
+y_offset=Fix(Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
 dx_arr = (xcen-Floor(xcen))*psf_resolution - Floor((xcen-Floor(xcen))*psf_resolution)
 dy_arr = (ycen-Floor(ycen))*psf_resolution - Floor((ycen-Floor(ycen))*psf_resolution)
 dx0dy0_arr = (1-dx_arr)*(1-dy_arr)
@@ -292,10 +288,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         IF n_xyf_bin GT 1 THEN xyf_ui0=[0,xyf_ui[0:n_xyf_bin-2]+1] ELSE xyf_ui0=0
         psf_weight=xyf_ui-xyf_ui0+1
          
-        vis_box1=vis_arr_use[inds];*freq_norm[freq_i]
+        vis_box1=vis_arr_use[inds]
         vis_box=vis_box1[xyf_ui]
         IF model_flag THEN BEGIN
-            model_box1=model_use[inds];*freq_norm[freq_i]
+            model_box1=model_use[inds]
             model_box=model_box1[xyf_ui]
         ENDIF
         
@@ -312,8 +308,8 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         vis_n=n_xyf_bin
     ENDIF ELSE BEGIN
         rep_flag=0
-        IF model_flag THEN model_box=model_use[inds];*freq_norm[freq_i]
-        vis_box=vis_arr_use[inds];*freq_norm[freq_i]
+        IF model_flag THEN model_box=model_use[inds]
+        vis_box=vis_arr_use[inds]
         psf_weight=Replicate(1.,vis_n)
     ENDELSE
     
