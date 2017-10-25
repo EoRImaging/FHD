@@ -46,18 +46,7 @@ IF Keyword_Set(uv_mask) THEN uv_mask_use=uv_mask ELSE uv_mask_use=Fltarr(dimensi
 uv_mask_use[*,elements/2+psf.dim:*]=0. 
 
 freq_bin_i=(*obs.baseline_info).fbin_i
-
 frequency_array=(*obs.baseline_info).freq
-
-;Save the original structures, and setup variables for a double bandwidth model
-if keyword_set(model_delay_filter) then begin
-  obs_original = replicate(obs,1)
-  params_original = replicate(params,1)
-  freq_bin_i=[INTARR(obs.n_freq/2)+freq_bin_i[0],freq_bin_i,INTARR(obs.n_freq/2)+freq_bin_i[obs.n_freq-1]]
-  for i=1,obs.n_freq/2 do frequency_array = [(*obs.baseline_info).freq[0]-obs.freq_res*i,frequency_array]
-  for i=1,obs.n_freq/2 do frequency_array = [frequency_array,(*obs.baseline_info).freq[N_elements((*obs.baseline_info).freq)-1]+obs.freq_res*i]
-endif
-
 nfreq_bin=Max(freq_bin_i)+1
 nbaselines=obs.nbaselines
 n_samples=obs.n_time
@@ -65,29 +54,23 @@ n_freq=obs.n_freq
 
 ;Set up the structures such that a double bandwidth model is made
 if keyword_set(model_delay_filter) then begin
+  obs_original = replicate(obs,1)
+  psf_original = replicate(psf,1)
+  freq_bin_i=[INTARR(obs.n_freq/2)+freq_bin_i[0],freq_bin_i,INTARR(obs.n_freq/2)+freq_bin_i[obs.n_freq-1]]
+  for i=1,obs.n_freq/2 do frequency_array = [(*obs.baseline_info).freq[0]-obs.freq_res*i,frequency_array]
+  for i=1,obs.n_freq/2 do frequency_array = [frequency_array,(*obs.baseline_info).freq[N_elements((*obs.baseline_info).freq)-1]+obs.freq_res*i]
   
+  nfreq_bin=Max(freq_bin_i)+1
   n_freq = n_freq*2
   freq_use = INTARR(n_freq) + 1
   
-  ;Setup obs structure (switch to using the init pro?)
-  arr={tile_A:(*obs.baseline_info).tile_a,tile_B:(*obs.baseline_info).tile_b,bin_offset:(*obs.baseline_info).bin_offset,Jdate:(*obs.baseline_info).Jdate,freq:Float(frequency_array),fbin_i:Long(freq_bin_i),$
-    freq_use:Fix(freq_use),tile_use:(*obs.baseline_info).tile_use,time_use:(*obs.baseline_info).time_use,tile_names:(*obs.baseline_info).tile_names,tile_height:(*obs.baseline_info).tile_height,tile_flag:(*obs.baseline_info).tile_flag}
-  obs={code_version:obs.code_version,instrument:obs.instrument,obsname:obs.obsname,$
-    dimension:obs.dimension,elements:obs.elements,nbaselines:obs.nbaselines,dft_threshold:obs.dft_threshold,double_precision:obs.double_precision,$
-    kpix:obs.kpix,degpix:obs.degpix,obsaz:obs.obsaz,obsalt:obs.obsalt,obsra:obs.obsra,obsdec:obs.obsdec,$
-    zenra:obs.zenra,zendec:obs.zendec,obsx:obs.obsx,obsy:obs.obsy,zenx:obs.zenx,zeny:obs.zeny,$
-    phasera:obs.phasera,phasedec:obs.phasedec,orig_phasera:obs.orig_phasera,orig_phasedec:obs.orig_phasedec,$
-    n_pol:obs.n_pol,n_tile:obs.n_tile,n_tile_flag:obs.n_tile_flag,n_freq:Long(n_freq),n_freq_flag:0L,n_time:obs.n_time,n_time_flag:0L,$
-    n_vis:obs.n_vis,n_vis_in:obs.n_vis_in,n_vis_raw:obs.n_vis_raw,nf_vis:obs.nf_vis,beam_integral:obs.beam_integral,pol_names:obs.pol_names,$
-    jd0:obs.jd0,max_baseline:obs.max_baseline,min_baseline:obs.min_baseline,delays:obs.delays,lon:obs.lon,lat:obs.lat,alt:obs.alt,$
-    freq_center:obs.freq_center,freq_res:obs.freq_res,time_res:obs.time_res,astr:obs.astr,alpha:obs.alpha,pflag:obs.pflag,cal:obs.cal,$
-    residual:0,vis_noise:obs.vis_noise,baseline_info:Ptr_new(arr),meta_data:obs.meta_data,meta_hdr:obs.meta_hdr,$
-    degrid_spectral_terms:obs.degrid_spectral_terms,grid_spectral_terms:obs.grid_spectral_terms,grid_info:obs.grid_info,healpix:obs.healpix}    
-  
-  psf=fhd_struct_init_psf(beam_ptr=psf.beam_ptr,fbin_i=freq_bin_i,xvals=psf.xvals,yvals=psf.yvals,$
-    n_pol=psf.n_pol,n_freq=nfreq_bin,freq_cen=obs.freq_center,group_arr=psf.id, psf_dim=psf.dim, $
-    psf_resolution = psf.resolution, complex_flag=psf.complex_flag)
-
+  updated_values = {n_freq:n_freq, freq_use:freq_use, freq:FLOAT(frequency_array), fbin_i:Long(freq_bin_i)}
+  obs = structure_update(obs,_Extra=updated_values)
+  obs.baseline_info = Pointer_copy(obs_original.baseline_info)
+  *obs.baseline_info = structure_update(*obs.baseline_info,_Extra=updated_values)
+    
+  updated_values = {n_freq:nfreq_bin, freq_use:freq_use, freq:FLOAT(frequency_array), fbin_i:Long(freq_bin_i)}
+  psf = structure_update(psf,_Extra=updated_values)
 endif
 
 n_freq_bin=N_Elements(freq_bin_i)
@@ -158,8 +141,8 @@ ENDFOR
 IF ~Keyword_Set(silent) THEN print,"Degridding timing: ",strn(t_degrid)
 
 if keyword_set(model_delay_filter) then begin  
-  ;params = replicate(params_original,1)
   vis_delay_filter, vis_arr, params, obs
+  psf = replicate(psf_original,1)
   obs = replicate(obs_original,1)
 endif
 timing=Systime(1)-t0
