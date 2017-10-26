@@ -310,8 +310,6 @@ pro rlb_fhd_versions
       FoV = 0
       pad_uv_image = 1
       snapshot_healpix_export = 1
-      snapshot_recalculate = 1
-      recalculate_all = 1
       undefine, diffuse_calibrate, diffuse_model
       rephase_weights = 0
       restrict_hpx_inds = 0
@@ -509,10 +507,9 @@ pro rlb_fhd_versions
       elements = 4096
       freq_start = 145
       freq_end = 155
+      vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2458042.12552.xx.HH.uvOR.uvfits'
     end
-    
   endcase
-  
   
   if ~keyword_set(vis_file_list) then begin
     if platform eq 'aws' then begin
