@@ -48,13 +48,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 0
@@ -109,13 +105,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
@@ -138,13 +130,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
@@ -197,13 +185,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 0
@@ -227,13 +211,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
@@ -257,13 +237,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 0
@@ -316,13 +292,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
@@ -346,13 +318,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
@@ -377,13 +345,9 @@ pro rlb_fhd_versions
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
-      smooth_width = 32
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
-      dimension = 2048
       return_cal_visibilities = 0
-      FoV = 0
-      pad_uv_image = 1
       snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
@@ -428,7 +392,6 @@ pro rlb_fhd_versions
       calibration_polyfit = 0
       bandpass_calibrate = 0
       flag_visibilities = 1
-      dimension = 4096
       elements = 4096
       vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2457458.16694.xx.uvUR.uvfits'
     end
@@ -475,11 +438,10 @@ pro rlb_fhd_versions
       calibration_polyfit = 0
       bandpass_calibrate = 0
       flag_visibilities = 0
-      dimension = 4096
       elements = 4096
       freq_start = 145
       freq_end = 155
-      vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2458042.12552.xx.HH.uvOR.uvfits'
+      vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2458042.12552.ls .uvfits'
       recalculate_all = 1
     end
   endcase
