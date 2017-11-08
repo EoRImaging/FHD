@@ -26,7 +26,7 @@ obsids=("$@")
 obs_id=${obsids[$SLURM_ARRAY_TASK_ID]}
 
 #ls $outdir > /dev/null # ping the output directory so nfs automounts
-/usr/local/bin/idl -IDL_DEVICE ps -IDL_CPU_TPOOL_NTHREADS $ncores -e sim_versions_wrapper -args $obs_id $outdir $version 
+/usr/local/bin/idl -IDL_DEVICE ps -IDL_CPU_TPOOL_NTHREADS $ncores -e sim_versions_wrapper -args $obs_id $outdir $version $sim_id 
 
 if [ $? -eq 0 ]
 then
