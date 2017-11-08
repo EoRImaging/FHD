@@ -39,15 +39,15 @@ unset resubmit_index
 #######Gathering the input arguments and applying defaults if necessary
 
 #Parse flags for inputs
-while getopts ":f:s:e:o:v:p:w:n:m:t" option
+while getopts ":f:s:e:o:v:i:p:w:n:m:t" option
 do
    case $option in
 	f) obs_file_name="$OPTARG";;	#text file of observation id's
 	s) starting_obs=$OPTARG;;	#starting observation in text file for choosing a range
 	e) ending_obs=$OPTARG;;		#ending observation in text file for choosing a range
         o) outdir=$OPTARG;;		#output directory for FHD output folder
-        v) version=$OPTARG;;		#FHD folder name and case for eor_firstpass_versions
-					#Example: nb_foo creates folder named fhd_nb_foo
+        v) version=$OPTARG;;		#Case for variation_versions
+	i) sim_id=$OPTARG;;		#sim_id creates fhd folder (Example: nb_foo creates folder named fhd_nb_foo)
 	w) wallclock_time=$OPTARG;;	#Time for execution in slurm
 	n) ncores=$OPTARG;;		#Number of cores for slurm
 	m) mem=$OPTARG;;		#Memory per node for slurm
@@ -113,6 +113,7 @@ if [ -z ${version} ]; then
    exit 1
 fi
 
+
 #if grep -q \'${version}\' ${FHDpath}Observations/eor_firstpass_versions.pro
 #then
 #    echo Using version $version
@@ -123,7 +124,7 @@ fi
 
 #Set typical wallclock_time for standard FHD firstpass if not set.
 if [ -z ${wallclock_time} ]; then
-    wallclock_time=10:00:00
+    wallclock_time=4:00:00
 fi
 #Set typical cores needed for standard FHD firstpass if not set.
 if [ -z ${ncores} ]; then
@@ -138,25 +139,43 @@ if [ -z ${thresh} ]; then
     thresh=-1
 fi
 
-#Make directory if it doesn't already exist
-mkdir -p ${outdir}/fhd_${version}
-mkdir -p ${outdir}/fhd_${version}/grid_out
-echo Output located at ${outdir}/fhd_${version}
+if [ -z ${sim_id} ]; then
+   echo "Warning: sim_id not specified. Using the version string"
+   sim_id=${version}
+   #Make directory if it doesn't already exist
+   mkdir -p ${outdir}/fhd_${version}
+   mkdir -p ${outdir}/fhd_${version}/grid_out
+   echo Output located at ${outdir}/fhd_${version}
+   fhddir=${outdir}/fhd_${version}
+else
+   #Make directory if it doesn't already exist
+   mkdir -p ${outdir}/fhd_${version}_${sim_id}
+   mkdir -p ${outdir}/fhd_${version}_${sim_id}/grid_out
+   echo Output located at ${outdir}/fhd_${version}_${sim_id}
+   fhddir=${outdir}/fhd_${version}_${sim_id}
+fi
 
+#Read the obs file and put into an array, skipping blank lines if they exist.
+# If the file doesn't exist, treat the obs_file_name as a single obsid
+if [ ! -e "$obs_file_name" ]
+then
+     obs_id_array=($obs_file_name)
+     max=$obs_file_name
+     min=$obs_file_name 
+else
+     i=0
+     while read line
+     do
+        if [ ! -z "$line" ]; then
+           obs_id_array[$i]=$line
+           i=$((i + 1))
+        fi
+     done < "$obs_file_name"
+    ##Find the max and min of the obs id array
+    max=${obs_id_array[$((i-1))]}
+    min=${obs_id_array[0]}
+fi
 
-#Read the obs file and put into an array, skipping blank lines if they exist
-i=0
-while read line
-do
-   if [ ! -z "$line" ]; then
-      obs_id_array[$i]=$line
-      i=$((i + 1))
-   fi
-done < "$obs_file_name"
-
-##Find the max and min of the obs id array
-max=${obs_id_array[$((i-1))]}
-min=${obs_id_array[0]}
 #
 #
 #If minimum not specified, start at minimum of obs_file
@@ -213,9 +232,8 @@ done
 #Find the number of obsids to run in array
 nobs=${#good_obs_list[@]}
 
-
 #### !!! The -w flag chooses a specific node.
-message=$(sbatch  --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 )) --export=ncores=$ncores,outdir=$outdir,version=$version,thresh=$thresh -o ${outdir}/fhd_${version}/grid_out/array_sim-%A_%a.out -e ${outdir}/fhd_${version}/grid_out/array_sim-%A_%a.err ${FHDpath}simulation/simulation_wrappers/eor_simulation_slurm_job.sh ${good_obs_list[@]})
+message=$(sbatch  --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 ))%20 --export=ncores=$ncores,outdir=$outdir,version=$version,sim_id=$sim_id,thresh=$thresh -o ${fhddir}/grid_out/array_sim-%A_%a.out -e ${fhddir}/grid_out/array_sim-%A_%a.err ${FHDpath}simulation/simulation_wrappers/eor_simulation_slurm_job.sh ${good_obs_list[@]})
 
 #echo $message
 
@@ -235,7 +253,7 @@ done
 
 if [ $firstpass_only -eq 1 ]; then
 	curdir=`pwd -P`
-	cd ${outdir}/fhd_${version}
+	cd ${fhddir}
 	uvconvert.py -o miriad
 	cd $curdir
 	exit 0
@@ -278,7 +296,7 @@ rerun_flag=0
 for obs_id in "${obs_id_array[@]}"; do
     i=$((i + 1))
     # Check to see if 4 files (even/odd, XX/YY) return from listing for that obsid
-    if ! ls -1 ${outdir}/fhd_${version}/Healpix/${obs_id}*cube* 2>/dev/null | wc -l | grep 4 -q; then
+    if ! ls -1 ${fhddir}/Healpix/${obs_id}*cube* 2>/dev/null | wc -l | grep 4 -q; then
 	echo Observation $obs_id is missing one or more Healpix cubes
         rerun_flag=1
         [[ $resubmit_list =~ $x ]] || resubmit_list+=($obs_id)
@@ -382,7 +400,7 @@ if [ "$rerun_flag" -ne 1 ];then
 
    nobs=${#resubmit_list[@]}
 
-   message=$(sbatch --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 )) --export=ncores=$ncores,outdir=$outdir,version=$version,thresh=$thresh -o ${outdir}/fhd_${version}/grid_out/array_sim-%A_%a.out -e ${outdir}/fhd_${version}/grid_out/array_sim-%A_%a.err ${FHDpath}Observations/eor_simulation_slurm_job.sh ${resubmit_list[@]})
+   message=$(sbatch --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 )) --export=ncores=$ncores,outdir=$outdir,version=$version,thresh=$thresh -o ${fhddir}/grid_out/array_sim-%A_%a.out -e ${fhddir}/grid_out/array_sim-%A_%a.err ${FHDpath}Observations/eor_simulation_slurm_job.sh ${resubmit_list[@]})
    message=($message)
    id=`echo ${message[3]}`
    while [ `myq | grep $id | wc -l` -ge 1 ]; do
@@ -396,7 +414,7 @@ fi
 
 # Submit a job to convert model visibilities to uvfits and MIRIAD formats
 curdir=`pwd -P`
-cd ${outdir}/fhd_${version}
+cd ${fhddir}
 uvconvert.py -o miriad
 cd $curdir
 
@@ -407,12 +425,12 @@ PSpath=$(idl -e 'print,rootdir("eppsilon")')
 
 if [ -z ${ending_obs} ]; then
     if [-z ${starting_obs} ]; then	
-	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -e ${ending_obs} -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -e ${ending_obs} -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
     else
-	    ${PSpath}ps_wrappers/ps_slurm.sh -e ${ending_obs} -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+	    ${PSpath}ps_wrappers/ps_slurm.sh -e ${ending_obs} -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
     fi
 elif [ -z ${starting_obs} ]; then
-	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
 else
     ${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
 fi
