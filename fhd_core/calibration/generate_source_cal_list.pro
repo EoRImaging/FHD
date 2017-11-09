@@ -73,7 +73,8 @@ ENDIF ELSE BEGIN
     IF N_Elements(beam_cal_threshold) GT 0 THEN beam_threshold=beam_cal_threshold
 ENDELSE
 
-beam_primary_i=region_grow(beam,dimension/2.+dimension*elements/2.,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
+obs_i = Round(obs.obsx) + dimension*Round(obs.obsy)
+beam_primary_i=region_grow(beam,obs_i,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
 beam_primary_mask=fltarr(dimension,elements) & beam_primary_mask[beam_primary_i]=1.
 beam_sidelobe_mask = 1 - beam_primary_mask
 IF Keyword_Set(model_visibilities) THEN BEGIN
