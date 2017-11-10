@@ -1,13 +1,13 @@
 FUNCTION eor_bubble_sim, obs, jones, select_radius=select_radius, bubble_fname=bubble_fname, beam_threshold=beam_threshold, allow_sidelobe_sources=allow_sidelobe_sources, dat=dat 
 
 ;Opening an HDF5 file and extract relevant data
-if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE hdf5_fname = '/users/alanman/data/alanman/BubbleCube/TiledHpxCubes/mwa_gaussian.hdf5'
+if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE message("Missing bubble file path") 
 if not keyword_set(beam_threshold) then beam_threshold = 0.05
 if keyword_set(allow_sidelobe_sources) THEN beam_threshold = 0.01
 if not keyword_set(select_radius) THEN  select_radius = 20     ; Degrees
 
 dimension=obs.dimension
-elements= obs.dimension
+elements= obs.elements
 
 f_id = H5F_OPEN(hdf5_fname)
 dset_id_eor  = H5D_OPEN(f_id, '/spectral_info/spectrum')
@@ -37,12 +37,11 @@ freq_hpx = freq_hpx[freq_inds]
 nfreq_hpx = n_elements(freq_hpx)
 
 ;; Extract only these healpix indices from the file.
-;; !! Unclear at this time how exactly to get the selection working. I'll need to experiment more. For now, just read the whole dataset in and select from it.
 ;H5S_SELECT_ELEMENTS, dspace_id_eor, hpx_inds, /RESET
 
 print, "Reading HDF5 file with EoR Healpix Cube"
 t0 = systime(/seconds)
-if n_elements(dat) eq 0 then dat = H5D_READ(dset_id_eor, FILE_SPACE=dpsace_id_eor)  ; temporary --- allow for the data to be reused if already loaded
+if n_elements(dat) eq 0 then dat = H5D_READ(dset_id_eor, FILE_SPACE=dpsace_id_eor)
 print, 'HDF5 reading time = ', systime(/seconds) - t0, ' seconds'
 
 ; Interpolate in frequency:
@@ -58,23 +57,17 @@ H5S_CLOSE, dspace_id_eor
 H5D_CLOSE, dset_id_eor
 H5F_CLOSE, f_id
 
-n_pol=4
-
 model_uv_arr=Ptrarr(n_pol,obs.n_freq, /allocate)
 t0 = systime(/seconds)
 print, 'Healpix Interpolation'
-;resolve_routine, 'healpix_interpolate',/either
-;profiler
 model_stokes_arr = healpix_interpolate(hpx_arr,obs,nside=nside,hpx_inds=inds_select,/from_kelvin)
-;profiler, /report, /code_coverage, filename="/gpfs_home/alanman/000_healpix_interpolate_profile.out"
 print, 'Hpx_interpolate timing: ', systime(/seconds) - t0
 
 FOR fi=0, obs.n_freq-1 do begin    ; 30 seconds for 203 channels
-   model_tmp=*model_stokes_arr[fi]
    model_tmp=Ptrarr(n_pol,/allocate)
    *model_tmp[0] = *model_stokes_arr[fi]
    FOR pol_i=1,n_pol-1 DO *model_tmp[pol_i]=Fltarr(obs.dimension,obs.elements)
-   model_arr = stokes_cnv(model_tmp, jones, /inverse)   ; In vis_simulate, the I to X/Y conversion is done by simply splitting. Would that be better?
+   model_arr = stokes_cnv(model_tmp, jones, /inverse)
    Ptr_free, model_tmp
 
    FOR pol_i=0,n_pol-1 DO BEGIN
@@ -85,6 +78,6 @@ FOR fi=0, obs.n_freq-1 do begin    ; 30 seconds for 203 channels
 
 ENDFOR
 
-return, model_uvf_arr
+return, model_uv_arr
 
 END
