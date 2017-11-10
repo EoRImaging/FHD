@@ -36,9 +36,7 @@ ENDIF ELSE radius=hpx_radius
 
 ;check if a string, if it is assume it is a filepath to a save file with the desired indices 
 ; (will NOT be over-written with the indices)
-IF Keyword_Set(restrict_hpx_inds) AND (size(restrict_hpx_inds,/type) NE 7) THEN BEGIN
-      IF restrict_hpx_inds NE 0 THEN  restrict_hpx_inds=observation_healpix_inds_select(obs)
-ENDIF
+IF Keyword_Set(restrict_hpx_inds) AND (size(restrict_hpx_inds,/type) NE 7) THEN restrict_hpx_inds=observation_healpix_inds_select(obs)
 IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN 
     file_path_use=restrict_hpx_inds
     IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=Rootdir('fhd'),subdir='Observations')

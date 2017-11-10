@@ -29,7 +29,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
   endif    
   n_sources=N_Elements(source_array)
   print, 'n_sources: '+string(n_sources)
-  skymodel=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_path=catalog_file_path,diffuse_model=diffuse_model, beam_threshold=beam_threshold, return_cal=0,_Extra=extra)
+  skymodel=fhd_struct_init_skymodel(obs,source_list=source_array,catalog_path=catalog_file_path,diffuse_model=diffuse_model,return_cal=0,_Extra=extra)
   
   if keyword_set(recalculate_all) then begin
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset,no_save=no_save
@@ -51,7 +51,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
       ENDELSE
 
     endfor
-;    IF ~Keyword_Set(no_save) THEN save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
+    IF ~Keyword_Set(no_save) THEN save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
     undefine_fhd, beam2_xx_image, beam2_yy_image, beam_arr
 
     if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(include_eor) then begin
@@ -173,7 +173,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
     IF Keyword_Set(diffuse_model) THEN BEGIN
       IF file_test(diffuse_model) EQ 0 THEN diffuse_model=(file_search(diffuse_model+'*'))[0]
          print,"Reading diffuse model file: "+diffuse_model
-      diffuse_model_uv=fhd_diffuse_model(obs,jones,skymodel,spectral_model_arr=diffuse_spectral_model_uv, select_radius=select_radius,/uv_return,/diffuse_units_kelvin,model_filepath=diffuse_model,_Extra=extra)
+      diffuse_model_uv=fhd_diffuse_model(obs,jones,skymodel,spectral_model_arr=diffuse_spectral_model_uv,/uv_return,/diffuse_units_kelvin,model_filepath=diffuse_model,_Extra=extra)
       IF Max(Ptr_valid(diffuse_model_uv)) EQ 0 THEN print,"Error reading or building diffuse model. Null pointer returned!"
     ENDIF
 
@@ -188,7 +188,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
         ;; if there is also a uvf cube, add the uv from the sources to the cube at each freq.
 	IF size(*source_model_uv_arr[0],/type) eq 6 then begin     ;; If array is complex
 	        FOR pol_i=0,n_pol-1 DO BEGIN
-			*model_uvf_arr[pol_i]+=rebin_complex(*source_model_uv_arr[pol_i],dimension,elements,n_freq)
+			*model_uvf_arr[pol_i]+=rebin_complex(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
 			;j = Complex(0,1)
 			;*model_uvf_arr[pol_i]+=Rebin(Real_part(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample)$
 			;				+j*(Rebin(imaginary(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample))
@@ -253,11 +253,12 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
         ;  this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_vis_weight_ptr,model_uv_arr=this_model_uv,$
         ;    timing=model_timing,silent=silent,error=error,_Extra=extra)
           model_timing=0.0
+    ; vis_source_model uses DFT, which works for point source models. Since the uvf cube was already FFTed, just run visibility_degrid.
           FOR pol_i=0,n_pol-1 DO BEGIN
               (*vis_model_arr[pol_i])[fi,*] = (*(visibility_degrid(*this_model_uv[pol_i],this_vis_weight_ptr[pol_i],obs,psf,params,timing=timing,silent=silent,$
                   polarization=pol_i,_Extra=extra)))[fi,*]
                model_timing += timing
-          ENDFOR    ; vis_source_model uses DFT, which works for point source models. Since the uvf cube was already FFTed, just run visibility_degrid.
+          ENDFOR
           print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
           
 ;          for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
