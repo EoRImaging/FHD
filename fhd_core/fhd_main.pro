@@ -108,6 +108,13 @@ IF data_flag LE 0 THEN BEGIN
     ;print informational messages
     obs_status,obs
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,layout=layout,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'  ;write preliminary settings file for debugging, in case later steps crash
+    IF obs.n_tile_flag EQ obs.n_tile THEN BEGIN
+        ; Exit if all tiles are flagged.
+        ; This is checked after optionally transfering or modifying the weights, and after writing the settings file.
+        error=1
+        print,"All tiles flagged! No data left to use. Returning"
+        RETURN
+    ENDIF
     
     IF Keyword_Set(transfer_calibration) THEN BEGIN
       calibrate_visibilities=1
