@@ -23,9 +23,13 @@ pro vis_delay_filter, vis_model_arr,  params, obs
   
   for pol_i=0,n_pol-1 do data[*,*,pol_i] = *vis_model_arr[pol_i]
   
+  
   ;test with removing zeroed visibilities instead
   total_data = total(total(data,1),2)
   bi_use = where(total_data ne 0)
+  auto_inds = where(params.antenna1 ne params.antenna2)
+  match, bi_use, auto_inds, suba, subb
+  bi_use = bi_use[suba]
   
   data = data[*,bi_use,*]
   uu = params.uu[bi_use]
