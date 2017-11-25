@@ -317,7 +317,6 @@ WARNING! Options in this section may change without notice, and should never be 
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br /> 
 
-  
 **image_filter_fn**: weighting filter to be applyed to resulting snapshot images and fits files. Options include  filter_uv_hanning, filter_uv_natural, filter_uv_radial, filter_uv_tapered_uniform, filter_uv_uniform, and filter_uv_weighted. Specifics on these filters can be found in `FHD/fhd_output/fft_filters`.<br />
   -*EoR_firstpass settings*: filter_uv_uniform <br />
   -*Default*: filter_uv_uniform <br />
@@ -468,6 +467,10 @@ mapfn_recalculate=0
 healpix_recalculate=0
 
 ## Resolution
+
+**baseline_threshold**: cuts baselines for imaging only; does not affect gridding or anything else. Positive numbers cut baselines shorter than the given number in wavelengths. Negative numbers cut baselines longer than the given number in wavelengths. <br />
+  -*EoR_firstpass settings*: 0 <br />
+  -*Default*: 0 <br />
 
 **dft_threshold**: set equal to 1 to use the DFT approximation. When set equal to 0 the true DFT is calculated for each source. It can also be explicitly set to a value that determines the accuracy of the approximation. <br />
 
