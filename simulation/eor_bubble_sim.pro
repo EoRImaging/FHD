@@ -1,7 +1,7 @@
 FUNCTION eor_bubble_sim, obs, jones, select_radius=select_radius, bubble_fname=bubble_fname, beam_threshold=beam_threshold, allow_sidelobe_sources=allow_sidelobe_sources, dat=dat 
 
 ;Opening an HDF5 file and extract relevant data
-if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE message("Missing bubble file path") 
+if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE message, "Missing bubble file path"
 if not keyword_set(beam_threshold) then beam_threshold = 0.05
 if keyword_set(allow_sidelobe_sources) THEN beam_threshold = 0.01
 if not keyword_set(select_radius) THEN  select_radius = 20     ; Degrees
