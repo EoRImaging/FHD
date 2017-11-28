@@ -468,7 +468,7 @@ healpix_recalculate=0
 
 ## Resolution
 
-**baseline_threshold**: cuts baselines for imaging only; does not affect gridding or anything else. Positive numbers cut baselines shorter than the given number in wavelengths. Negative numbers cut baselines longer than the given number in wavelengths. <br />
+**baseline_threshold**: Positive numbers cut baselines shorter than the given number in wavelengths. Negative numbers cut baselines longer than the given number in wavelengths. <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
 
