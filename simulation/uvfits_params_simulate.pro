@@ -92,7 +92,7 @@ IF N_Elements(sim_antenna1) EQ 0 THEN sim_antenna1=Long(Floor(sim_baseline_i/nam
 IF N_Elements(sim_antenna2) EQ 0 THEN sim_antenna2=Long(Fix(sim_baseline_i mod name_mod))
 
 params={uu:sim_baseline_uu,vv:sim_baseline_vv,ww:sim_baseline_ww,$
-        baseline_arr:sim_baseline_i,time:sim_baseline_time,
+        baseline_arr:sim_baseline_i,time:sim_baseline_time,$
         antenna1:sim_antenna1, antenna2:sim_antenna2}
 RETURN,params
 END
