@@ -1,6 +1,7 @@
 FUNCTION uvfits_params_simulate,hdr,params_in,sim_baseline_uu=sim_baseline_uu,sim_baseline_vv=sim_baseline_vv,$
     sim_baseline_ww=sim_baseline_ww,sim_baseline_i=sim_baseline_i,sim_baseline_time=sim_baseline_time,$
-    sim_tile_locations_x=sim_tile_locations_x,sim_tile_locations_y=sim_tile_locations_y,sim_tile_i=sim_tile_i,n_time=n_time,_Extra=extra
+    sim_tile_locations_x=sim_tile_locations_x,sim_tile_locations_y=sim_tile_locations_y,sim_tile_i=sim_tile_i,n_time=n_time,$
+    sim_antenna1=sim_antenna1, sim_antenna2=sim_antenna2, _Extra=extra
 
 ;    params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time}
 n_tile=hdr.n_tile
@@ -85,7 +86,13 @@ IF N_Elements(sim_baseline_ww) EQ 0 THEN sim_baseline_ww=default_ww
 IF N_Elements(sim_baseline_i) EQ 0 THEN sim_baseline_i=default_i
 IF N_Elements(sim_baseline_time) EQ 0 THEN sim_baseline_time=default_time
 
+; Define default antenna numbers
+name_mod=2.^((Ceil(Alog(Sqrt(hdr.nbaselines*2.-hdr.n_tile))/Alog(2.)))>Floor(Alog(Min(sim_baseline_i))/Alog(2.)))        
+IF N_Elements(sim_antenna1) EQ 0 THEN sim_antenna1=Long(Floor(sim_baseline_i/name_mod)) ;tile numbers start from 1      
+IF N_Elements(sim_antenna2) EQ 0 THEN sim_antenna2=Long(Fix(sim_baseline_i mod name_mod))
+
 params={uu:sim_baseline_uu,vv:sim_baseline_vv,ww:sim_baseline_ww,$
-        baseline_arr:sim_baseline_i,time:sim_baseline_time}
+        baseline_arr:sim_baseline_i,time:sim_baseline_time,$
+        antenna1:sim_antenna1, antenna2:sim_antenna2}
 RETURN,params
 END
