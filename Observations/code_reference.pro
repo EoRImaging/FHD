@@ -95,7 +95,7 @@ cal_amp_degree_fit=2
 cal_phase_degree_fit=1
 no_restrict_cal_sources=1
 cal_mode_fit=1
-cal_cable_reflection_correct=150
+cal_reflection_mode_file=150
 restrict_hpx_inds=1
 output_residual_histogram=1
 show_beam_contour=1
@@ -135,6 +135,7 @@ IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_model') THEN IF extra
 ENDIF
 IF N_Elements(extra) GT 0 THEN cmd_args=extra
 extra=var_bundle()
+fhd_depreciation_test,_extra=extra
 IF Tag_exist(extra,'comment') THEN BEGIN
     log_file=filepath('code_reference_log.txt',root=data_directory)
     append=0
