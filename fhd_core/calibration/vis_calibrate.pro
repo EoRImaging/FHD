@@ -187,6 +187,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
       unwrapped_phase = phunwrap(atan((*cal.gain[1]),/phase))
       for tile_i=0,127 do (*cal.gain[1])[*,tile_i] = abs((*cal.gain[1])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[1,obs_id,*]))))
     endif  
+    IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
+    IF Keyword_Set(n_tile_cut) THEN BREAK
   ENDFOR
   IF n_pol EQ 4 THEN $
     cal = vis_calibrate_crosspol_phase(vis_ptr,vis_weight_ptr,obs,cal)
