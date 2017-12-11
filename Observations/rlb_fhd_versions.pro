@@ -4,14 +4,19 @@ pro rlb_fhd_versions
   heap_gc
   
   ; parse command line args
-  compile_opt strictarr
-  args = Command_Line_Args(count=nargs)
-  obs_id = args[0]
-  output_directory = args[1]
-  version = args[2]
-  if nargs gt 3 then platform = args[3] else platform = '' ;indicates if running on AWS
+  ;compile_opt strictarr
+  ;args = Command_Line_Args(count=nargs)
+  ;obs_id = args[0]
+  ;output_directory = args[1]
+  ;version = args[2]
+  ;if nargs gt 3 then platform = args[3] else platform = '' ;indicates if running on AWS
   
-  cmd_args={version:version}
+  ;cmd_args={version:version}
+  
+  obs_id = '1061311664'
+  output_directory = '/nfs/mwa-04/r1/EoRuvfits/DiffuseSurvey2015'
+  version = 'rlb_Aug23_Dec2017'
+  platform = ''
   
   case version of
   
@@ -549,10 +554,11 @@ pro rlb_fhd_versions
       n_pol = 4
     end
     
-    'rlb_golden_set_Dec2017': begin
+    'rlb_Aug23_Dec2017': begin
       uvfits_version = 4
       uvfits_subversion = 1
-      calibration_catalog_file_path = filepath('GLEAM_plus_rlb2017.sav',root=rootdir('FHD'),subdir='catalog_data')
+      ;calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
       filter_background = 1
       snapshot_healpix_export = 1
       diffuse_calibrate = 0
@@ -565,24 +571,25 @@ pro rlb_fhd_versions
     
   endcase
   
-  if ~keyword_set(vis_file_list) then begin
+  if ~keyword_set(vis_file_list) and keyword_set(instrument) then begin
     if instrument eq 'hera' then begin
       vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2458042.'+obs_id+'.xx.HH.uvR.uvfits'
       if obs_id eq '38650' then begin
         vis_file_list = '/nfs/eor-00/h1/rbyrne/HERA_analysis/zen.2458042.'+obs_id+'.yy.HH.uvR.uvfits'
       endif
+    endif
+  endif
+  
+  if ~keyword_set(vis_file_list) then begin
+    if platform eq 'aws' then begin
+      vis_file_list = '/uvfits/' + STRING(obs_id) + '.uvfits'
     endif else begin
-      if platform eq 'aws' then begin
-        vis_file_list = '/uvfits/' + STRING(obs_id) + '.uvfits'
-      endif else begin
-        SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
-          STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
-      endelse
+      SPAWN, 'read_uvfits_loc.py -v ' + STRING(uvfits_version) + ' -s ' + $
+        STRING(uvfits_subversion) + ' -o ' + STRING(obs_id), vis_file_list
     endelse
   endif
   
   undefine, uvfits_subversion, uvfits_version
-
   
   fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
   healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
@@ -592,7 +599,7 @@ pro rlb_fhd_versions
   ; Any keywords set on the command line or in the top-level wrapper will supercede these defaults
   eor_wrapper_defaults,extra
   fhd_depreciation_test, _Extra=extra
-   
+  
   print,""
   print,"Keywords set in wrapper:"
   print,structure_to_text(extra)
