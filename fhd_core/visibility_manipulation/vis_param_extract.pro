@@ -1,4 +1,4 @@
-FUNCTION vis_param_extract,params,header
+FUNCTION vis_param_extract,params,header, antenna_mod_index=antenna_mod_index
 
 
 uu_arr=Double(reform(params[header.uu_i,*]))
@@ -11,9 +11,15 @@ IF header.baseline_i GE 0 THEN $
     baseline_arr=reform(params[header.baseline_i,*]) $
     ELSE baseline_arr = Lonarr(N_Elements(time))
 ; Define default antenna numbers
-name_mod=2.^((Ceil(Alog(Sqrt(header.nbaselines*2.-header.n_tile))/Alog(2.)))>Floor(Alog(Min(baseline_arr))/Alog(2.)))        
-ant1_arr=Long(Floor(baseline_arr/name_mod)) ;tile numbers start from 1      
-ant2_arr=Long(Fix(baseline_arr mod name_mod))
+IF not Keyword_Set(antenna_mod_index) THEN BEGIN
+    antenna_mod_index_use=Long(2^Floor(Alog(min(baseline_arr))/Alog(2.))) 
+    tile_B_test=min(baseline_arr) mod antenna_mod_index_use
+    IF tile_B_test GT 1 THEN $ ; Check if a bad fit
+        IF min(baseline_arr) mod 2 EQ 1 THEN $ ; but not if autocorrelations or the first tile are missing
+            antenna_mod_index_use/=Long(2^Floor(Alog(tile_B_test)/Alog(2.))) 
+ENDIF ELSE antenna_mod_index_use=antenna_mod_index        
+ant1_arr=Long(Floor(baseline_arr/antenna_mod_index_use)) ;tile numbers start from 1      
+ant2_arr=Long(Fix(baseline_arr mod antenna_mod_index_use))
 ; Use the recorded antenna numbers if those are present
 IF Tag_exist(header, "ant1_i") THEN $
     IF header.ant1_i GE 0 THEN ant1_arr = reform(params[header.ant1_i,*])
