@@ -30,7 +30,7 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(error) THEN RETURN
     IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
     
-    params=vis_param_extract(data_struct.params,hdr)
+    params=vis_param_extract(data_struct.params,hdr,_Extra=extra)
     t_readfits=Systime(1)-t_readfits
     print,"Time reading UVFITS files and extracting header: "+Strn(t_readfits)
     
@@ -102,7 +102,7 @@ ENDIF ELSE BEGIN
         ext_data = mrdfits(lun, 0, ext_header)
         ext_name=strtrim(sxpar(ext_header, 'extname'))
     endwhile
-    layout = fhd_struct_init_layout(ext_header, ext_data,_Extra=extra)
+;    layout = fhd_struct_init_layout(ext_header, ext_data,_Extra=extra)
     t_read_ant=Systime(1)-t_read_ant
     print,"Time finding and reading antenna table in UVFITS file and extracting header: "+Strn(t_read_ant)
         
