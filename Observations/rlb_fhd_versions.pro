@@ -4,19 +4,14 @@ pro rlb_fhd_versions
   heap_gc
   
   ; parse command line args
-  ;compile_opt strictarr
-  ;args = Command_Line_Args(count=nargs)
-  ;obs_id = args[0]
-  ;output_directory = args[1]
-  ;version = args[2]
-  ;if nargs gt 3 then platform = args[3] else platform = '' ;indicates if running on AWS
+  compile_opt strictarr
+  args = Command_Line_Args(count=nargs)
+  obs_id = args[0]
+  output_directory = args[1]
+  version = args[2]
+  if nargs gt 3 then platform = args[3] else platform = '' ;indicates if running on AWS
   
-  ;cmd_args={version:version}
-  
-  obs_id = '1061311664'
-  output_directory = '/nfs/mwa-04/r1/EoRuvfits/DiffuseSurvey2015'
-  version = 'rlb_Aug23_Dec2017'
-  platform = ''
+  cmd_args={version:version}
   
   case version of
   
@@ -567,6 +562,23 @@ pro rlb_fhd_versions
       dft_threshold = 0
       ring_radius = 0
       debug_region_grow = 0
+      recalculate_all = 1
+    end
+    
+    'rlb_Aug23_full_pol_branch_Dec2017': begin
+      uvfits_version = 4
+      uvfits_subversion = 1
+      ;calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
+      calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      filter_background = 1
+      snapshot_healpix_export = 1
+      diffuse_calibrate = 0
+      diffuse_model = 0
+      subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
+      dft_threshold = 0
+      ring_radius = 0
+      debug_region_grow = 0
+      recalculate_all = 1
     end
     
   endcase
