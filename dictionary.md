@@ -499,14 +499,25 @@ healpix_recalculate=0
   -*Set*: 2/4 <br />
   -*Default*: 2 <br />
   
-**ps_kbinsize** : UV pixel size in wavelengths which overrides kbinsize when doing healpix_snapshot_cube_generate. Overrides ps_fov if set. <br />
-  -*Default*: 0.5<br />
+**ps_dimension** : UV plane dimension in pixel number for Healpix cube generation. Overrides `ps_degpix` if set. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
+  -*Dependency*: `ps_kspan` must not be set in order for the keyword to take effect. <br />
+  -*Default*: not set<br />   
+  
+**ps_degpix** : Degrees per pixel for Healpix cube generation. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
+  -*Dependency*: `ps_kspan` and `ps_dimension` must not be set in order for the keyword to take effect. <br />
+  -*Default*: not set<br />   
+  
+**ps_fov** : Field of view in degrees for Healpix cube generation. Overrides `kpix` in the obs structure if set.<br />
+  -*Dependency*: `ps_kbinsize` must not be set in order for the keyword to take effect. <br />
+  -*Default*: not set<br />  
+  
+**ps_kbinsize** : UV pixel size in wavelengths to grid for Healpix cube generation. Overrides `ps_fov` and the `kpix` in the obs structure if set. <br />
+  -*EoR_firstpass settings*: 0.5<br />
+  -*Default*: not set<br />
 
-**ps_fov** : Field of view in degrees which overrides FoV in healpix_snapshot_cube_generate. Only used if ps_fov is not set.<br />
-  -*Default*: !Q<br />
-
-**ps_kspan** :  UV plane dimension to override dimension when diong healpix_snapshot_cube_generate.<br />
-  -*Default*: 600.<br />
+**ps_kspan** :  UV plane dimension in wavelengths for Healpix cube generation. Overrides `ps_dimension` and `ps_degpix` if set. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
+  -*EoR_firstpass settings*: 600. <br />
+  -*Default*: not set<br />
 
 
 cleanup=0
