@@ -499,6 +499,9 @@ healpix_recalculate=0
   -*Set*: 2/4 <br />
   -*Default*: 2 <br />
   
+**ps_beam_threshold** : Minimum value to which to calculate the beam out to in image space. The beam in UV space is pre-calculated and may have its own `beam_threshold` (see that keyword for more information), and this is only an additional cut in image space. <br />
+  -*Default*: not set<br />     
+  
 **ps_dimension** : UV plane dimension in pixel number for Healpix cube generation. Overrides `ps_degpix` if set. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
   -*Dependency*: `ps_kspan` must not be set in order for the keyword to take effect. <br />
   -*Default*: not set<br />   
@@ -517,6 +520,15 @@ healpix_recalculate=0
 
 **ps_kspan** :  UV plane dimension in wavelengths for Healpix cube generation. Overrides `ps_dimension` and `ps_degpix` if set. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
   -*EoR_firstpass settings*: 600. <br />
+  -*Default*: not set<br />
+  
+**ps_nfreq_avg** :  <br />
+  -*Default*: not set<br />
+  
+**ps_psf_resolution** :  <br />
+  -*Default*: not set<br />
+  
+**ps_tile_flag_list** :  <br />
   -*Default*: not set<br />
 
 
