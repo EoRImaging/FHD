@@ -14,8 +14,6 @@ dset_id_eor  = H5D_OPEN(f_id, '/spectral_info/spectrum')
 dspace_id_eor = H5D_GET_SPACE(dset_id_eor)
 
 freq_hpx = H5_GETDATA(hdf5_fname, '/spectral_info/freq')
-ra_hpx = H5_GETDATA(hdf5_fname, '/object/RA') 
-dec_hpx = H5_GETDATA(hdf5_fname, '/object/Dec') 
 
 dims = REVERSE(H5S_GET_SIMPLE_EXTENT_DIMS(dspace_id_eor))
 nside=NPIX2NSIDE(dims[0])
