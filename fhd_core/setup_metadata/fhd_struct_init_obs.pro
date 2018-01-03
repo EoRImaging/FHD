@@ -23,7 +23,6 @@ speed_light=299792458.
 time=params.time
 b0i=Uniq(time)
 n_time=N_Elements(b0i)
-IF n_time GT 1 THEN time_res=(time[b0i[1]]-time[b0i[0]])*24.*3600. ELSE time_res=1. ;have to put something in if there is only one time interval
 time_total=(Max(time)-Min(time))*24.*3600.
 bin_start=fltarr(n_time) & IF n_time GT 1 THEN bin_start[1:*]=b0i[0:n_time-2]+1
 bin_end=b0i
@@ -35,20 +34,6 @@ bin_offset=Lonarr(n_time) & IF n_time GT 1 THEN bin_offset[1:*]=total(bin_width[
 nbaselines=bin_width[0]
 n_vis=(n_vis_raw=(n_vis_in=(Float(N_Elements(time))*n_freq)))
 n_vis_arr=Lonarr(n_freq)
-time_use=intarr(n_time)+1
-FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
-    ;time cut is specified in seconds to cut (rounded up to next time integration point). 
-    ;Specify negative time_cut to cut time off the end. Specify a vector to cut at both the start and end
-    IF time_cut[ti] LT 0 THEN BEGIN
-        ti_start=((n_time-Ceil(Abs(time_cut[ti])/time_res))>0)<(n_time-1)
-        ti_end=n_time-1
-    ENDIF ELSE BEGIN
-        ti_start=0
-        ti_end=(Ceil(Abs(time_cut[ti])/time_res)-1)<(n_time-1)
-    ENDELSE
-    IF ti_end GE ti_start THEN time_use[ti_start:ti_end]=0
-ENDFOR
-n_time_cut = n_time - Total(time_use)
 
 freq_res=hdr.freq_res
 frequency_array=hdr.freq_arr
@@ -148,8 +133,24 @@ noise_arr=Ptr_new()
 
 meta=fhd_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,$
     n_tile=n_tile,instrument=instrument,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
+
 IF N_Elements(meta_data) EQ 0 THEN meta_data=Ptr_new() ELSE meta_data=Ptr_new(meta_data)
 IF N_Elements(meta_hdr) EQ 0 THEN meta_hdr=Ptr_new() ELSE meta_hdr=Ptr_new(meta_hdr)
+
+time_use=intarr(n_time)+1
+FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
+    ;time cut is specified in seconds to cut (rounded up to next time integration point). 
+    ;Specify negative time_cut to cut time off the end. Specify a vector to cut at both the start and end
+    IF time_cut[ti] LT 0 THEN BEGIN
+        ti_start=((n_time-Ceil(Abs(time_cut[ti])/meta.time_res))>0)<(n_time-1)
+        ti_end=n_time-1
+    ENDIF ELSE BEGIN
+        ti_start=0
+        ti_end=(Ceil(Abs(time_cut[ti])/meta.time_res)-1)<(n_time-1)
+    ENDELSE
+    IF ti_end GE ti_start THEN time_use[ti_start:ti_end]=0
+ENDFOR
+n_time_cut = n_time - Total(time_use)
 
 tile_use1=intarr(n_tile)
 FOR pol_i=0,n_pol-1 DO BEGIN

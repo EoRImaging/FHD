@@ -56,6 +56,7 @@ IF file_test(metafits_path) THEN BEGIN
 ;    HA=ten([Fix(Strmid(HA,0,2)),Fix(Strmid(HA,3,2)),Fix(Strmid(HA,6,2))])*15.
     date_obs=sxpar(meta_hdr,'DATE-OBS')
     IF ~Keyword_Set(time_offset) THEN time_offset=0d
+    time_res = sxpar(meta_hdr, 'INTTIME')
     time_offset/=(24.*3600.)
     JD0=Min(Jdate)+time_offset
     
@@ -89,6 +90,9 @@ ENDIF ELSE BEGIN
     IF ~Keyword_Set(time_offset) THEN time_offset=0d
     time_offset/=(24.*3600.)
     JD0=Min(Jdate)+time_offset
+    b0i=Uniq(time)
+    n_time=N_Elements(b0i)
+    IF n_time GT 1 THEN time_res=(time[b0i[1]]-time[b0i[0]])*24.*3600. ELSE time_res=1. ;have to put something in if there is only one time interval
     epoch=date_conv(JD0,'REAL')/1000.
     epoch_year=Floor(epoch)
     epoch_fraction=(epoch-epoch_year)*1000./365.24218967
@@ -140,7 +144,8 @@ Eq2Hor,obsra,obsdec,JD0,obsalt,obsaz,lat=lat,lon=lon,alt=Mean(alt)
 meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(zendec),phasera:Float(phasera),phasedec:Float(phasedec),$
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),$
     astr:astr,obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),obsaz:Float(obsaz),obsalt:Float(obsalt),$
-    delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Float(orig_phasera),orig_phasedec:Float(orig_phasedec)}
+    delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Float(orig_phasera),orig_phasedec:Float(orig_phasedec),$
+    time_res:Float(time_res)}
 
 RETURN,meta
 END
