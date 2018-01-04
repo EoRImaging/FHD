@@ -182,6 +182,19 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
         FOR pol_i=0,n_pol-1 DO *source_model_uv_arr[pol_i]+=*diffuse_model_uv[pol_i];*uv_mask_use
       endif else source_model_uv_arr = Pointer_copy(diffuse_model_uv)
     ENDIF
+    
+    ;; If galaxy model is set, calculate its contribution and add to the source_model_uv_arr
+    If keyword_set(skymodel.galaxy_model) then begin
+      gal_model_uv=fhd_galaxy_model(obs,jones,spectral_model_uv_arr=gal_spectral_model_uv,antialias=1,/uv_return,_Extra=extra)
+      IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN BEGIN
+        IF n_elements(source_model_uv_arr) GT 0 then begin
+          FOR pol_i=0,n_pol-1 DO *source_model_uv_arr[pol_i]+=*gal_model_uv[pol_i]
+	ENDIF ELSE source_model_uv_arr = Pointer_copy(gal_model_uv)
+      ENDIF
+      ;IF Min(Ptr_valid(gal_spectral_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO $
+      ;  *spectral_model_uv_arr[pol_i,s_i]+=*gal_spectral_model_uv[pol_i,s_i];*uv_mask_use
+      undefine_fhd,gal_model_uv;,gal_spectral_model_uv
+    endif
 
     if n_elements(source_model_uv_arr) gt 0 then begin
       if n_elements(model_uvf_arr) gt 0 then begin
