@@ -233,7 +233,7 @@ done
 nobs=${#good_obs_list[@]}
 
 #### !!! The -w flag chooses a specific node.
-message=$(sbatch --qos=pri-alanman  --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 ))%20 --export=ncores=$ncores,outdir=$outdir,version=$version,sim_id=$sim_id,thresh=$thresh -o ${fhddir}/grid_out/array_sim-%A_%a.out -e ${fhddir}/grid_out/array_sim-%A_%a.err ${FHDpath}simulation/simulation_wrappers/eor_simulation_slurm_job.sh ${good_obs_list[@]})
+message=$(sbatch  --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 ))%20 --export=ncores=$ncores,outdir=$outdir,version=$version,sim_id=$sim_id,thresh=$thresh -o ${fhddir}/grid_out/array_sim-%A_%a.out -e ${fhddir}/grid_out/array_sim-%A_%a.err ${FHDpath}simulation/simulation_wrappers/eor_simulation_slurm_job.sh ${good_obs_list[@]})
 
 #echo $message
 
@@ -279,7 +279,7 @@ if [ -z ${ending_obs} ]; then
 elif [ -z ${starting_obs} ]; then
 	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
 else
-    ${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+    ${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
 fi
 
 
