@@ -108,7 +108,7 @@ if [ -z ${version} ]; then
    exit 1
 fi
 
-if grep -q \'${version}\' ${FHDpath}Observations/firstpass_versions_wrapper.pro
+if grep -q \'${version}\' ${FHDpath}Observations/ael_fhd_versions.pro
 then
     echo Using version $version
 else
