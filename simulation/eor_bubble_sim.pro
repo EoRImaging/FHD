@@ -55,27 +55,24 @@ H5S_CLOSE, dspace_id_eor
 H5D_CLOSE, dset_id_eor
 H5F_CLOSE, f_id
 
-model_uv_arr=Ptrarr(n_pol,obs.n_freq, /allocate)
+model_uv_arr=Ptrarr(n_pol,/allocate)
 t0 = systime(/seconds)
-print, 'Healpix Interpolation'
 model_stokes_arr = healpix_interpolate(hpx_arr,obs,nside=nside,hpx_inds=inds_select,/from_kelvin)
-print, 'Hpx_interpolate timing: ', systime(/seconds) - t0
+print, 'Healpix_interpolate timing: ', systime(/seconds) - t0
 
-FOR fi=0, obs.n_freq-1 do begin    ; 30 seconds for 203 channels
+FOR pol_i=0, n_pol-1 DO *model_uv_arr[pol_i]=Fltarr(obs.dimension,obs.elements,obs.n_freq)
+FOR fi=0, obs.n_freq-1 do begin
    model_tmp=Ptrarr(n_pol,/allocate)
    *model_tmp[0] = *model_stokes_arr[fi]
-   FOR pol_i=1,n_pol-1 DO *model_tmp[pol_i]=Fltarr(obs.dimension,obs.elements)
+   *model_tmp[1] = fltarr(obs.dimension, obs.elements)
    model_arr = stokes_cnv(model_tmp, jones, /inverse)
    Ptr_free, model_tmp
 
    FOR pol_i=0,n_pol-1 DO BEGIN
-       model_uv=fft_shift(FFT(fft_shift(*model_arr[pol_i]),/inverse))
-       *model_uv_arr[pol_i,fi]=model_uv
+       model_tmp=fft_shift(FFT(fft_shift(*model_arr[pol_i]),/inverse))
+       (*model_uv_arr[pol_i])[*,*,fi]=model_tmp
    ENDFOR
    Ptr_free,model_arr
-
 ENDFOR
-
 return, model_uv_arr
-
 END

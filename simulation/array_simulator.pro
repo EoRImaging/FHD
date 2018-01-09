@@ -2,7 +2,7 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
     instrument=instrument,cleanup=cleanup,recalculate_all=recalculate_all,$
     n_pol=n_pol,silent=silent,tile_flag_list=tile_flag_list,$
     file_path_fhd=file_path_fhd,freq_start=freq_start,freq_end=freq_end,$
-    eor_sim=eor_sim, include_noise = include_noise, $
+    eor_sim=eor_sim, include_noise = include_noise,select_radius_multiplier=select_radius_multiplier, $
     include_catalog_sources = include_catalog_sources, source_array=source_array,$
     catalog_file_path=catalog_file_path,snapshot_healpix_export=snapshot_healpix_export, export_images=export_images, $
     snapshot_recalculate=snapshot_recalculate,grid_recalculate=grid_recalculate,eor_uvf_cube_file=eor_uvf_cube_file,_Extra=extra
@@ -53,8 +53,7 @@ PRO array_simulator,vis_arr,vis_weights,obs,status_str,psf,params,jones,error=er
   IF Keyword_Set(t_beam) THEN IF ~silent THEN print,'Beam modeling time: ',t_beam
 
   ;; Get a selection radius based on the primary beam width
-  select_radius = primary_beam_radius(obs,psf,beam_threshold=beam_threshold,_Extra=extra)
-
+  select_radius = primary_beam_radius(obs,psf,beam_threshold=beam_threshold,select_radius_multiplier=select_radius_multiplier,_Extra=extra)
   vis_weights=Ptrarr(n_pol,/allocate)
   n_param=N_Elements(params.uu)
   FOR pol_i=0,n_pol-1 DO BEGIN
