@@ -51,7 +51,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 0
       diffuse_calibrate = 0
@@ -108,7 +107,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
       diffuse_calibrate = 0
@@ -133,7 +131,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
       diffuse_calibrate = 0
@@ -188,7 +185,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 0
       diffuse_calibrate = 0
@@ -214,7 +210,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
       diffuse_calibrate = 0
@@ -240,7 +235,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 0
       diffuse_calibrate = 0
@@ -295,7 +289,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       cal_bp_transfer = 0
@@ -321,7 +314,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
       diffuse_calibrate = 0
@@ -348,7 +340,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       snapshot_recalculate = 1
       recalculate_all = 1
       diffuse_calibrate = 0
@@ -504,7 +495,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       cal_bp_transfer = 0
@@ -533,7 +523,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       cal_bp_transfer = 0
@@ -555,7 +544,6 @@ pro rlb_fhd_versions
       ;calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
       calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
       filter_background = 1
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -571,7 +559,6 @@ pro rlb_fhd_versions
       ;calibration_catalog_file_path = filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
       calibration_catalog_file_path = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
       filter_background = 1
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       subtract_sidelobe_catalog = filepath('GLEAMIDR4_181_consistent.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -591,7 +578,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 1 ;required for 4pol runs
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       cal_bp_transfer = 0
@@ -619,7 +605,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0  ; required to be turned on for 4pol normally, is ok to be off in sim
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       cal_bp_transfer = 0
@@ -649,7 +634,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 1  ; Fixed this
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       cal_bp_transfer = 0
@@ -676,7 +660,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0  ; required to be turned on for 4pol normally, is ok to be off in sim
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       cal_bp_transfer = 0
@@ -706,7 +689,6 @@ pro rlb_fhd_versions
       deconvolution_filter = 'filter_uv_uniform'
       filter_background = 1
       return_cal_visibilities = 0  ; required to be turned on for 4pol normally, is ok to be off in sim
-      snapshot_healpix_export = 1
       diffuse_calibrate = 0
       diffuse_model = 0
       cal_bp_transfer = 0
