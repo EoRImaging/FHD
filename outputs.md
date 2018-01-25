@@ -1,5 +1,5 @@
 # Outputs <br />
-FHD outputs various data products. We outline and describe these below. <br />
+FHD outputs various data products. We outline and describe these below. Items marked with (!Q are currently not defined -- ask Ian if needed and update please!)<br />
 
 ## Beam <br />
 
