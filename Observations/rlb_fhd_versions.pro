@@ -679,7 +679,7 @@ pro rlb_fhd_versions
     end
     
     'rlb_2pol_sim_nocal_master_Jan2018': begin
-      recalculate_all = 0
+      recalculate_all = 1
       max_sources = 200000
       calibration_catalog_file_path = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
       model_catalog_file_path = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
@@ -705,6 +705,8 @@ pro rlb_fhd_versions
       remove_sim_flags = 1 ;should be used for simulation
       calibrate_visibilities = 0
       model_visibilities = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
+      uvfits_version = 4
+      uvfits_subversion = 1
     end
     
   endcase
