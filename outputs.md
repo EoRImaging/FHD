@@ -34,7 +34,7 @@ FHD outputs various data products. We outline and describe these below. Items ma
   * **time_avg**: integer 1/0 value of whether or not visibilities were averaged in time during the X<sup>2</sup> calibration subroutine
   * **min_sols**: integer minimum number of equations used in the X<sup>2</sup> calibration subroutine per frequency channel
   * **ref_antenna**: long number index of tile to reference phases from
-  * **ref_antenna_name**: !Q
+  * **ref_antenna_name**: name of the antenna used as the phase reference.
   * **conv_thresh**: float number of the required convergence threshold
   * **polyfit**: integer 1/0 value of whether or not polynomials were fit
   * **amp_degree**: integer number of degree of coefficients used in fitting the amplitude of the cal solutions i.e. 2 = 2<sup>nd</sup> order polynomial
@@ -45,7 +45,7 @@ FHD outputs various data products. We outline and describe these below. Items ma
   * **mean_gain_residual**: !Q
   * **mean_gain_restrict**: !Q
   * **stddev_gain_residual**: !Q
-  * **cal_origin**: !Q
+  * **cal_origin**: result of `git describe` run on the FHD repo during calibration. Effectively the git hash, does not include the branch name.
 
 Pointers and large arrays in **cal** structure:
 
@@ -57,7 +57,7 @@ Pointers and large arrays in **cal** structure:
 
   * **cal.gain/cal.gain_residual**: a pointer array of dimension N<sub>pol</sub> which points to an complex array of dimension N<sub>freq</sub> by N<sub>tile</sub>. These arrays contain the complex gain or residual complex gains after all fits have been applied.
 
-  * **cal.auto_params**:
+  * **cal.auto_params**: !Q
 
   * **cal.convergence**: a pointer array of dimension Npol which points to an float array of dimension Nfreq by Ntile. These arrays contain a convergence measure for each pol/frequency/tile.
 
