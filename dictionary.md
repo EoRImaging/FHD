@@ -87,6 +87,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: if set to 1, becomes `mwa_eor0_highband_season1_cable_bandpass.fits` <br />
+  
+**cal_convergence_threshold**: threshold at which calibration ends. <br />
+  -*Default*: !Q
 
 **cal_mode_fit**: determines whether calibration will fit for reflection in cables. This will be set if
 	`cal_reflection_mode_file`, `cal_reflection_mode_theory`, `cal_reflection_mode_delay`, or `cal_reflection_hyperresolve` is set. Setting it to a positive cable length (scalar or array) will specifically include the associated tiles for fitting. Setting it to a negative cable length (scalar or array) will specifically exclude the associated tiles from fitting. <br />
@@ -168,6 +171,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   
 **model_transfer**: filepath to the FHD directory with model visbilities of the same obsid to be used instead of recalculating (i.e. `/path/to/the/FHD/dir/fhd_nb_test/cal_prerun/vis_data`). This is currently only an option for when the calibration model visibilities are the same as the subtraction model visibilities. The model visibilities can't have been flagged (see `cal_stop` on how to generate unflagged model visbilities). <br />
   -*Default*: 50 <br />
+  
+**n_avg**: number of frequencies to average over to smooth the frequency band. <br />
+  -*Default*: !Q <br />
   
 **return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. If n_pol = 4 (full pol mode), return_cal_visibilites must be set because the visibilites are required for calculating the mixing angle between Q and U. <br />
   -*Turn off/on*: 0/1 <br />
