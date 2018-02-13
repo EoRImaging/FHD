@@ -1,9 +1,7 @@
-FUNCTION eor_bubble_sim, obs, jones, select_radius=select_radius, bubble_fname=bubble_fname, beam_threshold=beam_threshold, allow_sidelobe_sources=allow_sidelobe_sources, dat=dat 
+FUNCTION eor_bubble_sim, obs, jones, select_radius=select_radius, bubble_fname=bubble_fname, dat=dat 
 
 ;Opening an HDF5 file and extract relevant data
 if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE message, "Missing bubble file path"
-if not keyword_set(beam_threshold) then beam_threshold = 0.05
-if keyword_set(allow_sidelobe_sources) THEN beam_threshold = 0.01
 if not keyword_set(select_radius) THEN  select_radius = 20     ; Degrees
 
 dimension=obs.dimension
@@ -63,8 +61,8 @@ print, 'Healpix_interpolate timing: ', systime(/seconds) - t0
 FOR pol_i=0, n_pol-1 DO *model_uv_arr[pol_i]=Fltarr(obs.dimension,obs.elements,obs.n_freq)
 FOR fi=0, obs.n_freq-1 do begin
    model_tmp=Ptrarr(n_pol,/allocate)
-   *model_tmp[0] = *model_stokes_arr[fi]
-   *model_tmp[1] = fltarr(obs.dimension, obs.elements)
+   FOR pol_i=1,n_pol-1 DO *model_tmp[pol_i]=Fltarr(obs.dimension,obs.elements)
+   *model_tmp[0] = *model_stokes_arr[fi]      ; model_stokes_arr is Stokes I
    model_arr = stokes_cnv(model_tmp, jones, /inverse)
    Ptr_free, model_tmp
 

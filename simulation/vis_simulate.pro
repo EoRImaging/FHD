@@ -263,18 +263,16 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
           
           if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
           
- ;         this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_vis_weight_ptr,model_uv_arr=this_model_uv,$
- ;           timing=model_timing,silent=silent,error=error,_Extra=extra)
-          model_timing=0.0
-    ; vis_source_model is inexplicably taking a long time. Since the uvf cube was already FFTed, just run visibility_degrid.
-          FOR pol_i=0,n_pol-1 DO BEGIN
+           ;this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_vis_weight_ptr,model_uv_arr=this_model_uv,$
+           ;timing=model_timing,silent=silent,error=error,_Extra=extra)
+           model_timing=0.0
+           ;vis_source_model is inexplicably taking a long time. Since the uvf cube was already FFTed, just run visibility_degrid.
+           FOR pol_i=0,n_pol-1 DO BEGIN
               (*vis_model_arr[pol_i])[fi,*] = (*(visibility_degrid(*this_model_uv[pol_i],this_vis_weight_ptr[pol_i],obs,psf,params,timing=timing,silent=silent,$
                   polarization=pol_i,_Extra=extra)))[fi,*]
                model_timing += timing
           ENDFOR
           print, 'model loop num, timing(s):'+ number_formatter(fi) + ' , ' + number_formatter(model_timing)
-          
-;          for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
           
           undefine_fhd, this_vis_weight_ptr, this_model_ptr, this_model_uv
         endfor
