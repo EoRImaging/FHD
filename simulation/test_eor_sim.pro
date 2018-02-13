@@ -7,8 +7,11 @@ FUNCTION test_eor_sim
 
 ; Visibility degrid requires -- obs, psf, image_uv, and vis_weight
 
-instrument='paper'
+instrument='mwa'
 n_pol=2
+
+bubble_fname='/gpfs/data/jpober/alanman/BubbleCube/TiledHpxCubes/mwa_patchy_calsky_cube.hdf5'
+select_radius=1.5
 
 ;hdr=uvfits_header_simulate(hdr_in,n_pol=n_pol, instrument=instrument)
 ;params=uvfits_params_simulate(hdr)
@@ -16,7 +19,7 @@ n_pol=2
 ;obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,instrument=instrument)
 
 ;get obs, and modify if necessary
-restore, '/users/alanman/fhd_out/fhd_sim_paper128_9hour/metadata/PAPER128_22_obs.sav'
+restore, '/users/alanman/fhd_out/fhd_mwa_goldensubset/metadata/1061311664_obs.sav'
 obs.dimension=256
 obs.elements=256
 obs.kpix=0.5
@@ -40,8 +43,10 @@ vis_dimension=n_param*n_samples
 uv_arr = (findgen(obs.dimension)-obs.dimension/2)*obs.kpix
 
 psf=beam_setup(obs)
+jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0)
 
-eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
+;eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
+eor_uvf_cube = eor_bubble_sim(obs, jones, select_radius=select_radius, bubble_fname=bubble_fname)
 
 model_uvf_arr=Ptrarr(n_pol,/allocate)
 for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(obs.dimension,obs.elements, n_freq)
@@ -49,8 +54,10 @@ for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(obs.dimension,obs.elemen
 
 ;(*model_uvf_arr[3])[*]=0.
 ;(*model_uvf_arr[2])[*]=0.
-(*model_uvf_arr[1])[*]=eor_uvf_cube/2.
-(*model_uvf_arr[0])[*]=eor_uvf_cube/2.
+;(*model_uvf_arr[1])[*]=eor_uvf_cube/2.
+;(*model_uvf_arr[0])[*]=eor_uvf_cube/2.
+
+model_uvf_arr = eor_uvf_cube
 
 
 vis_model_arr = Ptrarr(n_pol,/allocate)
@@ -64,10 +71,8 @@ for fi=0, n_freq-1 do begin
 	  *this_vis_weight_ptr[pol_i]=intarr(n_freq, n_param)
 	  (*this_vis_weight_ptr[pol_i])[fi,*] = (*vis_weights[pol_i])[fi,*]
 	  *this_model_uv[pol_i] = (*model_uvf_arr[pol_i])[*,*,fi]
-          this_model_ptr=visibility_degrid((*model_uvf_arr[pol_i])[*,*,fi], this_vis_weight_ptr[pol_i],obs,psf,params, polarization=pol_i)
+      (*vis_model_arr[pol_i])[fi,*] = (*(visibility_degrid(*this_model_uv[pol_i],this_vis_weight_ptr[pol_i],obs,psf,params,timing=timing,silent=silent,  polarization=pol_i,_Extra=extra)))[fi,*]
 	endfor
-
-	for pol_i=0,n_pol-1 do (*vis_model_arr[pol_i])[fi,*] = (*this_model_ptr[pol_i])[fi,*]
 
 	undefine_fhd, this_vis_weight_ptr, this_model_ptr, this_model_uv
 endfor
