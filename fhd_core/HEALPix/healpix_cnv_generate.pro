@@ -97,6 +97,7 @@ ENDELSE
 Eq2Hor,pix_ra, pix_dec, obs.JD0, alt_arr, az_arr, nutate=0,precess=0,aberration=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
 horizon_i = where(alt_arr LE 0, n_horizon, complement=h_use)
 IF n_horizon GT 0 THEN BEGIN
+    print,String(format='("Cutting ",A, " HEALPix pixels that were below the horizon.")',Strn(n_horizon))
     xv_hpx = xv_hpx[h_use]
     yv_hpx = yv_hpx[h_use]
     hpx_inds = hpx_inds[h_use]
