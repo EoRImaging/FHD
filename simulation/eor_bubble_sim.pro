@@ -32,14 +32,20 @@ freq_inds = where((freq_hpx GT lim[0]) and (freq_hpx LT lim[1]) )
 freq_hpx = freq_hpx[freq_inds]
 nfreq_hpx = n_elements(freq_hpx)
 
+; making the coord array for h5s_select
+;coord_arr = array_indices(make_array(nfreq_hpx,npix_sel),findgen(nfreq_hpx*npix_sel))
+;coord_arr[1,*] = inds_select[coord_arr[1,*]]
+
 ;; Extract only these healpix indices from the file.
-;H5S_SELECT_ELEMENTS, dspace_id_eor, hpx_inds, /RESET
+; Somehow this ended up being slower than reading in the full array, so leave it out for now.
+;H5S_SELECT_ELEMENTS, dspace_id_eor, coord_arr, /RESET
 
 print, "Reading HDF5 file with EoR Healpix Cube"
 t0 = systime(/seconds)
 if n_elements(dat) eq 0 then dat = H5D_READ(dset_id_eor, FILE_SPACE=dpsace_id_eor)
 print, 'HDF5 reading time = ', systime(/seconds) - t0, ' seconds'
 
+; dat now contains zeros for the nonselected healpix indices, but retains the full shell shape
 ; Interpolate in frequency:
 dat_interp = Fltarr(obs.n_freq,npix_sel)
 t0=systime(/seconds)
