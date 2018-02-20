@@ -10,8 +10,8 @@ FUNCTION test_eor_sim
 instrument='mwa'
 n_pol=2
 
-bubble_fname='/gpfs/data/jpober/alanman/BubbleCube/TiledHpxCubes/mwa_patchy_calsky_cube.hdf5'
-select_radius=1.5
+bubble_fname='/gpfs/data/jpober/alanman/BubbleCube/TiledHpxCubes/uniform_cube.hdf5'
+select_radius=1.0
 
 ;hdr=uvfits_header_simulate(hdr_in,n_pol=n_pol, instrument=instrument)
 ;params=uvfits_params_simulate(hdr)
@@ -47,6 +47,8 @@ jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0
 
 ;eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
 eor_uvf_cube = eor_bubble_sim(obs, jones, select_radius=select_radius, bubble_fname=bubble_fname)
+
+exit
 
 model_uvf_arr=Ptrarr(n_pol,/allocate)
 for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(obs.dimension,obs.elements, n_freq)
