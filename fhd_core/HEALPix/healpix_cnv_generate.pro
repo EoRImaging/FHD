@@ -93,6 +93,15 @@ ENDIF ELSE BEGIN
     hpx_inds=hpx_inds0[pix_i_use]
 ENDELSE
 
+; Test for pixels past the horizon. We don't need to be precise with this, so turn off precession, etc..
+Eq2Hor,pix_ra, pix_dec, obs.JD0, alt_arr, az_arr, nutate=0,precess=0,aberration=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+horizon_i = where(alt_arr LE 0, n_horizon, complement=h_use)
+IF n_horizon GT 0 THEN BEGIN
+    xv_hpx = xv_hpx[h_use]
+    yv_hpx = yv_hpx[h_use]
+    hpx_inds = hpx_inds[h_use]
+ENDIF
+
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
 ;image_inds=Long64(Floor(xv_hpx)+dimension*Floor(yv_hpx))
