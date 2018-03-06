@@ -2456,9 +2456,9 @@ pro nb_eor_firstpass_versions
     calibration_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
     model_subtract_sidelobe_catalog='/nfs/eor-00/h1/nbarry/MWA/IDL_code/FHD/catalog_data/GLEAM_EGC_catalog_KGSscale_ssextended.sav'
     ;transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
-    transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013cal_redo/beams'
+    ;transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013cal_redo/beams'
     ;    model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly_autovis/cal_prerun/vis_data'
-            model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013cal_redo/cal_prerun/vis_data'
+    ;        model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013cal_redo/cal_prerun/vis_data'
             tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
      ;       debug_gain_transfer='/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013longrun_std/calibration/'
      recalculate_all=1
@@ -2472,6 +2472,7 @@ pro nb_eor_firstpass_versions
     calibration_auto_fit=1
     nfreq_avg=8
     time_cut=-4
+    ;no_ref_tile=1
     ps_kspan=200.
   end
       'nb_2013longrun_autocal_pskspan100_horizonhpx': begin
