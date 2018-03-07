@@ -2,10 +2,10 @@
 ;; there is a single maximum (ie k=0 exists) -- this implies an asymmetric window
 ;; function and is correct for FFTs with even numbers of samples
 
-function spectral_window, n_samples, type = type, periodic = periodic,
+function spectral_window, n_samples, type = type, periodic = periodic, $
   fractional_size = fractional_size
 
-  type_list = ['Hann', 'Hamming', 'Blackman', 'Nutall', 'Blackman-Nutall',
+  type_list = ['Hann', 'Hamming', 'Blackman', 'Nutall', 'Blackman-Nutall', $
                'Blackman-Harris', 'Blackman-Harris^2', 'Tukey']
 
   if n_elements(type) eq 0 then type = 'Blackman-Harris'
