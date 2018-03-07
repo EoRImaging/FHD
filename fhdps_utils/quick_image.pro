@@ -1,12 +1,12 @@
 pro quick_image, image, xvals, yvals, data_range = data_range, data_min_abs = data_min_abs, $
     xrange = xrange, yrange = yrange, data_aspect=data_aspect, $
-    log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title,$
+    log=log, color_profile = color_profile, xtitle = xtitle, ytitle = ytitle, title = title, $
     cb_title = cb_title,  note = note, charsize = charsize_in, xlog = xlog, ylog = ylog, $
     window_num = window_num, multi_pos = multi_pos, start_multi_params = start_multi_params, $
     no_ps_close = no_ps_close, alphabackgroundimage = alphabackgroundimage, $
     missing_value = missing_value, noerase = noerase, savefile = savefile, $
     png = png, eps = eps, pdf = pdf
-    
+  
   if n_elements(window_num) eq 0 then window_num = 1
   
   if n_elements(savefile) gt 0 or keyword_set(png) or keyword_set(eps) or keyword_set(pdf) then pub = 1 else pub = 0
@@ -396,7 +396,8 @@ pro quick_image, image, xvals, yvals, data_range = data_range, data_min_abs = da
       charsize = charsize, font = font, oob_low = oob_low
       
   endif else begin
-    cgcolorbar, range=data_range, position = cb_pos, /vertical, format='exponent', charsize = charsize, font = font
+    cgcolorbar, range=data_range, position = cb_pos, /vertical, format='exponent', charsize = charsize, $
+      font = font, title = cb_title
   endelse
   
   if n_elements(note) ne 0 then begin
