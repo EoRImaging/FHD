@@ -31,7 +31,10 @@ IF Keyword_set(transfer_psf) then begin
       obs_restore = getvar_savefile(transfer_psf + '/' + obs.obsname + '_obs.sav','obs')
     if file_test(file_dirname(transfer_psf) + '/metadata/' + obs.obsname + '_obs.sav') then $
       obs_restore = getvar_savefile(file_dirname(transfer_psf) + '/metadata/' + obs.obsname + '_obs.sav','obs')
-    obs.primary_beam_sq_area = pointer_copy(obs_restore.primary_beam_sq_area)
+    if tag_exist(obs_restore,'primary_beam_sq_area') then begin
+      obs.primary_beam_sq_area = pointer_copy(obs_restore.primary_beam_sq_area)
+      obs.primary_beam_area = pointer_copy(obs_restore.primary_beam_area)
+    endif else if tag_exist(obs_restore,'beam_integral') then obs.primary_beam_sq_area = pointer_copy(obs_restore.beam_integral)
     
     RETURN,psf
 ENDIF
@@ -201,6 +204,5 @@ fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_sa
 fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
 IF not antenna_flag THEN undefine_fhd,antenna
 timing=Systime(1)-t00
-
 RETURN,psf
 END
