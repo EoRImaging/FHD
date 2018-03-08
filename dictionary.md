@@ -158,7 +158,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: undefined (off) <br />
   
 **max_calibration_sources**: limits the number of sources used in the calibration. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
-  -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set.
+  -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set. <br />
   -*EoR_firstpass settings*: 20000 <br />
   -*Default*: All valid sources in the catalog are used. <br />
 
