@@ -880,7 +880,7 @@ pro rlb_fhd_versions
       uvfits_subversion = 1
     end
     
-    'rlb_phaseII_sim_Mar2018': begin
+    'rlb_phaseII_barry_effect_Mar2018': begin
       recalculate_all = 0
       uvfits_version = 5
       uvfits_subversion = 1
