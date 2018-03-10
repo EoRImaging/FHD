@@ -2461,9 +2461,10 @@ pro nb_eor_firstpass_versions
     ;        model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013cal_redo/cal_prerun/vis_data'
             tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
      ;       debug_gain_transfer='/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013longrun_std/calibration/'
-     recalculate_all=1
+     ;recalculate_all=1
      mapfn_recalculate=0
     grid_recalculate=0
+    snapshot_recalculate=1
     save_visibilities=1
     export_images=0
     debug_beam_clip_floor=1
