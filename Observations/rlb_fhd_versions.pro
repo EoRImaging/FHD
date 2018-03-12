@@ -850,7 +850,7 @@ pro rlb_fhd_versions
     end
     
     'rlb_stokes_I_master_2pol_decon_Jan2018': begin
-      recalculate_all = 0
+      recalculate_all = 1
       max_sources = 200000
       calibration_catalog_file_path = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
       model_catalog_file_path = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
@@ -878,10 +878,11 @@ pro rlb_fhd_versions
       model_visibilities = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
       uvfits_version = 4
       uvfits_subversion = 1
+      dft_threshold = 0 ;added 3/12/18 to match simulation defaults
     end
     
     'rlb_phaseII_barry_effect_Mar2018': begin
-      recalculate_all = 0
+      recalculate_all = 1
       uvfits_version = 5
       uvfits_subversion = 1
       max_sources = 200000
@@ -889,7 +890,7 @@ pro rlb_fhd_versions
       calibration_catalog_file_path = filepath('GLEAM_plus_rlb2017.sav',root=rootdir('FHD'),subdir='catalog_data')
       smooth_width = 32
       filter_background = 1
-      return_cal_visibilities = 0
+      return_cal_visibilities = 1
       pad_uv_image = 1
       diffuse_calibrate = 0
       diffuse_model = 0
