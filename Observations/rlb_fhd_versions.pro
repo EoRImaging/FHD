@@ -852,8 +852,8 @@ pro rlb_fhd_versions
     'rlb_stokes_I_master_2pol_decon_Jan2018': begin
       recalculate_all = 1
       max_sources = 200000
-      calibration_catalog_file_path = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
-      model_catalog_file_path = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
+      calibration_catalog_file_path = '/home/ubuntu/sim_cal_catalog.sav'
+      model_catalog_file_path = '/home/ubuntu/sim_cal_catalog.sav'
       gain_factor = 0.1
       deconvolve = 1
       return_decon_visibilities = 1
@@ -872,10 +872,10 @@ pro rlb_fhd_versions
       write_healpix_fits = 1
       debug_region_grow = 0
       n_pol = 2
-      vis_file_list = '/nfs/eor-00/h1/rbyrne/sim_visibilities/stokes_I_sim_master_2pol.uvfits'
+      ;vis_file_list = '/nfs/eor-00/h1/rbyrne/sim_visibilities/stokes_I_sim_master_2pol.uvfits'
       remove_sim_flags = 1 ;should be used for simulation
       calibrate_visibilities = 0
-      model_visibilities = '/nfs/eor-00/h1/rbyrne/catalogs/sim_cal_catalog.sav'
+      model_visibilities = '/home/ubuntu/sim_cal_catalog.sav'
       uvfits_version = 4
       uvfits_subversion = 1
       dft_threshold = 0 ;added 3/12/18 to match simulation defaults
