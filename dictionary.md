@@ -479,6 +479,7 @@ healpix_recalculate=0
   -*Default*: 0 <br />
 
 **dft_threshold**: set equal to 1 to use the DFT approximation. When set equal to 0 the true DFT is calculated for each source. It can also be explicitly set to a value that determines the accuracy of the approximation. <br />
+  -*Default*: 1 <br />
 
 **dimension**: the number of pixels in the UV plane along one axis. <br />
   -*EoR_firstpass settings*: 2048 <br />
