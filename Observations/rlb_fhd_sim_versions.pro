@@ -24,7 +24,7 @@ PRO rlb_fhd_sim_versions
   ps_export=1  ; Differs from eor_wrapper_defaults
   save_imagecube=0  ; Not included in eor_wrapper_defaults
   save_uvf=0  ; Not included in eor_wrapper_defaults
-  dft_threshold=0   ; Approximate the DFT (1) or not (0)  Not included in eor_wrapper_defaults
+  ;dft_threshold=0   ; Removed 3/18 to match FHD defaults
     
   unflag_all=1  ; Not included in eor_wrapper_defaults
   
