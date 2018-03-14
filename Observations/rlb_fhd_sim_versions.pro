@@ -277,6 +277,37 @@ PRO rlb_fhd_sim_versions
       eor_sim = 0
     end
     
+    'rlb_stokes_I_master_2pol_sim_Mar2018': begin
+      recalculate_all = 1
+      uvfits_version = 4
+      uvfits_subversion = 1
+      max_sources = 200000
+      calibration_catalog_file_path = '/home/ubuntu/sim_cal_catalog.sav'
+      catalog_file_path = '/home/ubuntu/sim_cal_catalog.sav'
+      catalog_path = '/home/ubuntu/sim_cal_catalog.sav'
+      include_catalog_sources = 1
+      gain_factor = 0.1
+      deconvolve = 1
+      return_decon_visibilities = 1
+      filter_background = 1
+      return_cal_visibilities = 1
+      diffuse_calibrate = 0
+      diffuse_model = 0
+      cal_bp_transfer = 0
+      rephase_weights = 0
+      restrict_hpx_inds = 0
+      hpx_radius = 10
+      return_sidelobe_catalog = 1
+      dft_threshold = 0
+      ring_radius = 0
+      write_healpix_fits = 1
+      debug_region_grow = 0
+      sources_file_path = 0
+      source_list = 0
+      n_pol = 2
+      eor_sim = 0
+    end
+    
   endcase
   
   if ~keyword_set(vis_file_list) then begin
