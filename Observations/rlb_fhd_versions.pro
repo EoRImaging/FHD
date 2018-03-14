@@ -895,7 +895,7 @@ pro rlb_fhd_versions
       debug_region_grow = 0
       n_pol = 2
       remove_sim_flags = 1
-      calibrate_visibilites = 0
+      calibrate_visibilities = 0
       model_file_path = '/home/ubuntu/sim_cal_catalog.sav'
     end
     
@@ -921,7 +921,7 @@ pro rlb_fhd_versions
       debug_region_grow = 0
       n_pol = 2
       remove_sim_flags = 1
-      calibrate_visibilites = 0
+      calibrate_visibilities = 0
       model_file_path = '/home/ubuntu/sim_cal_catalog.sav'
     end
     
