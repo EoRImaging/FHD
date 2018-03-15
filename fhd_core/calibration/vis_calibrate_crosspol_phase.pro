@@ -15,7 +15,7 @@ weights_use = 0>Reform(*vis_weight_ptr[0],n_freq,n_baselines,n_time)<1
 ;average the visibilities in time
 pseudo_U = Reform(*vis_ptr[3] + *vis_ptr[2],n_freq,n_baselines,n_time)
 pseudo_U = Total(Temporary(pseudo_U)*weights_use,3)
-pseudo_V = Reform(*vis_ptr[3] - icomp*(*vis_ptr[2]),n_freq,n_baselines,n_time)
+pseudo_V = Reform(icomp*(*vis_ptr[3]) - icomp*(*vis_ptr[2]),n_freq,n_baselines,n_time)
 pseudo_V = Total(Temporary(pseudo_V)*weights_use,3)
 weight = Total(Temporary(weights_use),3)
 i_use = where(weight,n_use)
@@ -25,10 +25,10 @@ pseudo_V = Reform(pseudo_V[i_use],1,n_use)
 
 ;fit for leakage of Stokes U into V. We'll assume for now that that is due to an unfit phase between x and y
 U_V_leakage = LA_Least_Squares(pseudo_U_mat,pseudo_V)
-leakage_scale = Real_part(U_V_leakage[0])
+leakage_scale = U_V_leakage[0]
 leakage_offset = U_V_leakage[1]
 scale_factor = 1./Sqrt(2.0)
-phase_offset = Asin(leakage_scale) * scale_factor
+phase_offset = atan(U_V_leakage[0], /phase) * scale_factor
 cal.cross_phase = phase_offset
 *(cal.gain[0]) *= Exp(icomp * phase_offset / 2.0)
 *(cal.gain[1]) *= Exp(-icomp * phase_offset / 2.0)
