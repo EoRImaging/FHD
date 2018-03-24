@@ -5,7 +5,12 @@ FHD is very flexible, and has been designed to encompass a wide variety of instr
 
 ### Fast Holographic Deconvolution <br />
 
-### Firstpass -- New name forthcoming <br />
+Please see [
+Fast Holographic Deconvolution: A New Technique for Precision Radio Interferometry](http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1209.1653) for more information.
+
+### Firstpass <br />
+
+An analysis that performs calibration and subtraction using a sky-based model. This is a much faster method than FHD, however it will encode systematics due to the difference between a sky model and the real sky.
 
 ## Instruments <br />
 
@@ -177,48 +182,38 @@ bandpass_calibrate=0 <br />
 
 ## Simulations <br />
 
+### In situ <br />
+
+FHD is an analysis package, but it is also an instrument simulator. The in situ simulation harnesses the model generation aspect of FHD to run simulations purely within the same pipeline that analyzes data. 
+
+The basic setup of the in situ simulation is 1) to generate or read in model visibilities as "raw" visibilities, 2) calibrate and subtract given a new model specified by the user, and 2) export data products for power spectrum packages. Please see [Calibration requirements for detecting the 21 cm epoch of reionization power spectrum and implications for the SKA
+](http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1603.00607) for more information.
+
+The main code for the in situ simulation lives in [in_situ_sim_setup.pro](https://github.com/EoRImaging/FHD/blob/master/simulation/in_situ/in_situ_sim_setup.pro), called by [fhd_main.pro](https://github.com/EoRImaging/FHD/blob/master/fhd_core/fhd_main.pro). To activate, set `in_situ_sim_input`. Setting to 1 forces the "raw" visibilities to be made within the current run, and setting to a sav file path inputs model visibilities from a previous run (which is the preferred method since that run is independently documented). In order to then change the calibration and subtraction model, use the proper keywords that are normally used for an analysis run. To run with the same catalog that made the input, but with fewer known sources, use such keywords as `max_calibration_sources`, `max_model_sources`, `calibration_flux_threshhold`, `model_flux_threshold`, or others. These are documented in the [dictionary](https://github.com/EoRImaging/FHD/blob/e9ef646817928e5658d8347dc150b9ffd4d7d3ee/dictionary.md) and utlized in [generate_source_cal_list.pro](https://github.com/EoRImaging/FHD/blob/e9ef646817928e5658d8347dc150b9ffd4d7d3ee/fhd_core/calibration/generate_source_cal_list.pro).
+
+There are options to how the in situ simulation is run, besides all of the options that come with FHD. To turn off all flagging, including coarse band edges, tiles, and times, set the keyword `remove_sim_flags`. To add an EoR signal to the input visibilities, set `eor_savefile` to the full path of a sav file that has the same setup as the input visiblities. To enhance the EoR signal, set `enhance_eor` to a multiplicative factor. To add noise to the in situ sim, set `sim_noise`.
+
+### Brown University scripts <br />
 On Oscar (Brown University cluster), simulations may be run via one of two wrapper scripts. These are written to run on clusters managed by the Simple Linux Utility for Resource Management (SLURM) job scheduler.
   - 'sim_pipe_slurm.sh' is analogous to "pipe_dream.sh", and allows a simple simulation to be run off a set of ObsIDs. This will start an array task, with each parallel job simulating off a specified ObsID file. All outputs will go to the same fhd_directory.
   - 'sim_variation.sh' must be passed a parameter "-p 'param=opt1,opt2,opt3,...'", and can only be run for one ObsID at a time. This allows for a single simulation parameter to be varied. All the results will be stored in the same output directory, but files corresponding with each value of param will have 'param=opt_i' appended to the filename (where opt_i is the i'th value).<br />
 
 The parameters for the simulation are specified by the version string, which matches an entry in the "case" statement in sim_versions_wrapper.pro (analogous to eor_firstpass_versions.pro). Each wrapper must be given a version string, obs_id list file, and other SLURM parameters (see examples in submit_sims.sh).
 
-###EoR <br />
+### EoR <br />
 
 eor_sim=1
 include_catalog_sources=0
 
-**Needs updated by Bryna or Adam L** <br />
+### Diffuse <br />
 
-###Diffuse <br />
-
-diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')<br />
+diffuse_model=filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*This is a full-sky map in galactic coordinates of the Global Sky Model at 150 MHz only. *
 
-###Point sources <br />
+### Point sources <br />
 
 sources_file_name='GLEAM_EGC_catalog'<br />
   -*Specifies to use the publicly-released GLEAM extragalactic point source catalog*<br />
 max_model_sources=10000<br />
 
-###MWA <br />
-
-###PAPER <br />
-
-instrument='paper'
-nfreq_avg=203
-  -*Calculate the psf at only one frequency bin.*
-
-###In-situ <br />
-
-**Nichole will fill in**  <br />
-
-###HERA <br />
-
-instrument='hera' <br />
-beam_model_version=2 <br />
- -*For newest version of the beam model*
-
-
-
-###Variable array layouts <br />
+### Variable array layouts <br />
