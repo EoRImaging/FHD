@@ -1,4 +1,4 @@
-FUNCTION eor_bubble_sim, obs, jones, select_radius=select_radius, bubble_fname=bubble_fname, dat=dat 
+FUNCTION eor_bubble_sim, obs, jones, ltaper=ltaper, select_radius=select_radius, bubble_fname=bubble_fname, dat=dat 
 
 ;Opening an HDF5 file and extract relevant data
 if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE message, "Missing bubble file path"
@@ -28,7 +28,7 @@ print, "Npix_selected: ", npix_sel
 ; Limit the range of frequencies in the uvf cube to the range of the obs
 freq_arr = (*obs.baseline_info).freq
 lim = minmax(freq_arr)
-freq_inds = where((freq_hpx GT lim[0]) and (freq_hpx LT lim[1]) )
+freq_inds = where((freq_hpx GE lim[0]) and (freq_hpx LE lim[1]) )
 freq_hpx = freq_hpx[freq_inds]
 nfreq_hpx = n_elements(freq_hpx)
 
@@ -45,7 +45,35 @@ t0 = systime(/seconds)
 if n_elements(dat) eq 0 then dat = H5D_READ(dset_id_eor, FILE_SPACE=dpsace_id_eor)
 print, 'HDF5 reading time = ', systime(/seconds) - t0, ' seconds'
 
-; dat now contains zeros for the nonselected healpix indices, but retains the full shell shape
+; If l taper is set --- apply weights to l modes, up to the maximum l mode of the orthoslant map.
+; There isn't a standard way to do this strictly within IDL, so call healpy functions using IDL to Python bridge.
+if keyword_set(ltaper) THEN BEGIN
+    print, 'Applying l taper'
+    lmax_fhd = floor(180./obs.degpix)
+    lmax_hpx = 3*nside-1
+    if lmax_fhd GT lmax_hpx THEN BEGIN
+        print, "Input map resolution below FHD settings. lmax_fhd="+string(lmax_fhd)
+        lmax_fhd = lmax_hpx
+    ENDIF
+    hp = python.import('healpy')
+    mmax_hpx= lmax_hpx
+    almsize = floor(mmax_hpx * (2 * lmax_hpx + 1 - mmax_hpx) / 2.) + lmax_hpx + 1
+    almidx = lindgen(almsize)
+    lm = hp.Alm.getlm(lmax_hpx,almidx)
+    lmat = lm[0]
+    mmat = lm[1]
+    win_mat = 0.5*(1-tanh(ltaper*(lmat-lmax_fhd)))
+    for fi=0, nfreq_hpx-1 DO BEGIN
+        print, fi
+        map = Temporary(reform(dat[fi,*]))
+        alm = hp.map2alm(map,lmax=lmax_hpx)
+        alm *= win_mat
+        dat[fi,*] = hp.alm2map(alm,nside,lmax=lmax_hpx)
+        dat[fi,*] *= sqrt(variance(map)/variance(dat[fi,*]))    ; Preserve variance for gaussian maps
+    ENDFOR
+ENDIF
+
+
 ; Interpolate in frequency:
 dat_interp = Fltarr(obs.n_freq,npix_sel)
 t0=systime(/seconds)
@@ -58,6 +86,7 @@ for fi=0, obs.n_freq-1 DO hpx_arr[fi] = ptr_new(reform(dat_interp[fi,*]))
 H5S_CLOSE, dspace_id_eor
 H5D_CLOSE, dset_id_eor
 H5F_CLOSE, f_id
+
 
 model_uv_arr=Ptrarr(n_pol,/allocate)
 t0 = systime(/seconds)
