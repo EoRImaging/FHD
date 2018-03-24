@@ -10,7 +10,7 @@ FUNCTION test_eor_sim
 instrument='mwa'
 n_pol=2
 
-bubble_fname='/gpfs/data/jpober/alanman/BubbleCube/TiledHpxCubes/uniform_cube.hdf5'
+bubble_fname='/gpfs/data/jpober/alanman/BubbleCube/TiledHpxCubes/mwa_gaussian_ugrade_256.hdf5'
 select_radius=1.0
 
 ;hdr=uvfits_header_simulate(hdr_in,n_pol=n_pol, instrument=instrument)
@@ -23,6 +23,7 @@ restore, '/users/alanman/fhd_out/fhd_mwa_goldensubset/metadata/1061311664_obs.sa
 obs.dimension=256
 obs.elements=256
 obs.kpix=0.5
+obs.degpix = !RaDeg * 1/(obs.kpix*obs.dimension)
 n_samples=obs.n_time
 n_freq=203
 ;(*obs.baseline_info).freq=findgen(101)*1e6+1e6     ;101 freq chans
@@ -46,9 +47,8 @@ psf=beam_setup(obs)
 jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0)
 
 ;eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
-eor_uvf_cube = eor_bubble_sim(obs, jones, select_radius=select_radius, bubble_fname=bubble_fname)
+eor_uvf_cube = eor_bubble_sim(obs, jones, select_radius=select_radius, bubble_fname=bubble_fname,/ltaper)
 
-exit
 
 model_uvf_arr=Ptrarr(n_pol,/allocate)
 for pol_i=0,n_pol-1 do *model_uvf_arr[pol_i]=Complexarr(obs.dimension,obs.elements, n_freq)
