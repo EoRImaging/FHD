@@ -1,4 +1,4 @@
-FUNCTION eor_bubble_sim, obs, jones, ltaper=ltaper, select_radius=select_radius, bubble_fname=bubble_fname, dat=dat 
+FUNCTION eor_bubble_sim, obs, jones, ltaper=ltaper, select_radius=select_radius, bubble_fname=bubble_fname, dat=dat, file_path_fhd=file_path_fhd,orthomap_var=orthomap_var
 
 ;Opening an HDF5 file and extract relevant data
 if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE message, "Missing bubble file path"
@@ -93,6 +93,17 @@ t0 = systime(/seconds)
 model_stokes_arr = healpix_interpolate(hpx_arr,obs,nside=nside,hpx_inds=inds_select,/from_kelvin)
 print, 'Healpix_interpolate timing: ', systime(/seconds) - t0
 
+; Replace the interpolated orthoslant with gaussian noise
+IF keyword_set(orthslant_var) THEN BEGIN
+    model_stokes_arr = ptrarr(obs.n_freq)
+    convert_factor = convert_kelvin_jansky(1.,degpix=obs.degpix,freq=obs.freq_center)
+    var = orthomap_var
+    for fi=0, obs.n_freq-1 do begin
+        model_stokes_arr[fi] = ptr_new(randomn(seed,obs.dimension,obs.elements) * sqrt(var) * convert_factor)  ; K -> Jy/pix (ortho)
+    ; * convert_factor * weight_invert(pixel_area_factor))`
+    ENDFOR
+ENDIF
+
 FOR pol_i=0, n_pol-1 DO *model_uv_arr[pol_i]=Fltarr(obs.dimension,obs.elements,obs.n_freq)
 FOR fi=0, obs.n_freq-1 do begin
    model_tmp=Ptrarr(n_pol,/allocate)
@@ -107,5 +118,6 @@ FOR fi=0, obs.n_freq-1 do begin
    ENDFOR
    Ptr_free,model_arr
 ENDFOR
+save, filename=file_path_fhd + '_model_stokes_arr.sav',model_uv_arr, model_stokes_arr, nside, pixel_area_factor, var, convert_factor
 return, model_uv_arr
 END
