@@ -1,7 +1,7 @@
 FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=file_path_fhd,vis_weights=vis_weights,$
     recalculate_all=recalculate_all,$
     include_eor=include_eor, flat_sigma = flat_sigma, no_distrib = no_distrib, delta_power = delta_power, $
-    bubble_fname=bubble_fname, select_radius=select_radius, ltaper=ltaper, $
+    bubble_fname=bubble_fname, select_radius=select_radius, ltaper=ltaper,orthomap_var=orthomap_var, $
     delta_uv_loc = delta_uv_loc, eor_real_sky = eor_real_sky, $
     include_noise = include_noise, noise_sigma_freq = noise_sigma_freq, $
     include_catalog_sources = include_catalog_sources, source_array=source_array, catalog_file_path=catalog_file_path, $
@@ -161,7 +161,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
     
     ;; If bubble file is included, add to the model_uvf_arr
     IF Keyword_Set(bubble_fname) THEN BEGIN 
-       bubble_uvf = eor_bubble_sim(obs, jones, select_radius=select_radius, bubble_fname=bubble_fname,ltaper=ltaper)
+       bubble_uvf = eor_bubble_sim(obs, jones, select_radius=select_radius, bubble_fname=bubble_fname,ltaper=ltaper,file_path_fhd=file_path_fhd,orthomap_var=orthomap_var)
        IF Min(Ptr_valid(bubble_uvf)) GT 0 THEN BEGIN
          IF n_elements(model_uvf_arr) GT 0 then begin
            FOR pol_i=0,n_pol-1 DO *model_uvf_arr[pol_i] += *bubble_uvf[pol_i];*uv_mask_use
