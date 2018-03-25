@@ -76,31 +76,7 @@ FOR map_i=0,n_map-1 DO BEGIN
     model_img[Ceil(xv_hpx),Floor(yv_hpx)]+=(1-x_frac)*y_frac*hpx_vals
     model_img[Ceil(xv_hpx),Ceil(yv_hpx)]+=(1-x_frac)*(1-y_frac)*hpx_vals
     model_img*=weight_invert(weights_img)
-    
-    mask=fltarr(dimension,elements)
-    mask[radec_i]=1
-    interp_i=where((model_img EQ 0) AND (mask GT 0),n_interp)
-    IF n_interp GT 0 THEN BEGIN
-        fraction_int=n_interp/Total(mask)
-        min_valid=4.
-        min_width=Ceil(2.*Sqrt(min_valid/(!Pi*fraction_int)))>3.
-        model_int=model_img
-        model_int[interp_i]=!Values.F_NAN
-        model_filtered=Median(model_int,min_width,/even)
-        i_nan=where(Finite(model_filtered,/nan),n_nan)
-        iter=0
-        WHILE n_nan GT 0 DO BEGIN
-            IF iter GT 5 THEN BREAK
-            nan_x=i_nan mod dimension
-            nan_y=Floor(i_nan/dimension)
-            width_use=Ceil(min_width*(1.+iter)/2.)
-            FOR i=0L,n_nan-1 DO model_filtered[i_nan[i]]=Median(model_filtered[(nan_x[i]-width_use)>0:(nan_x[i]+width_use)<(dimension-1),(nan_y[i]-width_use)>0:(nan_y[i]+width_use)<(elements-1)],/even)
-            i_nan=where(Finite(model_filtered,/nan),n_nan)
-            iter+=1
-        ENDWHILE
-        IF n_nan GT 0 THEN model_filtered[i_nan]=0.
-        model_img[interp_i]=model_filtered[interp_i]
-    ENDIF
+
     model_uv = fft_shift(FFT(model_img * image_mask))
 
     ; Zero pad or truncate to the true orthoslant dimension
