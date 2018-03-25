@@ -116,8 +116,10 @@ FOR map_i=0,n_map-1 DO BEGIN
         model_uv_full[dim_out/2. - dimension/2.: dim_out/2. + dimension/2.-1,$
             ele_out/2. - elements/2.: ele_out/2. + elements/2. -1] = model_uv
     ENDELSE
-    model_img = FFT(fft_shift(model_uv_full),/inverse)
-    
+    ; Scaling accounts for the change in grid size
+    scale = (dimension*elements)/float(dim_out*ele_out)
+    model_img = scale*FFT(fft_shift(model_uv_full),/inverse)
+
     IF Ptr_flag THEN *map_interp[map_i]=model_img ELSE map_interp=model_img
 ENDFOR
 
