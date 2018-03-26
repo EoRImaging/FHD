@@ -52,7 +52,12 @@ xv_hpx=xv_hpx[hpx_i_use]
 yv_hpx=yv_hpx[hpx_i_use]
 
 image_mask=Fltarr(dimension,elements)
-image_mask[Min(Floor(xv_hpx)):Max(Ceil(xv_hpx)),Min(Floor(yv_hpx)):Max(Ceil(yv_hpx))]=1
+;image_mask[Min(Floor(xv_hpx)):Max(Ceil(xv_hpx)),Min(Floor(yv_hpx)):Max(Ceil(yv_hpx))]=1
+image_mask[Floor(xv_hpx),Floor(yv_hpx)] = 1
+image_mask[Ceil(xv_hpx),Ceil(yv_hpx)] = 1
+image_mask[Ceil(xv_hpx),Floor(yv_hpx)] = 1
+image_mask[Floor(xv_hpx),Ceil(yv_hpx)] = 1      ; Cover the full circular region
+
 
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
@@ -61,21 +66,15 @@ IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=n
         ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/n_hpx) ; (steradian/new pixel)/(steradian/old pixel)
 
 area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
-weights_img=fltarr(dimension,elements)
-weights_img[Floor(xv_hpx),Floor(yv_hpx)]+=x_frac*y_frac
-weights_img[Floor(xv_hpx),Ceil(yv_hpx)]+=x_frac*(1-y_frac)
-weights_img[Ceil(xv_hpx),Floor(yv_hpx)]+=(1-x_frac)*y_frac
-weights_img[Ceil(xv_hpx),Ceil(yv_hpx)]+=(1-x_frac)*(1-y_frac)
+
+triangulate, xv_hpx,yv_hpx, triangles
 FOR map_i=0,n_map-1 DO BEGIN
-    model_img=fltarr(dimension,elements)
     IF Ptr_flag THEN hpx_vals=(*healpix_map[map_i])[hpx_i_use] ELSE hpx_vals=healpix_map[hpx_i_use] 
     hpx_vals*=pixel_area_cnv ;convert to Jy/pixel for the new Healpix pixels
-    
-    model_img[Floor(xv_hpx),Floor(yv_hpx)]+=x_frac*y_frac*hpx_vals
-    model_img[Floor(xv_hpx),Ceil(yv_hpx)]+=x_frac*(1-y_frac)*hpx_vals
-    model_img[Ceil(xv_hpx),Floor(yv_hpx)]+=(1-x_frac)*y_frac*hpx_vals
-    model_img[Ceil(xv_hpx),Ceil(yv_hpx)]+=(1-x_frac)*(1-y_frac)*hpx_vals
-    model_img*=weight_invert(weights_img)
+    t0 = systime(1)
+    model_img = griddata(xv_hpx, yv_hpx, hpx_vals,dimension=[dimension,elements],delta=[1,1], triangles=triangles, /nearest_neighbor)
+    t1 = systime(1)
+    print, 'time for griddata (sec): ' + number_formatter((t1-t0))
 
     model_uv = fft_shift(FFT(model_img * image_mask))
 
