@@ -9,15 +9,11 @@ IF N_Elements(hpx_inds) EQ 0 THEN hpx_inds=Lindgen(n_hpx)
 hpx_res = sqrt(4*!Pi/(n_hpx))*!RaDeg
 dimension_hpx = ceil((obs.dimension*obs.degpix/hpx_res)*(1/2.))*2    ; Ensure even.
 elements_hpx = ceil((obs.elements*obs.degpix/hpx_res)*(1/2.))*2
-dimension = obs.dimension>dimension_hpx    ; Choose the larger dimension
-elements = obs.elements>dimension_hpx
-
-                    ; likewise with elements
 ; give new dimension/elements to update_obs
-obs_hpx = fhd_struct_update_obs(obs,dimension=dimension, elements=elements)
+obs_hpx = fhd_struct_update_obs(obs,dimension=dimension_hpx, elements=elements_hpx)
 astr=obs_hpx.astr
 
-apply_astrometry,obs_hpx, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension, elements, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+apply_astrometry,obs_hpx, x_arr=meshgrid(dimension_hpx,elements_hpx,1), y_arr=meshgrid(dimension_hpx, elements_hpx, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 radec_i=where(Finite(ra_arr))
 
 IF size(healpix_map,/type) EQ 10 THEN BEGIN ;check if pointer type, and if so allow it to be a pointer array
@@ -43,7 +39,7 @@ IF coord_sys EQ 'equatorial' THEN Hor2Eq,pix_dec,pix_ra,Jdate_use,pix_ra,pix_dec
 
 apply_astrometry, obs_hpx, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
 
-hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)),n_hpx_use) 
+hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension_hpx-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements_hpx-1)),n_hpx_use) 
 IF n_hpx_use EQ 0 THEN BEGIN
     print,"Error: Map has no valid Healpix indices"
     RETURN,map_interp
@@ -51,7 +47,7 @@ ENDIF
 xv_hpx=xv_hpx[hpx_i_use]
 yv_hpx=yv_hpx[hpx_i_use]
 
-image_mask=Fltarr(dimension,elements)
+image_mask=Fltarr(dimension_hpx,elements_hpx)
 ;image_mask[Min(Floor(xv_hpx)):Max(Ceil(xv_hpx)),Min(Floor(yv_hpx)):Max(Ceil(yv_hpx))]=1
 image_mask[Floor(xv_hpx),Floor(yv_hpx)] = 1
 image_mask[Ceil(xv_hpx),Ceil(yv_hpx)] = 1
@@ -68,40 +64,54 @@ IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=n
 area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
 
 triangulate, xv_hpx,yv_hpx, triangles
+t0 = systime(1)
+grid_map = griddata(xv_hpx, yv_hpx, findgen(n_hpx_use),dimension=[dimension_hpx,elements_hpx],delta=[1,1], triangles=triangles, /nearest_neighbor)
+t1 = systime(1)
+print, 'time for griddata (sec): ' + number_formatter((t1-t0))
+big_model_img = ptrarr(n_map)
 FOR map_i=0,n_map-1 DO BEGIN
+    model_img = fltarr(dimension_hpx,elements_hpx)
     IF Ptr_flag THEN hpx_vals=(*healpix_map[map_i])[hpx_i_use] ELSE hpx_vals=healpix_map[hpx_i_use] 
     hpx_vals*=pixel_area_cnv ;convert to Jy/pixel for the new Healpix pixels
-    t0 = systime(1)
-    model_img = griddata(xv_hpx, yv_hpx, hpx_vals,dimension=[dimension,elements],delta=[1,1], triangles=triangles, /nearest_neighbor)
-    t1 = systime(1)
-    print, 'time for griddata (sec): ' + number_formatter((t1-t0))
 
+    model_img += hpx_vals[grid_map]
+    big_model_img[map_i] = Ptr_new(model_img)
     model_uv = fft_shift(FFT(model_img * image_mask))
-
+    print, 'Variance of projected image: ', variance(model_img)
     ; Zero pad or truncate to the true orthoslant dimension
     dim_out = obs.dimension
     ele_out = obs.elements
-    IF dim_out LT dimension THEN BEGIN
+    IF dim_out LT dimension_hpx THEN BEGIN
         ; Truncate
-        model_uv_full = model_uv[dimension/2. - dim_out/2.: dimension/2. + dim_out/2.-1,$
-                                   elements/2. - ele_out/2.: elements/2. + ele_out/2.-1 ]
+        model_uv_full = model_uv[dimension_hpx/2. - dim_out/2.: dimension_hpx/2. + dim_out/2.-1,$
+                                   elements_hpx/2. - ele_out/2.: elements_hpx/2. + ele_out/2.-1 ]
     ENDIF ELSE BEGIN
         ; Zero-pad
         model_uv_full = Complexarr(dim_out,ele_out)
-        model_uv_full[dim_out/2. - dimension/2.: dim_out/2. + dimension/2.-1,$
-            ele_out/2. - elements/2.: ele_out/2. + elements/2. -1] = model_uv
+        model_uv_full[dim_out/2. - dimension_hpx/2.: dim_out/2. + dimension_hpx/2.-1,$
+            ele_out/2. - elements_hpx/2.: ele_out/2. + elements_hpx/2. -1] = model_uv
     ENDELSE
     ; Scaling accounts for the change in grid size
-    scale = (dimension*elements)/float(dim_out*ele_out)
+    scale = (dimension_hpx*elements_hpx)/float(dim_out*ele_out)
     model_img = scale*FFT(fft_shift(model_uv_full),/inverse)
+    print, 'Scale=',scale
+    print, 'Variance of resized image: ', variance(model_img)
 
     IF Ptr_flag THEN *map_interp[map_i]=model_img ELSE map_interp=model_img
 ENDFOR
 
+<<<<<<< HEAD
 ;pixel_area_factor=pixel_area(obs,/relative)
 ;IF Ptr_flag THEN BEGIN
 ;    FOR p_i=0L,N_Elements(map_interp)-1 DO *map_interp[p_i]*=weight_invert(pixel_area_factor)
 ;ENDIF ELSE map_interp*=weight_invert(pixel_area_factor)
 
+=======
+pixel_area_factor=pixel_area(obs,/relative)
+IF Ptr_flag THEN BEGIN
+    FOR p_i=0L,N_Elements(map_interp)-1 DO *map_interp[p_i]*=weight_invert(pixel_area_factor)
+ENDIF ELSE map_interp*=weight_invert(pixel_area_factor)
+save, map_interp, big_model_img, filename='model_images_nside'+number_formatter(nside)+'.sav'
+>>>>>>> ba7d4c6... Do griddata only once, reusing index map for frequency loop
 RETURN,map_interp
 END
