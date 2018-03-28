@@ -1,5 +1,6 @@
 FUNCTION fhd_struct_init_jones,obs,status_str,jones_in,file_path_fhd=file_path_fhd,mask=mask,$
-    restore_last=restore_last,update_last=update_last,debug_jones_obs=debug_jones_obs,_Extra=extra
+    restore_last=restore_last,update_last=update_last,debug_jones_obs=debug_jones_obs,$
+    beam_model_version=beam_model_version,_Extra=extra
 
 IF Keyword_Set(restore_last) THEN BEGIN
     fhd_save_io,status_str,jones,var='jones',file_path_fhd=file_path_fhd,/restore,_Extra=extra
@@ -62,44 +63,61 @@ dec=dec_use*!DtoR
 ha=hour_angle*!DtoR
 ;calculate the elements of the dipole projection matrix J ((J11, J12), (J21,J22))
 ;From Ord S.M. et al "Interferometric Imaging with the 32 Element Murchison Wide-Field Array" PASP 122 (2010)
-;J11=Cos(phi)*Cos(dec)+Sin(phi)*Sin(dec)*Cos(ha)
-;J12=-Sin(phi)*Sin(ha)
-;J21=Sin(dec)*Sin(ha)
-;J22=Cos(ha)
-
 ;NOTE!! RTS convention uses X for N-S dipoles, and Y for E-W, which is opposite everything else. So, we have to re-order the Jones matrix elements
-;J21=Cos(phi)*Cos(dec)+Sin(phi)*Sin(dec)*Cos(ha)
-;J22=-Sin(phi)*Sin(ha)
-;J11=Sin(dec)*Sin(ha)
-;J12=Cos(ha)
 J21=Cos(lat)*Cos(dec)+Sin(lat)*Sin(dec)*Cos(ha)
 J22=-Sin(lat)*Sin(ha)
 J11=Sin(phi)*Sin(ha)
 J12=Cos(ha)
+obs_temp = fhd_struct_update_obs(obs, nfreq_avg=obs.n_freq) ; Use only one average Jones matrix, not one per frequency
+antenna=fhd_struct_init_antenna(obs_temp,beam_model_version=beam_model_version,psf_resolution=1.,$
+    psf_dim=obs.dimension,psf_intermediate_res=1.,psf_image_resolution=1.,timing=t_ant)
+Jones=antenna[0].Jones[*,*,0]
+; Calculate the normalization
+ant_pol1 = 0
+ant_pol2 = 1
+power_zenith_beam = Fltarr(dimension, elements)
+FOR ant_pol=0,1 DO FOR sky_pol=0,1 DO $
+    power_zenith_beam += Real_part(*Jones[sky_pol,ant_pol]*Conj(*Jones[sky_pol, ant_pol]))
+;power_zenith_beam=abs((*Jones[0,ant_pol1])*(Conj(*Jones[0,ant_pol1]))+(*Jones[1,ant_pol1])*(Conj(*Jones[1,ant_pol1])) +$
+;    (*Jones[0,ant_pol2])*(Conj(*Jones[0,ant_pol2]))+(*Jones[1,ant_pol2])*(Conj(*Jones[1,ant_pol2])))
+power_zenith=Interpolate(power_zenith_beam,obs_temp.zenx,obs_temp.zeny,cubic=-0.5)
+FOR ptr_i=0,3 DO *Jones[ptr_i] = (*Jones[ptr_i])[inds_use]/Sqrt(power_zenith)
+;J11 = *Jones[0,0]
+;J12 = *Jones[0,1]
+;J21 = *Jones[1,0]
+;J22 = *Jones[1,1]
 
 p_map=Ptrarr(4,4,/allocate)
 p_corr=Ptrarr(4,4,/allocate)
 FOR i=0,3 DO FOR j=0,3 DO *p_map[i,j]=fltarr(n_pix)
 FOR i=0,3 DO FOR j=0,3 DO *p_corr[i,j]=fltarr(n_pix)
+order_1 = [0,1,0,1]
+order_2 = [0,1,1,0]
 
 FOR pix=0L,n_pix-1 DO BEGIN
     ;calculate tensor product J(X)J* 
     ;Jmat converts [pp,qq,pq,qp] -> [xx,yy,xy,yx]
     ;Jinv converts [xx, yy, xy, yx] -> [pp, qq, pq, qp]
-    ;Note: Stokes [I, Q, U, V] = (1./2.)*[(pp+qq), (qq-pp), ?(pq+qp)?, ?(qp-pq)?]
-
-    Jmat=[[J11[pix]^2.,J12[pix]^2.,J11[pix]*J12[pix],J12[pix]*J11[pix]],$
-             [J21[pix]^2.,J22[pix]^2.,J21[pix]*J22[pix],J22[pix]*J21[pix]],$
-             [J11[pix]*J21[pix],J12[pix]*J22[pix],J11[pix]*J22[pix],J12[pix]*J21[pix]],$
-             [J21[pix]*J11[pix],J22[pix]*J12[pix],J21[pix]*J12[pix],J22[pix]*J11[pix]]]
+    ;Note: Stokes [I, Q, U, V] = (1./2.)*[(pp+qq), (qq-pp), (pq+qp), (iqp-ipq)]
+    Jmat = Fltarr(4,4)
+    FOR ii=0,3 DO BEGIN
+        FOR jj = 0,3 DO BEGIN
+            Jmat[ii, jj] = (*Jones[order_1[ii], order_1[jj]])[pix]*Conj((*Jones[order_2[ii], order_2[jj]])[pix])
+        ENDFOR
+    ENDFOR
+;    Note that we re-order the matrix elements after the Kronecker product
+;    Leave the following code in as a reference for the final matrix element ordering
+;    Jmat=Abs([[J11[pix]*Conj(J11[pix]),J12[pix]*Conj(J12[pix]),J11[pix]*Conj(J12[pix]),J12[pix]*Conj(J11[pix])],$
+;              [J21[pix]*Conj(J21[pix]),J22[pix]*Conj(J22[pix]),J21[pix]*Conj(J22[pix]),J22[pix]*Conj(J21[pix])],$
+;              [J11[pix]*Conj(J21[pix]),J12[pix]*Conj(J22[pix]),J11[pix]*Conj(J22[pix]),J12[pix]*Conj(J21[pix])],$
+;              [J21[pix]*Conj(J11[pix]),J22[pix]*Conj(J12[pix]),J21[pix]*Conj(J12[pix]),J22[pix]*Conj(J11[pix])]])
     Jinv=Invert(Jmat)
     
     FOR i=0,3 DO FOR j=0,3 DO (*p_map[i,j])[pix]=Jmat[i,j]
     FOR i=0,3 DO FOR j=0,3 DO (*p_corr[i,j])[pix]=Jinv[i,j]
 ENDFOR
 
-jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
-;jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_corr,Jinv:p_map}
-fhd_save_io,status_str,jones,var='jones',/compress,file_path_fhd=file_path_fhd,_Extra=extra
-RETURN,jones
+jones_str={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
+fhd_save_io,status_str,jones_str,var='jones',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+RETURN,jones_str
 END
