@@ -11,10 +11,9 @@ dimension_hpx = ceil((obs.dimension*obs.degpix/hpx_res)*(1/2.))*2    ; Ensure ev
 elements_hpx = ceil((obs.elements*obs.degpix/hpx_res)*(1/2.))*2
 ; give new dimension/elements to update_obs
 obs_hpx = fhd_struct_update_obs(obs,dimension=dimension_hpx, elements=elements_hpx)
-astr=obs_hpx.astr
 
-apply_astrometry,obs_hpx, x_arr=meshgrid(dimension_hpx,elements_hpx,1), y_arr=meshgrid(dimension_hpx, elements_hpx, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
-radec_i=where(Finite(ra_arr))
+;apply_astrometry,obs_hpx, x_arr=meshgrid(dimension_hpx,elements_hpx,1), y_arr=meshgrid(dimension_hpx, elements_hpx, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+;radec_i=where(Finite(ra_arr))
 
 IF size(healpix_map,/type) EQ 10 THEN BEGIN ;check if pointer type, and if so allow it to be a pointer array
     ptr_flag=1
@@ -65,7 +64,7 @@ area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
 
 triangulate, xv_hpx,yv_hpx, triangles
 t0 = systime(1)
-grid_map = griddata(xv_hpx, yv_hpx, findgen(n_hpx_use),dimension=[dimension_hpx,elements_hpx],delta=[1,1], triangles=triangles, /nearest_neighbor)
+grid_map = griddata(xv_hpx, yv_hpx, findgen(n_hpx_use),dimension=[dimension_hpx,elements_hpx],delta=[1,1], triangles=triangles, /nearest_neighbor, start=[0,0])
 t1 = systime(1)
 print, 'time for griddata (sec): ' + number_formatter((t1-t0))
 big_model_img = ptrarr(n_map)
