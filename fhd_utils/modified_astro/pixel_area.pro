@@ -46,11 +46,6 @@ FOR i=0,2 DO BEGIN
     area_map+=(pix_vec_A[*,*,A_i]*pix_vec_B[*,*,B_i]-pix_vec_A[*,*,B_i]*pix_vec_B[*,*,A_i])^2.
 ENDFOR
 area_map=Sqrt(area_map)
-if Keyword_Set(nside) THEN BEGIN
-    print, "Using nside="+String(nside)
-    area_map *= 0.0
-    hpx_area = 4*!Pi / (12.0 * nside*nside)    ; nside^2 evaluates to 0 if nside is integer
-    area_map += hpx_area
 IF Keyword_Set(relative) THEN area_map/=(obs.degpix*!DtoR)^2.
 
 ;astr=obs.astr
