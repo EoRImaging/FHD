@@ -1,4 +1,4 @@
-function image_window, x_locs, y_locs, image_window_name = image_window_name,
+function image_window, x_locs, y_locs, image_window_name = image_window_name, $
   fractional_size = fractional_size
 
   ;; This function makes a 2D spatial window for an irregularly gridded (e.g. HEALPix) pixel set
