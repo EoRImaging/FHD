@@ -30,7 +30,7 @@ ENDELSE
 
 IF hpx_ordering EQ 'ring' THEN pix2vec_ring,nside,hpx_inds,pix_coords $
     ELSE pix2vec_nest,nside,hpx_inds,pix_coords
-    
+
 
 vec2ang,pix_coords,pix_dec,pix_ra,/astro
 IF coord_sys EQ 'galactic' THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /degree
@@ -62,21 +62,18 @@ IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=n
 
 area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
 
-triangulate, xv_hpx,yv_hpx, triangles
-t0 = systime(1)
-grid_map = griddata(xv_hpx, yv_hpx, findgen(n_hpx_use),dimension=[dimension_hpx,elements_hpx],delta=[1,1], triangles=triangles, /nearest_neighbor, start=[0,0])
-t1 = systime(1)
-print, 'time for griddata (sec): ' + number_formatter((t1-t0))
+print, 'conversion: ',pixel_area_cnv
+
 big_model_img = ptrarr(n_map)
 FOR map_i=0,n_map-1 DO BEGIN
     model_img = fltarr(dimension_hpx,elements_hpx)
     IF Ptr_flag THEN hpx_vals=(*healpix_map[map_i])[hpx_i_use] ELSE hpx_vals=healpix_map[hpx_i_use] 
-    hpx_vals*=pixel_area_cnv ;convert to Jy/pixel for the new Healpix pixels
+;    hpx_vals*=pixel_area_cnv ;convert to Jy/pixel for the new Healpix pixels
 
-    model_img += hpx_vals[grid_map]
+    for ni=0,n_hpx_use-1 DO model_img[round(xv_hpx[ni]),round(yv_hpx[ni])] += hpx_vals[ni]
     big_model_img[map_i] = Ptr_new(model_img)
     model_uv = fft_shift(FFT(model_img * image_mask))
-    print, 'Variance of projected image: ', variance(model_img)
+
     ; Zero pad or truncate to the true orthoslant dimension
     dim_out = obs.dimension
     ele_out = obs.elements
@@ -93,10 +90,8 @@ FOR map_i=0,n_map-1 DO BEGIN
     ; Scaling accounts for the change in grid size
     scale = sqrt((dimension_hpx*elements_hpx)/float(dim_out*ele_out))
     model_img = FFT(fft_shift(model_uv_full*scale),/inverse)
-    print, 'Scale=',scale
-    print, 'Variance of resized image: ', variance(model_img)
 
-    IF Ptr_flag THEN *map_interp[map_i]=model_img ELSE map_interp=model_img
+    IF Ptr_flag THEN *map_interp[map_i]=model_img*pixel_area_cnv ELSE map_interp=model_img*pixel_area_cnv   ; Jy/pixel for the orthoslant pixel area
 ENDFOR
 
 ;pixel_area_factor=pixel_area(obs,/relative)
