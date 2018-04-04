@@ -88,7 +88,7 @@ FOR map_i=0,n_map-1 DO BEGIN
             ele_out/2. - elements_hpx/2.: ele_out/2. + elements_hpx/2. -1] = model_uv
     ENDELSE
     ; Scaling accounts for the change in grid size
-    scale = sqrt((dimension_hpx*elements_hpx)/float(dim_out*ele_out))
+    if keyword_set(from_kelvin) THEN  scale = sqrt((dimension_hpx*elements_hpx)/float(dim_out*ele_out)) ELSE scale=1.0
     model_img = FFT(fft_shift(model_uv_full*scale),/inverse)
 
     IF Ptr_flag THEN *map_interp[map_i]=model_img*pixel_area_cnv ELSE map_interp=model_img*pixel_area_cnv   ; Jy/pixel for the orthoslant pixel area
