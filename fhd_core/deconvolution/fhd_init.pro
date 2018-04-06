@@ -37,7 +37,7 @@ IF N_Elements(deconvolution_convergence_sigma) EQ 0 THEN deconvolution_convergen
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05 ;0.05 is really as far down as you should go with our current beam models!
 IF N_Elements(beam_max_threshold) EQ 0 THEN beam_max_threshold=1e-4 ; Completely mask all pixels below this beam threshold.
 
-IF N_Elements(max_sources) EQ 0 THEN max_sources=100000L ELSE max_sources=Fix(max_sources) ; Maximum number of source components to deconvolve
+IF N_Elements(max_sources) EQ 0 THEN max_sources=100000L ELSE max_sources=Long(max_sources) ; Maximum number of source components to deconvolve
 IF N_Elements(gain_factor) EQ 0 THEN gain_factor=0.15 ; "clean gain" applied to detected sources before subtraction
 IF N_Elements(deconvolution_add_threshold) EQ 0 THEN deconvolution_add_threshold=0.8 ;also fit additional components brighter than this threshold
 IF N_Elements(local_max_radius) EQ 0 THEN local_max_radius=3. ; Sources must be brighter than all other pixels within this radius to be detected
