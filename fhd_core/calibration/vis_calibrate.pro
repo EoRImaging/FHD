@@ -192,11 +192,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     ENDIF ELSE cal=cal_bandpass
     
   ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,_Extra=extra)
-  
-  ;Get amp from auto-correlation visibilities for plotting (or optionally for the calibration solution itself)
-  IF Keyword_Set(vis_auto_model) THEN cal_auto=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
-  IF Keyword_Set(calibration_auto_fit) THEN cal_res=vis_cal_subtract(cal_base,cal_auto) ELSE cal_res=vis_cal_subtract(cal_base,cal)
-  
+ 
   ;In-situ simulation -- forced calibration solutions
   if keyword_set(sim_over_calibrate) then begin
     *cal.gain[0] = (*cal_base.gain[0])
@@ -208,6 +204,10 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     (*cal.gain[1])[*,*] = 1.
     message, "Forcing perfect solutions on the simulated gains"
   endif
+    
+  ;Get amp from auto-correlation visibilities for plotting (or optionally for the calibration solution itself)
+  IF Keyword_Set(vis_auto_model) THEN cal_auto=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
+  IF Keyword_Set(calibration_auto_fit) THEN cal_res=vis_cal_subtract(cal_base,cal_auto) ELSE cal_res=vis_cal_subtract(cal_base,cal)
   
   basename=file_basename(file_path_fhd)
   dirpath=file_dirname(file_path_fhd)
