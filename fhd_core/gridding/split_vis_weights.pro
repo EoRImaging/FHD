@@ -44,6 +44,7 @@ IF n_even LT n_odd THEN *bi_use[1]=(*bi_use[1])[0:n_even-1]
 IF n_odd LT n_even THEN *bi_use[0]=(*bi_use[0])[0:n_odd-1]
 
 FOR pol_i=0,n_pol-1 DO BEGIN
+    ;Logic AND where the max is 1 and min is 0. Breaks down if there are negative weights (accounted for earlier)
     flag_use0=0>(*vis_weights_use[pol_i])[*,*bi_use[0]]<(*vis_weights_use[pol_i])[*,*bi_use[1]]<1
     *vis_weights_use[pol_i]*=0
     IF ~Keyword_Set(odd_only) THEN (*vis_weights_use[pol_i])[*,*bi_use[0]]=flag_use0
