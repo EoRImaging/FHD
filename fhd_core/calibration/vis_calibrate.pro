@@ -197,12 +197,12 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   if keyword_set(sim_over_calibrate) then begin
     *cal.gain[0] = (*cal_base.gain[0])
     *cal.gain[1] = (*cal_base.gain[1])
-    message, "Forcing per-frequency solutions on the simulated gains"
+    print, "Forcing per-frequency solutions on the simulated gains"
   endif
   if keyword_set(sim_perf_calibrate) then begin
     (*cal.gain[0])[*,*] = 1.
     (*cal.gain[1])[*,*] = 1.
-    message, "Forcing perfect solutions on the simulated gains"
+    print, "Forcing perfect solutions on the simulated gains"
   endif
     
   ;Get amp from auto-correlation visibilities for plotting (or optionally for the calibration solution itself)
