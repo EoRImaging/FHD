@@ -47,7 +47,6 @@ xv_hpx=xv_hpx[hpx_i_use]
 yv_hpx=yv_hpx[hpx_i_use]
 
 image_mask=Fltarr(dimension_hpx,elements_hpx)
-;image_mask[Min(Floor(xv_hpx)):Max(Ceil(xv_hpx)),Min(Floor(yv_hpx)):Max(Ceil(yv_hpx))]=1
 image_mask[Floor(xv_hpx),Floor(yv_hpx)] = 1
 image_mask[Ceil(xv_hpx),Ceil(yv_hpx)] = 1
 image_mask[Ceil(xv_hpx),Floor(yv_hpx)] = 1
@@ -61,8 +60,6 @@ IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=n
         ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/n_hpx) ; (steradian/new pixel)/(steradian/old pixel)
 
 area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
-
-print, 'conversion: ',pixel_area_cnv
 
 big_model_img = ptrarr(n_map)
 FOR map_i=0,n_map-1 DO BEGIN
@@ -87,8 +84,8 @@ FOR map_i=0,n_map-1 DO BEGIN
         model_uv_full[dim_out/2. - dimension_hpx/2.: dim_out/2. + dimension_hpx/2.-1,$
             ele_out/2. - elements_hpx/2.: ele_out/2. + elements_hpx/2. -1] = model_uv
     ENDELSE
-    ; Scaling accounts for the change in grid size
-    if keyword_set(from_kelvin) THEN  scale = sqrt((dimension_hpx*elements_hpx)/float(dim_out*ele_out)) ELSE scale=1.0
+
+    scale=1.0
     model_img = FFT(fft_shift(model_uv_full*scale),/inverse)
 
     IF Ptr_flag THEN *map_interp[map_i]=model_img*pixel_area_cnv ELSE map_interp=model_img*pixel_area_cnv   ; Jy/pixel for the orthoslant pixel area
