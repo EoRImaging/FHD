@@ -61,14 +61,12 @@ IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=n
 
 area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
 
-big_model_img = ptrarr(n_map)
 FOR map_i=0,n_map-1 DO BEGIN
     model_img = fltarr(dimension_hpx,elements_hpx)
     IF Ptr_flag THEN hpx_vals=(*healpix_map[map_i])[hpx_i_use] ELSE hpx_vals=healpix_map[hpx_i_use] 
 ;    hpx_vals*=pixel_area_cnv ;convert to Jy/pixel for the new Healpix pixels
 
     for ni=0,n_hpx_use-1 DO model_img[round(xv_hpx[ni]),round(yv_hpx[ni])] += hpx_vals[ni]
-    big_model_img[map_i] = Ptr_new(model_img)
     model_uv = fft_shift(FFT(model_img * image_mask))
 
     ; Zero pad or truncate to the true orthoslant dimension
