@@ -39,7 +39,7 @@ unset resubmit_index
 #######Gathering the input arguments and applying defaults if necessary
 
 #Parse flags for inputs
-while getopts ":f:s:e:o:v:i:p:w:n:m:t" option
+while getopts ":f:s:e:o:v:i:p:w:n:m:q:t" option
 do
    case $option in
 	f) obs_file_name="$OPTARG";;	#text file of observation id's
@@ -51,6 +51,7 @@ do
 	w) wallclock_time=$OPTARG;;	#Time for execution in slurm
 	n) ncores=$OPTARG;;		#Number of cores for slurm
 	m) mem=$OPTARG;;		#Memory per node for slurm
+    q) qos=$OPTARG;;        # Quality of service for Oscar
 	t) firstpass_only=1;;	#Firstpass only, or also do power spectrum?
 	\?) echo "Unknown option: Accepted flags are -f (obs_file_name), -s (starting_obs), -e (ending obs), -o (output directory), "
 	    echo "-v (version input for FHD), -w (wallclock time in slurm), -n (number of cores to use),"
@@ -73,19 +74,11 @@ if [ -z ${obs_file_name} ]; then
    exit 1
 fi
 
-#Update the user on which obsids will run given the inputs
-if [ -z ${starting_obs} ] 
-then
-    echo Starting at observation at beginning of file $obs_file_name
-else
-    echo Starting on observation $starting_obs
-fi
+obs_file_name=$(readlink -f $obs_file_name)   # Get the complete absolute path
 
-if [ -z ${ending_obs} ]
+if [ -z ${qos} ]
 then
-    echo Ending at observation at end of file $obs_file_name
-else
-    echo Ending on observation $ending_obs
+    qos='jpober-condo'
 fi
 
 #firstpass_only specification
@@ -176,19 +169,17 @@ else
     min=${obs_id_array[0]}
 fi
 
-#
-#
 #If minimum not specified, start at minimum of obs_file
 if [ -z ${starting_obs} ]
 then
-   echo "Starting observation not specified: Starting at minimum of $obs_file_name"
+   echo "Starting observation not specified: Starting at minimum of "$(basename $obs_file_name)""
    starting_obs=$min
 fi
 
 #If maximum not specified, end at maximum of obs_file
 if [ -z ${ending_obs} ]
 then
-   echo "Ending observation not specified: Ending at maximum of $obs_file_name"
+   echo "Ending observation not specified: Ending at maximum of "$(basename $obs_file_name)""
    ending_obs=$max
 fi
 
@@ -197,7 +188,7 @@ fi
 unset good_obs_list
 startflag=0
 endflag=0
-#echo $starting_obs
+
 for obs_id in "${obs_id_array[@]}"; do 
      if [ $obs_id == $starting_obs ]; then 
      	startflag=1
@@ -206,25 +197,14 @@ for obs_id in "${obs_id_array[@]}"; do
      	good_obs_list+=($obs_id)
      fi
      if [ $obs_id == $ending_obs ]; then
-	endflag=1
+    	endflag=1
      fi
 done	
 
-#echo ${good_obs_list[@]}
+echo ${good_obs_list[@]}
 
-#for obs_id in "${obs_id_array[@]}"; do
-#    if [[ "$obs_id" =~ ^[0-9]+$ ]]; then      #Allow for non-numeric ObsIds
-#      if [ $obs_id -ge $starting_obs ] && [ $obs_id -le $ending_obs ]; then
-#	  good_obs_list+=($obs_id)
-#      fi
-#    else
-#      good_obs_list+=($obs_id)
-#    fi
-#done
 
 #######End of gathering the input arguments and applying defaults if necessary
-
-
 
 
 #######Submit the job and wait for output
@@ -233,7 +213,7 @@ done
 nobs=${#good_obs_list[@]}
 
 #### !!! The -w flag chooses a specific node.
-message=$(sbatch --qos=pri-alanman  --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 ))%20 --export=ncores=$ncores,outdir=$outdir,version=$version,sim_id=$sim_id,thresh=$thresh -o ${fhddir}/grid_out/array_sim-%A_%a.out -e ${fhddir}/grid_out/array_sim-%A_%a.err ${FHDpath}simulation/simulation_wrappers/eor_simulation_slurm_job.sh ${good_obs_list[@]})
+message=$(sbatch --qos=$qos  --mem=$mem -t ${wallclock_time} -n ${ncores} --array=0-$(( $nobs - 1 ))%20 --export=ncores=$ncores,outdir=$outdir,version=$version,sim_id=$sim_id,thresh=$thresh -o ${fhddir}/grid_out/array_sim-%A_%a.out -e ${fhddir}/grid_out/array_sim-%A_%a.err ${FHDpath}simulation/simulation_wrappers/eor_simulation_slurm_job.sh ${good_obs_list[@]})
 
 #echo $message
 
@@ -248,7 +228,6 @@ while [ `myq | grep $id | wc -l` -ge 1 ]; do
     sleep 10
 done
 
-
 ########End of submitting the firstpass job and waiting for output
 
 if [ $firstpass_only -eq 1 ]; then
@@ -259,28 +238,29 @@ if [ $firstpass_only -eq 1 ]; then
 	exit 0
 fi
 
-
 # Submit a job to convert model visibilities to uvfits and MIRIAD formats
 curdir=`pwd -P`
 cd ${fhddir}
 uvconvert.py -o miriad
 cd $curdir
 
-
 ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 PSpath=$(idl -e 'print,rootdir("eppsilon")')
 
-if [ -z ${ending_obs} ]; then
-    if [-z ${starting_obs} ]; then	
+if [ ! -z ${ending_obs} ]; then
+    echo "Ending obs: "${ending_obs}
+    if [ ! -z ${starting_obs} ]; then	
+        echo 'Running ps with both starting and ending obs'
 	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -e ${ending_obs} -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
     else
+        echo 'Running ps with both ending obs'
 	    ${PSpath}ps_wrappers/ps_slurm.sh -e ${ending_obs} -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
     fi
-elif [ -z ${starting_obs} ]; then
+elif [ ! -z ${starting_obs} ]; then
+        echo 'Running ps with both starting obs'
 	    ${PSpath}ps_wrappers/ps_slurm.sh -s ${starting_obs} -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
 else
-    ${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
+    ${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d ${fhddir} -w ${wallclock_time} -m ${mem}
 fi
-
 
 echo "Cube integration and PS submitted"

@@ -53,9 +53,12 @@ IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=n
 ;pixel_area_cnv=1.
 
 area_ratio=(4.*!Pi/n_hpx)/((obs.degpix*!DtoR)^2.)
-IF area_ratio GT 1 THEN BEGIN
+print, 'area_ratio',area_ratio
+area_ratio = round(area_ratio*1e6)/1e6 
+IF area_ratio GE 1 THEN BEGIN
     ;beam_area=!Pi*beam_width^2./(4.*Alog(2.)) ;area under a 2D gaussian with given FWHM 
     gauss_width=Sqrt(area_ratio*(4.*Alog(2.))/!Pi);/(2.*Sqrt(2.*Alog(2.)))
+    gauss_width /= 4.    ; Make it smaller
     grid_struct=source_comp_init(xvals=xv_hpx,yvals=yv_hpx,flux=0.)
     grid_struct.flux.(0)=1.
     weights_img=source_image_generate(grid_struct,obs,pol=0,restored_beam_width=gauss_width)
