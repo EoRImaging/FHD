@@ -533,6 +533,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
       freq_nan_i=nan_i mod n_freq
       freq_nan_i=freq_nan_i[Uniq(freq_nan_i,Sort(freq_nan_i))]
       (*vis_weight_ptr_use[pol_i])[freq_nan_i,*]=0
+      weight[freq_nan_i,*]=0
       gain_arr[nan_i]=0.
       
     ENDIF
@@ -540,7 +541,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
     cal_return.convergence[pol_i]=Ptr_new(convergence)
   ENDFOR
   
-  vis_count_i=where(*vis_weight_ptr_use[0],n_vis_cal)
+  vis_count_i=where(weight,n_vis_cal)
   cal_return.n_vis_cal=n_vis_cal
   
   RETURN,cal_return
