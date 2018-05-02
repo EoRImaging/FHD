@@ -25,8 +25,8 @@ do
    case $option in
 	f) obs_id="$OPTARG";;	#Obs_ID
 	p) param_var="$OPTARG";; 	  # String specifying values for a given parameter
-        o) outdir=$OPTARG;;		#output directory for FHD output folder
-        v) version=$OPTARG;;		#FHD folder name and case for variation_versions
+    o) outdir=$OPTARG;;		#output directory for FHD output folder
+    v) version=$OPTARG;;		#FHD folder name and case for variation_versions
 					#Example: nb_foo creates folder named fhd_nb_foo
 	w) wallclock_time=$OPTARG;;	#Time for execution in slurm
 	n) cores=$OPTARG;;		#Number of cores for slurm

@@ -9,6 +9,7 @@
 # Email if the job fails
 #SBATCH --mail-type=FAIL     
 #SBATCH --mail-user=adam_lanman@brown.edu
+# #SBATCH -p skylake
 
 # obs_id, outdir, version, and thresh and ncores expected to be passed from sbatch call
 # in sim_pipe_slurm.sh
@@ -19,14 +20,16 @@ echo TASKID ${SLURM_ARRAY_TASK_ID}
 #ls $outdir > /dev/null # ping the output directory so nfs automounts
 
 module load ghostscript
-module load imagemagick/6.6.4
-module load git/2.2.1
+module load imagemagick/7.0.7
+module load git/2.10.2
+module load idl
+shopt -s expand_aliases; source $IDL/envi53/bin/envi_setup.bash
 
 obsids=("$@")
 obs_id=${obsids[$SLURM_ARRAY_TASK_ID]}
 
 #ls $outdir > /dev/null # ping the output directory so nfs automounts
-/usr/local/bin/idl -IDL_DEVICE ps -IDL_CPU_TPOOL_NTHREADS $ncores -e sim_versions_wrapper -args $obs_id $outdir $version $sim_id 
+idl -IDL_DEVICE ps -IDL_CPU_TPOOL_NTHREADS $ncores -e sim_versions_wrapper -args $obs_id $outdir $version $sim_id
 
 if [ $? -eq 0 ]
 then
