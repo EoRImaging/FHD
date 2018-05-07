@@ -3,7 +3,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
     beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
-    interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf, _Extra=extra
+    interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf, MAJICK_degrid=MAJICK_degrid,params=params, _Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -157,7 +157,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,psf_dim=psf_dim,$
                 freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,$
                 xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
-                beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,_Extra=extra)
+                beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
+                MAJICK_degrid=MAJICK_degrid,params=params,psf_image_resolution=psf_image_resolution,_Extra=extra)
             
             t_beam_power+=Systime(1)-t_bpwr
             t_bint=Systime(1)
