@@ -4,8 +4,8 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
   interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
   debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
-  debug_clip_beam_mask=debug_clip_beam_mask,debug_gauss=debug_gauss,$
-  MAJICK_degrid=MAJICK_degrid,obs=obs,params=params,psf_image_resolution=psf_image_resolution, _Extra=extra
+  debug_clip_beam_mask=debug_clip_beam_mask,debug_gauss=debug_gauss,bi_inds=bi_inds,$
+  majick_degrid=majick_degrid,obs=obs,params=params,n_tracked=n_tracked,_Extra=extra
 
   icomp = Complex(0, 1)
   freq_center=antenna1.freq[freq_i]
@@ -42,36 +42,15 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   ;power_beam_zenith=Abs(power_beam[zen_int_x,zen_int_y])
   ;power_zenith_norm=power_zenith/power_beam_zenith/Max(Abs(power_beam))
 
-  if keyword_set(MAJICK_degrid) then begin
-
-    ;Calculate RA,DEC of pixel centers
-    psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
-    ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
-    psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res
-    psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
-    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx
-    yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsy
-    ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
-    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
-
-    ;Calculate phase-tracked n mode of pixel centers
-    cdec0 = cos(obs.obsdec*!dtor)
-    sdec0 = sin(obs.obsdec*!dtor)
-    cdec = cos(dec_arr*!dtor)
-    sdec = sin(dec_arr*!dtor)
-    cdra = cos((ra_arr-obs.obsra)*!dtor)
-    n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1. ;n=1 at phase center, so reference from there for phase tracking
-    infinite_vals=where(NOT float(finite(n_tracked)),n_count)
-    n_tracked[infinite_vals]=0
-
-    psf_base_superres=complex(FLTARR(obs.nbaselines,dimension_super,dimension_super))
-    t_b=Systime(1)
-    for baseline_i=0, obs.nbaselines-1 do begin
+  if keyword_set(majick_degrid) then begin
+    ;psf_base_superres=complex(FLTARR(obs.nbaselines,dimension_super,dimension_super))
+    ;t_b=Systime(1)
+    ;for baseline_i=0, obs.nbaselines-1 do begin
       psf_base_single=dirty_image_generate((power_beam/power_zenith)*$
-        exp(-2.*!pi*Complex(0,1)*n_tracked*freq_center*!dtor*params.ww[baseline_i]),/no_real)
-      psf_base_superres[baseline_i,*,*]=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-    endfor
-    stop
+        exp(-2.*!pi*Complex(0,1)*n_tracked*freq_center*!dtor*params.ww[bi_inds[0]]),/no_real)
+      psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5) ;same for now, can upgrade with more phases
+    ;endfor
+    ;stop
   endif else begin
     psf_base_single=dirty_image_generate(power_beam/power_zenith,/no_real)
     psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
@@ -87,20 +66,20 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
       thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
     uv_mask_superres[beam_i]=1
   ENDIF ELSE BEGIN
-    if keyword_set(MAJICK_degrid) then begin
-      single_uv_mask=Fltarr(dimension_super,dimension_super)
-      for baseline_i=0, obs.nbaselines-1 do begin
-        single_uv_mask[*,*]=0
-        beam_i=region_grow(Abs(reform(psf_base_superres[baseline_i,*,*])),dimension_super*(1.+dimension_super)/2.,$
-          thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres[baseline_i,*,*]))])
-          single_uv_mask[beam_i]=1
-        uv_mask_superres[baseline_i,*,*]=single_uv_mask
-      endfor
-    endif else begin
+    ;if keyword_set(majick_degrid) then begin
+    ;  single_uv_mask=Fltarr(dimension_super,dimension_super)
+    ;  for baseline_i=0, obs.nbaselines-1 do begin
+    ;    single_uv_mask[*,*]=0
+    ;    beam_i=region_grow(Abs(reform(psf_base_superres[baseline_i,*,*])),dimension_super*(1.+dimension_super)/2.,$
+    ;      thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres[baseline_i,*,*]))])
+    ;      single_uv_mask[beam_i]=1
+    ;    uv_mask_superres[baseline_i,*,*]=single_uv_mask
+    ;  endfor
+    ;endif else begin
       beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
         thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
       uv_mask_superres[beam_i]=1
-    endelse
+    ;endelse
   ENDELSE
 
 
@@ -124,7 +103,8 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
 
   psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
   psf_base_superres/=beam_norm
-  if keyword_set(MAJICK_degrid) then psf_val_ref=total(total(psf_base_superres,2),2) else psf_val_ref=Total(psf_base_superres)
+  ;if keyword_set(majick_degrid) then psf_val_ref=total(total(psf_base_superres,2),2) else $
+    psf_val_ref=Total(psf_base_superres)
 
   IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
     xvals_i=Reform(meshgrid(psf_dim,psf_dim,1)*psf_resolution,psf_dim^2.)
@@ -178,9 +158,10 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
 
     psf_base_superres = uvbeam_input
   endif else $
-    if keyword_set(MAJICK_degrid) then $
-    for baseline_i=0, obs.nbaselines-1 do psf_base_superres[baseline_i,*,*]*=psf_val_ref[baseline_i]/total(psf_base_superres[baseline_i,*,*]) $
-  else psf_base_superres*=psf_val_ref/Total(psf_base_superres)
+    ;if keyword_set(majick_degrid) then $
+    ;for baseline_i=0, obs.nbaselines-1 do psf_base_superres[baseline_i,*,*]*=psf_val_ref[baseline_i]/total(psf_base_superres[baseline_i,*,*]) $
+  ;else $
+  psf_base_superres*=psf_val_ref/Total(psf_base_superres)
   IF Keyword_Set(debug_beam_conjugate) THEN psf_base_superres=Conj(psf_base_superres)
   RETURN,psf_base_superres
 END
