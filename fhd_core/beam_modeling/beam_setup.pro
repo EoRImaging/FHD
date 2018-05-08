@@ -3,7 +3,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
     swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
     beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
-    interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf, MAJICK_degrid=MAJICK_degrid,params=params, _Extra=extra
+    interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf, majick_degrid=majick_degrid,params=params, _Extra=extra
 
 compile_opt idl2,strictarrsubs  
 t00=Systime(1)
@@ -58,7 +58,8 @@ dimension=obs.dimension
 elements=obs.elements
 degpix=obs.degpix
 antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
-    psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,_Extra=extra)
+    psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
+    majick_degrid=majick_degrid,_Extra=extra)
 
 IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]] 
 
@@ -94,11 +95,31 @@ psf_superres_dim=psf_dim*psf_resolution
 xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
+if keyword_set(majick_degrid) then begin
+    ;Calculate RA,DEC of pixel centers
+    psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
+    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx
+    yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsy
+    ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
+    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+
+    ;Calculate phase-tracked n mode of pixel centers
+    cdec0 = cos(obs.obsdec*!dtor)
+    sdec0 = sin(obs.obsdec*!dtor)
+    cdec = cos(dec_arr*!dtor)
+    sdec = sin(dec_arr*!dtor)
+    cdra = cos((ra_arr-obs.obsra)*!dtor)
+    n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1. ;n=1 at phase center, so reference from there for phase tracking
+    infinite_vals=where(NOT float(finite(n_tracked)),n_count)
+    n_tracked[infinite_vals]=0
+endif
+
 complex_flag_arr=intarr(n_pol,nfreq_bin)
 beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
 ant_A_list=tile_A[0:nbaselines-1]
 ant_B_list=tile_B[0:nbaselines-1]
 baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
+;baseline_mod=1.
 bi_list=ant_B_list+ant_A_list*baseline_mod
 bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
@@ -130,6 +151,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         beam_int=0.
         beam2_int=0.
         n_grp_use=0.
+        baseline_i=0.
         FOR g_i=0L,n_group-1 DO BEGIN
             g_i1=gi_use[g_i] mod ng1
             g_i2=Floor(gi_use[g_i]/ng1)
@@ -157,9 +179,10 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,psf_dim=psf_dim,$
                 freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,$
                 xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
-                beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
-                MAJICK_degrid=MAJICK_degrid,params=params,psf_image_resolution=psf_image_resolution,_Extra=extra)
-            
+                beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=bi_inds, $
+                majick_degrid=majick_degrid,params=params,n_tracked=n_tracked,_Extra=extra)
+
+            baseline_i+=1.
             t_beam_power+=Systime(1)-t_bpwr
             t_bint=Systime(1)
             ;divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization

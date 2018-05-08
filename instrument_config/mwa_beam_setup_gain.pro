@@ -1,6 +1,6 @@
 FUNCTION mwa_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
     za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,debug_flip=debug_flip,$
-    _EXTRA = EXTRA 
+    majick_degrid=majick_degrid,_EXTRA = EXTRA 
 
 n_ant_pol=Max(antenna.n_pol)
 nfreq_bin=Max(antenna.nfreq_bin)
@@ -18,13 +18,17 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
     gi=0
     n_ungrouped=n_tile
     ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
-    WHILE n_ungrouped GT 0 DO BEGIN
-        ref_i=ungrouped_i[0]
-        antenna[ref_i].group_id[pol_i]=gi
-        FOR ug_i=1L,n_ungrouped-1 DO IF Total(Abs(*antenna[ungrouped_i[ug_i]].gain[pol_i] - *antenna[ref_i].gain[pol_i])) EQ 0 THEN antenna[ungrouped_i[ug_i]].group_id[pol_i]=gi 
-        ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
-        gi+=1
-    ENDWHILE
+    IF ~keyword_set(majick_degrid) THEN BEGIN
+        WHILE n_ungrouped GT 0 DO BEGIN
+            ref_i=ungrouped_i[0]
+            antenna[ref_i].group_id[pol_i]=gi
+            FOR ug_i=1L,n_ungrouped-1 DO $
+              IF Total(Abs(*antenna[ungrouped_i[ug_i]].gain[pol_i] - *antenna[ref_i].gain[pol_i])) EQ 0 THEN $
+              antenna[ungrouped_i[ug_i]].group_id[pol_i]=gi 
+            ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
+            gi+=1
+        ENDWHILE
+    ENDIF ELSE FOR ug_i=0L,n_tile-1 DO antenna[ug_i].group_id[pol_i]=ug_i ;beam per tile pair for majick degridding
 ENDFOR
 
 ;build the instrumental pol Jones matrix
@@ -150,7 +154,7 @@ CASE beam_model_version OF
     0: BEGIN
         antenna_height=antenna[0].height
         wavelength=speed_light/freq_center
-        Jones_matrix=antenna.jones
+        Jones_matrix=antenna[0].jones
         FOR freq_i=0,nfreq_bin-1 DO BEGIN
             groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength[freq_i])) ;should technically have zc_arr, but until that is nonzero this is the same and faster
             groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength[freq_i]) ;normalization factor
@@ -166,7 +170,7 @@ CASE beam_model_version OF
         print,"Using default beam model"
         antenna_height=antenna[0].height
         wavelength=speed_light/freq_center
-        Jones_matrix=antenna.jones
+        Jones_matrix=antenna[0].jones
         FOR freq_i=0,nfreq_bin-1 DO BEGIN
             groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength[freq_i])) ;should technically have zc_arr, but until that is nonzero this is the same and faster
             groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength[freq_i]) ;normalization factor
