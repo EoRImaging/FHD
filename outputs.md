@@ -1,5 +1,5 @@
 # Outputs <br />
-FHD outputs various data products. We outline and describe these below. <br />
+FHD outputs various data products. We outline and describe these below. Items marked with (!Q are currently not defined -- ask Ian if needed and update please!)<br />
 
 ## Beam <br />
 
@@ -17,36 +17,73 @@ FHD outputs various data products. We outline and describe these below. <br />
 
 ### \<obsids\>\_cal.sav <br />
 
-**cal**: a structure of the various calibration parameters. Pointers and large arrays in this structure are defined below. Other variables in the structure include: 
-  * **n_pol**: long number of polarizations, **n_freq**: long number of frequency channels, **n_tile**: long number of tiles, **n_time**: long number of time steps 
-  * **auto_initialize**: integer 1/0 value of whether window scaled autocorrelations were used/not used, **max_iter**: long number of maximum iterations in the X<sup>2</sup> calibration subroutine, **phase_iter**: long number of maximum iterations in the X<sup>2</sup> calibration subroutine where only the phase was updated, **auto_scale**: !Q
-  * **tile_names**: string array of the tile names specified in the metafits and if unspecified then indices of tiles starting at 1, **freq**: float array of frequency values in Hz
-  * **min_cal_baseline**: float of the minimum baseline length included in calibration, **max_cal_baseline**: float of the maximum baseline included in calibration, **n_vis_cal**: long number of visibilities used in calibration 
-  * **time_avg**: integer 1/0 value of whether or not visibilities were averaged in time during the X<sup>2</sup> calibration subroutine, **min_sols**: integer minimum number of equations used in the X<sup>2</sup> calibration subroutine per frequency channel, **ref_antenna**: long number index of tile to reference phases from, **ref_antenna_name**: !Q, **conv_thresh**: float number of the required convergence threshold 
-  * **polyfit**: integer 1/0 value of whether or not polynomials were fit, **amp_degree**: integer number of degree of coefficients used in fitting the amplitude of the cal solutions i.e. 2 = 2<sup>nd</sup> order polynomial, **phase_degree**: integer number of degree of coefficients used in fitting the phase of the cal solutions i.e. 2 = 2<sup>nd</sup> order polynomial, **bandpass**: integer 1/0 value of whether or not a bandpass was fit, **mode_fit**: integer 1/0 value of whether or not cable reflection mode-fitting was done,
-  * **mean_gain**: !Q, **mean_gain_residual**: !Q, **mean_gain_restrict**: !Q, **stddev_gain_residual**: !Q, **cal_origin**: !Q
+**cal**: a structure of the various calibration parameters. Pointers and large arrays in this structure are defined below. Other variables in the structure include:
+  * **n_pol**: long number of polarizations
+  * **n_freq**: long number of frequency channels
+  * **n_tile**: long number of tiles
+  * **n_time**: long number of time steps
+  * **auto_initialize**: integer 1/0 value of whether window scaled autocorrelations were used/not used to set the initial calibration solution before iteration.
+  * **max_iter**: long number of maximum iterations in the X<sup>2</sup> calibration subroutine
+  * **phase_iter**: long number of maximum iterations in the X<sup>2</sup> calibration subroutine where only the phase was updated
+  * **auto_scale**: The average amplitude of the calibration solutions fit from the auto-correlations.
+  * **tile_names**: string array of the tile names specified in the metafits and if unspecified then indices of tiles starting at 1
+  * **freq**: float array of frequency values in Hz
+  * **min_cal_baseline**: float of the minimum baseline length included in calibration
+  * **max_cal_baseline**: float of the maximum baseline included in calibration
+  * **n_vis_cal**: long number of visibilities used in calibration
+  * **time_avg**: integer 1/0 value of whether or not visibilities were averaged in time during the X<sup>2</sup> calibration subroutine
+  * **min_sols**: integer minimum number of equations used in the X<sup>2</sup> calibration subroutine per frequency channel
+  * **ref_antenna**: long number index of tile to reference phases from
+  * **ref_antenna_name**: name of the antenna used as the phase reference.
+  * **conv_thresh**: float number of the required convergence threshold
+  * **polyfit**: integer 1/0 value of whether or not polynomials were fit
+  * **amp_degree**: integer number of degree of coefficients used in fitting the amplitude of the cal solutions i.e. 2 = 2<sup>nd</sup> order polynomial
+  * **phase_degree**: integer number of degree of coefficients used in fitting the phase of the cal solutions i.e. 2 = 2<sup>nd</sup> order polynomial
+  * **bandpass**: integer 1/0 value of whether or not a bandpass was fit
+  * **mode_fit**: integer 1/0 value of whether or not cable reflection mode-fitting was done,
+  * **mean_gain**: The average amplitude of the calibration solutions for each polarization.
+  * **mean_gain_residual**: The average amplitude of the residual calibration solutions, after the fitted solutions have been subtracted.
+  * **mean_gain_restrict**: The average amplitude of the residual calibration solutions excluding outliers, after the fitted solutions have been subtracted.
+  * **stddev_gain_residual**: A pointer. For extended sources, the pointer references a new source_list structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
+  * **cal_origin**: result of `git describe` run on the FHD repo during calibration. Effectively the git hash, does not include the branch name.
 
-**cal.bin_offset**: array of values that specifies the index number of the start of the input visibilities given a time step index. This can be used in conjuncture with cal.uu, cal.vv, cal.tile_a, cal.tile_b, and the like to to find the visibilities associated with a specific time step. For example, to find visibility indices associated with the 20<sup>th</sup> time step, cal.bin_offset[19] specifies the start index and cal.bin_offset[20]-1 specifies the end index.
+Pointers and large arrays in **cal** structure:
 
-**cal.uu/cal.vv**: array of the light travel time in seconds for the U or V coordinate for each visibility. Visibilities are ordered by iterating through tile A for each tile B, and for each time step. This ordering is the same for cal.tile_a and cal.tile_b, and indices from cal.bin_offset can be used.
+  * **cal.bin_offset**: array of values that specifies the index number of the start of the input visibilities given a time step index. This can be used in conjuncture with cal.uu, cal.vv, cal.tile_a, cal.tile_b, and the like to to find the visibilities associated with a specific time step. For example, to find visibility indices associated with the 20<sup>th</sup> time step, cal.bin_offset[19] specifies the start index and cal.bin_offset[20]-1 specifies the end index.
 
-**cal.tile_a/cal.tile_b**: array of the tile index of the visibility, where tile A and tile B refer to the two separate tiles used in creating that visibility. This ordering is the same for cal.uu and cal.vv, and indices from cal.bin_offset can be used.
+  * **cal.uu/cal.vv**: array of the light travel time in seconds for the U or V coordinate for each visibility. Visibilities are ordered by iterating through tile A for each tile B, and for each time step. This ordering is the same for cal.tile_a and cal.tile_b, and indices from cal.bin_offset can be used.
 
-**cal.gain/cal.gain_residual**: a pointer array of dimension N<sub>pol</sub> which points to an complex array of dimension N<sub>freq</sub> by N<sub>tile</sub>. These arrays contain the complex gain or residual complex gains after all fits have been applied.
+  * **cal.tile_a/cal.tile_b**: array of the tile index of the visibility, where tile A and tile B refer to the two separate tiles used in creating that visibility. This ordering is the same for cal.uu and cal.vv, and indices from cal.bin_offset can be used.
 
-**cal.auto_params**:
+  * **cal.gain/cal.gain_residual**: a pointer array of dimension N<sub>pol</sub> which points to an complex array of dimension N<sub>freq</sub> by N<sub>tile</sub>. These arrays contain the complex gain or residual complex gains after all fits have been applied.
 
-**cal.convergence**:
+  * **cal.auto_params**: Npol pointer array, referencing 2 x Ntile arrays of the linear fit offset and slope parameters calculated between the amplitudes of the autocorrelations and cross-correlations for each tile.
 
-**cal.amp_params/cal.phase_params/cal.mode_params**: a pointer array of dimension N<sub>pol</sub> by N<sub>tile</sub> which points to an array of coefficients used in the polynomial or mode fitting. The amplitude and phase parameters are ordered by the least-degree to the highest-degree; a polynomial fit of A + Bx + Cx<sup>2</sup> has an array of three values A,B, and C. The mode parameters are ordered by mode in index units of the Fourier transform (can be a non-integer for the hyperfine DFT option), amplitude of the mode, and phase of the mode. The wave can be reconstructed by amp * e<sup>-i2pi*(mode*[0,1,2...n_freq-1]/n_freq)+i*phase</sup>. If mode parameters (or amplitude or phase parameters) are not calculated for that tile, there will be a Null pointer in that place.
+  * **cal.convergence**: a pointer array of dimension Npol which points to an float array of dimension Nfreq by Ntile. These arrays contain a convergence measure for each pol/frequency/tile.
 
-**cal.skymodel**: a structure of the various skymodel parameters used in calibration.
-  * **include_calibration**: !Q, **n_sources**: number of sources included in the calibration skymodel, **catalog_name**: name of the catalog used in the calibration, **galaxy_model**: integer 1/0 value of whether or not a galaxy model was used, **galaxy_spectral_index**: the spectral index of the galaxy model used or NaN if no galaxy model was used, **diffuse_model**: name of the diffuse model used in the calibration, **diffuse_spectral_index**: the spectral index of the diffuse model used of NaN if no diffuse model was used. Source_list defined below.
+  * **cal.amp_params/cal.phase_params/cal.mode_params**: a pointer array of dimension N<sub>pol</sub> by N<sub>tile</sub> which points to an array of coefficients used in the polynomial or mode fitting. The amplitude and phase parameters are ordered by the least-degree to the highest-degree; a polynomial fit of A + Bx + Cx<sup>2</sup> has an array of three values A,B, and C. The mode parameters are ordered by mode in index units of the Fourier transform (can be a non-integer for the hyperfine DFT option), amplitude of the mode, and phase of the mode. The wave can be reconstructed by amp * e<sup>-i2pi*(mode*[0,1,2...n_freq-1]/n_freq)+i*phase</sup>. If mode parameters (or amplitude or phase parameters) are not calculated for that tile, there will be a Null pointer in that place.
 
-**cal.skymodel.source_list**: an array of structures of dimension N<sub>sources</sub>.
-  * **x**: !Q, **y**: !Q, **ra**: the RA coordinate value of the source, **dec**: the DEC coordinate value of the source, **ston**: not used in the calibration source list (!Q right?), **freq**: frequency of the source model, **alpha**: spectral index of the source, **gain**: not used in the calibration source list (!Q right?), **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
-  * **extend**: !Q 
-  * **flux**: structure of the fluxes for that source, where the dimension depends on what polarizations are reported for that source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness.
+  * **cal.skymodel**: a structure of the various skymodel parameters used in calibration.
+    * **include_calibration**: integer 1/0 value of whether or not the sources used for calibration are included in the source list.
+    * **n_sources**: number of sources included in the calibration skymodel
+    * **catalog_name**: name of the catalog used in the calibration
+    * **galaxy_model**: integer 1/0 value of whether or not a galaxy model was used
+    * **galaxy_spectral_index**: the spectral index of the galaxy model used or NaN if no galaxy model was used
+    * **diffuse_model**: name of the diffuse model used in the calibration
+    * **diffuse_spectral_index**: the spectral index of the diffuse model used of NaN if no diffuse model was used.
+
+    * **cal.skymodel.source_list**: an array of structures of dimension N<sub>sources</sub>.
+      * **x**: The centroided pixel column coordinate of the source.
+      * **y**: The centroided pixel row coordinate of the source.
+      * **ra**: the RA coordinate value of the source
+      * **dec**: the DEC coordinate value of the source
+      * **ston**: not used in the calibration source list (!Q right?)
+      * **freq**: frequency of the source model
+      * **alpha**: spectral index of the source
+      * **gain**: not used in the calibration source list (!Q right?)
+      * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
+      * **extend**: A pointer. For extended sources, the pointer references a new source_list structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
+      * **flux**: structure of the fluxes for that source, where the dimension depends on what polarizations are reported for that source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness.
 
 ### \<obsids\>\_bandpass.txt <br />
 
@@ -54,7 +91,7 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ##  Deconvolution (deconvolution only)<br />
 
-### \<obsids\>\_fhd.sav <br /> 
+### \<obsids\>\_fhd.sav <br />
 
 ### \<obsids\>\_fhd_params.sav <br />
 
@@ -62,19 +99,19 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ### \<obsids\>\_uv_\<pol\>.sav <br />
 
-  * **grid_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is the gridded UV plane of the calibrated data visibilities where all frequencies have been gridded together.<br /> 
+  * **grid_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is the gridded UV plane of the calibrated data visibilities where all frequencies have been gridded together.<br />
 
   * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
 
 ### \<obsids\>\_uv_model_\<pol\>.sav <br />
 
-  * **grid_uv_model**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is the gridded UV plane of the model visibilities where all frequencies have been gridded together.<br /> 
+  * **grid_uv_model**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is the gridded UV plane of the model visibilities where all frequencies have been gridded together.<br />
 
   * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
 
 ### \<obsids\>\_uv_weights_\<pol\>.sav <br />
 
-  * **weights_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is a gridded UV plane where a value of 1 is gridded with the beam for each visibility wand where all frequencies have been gridded together.<br /> 
+  * **weights_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is a gridded UV plane where a value of 1 is gridded with the beam for each visibility wand where all frequencies have been gridded together.<br />
 
   * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
 
