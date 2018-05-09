@@ -22,10 +22,10 @@ FHD outputs various data products. We outline and describe these below. Items ma
   * **n_freq**: long number of frequency channels
   * **n_tile**: long number of tiles
   * **n_time**: long number of time steps
-  * **auto_initialize**: integer 1/0 value of whether window scaled autocorrelations were used/not used
+  * **auto_initialize**: integer 1/0 value of whether window scaled autocorrelations were used/not used to set the initial calibration solution before iteration.
   * **max_iter**: long number of maximum iterations in the X<sup>2</sup> calibration subroutine
   * **phase_iter**: long number of maximum iterations in the X<sup>2</sup> calibration subroutine where only the phase was updated
-  * **auto_scale**: !Q
+  * **auto_scale**: The average amplitude of the calibration solutions fit from the auto-correlations.
   * **tile_names**: string array of the tile names specified in the metafits and if unspecified then indices of tiles starting at 1
   * **freq**: float array of frequency values in Hz
   * **min_cal_baseline**: float of the minimum baseline length included in calibration
@@ -41,10 +41,10 @@ FHD outputs various data products. We outline and describe these below. Items ma
   * **phase_degree**: integer number of degree of coefficients used in fitting the phase of the cal solutions i.e. 2 = 2<sup>nd</sup> order polynomial
   * **bandpass**: integer 1/0 value of whether or not a bandpass was fit
   * **mode_fit**: integer 1/0 value of whether or not cable reflection mode-fitting was done,
-  * **mean_gain**: !Q
-  * **mean_gain_residual**: !Q
-  * **mean_gain_restrict**: !Q
-  * **stddev_gain_residual**: !Q
+  * **mean_gain**: The average amplitude of the calibration solutions for each polarization.
+  * **mean_gain_residual**: The average amplitude of the residual calibration solutions, after the fitted solutions have been subtracted.
+  * **mean_gain_restrict**: The average amplitude of the residual calibration solutions excluding outliers, after the fitted solutions have been subtracted.
+  * **stddev_gain_residual**: A pointer. For extended sources, the pointer references a new source_list structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
   * **cal_origin**: result of `git describe` run on the FHD repo during calibration. Effectively the git hash, does not include the branch name.
 
 Pointers and large arrays in **cal** structure:
@@ -57,14 +57,14 @@ Pointers and large arrays in **cal** structure:
 
   * **cal.gain/cal.gain_residual**: a pointer array of dimension N<sub>pol</sub> which points to an complex array of dimension N<sub>freq</sub> by N<sub>tile</sub>. These arrays contain the complex gain or residual complex gains after all fits have been applied.
 
-  * **cal.auto_params**: !Q
+  * **cal.auto_params**: Npol pointer array, referencing 2 x Ntile arrays of the linear fit offset and slope parameters calculated between the amplitudes of the autocorrelations and cross-correlations for each tile.
 
   * **cal.convergence**: a pointer array of dimension Npol which points to an float array of dimension Nfreq by Ntile. These arrays contain a convergence measure for each pol/frequency/tile.
 
   * **cal.amp_params/cal.phase_params/cal.mode_params**: a pointer array of dimension N<sub>pol</sub> by N<sub>tile</sub> which points to an array of coefficients used in the polynomial or mode fitting. The amplitude and phase parameters are ordered by the least-degree to the highest-degree; a polynomial fit of A + Bx + Cx<sup>2</sup> has an array of three values A,B, and C. The mode parameters are ordered by mode in index units of the Fourier transform (can be a non-integer for the hyperfine DFT option), amplitude of the mode, and phase of the mode. The wave can be reconstructed by amp * e<sup>-i2pi*(mode*[0,1,2...n_freq-1]/n_freq)+i*phase</sup>. If mode parameters (or amplitude or phase parameters) are not calculated for that tile, there will be a Null pointer in that place.
 
   * **cal.skymodel**: a structure of the various skymodel parameters used in calibration.
-    * **include_calibration**: !Q
+    * **include_calibration**: integer 1/0 value of whether or not the sources used for calibration are included in the source list.
     * **n_sources**: number of sources included in the calibration skymodel
     * **catalog_name**: name of the catalog used in the calibration
     * **galaxy_model**: integer 1/0 value of whether or not a galaxy model was used
@@ -73,8 +73,8 @@ Pointers and large arrays in **cal** structure:
     * **diffuse_spectral_index**: the spectral index of the diffuse model used of NaN if no diffuse model was used.
 
     * **cal.skymodel.source_list**: an array of structures of dimension N<sub>sources</sub>.
-      * **x**: !Q
-      * **y**: !Q
+      * **x**: The centroided pixel column coordinate of the source.
+      * **y**: The centroided pixel row coordinate of the source.
       * **ra**: the RA coordinate value of the source
       * **dec**: the DEC coordinate value of the source
       * **ston**: not used in the calibration source list (!Q right?)
@@ -82,7 +82,7 @@ Pointers and large arrays in **cal** structure:
       * **alpha**: spectral index of the source
       * **gain**: not used in the calibration source list (!Q right?)
       * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
-      * **extend**: !Q
+      * **extend**: A pointer. For extended sources, the pointer references a new source_list structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
       * **flux**: structure of the fluxes for that source, where the dimension depends on what polarizations are reported for that source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness.
 
 ### \<obsids\>\_bandpass.txt <br />
