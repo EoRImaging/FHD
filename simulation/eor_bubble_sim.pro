@@ -104,20 +104,24 @@ IF keyword_set(orthslant_var) THEN BEGIN
     ENDFOR
 ENDIF
 
-FOR pol_i=0, n_pol-1 DO *model_uv_arr[pol_i]=Fltarr(obs.dimension,obs.elements,obs.n_freq)
+FOR pol_i=0, n_pol-1 DO *model_uv_arr[pol_i]=Complexarr(obs.dimension,obs.elements,obs.n_freq)
 FOR fi=0, obs.n_freq-1 do begin
    model_tmp=Ptrarr(n_pol,/allocate)
    FOR pol_i=1,n_pol-1 DO *model_tmp[pol_i]=Fltarr(obs.dimension,obs.elements)
    *model_tmp[0] = *model_stokes_arr[fi]      ; model_stokes_arr is Stokes I
-   model_arr = stokes_cnv(model_tmp, jones, /inverse)
+   model_arr = stokes_cnv(model_tmp, jones, /inverse, _extra=extra)
    Ptr_free, model_tmp
 
    FOR pol_i=0,n_pol-1 DO BEGIN
-       model_tmp=fft_shift(FFT(fft_shift(*model_arr[pol_i]),/inverse))
-       (*model_uv_arr[pol_i])[*,*,fi]=model_tmp
+       model_uv=fft_shift(FFT(fft_shift(*model_arr[pol_i]),/inverse))
+       (*model_uv_arr[pol_i])[*,*,fi]=model_uv
    ENDFOR
    Ptr_free,model_arr
 ENDFOR
-save, filename=file_path_fhd + '_model_stokes_arr.sav',model_uv_arr, model_stokes_arr, nside, pixel_area_factor, var, convert_factor
+;save, filename=file_path_fhd + '_model_stokes_arr.sav',model_uv_arr, model_stokes_arr, nside, pixel_area_factor, var, convert_factor
+;uvf_cube = model_uv_arr
+;save, uvf_cube, filename='/gpfs/data/jpober/alanman/eorbubble_uvf.sav' 
+;exit
+
 return, model_uv_arr
 END

@@ -132,10 +132,10 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
         if eor_gen ne 0 then begin
           print, 'Generating model EoR cube'
           uv_locs = findgen(101)*4.-200.
-          eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
-            delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky);, /lidz)
-          IF ~Keyword_Set(no_save) THEN save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, $
-            freq_arr, /compress
+  ;        eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
+  ;          delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky);, /lidz)
+  ;        IF ~Keyword_Set(no_save) THEN save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, $
+  ;          freq_arr, /compress
             
           time0 = systime(1)
           eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
@@ -262,7 +262,6 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
           endfor
           
           if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
-          
            ;this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_vis_weight_ptr,model_uv_arr=this_model_uv,$
            ;timing=model_timing,silent=silent,error=error,_Extra=extra)
            model_timing=0.0
