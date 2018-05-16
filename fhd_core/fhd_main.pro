@@ -255,8 +255,11 @@ IF Keyword_Set(export_images) THEN BEGIN
 ENDIF
 
 ;optionally export frequency-splt Healpix cubes
+;;; Temporarily --- Include options from simulation to select a circular region of healpix indices
+select_radius_multiplier=1.5
+select_radius = primary_beam_radius(obs,psf,beam_threshold=beam_threshold,select_radius_multiplier=select_radius_multiplier,_Extra=extra)
 IF Keyword_Set(snapshot_healpix_export) THEN healpix_snapshot_cube_generate,obs,status_str,psf,cal,params,vis_arr,$
-    vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,vis_weights=vis_weights,cmd_args=cmd_args,_Extra=extra
+    vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd,vis_weights=vis_weights,cmd_args=cmd_args,hpx_radius=select_radius,_Extra=extra
 
 ;Optionally fill the fhd table on the mwa_qc database located on eor-00 under the mwa username. See the python script 
 ;for more information about possible queries.
