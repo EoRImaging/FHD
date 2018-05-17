@@ -79,50 +79,10 @@ IF file_test(plot_path,/directory) EQ 0 THEN file_mkdir,plot_path
 
 
 folder_names=[fhd_dir_ref,fhd_dir_diff]
-save_path = plot_path ; folder_names+path_sep()+'ps'+path_sep()
+save_path = plot_path +"/temp/" ; folder_names+path_sep()+'ps'+path_sep()
 IF file_test(save_path) THEN file_delete,save_path,/quiet,/recursive
 file_mkdir,save_path
-data_subdirs = 'Healpix'+path_sep()
-obs_info = ps_filenames(folder_names, rts = 0, sim = 0, casa = 0, data_subdirs = data_subdirs, save_paths = folder_names+path_sep()+'ps'+path_sep())
-
-;if n_elements(set_data_ranges) eq 0 and not keyword_set(sim) then set_data_ranges = 1
-;    
-;if keyword_set(set_data_ranges) then begin
-;  if keyword_set(obs_info.integrated[0]) then begin
-;    sigma_range = [2e5, 2e9]
-;    nev_range = [2e6, 2e10]
-;  endif else begin
-;    sigma_range = [1e4, 2e6]
-;    nev_range = [5e4, 2e7]
-;  endelse
-;  
-;  if n_elements(data_range) eq 0 then data_range = [1e3, 1e15]
-;  if n_elements(nnr_range) eq 0 then nnr_range = [1e-1, 1e1]
-;  if n_elements(snr_range) eq 0 then snr_range = [1e-5, 1e7]
-;  
-;  noise_range = nev_range
-;endif
-
-if tag_exist(obs_info, 'diff_note') then $
-    IF Tag_Exist(obs_info, 'diff_plot_path') THEN obs_info.diff_plot_path = obs_info.diff_save_path $
-    ELSE obs_info = create_struct(obs_info, 'diff_plot_path', obs_info.diff_save_path)
-
-note = obs_info.diff_note
-plot_path = obs_info.diff_plot_path
-
-ps_difference_plots, folder_names,obs_info, cube_types, pols, spec_window_types = spec_window_types, all_type_pol = all_type_pol, $
-    plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
-    note = note, kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, data_range = data_range, data_min_abs = data_min_abs, $
-    quiet = quiet, png = png, eps = eps, pdf = pdf
-
-if n_elements(ratio_data_range) eq 0 then ratio_data_range = [1e-3, 1e1]
-
-diff_range=[-1,1]
-ps_ratio_plots, folder_names, obs_info, $
-    plot_path = plot_path, plot_filebase = plot_filebase, $
-    note = note, spec_window_types = spec_window_types, data_range = ratio_data_range, $
-    kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, diff_ratio = diff_ratio, diff_range = diff_range, $
-    plot_wedge_line = plot_wedge_line, quiet = quiet, png = png, eps = eps, pdf = pdf, window_num = window_num
+ps_diff_wrapper, folder_names, diff_save_path=save_path, plot_path=plot_path
 
 file_delete,save_path,/quiet,/recursive
 END

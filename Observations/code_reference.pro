@@ -145,7 +145,7 @@ IF Tag_exist(extra,'comment') THEN BEGIN
 ENDIF
 general_obs,_Extra=extra
 
-IF ~Keyword_Set(skip_ps) THEN code_reference_wrapper,file_dirname(fhd_file_list[0]),/png,/set_data_ranges,_Extra=extra
+IF ~Keyword_Set(skip_ps) THEN ps_wrapper,file_dirname(fhd_file_list[0]),/png
 
 IF Keyword_Set(reference_hash) THEN BEGIN
     hash_diff=Strmid(version_use,Strpos(version_use,'-g')+2,7)
