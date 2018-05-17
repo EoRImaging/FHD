@@ -136,13 +136,14 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     
     group1=antenna.group_id[ant_pol1,*]
     group2=antenna.group_id[ant_pol2,*]
+    ng1 = Max(group1) + 1
+    baseline_group = group1 + group2*ng1
+    hbaseline_group = histogram(baseline_group, min=0, reverse=grib)
+    gi_use = where(hbaseline_group, n_group)
     
     hgroup1=histogram(group1,min=0,/binsize,reverse=gri1)
     hgroup2=histogram(group2,min=0,/binsize,reverse=gri2)
-    ng1=N_Elements(hgroup1)
-    ng2=N_Elements(hgroup2)
-    group_matrix=hgroup1#hgroup2
-    gi_use=where(group_matrix,n_group)
+
     freq_center=antenna[0].freq ;all antennas need to have the same frequency coverage, so just take the first    
     
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
@@ -153,14 +154,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         n_grp_use=0.
         baseline_i=0.
         FOR g_i=0L,n_group-1 DO BEGIN
-            g_i1=gi_use[g_i] mod ng1
-            g_i2=Floor(gi_use[g_i]/ng1)
-            
-            baseline_group_n=group_matrix[g_i1,g_i2]
-            IF baseline_group_n LE 0 THEN CONTINUE
-            
-            ant_1_arr=gri1[gri1[g_i1]:gri1[g_i1+1]-1]
-            ant_2_arr=gri2[gri2[g_i2]:gri2[g_i2+1]-1]
+            g_ii = grib[grib[gi_use[g_i]]:grib[grib[gi_use[g_i]]+1]-1]
+            g_i1 = g_ii mod ng1
+            g_i2 = Floor(g_ii/ng1)
             ant_1=ant_1_arr[0]
             ant_2=ant_2_arr[0]
             
