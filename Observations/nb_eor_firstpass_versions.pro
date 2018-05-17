@@ -18,8 +18,8 @@ pro nb_eor_firstpass_versions
     ;obs_id = '1141660840'
     ;obs_id = '1061316296'
     obs_id = '1061319472'
-    output_directory = '/nfs/mwa-04/r1/EoRuvfits/analysis/'
-    version = 'nb_test'
+    output_directory = '/Users/nabarry/MWA/data/'
+    version = 'nb_nvis_test'
     platform=''
   endelse
   cmd_args={version:version}
@@ -30,6 +30,39 @@ pro nb_eor_firstpass_versions
   case version of
 
   ;;;;; Nichole's versions
+  'nb_nvis_test': begin
+    cal_bp_transfer=0
+    diffuse_calibrate=0
+    diffuse_model=0
+    uvfits_version=4
+    uvfits_subversion=1
+    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+    cal_time_average=0
+    calibration_subtract_sidelobe_catalog=filepath('GLEAM_EGC_catalog_KGSscale_ssextended.sav',root=rootdir('FHD'),subdir='catalog_data')
+    model_subtract_sidelobe_catalog=filepath('GLEAM_EGC_catalog_KGSscale_ssextended.sav',root=rootdir('FHD'),subdir='catalog_data')
+    ;transfer_psf = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013zenith_calonly/beams'
+    transfer_psf = '/Users/nabarry/MWA/data/sample_data/beams'
+        model_transfer = '/Users/nabarry/MWA/data/sample_data/cal_prerun/vis_data'
+    ;        model_transfer = '/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013cal_redo/cal_prerun/vis_data'
+    tile_flag_list = ['111','118','121','128','131','132','133','141','142','144','151','152','163','164']
+    ;       debug_gain_transfer='/nfs/mwa-10/r1/EoRuvfits/analysis/fhd_nb_2013longrun_std/calibration/'
+    ;recalculate_all=1
+    mapfn_recalculate=0
+    grid_recalculate=0
+    snapshot_recalculate=1
+    save_visibilities=0
+    export_images=0
+    debug_beam_clip_floor=1
+    model_delay_filter=1
+    ;beam_mask_threshold=1e3
+    digital_gain_jump_polyfit=1
+    calibration_auto_fit=1
+    nfreq_avg=8
+    time_cut=-4
+    ;no_ref_tile=1
+    ps_kspan=200.
+  end
+  
   'nb_no_long_tiles': begin
     diffuse_calibrate=filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data')
     cable_bandpass_fit=1
@@ -3509,10 +3542,10 @@ endcase
 
 case version of 
 
-  'nb_test': begin
+  'nb_nvis_test': begin
     ;vis_file_list = '/nfs/mwa-03/r1/EoR2013/cotter_pyuvfits_test/'+strtrim(string(obs_id),2)+'.uvfits'
     ;vis_file_list = '/nfs/eor-11/r1/EoRuvfits/jd2456528v4_1/1061316296/1061316296.uvfits'
-    vis_file_list = '/nfs/eor-11/r1/EoRuvfits/jd2456528v4_1/1061319472/1061319472.uvfits'
+    vis_file_list = '/Users/nabarry/MWA/data/sample_data/uvfits/4.1/1061319472/1061319472.uvfits'
     ;vis_file_list = '/nfs/eor-10/r1/EoRuvfits/jd2456856v5_1/1089664592/1089664592.uvfits'
   end
   'nb_paper_beam_test': begin

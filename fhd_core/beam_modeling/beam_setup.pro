@@ -144,6 +144,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     hgroup1=histogram(group1,min=0,/binsize,reverse=gri1)
     hgroup2=histogram(group2,min=0,/binsize,reverse=gri2)
 
+    ng1=N_Elements(hgroup1)
+    ng2=N_Elements(hgroup2)
+    group_matrix=hgroup1#hgroup2
+    
+    gi_use=where(group_matrix,n_group)
     freq_center=antenna[0].freq ;all antennas need to have the same frequency coverage, so just take the first    
     
     FOR freq_i=0,nfreq_bin-1 DO BEGIN        
@@ -175,7 +180,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,psf_dim=psf_dim,$
                 freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,$
                 xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
-                beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=bi_inds, $
+                beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=baseline_i, $
                 majick_degrid=majick_degrid,params=params,n_tracked=n_tracked,_Extra=extra)
 
             baseline_i+=1.
