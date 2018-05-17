@@ -72,8 +72,6 @@ ENDIF ELSE BEGIN
     vec2ang,pix_coords,pix_dec,pix_ra,/astro
     apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
     pix_coords=0
-    pix_ra=0
-    pix_dec=0
     
     ;NOTE: slightly more restrictive boundary here ('LT' and 'GT' instead of 'LE' and 'GE') 
     pix_i_use=where((xv_hpx GT 0) AND (xv_hpx LT dimension-1) AND (yv_hpx GT 0) AND (yv_hpx LT elements-1),n_hpx_use)
