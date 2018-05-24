@@ -164,7 +164,6 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
       beam_int=0.
       beam2_int=0.
       n_grp_use=0.
-      baseline_i=0.
       ;Loop over all unique beams
       FOR g_i=0L,n_group-1 DO BEGIN
         g_i1=gi_use[g_i] mod ng1
@@ -179,20 +178,11 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         ;Select first antenna index for beam calculation as representative
         ant_1=ant_1_arr[0]
         ant_2=ant_2_arr[0]
-
         ;Number of antennas in this group
         ant_1_n=hgroup1[g_i1]
         ant_2_n=hgroup2[g_i2]
-        ;If the pols are equal, then only calculating one of the beams in the unique group matrix for efficiency.
-        ;Set the redundant beam product to the one that is being calculated and redefine the element numbers.
-        IF ant_pol1 EQ ant_pol2 THEN BEGIN
-          ant_1_arr = [ant_1_arr, ant_2_arr]
-          ant_2_arr = [ant_2_arr, ant_1_arr]
-          baseline_group_n *= 2
-          ant_1_n *= 2
-          ant_2_n *= 2
-        ENDIF
-
+        
+        ;Get the baseline index
         bi_use=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)*baseline_mod+Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n),baseline_group_n)
         IF Max(bi_use) GT bi_max THEN bi_use=bi_use[where(bi_use LE bi_max)]
         bi_use_i=where(bi_hist0[bi_use],n_use)
@@ -200,15 +190,28 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         baseline_group_n=N_Elements(bi_use)
         bi_inds=ri_bi[ri_bi[bi_use]] ;use these indices to index the reverse indices of the original baseline index histogram
         group_arr[pol_i,freq_i,bi_inds]=g_i
+               
+        ;If the pols are equal, then only calculating one of the beams in the unique group matrix for efficiency.
+        ;Set the redundant beam product to the one that is being calculated and redefine the element numbers.
+        IF ant_pol1 EQ ant_pol2 THEN BEGIN
+          ;Use temp arrays to avoid overwriting issues
+          ant_1_arr_temp = [ant_1_arr, ant_2_arr]
+          ant_2_arr_temp = [ant_2_arr, ant_1_arr]
+          ant_1_arr = ant_1_arr_temp
+          ant_2_arr = ant_2_arr_temp
+          undefine_fhd, ant_1_arr_temp, ant_2_arr_temp
+          baseline_group_n *= 2
+          ant_1_n *= 2
+          ant_2_n *= 2
+        ENDIF
 
         t_bpwr=Systime(1)
         psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,psf_dim=psf_dim,$
           freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,$
           xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
-          beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=baseline_i, $
+          beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=bi_inds, $
           majick_degrid=majick_degrid,params=params,n_tracked=n_tracked,_Extra=extra)
 
-        baseline_i+=1.
         t_beam_power+=Systime(1)-t_bpwr
         t_bint=Systime(1)
         ;divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
