@@ -200,12 +200,12 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           ant_1_arr = ant_1_arr_temp
           ant_2_arr = ant_2_arr_temp
           undefine_fhd, ant_1_arr_temp, ant_2_arr_temp
-          baseline_group_n *= 2
           ant_1_n *= 2
           ant_2_n *= 2
         ENDIF
 
         t_bpwr=Systime(1)
+        ;Calculate power beam from antenna beams
         psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,psf_dim=psf_dim,$
           freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,$
           xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
@@ -214,19 +214,30 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
 
         t_beam_power+=Systime(1)-t_bpwr
         t_bint=Systime(1)
+        
         ;divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
         beam_int+=baseline_group_n*Total(psf_base_superres,/double)/psf_resolution^2.
         beam2_int+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2.
         n_grp_use+=baseline_group_n
         t_beam_int+=Systime(1)-t_bint
         IF ~double_flag THEN psf_base_superres=Complex(psf_base_superres)
+        ;NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
+        ;  the first element, shifted by one pixel. This allows efficient subscripting for interpolation during gridding
         psf_single=Ptrarr(psf_resolution+1,psf_resolution+1)
-        ;            NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
-        ;               the first element, shifted by one pixel. This allows efficient subscripting for interpolation during gridding
-        FOR i=0,psf_resolution-1 DO FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j])
-        FOR i=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+i,yvals_i+psf_resolution-1],psf_dim,psf_dim),0,1),psf_dim^2.))
-        FOR j=0,psf_resolution-1 DO psf_single[psf_resolution,psf_resolution-1-j]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+psf_resolution-1,yvals_i+j],psf_dim,psf_dim),1,0),psf_dim^2.))
-        psf_single[psf_resolution,psf_resolution]=Ptr_new(reform(shift(reform(psf_base_superres[xvals_i+psf_resolution-1,yvals_i+psf_resolution-1],psf_dim,psf_dim),1,1),psf_dim^2.))
+        
+        FOR i=0,psf_resolution-1 DO BEGIN
+          FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j])
+        ENDFOR
+        FOR i=0,psf_resolution-1 DO BEGIN
+          psf_single[psf_resolution-1-i,psf_resolution]=Ptr_new(reform(shift(reform($
+            psf_base_superres[xvals_i+i,yvals_i+psf_resolution-1],psf_dim,psf_dim),0,1),psf_dim^2.))
+        ENDFOR
+        FOR j=0,psf_resolution-1 DO BEGIN
+          psf_single[psf_resolution,psf_resolution-1-j]=Ptr_new(reform(shift(reform($
+            psf_base_superres[xvals_i+psf_resolution-1,yvals_i+j],psf_dim,psf_dim),1,0),psf_dim^2.))
+        ENDFOR
+        psf_single[psf_resolution,psf_resolution]=Ptr_new(reform(shift(reform($
+          psf_base_superres[xvals_i+psf_resolution-1,yvals_i+psf_resolution-1],psf_dim,psf_dim),1,1),psf_dim^2.))
         psf_single=Ptr_new(psf_single)
         FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
       ENDFOR
