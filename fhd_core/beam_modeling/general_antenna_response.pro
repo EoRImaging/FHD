@@ -1,5 +1,5 @@
 FUNCTION general_antenna_response,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim, $
-  majick_degrid=majick_degrid
+  majick_beam=majick_beam
 
 n_ant=obs.n_tile
 n_ant_pol=antenna[0].n_pol ;this needs to be the same for all antennas!
@@ -21,12 +21,12 @@ proj_z=Cos(za_arr*!DtoR) & proj_z_use=Reform(proj_z,(psf_image_dim)^2.)
 
 group_arr=antenna.group_id
 FOR pol_i=0,n_ant_pol-1 DO BEGIN
-    if ~keyword_set(majick_degrid) then begin
+    if ~keyword_set(majick_beam) then begin
         g_hist=histogram(group_arr[pol_i,*],min=0,/binsize,reverse_ind=g_ri)
     endif else begin
         group_arr[*,*]=0
         g_hist=histogram(group_arr[pol_i,*],min=0,/binsize,reverse_ind=g_ri)
-        print, "Warning: majick_degrid does not calculate individual antenna voltage response due to overhead"
+        print, "Warning: majick_beam does not calculate individual antenna voltage response due to overhead"
     endelse
     n_group=N_Elements(g_hist)
     FOR grp_i=0L,n_group-1 DO BEGIN
