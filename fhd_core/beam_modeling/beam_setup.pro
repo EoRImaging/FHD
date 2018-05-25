@@ -3,7 +3,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
   swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
   beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
-  interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf, majick_degrid=majick_degrid,params=params, _Extra=extra
+  interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,majick_beam=majick_beam,params=params,$
+  _Extra=extra
 
   compile_opt idl2,strictarrsubs
   t00=Systime(1)
@@ -34,7 +35,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     if tag_exist(obs_restore,'primary_beam_sq_area') then begin
       obs.primary_beam_sq_area = pointer_copy(obs_restore.primary_beam_sq_area)
       obs.primary_beam_area = pointer_copy(obs_restore.primary_beam_area)
-    endif else if tag_exist(obs_restore,'beam_integral') then obs.primary_beam_sq_area = pointer_copy(obs_restore.beam_integral)
+    endif else if $
+      tag_exist(obs_restore,'beam_integral') then obs.primary_beam_sq_area = pointer_copy(obs_restore.beam_integral)
 
     RETURN,psf
   ENDIF
@@ -59,11 +61,13 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   degpix=obs.degpix
   antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
-    majick_degrid=majick_degrid,_Extra=extra)
+    majick_beam=majick_beam,_Extra=extra)
 
   IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]]
 
-  psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+  ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image 
+  ;    space beam model
+  psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res 
   kbinsize=obs.kpix
   kbinsize_superres=kbinsize/psf_resolution
   primary_beam_area=Ptrarr(n_pol,/allocate)
@@ -84,25 +88,31 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   ;;set up coordinates to generate the high uv resolution model.
   ;;Remember that field of view = uv resolution, image pixel scale = uv span.
   ;;So, the cropped uv span (psf_dim) means we do not need to calculate at full image resolution,
-  ;;   while the increased uv resolution can correspond to super-horizon scales. We construct the beam model in image space,
-  ;;   and while we don't need the full image resolution we need to avoid quantization errors that come in if we make too small an image and then take the FFT
+  ;;   while the increased uv resolution can correspond to super-horizon scales. We construct the beam model in 
+  ;;   image space, and while we don't need the full image resolution we need to avoid quantization errors that 
+  ;;   come in if we make too small an image and then take the FFT
   psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
-  psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+  ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial 
+  ;    image space beam model
+  psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res 
   image_res_scale=dimension*psf_intermediate_res/psf_image_dim
   zen_int_x=(obs.zenx-obs.obsx)/image_res_scale+psf_image_dim/2
   zen_int_y=(obs.zeny-obs.obsy)/image_res_scale+psf_image_dim/2
   psf_superres_dim=psf_dim*psf_resolution
-  xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
-  yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+  xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-$
+    Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+  yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-$
+    Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
-  if keyword_set(majick_degrid) then begin
+  if keyword_set(majick_beam) then begin
     ;Calculate RA,DEC of pixel centers for image-based phasing
     ;Based off of Jack Line's thesis work
     psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
     xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx
     yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsy
     ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
-    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, $
+      /ignore_refraction
 
     ;Calculate phase-tracked n mode of pixel centers
     cdec0 = cos(obs.obsdec*!dtor)
@@ -183,12 +193,14 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         ant_2_n=hgroup2[g_i2]
         
         ;Get the baseline index
-        bi_use=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)*baseline_mod+Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n),baseline_group_n)
+        bi_use=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)*baseline_mod+$
+          Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n),baseline_group_n)
         IF Max(bi_use) GT bi_max THEN bi_use=bi_use[where(bi_use LE bi_max)]
         bi_use_i=where(bi_hist0[bi_use],n_use)
         IF n_use GT 0 THEN bi_use=bi_use[bi_use_i]
         baseline_group_n=N_Elements(bi_use)
-        bi_inds=ri_bi[ri_bi[bi_use]] ;use these indices to index the reverse indices of the original baseline index histogram
+        ;use these indices to index the reverse indices of the original baseline index histogram
+        bi_inds=ri_bi[ri_bi[bi_use]] 
         group_arr[pol_i,freq_i,bi_inds]=g_i
                
         ;If the pols are equal, then only calculating one of the beams in the unique group matrix for efficiency.
@@ -207,10 +219,10 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         t_bpwr=Systime(1)
         ;Calculate power beam from antenna beams
         psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,psf_dim=psf_dim,$
-          freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,$
-          xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
+          freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
+          psf_resolution=psf_resolution,xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
           beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=bi_inds, $
-          majick_degrid=majick_degrid,params=params,n_tracked=n_tracked,_Extra=extra)
+          majick_beam=majick_beam,params=params,n_tracked=n_tracked,_Extra=extra)
 
         t_beam_power+=Systime(1)-t_bpwr
         t_bint=Systime(1)
@@ -226,7 +238,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         psf_single=Ptrarr(psf_resolution+1,psf_resolution+1)
         
         FOR i=0,psf_resolution-1 DO BEGIN
-          FOR j=0,psf_resolution-1 DO psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j])
+          FOR j=0,psf_resolution-1 DO $
+            psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j])
         ENDFOR
         FOR i=0,psf_resolution-1 DO BEGIN
           psf_single[psf_resolution-1-i,psf_resolution]=Ptr_new(reform(shift(reform($
@@ -253,10 +266,10 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   FOR pol_i=0,n_pol-1 DO obs.primary_beam_sq_area[pol_i]=primary_beam_sq_area[pol_i]
   print,t_ant,t_beam_power,t_beam_int
 
-  ;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there is real signal
-  ;   So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
-  IF Keyword_Set(beam_dim_fit) THEN beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,beam_mask_threshold=beam_mask_threshold,$
-    psf_xvals=psf_xvals,psf_yvals=psf_yvals,_Extra=extra
+  ;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there 
+  ;   is real signal. So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
+  IF Keyword_Set(beam_dim_fit) THEN beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,$
+    beam_mask_threshold=beam_mask_threshold,psf_xvals=psf_xvals,psf_yvals=psf_yvals,_Extra=extra
 
   complex_flag=1
   beam_ptr=Ptr_new(beam_arr)

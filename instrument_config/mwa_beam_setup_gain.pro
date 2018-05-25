@@ -1,6 +1,6 @@
 FUNCTION mwa_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
     za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,debug_flip=debug_flip,$
-    majick_degrid=majick_degrid,_EXTRA = EXTRA 
+    majick_beam=majick_beam,_EXTRA = EXTRA 
 
 n_ant_pol=Max(antenna.n_pol)
 nfreq_bin=Max(antenna.nfreq_bin)
@@ -18,7 +18,7 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
     gi=0
     n_ungrouped=n_tile
     ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
-    IF ~keyword_set(majick_degrid) THEN BEGIN
+    IF ~keyword_set(majick_beam) THEN BEGIN
         WHILE n_ungrouped GT 0 DO BEGIN
             ref_i=ungrouped_i[0]
             antenna[ref_i].group_id[pol_i]=gi

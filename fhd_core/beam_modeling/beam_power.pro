@@ -4,8 +4,8 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
   interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
   debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
-  debug_clip_beam_mask=debug_clip_beam_mask,debug_gauss=debug_gauss,bi_inds=bi_inds,$
-  majick_degrid=majick_degrid,obs=obs,params=params,n_tracked=n_tracked,_Extra=extra
+  debug_clip_beam_mask=debug_clip_beam_mask,bi_inds=bi_inds,$
+  majick_beam=majick_beam,obs=obs,params=params,n_tracked=n_tracked,_Extra=extra
 
   icomp = Complex(0, 1)
   freq_center=antenna1.freq[freq_i]
@@ -19,9 +19,11 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   beam_norm=1.
 
   IF ant_pol1 NE ant_pol2 THEN BEGIN
-    power_zenith_beam1=abs((*Jones1[0,ant_pol1])*(Conj(*Jones2[0,ant_pol1]))+(*Jones1[1,ant_pol1])*(Conj(*Jones2[1,ant_pol1])))
+    power_zenith_beam1=abs((*Jones1[0,ant_pol1])*(Conj(*Jones2[0,ant_pol1]))+$
+      (*Jones1[1,ant_pol1])*(Conj(*Jones2[1,ant_pol1])))
     power_zenith1=Interpolate(power_zenith_beam1,zen_int_x,zen_int_y,cubic=-0.5)
-    power_zenith_beam2=abs((*Jones1[0,ant_pol2])*(Conj(*Jones2[0,ant_pol2]))+(*Jones1[1,ant_pol2])*(Conj(*Jones2[1,ant_pol2])))
+    power_zenith_beam2=abs((*Jones1[0,ant_pol2])*(Conj(*Jones2[0,ant_pol2]))+$
+      (*Jones1[1,ant_pol2])*(Conj(*Jones2[1,ant_pol2])))
     power_zenith2=Interpolate(power_zenith_beam2,zen_int_x,zen_int_y,cubic=-0.5)
     power_zenith=Sqrt(power_zenith1*power_zenith2)
 
@@ -32,7 +34,8 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     power_beam=Sqrt(power_beam1*power_beam2)
     debug_point=1
   ENDIF ELSE BEGIN
-    power_zenith_beam=abs((*Jones1[0,ant_pol1])*(Conj(*Jones2[0,ant_pol2]))+(*Jones1[1,ant_pol1])*(Conj(*Jones2[1,ant_pol2])))
+    power_zenith_beam=abs((*Jones1[0,ant_pol1])*(Conj(*Jones2[0,ant_pol2]))+$
+      (*Jones1[1,ant_pol1])*(Conj(*Jones2[1,ant_pol2])))
     power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
     ;power_zenith=abs((*Jones1[0,ant_pol1])[zen_int_x,zen_int_y]*(Conj(*Jones2[0,ant_pol2]))[zen_int_x,zen_int_y]+$
     ;             (*Jones1[1,ant_pol1])[zen_int_x,zen_int_y]*(Conj(*Jones2[1,ant_pol2]))[zen_int_x,zen_int_y])
@@ -42,21 +45,16 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   ;power_beam_zenith=Abs(power_beam[zen_int_x,zen_int_y])
   ;power_zenith_norm=power_zenith/power_beam_zenith/Max(Abs(power_beam))
 
-  if keyword_set(majick_degrid) then begin
-    ;psf_base_superres=complex(FLTARR(obs.nbaselines,dimension_super,dimension_super))
-    ;t_b=Systime(1)
-    ;for baseline_i=0, obs.nbaselines-1 do begin
-      psf_base_single=dirty_image_generate((power_beam/power_zenith)*$
-        exp(-2.*!pi*Complex(0,1)*n_tracked*freq_center*!dtor*params.ww[bi_inds[0]]),/no_real)
-      psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5) ;same for now, can upgrade with more phases
-    ;endfor
-    ;stop
+  if keyword_set(majick_beam) then begin
+    psf_base_single=dirty_image_generate((power_beam/power_zenith)*$
+      exp(-2.*!pi*Complex(0,1)*n_tracked*freq_center*!dtor*params.ww[bi_inds[0]]),/no_real)
+    ;same for now, can upgrade with more phases to uv pixel centers to avoid hyperresolution
+    psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5) 
   endif else begin
     psf_base_single=dirty_image_generate(power_beam/power_zenith,/no_real)
     psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
   endelse
 
-  ;uv_mask_superres=Fltarr(dimension_super,dimension_super)
   s=size(psf_base_superres)
   uv_mask_superres=Fltarr(s[1:s[0]]) ;dynamically set size to match psf_base_superres
   psf_mask_threshold_use = Max(Abs(psf_base_superres))/beam_mask_threshold
@@ -66,20 +64,9 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
       thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
     uv_mask_superres[beam_i]=1
   ENDIF ELSE BEGIN
-    ;if keyword_set(majick_degrid) then begin
-    ;  single_uv_mask=Fltarr(dimension_super,dimension_super)
-    ;  for baseline_i=0, obs.nbaselines-1 do begin
-    ;    single_uv_mask[*,*]=0
-    ;    beam_i=region_grow(Abs(reform(psf_base_superres[baseline_i,*,*])),dimension_super*(1.+dimension_super)/2.,$
-    ;      thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres[baseline_i,*,*]))])
-    ;      single_uv_mask[beam_i]=1
-    ;    uv_mask_superres[baseline_i,*,*]=single_uv_mask
-    ;  endfor
-    ;endif else begin
-      beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
-        thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
-      uv_mask_superres[beam_i]=1
-    ;endelse
+    beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
+      thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
+    uv_mask_superres[beam_i]=1
   ENDELSE
 
 
@@ -101,10 +88,10 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     uv_mask_superres = uv_mask_superres_int
   ENDIF
 
-  psf_base_superres*=psf_intermediate_res^2. ;FFT normalization correction in case this changes the total number of pixels
+  ;FFT normalization correction in case this changes the total number of pixels
+  psf_base_superres*=psf_intermediate_res^2. 
   psf_base_superres/=beam_norm
-  ;if keyword_set(majick_degrid) then psf_val_ref=total(total(psf_base_superres,2),2) else $
-    psf_val_ref=Total(psf_base_superres)
+  psf_val_ref=Total(psf_base_superres)
 
   IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
     xvals_i=Reform(meshgrid(psf_dim,psf_dim,1)*psf_resolution,psf_dim^2.)
@@ -134,33 +121,6 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     psf_base_superres = psf_amp*Cos(psf_phase) + icomp*psf_amp*Sin(psf_phase)
   ENDIF
 
-  if keyword_set(debug_gauss) then begin
-    max_ind = where(abs(psf_base_superres) EQ max(abs(psf_base_superres)))
-    max_ind_col = max_ind mod N_elements(psf_base_superres[0,*])
-    max_val = abs(psf_base_superres[max_ind])
-    uvbeam_input_1D = FLTARR(N_elements(psf_base_superres[0,*]))
-    max_val_arr = FLTARR(N_elements(psf_base_superres[0,*]),N_elements(psf_base_superres[0,*]))
-    max_val_arr[*,*] = max_val
-
-    gauss = exp(-(INDGEN(1400,/float)-699.)^2./(2*200^2.))
-    uvbeam_input = gauss # transpose(gauss) * max_val_arr
-    singauss = FLTARR(1400)
-    singauss[100:1299]=sin(2.*!Pi*(1/1200.)*INDGEN(1200,/float))*.0009
-    singauss = singauss*gauss
-    uvbeam_imag = (Complex(0,1)*(singauss)) # transpose(gauss)
-    uvbeam_input = uvbeam_input + uvbeam_imag
-
-    sub_level = min(abs(uvbeam_input[*,699]))
-    uvbeam_input2 = uvbeam_input - sub_level
-    zeroed = where(uvbeam_input2 LT 0,n_count)
-    if n_count GT 0 then uvbeam_input2[zeroed] = 0.
-    uvbeam_input=uvbeam_input2
-
-    psf_base_superres = uvbeam_input
-  endif else $
-    ;if keyword_set(majick_degrid) then $
-    ;for baseline_i=0, obs.nbaselines-1 do psf_base_superres[baseline_i,*,*]*=psf_val_ref[baseline_i]/total(psf_base_superres[baseline_i,*,*]) $
-  ;else $
   psf_base_superres*=psf_val_ref/Total(psf_base_superres)
   IF Keyword_Set(debug_beam_conjugate) THEN psf_base_superres=Conj(psf_base_superres)
   RETURN,psf_base_superres
