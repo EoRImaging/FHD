@@ -160,7 +160,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     ;Unset lower half of group matrix if they are redundant with upper half
     ;i.e. beam1 * conj(beam2) == beam2 * conj(beam1) when pols are the same
     IF ant_pol1 EQ ant_pol2 THEN BEGIN
-      for ind_i = 0,n_tiles - 2 Do BEGIN
+      for ind_i = 0,ng1 - 2 Do BEGIN
         group_matrix[ind_i+1:*,ind_i] = 0
       endfor
     ENDIF
