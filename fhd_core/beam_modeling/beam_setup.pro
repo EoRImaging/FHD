@@ -120,9 +120,14 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     cdec = cos(dec_arr*!dtor)
     sdec = sin(dec_arr*!dtor)
     cdra = cos((ra_arr-obs.obsra)*!dtor)
+    sdra = sin((ra_arr-obs.obsra)*!dtor)
+    l_mode = cdec*sdra
+    m_mode = sdec*cdec0 + cdec*sdec0*cdra
     n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1. ;n=1 at phase center, so reference from there for phase tracking
     infinite_vals=where(NOT float(finite(n_tracked)),n_count)
     n_tracked[infinite_vals]=0
+    l_mode[infinite_vals]=0
+    m_mode[infinite_vals]=0
   endif
 
   complex_flag_arr=intarr(n_pol,nfreq_bin)
@@ -222,7 +227,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
           psf_resolution=psf_resolution,xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
           beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=bi_inds, $
-          majick_beam=majick_beam,params=params,n_tracked=n_tracked,_Extra=extra)
+          majick_beam=majick_beam,params=params,n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,_Extra=extra)
 
         t_beam_power+=Systime(1)-t_bpwr
         t_bint=Systime(1)
