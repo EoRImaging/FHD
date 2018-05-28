@@ -19,6 +19,7 @@ except=!except
 error=0
 heap_gc 
 t0=Systime(1)
+start_mem = memory(/current)
 
 print,"Processing "+file_basename(file_path_vis)+" in "+file_dirname(file_path_vis)
 print,systime()
@@ -262,8 +263,12 @@ ENDIF
 undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,vis_weights,vis_model_arr
 undefine_fhd,obs,cal,jones,layout,psf,antenna,fhd_params,skymodel,skymodel_cal,skymodel_update
 
+end_mem = (MEMORY(/HIGHWATER) - start_mem)/1e9
 timing=Systime(1)-t0
-IF ~Keyword_Set(silent) THEN print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
+IF ~Keyword_Set(silent) THEN BEGIN
+  print,'Memory required (GB): ',Strn(Round(end_mem))
+  print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
+ENDIF
 print,''
 !except=except
 
