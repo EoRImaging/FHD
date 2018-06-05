@@ -104,7 +104,6 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
       if keyword_set(uvf_input) then sim_file_test = file_test(folder_path + folder_names[j]+'/*gridded_uvf.sav') $
       else sim_file_test = file_test(folder_path + folder_names[j]+'/Healpix/*cube*.sav')
       if sim_file_test eq 0 then begin
-        print, 'simulating density: ' + number_formatter(sample_factors[j]) + ' in folder: ' + version[j]
         if j eq 0 then use_saved_uvf = 0 else begin
           use_saved_uvf = 1
           input_model_files = file_search(folder_path + folder_names[0] + '/*_input_model.sav', count = nfiles)
@@ -112,10 +111,14 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
         endelse
 
         if keyword_set(file_uvw) then begin
+          print, 'simulating file uvws in folder: ' + version[j]
+
           eor_simulation_enterprise, start=36, end=36, version=version[j], $
             flat_sigma = flat_sigma, use_saved_uvf = use_saved_uvf, uvf_savefile = saved_uvf_filename, $
             eor_real_sky = eor_real_sky, /recalculate_all; = recalc_sim
         endif else begin
+          print, 'simulating density: ' + number_formatter(sample_factors[j]) + ' in folder: ' + version[j]
+
           eor_simulation_enterprise, start=36, end=36, version=version[j], sim_baseline_density=sample_factors[j], $
             flat_sigma = flat_sigma, use_saved_uvf = use_saved_uvf, uvf_savefile = saved_uvf_filename, $
             eor_real_sky = eor_real_sky, /recalculate_all; = recalc_sim
