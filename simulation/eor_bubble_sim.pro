@@ -27,9 +27,9 @@ print, "Npix_selected: ", npix_sel
 
 ; Limit the range of frequencies in the uvf cube to the range of the obs
 freq_arr = (*obs.baseline_info).freq
-lim = minmax(freq_arr)
-freq_inds = where((freq_hpx GE lim[0]) and (freq_hpx LE lim[1]) )
-freq_hpx = freq_hpx[freq_inds]
+;lim = minmax(freq_arr)
+;freq_inds = where((freq_hpx GE lim[0]) and (freq_hpx LE lim[1]) )
+;freq_hpx = freq_hpx[freq_inds]
 nfreq_hpx = n_elements(freq_hpx)
 
 ; making the coord array for h5s_select
@@ -77,7 +77,17 @@ ENDIF
 ; Interpolate in frequency:
 dat_interp = Fltarr(obs.n_freq,npix_sel)
 t0=systime(/seconds)
-for hpx_i=0,npix_sel-1 DO dat_interp[*,hpx_i] = Interpol(dat[freq_inds,inds_select[hpx_i]],freq_hpx,freq_arr, /spline)
+;for hpx_i=0,npix_sel-1 DO dat_interp[*,hpx_i] = Interpol(dat[freq_inds,inds_select[hpx_i]],freq_hpx,freq_arr)
+;; Bin in frequency instead of interpolating
+freq_bins = round((freq_hpx - freq_arr[0]) / obs.freq_res)
+freqweight = Fltarr(obs.n_freq,npix_sel)
+weight = fltarr(obs.n_freq, npix_sel) + 1
+for hpx_i=0,npix_sel-1 DO BEGIN
+    dat_interp[*,hpx_i] += dat[freq_bins, inds_select[hpx_i]]
+    freqweight[freq_bins,hpx_i] += 1.0
+ENDFOR
+;; Note that the above can leave some frequencies empty. This will cause an error in eppsilon (uv_slice = 0)
+dat_interp *= weight_invert(freqweight)
 print, 'Frequency interpolation complete: ', systime(/seconds) - t0
 hpx_arr = Ptrarr(obs.n_freq)
 for fi=0, obs.n_freq-1 DO hpx_arr[fi] = ptr_new(reform(dat_interp[fi,*]))
