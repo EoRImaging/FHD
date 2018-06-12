@@ -71,6 +71,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     ENDIF
 
     vis_cal=vis_calibration_apply(vis_ptr,cal)
+    print,'Calibration transferred from ' + cal_file_use
     timing=Systime(1)-t0_0
     RETURN,vis_cal
   ENDIF
