@@ -100,7 +100,7 @@ H5F_CLOSE, f_id
 
 model_uv_arr=Ptrarr(n_pol,/allocate)
 t0 = systime(/seconds)
-model_stokes_arr = healpix_interpolate(hpx_arr,obs,nside=nside,hpx_inds=inds_select,/from_kelvin)
+model_stokes_arr = healpix_bin(hpx_arr,obs,nside=nside,hpx_inds=inds_select,/from_kelvin)
 print, 'Healpix_interpolate timing: ', systime(/seconds) - t0
 
 ; Replace the interpolated orthoslant with gaussian noise
