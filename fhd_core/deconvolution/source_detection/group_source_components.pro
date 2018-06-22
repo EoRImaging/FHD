@@ -87,7 +87,7 @@ group_inds=where(hgroup GT 1,ng)
 
 cx_arr=source_candidate_i mod dimension
 cy_arr=Floor(source_candidate_i/dimension)
-sub_pad=5. ;don't change this. Padding is required around the sub_image for source_image_generate and then region_grow to work properly
+sub_pad=50. ;don't change this. Padding is required around the sub_image for source_image_generate and then region_grow to work properly
 
 FOR gi=0L,ng-1 DO BEGIN
 ;    IF hgroup[gi] EQ 0 THEN CONTINUE

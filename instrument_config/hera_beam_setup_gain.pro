@@ -81,8 +81,9 @@ CASE beam_model_version OF
     END
     ELSE: BEGIN
 
-        hera_beam_filepath_X=filepath('HERA_beam_X.sav',root=rootdir('FHD'),sub='instrument_config')
-        hera_beam_filepath_Y=filepath('HERA_beam_Y.sav',root=rootdir('FHD'),sub='instrument_config')
+        hera_beam_filepath_X=filepath('HERA_beam_X_128.sav',root=rootdir('FHD'),sub='instrument_config')
+        hera_beam_filepath_Y=filepath('HERA_beam_Y_128.sav',root=rootdir('FHD'),sub='instrument_config')
+        ;HERA_beam_X_128.sav come pre-interpolated
         
         nside=getvar_savefile(hera_beam_filepath_X,'nside')
         n_hpx=getvar_savefile(hera_beam_filepath_X,'n_hpx')
