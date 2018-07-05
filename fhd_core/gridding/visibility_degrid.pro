@@ -1,7 +1,10 @@
 FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
     complex=complex,fill_model_visibilities=fill_model_visibilities,$
-    vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra
+    vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,$
+    beam_mask_threshold=beam_mask_threshold,majick_beam=majick_beam,$
+    n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,$
+    interpolate_beam_threshold=interpolate_beam_threshold,_Extra=extra
 t0=Systime(1)
 heap_gc
 
@@ -31,8 +34,11 @@ psf_dim=psf.dim
 psf_resolution=Long(psf.resolution)
 
 vis_weight_switch=Ptr_valid(vis_weight_ptr)
-kx_arr=params.uu/kbinsize
-ky_arr=params.vv/kbinsize
+uu=params.uu
+vv=params.vv
+ww=params.ww
+kx_arr=uu/kbinsize
+ky_arr=vv/kbinsize
 nbaselines=obs.nbaselines
 n_samples=obs.n_time
 n_freq_use=N_Elements(frequency_array)
@@ -57,6 +63,9 @@ IF n_conj GT 0 THEN BEGIN
     conj_flag[conj_i]=1
     kx_arr[conj_i]=-kx_arr[conj_i]
     ky_arr[conj_i]=-ky_arr[conj_i]
+    uu[conj_i]=-uu[conj_i]
+    vv[conj_i]=-vv[conj_i]
+    ww[conj_i]=-ww[conj_i]
 ENDIF
 
 xcen=Float(frequency_array#kx_arr)
@@ -126,6 +135,19 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     box_arr_ptr=Ptrarr(n_spectral)
 ENDIF
 
+if keyword_set(majick_beam) then begin
+  IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E2
+  beam_norm=1.
+  beam_int=FLTARR(n_freq)
+  beam2_int=FLTARR(n_freq)
+  n_grp_use=FLTARR(n_freq) 
+  primary_beam_area=ptr_new(Fltarr(n_freq))
+  primary_beam_sq_area=ptr_new(Fltarr(n_freq))
+  pol_arr=[[0,0],[1,1],[0,1],[1,0]]
+  ant_pol1=pol_arr[0,polarization]
+  ant_pol2=pol_arr[1,polarization]
+endif
+
 FOR bi=0L,n_bin_use-1 DO BEGIN
     t1_0=Systime(1)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
@@ -163,8 +185,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         n_xyf_bin=N_Elements(xyf_ui)
     ENDELSE
     
-    IF vis_n GT Ceil(1.1*n_xyf_bin) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF (vis_n GT Ceil(1.1*n_xyf_bin)) AND ~keyword_set(majick_beam) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         ind_remap_flag=1
+        
         inds=inds[xyf_si]
         inds_use=[xyf_si[xyf_ui]]
         
@@ -181,19 +204,87 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         ENDELSE
         
         vis_n=Long64(n_xyf_bin)
-    ENDIF ELSE $
+    ENDIF ELSE BEGIN
         ind_remap_flag=0
+        bt_index = inds / n_freq_use
+    ENDELSE
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) 
     
     box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
     t3_0=Systime(1)
     t2+=t3_0-t1_0
+
+    ;Make the beams on the fly with corrective phases given the baseline location
+    if keyword_set(majick_beam) then begin
+        FOR ii=0L,vis_n-1 DO begin
+            ;Pixel center offset phases
+            deltau_l = l_mode*(uu[bt_index[ii]]*frequency_array[fbin[ii]] mod obs.kpix)
+            deltav_m = m_mode*(vv[bt_index[ii]]*frequency_array[fbin[ii]] mod obs.kpix)
+            ;w term offset phase
+            w_n_tracked = n_tracked*ww[bt_index[ii]]*frequency_array[fbin[ii]]
+            
+            ;Generate a UV beam from the image space beam, offset by calculated phases
+            psf_base_single=dirty_image_generate(*(psf.image_power_beam_arr[polarization,freq_i])[0]*$
+              exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
+      
+            ;Downsample the UV beam to match the grid size
+            d = size(psf_base_single,/DIMENSIONS) & nx = d[0]/2 & ny = d[1]/2
+            psf_base_superres = transpose(max(reform(transpose(reform(psf_base_single,2,nx,2*ny),[0,2,1]), 4,ny,nx),DIMENSION=1))
+
+            s=size(psf_base_superres)
+            uv_mask_superres=Fltarr(s[1:s[0]]) ;dynamically set size to match psf_base_superres
+            psf_mask_threshold_use = Max(Abs(psf_base_superres))/beam_mask_threshold 
+
+            IF ant_pol1 NE ant_pol2 THEN BEGIN
+                seed_i=where(Abs(psf_base_superres) GE Max(Abs(psf_base_superres))/2.,n_seed)
+                beam_i=region_grow(Abs(psf_base_superres),seed_i,$
+                thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
+                uv_mask_superres[beam_i]=1
+            ENDIF ELSE BEGIN
+                dimension_super=(size(psf_base_superres,/dimension))[0]
+                beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
+                  thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
+                uv_mask_superres[beam_i]=1
+            ENDELSE
+
+            ;FFT normalization correction in case this changes the total number of pixels
+            psf_base_superres*=psf_intermediate_res^2.
+            psf_base_superres/=beam_norm
+            psf_val_ref=Total(psf_base_superres)
+
+            IF Keyword_Set(interpolate_beam_threshold) THEN BEGIN
+                psf_amp = interpol_2d(abs(psf_base_superres*uv_mask_superres), uv_mask_superres) > 0
+                psf_phase = Fltarr(size(psf_base_superres, /dimension))
+                psf_phase[beam_i] = Atan(psf_base_superres[beam_i], /phase)
+                psf_phase = interpol_2d(psf_phase, uv_mask_superres)
+                psf_base_superres = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
+            ENDIF ELSE psf_base_superres*=uv_mask_superres
+      
+            ;Subtract off beam clip and renormalize
+            i_use = where(abs(psf_base_superres))
+            psf_amp = abs(psf_base_superres)
+            psf_phase = Atan(psf_base_superres, /phase)
+            psf_floor = psf_mask_threshold_use*(psf_intermediate_res^2.)/beam_norm
+            psf_amp[i_use] -= psf_floor
+            psf_base_superres = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
+            psf_base_superres*=psf_val_ref/Total(psf_base_superres)
     
-    IF interp_flag THEN $
-        FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
+            baseline_group_n=1.
+            beam_int[fbin[ii]]+=baseline_group_n*Total(psf_base_superres,/double)/psf_resolution^2.
+            beam2_int[fbin[ii]]+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2.
+            n_grp_use[fbin[ii]]+=baseline_group_n
+            psf_base_superres=Complex(psf_base_superres)
+    
+            psf_base_superres = reform(psf_base_superres, psf.dim^2.)
+            box_matrix[psf_dim3*ii]=psf_base_superres
+        endfor
+    endif else begin
+        IF interp_flag THEN $
+          FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
             interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii],dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
-    ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+        ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+    endelse
 
     t4_0=Systime(1)
     t3+=t4_0-t3_0
@@ -224,6 +315,15 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t5+=t5_1-t5_0
     t1+=t5_1-t1_0 
 ENDFOR
+
+if keyword_set(majick_beam) then begin
+    beam2_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
+    beam_int*=weight_invert(n_grp_use)/kbinsize^2.
+    (*primary_beam_sq_area)=Float(beam2_int)
+    (*primary_beam_area)=Float(beam_int)
+    obs.primary_beam_area[polarization]=primary_beam_area
+    obs.primary_beam_sq_area[polarization]=primary_beam_sq_area
+endif
 
 x_offset=(y_offset=0)
 xmin=(ymin=0)

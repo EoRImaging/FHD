@@ -18,7 +18,7 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
     gi=0
     n_ungrouped=n_tile
     ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
-    IF ~keyword_set(majick_beam) THEN BEGIN
+    ;IF ~keyword_set(majick_beam) THEN BEGIN
         WHILE n_ungrouped GT 0 DO BEGIN
             ref_i=ungrouped_i[0]
             antenna[ref_i].group_id[pol_i]=gi
@@ -28,7 +28,7 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
             ungrouped_i=where(antenna.group_id[pol_i] EQ -1,n_ungrouped)
             gi+=1
         ENDWHILE
-    ENDIF ELSE FOR ug_i=0L,n_tile-1 DO antenna[ug_i].group_id[pol_i]=ug_i ;beam per tile pair for majick degridding
+    ;ENDIF ELSE FOR ug_i=0L,n_tile-1 DO antenna[ug_i].group_id[pol_i]=ug_i ;beam per tile pair for majick degridding
 ENDFOR
 
 ;build the instrumental pol Jones matrix

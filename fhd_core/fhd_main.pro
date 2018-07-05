@@ -76,7 +76,7 @@ IF data_flag LE 0 THEN BEGIN
     ;Read in or construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,$
-      params=params,_Extra=extra)
+      n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
     jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
 
@@ -130,7 +130,7 @@ IF data_flag LE 0 THEN BEGIN
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,$
-             flag_calibration=flag_calibration,cal_stop=cal_stop,_Extra=extra)
+             flag_calibration=flag_calibration,cal_stop=cal_stop,n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,_Extra=extra)
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
         IF Keyword_Set(error) THEN BEGIN
             print,"Error occured during calibration. Returning."

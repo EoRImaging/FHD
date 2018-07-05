@@ -5,10 +5,9 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
   debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
   debug_clip_beam_mask=debug_clip_beam_mask,bi_inds=bi_inds,$
-  majick_beam=majick_beam,obs=obs,params=params,n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,_Extra=extra
+  majick_beam=majick_beam,obs=obs,image_power_beam=image_power_beam,_Extra=extra
 
   icomp = Complex(0, 1)
-  c_light = 299792458.
   freq_center=antenna1.freq[freq_i]
   dimension_super=(size(xvals_uv_superres,/dimension))[0]
 
@@ -43,25 +42,13 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     power_beam=(*Jones1[0,ant_pol1]*beam_ant1)*(Conj(*Jones2[0,ant_pol2])*beam_ant2)+$
       (*Jones1[1,ant_pol1]*beam_ant1)*(Conj(*Jones2[1,ant_pol2])*beam_ant2)
   ENDELSE
-  ;power_beam_zenith=Abs(power_beam[zen_int_x,zen_int_y])
-  ;power_zenith_norm=power_zenith/power_beam_zenith/Max(Abs(power_beam))
 
-  if keyword_set(majick_beam) then begin
-    ;Pixel center offset phases
-    deltau_l = l_mode*!dtor*(params.uu[bi_inds[0]]*c_light mod obs.kpix)/c_light*freq_center
-    deltav_m = m_mode*!dtor*(params.vv[bi_inds[0]]*c_light mod obs.kpix)/c_light*freq_center
-    ;w term offset phase
-    w_n_tracked = n_tracked*!dtor*params.ww[bi_inds[0]]*freq_center
-    
-    psf_base_single=dirty_image_generate((power_beam/power_zenith)*$
-      exp(2.*!pi*icomp*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
-    ;same for now, can upgrade with more phases to uv pixel centers to avoid hyperresolution
-    psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-  endif else begin
-    psf_base_single=dirty_image_generate(power_beam/power_zenith,/no_real)
-    psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-  endelse
+  if keyword_set(majick_beam) then image_power_beam=power_beam/power_zenith
 
+  ;Generate UV beam and interpolate to a super resolution
+  psf_base_single=dirty_image_generate(power_beam/power_zenith,/no_real)
+  psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
+  
   s=size(psf_base_superres)
   uv_mask_superres=Fltarr(s[1:s[0]]) ;dynamically set size to match psf_base_superres
   psf_mask_threshold_use = Max(Abs(psf_base_superres))/beam_mask_threshold
