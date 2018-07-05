@@ -3,8 +3,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
   swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
   beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
-  interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,majick_beam=majick_beam,params=params,$
-  _Extra=extra
+  interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,majick_beam=majick_beam,$
+  n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,_Extra=extra
 
   compile_opt idl2,strictarrsubs
   t00=Systime(1)
@@ -110,11 +110,10 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
     xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx
     yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsy
-    ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
-    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, $
-      /ignore_refraction
+    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+    image_power_beam_arr=PTRARR(n_pol,n_freq)
 
-    ;Calculate phase-tracked n mode of pixel centers
+    ;Calculate l mode, m mode, and phase-tracked n mode of pixel centers
     cdec0 = cos(obs.obsdec*!dtor)
     sdec0 = sin(obs.obsdec*!dtor)
     cdec = cos(dec_arr*!dtor)
@@ -122,7 +121,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     cdra = cos((ra_arr-obs.obsra)*!dtor)
     sdra = sin((ra_arr-obs.obsra)*!dtor)
     l_mode = cdec*sdra
-    m_mode = sdec*cdec0 + cdec*sdec0*cdra
+    m_mode = sdec*cdec0 - cdec*sdec0*cdra
     n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1. ;n=1 at phase center, so reference from there for phase tracking
     infinite_vals=where(NOT float(finite(n_tracked)),n_count)
     n_tracked[infinite_vals]=0
@@ -227,9 +226,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
           psf_resolution=psf_resolution,xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
           beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=bi_inds, $
-          majick_beam=majick_beam,obs=obs,params=params,n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,_Extra=extra)
+          majick_beam=majick_beam,obs=obs,image_power_beam=image_power_beam,_Extra=extra)
 
-        t_beam_power+=Systime(1)-t_bpwr
         t_bint=Systime(1)
         
         ;divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
@@ -237,6 +235,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         beam2_int+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2.
         n_grp_use+=baseline_group_n
         t_beam_int+=Systime(1)-t_bint
+
         IF ~double_flag THEN psf_base_superres=Complex(psf_base_superres)
         ;NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
         ;  the first element, shifted by one pixel. This allows efficient subscripting for interpolation during gridding
@@ -257,18 +256,24 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         psf_single[psf_resolution,psf_resolution]=Ptr_new(reform(shift(reform($
           psf_base_superres[xvals_i+psf_resolution-1,yvals_i+psf_resolution-1],psf_dim,psf_dim),1,1),psf_dim^2.))
         psf_single=Ptr_new(psf_single)
+        
         FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
+
       ENDFOR
+      if keyword_set(majick_beam) then image_power_beam_arr[pol_i,freq_i]=ptr_new(image_power_beam)
+
       beam2_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
       beam_int*=weight_invert(n_grp_use)/kbinsize^2.
       fi_use=where(freq_bin_i EQ freq_i,nf_use)
       FOR fi1=0L,nf_use-1 DO (*primary_beam_sq_area[pol_i])[fi_use[fi1]]=Float(beam2_int)
       FOR fi1=0L,nf_use-1 DO (*primary_beam_area[pol_i])[fi_use[fi1]]=Float(beam_int)
+
     ENDFOR
   ENDFOR
 
   FOR pol_i=0,n_pol-1 DO obs.primary_beam_area[pol_i]=primary_beam_area[pol_i]
   FOR pol_i=0,n_pol-1 DO obs.primary_beam_sq_area[pol_i]=primary_beam_sq_area[pol_i]
+
   print,t_ant,t_beam_power,t_beam_int
 
   ;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there 
@@ -280,7 +285,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   beam_ptr=Ptr_new(beam_arr)
   psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
-    n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr,interpolate_kernel=interpolate_kernel)
+    n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr,interpolate_kernel=interpolate_kernel,image_power_beam_arr=image_power_beam_arr)
 
   fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
   fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
