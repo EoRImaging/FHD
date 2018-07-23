@@ -119,7 +119,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
       void = getvar_savefile(sim_noise,names=names)
       if strmatch(names, 'obs', /FOLD_CASE) then begin
         obs_restore = getvar_savefile(sim_noise,strjoin((names[where(strmatch(names, 'obs', /FOLD_CASE) EQ 1)])[0]))
-        vis_noise = vis_noise_simulation(cal_sim_input, vis_arr, obs_id, obs_restore, n_pol=n_pol, file_path_fhd=file_path_fhd)
+        vis_noise = vis_noise_simulation(vis_arr, obs_id, obs_restore, n_pol=n_pol, file_path_fhd=file_path_fhd)
       endif else vis_noise = getvar_savefile(sim_noise,strjoin(names[0]))
       
     endif else message, 'Need to specify either a filepath to an obs with vis_noise calculation or a noise simulation.'
