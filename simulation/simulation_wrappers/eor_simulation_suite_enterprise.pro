@@ -34,7 +34,7 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
 
   endelse
   folder_names = 'fhd_' + version
-  folder_path = '/data4/MWA/FHD_Aug23/'
+  folder_path = '/data3/users/bryna/fhd_sims/'
 
   if keyword_set(png) or keyword_set(eps) or keyword_set(pdf) then pub = 1 else pub = 0
   if pub eq 1 then begin
@@ -115,24 +115,25 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
 
           eor_simulation_enterprise, start=36, end=36, version=version[j], $
             flat_sigma = flat_sigma, use_saved_uvf = use_saved_uvf, uvf_savefile = saved_uvf_filename, $
-            eor_real_sky = eor_real_sky, /recalculate_all; = recalc_sim
+            eor_real_sky = eor_real_sky, output_directory=folder_path, /recalculate_all; = recalc_sim
         endif else begin
           print, 'simulating density: ' + number_formatter(sample_factors[j]) + ' in folder: ' + version[j]
 
           eor_simulation_enterprise, start=36, end=36, version=version[j], sim_baseline_density=sample_factors[j], $
             flat_sigma = flat_sigma, use_saved_uvf = use_saved_uvf, uvf_savefile = saved_uvf_filename, $
-            eor_real_sky = eor_real_sky, /recalculate_all; = recalc_sim
+            eor_real_sky = eor_real_sky, output_directory=folder_path, /recalculate_all; = recalc_sim
         endelse
       endif
 
       print, 'calculating ps for ' + folder_names[j]
 
-      if run_name eq 'noflag' then fix_use = 1 $
-      else if (run_name eq 'realsky' or run_name eq 'complexsky') and j gt 0 then fix_use = 1
+      ;;if run_name eq 'noflag' then fix_use = 1 $
+      ;;else if (run_name eq 'realsky' or run_name eq 'complexsky') and j gt 0 then fix_use = 1
 
-      enterprise_wrapper, folder_names[j],/sim, png = png, eps = eps, pdf = pdf, $
+      ps_wrapper, folder_path + folder_names[j],/sim, png = png, eps = eps, pdf = pdf, $
         refresh_ps=refresh_ps, refresh_binning = refresh_binning, $
-        cube_power_info = cube_power_info, plot_stdset = plot_stdset, uvf_input = uvf_input, fix_sim_input = fix_use
+        cube_power_info = cube_power_info, plot_stdset = plot_stdset, $
+        uvf_input = uvf_input;, fix_sim_input = fix_use
 
       sim_ave_powers[i,j] = cube_power_info.ave_power[0]
       sim_wt_ave_powers[i,j] = cube_power_info.wt_ave_power[0]
