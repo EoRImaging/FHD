@@ -141,7 +141,6 @@ beam_mask*=rebin(horizon_mask_use,dimension_fit,elements_fit,/sample)
 ; Load the gridded UV data, FFT to the image plane with optional zero padding, and renormalize
 ; Define the pointer arrays that will contain the input images and deconvolved models
 IF N_Elements(map_fn_arr) EQ 0 THEN map_fn_arr=Ptrarr(n_pol,/allocate)
-weights_arr=Ptrarr(n_pol,/allocate)
 dirty_array=Ptrarr(n_pol,/allocate)
 residual_array=Ptrarr(n_pol,/allocate)
 model_arr=Ptrarr(n_pol,/allocate)
@@ -156,13 +155,6 @@ dirty_image_composite_U=fltarr(dimension_fit,elements_fit)
 dirty_image_composite_V=fltarr(dimension_fit,elements_fit)
 source_uv_mask=fltarr(dimension,elements)
 
-FOR pol_i=0,n_pol-1 DO BEGIN
-    weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
-    weights_single_conj=conjugate_mirror(weights_single)
-    source_uv_mask[where(weights_single)]=1
-    weights_single=(weights_single+weights_single_conj)/2.
-    *weights_arr[pol_i]=weights_single
-ENDFOR
 uv_i_use=where(source_uv_mask,n_uv_use)
 xvals_use=xvals[uv_i_use]
 yvals_use=yvals[uv_i_use]
