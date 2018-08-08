@@ -153,8 +153,13 @@ dirty_image_composite=fltarr(dimension_fit,elements_fit)
 dirty_image_composite_Q=fltarr(dimension_fit,elements_fit)
 dirty_image_composite_U=fltarr(dimension_fit,elements_fit)
 dirty_image_composite_V=fltarr(dimension_fit,elements_fit)
-source_uv_mask=fltarr(dimension,elements)
 
+; Calculate the minimum set of pixels in the uv plane needed for the source model.
+source_uv_mask=fltarr(dimension,elements)
+FOR pol_i=0,n_pol-1 DO BEGIN
+    weights_single=holo_mapfn_apply(complexarr(dimension,elements)+1,map_fn_arr[pol_i],/no_conj,/indexed,_Extra=extra)
+    source_uv_mask[where(weights_single)]=1
+ENDFOR
 uv_i_use=where(source_uv_mask,n_uv_use)
 xvals_use=xvals[uv_i_use]
 yvals_use=yvals[uv_i_use]
