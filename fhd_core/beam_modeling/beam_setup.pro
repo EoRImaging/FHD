@@ -4,7 +4,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
   beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
   interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,majick_beam=majick_beam,$
-  n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,_Extra=extra
+  _Extra=extra
 
   compile_opt idl2,strictarrsubs
   t00=Systime(1)
@@ -104,33 +104,9 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-$
     Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
-  if keyword_set(majick_beam) then begin
-    ;Calculate RA,DEC of pixel centers for image-based phasing
-    ;Based off of Jack Line's thesis work
-    psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
-    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx
-    yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsy
-    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
-    image_power_beam_arr=PTRARR(n_pol,n_freq)
-
-    ;Calculate l mode, m mode, and phase-tracked n mode of pixel centers
-    cdec0 = cos(obs.obsdec*!dtor)
-    sdec0 = sin(obs.obsdec*!dtor)
-    cdec = cos(dec_arr*!dtor)
-    sdec = sin(dec_arr*!dtor)
-    cdra = cos((ra_arr-obs.obsra)*!dtor)
-    sdra = sin((ra_arr-obs.obsra)*!dtor)
-    l_mode = cdec*sdra
-    m_mode = sdec*cdec0 - cdec*sdec0*cdra
-    n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1. ;n=1 at phase center, so reference from there for phase tracking
-    infinite_vals=where(NOT float(finite(n_tracked)),n_count)
-    n_tracked[infinite_vals]=0
-    l_mode[infinite_vals]=0
-    m_mode[infinite_vals]=0
-  endif
-
   complex_flag_arr=intarr(n_pol,nfreq_bin)
   beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
+  if keyword_set(majick_beam) then image_power_beam_arr=PTRARR(n_pol,nfreq_bin)
   ant_A_list=tile_A[0:nbaselines-1]
   ant_B_list=tile_B[0:nbaselines-1]
   baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
