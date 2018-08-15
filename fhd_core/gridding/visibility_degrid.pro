@@ -3,7 +3,6 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     complex=complex,fill_model_visibilities=fill_model_visibilities,$
     vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,$
     beam_mask_threshold=beam_mask_threshold,majick_beam=majick_beam,$
-    n_tracked=n_tracked,l_mode=l_mode,m_mode=m_mode,$
     interpolate_beam_threshold=interpolate_beam_threshold,_Extra=extra
 t0=Systime(1)
 heap_gc
@@ -47,6 +46,43 @@ n_freq_bin=N_Elements(freq_bin_i)
 psf_dim2=2*psf_dim
 group_arr=reform(psf.id[polarization,freq_bin_i,*])
 beam_arr=*psf.beam_ptr
+
+
+  if keyword_set(majick_beam) then begin
+
+  psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+  ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial 
+  ;    image space beam model
+IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=1.
+  psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res
+    ;Calculate RA,DEC of pixel centers for image-based phasing
+    ;Based off of Jack Line's thesis work
+    psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
+
+  image_bot=-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+  image_top=(psf_dim*psf_resolution-1)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+
+    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+Floor(obs.zenx);+obs.obsx
+    yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+Floor(obs.zeny);+obs.obsy
+    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+
+    ;Calculate l mode, m mode, and phase-tracked n mode of pixel centers
+    cdec0 = cos(obs.obsdec*!dtor)
+    sdec0 = sin(obs.obsdec*!dtor)
+    cdec = cos(dec_arr*!dtor)
+    sdec = sin(dec_arr*!dtor)
+    cdra = cos((ra_arr-obs.obsra)*!dtor)
+    sdra = sin((ra_arr-obs.obsra)*!dtor)
+    l_mode = cdec*sdra
+    m_mode = sdec*cdec0 - cdec*sdec0*cdra
+    n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1. ;n=1 at phase center, so reference from there for phase tracking
+    infinite_vals=where(NOT float(finite(n_tracked)),n_count)
+    n_tracked[infinite_vals]=0
+    l_mode[infinite_vals]=0
+    m_mode[infinite_vals]=0
+  endif
+
+
 
 vis_dimension=nbaselines*n_samples
 IF Keyword_Set(double_precision) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
@@ -219,18 +255,20 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     if keyword_set(majick_beam) then begin
         FOR ii=0L,vis_n-1 DO begin
             ;Pixel center offset phases
-            deltau_l = l_mode*(uu[bt_index[ii]]*frequency_array[fbin[ii]] mod obs.kpix)
-            deltav_m = m_mode*(vv[bt_index[ii]]*frequency_array[fbin[ii]] mod obs.kpix)
+            deltau_l = l_mode*(uu[bt_index[ii]]*frequency_array[freq_i[ii]] mod obs.kpix)
+            deltav_m = m_mode*(vv[bt_index[ii]]*frequency_array[freq_i[ii]] mod obs.kpix)
             ;w term offset phase
-            w_n_tracked = n_tracked*ww[bt_index[ii]]*frequency_array[fbin[ii]]
+            w_n_tracked = n_tracked*ww[bt_index[ii]]*frequency_array[freq_i[ii]]
             
             ;Generate a UV beam from the image space beam, offset by calculated phases
-            psf_base_single=dirty_image_generate(*(psf.image_power_beam_arr[polarization,freq_i])[0]*$
-              exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
+            psf_base_superres=dirty_image_generate((*psf.image_power_beam_arr[polarization,fbin[ii]])*$
+              exp(2.*!pi*Complex(0,1)*(deltau_l+deltav_m)),/no_real)
+              ;exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
       
             ;Downsample the UV beam to match the grid size
-            d = size(psf_base_single,/DIMENSIONS) & nx = d[0]/2 & ny = d[1]/2
-            psf_base_superres = transpose(max(reform(transpose(reform(psf_base_single,2,nx,2*ny),[0,2,1]), 4,ny,nx),DIMENSION=1))
+;            psf_base_single=psf_base_single[image_bot:image_top,image_bot:image_top] 
+;            d = size(psf_base_single,/DIMENSIONS) & nx = d[0]/2 & ny = d[1]/2
+;            psf_base_superres = transpose(max(reform(transpose(reform(psf_base_single,2,nx,2*ny),[0,2,1]), 4,ny,nx),DIMENSION=1))
 
             s=size(psf_base_superres)
             uv_mask_superres=Fltarr(s[1:s[0]]) ;dynamically set size to match psf_base_superres
@@ -249,35 +287,43 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             ENDELSE
 
             ;FFT normalization correction in case this changes the total number of pixels
-            psf_base_superres*=psf_intermediate_res^2.
-            psf_base_superres/=beam_norm
+ ;           psf_base_superres*=psf_intermediate_res^2.
+ ;           psf_base_superres/=beam_norm
             psf_val_ref=Total(psf_base_superres)
 
-            IF Keyword_Set(interpolate_beam_threshold) THEN BEGIN
-                psf_amp = interpol_2d(abs(psf_base_superres*uv_mask_superres), uv_mask_superres) > 0
-                psf_phase = Fltarr(size(psf_base_superres, /dimension))
-                psf_phase[beam_i] = Atan(psf_base_superres[beam_i], /phase)
-                psf_phase = interpol_2d(psf_phase, uv_mask_superres)
-                psf_base_superres = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
-            ENDIF ELSE psf_base_superres*=uv_mask_superres
-      
+;            IF Keyword_Set(interpolate_beam_threshold) THEN BEGIN
+;                psf_amp = interpol_2d(abs(psf_base_superres*uv_mask_superres), uv_mask_superres) > 0
+;                psf_phase = Fltarr(size(psf_base_superres, /dimension))
+;                psf_phase[beam_i] = Atan(psf_base_superres[beam_i], /phase)
+;                psf_phase = interpol_2d(psf_phase, uv_mask_superres)
+;                psf_base_superres = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
+;            ENDIF ELSE psf_base_superres*=uv_mask_superres
+            psf_base_superres*=uv_mask_superres
             ;Subtract off beam clip and renormalize
-            i_use = where(abs(psf_base_superres))
+            ;i_use = where(abs(psf_base_superres))
             psf_amp = abs(psf_base_superres)
             psf_phase = Atan(psf_base_superres, /phase)
-            psf_floor = psf_mask_threshold_use*(psf_intermediate_res^2.)/beam_norm
-            psf_amp[i_use] -= psf_floor
+            psf_floor = psf_mask_threshold_use*(psf_intermediate_res^2.);/beam_norm
+            ;psf_amp[i_use] -= psf_floor
+            psf_amp -= psf_floor*uv_mask_superres
             psf_base_superres = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
             psf_base_superres*=psf_val_ref/Total(psf_base_superres)
     
-            baseline_group_n=1.
-            beam_int[fbin[ii]]+=baseline_group_n*Total(psf_base_superres,/double)/psf_resolution^2.
-            beam2_int[fbin[ii]]+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2.
-            n_grp_use[fbin[ii]]+=baseline_group_n
-            psf_base_superres=Complex(psf_base_superres)
-    
+            ;baseline_group_n=1.
+            ;beam_int[fbin[ii]]+=baseline_group_n*Total(psf_base_superres,/double)/psf_resolution^2.
+            ;beam2_int[fbin[ii]]+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2.
+            ;n_grp_use[fbin[ii]]+=baseline_group_n
+            ;psf_base_superres=Complex(psf_base_superres)
+            
             psf_base_superres = reform(psf_base_superres, psf.dim^2.)
             box_matrix[psf_dim3*ii]=psf_base_superres
+        endfor
+        beam_int_temp = Total(box_matrix,1,/double)/psf_resolution^2.
+        beam2_int_temp = Total(Abs(box_matrix)^2,1,/double)/psf_resolution^2.
+        for ii=0, N_elements(freq_i)-1 do begin
+          beam_int[freq_i[ii]]+=beam_int_temp[ii]
+          beam2_int[freq_i[ii]]+=beam2_int_temp[ii]  
+          n_grp_use[freq_i[ii]]+=1
         endfor
     endif else begin
         IF interp_flag THEN $
