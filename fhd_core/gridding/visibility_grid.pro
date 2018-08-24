@@ -5,7 +5,8 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
     error=error,grid_uniform=grid_uniform,interpolate_grid_kernel=interpolate_grid_kernel,$
-    grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,_Extra=extra
+    grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
+    majick_beam=majick_beam,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -84,8 +85,11 @@ beam_arr=*psf.beam_ptr
 weights_flag=Keyword_Set(weights)
 variance_flag=Keyword_Set(variance)
 uniform_flag=Keyword_Set(uniform_filter)
-kx_arr=params.uu[bi_use]/kbinsize
-ky_arr=params.vv[bi_use]/kbinsize
+uu=params.uu
+vv=params.vv
+ww=params.ww
+kx_arr=uu[bi_use]/kbinsize
+ky_arr=vv[bi_use]/kbinsize
 
 nbaselines=obs.nbaselines
 n_samples=obs.n_time
@@ -93,6 +97,35 @@ n_freq_use=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
 psf_dim3=psf_dim*psf_dim
 bi_use_reduced=bi_use mod nbaselines
+
+if keyword_set(majick_beam) then begin
+    psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+    IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=1.
+    IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E2
+    psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res
+    psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
+    
+    ;Calculate RA,DEC of pixel centers for image-based phasing
+    ;Based off of Jack Line's thesis work
+    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx;+Floor(obs.zenx)
+    yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsy
+    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+
+    ;Calculate l mode, m mode, and phase-tracked n mode of pixel centers
+    cdec0 = cos(obs.obsdec*!dtor)
+    sdec0 = sin(obs.obsdec*!dtor)
+    cdec = cos(dec_arr*!dtor)
+    sdec = sin(dec_arr*!dtor)
+    cdra = cos((ra_arr-obs.obsra)*!dtor)
+    sdra = sin((ra_arr-obs.obsra)*!dtor)
+    l_mode = cdec*sdra
+    m_mode = sdec*cdec0 - cdec*sdec0*cdra
+    n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1. ;n=1 at phase center, so reference from there for phase tracking
+    infinite_vals=where(NOT float(finite(n_tracked)),n_count)
+    n_tracked[infinite_vals]=0
+    l_mode[infinite_vals]=0
+    m_mode[infinite_vals]=0
+endif
 
 IF Keyword_Set(double_precision) THEN image_uv=DComplexarr(dimension,elements) ELSE image_uv=Complexarr(dimension,elements)
 IF Keyword_Set(double_precision) THEN weights=DComplexarr(dimension,elements) ELSE weights=Complexarr(dimension,elements)
@@ -119,11 +152,17 @@ IF n_conj GT 0 THEN BEGIN
     conj_flag[conj_i]=1
     kx_arr[conj_i]=-kx_arr[conj_i]
     ky_arr[conj_i]=-ky_arr[conj_i]
+    uu[conj_i]=-uu[conj_i]
+    vv[conj_i]=-vv[conj_i]
+    ww[conj_i]=-ww[conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
     IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
 ENDIF
 xcen=Float(frequency_array#Temporary(kx_arr))
 ycen=Float(frequency_array#Temporary(ky_arr))
+
+x = (FINDGEN(dimension) - dimension/2.)*obs.kpix
+y = (FINDGEN(dimension) - dimension/2.)*obs.kpix
  
 x_offset=Fix(Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
 y_offset=Fix(Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
@@ -274,7 +313,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         n_xyf_bin=N_Elements(xyf_ui)
     ENDELSE
     
-    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF vis_n GT 1.1*n_xyf_bin AND ~keyword_set(majick_beam) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         rep_flag=1
         inds=inds[xyf_si]
         inds_use=xyf_si[xyf_ui]
@@ -311,6 +350,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         IF model_flag THEN model_box=model_use[inds]
         vis_box=vis_arr_use[inds]
         psf_weight=Replicate(1.,vis_n)
+        bt_index = inds / n_freq_use
     ENDELSE
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
@@ -318,11 +358,31 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t3_0=Systime(1)
         t2+=t3_0-t1_0
     ENDIF
-    
+   
+    ;Make the beams on the fly with corrective phases given the baseline location
+    if keyword_set(majick_beam) then begin
+        FOR ii=0L,vis_n-1 DO begin
+            ;Pixel center offset phases
+            deltau_l = l_mode*(uu[bt_index[ii]]*frequency_array[freq_i[ii]]-x[xmin_use+psf_dim/2])
+            deltav_m = m_mode*(vv[bt_index[ii]]*frequency_array[freq_i[ii]]-y[ymin_use+psf_dim/2])
+            ;w term offset phase
+            w_n_tracked = n_tracked*ww[bt_index[ii]]*frequency_array[freq_i[ii]]
+
+            ;Generate a UV beam from the image space beam, offset by calculated phases
+            psf_base_superres=dirty_image_generate((*psf.image_power_beam_arr[polarization,fbin[ii]])*$
+              exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
+
+            psf_base_superres = reform(psf_base_superres, psf.dim^2.)
+            box_matrix[psf_dim3*ii]=psf_base_superres
+        endfor
+        small_inds=where(abs(box_matrix) LT Max(Abs(box_matrix))/beam_mask_threshold) ; should be max by kernel, but this is fast
+        box_matrix[small_inds]=0
+    endif else begin 
     IF interp_flag THEN $
         FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
             interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
         ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+    endelse
 ;;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 ;;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $
