@@ -16,6 +16,7 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
 
     n_samples = 1
     no_suite_plots = 1
+    use_weight_cutoff_sim = 1
   endif else begin
     ;sample_factors = [.0001,.0002,.0005,.001,.005,.01,.05,.1,.5, 1]
     sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1];, 5]
@@ -31,6 +32,7 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
     if n_elements(sample_inds) gt 0 then sample_factors = sample_factors[sample_inds]
 
     n_samples = n_elements(sample_factors)
+    use_weight_cutoff_sim = 0
 
   endelse
   folder_names = 'fhd_' + version
@@ -133,7 +135,7 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
       ps_wrapper, folder_path + folder_names[j],/sim, png = png, eps = eps, pdf = pdf, $
         refresh_ps=refresh_ps, refresh_binning = refresh_binning, $
         cube_power_info = cube_power_info, plot_stdset = plot_stdset, $
-        uvf_input = uvf_input, use_weight_cutoff_sim=0
+        uvf_input = uvf_input, use_weight_cutoff_sim=use_weight_cutoff_sim
 
       sim_ave_powers[i,j] = cube_power_info.ave_power[0]
       sim_wt_ave_powers[i,j] = cube_power_info.wt_ave_power[0]
