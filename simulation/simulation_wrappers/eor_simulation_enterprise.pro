@@ -29,7 +29,7 @@ PRO eor_simulation_enterprise,cleanup=cleanup,recalculate_all=recalculate_all,ex
   IF N_Elements(ps_kbinsize) EQ 0 THEN ps_kbinsize=0.5
   IF N_Elements(ps_kspan) EQ 0 THEN ps_kspan=600.
 
-  if n_elements(output_directory) eq 0 then output_directory='/data3/MWA/MWA_data4/FHD_Aug23/'
+  if n_elements(output_directory) eq 0 then output_directory='/data3/users/bryna/fhd_sims/'
   image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
   ;image_filter_fn=''
 
