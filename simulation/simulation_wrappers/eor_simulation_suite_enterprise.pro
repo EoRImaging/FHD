@@ -18,7 +18,7 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
     no_suite_plots = 1
   endif else begin
     ;sample_factors = [.0001,.0002,.0005,.001,.005,.01,.05,.1,.5, 1]
-    sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1, 5]
+    sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1];, 5]
 
     if n_elements(run_name) eq 0 then run_name = 'realsky'
 
@@ -133,7 +133,7 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
       ps_wrapper, folder_path + folder_names[j],/sim, png = png, eps = eps, pdf = pdf, $
         refresh_ps=refresh_ps, refresh_binning = refresh_binning, $
         cube_power_info = cube_power_info, plot_stdset = plot_stdset, $
-        uvf_input = uvf_input;, fix_sim_input = fix_use
+        uvf_input = uvf_input, use_weight_cutoff_sim=0
 
       sim_ave_powers[i,j] = cube_power_info.ave_power[0]
       sim_wt_ave_powers[i,j] = cube_power_info.wt_ave_power[0]
