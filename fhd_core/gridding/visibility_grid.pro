@@ -6,7 +6,7 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
     error=error,grid_uniform=grid_uniform,interpolate_grid_kernel=interpolate_grid_kernel,$
     grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
-    majick_beam=majick_beam,_Extra=extra
+    majick_beam=majick_beam,uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -99,15 +99,19 @@ psf_dim3=psf_dim*psf_dim
 bi_use_reduced=bi_use mod nbaselines
 
 if keyword_set(majick_beam) then begin
+    uv_grid_phase_only=1
     psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
     IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=1.
     IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E2
     psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res
     psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
     
+    image_bot=-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+    image_top=(psf_dim*psf_resolution-1)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+
     ;Calculate RA,DEC of pixel centers for image-based phasing
     ;Based off of Jack Line's thesis work
-    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx;+Floor(obs.zenx)
+    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx
     yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsy
     apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 
@@ -125,6 +129,8 @@ if keyword_set(majick_beam) then begin
     n_tracked[infinite_vals]=0
     l_mode[infinite_vals]=0
     m_mode[infinite_vals]=0
+
+    if keyword_set(uv_grid_phase_only) then n_tracked[*]=0
 endif
 
 IF Keyword_Set(double_precision) THEN image_uv=DComplexarr(dimension,elements) ELSE image_uv=Complexarr(dimension,elements)
@@ -371,12 +377,24 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             ;Generate a UV beam from the image space beam, offset by calculated phases
             psf_base_superres=dirty_image_generate((*psf.image_power_beam_arr[polarization,fbin[ii]])*$
               exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
+            d = size(psf_base_superres,/DIMENSIONS) & nx = d[0]/2 & ny = d[1]/2
+            psf_base_superres = transpose(max(reform(transpose(reform(psf_base_superres,2,nx,2*ny),$
+              [0,2,1]), 4,ny,nx),DIMENSION=1))
+
+            psf_base_superres=psf_base_superres[image_bot:image_top,image_bot:image_top]
 
             psf_base_superres = reform(psf_base_superres, psf.dim^2.)
             box_matrix[psf_dim3*ii]=psf_base_superres
         endfor
-        small_inds=where(abs(box_matrix) LT Max(Abs(box_matrix))/beam_mask_threshold) ; should be max by kernel, but this is fast
-        box_matrix[small_inds]=0
+        psf_val_ref=Total(box_matrix)
+        psf_amp = abs(box_matrix)
+        psf_mask_threshold_use = Max(psf_amp)/beam_mask_threshold
+        psf_phase = Atan(box_matrix, /phase)
+        psf_amp -= psf_mask_threshold_use
+        box_matrix = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
+        small_inds=where(psf_amp LT 0, n_count) ; should be max by kernel, but this is fast
+        if n_count GT 0 then box_matrix[small_inds]=0
+        box_matrix*=psf_val_ref/Total(box_matrix)
     endif else begin 
     IF interp_flag THEN $
         FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
