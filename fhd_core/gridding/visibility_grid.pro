@@ -85,11 +85,11 @@ beam_arr=*psf.beam_ptr
 weights_flag=Keyword_Set(weights)
 variance_flag=Keyword_Set(variance)
 uniform_flag=Keyword_Set(uniform_filter)
-uu=params.uu
-vv=params.vv
-ww=params.ww
-kx_arr=uu[bi_use]/kbinsize
-ky_arr=vv[bi_use]/kbinsize
+uu=params.uu[bi_use]
+vv=params.vv[bi_use]
+ww=params.ww[bi_use]
+kx_arr=uu/kbinsize
+ky_arr=vv/kbinsize
 
 nbaselines=obs.nbaselines
 n_samples=obs.n_time
@@ -377,11 +377,11 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             ;Generate a UV beam from the image space beam, offset by calculated phases
             psf_base_superres=dirty_image_generate((*psf.image_power_beam_arr[polarization,fbin[ii]])*$
               exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
+              
+            psf_base_superres=psf_base_superres[image_bot:image_top,image_bot:image_top]  
             d = size(psf_base_superres,/DIMENSIONS) & nx = d[0]/2 & ny = d[1]/2
             psf_base_superres = transpose(max(reform(transpose(reform(psf_base_superres,2,nx,2*ny),$
               [0,2,1]), 4,ny,nx),DIMENSION=1))
-
-            psf_base_superres=psf_base_superres[image_bot:image_top,image_bot:image_top]
 
             psf_base_superres = reform(psf_base_superres, psf.dim^2.)
             box_matrix[psf_dim3*ii]=psf_base_superres
