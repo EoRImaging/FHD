@@ -380,8 +380,11 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
               
             psf_base_superres=psf_base_superres[image_bot:image_top,image_bot:image_top]  
             d = size(psf_base_superres,/DIMENSIONS) & nx = d[0]/2 & ny = d[1]/2
-            psf_base_superres = transpose(max(reform(transpose(reform(psf_base_superres,2,nx,2*ny),$
-              [0,2,1]), 4,ny,nx),DIMENSION=1))
+            ;A quick way to sum down the image by a factor of 2 in both dimensions.
+            ;  indices of all the 2x2 sub-arrays are next to each other in memory
+            ;  then, total collapses the 2x2 sub-arrays
+            psf_base_superres = transpose(total(reform(transpose(reform(psf_base_superres,2,nx,2*ny),$
+              [0,2,1]), 4,ny,nx),1))
 
             psf_base_superres = reform(psf_base_superres, psf.dim^2.)
             box_matrix[psf_dim3*ii]=psf_base_superres
