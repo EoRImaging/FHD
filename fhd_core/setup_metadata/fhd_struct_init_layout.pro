@@ -40,9 +40,9 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     antenna_names = antenna_names, antenna_numbers = antenna_numbers, antenna_coords = antenna_coords, $
     mount_type = mount_type, axis_offset = axis_offset, pola = pola, pola_orientation = pola_orientation, $
     pola_cal_params = pola_cal_params, polb = polb, polb_orientation = polb_orientation, $
-    polb_cal_params = polb_cal_params, _Extra=extra
-    
-    
+    polb_cal_params = polb_cal_params, diameters = diameters, beam_fwhm = beam_fwhm, $
+    _Extra=extra
+
   if n_elements(ant_table_header) ne 0 then begin
     ;; first get values out of header
     keyword_list = strarr(n_elements(ant_table_header))
@@ -113,7 +113,10 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
       polb_orientation = ant_table_data.polab
     if n_elements(polb_cal_params) eq 0 and Tag_exist(ant_table_data, 'polcalb') then $
       polb_cal_params = ant_table_data.polcalb
-      
+    if n_elements(diameters) eq 0 and Tag_exist(ant_table_data, 'diameter') then $
+      diameters = ant_table_data.diameter
+    if n_elements(beam_fwhm) eq 0 and Tag_exist(ant_table_data, 'beamfwhm') then $
+      beam_fwhm = ant_table_data.beamfwhm
   endif
   
   ;; if no center given, assume MWA center (Tingay et al. 2013, converted from lat/lon using pyuvdata)
@@ -276,7 +279,13 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     pol_type: pol_type, n_pol_cal_params: n_pol_cal_params, n_antenna: n_antenna, $
     antenna_names: antenna_names, antenna_numbers: antenna_numbers, antenna_coords: antenna_coords, $
     mount_type: mount_type, axis_offset: axis_offset, pola: pola, pola_orientation: pola_orientation, $
-    pola_cal_params: pola_cal_params, polb: polb, polb_orientation: polb_orientation, polb_cal_params: polb_cal_params}
-    
+    pola_cal_params: pola_cal_params, polb: polb, polb_orientation: polb_orientation, $
+    polb_cal_params: polb_cal_params}
+
+  if n_elements(diameters):
+    layout = create_struct(layout, 'diameters', diameters)
+  if n_elements(beam_fwhm):
+    layout = create_struct(layout, 'beam_fwhm', beam_fwhm)
+
   return, layout
 end
