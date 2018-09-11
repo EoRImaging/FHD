@@ -45,34 +45,34 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     
   if n_elements(ant_table_header) ne 0 then begin
     ;; first get values out of header
-    keyword_list = list()
+    keyword_list = strarr(n_elements(ant_table_header))
     for si = 0, n_elements(ant_table_header)-1 do begin
-      keyword_list.add, strlowcase(strtrim(strmid(ant_table_header[si], 0, 8)))
+      keyword_list[si] = strlowcase(strtrim(strmid(ant_table_header[si], 0, 8)))
     endfor
-    if n_elements(array_center) eq 0 and keyword_list.count('arrayx') gt 0 and $
-      keyword_list.count('arrayy') gt 0 and keyword_list.count('arrayz') gt 0 then $
+    if n_elements(array_center) eq 0 and max(keyword_list EQ 'arrayx') and $
+      max(keyword_list EQ 'arrayy') and max(keyword_list EQ 'arrayz') then $
       array_center = [sxpar(ant_table_header,'arrayx'), sxpar(ant_table_header,'arrayy'), sxpar(ant_table_header,'arrayz')]
       
-    if n_elements(coordinate_frame) eq 0 and keyword_list.count('frame') gt 0 then $
+    if n_elements(coordinate_frame) eq 0 and max(keyword_list EQ 'frame') then $
       coordinate_frame = sxpar(ant_table_header,'frame')
-    if n_elements(gst0) eq 0 and keyword_list.count('gstiao') gt 0 then $
+    if n_elements(gst0) eq 0 and max(keyword_list EQ 'gstiao') then $
       gst0 = sxpar(ant_table_header,'gstiao')
-    if n_elements(earth_degpd) eq 0 and keyword_list.count('degpdy') gt 0 then $
+    if n_elements(earth_degpd) eq 0 and max(keyword_list EQ 'degpdy') then $
       earth_degpd = sxpar(ant_table_header,'degpdy')
-    if n_elements(ref_date) eq 0 and keyword_list.count('rdate') gt 0 then $
+    if n_elements(ref_date) eq 0 and max(keyword_list EQ 'rdate') then $
       ref_date = sxpar(ant_table_header,'rdate')
     if n_elements(time_system) eq 0 then begin
-      if keyword_list.count('timesys') gt 0 then begin
+      if max(keyword_list EQ 'timesys') then begin
         time_system = sxpar(ant_table_header,'timesys')
-      endif else if keyword_list.count('timsys') gt 0 then begin ;; cotter misspells this
+      endif else if max(keyword_list EQ 'timsys') then begin ;; cotter misspells this
         time_system = sxpar(ant_table_header,'timsys')
       endif
     endif
-    if n_elements(dut1) eq 0 and keyword_list.count('ut1utc') gt 0 then $
+    if n_elements(dut1) eq 0 and max(keyword_list EQ 'ut1utc') then $
       dut1 = sxpar(ant_table_header,'ut1utc')
-    if n_elements(diff_utc) eq 0 and keyword_list.count('datutc') gt 0 then $
+    if n_elements(diff_utc) eq 0 and max(keyword_list EQ 'datutc') then $
       diff_utc = sxpar(ant_table_header,'datutc')
-    if n_elements(nleap_sec) eq 0 and n_elements(time_system) gt 0 then begin
+    if n_elements(nleap_sec) eq 0 and n_elements(time_system) then begin
       if time_system eq 'IAT' then begin
         nleap_sec = diff_utc
       endif
@@ -80,14 +80,15 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     ;; 'iatutc' is a non-standard fits keyword, but cotter provides it and it contains the
     ;; number of leap seconds, so we capture it here
     if n_elements(nleap_sec) eq 0 then begin
-      if keyword_list.count('iatutc') gt 0 then nleap_sec = sxpar(ant_table_header,'iatutc')
+      if max(keyword_list EQ 'iatutc') then nleap_sec = sxpar(ant_table_header,'iatutc')
     endif
-    if n_elements(pol_type) eq 0 and keyword_list.count('poltype') gt 0 then $
+    if n_elements(pol_type) eq 0 and max(keyword_list EQ 'poltype') then $
       pol_type = sxpar(ant_table_header,'poltype')
-    if n_elements(n_pol_cal_params) eq 0 and keyword_list.count('nopcal') gt 0 then $
+    if n_elements(n_pol_cal_params) eq 0 and max(keyword_list EQ 'nopcal') then $
       n_pol_cal_params = sxpar(ant_table_header,'nopcal')
-    if n_elements(n_antenna) eq 0 and keyword_list.count('naxis2') gt 0 then $
+    if n_elements(n_antenna) eq 0 and max(keyword_list EQ 'naxis2') then $
       n_antenna = sxpar(ant_table_header,'naxis2')
+    
       
     ;; now get values out of table data
     tag_list = list(strlowcase(tag_names(ant_table_data)), /extract)
