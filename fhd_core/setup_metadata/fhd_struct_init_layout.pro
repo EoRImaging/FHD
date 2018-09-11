@@ -40,39 +40,39 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     antenna_names = antenna_names, antenna_numbers = antenna_numbers, antenna_coords = antenna_coords, $
     mount_type = mount_type, axis_offset = axis_offset, pola = pola, pola_orientation = pola_orientation, $
     pola_cal_params = pola_cal_params, polb = polb, polb_orientation = polb_orientation, $
-    polb_cal_params = polb_cal_params, _Extra=extra
-    
-    
+    polb_cal_params = polb_cal_params, diameters = diameters, beam_fwhm = beam_fwhm, $
+    _Extra=extra
+
   if n_elements(ant_table_header) ne 0 then begin
     ;; first get values out of header
-    keyword_list = list()
+    keyword_list = strarr(n_elements(ant_table_header))
     for si = 0, n_elements(ant_table_header)-1 do begin
-      keyword_list.add, strlowcase(strtrim(strmid(ant_table_header[si], 0, 8)))
+      keyword_list[si] = strlowcase(strtrim(strmid(ant_table_header[si], 0, 8)))
     endfor
-    if n_elements(array_center) eq 0 and keyword_list.count('arrayx') gt 0 and $
-      keyword_list.count('arrayy') gt 0 and keyword_list.count('arrayz') gt 0 then $
+    if n_elements(array_center) eq 0 and max(keyword_list EQ 'arrayx') and $
+      max(keyword_list EQ 'arrayy') and max(keyword_list EQ 'arrayz') then $
       array_center = [sxpar(ant_table_header,'arrayx'), sxpar(ant_table_header,'arrayy'), sxpar(ant_table_header,'arrayz')]
       
-    if n_elements(coordinate_frame) eq 0 and keyword_list.count('frame') gt 0 then $
+    if n_elements(coordinate_frame) eq 0 and max(keyword_list EQ 'frame') then $
       coordinate_frame = sxpar(ant_table_header,'frame')
-    if n_elements(gst0) eq 0 and keyword_list.count('gstiao') gt 0 then $
+    if n_elements(gst0) eq 0 and max(keyword_list EQ 'gstiao') then $
       gst0 = sxpar(ant_table_header,'gstiao')
-    if n_elements(earth_degpd) eq 0 and keyword_list.count('degpdy') gt 0 then $
+    if n_elements(earth_degpd) eq 0 and max(keyword_list EQ 'degpdy') then $
       earth_degpd = sxpar(ant_table_header,'degpdy')
-    if n_elements(ref_date) eq 0 and keyword_list.count('rdate') gt 0 then $
+    if n_elements(ref_date) eq 0 and max(keyword_list EQ 'rdate') then $
       ref_date = sxpar(ant_table_header,'rdate')
     if n_elements(time_system) eq 0 then begin
-      if keyword_list.count('timesys') gt 0 then begin
+      if max(keyword_list EQ 'timesys') then begin
         time_system = sxpar(ant_table_header,'timesys')
-      endif else if keyword_list.count('timsys') gt 0 then begin ;; cotter misspells this
+      endif else if max(keyword_list EQ 'timsys') then begin ;; cotter misspells this
         time_system = sxpar(ant_table_header,'timsys')
       endif
     endif
-    if n_elements(dut1) eq 0 and keyword_list.count('ut1utc') gt 0 then $
+    if n_elements(dut1) eq 0 and max(keyword_list EQ 'ut1utc') then $
       dut1 = sxpar(ant_table_header,'ut1utc')
-    if n_elements(diff_utc) eq 0 and keyword_list.count('datutc') gt 0 then $
+    if n_elements(diff_utc) eq 0 and max(keyword_list EQ 'datutc') then $
       diff_utc = sxpar(ant_table_header,'datutc')
-    if n_elements(nleap_sec) eq 0 and n_elements(time_system) gt 0 then begin
+    if n_elements(nleap_sec) eq 0 and n_elements(time_system) then begin
       if time_system eq 'IAT' then begin
         nleap_sec = diff_utc
       endif
@@ -80,40 +80,43 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     ;; 'iatutc' is a non-standard fits keyword, but cotter provides it and it contains the
     ;; number of leap seconds, so we capture it here
     if n_elements(nleap_sec) eq 0 then begin
-      if keyword_list.count('iatutc') gt 0 then nleap_sec = sxpar(ant_table_header,'iatutc')
+      if max(keyword_list EQ 'iatutc') then nleap_sec = sxpar(ant_table_header,'iatutc')
     endif
-    if n_elements(pol_type) eq 0 and keyword_list.count('poltype') gt 0 then $
+    if n_elements(pol_type) eq 0 and max(keyword_list EQ 'poltype') then $
       pol_type = sxpar(ant_table_header,'poltype')
-    if n_elements(n_pol_cal_params) eq 0 and keyword_list.count('nopcal') gt 0 then $
+    if n_elements(n_pol_cal_params) eq 0 and max(keyword_list EQ 'nopcal') then $
       n_pol_cal_params = sxpar(ant_table_header,'nopcal')
-    if n_elements(n_antenna) eq 0 and keyword_list.count('naxis2') gt 0 then $
+    if n_elements(n_antenna) eq 0 and max(keyword_list EQ 'naxis2') then $
       n_antenna = sxpar(ant_table_header,'naxis2')
+    
       
     ;; now get values out of table data
-    tag_list = list(strlowcase(tag_names(ant_table_data)), /extract)
-    if n_elements(antenna_names) eq 0 and tag_list.count('anname') gt 0 then $
+    if n_elements(antenna_names) eq 0 and Tag_exist(ant_table_data, 'anname') then $
       antenna_names = ant_table_data.anname
-    if n_elements(antenna_numbers) eq 0 and tag_list.count('nosta') gt 0 then $
+    if n_elements(antenna_numbers) eq 0 and Tag_exist(ant_table_data, 'nosta') then $
       antenna_numbers = ant_table_data.nosta
-    if n_elements(antenna_coords) eq 0 and tag_list.count('stabxyz') gt 0 then $
+    if n_elements(antenna_coords) eq 0 and Tag_exist(ant_table_data, 'stabxyz') then $
       antenna_coords = ant_table_data.stabxyz
-    if n_elements(mount_type) eq 0 and tag_list.count('mntsta') gt 0 then $
+    if n_elements(mount_type) eq 0 and Tag_exist(ant_table_data, 'mntsta') then $
       mount_type = ant_table_data.mntsta
-    if n_elements(axis_offset) eq 0 and tag_list.count('staxof') gt 0 then $
+    if n_elements(axis_offset) eq 0 and Tag_exist(ant_table_data, 'staxof') then $
       axis_offset = ant_table_data.staxof
-    if n_elements(pola) eq 0 and tag_list.count('poltya') gt 0 then $
+    if n_elements(pola) eq 0 and Tag_exist(ant_table_data, 'poltya') then $
       pola = ant_table_data.poltya
-    if n_elements(pola_orientation) eq 0 and tag_list.count('polaa') gt 0 then $
+    if n_elements(pola_orientation) eq 0 and Tag_exist(ant_table_data, 'polaa') then $
       pola_orientation = ant_table_data.polaa
-    if n_elements(pola_cal_params) eq 0 and tag_list.count('polcala') gt 0 then $
+    if n_elements(pola_cal_params) eq 0 and Tag_exist(ant_table_data, 'polcala') then $
       pola_cal_params = ant_table_data.polcala
-    if n_elements(polb) eq 0 and tag_list.count('poltyb') gt 0 then $
+    if n_elements(polb) eq 0 and Tag_exist(ant_table_data, 'poltyb') then $
       polb = ant_table_data.poltyb
-    if n_elements(polb_orientation) eq 0 and tag_list.count('polab') gt 0 then $
+    if n_elements(polb_orientation) eq 0 and Tag_exist(ant_table_data, 'polab') then $
       polb_orientation = ant_table_data.polab
-    if n_elements(polb_cal_params) eq 0 and tag_list.count('polcalb') gt 0 then $
+    if n_elements(polb_cal_params) eq 0 and Tag_exist(ant_table_data, 'polcalb') then $
       polb_cal_params = ant_table_data.polcalb
-      
+    if n_elements(diameters) eq 0 and Tag_exist(ant_table_data, 'diameter') then $
+      diameters = ant_table_data.diameter
+    if n_elements(beam_fwhm) eq 0 and Tag_exist(ant_table_data, 'beamfwhm') then $
+      beam_fwhm = ant_table_data.beamfwhm
   endif
   
   ;; if no center given, assume MWA center (Tingay et al. 2013, converted from lat/lon using pyuvdata)
@@ -276,7 +279,13 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     pol_type: pol_type, n_pol_cal_params: n_pol_cal_params, n_antenna: n_antenna, $
     antenna_names: antenna_names, antenna_numbers: antenna_numbers, antenna_coords: antenna_coords, $
     mount_type: mount_type, axis_offset: axis_offset, pola: pola, pola_orientation: pola_orientation, $
-    pola_cal_params: pola_cal_params, polb: polb, polb_orientation: polb_orientation, polb_cal_params: polb_cal_params}
-    
+    pola_cal_params: pola_cal_params, polb: polb, polb_orientation: polb_orientation, $
+    polb_cal_params: polb_cal_params}
+
+  if n_elements(diameters):
+    layout = create_struct(layout, 'diameters', diameters)
+  if n_elements(beam_fwhm):
+    layout = create_struct(layout, 'beam_fwhm', beam_fwhm)
+
   return, layout
 end
