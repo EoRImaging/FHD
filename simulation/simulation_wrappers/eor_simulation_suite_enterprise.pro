@@ -141,7 +141,8 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
       ps_wrapper, folder_path + folder_names[j],/sim, png = png, eps = eps, pdf = pdf, $
         refresh_ps=refresh_ps, refresh_binning = refresh_binning, $
         cube_power_info = cube_power_info, plot_stdset = plot_stdset, $
-        uvf_input = uvf_input, use_weight_cutoff_sim=use_weight_cutoff_sim
+        uvf_input = uvf_input, use_weight_cutoff_sim=use_weight_cutoff_sim, $
+        plot_flat_1d = flat_sigma
 
       sim_ave_powers[i,j] = cube_power_info.ave_power[0]
       sim_wt_ave_powers[i,j] = cube_power_info.wt_ave_power[0]
