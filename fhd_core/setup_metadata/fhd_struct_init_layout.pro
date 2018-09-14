@@ -282,10 +282,12 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
     pola_cal_params: pola_cal_params, polb: polb, polb_orientation: polb_orientation, $
     polb_cal_params: polb_cal_params}
 
-  if n_elements(diameters):
+  if n_elements(diameters) then begin
     layout = create_struct(layout, 'diameters', diameters)
-  if n_elements(beam_fwhm):
+  endif
+  if n_elements(beam_fwhm) then begin
     layout = create_struct(layout, 'beam_fwhm', beam_fwhm)
+  endif
 
   return, layout
 end
