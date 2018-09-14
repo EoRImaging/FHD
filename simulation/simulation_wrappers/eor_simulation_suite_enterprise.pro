@@ -1,5 +1,5 @@
 pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
-    file_uvw = file_uvw, $
+    file_uvw = file_uvw, large_healpix = large_healpix, $
     flat_sigma = flat_sigma, run_name = run_name, $
     sample_inds = sample_inds, eor_real_sky = eor_real_sky, $
     recalc_sim = recalc_sim, refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
@@ -8,6 +8,10 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
 
   if n_elements(flat_sigma) eq 0 then flat_sigma = 1
   if keyword_set(flat_sigma) then sim_in = 'flat' else sim_in = 'eor'
+
+  if keyword_set(large_healpix) then begin
+    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+  endif
 
   if keyword_set(file_uvw) then begin
     if n_elements(run_name) eq 0 then run_name = 'mwa_zenith'
@@ -21,7 +25,7 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
     ;sample_factors = [.0001,.0002,.0005,.001,.005,.01,.05,.1,.5, 1]
     sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1];, 5]
 
-    if n_elements(run_name) eq 0 then run_name = 'realsky'
+    if n_elements(run_name) eq 0 then message, 'run name must be specified.'
 
     if run_name eq 'noflag' then sample_factors = [sample_factors, 5]
 
@@ -117,13 +121,15 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
 
           eor_simulation_enterprise, start=36, end=36, version=version[j], $
             flat_sigma = flat_sigma, use_saved_uvf = use_saved_uvf, uvf_savefile = saved_uvf_filename, $
-            eor_real_sky = eor_real_sky, output_directory=folder_path, /recalculate_all; = recalc_sim
+            eor_real_sky = eor_real_sky, output_directory=folder_path, restrict_hpx_inds=restrict_hpx_inds, $
+            /recalculate_all; = recalc_sim
         endif else begin
           print, 'simulating density: ' + number_formatter(sample_factors[j]) + ' in folder: ' + version[j]
 
           eor_simulation_enterprise, start=36, end=36, version=version[j], sim_baseline_density=sample_factors[j], $
             flat_sigma = flat_sigma, use_saved_uvf = use_saved_uvf, uvf_savefile = saved_uvf_filename, $
-            eor_real_sky = eor_real_sky, output_directory=folder_path, /recalculate_all; = recalc_sim
+            eor_real_sky = eor_real_sky, output_directory=folder_path, restrict_hpx_inds=restrict_hpx_inds, $
+            /recalculate_all; = recalc_sim
         endelse
       endif
 
