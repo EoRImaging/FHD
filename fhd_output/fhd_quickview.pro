@@ -8,7 +8,8 @@ PRO fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=
     allow_sidelobe_image_output=allow_sidelobe_image_output,beam_output_threshold=beam_output_threshold,beam_threshold=beam_threshold,$
     beam_diff_image=beam_diff_image,output_residual_histogram=output_residual_histogram,show_beam_contour=show_beam_contour,$
     image_mask_horizon=image_mask_horizon,write_healpix_fits=write_healpix_fits,nside=nside,$
-    model_recalculate=model_recalculate,map_fn_arr=map_fn_arr,_Extra=extra
+    model_recalculate=model_recalculate,map_fn_arr=map_fn_arr,$
+    min_restored_beam_width=min_restored_beam_width, max_restored_beam_width=max_restored_beam_width,_Extra=extra
 t0=Systime(1)
 
 basename=file_basename(file_path_fhd)
