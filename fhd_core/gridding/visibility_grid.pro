@@ -6,7 +6,7 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
     error=error,grid_uniform=grid_uniform,interpolate_grid_kernel=interpolate_grid_kernel,$
     grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
-    majick_beam=majick_beam,uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
+    beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -98,7 +98,7 @@ psf_dim2=2*psf_dim
 psf_dim3=psf_dim*psf_dim
 bi_use_reduced=bi_use mod nbaselines
 
-if keyword_set(majick_beam) then begin
+if keyword_set(beam_per_baseline) then begin
     uv_grid_phase_only=1
     psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
     psf_image_dim=(*psf.image_info).psf_image_dim
@@ -296,7 +296,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         n_xyf_bin=N_Elements(xyf_ui)
     ENDELSE
     
-    IF vis_n GT 1.1*n_xyf_bin AND ~keyword_set(majick_beam) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF vis_n GT 1.1*n_xyf_bin AND ~keyword_set(beam_per_baseline) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         rep_flag=1
         inds=inds[xyf_si]
         inds_use=xyf_si[xyf_ui]
@@ -343,7 +343,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     ENDIF
    
     ;Make the beams on the fly with corrective phases given the baseline location
-    if keyword_set(majick_beam) then begin
+    if keyword_set(beam_per_baseline) then begin
         box_matrix = beam_per_baseline(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
           xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
           box_matrix, vis_n)

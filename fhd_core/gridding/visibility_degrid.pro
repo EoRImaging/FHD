@@ -2,7 +2,7 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
     complex=complex,fill_model_visibilities=fill_model_visibilities,$
     vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,$
-    beam_mask_threshold=beam_mask_threshold,majick_beam=majick_beam,$
+    beam_mask_threshold=beam_mask_threshold,beam_per_baseline=beam_per_baseline,$
     interpolate_beam_threshold=interpolate_beam_threshold,$
     uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
 t0=Systime(1)
@@ -49,7 +49,7 @@ group_arr=reform(psf.id[polarization,freq_bin_i,*])
 beam_arr=*psf.beam_ptr
 
 
-if keyword_set(majick_beam) then begin
+if keyword_set(beam_per_baseline) then begin
     uv_grid_phase_only=1
     psf_image_dim=(*psf.image_info).psf_image_dim
     psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
@@ -193,7 +193,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         n_xyf_bin=N_Elements(xyf_ui)
     ENDELSE
     
-    IF (vis_n GT Ceil(1.1*n_xyf_bin)) AND ~keyword_set(majick_beam) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF (vis_n GT Ceil(1.1*n_xyf_bin)) AND ~keyword_set(beam_per_baseline) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         ind_remap_flag=1
         
         inds=inds[xyf_si]
@@ -224,7 +224,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t2+=t3_0-t1_0
 
     ;Make the beams on the fly with corrective phases given the baseline location
-    if keyword_set(majick_beam) then begin
+    if keyword_set(beam_per_baseline) then begin
         box_matrix = beam_per_baseline(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
           xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$ 
           box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,degrid_flag=1)
@@ -265,7 +265,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     t1+=t5_1-t1_0 
 ENDFOR
 
-if keyword_set(majick_beam) then begin
+if keyword_set(beam_per_baseline) then begin
     beam2_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
     beam_int*=weight_invert(n_grp_use)/kbinsize^2.
     (*primary_beam_sq_area)=Float(beam2_int)

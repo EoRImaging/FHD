@@ -3,7 +3,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
   swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
   beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
-  interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,majick_beam=majick_beam,$
+  interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,beam_per_baseline=beam_per_baseline,$
   _Extra=extra
 
   compile_opt idl2,strictarrsubs
@@ -61,7 +61,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   degpix=obs.degpix
   antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
-    majick_beam=majick_beam,ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra)
+    beam_per_baseline=beam_per_baseline,ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra)
 
   IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]]
 
@@ -106,7 +106,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
 
   complex_flag_arr=intarr(n_pol,nfreq_bin)
   beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
-  if keyword_set(majick_beam) then image_power_beam_arr=PTRARR(n_pol,nfreq_bin)
+  if keyword_set(beam_per_baseline) then image_power_beam_arr=PTRARR(n_pol,nfreq_bin)
   ant_A_list=tile_A[0:nbaselines-1]
   ant_B_list=tile_B[0:nbaselines-1]
   baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
@@ -202,7 +202,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
           psf_resolution=psf_resolution,xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
           beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=bi_inds, $
-          majick_beam=majick_beam,obs=obs,image_power_beam=image_power_beam,_Extra=extra)
+          beam_per_baseline=beam_per_baseline,obs=obs,image_power_beam=image_power_beam,_Extra=extra)
 
         t_bint=Systime(1)
         
@@ -236,7 +236,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         FOR bii=0L,baseline_group_n-1 DO beam_arr[pol_i,freq_i,bi_inds[bii]]=psf_single
 
       ENDFOR
-      if keyword_set(majick_beam) then image_power_beam_arr[pol_i,freq_i]=ptr_new(image_power_beam)
+      if keyword_set(beam_per_baseline) then image_power_beam_arr[pol_i,freq_i]=ptr_new(image_power_beam)
 
       beam2_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
       beam_int*=weight_invert(n_grp_use)/kbinsize^2.
