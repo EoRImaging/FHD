@@ -101,26 +101,11 @@ bi_use_reduced=bi_use mod nbaselines
 if keyword_set(majick_beam) then begin
     uv_grid_phase_only=1
     psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
-    IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=1.
-    psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res
-    
+    psf_image_dim=(*psf.image_info).psf_image_dim
     image_bot=-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
     image_top=(psf_dim*psf_resolution-1)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
-    ;Calculate l mode, m mode, and phase-tracked n mode of pixel centers
-    cdec0 = cos(obs.obsdec*!dtor)
-    sdec0 = sin(obs.obsdec*!dtor)
-    cdec = cos(psf.dec_arr*!dtor)
-    sdec = sin(psf.dec_arr*!dtor)
-    cdra = cos((psf.ra_arr-obs.obsra)*!dtor)
-    sdra = sin((psf.ra_arr-obs.obsra)*!dtor)
-    l_mode = cdec*sdra
-    m_mode = sdec*cdec0 - cdec*sdec0*cdra
-    n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1. ;n=1 at phase center, so reference from there for phase tracking
-    infinite_vals=where(NOT float(finite(n_tracked)),n_count)
-    n_tracked[infinite_vals]=0
-    l_mode[infinite_vals]=0
-    m_mode[infinite_vals]=0
+    l_m_n, obs, psf, l_mode=l_mode, m_mode=m_mode, n_tracked=n_tracked
 
     if keyword_set(uv_grid_phase_only) then n_tracked[*]=0
 endif
