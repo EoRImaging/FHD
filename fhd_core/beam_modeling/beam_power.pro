@@ -5,7 +5,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
   debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
   debug_clip_beam_mask=debug_clip_beam_mask,bi_inds=bi_inds,$
-  majick_beam=majick_beam,obs=obs,image_power_beam=image_power_beam,_Extra=extra
+  beam_per_baseline=beam_per_baseline,obs=obs,image_power_beam=image_power_beam,_Extra=extra
 
   icomp = Complex(0, 1)
   freq_center=antenna1.freq[freq_i]
