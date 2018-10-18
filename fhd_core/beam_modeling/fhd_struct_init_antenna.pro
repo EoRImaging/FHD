@@ -2,7 +2,7 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,$
     psf_image_resolution=psf_image_resolution,timing=timing,$
     psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
-    inst_tile_ptr=inst_tile_ptr,_Extra=extra
+    inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
