@@ -22,8 +22,10 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
     no_suite_plots = 1
     use_weight_cutoff_sim = 1
   endif else begin
-    ;sample_factors = [.0001,.0002,.0005,.001,.005,.01,.05,.1,.5, 1]
-    sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1];, 5]
+    ;; larger numbers here correspond to increasing baseline density.
+    ;; higher densities take more memory. Ideally going up to 5 would be good,
+    ;; enterprise doesn't seem to be able to do more than 0.5 without crashing.
+    sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1]
 
     if n_elements(run_name) eq 0 then message, 'run name must be specified.'
 
