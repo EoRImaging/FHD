@@ -43,7 +43,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
       (*Jones1[1,ant_pol1]*beam_ant1)*(Conj(*Jones2[1,ant_pol2])*beam_ant2)
   ENDELSE
 
-  if keyword_set(majick_beam) then image_power_beam=power_beam/power_zenith
+  if keyword_set(beam_per_baseline) then image_power_beam=power_beam/power_zenith
 
   ;Generate UV beam and interpolate to a super resolution
   psf_base_single=dirty_image_generate(power_beam/power_zenith,/no_real)
