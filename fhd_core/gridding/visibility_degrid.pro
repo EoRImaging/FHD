@@ -53,26 +53,18 @@ if keyword_set(majick_beam) then begin
     uv_grid_phase_only=1
     psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
     IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=1. ;no need to pad image with Majick
-    IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=1E2
     psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res
-    psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
 
     image_bot=-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
     image_top=(psf_dim*psf_resolution-1)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
-    ;Calculate RA,DEC of pixel centers for image-based phasing
-    ;Based off of Jack Line's thesis work
-    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsx
-    yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obs.obsy
-    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
-
     ;Calculate l mode, m mode, and phase-tracked n mode of pixel centers
     cdec0 = cos(obs.obsdec*!dtor)
     sdec0 = sin(obs.obsdec*!dtor)
-    cdec = cos(dec_arr*!dtor)
-    sdec = sin(dec_arr*!dtor)
-    cdra = cos((ra_arr-obs.obsra)*!dtor)
-    sdra = sin((ra_arr-obs.obsra)*!dtor)
+    cdec = cos(psf.dec_arr*!dtor)
+    sdec = sin(psf.dec_arr*!dtor)
+    cdra = cos((psf.ra_arr-obs.obsra)*!dtor)
+    sdra = sin((psf.ra_arr-obs.obsra)*!dtor)
     l_mode = cdec*sdra
     m_mode = sdec*cdec0 - cdec*sdec0*cdra
     ;n=1 at phase center, so reference from there for phase tracking
@@ -257,44 +249,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     ;Make the beams on the fly with corrective phases given the baseline location
     if keyword_set(majick_beam) then begin
-        FOR ii=0L,vis_n-1 DO begin
-            ;Pixel center offset phases
-            deltau_l = l_mode*(uu[bt_index[ii]]*frequency_array[freq_i[ii]]-x[xmin_use+psf_dim/2])
-            deltav_m = m_mode*(vv[bt_index[ii]]*frequency_array[freq_i[ii]]-y[ymin_use+psf_dim/2])
-            ;w term offset phase
-            w_n_tracked = n_tracked*ww[bt_index[ii]]*frequency_array[freq_i[ii]]
-            
-            ;Generate a UV beam from the image space beam, offset by calculated phases
-            psf_base_superres=dirty_image_generate((*psf.image_power_beam_arr[polarization,fbin[ii]])*$
-              exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
-            
-            psf_base_superres=psf_base_superres[image_bot:image_top,image_bot:image_top]
-            d = size(psf_base_superres,/DIMENSIONS) & nx = d[0]/2 & ny = d[1]/2
-            ;A quick way to sum down the image by a factor of 2 in both dimensions.
-            ;  indices of all the 2x2 sub-arrays are next to each other in memory
-            ;  then, total collapses the 2x2 sub-arrays
-            psf_base_superres = transpose(total(reform(transpose(reform(psf_base_superres,2,nx,2*ny),$
-              [0,2,1]), 4,ny,nx),1))
-
-            psf_base_superres = reform(psf_base_superres, psf.dim^2.)
-            box_matrix[psf_dim3*ii]=psf_base_superres
-        endfor
-        psf_val_ref=Total(box_matrix)
-        psf_amp = abs(box_matrix)
-        psf_mask_threshold_use = Max(psf_amp)/beam_mask_threshold
-        psf_phase = Atan(box_matrix, /phase)
-        psf_amp -= psf_mask_threshold_use
-        box_matrix = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
-        small_inds=where(psf_amp LT 0, n_count) ; should be max by kernel, but this is fast
-        if n_count GT 0 then box_matrix[small_inds]=0
-        box_matrix*=psf_val_ref/Total(box_matrix)
-        beam_int_temp = Total(box_matrix,1,/double)/psf_resolution^2.
-        beam2_int_temp = Total(Abs(box_matrix)^2,1,/double)/psf_resolution^2.
-        for ii=0, N_elements(freq_i)-1 do begin
-          beam_int[freq_i[ii]]+=beam_int_temp[ii]
-          beam2_int[freq_i[ii]]+=beam2_int_temp[ii]  
-          n_grp_use[freq_i[ii]]+=1
-        endfor
+        box_matrix = beam_per_baseline(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
+          xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$ 
+          box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,degrid_flag=1)
     endif else begin
         IF interp_flag THEN $
           FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
