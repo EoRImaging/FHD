@@ -26,7 +26,7 @@ IF N_Elements(group_arr) EQ 0 THEN group_arr=Lonarr(size(beam_arr,/dimension))
 IF N_Elements(interpolate_kernel) EQ 0 THEN interpolate_kernel=0 ELSE interpolate_kernel=Keyword_Set(interpolate_kernel)
 IF N_Elements(beam_mask_threshold) EQ 0 THEN beam_mask_threshold=0 
 
-IF N_Elements(image_power_beam_arr) EQ 0 THEN image_power_beam_arr=0 
+IF N_Elements(image_power_beam_arr) EQ 0 THEN image_power_beam_arr=Ptr_new() 
 IF N_Elements(ra_arr) EQ 0 THEN ra_arr=0 
 IF N_Elements(dec_arr) EQ 0 THEN dec_arr=0 
 IF N_Elements(psf_image_resolution) EQ 0 THEN psf_image_resolution=0

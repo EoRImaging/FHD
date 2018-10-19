@@ -61,7 +61,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   degpix=obs.degpix
   antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
-    beam_per_baseline=beam_per_baseline,ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra)
+    ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra)
 
   IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]]
 
@@ -189,9 +189,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           ;Use temp arrays to avoid overwriting issues
           ant_1_arr_temp = [ant_1_arr, ant_2_arr]
           ant_2_arr_temp = [ant_2_arr, ant_1_arr]
-          ant_1_arr = ant_1_arr_temp
-          ant_2_arr = ant_2_arr_temp
-          undefine_fhd, ant_1_arr_temp, ant_2_arr_temp
+          ant_1_arr = Temporary(ant_1_arr_temp)
+          ant_2_arr = Temporary(ant_2_arr_temp)
           ant_1_n *= 2
           ant_2_n *= 2
         ENDIF
@@ -201,8 +200,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],ant_pol1=ant_pol1,ant_pol2=ant_pol2,psf_dim=psf_dim,$
           freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
           psf_resolution=psf_resolution,xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
-          beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y,bi_inds=bi_inds, $
-          beam_per_baseline=beam_per_baseline,obs=obs,image_power_beam=image_power_beam,_Extra=extra)
+          beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y, $
+          beam_per_baseline=beam_per_baseline,image_power_beam=image_power_beam,_Extra=extra)
 
         t_bint=Systime(1)
         
