@@ -262,7 +262,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr,interpolate_kernel=interpolate_kernel,$
-    image_power_beam_arr=image_power_beam_arr,ra_arr=ra_arr,dec_arr=dec_arr,beam_mask_threshold=beam_mask_threshold)
+    image_power_beam_arr=image_power_beam_arr,ra_arr=ra_arr,dec_arr=dec_arr,psf_image_dim=psf_image_dim,$
+    psf_image_resolution=psf_image_resolution,beam_mask_threshold=beam_mask_threshold)
 
   fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
   fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model

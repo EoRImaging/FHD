@@ -225,7 +225,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     ;Make the beams on the fly with corrective phases given the baseline location
     if keyword_set(beam_per_baseline) then begin
-        box_matrix = beam_per_baseline(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
+        box_matrix = beam_per_baseline_wrap(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
           xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$ 
           box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,degrid_flag=1)
     endif else begin

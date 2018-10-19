@@ -1,4 +1,4 @@
-function beam_per_baseline, psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
+function beam_per_baseline_wrap, psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
     xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
     box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,$
     degrid_flag=degrid_flag
@@ -16,7 +16,7 @@ FOR ii=0L,vis_n-1 DO begin
     w_n_tracked = n_tracked*ww[bt_index[ii]]*frequency_array[freq_i[ii]]
 
     ;Generate a UV beam from the image space beam, offset by calculated phases
-    psf_base_superres=dirty_image_generate((*psf.image_power_beam_arr[polarization,fbin[ii]])*$
+    psf_base_superres=dirty_image_generate((*(*psf.image_info).image_power_beam_arr[polarization,fbin[ii]])*$
       exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
  
     psf_base_superres=psf_base_superres[image_bot:image_top,image_bot:image_top]
