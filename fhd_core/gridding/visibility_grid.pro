@@ -99,13 +99,13 @@ psf_dim3=psf_dim*psf_dim
 bi_use_reduced=bi_use mod nbaselines
 
 if keyword_set(beam_per_baseline) then begin
-    uv_grid_phase_only=1
+    uv_grid_phase_only=1 ;w-terms have not been tested, thus they've been turned off for now
     psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
     psf_image_dim=(*psf.image_info).psf_image_dim
     image_bot=-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
     image_top=(psf_dim*psf_resolution-1)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
 
-    l_m_n, obs, psf, l_mode=l_mode, m_mode=m_mode, n_tracked=n_tracked
+    n_tracked = l_m_n(obs, psf, l_mode=l_mode, m_mode=m_mode)
 
     if keyword_set(uv_grid_phase_only) then n_tracked[*]=0
 endif
@@ -348,10 +348,11 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
           xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
           box_matrix, vis_n)
     endif else begin 
-    IF interp_flag THEN $
-        FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
-            interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
-        ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+        IF interp_flag THEN $
+            FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
+                interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
+                    y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
+            ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
     endelse
 ;;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation

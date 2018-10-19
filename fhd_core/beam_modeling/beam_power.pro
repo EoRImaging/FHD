@@ -4,8 +4,8 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
   interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
   debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
-  debug_clip_beam_mask=debug_clip_beam_mask,bi_inds=bi_inds,$
-  beam_per_baseline=beam_per_baseline,obs=obs,image_power_beam=image_power_beam,_Extra=extra
+  debug_clip_beam_mask=debug_clip_beam_mask,beam_per_baseline=beam_per_baseline,$
+  image_power_beam=image_power_beam,_Extra=extra
 
   icomp = Complex(0, 1)
   freq_center=antenna1.freq[freq_i]
@@ -49,20 +49,18 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   psf_base_single=dirty_image_generate(power_beam/power_zenith,/no_real)
   psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
   
-  s=size(psf_base_superres)
-  uv_mask_superres=Fltarr(s[1:s[0]]) ;dynamically set size to match psf_base_superres
+  s=size(psf_base_superres, /dimensions)
+  uv_mask_superres=Fltarr(s[0],s[1]) ;dynamically set size to match psf_base_superres
   psf_mask_threshold_use = Max(Abs(psf_base_superres))/beam_mask_threshold
   IF ant_pol1 NE ant_pol2 THEN BEGIN
     seed_i=where(Abs(psf_base_superres) GE Max(Abs(psf_base_superres))/2.,n_seed)
     beam_i=region_grow(Abs(psf_base_superres),seed_i,$
       thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
-    uv_mask_superres[beam_i]=1
   ENDIF ELSE BEGIN
     beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
       thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
-    uv_mask_superres[beam_i]=1
   ENDELSE
-
+  uv_mask_superres[beam_i]=1
 
   IF Keyword_Set(debug_beam_clip_grow) THEN BEGIN
     mask_dist_test = morph_distance(uv_mask_superres, neighbor=3, /background)
