@@ -18,10 +18,12 @@ m_mode = sdec*cdec0 - cdec*sdec0*cdra
 ;n=1 at phase center, so reference from there for phase tracking
 n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1.
 
-infinite_vals=where(finite(n_tracked, /inf),n_count)
-n_tracked[infinite_vals]=0
-l_mode[infinite_vals]=0
-m_mode[infinite_vals]=0
+nan_vals=where(finite(n_tracked, /nan),n_count)
+if n_count GT 0 then begin
+    n_tracked[nan_vals]=0
+    l_mode[nan_vals]=0
+    m_mode[nan_vals]=0
+endif
 
 return, n_tracked
 
