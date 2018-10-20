@@ -20,12 +20,24 @@ FOR ii=0L,vis_n-1 DO begin
       exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
  
     psf_base_superres=psf_base_superres[image_bot:image_top,image_bot:image_top]
-    d = size(psf_base_superres,/DIMENSIONS) & nx = d[0]/2 & ny = d[1]/2
+
     ;A quick way to sum down the image by a factor of 2 in both dimensions.
-    ;  indices of all the 2x2 sub-arrays are next to each other in memory
-    ;  then, total collapses the 2x2 sub-arrays
-    psf_base_superres = transpose(total(reform(transpose(reform(psf_base_superres,2,nx,2*ny),$
-      [0,2,1]), 4,ny,nx),1))
+    ;A 4x4 example where we sum down by a factor of 2
+    ;
+    ;1  2  3  4           1  2           1  2           1  2  5  6            14 46           14 22
+    ;5  6  7  8    -->    3  4    -->    5  6    -->    9  10 13 14    -->    22 54    -->    56 54
+    ;9  10 11 12                         9  10
+    ;13 14 15 16          5  6           13 14          3  4  7  8
+    ;                     7  8                          11 12 15 16
+    ;                                    3  4
+    ;                     9  10          7  8
+    ;                     11 12          11 12
+    ;                                    15 16
+    ;                     13 14
+    ;                     15 16    
+    d = size(psf_base_superres,/DIMENSIONS) & nx = d[0]/psf.resolution & ny = d[1]/psf.resolution
+    psf_base_superres = transpose(total(reform(transpose(reform(psf_base_superres,psf.resolution,$
+      nx,psf.resolution*ny,/overwrite),[0,2,1]),psf.resolution^2,ny,nx,/overwrite),1))
  
     psf_base_superres = reform(psf_base_superres, psf.dim^2.)
     box_matrix[psf_dim3*ii]=psf_base_superres
