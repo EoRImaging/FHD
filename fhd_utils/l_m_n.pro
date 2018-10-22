@@ -8,7 +8,7 @@ if ~keyword_set(ra_arr) then ra_arr = (*psf.image_info).ra_arr
 
 ;Calculate l mode, m mode, and phase-tracked n mode of pixel centers
 cdec0 = cos(obsdec*!dtor)
-sdec0 = sin(obsra*!dtor)
+sdec0 = sin(obsdec*!dtor)
 cdec = cos(dec_arr*!dtor)
 sdec = sin(dec_arr*!dtor)
 cdra = cos((ra_arr-obsra)*!dtor)
