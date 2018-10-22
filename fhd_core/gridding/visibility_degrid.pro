@@ -3,7 +3,6 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     complex=complex,fill_model_visibilities=fill_model_visibilities,$
     vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,$
     beam_mask_threshold=beam_mask_threshold,beam_per_baseline=beam_per_baseline,$
-    interpolate_beam_threshold=interpolate_beam_threshold,$
     uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
 t0=Systime(1)
 heap_gc
@@ -227,7 +226,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     if keyword_set(beam_per_baseline) then begin
         box_matrix = beam_per_baseline_wrap(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
           xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$ 
-          box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,degrid_flag=1)
+          box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,degrid_flag=1,_Extra=extra)
     endif else begin
         IF interp_flag THEN $
           FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$

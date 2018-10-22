@@ -1,7 +1,7 @@
 function beam_per_baseline_wrap, psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
     xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
     box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,$
-    degrid_flag=degrid_flag
+    degrid_flag=degrid_flag,debug_beam_clip_floor=debug_beam_clip_floor,_Extra=extra
 
 ;Make the beams on the fly with corrective phases given the baseline location. 
 ;Will need to be rerun for every baseline, so speed is key.
@@ -46,16 +46,18 @@ endfor
 ;Subtract off a small clip, set negative indices to 0, and renomalize.
 ;This is a modification of the look-up-table beam using a few assumptions
 ;to make it faster/feasible to run.
-psf_val_ref=Total(box_matrix,1)
-psf_amp = abs(box_matrix)
-psf_mask_threshold_use = Max(psf_amp)/psf.beam_mask_threshold
-psf_amp -= psf_mask_threshold_use
-psf_phase = Atan(box_matrix, /phase)
-box_matrix = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
-small_inds=where(psf_amp LT 0, n_count) ; should be max by kernel and forced continuous surface
-if n_count GT 0 then box_matrix[small_inds]=0
-ref_temp = total(box_matrix,1)
-for ii=0, vis_n-1 do box_matrix[*,ii]*=psf_val_ref[ii]/ref_temp[ii]
+if keyword_set(debug_beam_clip_floor) then begin
+    psf_val_ref=Total(box_matrix,1)
+    psf_amp = abs(box_matrix)
+    psf_mask_threshold_use = Max(psf_amp)/psf.beam_mask_threshold
+    psf_amp -= psf_mask_threshold_use
+    psf_phase = Atan(box_matrix, /phase)
+    box_matrix = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
+    small_inds=where(psf_amp LT 0, n_count) ; should be max by kernel and forced continuous surface
+    if n_count GT 0 then box_matrix[small_inds]=0
+    ref_temp = total(box_matrix,1)
+    for ii=0, vis_n-1 do box_matrix[*,ii]*=psf_val_ref[ii]/ref_temp[ii]
+endif
 
 if keyword_set(degrid_flag) then begin
     ;Calculate the beam and beam^2 integral (degridding)
