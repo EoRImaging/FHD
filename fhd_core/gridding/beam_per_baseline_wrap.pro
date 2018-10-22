@@ -44,17 +44,19 @@ FOR ii=0L,vis_n-1 DO begin
 endfor
 
 ;Subtract off a small clip, set negative indices to 0, and renomalize.
-;This is a modification of the look-up-table beam using a few assumptions
-;to make it faster/feasible to run.
+;  This is a modification of the look-up-table beam using a few assumptions
+;  to make it faster/feasible to run.
+;Modifications: done per group of baselines that fit within the current box, 
+;  rather than individually. region_grow is not used to find a contiguous
+;  edge around the beam to cut because it is too slow.
 if keyword_set(beam_clip_floor) then begin
     psf_val_ref=Total(box_matrix,1)
     psf_amp = abs(box_matrix)
     psf_mask_threshold_use = Max(psf_amp)/psf.beam_mask_threshold
     psf_amp -= psf_mask_threshold_use
     psf_phase = Atan(box_matrix, /phase)
+    psf_amp = psf_amp>0
     box_matrix = psf_amp*Cos(psf_phase) + Complex(0,1)*psf_amp*Sin(psf_phase)
-    small_inds=where(psf_amp LT 0, n_count) ; should be max by kernel and forced continuous surface
-    if n_count GT 0 then box_matrix[small_inds]=0
     ref_temp = total(box_matrix,1)
     for ii=0, vis_n-1 do box_matrix[*,ii]*=psf_val_ref[ii]/ref_temp[ii]
 endif
