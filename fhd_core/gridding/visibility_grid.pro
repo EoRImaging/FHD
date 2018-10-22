@@ -4,7 +4,7 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    error=error,grid_uniform=grid_uniform,interpolate_grid_kernel=interpolate_grid_kernel,$
+    error=error,grid_uniform=grid_uniform,$
     grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
     beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
 t0_0=Systime(1)
@@ -346,7 +346,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     if keyword_set(beam_per_baseline) then begin
         box_matrix = beam_per_baseline_wrap(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
           xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
-          box_matrix, vis_n)
+          box_matrix, vis_n, _Extra=extra)
     endif else begin 
         IF interp_flag THEN $
             FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
