@@ -3,7 +3,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   beam_mask_electric_field=beam_mask_electric_field,beam_mask_threshold=beam_mask_threshold,$
   xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
   interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
-  debug_beam_conjugate=debug_beam_conjugate, debug_beam_clip_floor=debug_beam_clip_floor,$
+  debug_beam_conjugate=debug_beam_conjugate, beam_clip_floor=beam_clip_floor,$
   debug_clip_beam_mask=debug_clip_beam_mask,beam_per_baseline=beam_per_baseline,$
   image_power_beam=image_power_beam,_Extra=extra
 
@@ -103,7 +103,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
     psf_base_superres = psf_amp*Cos(psf_phase) + icomp*psf_amp*Sin(psf_phase)
   ENDIF ELSE psf_base_superres*=uv_mask_superres
 
-  IF Keyword_Set(debug_beam_clip_floor) THEN BEGIN
+  IF Keyword_Set(beam_clip_floor) THEN BEGIN
     i_use = where(abs(psf_base_superres))
     psf_amp = abs(psf_base_superres)
     psf_phase = Atan(psf_base_superres, /phase)
