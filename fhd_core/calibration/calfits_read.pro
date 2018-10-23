@@ -50,7 +50,7 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
     message, 'Calfits file does not appear to adhere to standard. Please see github:pyuvdata/docs/references'
   if ~keyword_set(gain_convention) then gain_convention = 'divide' ;default of the gain convention if undefined
   
-  if size(data_array)[5] ne 1 then message, 'Calfits file includes more than one spectral window. Note that this feature is not yet supported in FHD.'
+  if (size(data_array))[5] ne 1 then message, 'Calfits file includes more than one spectral window. Note that this feature is not yet supported in FHD.'
   data_array = mean(data_array, dimension=5)  ; Remove spectral window dimension for compatibility
   
   ;Check whether the number of polarizations specified matches the observation analysis run
