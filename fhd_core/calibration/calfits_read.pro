@@ -39,17 +39,20 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   ;*********
   
   ;*********Check parameters
-  IF (data_index NE 0) OR (ant_index NE 5) OR (freq_index NE 3) OR (time_index NE 2) OR (jones_index NE 1) OR (spec_wind_index NE 4) then $
-    message, 'Calfits file does not appear to adhere to standard. Please see github:pyuvdata/docs/references'
+  IF (data_index NE 0) OR (ant_index NE 4) OR (freq_index NE 3) OR (time_index NE 2) OR (jones_index NE 1) then begin  ; calfits doesn't conform to the original convention
+    IF (data_index EQ 0) AND (ant_index EQ 5) AND (freq_index EQ 3) AND (time_index EQ 2) AND (jones_index EQ 1) AND (spec_wind_index EQ 4) then begin  ; calfits conforms to the Fall 2018 pyuvdata convention
+      if (size(data_array))[5] ne 1 then message, 'Calfits file includes more than one spectral window. Note that this feature is not yet supported in FHD.'
+      data_array = mean(data_array, dimension=5)  ; Remove spectral window dimension for compatibility
+      data_array = data_array/2.  ; For some reason the calfits reports twice the gains
+    endif else message, 'Calfits file does not appear to adhere to standard. Please see github:pyuvdata/docs/references'
+  endif 
+
   if ~keyword_set(gain_convention) then gain_convention = 'divide' ;default of the gain convention if undefined
   
   n_ant_data = (size(data_array))[6]
   n_freq = (size(data_array))[4]
   n_time = (size(data_array))[3]
-  if (size(data_array))[5] ne 1 then message, 'Calfits file includes more than one spectral window. Note that this feature is not yet supported in FHD.'
-  data_array = mean(data_array, dimension=5)  ; Remove spectral window dimension for compatibility
-  data_array = data_array/2.  ; For some reason the calfits reports twice the gains
-  
+
   ;Check whether the number of polarizations specified matches the observation analysis run
   jones_type_matrix = LONARR(data_dims[1])
   for jones_i=1, data_dims[1] do jones_type_matrix[jones_i-1] = jones_start+(jones_delt*jones_i)
