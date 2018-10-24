@@ -48,6 +48,7 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   n_time = (size(data_array))[3]
   if (size(data_array))[5] ne 1 then message, 'Calfits file includes more than one spectral window. Note that this feature is not yet supported in FHD.'
   data_array = mean(data_array, dimension=5)  ; Remove spectral window dimension for compatibility
+  data_array = data_array/2.  ; For some reason the calfits reports twice the gains
   
   ;Check whether the number of polarizations specified matches the observation analysis run
   jones_type_matrix = LONARR(data_dims[1])
