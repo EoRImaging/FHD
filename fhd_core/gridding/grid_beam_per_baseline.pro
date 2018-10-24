@@ -1,4 +1,4 @@
-function beam_per_baseline_wrap, psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
+function grid_beam_per_baseline, psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
     xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
     box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,$
     degrid_flag=degrid_flag,beam_clip_floor=beam_clip_floor,_Extra=extra
