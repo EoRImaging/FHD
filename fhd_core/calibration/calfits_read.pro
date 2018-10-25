@@ -49,7 +49,7 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
 
   if ~keyword_set(gain_convention) then gain_convention = 'divide' ;default of the gain convention if undefined
   
-  n_ant_data = (size(data_array))[6]
+  n_ant_data = (size(data_array))[5]
   n_freq = (size(data_array))[4]
   n_time = (size(data_array))[3]
 
