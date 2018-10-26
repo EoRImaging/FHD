@@ -38,6 +38,9 @@ case beam_model_version of
     0: sigma = 100./(2*sqrt(2.*alog(2.)))
     1: sigma = 70./(2*sqrt(2.*alog(2.)))
     2: sigma = 40./(2*sqrt(2.*alog(2.)))
+    3: sigma = 35./(2*sqrt(2.*alog(2.)))
+    4: sigma = 16./(2*sqrt(2.*alog(2.)))
+    5: sigma = 10./(2*sqrt(2.*alog(2.)))
 END
 print, 'hwhm = ', sigma*2.355/2., ' model: ', beam_model_version
 beam_vals = Exp(-za_arr^2./(2.*sigma^2.));/(2 * sigma * sqrt(2*!pi))
