@@ -1,4 +1,4 @@
-FUNCTION eor_bubble_sim, obs, jones, ltaper=ltaper, select_radius=select_radius, bubble_fname=bubble_fname, dat=dat, file_path_fhd=file_path_fhd,orthomap_var=orthomap_var
+FUNCTION eor_bubble_sim, obs, jones, ltaper=ltaper, select_radius=select_radius, bubble_fname=bubble_fname, dat=dat, file_path_fhd=file_path_fhd,orthomap_var=orthomap_var, shellreplace=shellreplace
 
 ;Opening an HDF5 file and extract relevant data
 if keyword_set(bubble_fname) THEN hdf5_fname = bubble_fname ELSE message, "Missing bubble file path"
@@ -28,7 +28,8 @@ print, "Npix_selected: ", npix_sel
 ; Limit the range of frequencies in the uvf cube to the range of the obs
 freq_arr = (*obs.baseline_info).freq
 ;lim = minmax(freq_arr)
-;freq_inds = where((freq_hpx GE lim[0]) and (freq_hpx LE lim[1]) )
+;freq_inds = where((freq_hpx GE lim[0]) and (freq_hpx LE lim[1]), count_inds )
+;if count_inds EQ 0 THEN  message, "No frequency overlap between shell and simulation"
 ;freq_hpx = freq_hpx[freq_inds]
 nfreq_hpx = n_elements(freq_hpx)
 
@@ -44,6 +45,15 @@ print, "Reading HDF5 file with EoR Healpix Cube"
 t0 = systime(/seconds)
 if n_elements(dat) eq 0 then dat = H5D_READ(dset_id_eor, FILE_SPACE=dpsace_id_eor)
 print, 'HDF5 reading time = ', systime(/seconds) - t0, ' seconds'
+
+if keyword_set(shellreplace) THEN BEGIN
+; Replace dat with a new array of the same variance and mean.
+    print, 'Replacing the shell'
+    sig = sqrt(variance(dat))
+    mu = mean(dat)
+    print, 'sig=', sig, 'mu=', mu
+    dat = randomn(seed, dims[1], dims[0])*sig + mu
+ENDIF
 
 ; If l taper is set --- apply weights to l modes, up to the maximum l mode of the orthoslant map.
 ; There isn't a standard way to do this strictly within IDL, so call healpy functions using IDL to Python bridge.
@@ -77,17 +87,23 @@ ENDIF
 ; Interpolate in frequency:
 dat_interp = Fltarr(obs.n_freq,npix_sel)
 t0=systime(/seconds)
+dat_interp = dat[*, inds_select]
 ;for hpx_i=0,npix_sel-1 DO dat_interp[*,hpx_i] = Interpol(dat[freq_inds,inds_select[hpx_i]],freq_hpx,freq_arr)
+print, 'Variance before freq interpolation: ', variance(dat), ', and after: ', variance(dat_interp)
+ 
+IF keyword_set(shellreplace) THEN BEGIN
+    save, dat_interp, inds_select, filename=file_path_fhd+'_shellreplace.sav'
+ENDIF
 ;; Bin in frequency instead of interpolating
-freq_bins = round((freq_hpx - freq_arr[0]) / obs.freq_res)
-freqweight = Fltarr(obs.n_freq,npix_sel)
-weight = fltarr(obs.n_freq, npix_sel) + 1
-for hpx_i=0,npix_sel-1 DO BEGIN
-    dat_interp[*,hpx_i] += dat[freq_bins, inds_select[hpx_i]]
-    freqweight[freq_bins,hpx_i] += 1.0
-ENDFOR
-;; Note that the above can leave some frequencies empty. This will cause an error in eppsilon (uv_slice = 0)
-dat_interp *= weight_invert(freqweight)
+;freq_bins = round((freq_hpx - freq_arr[0]) / obs.freq_res)
+;freqweight = Fltarr(obs.n_freq,npix_sel)
+;weight = fltarr(obs.n_freq, npix_sel) + 1
+;for hpx_i=0,npix_sel-1 DO BEGIN
+;    dat_interp[*,hpx_i] += dat[freq_bins, inds_select[hpx_i]]
+;    freqweight[freq_bins,hpx_i] += 1.0
+;ENDFOR
+;;; Note that the above can leave some frequencies empty. This will cause an error in eppsilon (uv_slice = 0)
+;dat_interp *= weight_invert(freqweight)
 print, 'Frequency interpolation complete: ', systime(/seconds) - t0
 hpx_arr = Ptrarr(obs.n_freq)
 for fi=0, obs.n_freq-1 DO hpx_arr[fi] = ptr_new(reform(dat_interp[fi,*]))
@@ -104,7 +120,7 @@ model_stokes_arr = healpix_bin(hpx_arr,obs,nside=nside,hpx_inds=inds_select,/fro
 print, 'Healpix_interpolate timing: ', systime(/seconds) - t0
 
 ; Replace the interpolated orthoslant with gaussian noise
-IF keyword_set(orthslant_var) THEN BEGIN
+IF keyword_set(orthomap_var) THEN BEGIN
     model_stokes_arr = ptrarr(obs.n_freq)
     convert_factor = convert_kelvin_jansky(1.,degpix=obs.degpix,freq=obs.freq_center)
     var = orthomap_var
