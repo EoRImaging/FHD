@@ -1,5 +1,8 @@
 FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=elements,flux=flux,$
-    silent=silent,conserve_memory=conserve_memory,inds_use=inds_use,double_precision=double_precision
+    silent=silent,conserve_memory=conserve_memory,inds_use=inds_use,double_precision=double_precision, $
+    gaussian_source_models = gaussian_source_models, gaussian_x = gaussian_x, gaussian_y = gaussian_y, $
+    gaussian_rot = gaussian_rot
+
 fft_norm=1.
 icomp = Complex(0,1)
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
@@ -56,6 +59,7 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
     ;*****Start memory-managed DFT
     ;If the max memory is less than the estimated memory needed to DFT all sources at once, then break the DFT into chunks
     IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
+      
         memory_bins=Ceil(element_check/mem_thresh) ;Estimate number of memory bins needed to maintain memory threshold
 
         n0=N_Elements(x_use) ;Number of sources in primary beam to be DFTd
@@ -79,6 +83,17 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
             phase=matrix_multiply(xvals,x_use[inds])+matrix_multiply(yvals,y_use[inds])
             cos_term=Cos(phase)
             sin_term=Sin(Temporary(phase))
+            IF keyword_set(gaussian_source_models) THEN BEGIN
+              if n_elements(gaussian_rot) gt 0 then begin
+                source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gaussian_x[inds]^2.*Cos(gaussian_rot[inds])^2.+gaussian_y[inds]^2.*Sin(gaussian_rot[inds])^2.) $
+                  + matrix_multiply(yvals^2., gaussian_x[inds]^2.*Sin(gaussian_rot[inds])^2.+gaussian_y[inds]^2.*Cos(gaussian_rot[inds])^2.)) $
+                  + matrix_multiply(xvals*yvals, (gaussian_y[inds]^2.-gaussian_x[inds]^2.)*Cos(gaussian_rot[inds])*Sin(gaussian_rot[inds])))
+              endif else begin
+                source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gaussian_x[inds]^2.)+matrix_multiply(yvals^2., gaussian_y[inds]^2.)))
+              endelse
+              cos_term *= source_envelope
+              sin_term *= source_envelope
+            ENDIF
             FOR fbin_i=0L,n_fbin-1 DO BEGIN
                 flux_vals=(*flux_use[fbin_use[fbin_i]])[inds]
                 source_uv_real_vals=matrix_multiply(cos_term,flux_vals)
@@ -93,6 +108,17 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
       phase=matrix_multiply(xvals,x_use)+matrix_multiply(yvals,y_use)
       cos_term=Cos(phase)
       sin_term=Sin(Temporary(phase))
+      IF keyword_set(gaussian_source_models) THEN BEGIN
+        if n_elements(gaussian_rot) gt 0 then begin
+          source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gaussian_x^2.*Cos(gaussian_rot)^2.+gaussian_y^2.*Sin(gaussian_rot)^2.) $
+            + matrix_multiply(yvals^2., gaussian_x^2.*Sin(gaussian_rot)^2.+gaussian_y^2.*Cos(gaussian_rot)^2.)) $
+            + matrix_multiply(xvals*yvals, (gaussian_y^2.-gaussian_x^2.)*Cos(gaussian_rot)*Sin(gaussian_rot)))
+        endif else begin
+          source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gaussian_x^2.)+matrix_multiply(yvals^2., gaussian_y^2.)))
+        endelse
+        cos_term *= source_envelope
+        sin_term *= source_envelope
+      ENDIF
       FOR fbin_i=0L,n_fbin-1 DO BEGIN
         source_uv_real_vals=matrix_multiply(cos_term,*flux_use[fbin_use[fbin_i]])
         source_uv_im_vals=matrix_multiply(sin_term,*flux_use[fbin_use[fbin_i]])
@@ -106,6 +132,10 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
       *source_uv_vals[fbin_use[fbin_i]]=Complex(Temporary(*source_uv_vals[fbin_use[fbin_i]]))
   ENDIF ELSE BEGIN
     IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
+        if keyword_set(gaussian_source_models) then begin
+          print, 'Gaussian source modeling is not compatible with keyword conserve_memory at this time. Unsetting keyword gaussian_source_models.'
+          undefine, gaussian_source_models
+        endif
         memory_bins=Round(element_check/mem_thresh)
         source_uv_vals=DComplexarr(size(xvals,/dimension))
         n0=N_Elements(x_use)
@@ -118,6 +148,17 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
             cos_term=Cos(phase)
             source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux_use[inds])
             sin_term=Sin(Temporary(phase))
+            IF keyword_set(gaussian_source_models) THEN BEGIN
+              if n_elements(gaussian_rot) gt 0 then begin
+                source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gaussian_x[inds]^2.*Cos(gaussian_rot[inds])^2.+gaussian_y[inds]^2.*Sin(gaussian_rot[inds])^2.) $
+                  + matrix_multiply(yvals^2., gaussian_x[inds]^2.*Sin(gaussian_rot[inds])^2.+gaussian_y[inds]^2.*Cos(gaussian_rot[inds])^2.)) $
+                  + matrix_multiply(xvals*yvals, (gaussian_y[inds]^2.-gaussian_x[inds]^2.)*Cos(gaussian_rot[inds])*Sin(gaussian_rot[inds])))
+              endif else begin
+                source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gaussian_x[inds]^2.)+matrix_multiply(yvals^2., gaussian_y[inds]^2.)))
+              endelse
+              cos_term *= source_envelope
+              sin_term *= source_envelope
+            ENDIF
             source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux_use[inds])
             source_uv_vals+=Temporary(source_uv_real_vals) + icomp * Temporary(source_uv_im_vals)
         ENDFOR
@@ -126,6 +167,17 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
         cos_term=Cos(phase)
         source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux_use[inds])
         sin_term=Sin(Temporary(phase))
+        IF keyword_set(gaussian_source_models) THEN BEGIN
+          if n_elements(gaussian_rot) gt 0 then begin
+            source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gaussian_x^2.*Cos(gaussian_rot)^2.+gaussian_y^2.*Sin(gaussian_rot)^2.) $
+              + matrix_multiply(yvals^2., gaussian_x^2.*Sin(gaussian_rot)^2.+gaussian_y^2.*Cos(gaussian_rot)^2.)) $
+              + matrix_multiply(xvals*yvals, (gaussian_y^2.-gaussian_x^2.)*Cos(gaussian_rot)*Sin(gaussian_rot)))
+          endif else begin
+            source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gaussian_x^2.)+matrix_multiply(yvals^2., gaussian_y^2.)))
+          endelse
+          cos_term *= source_envelope
+          sin_term *= source_envelope
+        ENDIF
         source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux_use)
         source_uv_vals=Temporary(source_uv_real_vals) + icomp * Temporary(source_uv_im_vals)
     ENDELSE

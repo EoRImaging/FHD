@@ -1,7 +1,8 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
     conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,silent=silent,$
     dimension=dimension,elements=elements,n_pol=n_pol,spectral_model_uv_arr=spectral_model_uv_arr,$
-    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,double_precision=double_precision,_Extra=extra
+    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,double_precision=double_precision,$
+    gaussian_source_models = gaussian_source_models,_Extra=extra
 
 alpha_corr=0.
 IF Keyword_Set(obs) THEN BEGIN
@@ -48,6 +49,22 @@ FOR a_i=0L,n_alpha-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO source_array_use[alpha_i[a_i]].flux.(pol_i)*=flux_scale
 ENDFOR
 
+IF keyword_set(gaussian_source_models) then begin
+  if tag_exist(source_array, 'shape') then begin
+    gaussian_x=source_array.shape.x
+    gaussian_y=source_array.shape.y
+    gaussian_rot=source_array.shape.angle
+    null=where(gaussian_x,n_gauss_params)
+    if n_gaus_params eq 0 then begin
+      print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
+      undefine, gaussian_source_models
+    endif
+  endif else begin
+    print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
+    undefine, gaussian_source_models
+  endelse
+ENDIF
+
 
 IF Keyword_Set(n_spectral) THEN BEGIN
 ;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg
@@ -67,7 +84,9 @@ IF Keyword_Set(n_spectral) THEN BEGIN
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision)
+                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision,$
+                gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
+                gaussian_rot=gaussian_rot)
             FOR pol_i=0,n_pol-1 DO BEGIN
                 FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
                     single_uv=Complexarr(dimension,elements)
@@ -93,7 +112,9 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-            conserve_memory=conserve_memory,silent=silent,double_precision=double_precision)
+            conserve_memory=conserve_memory,silent=silent,double_precision=double_precision,$
+            gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
+            gaussian_rot=gaussian_rot)
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
@@ -130,7 +151,9 @@ ENDIF ELSE BEGIN
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision)
+                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision,$
+                gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
+                gaussian_rot=gaussian_rot)
             FOR pol_i=0,n_pol-1 DO BEGIN
                 single_uv=Complexarr(dimension,elements)
                 single_uv[uv_i_use]=*model_uv_vals[pol_i] 
@@ -155,10 +178,15 @@ ENDIF ELSE BEGIN
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-            silent=silent,conserve_memory=conserve_memory,double_precision=double_precision)
+            silent=silent,conserve_memory=conserve_memory,double_precision=double_precision,$
+            gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
+            gaussian_rot=gaussian_rot)
         FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
         undefine_fhd,model_uv_vals,flux_arr
     ENDELSE
 ENDELSE
 
+stop
+
+model_uv_full=crosspol_reformat(model_uv_full, /inverse)
 END
