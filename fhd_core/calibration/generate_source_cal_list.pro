@@ -116,8 +116,13 @@ ENDIF
 IF n_use GT 0 THEN BEGIN
     catalog=catalog[i_use]
     IF N_Elements(spectral_index) GT 1 THEN spectral_index=spectral_index[i_use]
-    source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
+    if tag_exist(catalog, 'shape') then begin
+      source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
+        alpha=spectral_index,extend=catalog.extend,shape=catalog.shape)
+    endif else begin
+      source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
         alpha=spectral_index,extend=catalog.extend)
+    endelse
    
     apply_astrometry, obs, ra_arr=source_list.ra, dec_arr=source_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy    
     source_list.x=x_arr

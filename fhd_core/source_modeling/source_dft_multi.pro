@@ -51,14 +51,28 @@ ENDFOR
 
 IF keyword_set(gaussian_source_models) then begin
   if tag_exist(source_array, 'shape') then begin
-    gaussian_x=source_array.shape.x
-    gaussian_y=source_array.shape.y
-    gaussian_rot=source_array.shape.angle
+    gaussian_x=make_array(n_elements(source_array),/float)
+    gaussian_y=make_array(n_elements(source_array),/float)
+    gaussian_rot=make_array(n_elements(source_array),/float)
+    for source_ind=0,n_elements(source_array)-1 do begin
+      if tag_exist(source_array[source_ind], 'shape') then begin
+        gaussian_x[source_ind]=source_array[source_ind].shape.x
+        gaussian_y[source_ind]=source_array[source_ind].shape.y
+        gaussian_rot[source_ind]=source_array[source_ind].shape.angle
+      endif else begin
+        gaussian_x[source_ind]=0
+        gaussian_y[source_ind]=0
+        gaussian_rot[source_ind]=0
+      endelse
+    endfor
     null=where(gaussian_x,n_gauss_params)
-    if n_gaus_params eq 0 then begin
+    if n_gauss_params eq 0 then begin
       print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
       undefine, gaussian_source_models
     endif
+    ;Convert from FWHM in arcsec to stddev in pixels
+    gaussian_x/=(7200*obs.degpix*sqrt(2*alog(2)))
+    gaussian_y/=(7200*obs.degpix*sqrt(2*alog(2)))
   endif else begin
     print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
     undefine, gaussian_source_models
@@ -185,8 +199,6 @@ ENDIF ELSE BEGIN
         undefine_fhd,model_uv_vals,flux_arr
     ENDELSE
 ENDELSE
-
-stop
 
 model_uv_full=crosspol_reformat(model_uv_full, /inverse)
 END
