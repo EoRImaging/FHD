@@ -56,9 +56,11 @@ IF keyword_set(gaussian_source_models) then begin
     gaussian_rot=make_array(n_elements(source_array),/float)
     for source_ind=0,n_elements(source_array)-1 do begin
       if tag_exist(source_array[source_ind], 'shape') then begin
-        gaussian_x[source_ind]=source_array[source_ind].shape.x
-        gaussian_y[source_ind]=source_array[source_ind].shape.y
-        gaussian_rot[source_ind]=source_array[source_ind].shape.angle
+        ;Convert from FWHM in arcsec to stddev in deg
+        gaussian_x[source_ind]=source_array[source_ind].shape.x/(7200*sqrt(2*alog(2)))
+        gaussian_y[source_ind]=source_array[source_ind].shape.y/(7200*sqrt(2*alog(2)))
+        ;Convert from deg to rad
+        gaussian_rot[source_ind]=source_array[source_ind].shape.angle*!Pi/180.
       endif else begin
         gaussian_x[source_ind]=0
         gaussian_y[source_ind]=0
@@ -69,10 +71,16 @@ IF keyword_set(gaussian_source_models) then begin
     if n_gauss_params eq 0 then begin
       print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
       undefine, gaussian_source_models
-    endif
-    ;Convert from FWHM in arcsec to stddev in pixels
-    gaussian_x/=(7200*obs.degpix*sqrt(2*alog(2)))
-    gaussian_y/=(7200*obs.degpix*sqrt(2*alog(2)))
+    endif else begin
+      ;Convert from deg to pixels
+      gaussian_ra_vals = [[source_array.ra+0.5*gaussian_x*Cos(gaussian_rot)], [source_array.ra-0.5*gaussian_x*Cos(gaussian_rot)], $
+        [source_array.ra+0.5*gaussian_y*Sin(gaussian_rot)], [source_array.ra-0.5*gaussian_y*Sin(gaussian_rot)]]
+      gaussian_dec_vals = [[source_array.dec+0.5*gaussian_x*Sin(gaussian_rot)], [source_array.dec-0.5*gaussian_x*Sin(gaussian_rot)], $
+        [source_array.dec+0.5*gaussian_y*Cos(gaussian_rot)], [source_array.dec-0.5*gaussian_y*Cos(gaussian_rot)]]
+      apply_astrometry, obs, x_arr=x_arr, y_arr=y_arr, ra_arr=gaussian_ra_vals, dec_arr=gaussian_dec_vals, /ad2xy
+      gaussian_x = sqrt((x_arr[*,0]-x_arr[*,1])^2.+(y_arr[*,0]-y_arr[*,1])^2.)
+      gaussian_y = sqrt((x_arr[*,2]-x_arr[*,3])^2.+(y_arr[*,2]-y_arr[*,3])^2.)
+    endelse
   endif else begin
     print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
     undefine, gaussian_source_models
