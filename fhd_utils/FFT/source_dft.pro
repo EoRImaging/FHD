@@ -50,8 +50,6 @@ y_use*=(2.*Pi/dimension)
 if n_elements(gaussian_x) gt 0 then gauss_x_use=gaussian_x*(2.*Pi/dimension)
 if n_elements(gaussian_y) gt 0 then gauss_y_use=gaussian_y*(2.*Pi/dimension)
 
-stop
-
 element_check=Long64(N_Elements(xvals))*Long64(N_Elements(x_use))
 
 IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the same locations to be used for multiple sets of fluxes
