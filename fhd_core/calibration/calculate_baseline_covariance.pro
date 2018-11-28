@@ -1,4 +1,4 @@
-FUNCTION calculate_baseline_covariance,obs, params, psf, freq_i
+FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i
     ; Calculate the fraction of power shared between every baseline pair
     n_pol = obs.n_pol < 2
     b_info=(*obs.baseline_info)
