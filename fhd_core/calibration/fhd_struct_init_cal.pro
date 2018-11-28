@@ -8,7 +8,8 @@ FUNCTION fhd_struct_init_cal, obs, params, skymodel, gain_arr_ptr=gain_arr_ptr, 
     calibration_polyfit=calibration_polyfit, bandpass_calibrate=bandpass_calibrate, $
     cal_mode_fit=cal_mode_fit, file_path_fhd=file_path_fhd, transfer_calibration=transfer_calibration, $
     calibration_auto_initialize=calibration_auto_initialize, cal_gain_init=cal_gain_init, $
-    phase_fit_iter=phase_fit_iter, cal_amp_degree_fit=cal_amp_degree_fit,cal_phase_degree_fit=cal_phase_degree_fit,_Extra=extra
+    phase_fit_iter=phase_fit_iter, cal_amp_degree_fit=cal_amp_degree_fit,cal_phase_degree_fit=cal_phase_degree_fit,$
+    use_redundant_calibration=use_redundant_calibration, redundant_calibration_iter=redundant_calibration_iter, _Extra=extra
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd
 IF N_Elements(params) EQ 0 THEN fhd_save_io,0,params,var='params',/restore,file_path_fhd=file_path_fhd
@@ -38,6 +39,10 @@ ref_antenna_name=(*obs.baseline_info).tile_names[ref_antenna]
 IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-7
 IF N_Elements(calibration_origin) EQ 0 THEN $
     IF Tag_exist(obs,'obsname') THEN calibration_origin=obs.obsname ELSE calibration_origin=''
+IF N_Elements(use_redundant_calibration) EQ 0 THEN use_redundant_calibration=0
+IF N_Elements(redundant_calibration_iter) EQ 0 THEN $
+    redundant_calibration_iter=phase_fit_iter+2 ELSE $
+    redundant_calibration_iter=Long(redundant_calibration_iter)
 IF N_Elements(cal_gain_init) EQ 0 THEN cal_gain_init=1.
 IF N_Elements(gain_arr_ptr) EQ 0 THEN BEGIN
     gain_arr=Complexarr(n_freq,n_tile)+cal_gain_init
@@ -70,6 +75,7 @@ cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, 
     amp_params:amp_params, phase_params:phase_params,$
     mean_gain:Fltarr(n_pol), mean_gain_residual:Fltarr(n_pol), mean_gain_restrict:Fltarr(n_pol),$
     stddev_gain_residual:Fltarr(n_pol), bandpass:bandpass_calibrate, mode_fit:cal_mode_fit,$
-    mode_params:mode_params, cal_origin:calibration_origin, skymodel:skymodel}
+    mode_params:mode_params, cal_origin:calibration_origin, skymodel:skymodel,$
+    use_redundant:use_redundant_calibration, redundant_iter:redundant_calibration_iter}
 RETURN,cal_struct
 END

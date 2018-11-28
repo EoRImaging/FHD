@@ -175,7 +175,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   FOR iter=0,calibration_flag_iterate DO BEGIN
     t2_a=Systime(1)
     IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
-    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,vis_weight_ptr,obs,cal,$
+    cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,vis_weight_ptr,obs,cal,psf,$
       preserve_visibilities=preserve_flag,_Extra=extra)
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
     IF Keyword_Set(n_tile_cut) THEN BREAK
