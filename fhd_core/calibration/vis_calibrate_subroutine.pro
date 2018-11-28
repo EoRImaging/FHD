@@ -180,8 +180,6 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
                 BREAK
             ENDIF
             IF phase_fit_iter-i GT 0 THEN gain_new*=Abs(gain_old)*weight_invert(Abs(gain_new)) ;fit only phase at first
-;          IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
-;            gain_new*=Mean(Abs(gain_new[where(gain_new)]))*weight_invert(Abs(gain_new)) ;then fit only average amplitude
             gain_curr=(gain_new+gain_old)/2.
             dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
             diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
