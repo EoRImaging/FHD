@@ -68,6 +68,6 @@ FUNCTION calculate_baseline_covariance,obs, psf, cal, freq_i, pol_i, baseline_in
     ENDFOR
 
     ; Save the covariances and baseline indices as a sparse matrix, in the same format as the holographic mapping function
-    covariance_map_fn = {ija:ija,sa:sa,i_use:Lindgen(n_baselines2),norm:1.,indexed:0}
+    covariance_map_fn = {ija:ija,sa:sa,i_use:baseline_inds,norm:1.,indexed:0}
     RETURN, covariance_map_fn
 END

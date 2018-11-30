@@ -9,7 +9,8 @@ FUNCTION fhd_struct_init_cal, obs, params, skymodel, gain_arr_ptr=gain_arr_ptr, 
     cal_mode_fit=cal_mode_fit, file_path_fhd=file_path_fhd, transfer_calibration=transfer_calibration, $
     calibration_auto_initialize=calibration_auto_initialize, cal_gain_init=cal_gain_init, $
     phase_fit_iter=phase_fit_iter, cal_amp_degree_fit=cal_amp_degree_fit,cal_phase_degree_fit=cal_phase_degree_fit,$
-    use_redundant_calibration=use_redundant_calibration, redundant_calibration_iter=redundant_calibration_iter, _Extra=extra
+    use_redundant_calibration=use_redundant_calibration, redundant_calibration_iter=redundant_calibration_iter,$
+    redundant_calibration_weight=redundant_calibration_weight, cal_covariance_threshold=cal_covariance_threshold, _Extra=extra
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd
 IF N_Elements(params) EQ 0 THEN fhd_save_io,0,params,var='params',/restore,file_path_fhd=file_path_fhd
@@ -43,6 +44,12 @@ IF N_Elements(use_redundant_calibration) EQ 0 THEN use_redundant_calibration=0
 IF N_Elements(redundant_calibration_iter) EQ 0 THEN $
     redundant_calibration_iter=phase_fit_iter+2 ELSE $
     redundant_calibration_iter=Long(redundant_calibration_iter)
+IF N_Elements(cal_covariance_threshold) EQ 0 THEN $
+    cal_covariance_threshold=3. ELSE $
+    cal_covariance_threshold=Float(cal_covariance_threshold)
+IF N_Elements(redundant_calibration_weight) EQ 0 THEN $
+    redundant_calibration_weight=1. ELSE $
+    redundant_calibration_weight=Float(0.<redundant_calibration_weight<1.)
 IF N_Elements(cal_gain_init) EQ 0 THEN cal_gain_init=1.
 IF N_Elements(gain_arr_ptr) EQ 0 THEN BEGIN
     gain_arr=Complexarr(n_freq,n_tile)+cal_gain_init
@@ -68,6 +75,7 @@ cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, 
     auto_initialize:auto_initialize, time_avg:cal_time_average, min_solns:min_cal_solutions,$
     convergence_iter:[-1, -1], max_iter:max_cal_iter, phase_iter:phase_fit_iter,$
     use_redundant:use_redundant_calibration, redundant_iter:redundant_calibration_iter,$
+    redundant_weight:redundant_calibration_weight, covariance_threshold:cal_covariance_threshold,$
     tile_A:tile_A, tile_B:tile_B, tile_names:tile_names, bin_offset:bin_offset, freq:freq, gain:gain_arr_ptr,$
     gain_residual:gain_residual, auto_scale:auto_scale, auto_params:auto_params,$
     min_cal_baseline:min_cal_baseline, max_cal_baseline:max_cal_baseline, n_vis_cal:n_vis_cal,$

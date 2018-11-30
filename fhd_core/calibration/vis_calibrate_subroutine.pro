@@ -1,5 +1,5 @@
 FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,psf,$
-    preserve_visibilities=preserve_visibilities,redundant_delta_arr=redundant_delta_arr,$
+    preserve_visibilities=preserve_visibilities,redundant_cal_correction=redundant_cal_correction,$
     calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,no_ref_tile=no_ref_tile,_Extra=extra
 
   reference_tile=cal.ref_antenna
@@ -32,7 +32,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
   IF Tag_exist(cal,'phase_iter') THEN phase_fit_iter=cal.phase_iter ELSE phase_fit_iter=Floor(max_cal_iter/4.)<4
   IF Tag_exist(cal,'redundant_iter') THEN redundant_fit_iter=cal.redundant_iter ELSE redundant_fit_iter=(Floor(max_cal_iter/4.))+2<6
   IF Tag_exist(cal,'use_redundant') THEN use_redundant_calibration=cal.use_redundant ELSE use_redundant_calibration=0
-  redundant_delta_arr=Ptrarr(n_pol, n_freq)
+  redundant_cal_correction=Ptrarr(n_pol, n_freq)
   
   kbinsize=obs.kpix
   
@@ -156,9 +156,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             covariance_map_fn = calculate_baseline_covariance(obs, psf, cal, fi, pol_i,$
                                                               baseline_inds=baseline_use[b_i_use1])
             IF Keyword_Set(time_average) THEN BEGIN
-                redundant_delta_arr[pol_i, fi] = Ptr_new(Complexarr(n_baselines))
+                redundant_cal_correction[pol_i, fi] = Ptr_new(Complexarr(n_baselines))
             ENDIF ELSE BEGIN
-                redundant_delta_arr[pol_i, fi] = Ptr_new(Complexarr(N_Elements(cal.uu)))
+                redundant_cal_correction[pol_i, fi] = Ptr_new(Complexarr(N_Elements(cal.uu)))
             ENDELSE
         ENDIF
         
@@ -179,8 +179,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             vis_use=vis_data2
             
             IF Keyword_Set(use_redundant_calibration) THEN BEGIN
-                vis_model_red = apply_redundant_cal_correction(vis_model2, redundant_delta=*redundant_delta_arr[pol_i, fi],$
-                                                               baseline_inds=baseline_use[b_i_use1], /use_conjugate)
+                vis_model_red = apply_redundant_cal_correction(vis_model2, redundant_delta=*redundant_cal_correction[pol_i, fi],$
+                                                               baseline_inds=baseline_use[b_i_use1], /use_conjugate,$
+                                                               redundant_calibration_weight=cal.redundant_weight)
                 vis_model_matrix=vis_model_red*Conj(gain_curr[B_ind])
             ENDIF ELSE BEGIN
                 vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
@@ -212,7 +213,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             endif
             IF Keyword_Set(use_redundant_calibration) AND (redundant_fit_iter-i GT 0) THEN BEGIN
                 calculate_redundant_cal_correction,vis_data2, vis_model2, covariance_map_fn, A_ind, B_ind, gain_old,$
-                    redundant_delta=*redundant_delta_arr[pol_i, fi], baseline_inds=baseline_use[b_i_use1]
+                    redundant_delta=*redundant_cal_correction[pol_i, fi], baseline_inds=baseline_use[b_i_use1],$
+                    covariance_threshold=cal.covariance_threshold, redundant_calibration_weight=cal.redundant_weight
             ENDIF
             conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
             IF i GT phase_fit_iter THEN IF conv_test[fii,i] LE conv_thresh THEN BREAK
