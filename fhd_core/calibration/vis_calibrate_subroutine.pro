@@ -241,6 +241,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
     *cal_return.gain[pol_i]=gain_arr
     cal_return.convergence[pol_i]=Ptr_new(convergence)
     cal_return.n_converged[pol_i] = n_converged
+    IF Tag_exist(cal_return, "convergence_iter") THEN cal_return.convergence_iter[pol_i] = i
   ENDFOR
   
   vis_count_i=where(weight,n_vis_cal)
