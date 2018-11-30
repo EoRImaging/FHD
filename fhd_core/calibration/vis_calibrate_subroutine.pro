@@ -179,7 +179,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             vis_use=vis_data2
             
             IF Keyword_Set(use_redundant_calibration) THEN BEGIN
-                vis_model_red = apply_redundant_cal_correction(vis_model2, redundant_delta=*redundant_cal_correction[pol_i, fi],$
+                vis_model_red = apply_redundant_cal_correction(vis_model2, redundant_cal_correction=*redundant_cal_correction[pol_i, fi],$
                                                                baseline_inds=baseline_use[b_i_use1], /use_conjugate,$
                                                                redundant_calibration_weight=cal.redundant_weight)
                 vis_model_matrix=vis_model_red*Conj(gain_curr[B_ind])
@@ -213,7 +213,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             endif
             IF Keyword_Set(use_redundant_calibration) AND (redundant_fit_iter-i GT 0) THEN BEGIN
                 calculate_redundant_cal_correction,vis_data2, vis_model2, covariance_map_fn, A_ind, B_ind, gain_old,$
-                    redundant_delta=*redundant_cal_correction[pol_i, fi], baseline_inds=baseline_use[b_i_use1],$
+                    redundant_cal_correction=*redundant_cal_correction[pol_i, fi], baseline_inds=baseline_use[b_i_use1],$
                     covariance_threshold=cal.covariance_threshold, redundant_calibration_weight=cal.redundant_weight
             ENDIF
             conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
