@@ -1,4 +1,4 @@
-FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,psf,params,$
+FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,psf,$
     preserve_visibilities=preserve_visibilities,redundant_delta_arr=redundant_delta_arr,$
     calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,no_ref_tile=no_ref_tile,_Extra=extra
 
@@ -141,7 +141,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
         vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)]
         vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]
         weight2=Reform(weight[fi,baseline_use])
-        b_i_use1 = where(weight2 GT 0)
+        b_i_use1 = where(weight2 GT 0, n_baseline_use1)
         weight2=[weight2,weight2]
         IF Keyword_Set(calibration_weights) THEN BEGIN 
             baseline_wts2=Reform(baseline_weights[fi,baseline_use])
@@ -152,9 +152,15 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
         weight2=weight2[b_i_use2]
         vis_data2=vis_data2[b_i_use2];*weight_invert(weight2)
         vis_model2=vis_model2[b_i_use2];*weight_invert(weight2)
-        IF use_redundant_calibration THEN $
-            covariance_map_fn = calculate_baseline_covariance(obs, psf, params, fi, pol_i,$
+        IF use_redundant_calibration THEN BEGIN 
+            covariance_map_fn = calculate_baseline_covariance(obs, psf, cal, fi, pol_i,$
                                                               baseline_inds=baseline_use[b_i_use1])
+            IF Keyword_Set(time_average) THEN BEGIN
+                redundant_delta_arr[pol_i, fi] = Ptr_new(Complexarr(n_baselines))
+            ENDIF ELSE BEGIN
+                redundant_delta_arr[pol_i, fi] = Ptr_new(Complexarr(N_Elements(cal.uu)))
+            ENDELSE
+        ENDIF
         
         A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use2]
         B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use2]
@@ -174,7 +180,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             
             IF Keyword_Set(use_redundant_calibration) THEN BEGIN
                 vis_model_red = apply_redundant_cal_correction(vis_model2, redundant_delta=*redundant_delta_arr[pol_i, fi],$
-                                                               baseline_inds=baseline_use[b_i_use1])
+                                                               baseline_inds=baseline_use[b_i_use1], /use_conjugate)
                 vis_model_matrix=vis_model_red*Conj(gain_curr[B_ind])
             ENDIF ELSE BEGIN
                 vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
@@ -205,7 +211,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
               gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
             endif
             IF Keyword_Set(use_redundant_calibration) AND (redundant_fit_iter-i GT 0) THEN BEGIN
-                calculate_redundant_cal_correction,vis_data, vis_model, covariance_map_fn, A_ind, B_ind, fi, pol_i,$
+                calculate_redundant_cal_correction,vis_data2, vis_model2, covariance_map_fn, A_ind, B_ind, gain_old,$
                     redundant_delta=*redundant_delta_arr[pol_i, fi], baseline_inds=baseline_use[b_i_use1]
             ENDIF
             conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))

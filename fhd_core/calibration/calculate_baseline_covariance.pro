@@ -1,6 +1,6 @@
-FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i, pol_i, baseline_inds
+FUNCTION calculate_baseline_covariance,obs, psf, cal, freq_i, pol_i, baseline_inds=baseline_inds
     ; Calculate the fraction of power shared between every baseline pair
-    n_pol = obs.n_pol < 2
+    n_pol = cal.n_pol
     frequency = (*obs.baseline_info).freq[freq_i]
 
     psf_dim=psf.dim
@@ -9,8 +9,8 @@ FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i, pol_i, baseline
     freq_bin_i=(*obs.baseline_info).fbin_i
     fbin_use=freq_bin_i[freq_i]
     kbinsize=obs.kpix
-    kx_arr=params.uu[baseline_inds]/kbinsize
-    ky_arr=params.vv[baseline_inds]/kbinsize
+    kx_arr=cal.uu[baseline_inds]/kbinsize
+    ky_arr=cal.vv[baseline_inds]/kbinsize
     ; As with the rest of calibration, append the complex conjugate at the mirror location
     kx_arr = [kx_arr, -kx_arr]
     ky_arr = [ky_arr, -ky_arr]
@@ -21,7 +21,7 @@ FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i, pol_i, baseline
     n_baselines2 = N_Elements(baseline_inds2)
 
     psf_dim2 = 2*psf_dim + 1
-    IF complex_flag THEN init_arr=Complexarr(psf_dim2,psf_dim2) ELSE init_arr=Fltarr(psf_dim2,psf_dim2)
+    init_arr=Complexarr(psf_dim2,psf_dim2)
     init_arr[Ceil(psf_dim/2):Ceil(psf_dim/2)+psf_dim-1, Ceil(psf_dim/2):Ceil(psf_dim/2)+psf_dim-1] = 1
     psf_base_inds = where(init_arr)
     arr_type=Size(init_arr,/type)
@@ -32,14 +32,14 @@ FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i, pol_i, baseline
 
     FOR b_ii=0L,n_baselines-1 DO BEGIN
         b_i = baseline_inds[b_ii]
-        covariance_flag = (Abs(xcen[b_i] - xcen) LE psf_dim) & (Abs(ycen[b_i] - ycen) LE psf_dim)
+        covariance_flag = (Abs(xcen[b_i] - xcen) LE psf_dim) and (Abs(ycen[b_i] - ycen) LE psf_dim)
         ; Guaranteed at least one match, since the baseline being matched is itself in the set
         bi_covariant_i = where(covariance_flag, n_covariant)
         covariances = Complexarr(n_covariant)
 
         covariance_box = Make_array(psf_dim3, type=arr_type)
         ; Use the zero-offset beam model as the reference
-        covariance_box[psf_base_inds] = *(*beam_arr[pol_i,fbin_use,baseline_inds[b_i]])[0,0]
+        covariance_box[psf_base_inds] = *(*beam_arr[pol_i,fbin_use,b_i])[0,0]
         dx = xcen[bi_covariant_i] - xcen[b_i]
         dy = ycen[bi_covariant_i] - ycen[b_i]
         x0 = Floor(dx)
@@ -54,7 +54,7 @@ FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i, pol_i, baseline
             covariance_box2 = Make_array(psf_dim3, type=arr_type)
             ; Note: this should be the complex conjugate, but I combined that and the next complex conjugate to save computations
             covariance_box2[psf_base_inds + ind_offset[covariant_i]] = $
-                *(*beam_arr[pol_i,fbin_use,baseline_inds[b_i2]])[x_offset[covariant_i], y_offset[covariant_i]]
+                *(*beam_arr[pol_i,fbin_use,baseline_inds2[b_i2]])[x_offset[covariant_i], y_offset[covariant_i]]
             ; use the complex conjugate for the second half of the baselines, that have been mirrored
             ; Note that I have combined this with the above complex conjugate, so only apply Conj() to the first half
             IF b_i2 LT n_baselines THEN covariance_box = Conj(covariance_box)
@@ -63,8 +63,8 @@ FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i, pol_i, baseline
             covariances[covariant_i] = 2*Total(covariance_box*covariance_box2)/(Total(Abs(covariance_box)^2.) + Total(Abs(covariance_box2)^2.))
 
         ENDFOR
-        ija[b_i] = Ptr_new(bi_covariant_i)
-        sa[b_i] = Ptr_new(covariances)
+        ija[b_ii] = Ptr_new(bi_covariant_i)
+        sa[b_ii] = Ptr_new(covariances)
     ENDFOR
 
     ; Save the covariances and baseline indices as a sparse matrix, in the same format as the holographic mapping function
