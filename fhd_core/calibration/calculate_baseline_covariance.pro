@@ -1,22 +1,24 @@
-FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i
+FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i, pol_i, baseline_inds
     ; Calculate the fraction of power shared between every baseline pair
     n_pol = obs.n_pol < 2
-    b_info=(*obs.baseline_info)
-    tile_use=where(b_info.tile_use)+1
-    bi_use=array_match(b_info.tile_A,b_info.tile_B,value_match=tile_use, n_match=n_baselines_use)
     frequency = (*obs.baseline_info).freq[freq_i]
 
-    complex_flag=psf.complex_flag
     psf_dim=psf.dim
     psf_resolution=psf.resolution
     beam_arr=*psf.beam_ptr
     freq_bin_i=(*obs.baseline_info).fbin_i
     fbin_use=freq_bin_i[freq_i]
     kbinsize=obs.kpix
-    kx_arr=params.uu[bi_use]/kbinsize
-    ky_arr=params.vv[bi_use]/kbinsize
+    kx_arr=params.uu[baseline_inds]/kbinsize
+    ky_arr=params.vv[baseline_inds]/kbinsize
+    ; As with the rest of calibration, append the complex conjugate at the mirror location
+    kx_arr = [kx_arr, -kx_arr]
+    ky_arr = [ky_arr, -ky_arr]
+    baseline_inds2 = [baseline_inds, baseline_inds]
     xcen=frequency*Temporary(kx_arr)
     ycen=frequency*Temporary(ky_arr)
+    n_baselines = N_Elements(baseline_inds)
+    n_baselines2 = N_Elements(baseline_inds2)
 
     psf_dim2 = 2*psf_dim + 1
     IF complex_flag THEN init_arr=Complexarr(psf_dim2,psf_dim2) ELSE init_arr=Fltarr(psf_dim2,psf_dim2)
@@ -25,24 +27,24 @@ FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i
     arr_type=Size(init_arr,/type)
     psf_dim3 = psf_dim2*psf_dim2
     ; Sparse matrix format, see holo_mapfn_convert.pro
-    sa=Ptrarr(n_baselines_use,/allocate)
-    ija=Ptrarr(n_baselines_use,/allocate)
+    sa=Ptrarr(n_baselines)
+    ija=Ptrarr(n_baselines)
 
-    FOR b_ii=0L,n_baselines_use-1 DO BEGIN
-        b_i = bi_use[b_ii]
+    FOR b_ii=0L,n_baselines-1 DO BEGIN
+        b_i = baseline_inds[b_ii]
         covariance_flag = (Abs(xcen[b_i] - xcen) LE psf_dim) & (Abs(ycen[b_i] - ycen) LE psf_dim)
         ; Guaranteed at least one match, since the baseline being matched is itself in the set
         bi_covariant_i = where(covariance_flag, n_covariant)
-        IF complex_flag THEN covariances = Complexarr(n_covariant) ELSE covariances = Fltarr(n_covariant)
+        covariances = Complexarr(n_covariant)
 
         covariance_box = Make_array(psf_dim3, type=arr_type)
         ; Use the zero-offset beam model as the reference
-        FOR pol_i=0,n_pol-1 DO $
-            covariance_box[psf_base_inds] += *(*beam_arr[pol_i,fbin_use,bi_use[b_i]])[0,0]
+        covariance_box[psf_base_inds] = *(*beam_arr[pol_i,fbin_use,baseline_inds[b_i]])[0,0]
         dx = xcen[bi_covariant_i] - xcen[b_i]
         dy = ycen[bi_covariant_i] - ycen[b_i]
         x0 = Floor(dx)
         y0 = Floor(dy)
+        ; Use the same indexing notation as visibility_grid.pro
         ind_offset = x0 + y0*psf_dim2
         x_offset=Fix(Floor((dx-x0)*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
         y_offset=Fix(Floor((dy-y0)*psf_resolution) mod psf_resolution, type=12)
@@ -50,19 +52,22 @@ FUNCTION calculate_baseline_covariance,obs, psf, params, freq_i
         FOR covariant_i=0L,n_covariant-1 DO BEGIN
             b_i2 = bi_covariant_i[covariant_i]
             covariance_box2 = Make_array(psf_dim3, type=arr_type)
-            FOR pol_i=0,n_pol-1 DO $
-                covariance_box2[psf_base_inds + ind_offset[covariant_i]] += $
-                    *(*beam_arr[pol_i,fbin_use,bi_use[b_i2]])[x_offset[covariant_i], y_offset[covariant_i]]
-            IF complex_flag THEN covariance_box2 = Conj(Temporary(covariance_box2))
+            ; Note: this should be the complex conjugate, but I combined that and the next complex conjugate to save computations
+            covariance_box2[psf_base_inds + ind_offset[covariant_i]] = $
+                *(*beam_arr[pol_i,fbin_use,baseline_inds[b_i2]])[x_offset[covariant_i], y_offset[covariant_i]]
+            ; use the complex conjugate for the second half of the baselines, that have been mirrored
+            ; Note that I have combined this with the above complex conjugate, so only apply Conj() to the first half
+            IF b_i2 LT n_baselines THEN covariance_box = Conj(covariance_box)
 
-            covariances[covariant_i] = Abs(Total(covariance_box*covariance_box2))^2./(Total(Abs(covariance_box)^2.)*Total(Abs(covariance_box2)^2.))
+            ; covariances[covariant_i] = Abs(Total(covariance_box*covariance_box2))^2./(Total(Abs(covariance_box)^2.)*Total(Abs(covariance_box2)^2.))
+            covariances[covariant_i] = 2*Total(covariance_box*covariance_box2)/(Total(Abs(covariance_box)^2.) + Total(Abs(covariance_box2)^2.))
 
         ENDFOR
-        *ija[b_ii] = bi_covariant_i
-        *sa[b_ii] = covariances
+        ija[b_i] = Ptr_new(bi_covariant_i)
+        sa[b_i] = Ptr_new(covariances)
     ENDFOR
 
     ; Save the covariances and baseline indices as a sparse matrix, in the same format as the holographic mapping function
-    covariance_map_fn = {ija:ija,sa:sa,i_use:bi_use,norm:1.,indexed:1}
+    covariance_map_fn = {ija:ija,sa:sa,i_use:Lindgen(n_baselines2),norm:1.,indexed:0}
     RETURN, covariance_map_fn
 END

@@ -1,4 +1,5 @@
-FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,psf,params,preserve_visibilities=preserve_visibilities,$
+FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,psf,params,$
+    preserve_visibilities=preserve_visibilities,redundant_delta_arr=redundant_delta_arr,$
     calib_freq_func=calib_freq_func,calibration_weights=calibration_weights,no_ref_tile=no_ref_tile,_Extra=extra
 
   reference_tile=cal.ref_antenna
@@ -31,6 +32,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
   IF Tag_exist(cal,'phase_iter') THEN phase_fit_iter=cal.phase_iter ELSE phase_fit_iter=Floor(max_cal_iter/4.)<4
   IF Tag_exist(cal,'redundant_iter') THEN redundant_fit_iter=cal.redundant_iter ELSE redundant_fit_iter=(Floor(max_cal_iter/4.))+2<6
   IF Tag_exist(cal,'use_redundant') THEN use_redundant_calibration=cal.use_redundant ELSE use_redundant_calibration=0
+  redundant_delta_arr=Ptrarr(n_pol, n_freq)
   
   kbinsize=obs.kpix
   
@@ -133,23 +135,29 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
 ;    if not keyword_set(calib_freq_func) then begin
       FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
-        IF use_redundant_calibration THEN covariance_map_fn = calculate_baseline_covariance(obs, psf, params, fi)
         gain_curr=Reform(gain_arr[fi,tile_use])
-        ;Reuse same gain solution between successive frequency channels IF input gains are default values
-        ;        IF fii EQ 0 THEN gain_curr=Reform(gain_arr[fi,tile_use])
-        ;        IF Stddev(gain_arr[fi,tile_use]) GT 0 THEN gain_curr=Reform(gain_arr[fi,tile_use])
-        vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)]        ;Set up data and model arrays of the original and conjugated versions. This
-        vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]  ;provides twice as many equations into the linear least-squares solver.
-        weight2=Reform(weight[fi,baseline_use]) & weight2=[weight2,weight2]
-        IF Keyword_Set(calibration_weights) THEN BEGIN baseline_wts2=Reform(baseline_weights[fi,baseline_use]) & baseline_wts2=[baseline_wts2,baseline_wts2] & ENDIF 
+        ; Set up data and model arrays of the original and conjugated versions.
+        ; This provides twice as many equations into the linear least-squares solver.
+        vis_data2=Reform(vis_avg[fi,baseline_use]) & vis_data2=[vis_data2,Conj(vis_data2)]
+        vis_model2=Reform(vis_model[fi,baseline_use]) & vis_model2=[vis_model2,Conj(vis_model2)]
+        weight2=Reform(weight[fi,baseline_use])
+        b_i_use1 = where(weight2 GT 0)
+        weight2=[weight2,weight2]
+        IF Keyword_Set(calibration_weights) THEN BEGIN 
+            baseline_wts2=Reform(baseline_weights[fi,baseline_use])
+            baseline_wts2=[baseline_wts2,baseline_wts2]
+        ENDIF 
         
-        b_i_use=where(weight2 GT 0,n_baseline_use2)
-        weight2=weight2[b_i_use]
-        vis_data2=vis_data2[b_i_use];*weight_invert(weight2)
-        vis_model2=vis_model2[b_i_use];*weight_invert(weight2)
+        b_i_use2=where(weight2 GT 0,n_baseline_use2)
+        weight2=weight2[b_i_use2]
+        vis_data2=vis_data2[b_i_use2];*weight_invert(weight2)
+        vis_model2=vis_model2[b_i_use2];*weight_invert(weight2)
+        IF use_redundant_calibration THEN $
+            covariance_map_fn = calculate_baseline_covariance(obs, psf, params, fi, pol_i,$
+                                                              baseline_inds=baseline_use[b_i_use1])
         
-        A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use]
-        B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use]
+        A_ind=[tile_A_i_use,tile_B_i_use] & A_ind=A_ind[b_i_use2]
+        B_ind=[tile_B_i_use,tile_A_i_use] & B_ind=B_ind[b_i_use2]
         
         A_ind_arr=Ptrarr(n_tile_use,/allocate)
         n_arr=Fltarr(n_tile_use)
@@ -165,7 +173,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             vis_use=vis_data2
             
             IF Keyword_Set(use_redundant_calibration) THEN BEGIN
-                vis_model_red = apply_redundant_cal_correction(vis_data2, vis_model2, covariance_map_fn, redundant_delta_ptr[fi], A_ind, B_ind)
+                vis_model_red = apply_redundant_cal_correction(vis_model2, redundant_delta=*redundant_delta_arr[pol_i, fi],$
+                                                               baseline_inds=baseline_use[b_i_use1])
                 vis_model_matrix=vis_model_red*Conj(gain_curr[B_ind])
             ENDIF ELSE BEGIN
                 vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
@@ -195,8 +204,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             if ~keyword_set(no_ref_tile) then begin
               gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
             endif
-            IF redundant_fit_iter-i GT 0 THEN BEGIN
-                redundant_delta_ptr = calculate_redundant_cal_correction(???)
+            IF Keyword_Set(use_redundant_calibration) AND (redundant_fit_iter-i GT 0) THEN BEGIN
+                calculate_redundant_cal_correction,vis_data, vis_model, covariance_map_fn, A_ind, B_ind, fi, pol_i,$
+                    redundant_delta=*redundant_delta_arr[pol_i, fi], baseline_inds=baseline_use[b_i_use1]
             ENDIF
             conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
             IF i GT phase_fit_iter THEN IF conv_test[fii,i] LE conv_thresh THEN BREAK
