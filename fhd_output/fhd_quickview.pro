@@ -1,5 +1,5 @@
 PRO fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
-    model_uv_arr=model_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
+    model_uv_arr=model_uv_arr,redundantCorr_uv_arr=redundantCorr_uv_arr,file_path_fhd=file_path_fhd,silent=silent,show_grid=show_grid,$
     gridline_image_show=gridline_image_show,pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
     grid_spacing=grid_spacing,reverse_image=reverse_image,show_obsname=show_obsname,mark_zenith=mark_zenith,$
     no_fits=no_fits,no_png=no_png,ring_radius=ring_radius,zoom_low=zoom_low,zoom_high=zoom_high,zoom_radius=zoom_radius,$
@@ -93,6 +93,8 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
 ENDIF
 
 IF residual_flag THEN model_flag=0
+
+redundantCorr_flag = Max(Ptr_valid(redundantCorr_uv_arr))
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
@@ -269,6 +271,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
         image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],$
         beam_ptr=beam_base_out[pol_i],no_real=complex_flag,_Extra=extra))
+    IF redundantCorr_flag THEN instr_redundantCorr_arr[pol_i]=Ptr_new(dirty_image_generate(*redundantCorr_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],beam_ptr=beam_base_out[pol_i],_Extra=extra))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))
@@ -287,6 +291,7 @@ for pol_i=0,n_pol-1 do begin
   IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor[pol_i]
   IF source_flag THEN BEGIN
     *instr_sources[pol_i]*=renorm_factor[pol_i]
+    IF redundantCorr_flag THEN *instr_redundantCorr_arr[pol_i]*=renorm_factor[pol_i]
     IF Keyword_Set(ring_radius) THEN *instr_rings[pol_i]*=renorm_factor[pol_i]
   ENDIF
 endfor
@@ -421,6 +426,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         stokes_model=(*stokes_model_arr[pol_i])*beam_mask
         stokes_dirty=(*stokes_dirty_arr[pol_i])*beam_mask
     ENDIF
+    IF redundantCorr_flag THEN instr_redundantCorr=*instr_redundantCorr_arr[pol_i]*(*beam_correction_out[pol_i])
     stokes_residual=(*stokes_residual_arr[pol_i])*beam_mask
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]
@@ -476,6 +482,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
                 title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_stokes,_Extra=extra
         ENDIF
+        IF redundantCorr_flag THEN BEGIN
+            Imagefast,instr_redundantCorr[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_RedundantCorrection_'+pol_names[pol_i],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
+                title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
+        ENDIF
         Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
             title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
@@ -506,6 +517,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             FitsFast,instr_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i]
             FitsFast,stokes_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i+4]
             FitsFast,stokes_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i+4]
+        ENDIF
+        IF redundantCorr_flag THEN BEGIN
+            FitsFast,instr_redundantCorr,fits_header_apparent,/write,file_path=output_path+filter_name+'_RedundantCorrection_'+pol_names[pol_i]
         ENDIF
         FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]

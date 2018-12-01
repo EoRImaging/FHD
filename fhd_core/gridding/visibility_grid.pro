@@ -6,6 +6,7 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
     error=error,grid_uniform=grid_uniform,$
     grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
+    redundantCorr_return=redundantCorr_return, redundantCorr_ptr=redundantCorr_ptr,$
     beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
 t0_0=Systime(1)
 heap_gc
@@ -68,6 +69,20 @@ IF Ptr_valid(model_ptr) THEN BEGIN
         ENDELSE
         IF Keyword_Set(double_precision) THEN model_return=DComplexarr(dimension,elements) ELSE model_return=Complexarr(dimension,elements)
         model_flag=1
+    ENDIF ELSE BEGIN
+;        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[vis_inds_use] $
+;            ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
+    ENDELSE
+ENDIF
+redundantCorr_flag=0
+IF Ptr_valid(redundantCorr_ptr) THEN BEGIN
+    IF Keyword_Set(redundantCorr_return) THEN BEGIN
+        IF Keyword_Set(preserve_visibilities) THEN redundantCorr_use=(*redundantCorr_ptr)[vis_inds_use] ELSE BEGIN
+            redundantCorr_use=(Temporary(*redundantCorr_ptr))[vis_inds_use]
+            ptr_free,redundantCorr_ptr
+        ENDELSE
+        IF Keyword_Set(double_precision) THEN redundantCorr_return=DComplexarr(dimension,elements) ELSE redundantCorr_return=Complexarr(dimension,elements)
+        redundantCorr_flag=1
     ENDIF ELSE BEGIN
 ;        IF Keyword_Set(preserve_visibilities) THEN vis_arr_use-=(*model_ptr)[vis_inds_use] $
 ;            ELSE vis_arr_use-=(Temporary(*model_ptr))[vis_inds_use]
@@ -140,6 +155,7 @@ IF n_conj GT 0 THEN BEGIN
     ww[conj_i]=-ww[conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
     IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
+    IF redundantCorr_flag THEN redundantCorr_use[*,conj_i]=Conj(redundantCorr_use[*,conj_i])
 ENDIF
 xcen=Float(frequency_array#Temporary(kx_arr))
 ycen=Float(frequency_array#Temporary(ky_arr))
@@ -316,6 +332,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             model_box1=model_use[inds]
             model_box=model_box1[xyf_ui]
         ENDIF
+        IF redundantCorr_flag THEN BEGIN
+            redundantCorr_box1=redundantCorr_use[inds]
+            redundantCorr_box=redundantCorr_box1[xyf_ui]
+        ENDIF
         
         repeat_i=where(psf_weight GT 1,n_rep,complement=single_i,ncom=n_single)
         
@@ -326,11 +346,14 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         
         IF model_flag THEN FOR rep_ii=0,n_rep-1 DO $
             model_box[repeat_i[rep_ii]]=Total(model_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
+        IF redundantCorr_flag THEN FOR rep_ii=0,n_rep-1 DO $
+            redundantCorr_box[repeat_i[rep_ii]]=Total(redundantCorr_box1[xyf_ui0[rep_ii]:xyf_ui[rep_ii]])
         
         vis_n=n_xyf_bin
     ENDIF ELSE BEGIN
         rep_flag=0
         IF model_flag THEN model_box=model_use[inds]
+        IF redundantCorr_flag THEN redundantCorr_box=redundantCorr_use[inds]
         vis_box=vis_arr_use[inds]
         psf_weight=Replicate(1.,vis_n)
         bt_index = inds / n_freq_use
@@ -390,6 +413,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     IF model_flag THEN BEGIN
         box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
         model_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
+    ENDIF
+    IF redundantCorr_flag THEN BEGIN
+        box_arr=matrix_multiply(Temporary(redundantCorr_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
+        redundantCorr_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     ENDIF
     box_arr=matrix_multiply(Temporary(vis_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
@@ -465,6 +492,7 @@ IF Keyword_Set(grid_uniform) THEN BEGIN
     IF weights_flag THEN weights*=weight_invert(filter_use)
     IF variance_flag THEN variance*=weight_invert(filter_use)
     IF model_flag THEN model_return*=weight_invert(filter_use)
+    IF redundantCorr_flag THEN redundantCorr_return*=weight_invert(filter_use)
 ENDIF
 
 IF ~Keyword_Set(no_conjugate) THEN BEGIN
@@ -472,6 +500,7 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
     IF weights_flag THEN weights=(weights+conjugate_mirror(weights))/2.        
     IF variance_flag THEN variance=(variance+conjugate_mirror(variance))/4. ;2?
     IF model_flag THEN model_return=(model_return+conjugate_mirror(model_return))/2.
+    IF redundantCorr_flag THEN redundantCorr_return=(redundantCorr_return+conjugate_mirror(redundantCorr_return))/2.
     IF uniform_flag THEN uniform_filter=(uniform_filter+conjugate_mirror(uniform_filter))/2.
 ENDIF
 
