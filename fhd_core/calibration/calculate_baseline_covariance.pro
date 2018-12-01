@@ -58,21 +58,23 @@ FUNCTION calculate_baseline_covariance,obs, psf, cal, freq_i, pol_i, baseline_in
         ind_offset = x0 + y0*psf_dim2
         x_offset=Fix(Floor((dx-x0)*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
         y_offset=Fix(Floor((dy-y0)*psf_resolution) mod psf_resolution, type=12)
+        
+        covariance_box2 =  Make_array(psf_dim3, n_covariant, type=arr_type)
 
         FOR covariant_i=0L,n_covariant-1 DO BEGIN
             b_i2 = bi_covariant_i[covariant_i]
-            covariance_box2 = Make_array(psf_dim3, type=arr_type)
-            ; Note: this should be the complex conjugate, but I combined that and the next complex conjugate to save computations
-            covariance_box2[psf_base_inds + ind_offset[covariant_i]] = $
-                *(*beam_arr[pol_i,fbin_use,baseline_inds2[b_i2] mod obs.nbaselines])[x_offset[covariant_i], y_offset[covariant_i]]
+            beam_use = *(*beam_arr[pol_i,fbin_use,baseline_inds2[b_i2] mod obs.nbaselines])[x_offset[covariant_i], y_offset[covariant_i]]
+            IF b_i2 LT n_baselines THEN beam_use = Conj(beam_use)
             ; use the complex conjugate for the second half of the baselines, that have been mirrored
-            ; Note that I have combined this with the above complex conjugate, so only apply Conj() to the first half
-            IF b_i2 LT n_baselines THEN covariance_box = Conj(covariance_box)
+            ; Note that I have combined this with the below complex conjugate, so only apply Conj() to the first half
+            ; Note: this should be the complex conjugate, but I combined that and the previous complex conjugate to save computations
+            covariance_box2[covariant_i*psf_dim3 + psf_base_inds + ind_offset[covariant_i]] = beam_use
 
             ; covariances[covariant_i] = Abs(Total(covariance_box*covariance_box2))^2./(Total(Abs(covariance_box)^2.)*Total(Abs(covariance_box2)^2.))
-            covariances[covariant_i] = 2*Total(covariance_box*covariance_box2)/(Total(Abs(covariance_box)^2.) + Total(Abs(covariance_box2)^2.))
+            ;covariances[covariant_i] = 2*Total(covariance_box*covariance_box2)/(Total(Abs(covariance_box)^2.) + Total(Abs(covariance_box2)^2.))
 
         ENDFOR
+        covariances=matrix_multiply(Temporary(covariance_box)/n_covariant,Temporary(covariance_box2),/atranspose,/btranspose)
         ija[b_ii] = Ptr_new(bi_covariant_i)
         sa[b_ii] = Ptr_new(covariances)
     ENDFOR
