@@ -142,7 +142,8 @@ IF data_flag LE 0 THEN BEGIN
              transfer_calibration=transfer_calibration,timing=cal_timing,error=error,model_uv_arr=model_uv_arr,$
              return_cal_visibilities=return_cal_visibilities,vis_model_arr=vis_model_arr,$
              calibration_visibilities_subtract=calibration_visibilities_subtract,silent=silent,$
-             flag_calibration=flag_calibration,cal_stop=cal_stop,_Extra=extra)
+             flag_calibration=flag_calibration,cal_stop=cal_stop,
+             redundant_cal_correction=redundant_cal_correction,_Extra=extra)
         IF Keyword_Set(return_cal_visibilities) THEN $
             vis_calibrate_qu_mixing,vis_arr,vis_model_arr,vis_weights,obs,cal
         IF ~Keyword_Set(silent) THEN print,String(format='("Calibration timing: ",A)',Strn(cal_timing))
@@ -158,6 +159,7 @@ IF data_flag LE 0 THEN BEGIN
           run_report, start_mem, t0, silent=silent
           RETURN
         endif
+        redundant_correction_flag = cal.use_redundant
     ENDIF
     
     IF Keyword_Set(flag_visibilities) THEN BEGIN
@@ -220,6 +222,7 @@ IF data_flag LE 0 THEN BEGIN
         t_save0=Systime(1)
         vis_export,obs,status_str,vis_arr,vis_weights,file_path_fhd=file_path_fhd,/compress
         IF Keyword_Set(model_flag) THEN vis_export,obs,status_str,vis_model_arr,vis_weights,file_path_fhd=file_path_fhd,/compress,/model
+        IF Keyword_Set(redundant_correction_flag) THEN vis_export,obs,status_str,redundant_cal_correction,vis_weights,file_path_fhd=file_path_fhd,/compress,/redundant_correction
         t_save=Systime(1)-t_save0
         IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
     ENDIF
