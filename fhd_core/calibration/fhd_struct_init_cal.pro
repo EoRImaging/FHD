@@ -41,6 +41,8 @@ IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-
 IF N_Elements(calibration_origin) EQ 0 THEN $
     IF Tag_exist(obs,'obsname') THEN calibration_origin=obs.obsname ELSE calibration_origin=''
 IF N_Elements(use_redundant_calibration) EQ 0 THEN use_redundant_calibration=0
+; Time averaging is not yet compatible with the redundant calibration correction
+IF Keyword_Set(use_redundant_calibration) THEN cal_time_average=0
 IF N_Elements(redundant_calibration_iter) EQ 0 THEN $
     redundant_calibration_iter=phase_fit_iter+2 ELSE $
     redundant_calibration_iter=Long(redundant_calibration_iter)

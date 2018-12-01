@@ -1,13 +1,19 @@
-PRO vis_export,obs,status_str,vis_ptr_arr,vis_weight_ptr,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,model=model
+PRO vis_export,obs,status_str,vis_ptr_arr,vis_weight_ptr,file_path_fhd=file_path_fhd,pol_i=pol_i,compress=compress,$
+    model=model, redundant_correction=redundant_correction
 IF N_Elements(compress) EQ 0 THEN compress=1
 pol_names=obs.pol_names
 
 res_name='Residual'
+var_name='vis_ptr'
 IF obs.residual EQ 0 THEN res_name='Dirty'
 IF Keyword_Set(model) THEN BEGIN
     res_name='Model'
     var_name='vis_model_ptr'
-ENDIF ELSE var_name='vis_ptr'
+ENDIF
+IF Keyword_Set(redundant_correction) THEN BEGIN
+    res_name = 'Redundant calibration correction'
+    var_name = 'vis_redundantCorr_ptr'
+ENDIF
 
 IF min(Ptr_valid(vis_ptr_arr)) EQ 0 THEN BEGIN
     print,res_name+" visibilities NULL! Not exported!"
