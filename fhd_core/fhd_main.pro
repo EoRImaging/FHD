@@ -213,8 +213,10 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(grid_recalculate) THEN BEGIN
         image_uv_arr=visibility_grid_wrap(vis_arr,vis_weights,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
             deconvolve=deconvolve,model_flag=model_flag,snapshot_healpix_export=snapshot_healpix_export,mapfn_recalculate=mapfn_recalculate,$
-            return_decon_visibilities=return_decon_visibilities,_Extra=extra)
             save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_arr=model_uv_arr,$
+            return_decon_visibilities=return_decon_visibilities,$
+            redundant_correction_flag=redundant_correction_flag,redundant_cal_correction=redundant_cal_correction,redundantCorr_uv_arr=redundantCorr_uv_arr,$
+            _Extra=extra)
     ENDIF ELSE BEGIN
       print,'Visibilities not re-gridded'
     ENDELSE
@@ -240,7 +242,7 @@ ENDELSE
 ;Generate fits data files and images
 IF Keyword_Set(export_images) THEN BEGIN
     fhd_quickview,obs,status_str,psf,cal,jones,skymodel,fhd_params,image_uv_arr=image_uv_arr,weights_arr=weights_arr,$
-        model_uv_arr=model_uv_arr,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,$
+        model_uv_arr=model_uv_arr,redundantCorr_uv_arr=redundantCorr_uv_arr,beam_arr=beam_arr,file_path_fhd=file_path_fhd,silent=silent,$
         map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,_Extra=extra
 ENDIF
 
