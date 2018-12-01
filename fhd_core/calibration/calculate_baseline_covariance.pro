@@ -29,10 +29,21 @@ FUNCTION calculate_baseline_covariance,obs, psf, cal, freq_i, pol_i, baseline_in
     ; Sparse matrix format, see holo_mapfn_convert.pro
     sa=Ptrarr(n_baselines)
     ija=Ptrarr(n_baselines)
+    overlap_test = Fltarr(psf_dim)
+    FOR pix=0,psf_dim-1 DO BEGIN
+        covariance_box = Make_array(psf_dim3, type=arr_type)
+        covariance_box[psf_base_inds] = *(*beam_arr[pol_i,fbin_use,0])[0,0]
+        ind_offset = pix +pix*psf_dim2
+        covariance_box2 = Make_array(psf_dim3, type=arr_type)
+        covariance_box2[psf_base_inds + ind_offset[covariant_i]] = $
+            Conj(*(*beam_arr[pol_i,fbin_use,0])[0,0])
+        overlap_test[pix] = Total(Abs(covariance_box*covariance_box2))
+    ENDFOR
+    overlap_i = where(overlap_test GE cal.covariance_threshold, covariant_dim)
 
     FOR b_ii=0L,n_baselines-1 DO BEGIN
         b_i = baseline_inds[b_ii]
-        covariance_flag = (Abs(xcen[b_i] - xcen) LE psf_dim) and (Abs(ycen[b_i] - ycen) LE psf_dim)
+        covariance_flag = (Abs(xcen[b_i] - xcen) LE covariant_dim) and (Abs(ycen[b_i] - ycen) LE covariant_dim)
         ; Guaranteed at least one match, since the baseline being matched is itself in the set
         bi_covariant_i = where(covariance_flag, n_covariant)
         covariances = Complexarr(n_covariant)
