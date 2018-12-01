@@ -47,7 +47,7 @@ IF N_Elements(redundant_calibration_iter) EQ 0 THEN $
     redundant_calibration_iter=phase_fit_iter+2 ELSE $
     redundant_calibration_iter=Long(redundant_calibration_iter)
 IF N_Elements(cal_covariance_threshold) EQ 0 THEN $
-    cal_covariance_threshold=3. ELSE $
+    cal_covariance_threshold=1E-3 ELSE $
     cal_covariance_threshold=Float(cal_covariance_threshold)
 IF N_Elements(redundant_calibration_weight) EQ 0 THEN $
     redundant_calibration_weight=1. ELSE $
