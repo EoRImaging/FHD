@@ -35,8 +35,7 @@ FUNCTION calculate_baseline_covariance,obs, psf, cal, freq_i, pol_i, baseline_in
         covariance_box[psf_base_inds] = *(*beam_arr[pol_i,fbin_use,0])[0,0]
         ind_offset = pix +pix*psf_dim2
         covariance_box2 = Make_array(psf_dim3, type=arr_type)
-        covariance_box2[psf_base_inds + ind_offset[covariant_i]] = $
-            Conj(*(*beam_arr[pol_i,fbin_use,0])[0,0])
+        covariance_box2[psf_base_inds + ind_offset] = Conj(*(*beam_arr[pol_i,fbin_use,0])[0,0])
         overlap_test[pix] = Total(Abs(covariance_box*covariance_box2))
     ENDFOR
     overlap_i = where(overlap_test GE cal.covariance_threshold, covariant_dim)
