@@ -39,7 +39,8 @@ ENDIF
 IF Keyword_Set(restore) THEN no_save=1
 
 IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,layout:0,psf:0,antenna:0,jones:0,cal:0,skymodel:0,source_array:0,vis_weights:0,auto_corr:0,$
-    vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),vis_count:0,$
+    vis_ptr:intarr(4),vis_model_ptr:intarr(4),vis_redundantCorr_ptr:intarr(4),$
+    grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),grid_uv_redundantCorr:intarr(4),vis_count:0,$
     map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4),complete:0}
 IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str', compatibility_mode = compatibility_mode)
 status_use=status_str
@@ -70,9 +71,11 @@ CASE var_name OF ;listed in order typically generated
     'auto_corr':BEGIN status_use.auto_corr=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
     'vis_ptr':BEGIN status_use.vis_ptr[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
     'vis_model_ptr':BEGIN status_use.vis_model_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
+    'vis_redundantCorr_ptr':BEGIN status_use.vis_redundantCorr_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
     'grid_uv':BEGIN status_use.grid_uv[pol_i]=1 & path_add='_uv_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'weights_uv':BEGIN status_use.weights_uv[pol_i]=1 & path_add='_uv_weights_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'grid_uv_model':BEGIN status_use.grid_uv_model[pol_i]=1 & path_add='_uv_model_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
+    'grid_uv_redundantCorr':BEGIN status_use.grid_uv_redundantCorr[pol_i]=1 & path_add='_uv_grid_uv_redundantCorr_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'vis_count':BEGIN status_use.vis_count=1 & path_add='_vis_count' & subdir='grid_data'& END
     ;NOTE: Because of it's size, only the map_fn can be saved in the mapfn .sav file. It has to be restored using RESTORE ,
     ; and including other parameters can cause unwanted behavior when they are restored
