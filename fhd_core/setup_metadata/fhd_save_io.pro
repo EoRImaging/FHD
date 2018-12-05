@@ -71,11 +71,11 @@ CASE var_name OF ;listed in order typically generated
     'auto_corr':BEGIN status_use.auto_corr=1 & path_add='_autos' & subdir='vis_data' & obs_flag=1 & END
     'vis_ptr':BEGIN status_use.vis_ptr[pol_i]=1 & path_add='_vis_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
     'vis_model_ptr':BEGIN status_use.vis_model_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
-    'vis_redundantCorr_ptr':BEGIN status_use.vis_redundantCorr_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
+    'vis_redundantcorr_ptr':BEGIN status_use.vis_redundantCorr_ptr[pol_i]=1 & path_add='_vis_model_'+pol_names[pol_i] & subdir='vis_data' & obs_flag=1 & pol_flag=1 & END
     'grid_uv':BEGIN status_use.grid_uv[pol_i]=1 & path_add='_uv_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'weights_uv':BEGIN status_use.weights_uv[pol_i]=1 & path_add='_uv_weights_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'grid_uv_model':BEGIN status_use.grid_uv_model[pol_i]=1 & path_add='_uv_model_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
-    'grid_uv_redundantCorr':BEGIN status_use.grid_uv_redundantCorr[pol_i]=1 & path_add='_uv_grid_uv_redundantCorr_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
+    'grid_uv_redundantcorr':BEGIN status_use.grid_uv_redundantCorr[pol_i]=1 & path_add='_uv_grid_uv_redundantCorr_'+pol_names[pol_i] & subdir='grid_data'& pol_flag=1 & END
     'vis_count':BEGIN status_use.vis_count=1 & path_add='_vis_count' & subdir='grid_data'& END
     ;NOTE: Because of it's size, only the map_fn can be saved in the mapfn .sav file. It has to be restored using RESTORE ,
     ; and including other parameters can cause unwanted behavior when they are restored
