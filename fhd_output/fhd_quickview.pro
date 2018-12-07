@@ -91,6 +91,15 @@ IF N_Elements(model_uv_arr) EQ 0 THEN BEGIN
         model_uv_arr=getvar_savefile(fhd_sav_filepath+'.sav','model_uv_holo')
     ENDIF ELSE model_flag=0
 ENDIF
+IF N_Elements(redundantCorr_uv_arr) EQ 0 THEN BEGIN
+    IF Min(status_str.grid_uv_redundantCorr[0:n_pol-1]) GT 0 THEN BEGIN
+        redundantCorr_uv_arr=Ptrarr(n_pol,/allocate)
+        FOR pol_i=0,n_pol-1 DO BEGIN
+            fhd_save_io,status_str,grid_uv_redundantCorr,var='grid_uv_redundantCorr',/restore,file_path_fhd=file_path_fhd,obs=obs,pol_i=pol_i,_Extra=extra
+            *redundantCorr_uv_arr[pol_i]=grid_uv_redundantCorr
+        ENDFOR
+    ENDIF
+ENDIF
 
 IF residual_flag THEN model_flag=0
 
@@ -263,6 +272,7 @@ instr_dirty_arr=Ptrarr(n_pol)
 instr_sources=Ptrarr(n_pol)
 instr_rings=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,/allocate) 
+instr_redundantCorr_arr = Ptrarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN
     complex_flag = pol_i GT 1 ? 1 : 0
     instr_dirty_arr[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
@@ -483,8 +493,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
                 title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_stokes,_Extra=extra
         ENDIF
         IF redundantCorr_flag THEN BEGIN
+            redundantCorr_low_use=Min(instr_redundantCorr[beam_i])>(-5.*Stddev(instr_redundantCorr[beam_i]))
+            redundantCorr_high_use=Max(instr_redundantCorr[beam_i])<(10.*Stddev(instr_redundantCorr[beam_i]))
+    
             Imagefast,instr_redundantCorr[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_RedundantCorrection_'+pol_names[pol_i],$
-                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=redundantCorr_low_use,high=redundantCorr_high_use,$
                 title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
         ENDIF
         Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i],$
