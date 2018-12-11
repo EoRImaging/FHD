@@ -2,7 +2,7 @@ FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=element
     silent=silent,conserve_memory=conserve_memory,inds_use=inds_use,double_precision=double_precision, $
     gaussian_source_models = gaussian_source_models, gaussian_x = gaussian_x, gaussian_y = gaussian_y, $
     gaussian_rot = gaussian_rot
-
+    
 fft_norm=1.
 icomp = Complex(0,1)
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
@@ -87,14 +87,16 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
             sin_term=Sin(Temporary(phase))
             IF keyword_set(gaussian_source_models) THEN BEGIN
               if n_elements(gaussian_rot) gt 0 then begin
-                source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.*Cos(gaussian_rot[inds])^2.+gauss_y_use[inds]^2.*Sin(gaussian_rot[inds])^2.) $
+                source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.*Cos(gaussian_rot[inds])^2.+gauss_y_use[inds]^2.*Sin(gaussian_rot[inds])^2.) $
                   + matrix_multiply(yvals^2., gauss_x_use[inds]^2.*Sin(gaussian_rot[inds])^2.+gauss_y_use[inds]^2.*Cos(gaussian_rot[inds])^2.)) $
                   + matrix_multiply(xvals*yvals, (gauss_y_use[inds]^2.-gauss_x_use[inds]^2.)*Cos(gaussian_rot[inds])*Sin(gaussian_rot[inds])))
               endif else begin
-                source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.)+matrix_multiply(yvals^2., gauss_y_use[inds]^2.)))
+                source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.)+matrix_multiply(yvals^2., gauss_y_use[inds]^2.)))
               endelse
-              cos_term *= source_envelope
-              sin_term *= source_envelope
+              envelope_norm_factor = n_elements(xvals)/total(source_envelope, 1, /nan)
+              source_envelope_normalized = matrix_multiply(source_envelope, diag_matrix(envelope_norm_factor))
+              cos_term *= source_envelope_normalized
+              sin_term *= source_envelope_normalized
             ENDIF
             FOR fbin_i=0L,n_fbin-1 DO BEGIN
                 flux_vals=(*flux_use[fbin_use[fbin_i]])[inds]
@@ -112,14 +114,16 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
       sin_term=Sin(Temporary(phase))
       IF keyword_set(gaussian_source_models) THEN BEGIN
         if n_elements(gaussian_rot) gt 0 then begin
-          source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gauss_x_use^2.*Cos(gaussian_rot)^2.+gauss_y_use^2.*Sin(gaussian_rot)^2.) $
+          source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use^2.*Cos(gaussian_rot)^2.+gauss_y_use^2.*Sin(gaussian_rot)^2.) $
             + matrix_multiply(yvals^2., gauss_x_use^2.*Sin(gaussian_rot)^2.+gauss_y_use^2.*Cos(gaussian_rot)^2.)) $
             + matrix_multiply(xvals*yvals, (gauss_y_use^2.-gauss_x_use^2.)*Cos(gaussian_rot)*Sin(gaussian_rot)))
         endif else begin
-          source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gauss_x_use^2.)+matrix_multiply(yvals^2., gauss_y_use^2.)))
+          source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use^2.)+matrix_multiply(yvals^2., gauss_y_use^2.)))
         endelse
-        cos_term *= source_envelope
-        sin_term *= source_envelope
+        envelope_norm_factor = n_elements(xvals)/total(source_envelope, 1, /nan)
+        source_envelope_normalized = matrix_multiply(source_envelope, diag_matrix(envelope_norm_factor))
+        cos_term *= source_envelope_normalized
+        sin_term *= source_envelope_normalized
       ENDIF
       FOR fbin_i=0L,n_fbin-1 DO BEGIN
         source_uv_real_vals=matrix_multiply(cos_term,*flux_use[fbin_use[fbin_i]])
@@ -151,14 +155,16 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
             sin_term=Sin(Temporary(phase))
             IF keyword_set(gaussian_source_models) THEN BEGIN
               if n_elements(gaussian_rot) gt 0 then begin
-                source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.*Cos(gaussian_rot[inds])^2.+gauss_y_use[inds]^2.*Sin(gaussian_rot[inds])^2.) $
+                source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.*Cos(gaussian_rot[inds])^2.+gauss_y_use[inds]^2.*Sin(gaussian_rot[inds])^2.) $
                   + matrix_multiply(yvals^2., gauss_x_use[inds]^2.*Sin(gaussian_rot[inds])^2.+gauss_y_use[inds]^2.*Cos(gaussian_rot[inds])^2.)) $
                   + matrix_multiply(xvals*yvals, (gauss_y_use[inds]^2.-gauss_x_use[inds]^2.)*Cos(gaussian_rot[inds])*Sin(gaussian_rot[inds])))
               endif else begin
-                source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.)+matrix_multiply(yvals^2., gauss_y_use[inds]^2.)))
+                source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.)+matrix_multiply(yvals^2., gauss_y_use[inds]^2.)))
               endelse
-              cos_term *= source_envelope
-              sin_term *= source_envelope
+              envelope_norm_factor = n_elements(xvals)/total(source_envelope, 1, /nan)
+              source_envelope_normalized = matrix_multiply(source_envelope, diag_matrix(envelope_norm_factor))
+              cos_term *= source_envelope_normalized
+              sin_term *= source_envelope_normalized
             ENDIF
             source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux_use[inds])
             source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux_use[inds])
@@ -170,14 +176,16 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
         sin_term=Sin(Temporary(phase))
         IF keyword_set(gaussian_source_models) THEN BEGIN
           if n_elements(gaussian_rot) gt 0 then begin
-            source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gauss_x_use^2.*Cos(gaussian_rot)^2.+gauss_y_use^2.*Sin(gaussian_rot)^2.) $
+            source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use^2.*Cos(gaussian_rot)^2.+gauss_y_use^2.*Sin(gaussian_rot)^2.) $
               + matrix_multiply(yvals^2., gauss_x_use^2.*Sin(gaussian_rot)^2.+gauss_y_use^2.*Cos(gaussian_rot)^2.)) $
               + matrix_multiply(xvals*yvals, (gauss_y_use^2.-gauss_x_use^2.)*Cos(gaussian_rot)*Sin(gaussian_rot)))
           endif else begin
-            source_envelope = exp(-2*Pi^2.*(matrix_multiply(xvals^2., gauss_x_use^2.)+matrix_multiply(yvals^2., gauss_y_use^2.)))
+            source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use^2.)+matrix_multiply(yvals^2., gauss_y_use^2.)))
           endelse
-          cos_term *= source_envelope
-          sin_term *= source_envelope
+          envelope_norm_factor = n_elements(xvals)/total(source_envelope, 1, /nan)
+          source_envelope_normalized = matrix_multiply(source_envelope, diag_matrix(envelope_norm_factor))
+          cos_term *= source_envelope_normalized
+          sin_term *= source_envelope_normalized
         ENDIF
         source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux_use[inds])
         source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux_use)
