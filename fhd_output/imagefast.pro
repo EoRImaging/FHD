@@ -1,4 +1,4 @@
-PRO imagefast,Image,astr=astr,file_path=file_path,no_ps=no_ps,$
+PRO imagefast,Image,astr=astr,file_path=file_path, eps=eps, png=png,$
     no_colorbar=no_colorbar,vertical_colorbar=vertical_colorbar,colorbar_title=colorbar_title,color_table=color_table,$
     right_colorbar=right_colorbar,left_colorbar=left_colorbar,$
     layout=layout,margin=margin,background=background,over_plot=over_plot,charsize=charsize,$
@@ -41,8 +41,8 @@ PRO imagefast,Image,astr=astr,file_path=file_path,no_ps=no_ps,$
 ;1: Stereographic  2: Orthographic 3: Lambert Conic 4: Lambert Azimuthal 5: Gnomonic 6: Azimuthal Equidistant 
 ;7: Satellite 8: Cylindrical 9: Mercator 10: Mollweide 11: Sinusoidal 12: Aitoff 
 
-;
-IF cgHasImageMagick() EQ 0 THEN BEGIN
+IF N_Elements(png) EQ 0 AND N_Elements(eps) EQ 0 THEN png=1
+IF Keyword_Set(png) AND cgHasImageMagick() EQ 0 THEN BEGIN
     print,"Imagemagick not found! Install from http://www.imagemagick.org/ to use this program."
     RETURN
 ENDIF
@@ -51,24 +51,12 @@ IF N_Elements(file_path) EQ 0 THEN BEGIN
     file_path_use=expand_path('ImageFast')
     print,"Path not specified. File put here: ", file_path_use 
 ENDIF ELSE file_path_use=file_path
-;IF N_Elements(project_name) EQ 0 THEN project_name='mwa'
-;RootDirectory=rootdir(project_name)
-;IF Keyword_Set(data_directory) THEN filename_full=filepath(filename_use,Root_dir=RootDirectory,subdir=data_directory) $
-;    ELSE filename_full=filepath(filename_use,Root_dir=RootDirectory)
 
 IF N_Elements(significant_figures) EQ 0 THEN sigfig=2 ELSE sigfig=significant_figures
 IF N_Elements(background) EQ 0 THEN background='white'
 IF Keyword_Set(over_plot) THEN noerase=1 ELSE noerase=0
 IF Keyword_Set(hist_equal) THEN scale=1 ELSE scale=0
 
-;OBSOLETE KEYWORDS! Supply astr structure instead
-;IF N_Elements(map_reverse) EQ 0 THEN map_reverse=1
-;IF N_Elements(projection) EQ 0 THEN projection='orthographic' ;2
-;IF N_Elements(rotation) EQ 0 THEN rotation=0
-;IF N_Elements(lat_center) EQ 0 THEN lat_center=0
-;IF N_Elements(lon_center) EQ 0 THEN lon_center=0
-;IF N_Elements(offset_lat) EQ 0 THEN offset_lat=0
-;IF N_Elements(offset_lon) EQ 0 THEN offset_lon=0
 IF N_Elements(grid_spacing) EQ 0 THEN grid_spacing=10. ;degrees
 IF N_Elements(label_spacing) EQ 0 THEN label_spacing=1
 
@@ -127,14 +115,6 @@ CASE 1 OF
         cb_label_vals2*=256./Max(cb_label_vals2)
         cb_label_ii=indgen(cb_divisions+1)*256/cb_divisions
         cb_label_vals=Interpol(cb_label_vals,cb_label_vals2,cb_label_ii)
-;;        cb_label_vals
-        
-;        cb_label_vals/=image_rescale
-;        cb_label_vals-=image_val_shift
-;        cb_lab_high_i=where(cb_label_vals GE 0,n_high)
-;        cb_lab_low_i=where(cb_label_vals LT 0,n_low)
-;        IF n_high GT 0 THEN cb_label_vals[cb_lab_high_i]=color_center-1+10.^cb_label_vals[cb_lab_high_i]
-;        IF n_low GT 0 THEN cb_label_vals[cb_lab_low_i]=1-color_center-10.^(Abs(cb_label_vals[cb_lab_low_i]))
     END
     
     Keyword_Set(sqrt_color): BEGIN
@@ -194,9 +174,6 @@ xsize=Float(dimension)
 ysize=Float(elements)
 colorbar_width=20; pixel width of the colorbar, excluding labels
 
-
-;cb_digits=Max(Abs(Alog10(abs(cb_label_vals))))
-;IF low LT 0 THEN cb_digits+=1
 cb_labels=Strarr(cb_divisions+1)
 cb_digit_arr=intarr(cb_divisions+1)
 cb_decimal_arr=intarr(cb_divisions+1)
@@ -230,9 +207,6 @@ WHILE nstar GT 0 DO BEGIN
     nstar=Total(strmatch(cb_labels,'*\*'))
     IF iter++ GT 8 THEN BREAK
 ENDWHILE
-;cb_format_test='(I0)'
-;cb_labels_test=String(format='(I0)',cb_label_vals)
-;cb_digits=Max(Strlen(cb_labels_test))
 
 colorbar_label_width=charsize*cb_digits*6.
 IF Keyword_Set(colorbar_title) THEN colorbar_label_width+=charsize*16.
@@ -260,47 +234,43 @@ pixres=72.
 xsize2=xsize/pixres
 ysize2=ysize/pixres
 
-cgPS_Open,filename=file_path_use+'.ps',/quiet,/nomatch,charsize=charsize,xsize=xsize2,ysize=ysize2
-;position_default=[x0, y0, x1, y1]
+cgPS_Open,filename=file_path_use+'.eps',/quiet,/nomatch,charsize=charsize,xsize=xsize2,ysize=ysize2,/encapsulated
+
 image_position=[xstart/xsize,ystart/ysize,(xstart+dimension)/xsize,(ystart+elements)/ysize]
 cgImage,image_use,/keep_aspect,background=background,layout=layout,margin=margin,noerase=noerase,$
     palette=palette,oposition=oposition,position=image_position,$
     scale=scale,title=title,/axes,axkeywords={XSTYLE:4,YSTYLE:4}
 
 IF Keyword_Set(show_grid) THEN BEGIN
-    IF Keyword_Set(astr) THEN BEGIN
-        astr_use=astr
-        xvals=meshgrid(dimension,elements,1)
-        yvals=meshgrid(dimension,elements,2)
-        CASE reverse_image OF
-            0:cd_mod=[1.,1.]
-            1:BEGIN
-                cd_mod=[-1.,1.]
-                astr_use.crpix=[dimension+1-(astr_use.crpix)[0],(astr_use.crpix)[1]]
-            END
-            2:BEGIN
-                cd_mod=[1.,-1.]
-                astr_use.crpix=[(astr_use.crpix)[0],elements+1-(astr_use.crpix)[1]]
-            END
-            3:BEGIN
-                cd_mod=[-1.,-1.]
-                astr_use.crpix=[dimension+1-(astr_use.crpix)[0],elements+1-(astr_use.crpix)[1]]
-            END
-        ENDCASE
-        astr_use.cdelt=astr_use.cdelt*cd_mod
-        ;don't use apply_astrometry here, since we're only calculating grid lines and have modified the astr structure
-        xy2ad,xvals,yvals,astr_use,ra_arr,dec_arr
-        ra_levels=indgen(360./grid_spacing)*grid_spacing
-        dec_levels=indgen(1+180./grid_spacing)*grid_spacing-90
-        ra_cut=where((ra_arr GT 360.-0.75*grid_spacing) AND (ra_arr LT 360.-0.25*grid_spacing),n_ra_cut)
-        ra_mod=where(ra_arr GE 360.-0.25*grid_spacing,n_ra_mod)
-        IF n_ra_mod GT 0 THEN ra_arr[ra_mod]-=360.
-        IF n_ra_cut GT 0 THEN ra_arr[ra_cut]=!Values.F_NAN
-        cgcontour,ra_arr,levels=ra_levels,/overplot,/noerase,position=oposition,/onimage
-        cgcontour,dec_arr,levels=dec_levels,/overplot,/noerase,position=oposition,/onimage
-    ENDIF ELSE BEGIN
-        ;Obsolete
-    ENDELSE
+    astr_use=astr
+    xvals=meshgrid(dimension,elements,1)
+    yvals=meshgrid(dimension,elements,2)
+    CASE reverse_image OF
+        0:cd_mod=[1.,1.]
+        1:BEGIN
+            cd_mod=[-1.,1.]
+            astr_use.crpix=[dimension+1-(astr_use.crpix)[0],(astr_use.crpix)[1]]
+        END
+        2:BEGIN
+            cd_mod=[1.,-1.]
+            astr_use.crpix=[(astr_use.crpix)[0],elements+1-(astr_use.crpix)[1]]
+        END
+        3:BEGIN
+            cd_mod=[-1.,-1.]
+            astr_use.crpix=[dimension+1-(astr_use.crpix)[0],elements+1-(astr_use.crpix)[1]]
+        END
+    ENDCASE
+    astr_use.cdelt=astr_use.cdelt*cd_mod
+    ;don't use apply_astrometry here, since we're only calculating grid lines and have modified the astr structure
+    xy2ad,xvals,yvals,astr_use,ra_arr,dec_arr
+    ra_levels=indgen(360./grid_spacing)*grid_spacing
+    dec_levels=indgen(1+180./grid_spacing)*grid_spacing-90
+    ra_cut=where((ra_arr GT 360.-0.75*grid_spacing) AND (ra_arr LT 360.-0.25*grid_spacing),n_ra_cut)
+    ra_mod=where(ra_arr GE 360.-0.25*grid_spacing,n_ra_mod)
+    IF n_ra_mod GT 0 THEN ra_arr[ra_mod]-=360.
+    IF n_ra_cut GT 0 THEN ra_arr[ra_cut]=!Values.F_NAN
+    cgcontour,ra_arr,levels=ra_levels,/overplot,/noerase,position=oposition,/onimage
+    cgcontour,dec_arr,levels=dec_levels,/overplot,/noerase,position=oposition,/onimage
 ENDIF  
 
 IF Keyword_Set(contour_image) THEN BEGIN
@@ -324,14 +294,7 @@ IF not Keyword_Set(no_colorbar) THEN BEGIN
         position=cb_position,title=colorbar_title,divisions=cb_divisions,ticknames=cb_labels;,/fit ;format default is '(I0)'
 ENDIF
 
-;;IF !version.os_family EQ 'unix' THEN BEGIN
-;    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=300,Resize=25.,/png,/DELETE_PS,/allow_transparent,/nomessage $
-;        ELSE cgPS_Close,Density=300,Resize=25.,/png,/allow_transparent,/nomessage
-;;ENDIF ELSE BEGIN
-;;    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=300,Resize=25.,/png,/DELETE_PS $
-;;        ELSE cgPS_Close,Density=300,Resize=25.,/png,/NoWait
-;;ENDELSE
-    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=75,Resize=100.,/png,/DELETE_PS,/allow_transparent,/nomessage $
-        ELSE cgPS_Close,Density=75,Resize=100.,/png,/allow_transparent,/nomessage
+delete_ps = ~Keyword_Set(eps)
+cgPS_Close,Density=75,Resize=100.,png=png,delete_ps=delete_ps,/allow_transparent,/nomessage
 
 END
