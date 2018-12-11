@@ -77,9 +77,9 @@ IF keyword_set(gaussian_source_models) then begin
         [source_array.ra+0.5*gaussian_y*Sin(gaussian_rot)], [source_array.ra-0.5*gaussian_y*Sin(gaussian_rot)]]
       gaussian_dec_vals = [[source_array.dec+0.5*gaussian_x*Sin(gaussian_rot)], [source_array.dec-0.5*gaussian_x*Sin(gaussian_rot)], $
         [source_array.dec+0.5*gaussian_y*Cos(gaussian_rot)], [source_array.dec-0.5*gaussian_y*Cos(gaussian_rot)]]
-      apply_astrometry, obs, x_arr=x_arr, y_arr=y_arr, ra_arr=gaussian_ra_vals, dec_arr=gaussian_dec_vals, /ad2xy
-      gaussian_x = sqrt((x_arr[*,0]-x_arr[*,1])^2.+(y_arr[*,0]-y_arr[*,1])^2.)
-      gaussian_y = sqrt((x_arr[*,2]-x_arr[*,3])^2.+(y_arr[*,2]-y_arr[*,3])^2.)
+      apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=gaussian_ra_vals, dec_arr=gaussian_dec_vals, /ad2xy
+      gaussian_x = sqrt((gaussian_x_vals[*,0]-gaussian_x_vals[*,1])^2.+(gaussian_y_vals[*,0]-gaussian_y_vals[*,1])^2.)
+      gaussian_y = sqrt((gaussian_x_vals[*,2]-gaussian_x_vals[*,3])^2.+(gaussian_y_vals[*,2]-gaussian_y_vals[*,3])^2.)
     endelse
   endif else begin
     print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
