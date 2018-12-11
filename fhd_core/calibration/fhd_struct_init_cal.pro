@@ -65,7 +65,7 @@ cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, 
     gain_residual:gain_residual, auto_scale:auto_scale, auto_params:auto_params,$
     min_cal_baseline:min_cal_baseline, max_cal_baseline:max_cal_baseline, n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average, min_solns:min_cal_solutions, ref_antenna:ref_antenna,$
-    ref_antenna_name:ref_antenna_name, conv_thresh:cal_convergence_threshold, convergence:convergence,$
+    ref_antenna_name:ref_antenna_name, conv_thresh:cal_convergence_threshold, convergence:convergence,n_converged:Lonarr(n_pol)-1,$
     polyfit:calibration_polyfit, amp_degree:cal_amp_degree_fit, phase_degree:cal_phase_degree_fit,$
     amp_params:amp_params, phase_params:phase_params,$
     mean_gain:Fltarr(n_pol), mean_gain_residual:Fltarr(n_pol), mean_gain_restrict:Fltarr(n_pol),$

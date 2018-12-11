@@ -183,6 +183,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
     IF n_nan GT 0 THEN vis_model[nan_i]=(vis_avg[nan_i]=0)
     
     conv_test=fltarr(n_freq_use,max_cal_iter)
+    n_converged = 0L
 ;    if not keyword_set(calib_freq_func) then begin
       FOR fii=0L,n_freq_use-1 DO BEGIN
         fi=freq_use[fii]
@@ -245,8 +246,14 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
               gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
             endif
             conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
-            IF i GT phase_fit_iter THEN IF conv_test[fii,i] LE conv_thresh THEN BREAK
+            IF i GT phase_fit_iter THEN IF conv_test[fii,i] LE conv_thresh THEN BEGIN
+                n_converged += 1
+                BREAK
+            ENDIF
         ENDFOR
+        IF i EQ max_cal_iter THEN BEGIN
+            print,String(format='("Calibration reached max iterations before converging for pol_i: ", A, " freq_i: ",A)', Strn(pol_i), Strn(fi)) 
+        ENDIF
         convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
         Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr
@@ -541,6 +548,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
     ENDIF
     *cal_return.gain[pol_i]=gain_arr
     cal_return.convergence[pol_i]=Ptr_new(convergence)
+    cal_return.n_converged[pol_i] = n_converged
   ENDFOR
   
   vis_count_i=where(weight,n_vis_cal)
