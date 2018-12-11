@@ -234,7 +234,8 @@ pixres=72.
 xsize2=xsize/pixres
 ysize2=ysize/pixres
 
-cgPS_Open,filename=file_path_use+'.ps',/quiet,/nomatch,charsize=charsize,xsize=xsize2,ysize=ysize2
+cgPS_Open,filename=file_path_use+'.eps',/quiet,/nomatch,charsize=charsize,xsize=xsize2,ysize=ysize2,/encapsulated
+
 image_position=[xstart/xsize,ystart/ysize,(xstart+dimension)/xsize,(ystart+elements)/ysize]
 cgImage,image_use,/keep_aspect,background=background,layout=layout,margin=margin,noerase=noerase,$
     palette=palette,oposition=oposition,position=image_position,$
