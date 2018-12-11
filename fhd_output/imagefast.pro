@@ -1,4 +1,4 @@
-PRO imagefast,Image,astr=astr,file_path=file_path,no_ps=no_ps,$
+PRO imagefast,Image,astr=astr,file_path=file_path, eps=eps, png=png,$
     no_colorbar=no_colorbar,vertical_colorbar=vertical_colorbar,colorbar_title=colorbar_title,color_table=color_table,$
     right_colorbar=right_colorbar,left_colorbar=left_colorbar,$
     layout=layout,margin=margin,background=background,over_plot=over_plot,charsize=charsize,$
@@ -41,8 +41,8 @@ PRO imagefast,Image,astr=astr,file_path=file_path,no_ps=no_ps,$
 ;1: Stereographic  2: Orthographic 3: Lambert Conic 4: Lambert Azimuthal 5: Gnomonic 6: Azimuthal Equidistant 
 ;7: Satellite 8: Cylindrical 9: Mercator 10: Mollweide 11: Sinusoidal 12: Aitoff 
 
-;
-IF cgHasImageMagick() EQ 0 THEN BEGIN
+IF N_Elements(png) EQ 0 AND N_Elements(eps) EQ 0 THEN png=1
+IF Keyword_Set(png) AND cgHasImageMagick() EQ 0 THEN BEGIN
     print,"Imagemagick not found! Install from http://www.imagemagick.org/ to use this program."
     RETURN
 ENDIF
@@ -294,8 +294,7 @@ IF not Keyword_Set(no_colorbar) THEN BEGIN
         position=cb_position,title=colorbar_title,divisions=cb_divisions,ticknames=cb_labels;,/fit ;format default is '(I0)'
 ENDIF
 
-
-    IF Keyword_Set(no_ps) THEN cgPS_Close,Density=75,Resize=100.,/png,/DELETE_PS,/allow_transparent,/nomessage $
-        ELSE cgPS_Close,Density=75,Resize=100.,/png,/allow_transparent,/nomessage
+delete_ps = ~Keyword_Set(eps)
+cgPS_Close,Density=75,Resize=100.,png=png,delete_ps=delete_ps,/allow_transparent,/nomessage
 
 END
