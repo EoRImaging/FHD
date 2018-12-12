@@ -2,7 +2,7 @@ FUNCTION source_dft,x_loc,y_loc,xvals,yvals,dimension=dimension,elements=element
     silent=silent,conserve_memory=conserve_memory,inds_use=inds_use,double_precision=double_precision, $
     gaussian_source_models = gaussian_source_models, gaussian_x = gaussian_x, gaussian_y = gaussian_y, $
     gaussian_rot = gaussian_rot
-    
+
 fft_norm=1.
 icomp = Complex(0,1)
 IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
@@ -93,10 +93,8 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
               endif else begin
                 source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.)+matrix_multiply(yvals^2., gauss_y_use[inds]^2.)))
               endelse
-              envelope_norm_factor = n_elements(xvals)/total(source_envelope, 1, /nan)
-              source_envelope_normalized = matrix_multiply(source_envelope, diag_matrix(envelope_norm_factor))
-              cos_term *= source_envelope_normalized
-              sin_term *= source_envelope_normalized
+              cos_term *= source_envelope
+              sin_term *= source_envelope
             ENDIF
             FOR fbin_i=0L,n_fbin-1 DO BEGIN
                 flux_vals=(*flux_use[fbin_use[fbin_i]])[inds]
@@ -120,10 +118,8 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
         endif else begin
           source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use^2.)+matrix_multiply(yvals^2., gauss_y_use^2.)))
         endelse
-        envelope_norm_factor = n_elements(xvals)/total(source_envelope, 1, /nan)
-        source_envelope_normalized = matrix_multiply(source_envelope, diag_matrix(envelope_norm_factor))
-        cos_term *= source_envelope_normalized
-        sin_term *= source_envelope_normalized
+        cos_term *= source_envelope
+        sin_term *= source_envelope
       ENDIF
       FOR fbin_i=0L,n_fbin-1 DO BEGIN
         source_uv_real_vals=matrix_multiply(cos_term,*flux_use[fbin_use[fbin_i]])
@@ -161,10 +157,8 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
               endif else begin
                 source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use[inds]^2.)+matrix_multiply(yvals^2., gauss_y_use[inds]^2.)))
               endelse
-              envelope_norm_factor = n_elements(xvals)/total(source_envelope, 1, /nan)
-              source_envelope_normalized = matrix_multiply(source_envelope, diag_matrix(envelope_norm_factor))
-              cos_term *= source_envelope_normalized
-              sin_term *= source_envelope_normalized
+              cos_term *= source_envelope
+              sin_term *= source_envelope
             ENDIF
             source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux_use[inds])
             source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux_use[inds])
@@ -182,10 +176,8 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
           endif else begin
             source_envelope = exp(-.5*(matrix_multiply(xvals^2., gauss_x_use^2.)+matrix_multiply(yvals^2., gauss_y_use^2.)))
           endelse
-          envelope_norm_factor = n_elements(xvals)/total(source_envelope, 1, /nan)
-          source_envelope_normalized = matrix_multiply(source_envelope, diag_matrix(envelope_norm_factor))
-          cos_term *= source_envelope_normalized
-          sin_term *= source_envelope_normalized
+          cos_term *= source_envelope
+          sin_term *= source_envelope
         ENDIF
         source_uv_real_vals=matrix_multiply(Temporary(cos_term),flux_use[inds])
         source_uv_im_vals=matrix_multiply(Temporary(sin_term),flux_use)
