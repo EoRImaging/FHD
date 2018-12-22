@@ -52,7 +52,7 @@ shopt -s expand_aliases; source $IDL/envi53/bin/envi_setup.bash
 obsids=("$@")
 obs_id=${obsids[$SLURM_ARRAY_TASK_ID]}
 
-idl -IDL_DEVICE ps -quiet -IDL_CPU_TPOOL_NTHREADS $ncores -e eor_firstpass_versions -args $obs_id $outdir $version 
+idl -IDL_DEVICE ps -quiet -IDL_CPU_TPOOL_NTHREADS $ncores -e wyl_eor_firstpass_versions -args $obs_id $outdir $version 
 
 if [ $? -eq 0 ]
 then
