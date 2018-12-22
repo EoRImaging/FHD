@@ -67,7 +67,7 @@ bandpass_calibrate=1
 calibration_polyfit=2
 no_restrict_cal_sources=1
 cal_reflection_mode_theory=150
-auto_divided=0 ;set if the scaled auto has been divided out.
+decompose_auto=0
 restrict_hpx_inds=1
 
 kbinsize=0.5
@@ -238,7 +238,7 @@ case version of
    end
 
    'cable_aut_cal': begin
-    auto_divided=1
+    decompose_auto=1
     debug_beam_clip_floor=1
     model_delay_filter=1
     calibration_catalog_file_path=filepath('master_sgal_cat.sav',root=rootdir('FHD'),subdir='catalog_data')
@@ -247,7 +247,8 @@ case version of
     ;restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
    end
 
-   'cable_afo_cal': begin
+   'test_autocal': begin
+    decompose_auto=1
     calibrate_visibilities=0
     debug_beam_clip_floor=1
     model_delay_filter=1
@@ -257,7 +258,7 @@ case version of
    end
 
    'Calibration_PhaseII': begin
-    auto_divided=1
+    decompose_auto=1
     diffuse_calibrate=0
     debug_beam_clip_floor=1
     model_delay_filter=1
