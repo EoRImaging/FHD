@@ -27,6 +27,8 @@
 # nohup ./pipe_slurm.sh -f /path/to/obsfile -v yourinitials_jackknife_test > /path/to/your/output/log/file.txt &
 #
 ####################################################
+module load idl
+shopt -s expand_aliases; source $IDL/envi53/bin/envi_setup.bash
 
 #Clear input parameters
 unset obs_file_name
@@ -67,7 +69,7 @@ done
 shift $(($OPTIND - 1))
 
 #Specify the FHD file path that is used in IDL (generally specified in idl_startup)
-FHDpath="/users/wl42/IDL/FHD/" ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
+FHDpath=$(idl -e 'print,rootdir("fhd")') ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
 
 #Throw error if no obs_id file.
 if [ -z ${obs_file_name} ]; then
@@ -108,11 +110,11 @@ if [ -z ${version} ]; then
    exit 1
 fi
 
-if grep -q \'${version}\' ${FHDpath}Observations/eor_firstpass_versions.pro
+if grep -q \'${version}\' ${FHDpath}Observations/wyl_eor_firstpass_versions.pro
 then
     echo Using version $version
 else
-    echo Version \'${version}\' was not found in ${FHDpath}Observations/eor_firstpass_versions.pro
+    echo Version \'${version}\' was not found in ${FHDpath}Observations/wyl_eor_firstpass_versions.pro
     exit 1
 fi
 
@@ -371,7 +373,7 @@ fi
 
 
 ### NOTE this only works if idlstartup doesn't have any print statements (e.g. healpix check)
-PSpath="/users/wl42/IDL/eppsilon/"
+PSpath=$(idl -e 'print,rootdir("eppsilon")')
 
 #${PSpath}ps_wrappers/ps_slurm.sh -f $obs_file_name -d $outdir/fhd_$version -w ${wallclock_time} -m ${mem}
 ${PSpath}ps_wrappers/ps_redhat.sh -f $obs_file_name -d $outdir/fhd_$version -w 80:00:00 -m 120G
