@@ -21,6 +21,8 @@ healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_fi
 catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
 calibration_catalog_file_path=filepath('mwa_calibration_source_list_gleam_kgs_fhd_fornax.sav',root=rootdir('FHD'),subdir='catalog_data')
 
+calibration_auto_initialize=1
+
 combine_obs=0
 dimension=2048.
 max_sources=100000.
@@ -68,7 +70,7 @@ undefine_fhd,default_diffuse
 n_pol=2
 restore_vis_savefile=0
 firstpass=1
-max_cal_iter=100L
+max_cal_iter=1000L
 beam_model_version=2
 dft_threshold=1
 init_healpix

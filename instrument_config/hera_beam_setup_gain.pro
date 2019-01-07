@@ -69,8 +69,8 @@ CASE beam_model_version OF
             FOR freq_i=0,nfreq_bin-1 DO BEGIN
 
                 ;Build up gridded beam for both real and complex values (healpix_interpolate is not complex)
-                hera_beam_grid_arr = healpix_interpolate(real_part(hera_beam_interp[beam_pix[*,beam_i],freq_i]),obs,nside=nside,Jdate_use=Jdate_use,coord_sys='equatorial') $
-                  + Complex(0,1) * healpix_interpolate(imaginary(hera_beam_interp[beam_pix[*,beam_i],freq_i]),obs,nside=nside,Jdate_use=Jdate_use,coord_sys='equatorial') 
+                hera_beam_grid_arr = healpix_interpolate(real_part(hera_beam_interp[beam_pix[*,beam_i],freq_i]),obs,nside=nside,Jdate_use=Jdate_use,coord_sys='equatorial',/ignore_refraction) $
+                  + Complex(0,1) * healpix_interpolate(imaginary(hera_beam_interp[beam_pix[*,beam_i],freq_i]),obs,nside=nside,Jdate_use=Jdate_use,coord_sys='equatorial',/ignore_refraction) 
                 ;Create the Jones matrix
                 ;Note: Elements of Jones matrix may not be in the proper basis to be used individually due to the 90deg rotation, though this will not affect the power beam
                 Jones_matrix[matrix_inds[0,beam_i],matrix_inds[1,beam_i],freq_i]=Ptr_new(Interpolate(hera_beam_grid_arr,xvals_interp,yvals_interp)*horizon_mask)
@@ -101,7 +101,7 @@ CASE beam_model_version OF
             FOR hpx_i=0L,n_hpx-1 DO hera_beam_interp[hpx_i,*]=Interpol((*hera_beam_in[pol_i])[*,hpx_i],hera_frequency_array,freq_center)
             hera_beam_interp_arr=Ptrarr(nfreq_bin)
             FOR freq_i=0,nfreq_bin-1 DO hera_beam_interp_arr[freq_i]=Ptr_new(hera_beam_interp[*,freq_i])
-            hera_beam_grid_arr=healpix_interpolate(hera_beam_interp_arr,obs,nside=nside,Jdate_use=Jdate_use,coord_sys='equatorial')
+            hera_beam_grid_arr=healpix_interpolate(hera_beam_interp_arr,obs,nside=nside,Jdate_use=Jdate_use,coord_sys='equatorial',/ignore_refraction)
             FOR freq_i=0,nfreq_bin-1 DO Jones_matrix[pol_i,pol_i,freq_i]=Ptr_new(Interpolate(*hera_beam_grid_arr[freq_i],xvals_interp,yvals_interp)*horizon_mask)
             FOR freq_i=0,nfreq_bin-1 DO Jones_matrix[pol_i,(pol_i+1) mod 2,freq_i]=Ptr_new(Fltarr(psf_image_dim,psf_image_dim))
         ENDFOR
