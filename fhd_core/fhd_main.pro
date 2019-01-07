@@ -11,7 +11,7 @@ PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cl
     generate_vis_savefile=generate_vis_savefile, model_visibilities=model_visibilities, model_catalog_file_path=model_catalog_file_path,$
     transfer_weights=transfer_weights, flag_calibration=flag_calibration, production=production, deproject_w_term=deproject_w_term, $
     in_situ_sim_input=in_situ_sim_input, eor_savefile=eor_savefile, enhance_eor=enhance_eor, sim_noise=sim_noise,cal_stop=cal_stop, $
-    remove_sim_flags=remove_sim_flags,_Extra=extra
+    remove_sim_flags=remove_sim_flags,model_uv_transfer=model_uv_transfer,_Extra=extra
 
 compile_opt idl2,strictarrsubs    
 except=!except
@@ -99,13 +99,15 @@ IF data_flag LE 0 THEN BEGIN
     
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
       IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
-      IF ~Keyword_Set(calibration_source_list) THEN $
-        calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)
+      IF ~Keyword_set(transfer_calibration) AND ~Keyword_set(model_uv_transfer) THEN BEGIN
+        IF ~Keyword_Set(calibration_source_list) THEN $
+          calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)
+      ENDIF
       skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,diffuse_model=diffuse_calibrate,_Extra=extra)
       cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
         catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
     ENDIF
-    
+
     ;print informational messages
     obs_status,obs
     fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,layout=layout,antenna=antenna,cmd_args=cmd_args,/overwrite,sub_dir='metadata'  ;write preliminary settings file for debugging, in case later steps crash
@@ -121,7 +123,13 @@ IF data_flag LE 0 THEN BEGIN
       calibrate_visibilities=1
       IF size(transfer_calibration,/type) LT 7 THEN transfer_calibration=file_path_fhd ;this will not modify string or structure types, but will over-write it if set to a numerical type
     ENDIF
-    
+
+    IF Keyword_set(model_uv_transfer) THEN BEGIN
+      if ~file_test(model_uv_transfer) then message, model_uv_transfer + ' not found during model uv transfer.'
+      model_uv_arr = getvar_savefile(model_uv_transfer,'model_uv_arr')
+      IF Keyword_Set(model_visibilities) THEN model_uv_arr2 = model_uv_arr
+    ENDIF
+
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
         print,"Calibrating visibilities"
         vis_arr=vis_calibrate(vis_arr,cal,obs,status_str,psf,params,jones,$
@@ -151,7 +159,7 @@ IF data_flag LE 0 THEN BEGIN
         fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF Keyword_Set(model_visibilities) THEN BEGIN
-        IF Keyword_Set(model_catalog_file_path) THEN BEGIN
+        IF Keyword_Set(model_catalog_file_path) AND ~Keyword_set(model_uv_transfer) THEN BEGIN
             model_source_list=generate_source_cal_list(obs,psf,catalog_path=model_catalog_file_path,/model_visibilities,_Extra=extra) 
             IF Keyword_Set(return_cal_visibilities) OR Keyword_Set(calibration_visibilities_subtract) THEN $
                 model_source_list=source_list_append(obs,model_source_list,skymodel_cal.source_list,/exclude)

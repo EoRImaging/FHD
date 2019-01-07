@@ -73,6 +73,17 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     vis_cal=vis_calibration_apply(vis_ptr,cal)
     print,'Calibration transferred from ' + cal_file_use
     timing=Systime(1)-t0_0
+
+  if keyword_set(model_transfer) then begin
+    ;Option to transfer pre-made and unflagged model visbilities
+    vis_model_arr=PTRARR(obs.n_pol,/allocate)
+    for pol_i=0, obs.n_pol-1 do begin
+      if ~file_test(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav') then $
+        message, model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav not found during model transfer.'
+      vis_model_arr[pol_i] = getvar_savefile(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav','vis_model_ptr')
+    endfor
+  endif
+
     RETURN,vis_cal
   ENDIF
   
@@ -92,8 +103,11 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   t1=Systime(1)-t0_0
 
   ;Option to save unflagged model visibilities as part of a calibration-only loop.
-  if keyword_set(cal_stop) then vis_export,obs,status_str,vis_model_arr,file_path_fhd=file_dirname(file_path_fhd) + '/cal_prerun/' $
-    + file_basename(file_path_fhd) ,/compress,/model
+  if keyword_set(cal_stop) then begin
+    vis_export,obs,status_str,vis_model_arr,file_path_fhd=file_dirname(file_path_fhd) + '/cal_prerun/' $
+      + file_basename(file_path_fhd) ,/compress,/model
+    save, model_uv_arr, filename=file_dirname(file_path_fhd) + '/cal_prerun/' + file_basename(file_path_fhd) + '_model_uv_arr.sav'
+  endif
 
   ;Calculate auto-correlation visibilities, optionally use them for initial calibration estimates
   vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
