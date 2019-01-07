@@ -1,5 +1,5 @@
 FUNCTION healpix_interpolate,healpix_map,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=from_kelvin,$
-    from_jy_per_sr=from_jy_per_sr,hpx_ordering=hpx_ordering,coord_sys=coord_sys,Jdate_use=Jdate_use
+    from_jy_per_sr=from_jy_per_sr,hpx_ordering=hpx_ordering,coord_sys=coord_sys,Jdate_use=Jdate_use,_Extra=extra
 
 IF N_Elements(hpx_ordering) EQ 0 THEN hpx_ordering='ring' ELSE hpx_ordering=StrLowCase(hpx_ordering) ;other ordering is 'nested'
 IF N_Elements(coord_sys) EQ 0 THEN coord_sys='celestial' ELSE coord_sys=StrLowCase(coord_sys)
@@ -33,7 +33,7 @@ vec2ang,pix_coords,pix_dec,pix_ra,/astro
 IF coord_sys EQ 'galactic' THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /degree
 IF coord_sys EQ 'equatorial' THEN Hor2Eq,pix_dec,pix_ra,Jdate_use,pix_ra,pix_dec,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
 
-apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy, _Extra=extra
 
 hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)),n_hpx_use) 
 IF n_hpx_use EQ 0 THEN BEGIN
