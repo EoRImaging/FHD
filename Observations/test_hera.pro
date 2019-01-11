@@ -29,7 +29,7 @@ max_sources=100000.
 pad_uv_image=1.
 IF dimension GE 2048 THEN pad_uv_image=1.
 precess=0 ;set to 1 ONLY for X16 PXX scans (i.e. Drift_X16.pro)
-FoV=!Radeg*2.
+FoV=!Radeg*4.
 no_ps=1 ;don't save postscript copy of images
 gain_factor=0.1
 min_baseline=1.
@@ -71,7 +71,7 @@ n_pol=2
 restore_vis_savefile=0
 firstpass=1
 max_cal_iter=1000L
-beam_model_version=2
+beam_model_version=1
 dft_threshold=1
 init_healpix
 
