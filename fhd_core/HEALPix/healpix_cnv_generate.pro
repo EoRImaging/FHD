@@ -10,7 +10,6 @@ ENDIF
 IF Keyword_Set(restore_last) THEN BEGIN
     IF ~Keyword_Set(silent) THEN print,'Saved Healpix grid map restored'
     fhd_save_io,status_str,hpx_cnv,var='hpx_cnv',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-;    restore,file_path_fhd+'_hpxcnv'+'.sav'
     nside=hpx_cnv.nside
     RETURN,hpx_cnv
 ENDIF ELSE IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
@@ -53,7 +52,6 @@ ENDIF
 IF ~Keyword_Set(nside) THEN BEGIN
     pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(obs.astr.cdelt))
     Nside=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
-;    nside*=2.
 ENDIF
 npix=nside2npix(nside)
 
@@ -103,8 +101,6 @@ ENDIF
 
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
-;image_inds=Long64(Floor(xv_hpx)+dimension*Floor(yv_hpx))
-;corner_inds=Long64([0,1,dimension,dimension+1])
 
 min_bin=Min(Floor(xv_hpx)+dimension*Floor(yv_hpx))>0L
 max_bin=Max(Ceil(xv_hpx)+dimension*Ceil(yv_hpx))<(dimension*elements-1L)

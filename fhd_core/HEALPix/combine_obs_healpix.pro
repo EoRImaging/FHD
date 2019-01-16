@@ -64,7 +64,6 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     IF obs_i EQ 0 THEN obs_arr=[obs] ELSE obs_arr=[obs_arr,obs]
     
     beam_width=beam_width_calculate(obs)
-;    beam_area=2.*!Pi*(beam_width*obs.degpix)^2. 
     beam_area=(beam_width*obs.degpix)^2.
     pix_sky=4.*!Pi*!RaDeg^2./beam_area
     Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
@@ -205,8 +204,6 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             hist1=histogram(hpx_inds1,min=hist_min,max=hist_max,/binsize,reverse_ind=ri1)
             hist=hist0+hist1
             hpx_inds_i=where(hist,n_hpx) ;reduce all sky healpix indices to sparse format
-;            hist0=hist0[hpx_inds_i]
-;            hist1=hist1[hpx_inds_i]
             ind_use0=where(hist0[hpx_inds_i],n_hpx0) ;determine existing healpix sparse format pixels in combined sparse format
             ind_use1=where(hist1[hpx_inds_i],n_hpx1) ;determine new healpix sparse format pixels in combined sparse format
             
@@ -214,15 +211,11 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
                 reform_flag=1
                 ind_use0b=ri0[ri0[hpx_inds_i[ind_use0]]]
                 ind_order0=Sort(ind_use0b) ;determine ordering needed to convert monotonic increasing sparse indices to actual ordering of healpix pixels (in case of RA=0 branch cut)
-                ind_map0=ind_use0[ind_order0] 
-;                ri0=0               
+                ind_map0=ind_use0[ind_order0]              
             ENDELSE
             ind_use1b=ri1[ri1[hpx_inds_i[ind_use1]]]
             ind_order1=Sort(ind_use1b)
             ind_map1=ind_use1[ind_order1]
-;            ind_order1=Sort(Sort(ri1[ri1[hpx_inds_i[ind_use1]]])) ;determine ordering needed to convert monotonic increasing sparse indices to actual ordering of healpix pixels (in case of RA=0 branch cut)
-;;            ri1=0
-;            ind_map1=ind_use1[ind_order1]
             hpx_inds=hpx_inds_i+hist_min
         ENDELSE
     ENDIF ELSE BEGIN
