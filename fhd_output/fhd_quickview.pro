@@ -286,6 +286,7 @@ IF model_flag THEN BEGIN
     instr_residual_arr=Ptrarr(n_pol,/allocate)
     FOR pol_i=0,n_pol-1 DO *instr_residual_arr[pol_i]=*instr_dirty_arr[pol_i]-*instr_model_arr[pol_i]
     stokes_residual_arr=stokes_cnv(instr_residual_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
+    stokes_model_arr=stokes_cnv(instr_model_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
 ENDIF ELSE BEGIN
     instr_residual_arr=instr_dirty_arr
     stokes_residual_arr=stokes_dirty_arr
@@ -299,7 +300,7 @@ ENDIF
 IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=output_path+'_source_list'
 
 ; plot calibration solutions, export to png
-if size(cal,/type) eq 8 then begin
+IF size(cal,/type) EQ 8 THEN BEGIN
    IF cal.skymodel.n_sources GT 0 THEN BEGIN
       IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
          vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
@@ -395,7 +396,11 @@ IF (residual_flag EQ 0) AND (model_flag EQ 0) THEN res_name='_Dirty_' ELSE res_n
 FOR pol_i=0,n_pol-1 DO BEGIN
     instr_residual=*instr_residual_arr[pol_i]*(*beam_correction_out[pol_i])
     instr_dirty=*instr_dirty_arr[pol_i]*(*beam_correction_out[pol_i])
-    IF model_flag THEN instr_model=*instr_model_arr[pol_i]*(*beam_correction_out[pol_i])
+    IF model_flag THEN BEGIN
+        instr_model=*instr_model_arr[pol_i]*(*beam_correction_out[pol_i])
+        stokes_model=(*stokes_model_arr[pol_i])*beam_mask
+        stokes_dirty=(*stokes_dirty_arr[pol_i])*beam_mask
+    ENDIF
     stokes_residual=(*stokes_residual_arr[pol_i])*beam_mask
     IF source_flag THEN BEGIN
         instr_source=*instr_sources[pol_i]
@@ -440,6 +445,16 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             Imagefast,instr_model[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Model_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
                 title=title_fhd,show_grid=show_grid,astr=astr_out2,contour_image=beam_contour_arr[pol_i],_Extra=extra
+            Imagefast,stokes_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i+4],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low_use*2,high=stokes_high_use*2,$
+                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
+                title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_stokes,_Extra=extra
+            Imagefast,stokes_model[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Model_'+pol_names[pol_i+4],$
+                /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=stokes_low_use*2,high=stokes_high_use*2,$
+                lat_center=obs_out.obsdec,lon_center=obs_out.obsra,rotation=0,grid_spacing=grid_spacing,degpix=degpix,$
+                offset_lat=offset_lat,offset_lon=offset_lon,label_spacing=label_spacing,map_reverse=map_reverse,show_grid=show_grid,$
+                title=title_fhd,/sphere,astr=astr_out2,contour_image=beam_contour_stokes,_Extra=extra
         ENDIF
         Imagefast,instr_residual[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+res_name+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
