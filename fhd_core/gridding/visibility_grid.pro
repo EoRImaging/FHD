@@ -4,8 +4,9 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     visibility_list=visibility_list,image_list=image_list,n_vis=n_vis,no_conjugate=no_conjugate,$
     return_mapfn=return_mapfn,mask_mirror_indices=mask_mirror_indices,no_save=no_save,$
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
-    error=error,grid_uniform=grid_uniform,interpolate_grid_kernel=interpolate_grid_kernel,$
-    grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,_Extra=extra
+    error=error,grid_uniform=grid_uniform,$
+    grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
+    beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -84,8 +85,11 @@ beam_arr=*psf.beam_ptr
 weights_flag=Keyword_Set(weights)
 variance_flag=Keyword_Set(variance)
 uniform_flag=Keyword_Set(uniform_filter)
-kx_arr=params.uu[bi_use]/kbinsize
-ky_arr=params.vv[bi_use]/kbinsize
+uu=params.uu[bi_use]
+vv=params.vv[bi_use]
+ww=params.ww[bi_use]
+kx_arr=uu/kbinsize
+ky_arr=vv/kbinsize
 
 nbaselines=obs.nbaselines
 n_samples=obs.n_time
@@ -93,6 +97,18 @@ n_freq_use=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
 psf_dim3=psf_dim*psf_dim
 bi_use_reduced=bi_use mod nbaselines
+
+if keyword_set(beam_per_baseline) then begin
+    uv_grid_phase_only=1 ;w-terms have not been tested, thus they've been turned off for now
+    psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+    psf_image_dim=(*psf.image_info).psf_image_dim
+    image_bot=-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+    image_top=(psf_dim*psf_resolution-1)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+
+    n_tracked = l_m_n(obs, psf, l_mode=l_mode, m_mode=m_mode)
+
+    if keyword_set(uv_grid_phase_only) then n_tracked[*]=0
+endif
 
 IF Keyword_Set(double_precision) THEN image_uv=DComplexarr(dimension,elements) ELSE image_uv=Complexarr(dimension,elements)
 IF Keyword_Set(double_precision) THEN weights=DComplexarr(dimension,elements) ELSE weights=Complexarr(dimension,elements)
@@ -119,11 +135,17 @@ IF n_conj GT 0 THEN BEGIN
     conj_flag[conj_i]=1
     kx_arr[conj_i]=-kx_arr[conj_i]
     ky_arr[conj_i]=-ky_arr[conj_i]
+    uu[conj_i]=-uu[conj_i]
+    vv[conj_i]=-vv[conj_i]
+    ww[conj_i]=-ww[conj_i]
     vis_arr_use[*,conj_i]=Conj(vis_arr_use[*,conj_i])
     IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
 ENDIF
 xcen=Float(frequency_array#Temporary(kx_arr))
 ycen=Float(frequency_array#Temporary(ky_arr))
+
+x = (FINDGEN(dimension) - dimension/2.)*obs.kpix
+y = (FINDGEN(dimension) - dimension/2.)*obs.kpix
  
 x_offset=Fix(Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
 y_offset=Fix(Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
@@ -274,7 +296,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         n_xyf_bin=N_Elements(xyf_ui)
     ENDELSE
     
-    IF vis_n GT 1.1*n_xyf_bin THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
+    IF vis_n GT 1.1*n_xyf_bin AND ~keyword_set(beam_per_baseline) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
         rep_flag=1
         inds=inds[xyf_si]
         inds_use=xyf_si[xyf_ui]
@@ -311,6 +333,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         IF model_flag THEN model_box=model_use[inds]
         vis_box=vis_arr_use[inds]
         psf_weight=Replicate(1.,vis_n)
+        bt_index = inds / n_freq_use
     ENDELSE
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
@@ -318,11 +341,19 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         t3_0=Systime(1)
         t2+=t3_0-t1_0
     ENDIF
-    
-    IF interp_flag THEN $
-        FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
-            interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
-        ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+   
+    ;Make the beams on the fly with corrective phases given the baseline location
+    if keyword_set(beam_per_baseline) then begin
+        box_matrix = grid_beam_per_baseline(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
+          xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
+          box_matrix, vis_n, _Extra=extra)
+    endif else begin 
+        IF interp_flag THEN $
+            FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
+                interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
+                    y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
+            ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+    endelse
 ;;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*psf_base[polarization,fbin[ii],x_off[ii],y_off[ii]]
 ;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
 ;;    FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=psf_conj_flag[ii] ? $

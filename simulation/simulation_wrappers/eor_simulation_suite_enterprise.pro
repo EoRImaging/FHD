@@ -1,5 +1,5 @@
 pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
-    file_uvw = file_uvw, $
+    file_uvw = file_uvw, large_healpix = large_healpix, $
     flat_sigma = flat_sigma, run_name = run_name, $
     sample_inds = sample_inds, eor_real_sky = eor_real_sky, $
     recalc_sim = recalc_sim, refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
@@ -9,6 +9,10 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
   if n_elements(flat_sigma) eq 0 then flat_sigma = 1
   if keyword_set(flat_sigma) then sim_in = 'flat' else sim_in = 'eor'
 
+  if keyword_set(large_healpix) then begin
+    restrict_hpx_inds='EoR0_high_healpix_inds_3x.idlsave'
+  endif
+
   if keyword_set(file_uvw) then begin
     if n_elements(run_name) eq 0 then run_name = 'mwa_zenith'
 
@@ -16,11 +20,14 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
 
     n_samples = 1
     no_suite_plots = 1
+    use_weight_cutoff_sim = 1
   endif else begin
-    ;sample_factors = [.0001,.0002,.0005,.001,.005,.01,.05,.1,.5, 1]
-    sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1, 5]
+    ;; larger numbers here correspond to increasing baseline density.
+    ;; higher densities take more memory. Ideally going up to 5 would be good,
+    ;; enterprise doesn't seem to be able to do more than 0.5 without crashing.
+    sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1]
 
-    if n_elements(run_name) eq 0 then run_name = 'realsky'
+    if n_elements(run_name) eq 0 then message, 'run name must be specified.'
 
     if run_name eq 'noflag' then sample_factors = [sample_factors, 5]
 
@@ -31,10 +38,11 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
     if n_elements(sample_inds) gt 0 then sample_factors = sample_factors[sample_inds]
 
     n_samples = n_elements(sample_factors)
+    use_weight_cutoff_sim = 0
 
   endelse
   folder_names = 'fhd_' + version
-  folder_path = '/data4/MWA/FHD_Aug23/'
+  folder_path = '/data3/users/bryna/fhd_sims/'
 
   if keyword_set(png) or keyword_set(eps) or keyword_set(pdf) then pub = 1 else pub = 0
   if pub eq 1 then begin
@@ -115,24 +123,28 @@ pro eor_simulation_suite_enterprise, uvf_input = uvf_input, $
 
           eor_simulation_enterprise, start=36, end=36, version=version[j], $
             flat_sigma = flat_sigma, use_saved_uvf = use_saved_uvf, uvf_savefile = saved_uvf_filename, $
-            eor_real_sky = eor_real_sky, /recalculate_all; = recalc_sim
+            eor_real_sky = eor_real_sky, output_directory=folder_path, restrict_hpx_inds=restrict_hpx_inds, $
+            /recalculate_all; = recalc_sim
         endif else begin
           print, 'simulating density: ' + number_formatter(sample_factors[j]) + ' in folder: ' + version[j]
 
           eor_simulation_enterprise, start=36, end=36, version=version[j], sim_baseline_density=sample_factors[j], $
             flat_sigma = flat_sigma, use_saved_uvf = use_saved_uvf, uvf_savefile = saved_uvf_filename, $
-            eor_real_sky = eor_real_sky, /recalculate_all; = recalc_sim
+            eor_real_sky = eor_real_sky, output_directory=folder_path, restrict_hpx_inds=restrict_hpx_inds, $
+            /recalculate_all; = recalc_sim
         endelse
       endif
 
       print, 'calculating ps for ' + folder_names[j]
 
-      if run_name eq 'noflag' then fix_use = 1 $
-      else if (run_name eq 'realsky' or run_name eq 'complexsky') and j gt 0 then fix_use = 1
+      ;;if run_name eq 'noflag' then fix_use = 1 $
+      ;;else if (run_name eq 'realsky' or run_name eq 'complexsky') and j gt 0 then fix_use = 1
 
-      enterprise_wrapper, folder_names[j],/sim, png = png, eps = eps, pdf = pdf, $
+      ps_wrapper, folder_path + folder_names[j],/sim, png = png, eps = eps, pdf = pdf, $
         refresh_ps=refresh_ps, refresh_binning = refresh_binning, $
-        cube_power_info = cube_power_info, plot_stdset = plot_stdset, uvf_input = uvf_input, fix_sim_input = fix_use
+        cube_power_info = cube_power_info, plot_stdset = plot_stdset, $
+        uvf_input = uvf_input, use_weight_cutoff_sim=use_weight_cutoff_sim, $
+        plot_flat_1d = flat_sigma
 
       sim_ave_powers[i,j] = cube_power_info.ave_power[0]
       sim_wt_ave_powers[i,j] = cube_power_info.wt_ave_power[0]

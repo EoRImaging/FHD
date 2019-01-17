@@ -1,4 +1,4 @@
-function vis_noise_simulation, cal_sim_input, vis_arr, obs_id, obs, n_pol=n_pol , file_path_fhd=file_path_fhd
+function vis_noise_simulation, vis_arr, obs_id, obs, n_pol=n_pol , file_path_fhd=file_path_fhd
 
 	if ~keyword_set(n_pol) then n_pol=2
 	

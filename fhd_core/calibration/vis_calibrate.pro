@@ -73,10 +73,20 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     vis_cal=vis_calibration_apply(vis_ptr,cal)
     print,'Calibration transferred from ' + cal_file_use
     timing=Systime(1)-t0_0
+
+    if keyword_set(model_transfer) then begin
+      ;Option to transfer pre-made and unflagged model visbilities
+      vis_model_arr=PTRARR(obs.n_pol,/allocate)
+      for pol_i=0, obs.n_pol-1 do begin
+        if ~file_test(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav') then $
+          message, model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav not found during model transfer.'
+        vis_model_arr[pol_i] = getvar_savefile(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav','vis_model_ptr')
+      endfor
+    endif
+
     RETURN,vis_cal
   ENDIF
   
-
   if ~keyword_set(model_transfer) then begin
     vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,/fill_model_vis,$
       timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
@@ -92,8 +102,11 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   t1=Systime(1)-t0_0
 
   ;Option to save unflagged model visibilities as part of a calibration-only loop.
-  if keyword_set(cal_stop) then vis_export,obs,status_str,vis_model_arr,file_path_fhd=file_dirname(file_path_fhd) + '/cal_prerun/' $
-    + file_basename(file_path_fhd) ,/compress,/model
+  if keyword_set(cal_stop) then begin
+    vis_export,obs,status_str,vis_model_arr,file_path_fhd=file_dirname(file_path_fhd) + '/cal_prerun/' $
+      + file_basename(file_path_fhd) ,/compress,/model
+    save, model_uv_arr, filename=file_dirname(file_path_fhd) + '/cal_prerun/' + file_basename(file_path_fhd) + '_model_uv_arr.sav'
+  endif
 
   ;Calculate auto-correlation visibilities, optionally use them for initial calibration estimates
   vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
@@ -164,23 +177,13 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     IF iter LT calibration_flag_iterate THEN preserve_flag=1 ELSE preserve_flag=preserve_visibilities
     cal=vis_calibrate_subroutine(vis_ptr,vis_model_arr,vis_weight_ptr,obs,cal,$
       preserve_visibilities=preserve_flag,_Extra=extra)
-    if keyword_set(debug_ave_ref) then begin
-      ref_avg = getvar_savefile('/nfs/mwa-09/r1/djc/EoR2013/Aug23/fhd_nb_2013longrun/longrun_gain_ave/longrun_gain_dig_poi_refave_byday.sav','ref_avg')
-      gain0 = (*cal.gain[0])
-      gain1 = (*cal.gain[1])
-
-      unwrapped_phase = phunwrap(atan((*cal.gain[0]),/phase))
-      for tile_i=0,127 do (*cal.gain[0])[*,tile_i] = abs((*cal.gain[0])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[0,0,*]))))
-      unwrapped_phase = phunwrap(atan((*cal.gain[1]),/phase))
-      for tile_i=0,127 do (*cal.gain[1])[*,tile_i] = abs((*cal.gain[1])[*,tile_i]) * ((exp(Complex(0,1)*unwrapped_phase[*,tile_i])) / (exp(Complex(0,1)*reform(ref_avg[1,0,*]))))
-    endif  
-    t3_a=Systime(1)
-    t2+=t3_a-t2_a
-
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
     IF Keyword_Set(n_tile_cut) THEN BREAK
-  
   ENDFOR
+  IF n_pol EQ 4 THEN $
+    cal = vis_calibrate_crosspol_phase(vis_ptr,vis_weight_ptr,obs,cal)
+  t3_a=Systime(1)
+  t2+=t3_a-t2_a
   cal_base=Pointer_copy(cal)
 
   ;Perform bandpass (amp and phase per fine freq) and polynomial fitting (low order amp and phase fit plus cable reflection fit)
@@ -216,35 +219,9 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   ;make sure to plot both, if autocorrelations are used for the calibration solution
   plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
 
-  if keyword_set(debug_phase_longrun) then begin
-    if ~file_test(debug_phase_longrun) then message, 'debug_phase_longrun file not found. Set to filepath of save file' 
-    longrun_phase = getvar_savefile(debug_phase_longrun,'phase_mean_pointing') ;384, 5, 2, 128
-    pointing_num=mwa_get_pointing_number(obs,/string)
-    poi_name = ['-2','-1','0','1','2']
-    poi = where(pointing_num EQ poi_name)
-      
-    cal_base.mode_fit=0  
-    cal_polyfit1 = vis_cal_polyfit(cal_base,obs)
-      
-    *cal.gain[0] = abs(*cal.gain[0])*exp(Complex(0,1)*( atan((*cal_polyfit1.gain[0]),/phase)+reform(longrun_phase[*,poi,0,*])))
-    *cal.gain[1] = abs(*cal.gain[1])*exp(Complex(0,1)*( atan((*cal_polyfit1.gain[1]),/phase)+reform(longrun_phase[*,poi,1,*])))
-  endif
-
-  if keyword_set(debug_amp_longrun) then begin
-    if ~file_test(debug_amp_longrun) then message, 'debug_amp_longrun file not found. Set to filepath of save file' 
-    longrun_gain = getvar_savefile(debug_amp_longrun,'amp_mean_obs3') ;384, 5, 2, 128
-    pointing_num=mwa_get_pointing_number(obs,/string)
-    poi_name = ['-2','-1','0','1','2']
-    poi = where(pointing_num EQ poi_name)
-      
-    cal_base.amp_degree = 4
-    cal_polyfit2 = vis_cal_polyfit(cal_base,obs,digital_gain_jump_polyfit=1)
-      
-    *cal.gain[0] = abs(*cal_polyfit2.gain[0])*abs(reform(longrun_gain[*,poi,0,*]))*exp(Complex(0,1)* atan((*cal.gain[0]),/phase) ) 
-    *cal.gain[1] = abs(*cal_polyfit2.gain[1])*abs(reform(longrun_gain[*,poi,1,*]))*exp(Complex(0,1)* atan((*cal.gain[1]),/phase) )
-  endif  
-
-
+  if keyword_set(debug_phase_longrun) OR keyword_set(debug_amp_longrun) THEN $
+    debug_calibration_options,obs, cal, cal_base, debug_phase_longrun=debug_phase_longrun, debug_amp_longrun=debug_amp_longrun
+ 
   IF Keyword_Set(calibration_auto_fit) THEN cal=cal_auto
   vis_cal=vis_calibration_apply(vis_ptr,cal)
   cal.gain_residual=cal_res.gain

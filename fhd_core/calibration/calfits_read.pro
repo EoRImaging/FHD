@@ -13,19 +13,12 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   for naxis_i=0, naxis - 1 do data_dims[naxis_i] = sxpar(data_header0,'naxis'+strtrim((naxis_i+1),2)) ;dimension of each data axis
   telescope = sxpar(data_header0,'telescop') ;telescope that took the data
   gain_convention = sxpar(data_header0,'gnconven') ;convention of the gains, either 'divide' or 'multiply'
-  n_time = sxpar(data_header0,'ntimes') ;number of times with calibration data
-  n_freq = sxpar(data_header0,'nfreqs') ;number of frequencies with calibration data
-  n_ant_data = sxpar(data_header0,'nantsdat') ;number of antennas with calibration data
   n_jones = sxpar(data_header0,'njones') ;number of polarizations/jones with calibration data
   caltype = sxpar(data_header0,'caltype') ;type of calibration, 'gain' or 'delay'
   if STRMATCH(caltype, 'delay*', /FOLD_CASE) then message, 'Input delay calibration not supported at this time.'
   time_integration = sxpar(data_header0,'inttime') ;time integration of the calibration data
   freq_channel_width = sxpar(data_header0,'chwidth') ;frequency channel width
-  n_ant_tel = sxpar(data_header0,'nantstel') ;number of antennas in the telescope
-  n_spws = sxpar(data_header0,'nspws') ;number of spectral windows
-  if n_spws GT 1 then message, 'More than one spectral window is not supported at this time.'
   x_orient = sxpar(data_header0,'xorient') ;Orientation of the X dipole.
-  freq_range = sxpar(data_header0,'frqrange') ;Frequency range that the calibration data is valid for
   time_range = sxpar(data_header0,'tmerange') ;Time range that the calibration data is valid for
   
   data_types = STRARR(naxis)
@@ -36,6 +29,7 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   freq_index = Min(where(strmatch(data_types, 'freqs', /FOLD_CASE) EQ 1))
   time_index = Min(where(strmatch(data_types, 'time', /FOLD_CASE) EQ 1))
   jones_index = Min(where(strmatch(data_types, 'jones', /FOLD_CASE) EQ 1))
+  spec_wind_index = Min(where(strmatch(data_types, 'if', /FOLD_CASE) EQ 1))
   data_narray = sxpar(data_header0,strjoin('crval'+strtrim((data_index+1),2))) ;real(gain), imag(gain), flags, (optional input flags), quality
   freq_start = sxpar(data_header0,strjoin('crval'+strtrim((freq_index+1),2)))
   time_start = sxpar(data_header0,strjoin('crval'+strtrim((time_index+1),2)))
@@ -45,10 +39,20 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
   ;*********
   
   ;*********Check parameters
-  IF (data_index NE 0) OR (ant_index NE 4) OR (freq_index NE 3) OR (time_index NE 2) OR (jones_index NE 1) then $
-    message, 'Calfits file does not appear to adhere to standard. Please see github:pyuvdata/docs/references'
+  IF (data_index NE 0) OR (ant_index NE 4) OR (freq_index NE 3) OR (time_index NE 2) OR (jones_index NE 1) then begin  ; calfits doesn't conform to the original convention
+    IF (data_index EQ 0) AND (ant_index EQ 5) AND (freq_index EQ 3) AND (time_index EQ 2) AND (jones_index EQ 1) AND (spec_wind_index EQ 4) then begin  ; calfits conforms to the Fall 2018 pyuvdata convention
+      if (size(data_array))[5] ne 1 then message, 'Calfits file includes more than one spectral window. Note that this feature is not yet supported in FHD.'
+      data_array = mean(data_array, dimension=5)  ; Remove spectral window dimension for compatibility
+      data_array = data_array/2.  ; For some reason the calfits reports twice the gains
+    endif else message, 'Calfits file does not appear to adhere to standard. Please see github:pyuvdata/docs/references'
+  endif 
+
   if ~keyword_set(gain_convention) then gain_convention = 'divide' ;default of the gain convention if undefined
   
+  n_ant_data = (size(data_array))[5]
+  n_freq = (size(data_array))[4]
+  n_time = (size(data_array))[3]
+
   ;Check whether the number of polarizations specified matches the observation analysis run
   jones_type_matrix = LONARR(data_dims[1])
   for jones_i=1, data_dims[1] do jones_type_matrix[jones_i-1] = jones_start+(jones_delt*jones_i)

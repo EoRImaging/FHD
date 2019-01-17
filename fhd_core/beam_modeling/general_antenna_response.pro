@@ -40,7 +40,6 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
         D_d=Reform(D_d,psf_image_dim,psf_image_dim,n_ant_elements)
         
         response_grp=Ptrarr(nfreq_bin)
-        
         FOR freq_i=0L,nfreq_bin-1 DO BEGIN
             response=Complexarr(psf_image_dim,psf_image_dim)
             Kconv=(2.*!Pi)*(freq_center[freq_i]/c_light_vacuum) 
@@ -49,7 +48,7 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
             meas_current=(*coupling[pol_i,freq_i])#voltage_delay
             zenith_norm=Mean((*coupling[pol_i,freq_i])#Replicate(1.,n_ant_elements))
             meas_current/=zenith_norm
-            
+
             FOR ii=0L,n_ant_elements-1 DO BEGIN
                 response+=antenna_gain_arr[*,*,ii]*meas_current[ii]/n_ant_elements
             ENDFOR

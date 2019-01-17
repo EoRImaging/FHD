@@ -3,9 +3,9 @@ Fast Holographic Deconvolution IDL installation instructions
 
 1 Download the latest versions of the following libraries:	
 
-a. this repository (https://github.com/miguelfmorales/FHD/)
+a. this repository (https://github.com/EoRImaging/FHD/)
 
-b. the power spectrum generation code (https://github.com/miguelfmorales/PS/)
+b. the power spectrum generation code (https://github.com/EoRImaging/eppsilon/)
 
 c. the astro IDL library (http://idlastro.gsfc.nasa.gov/)
 

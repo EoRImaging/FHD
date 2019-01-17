@@ -79,10 +79,10 @@ IF file_test(plot_path,/directory) EQ 0 THEN file_mkdir,plot_path
 
 
 folder_names=[fhd_dir_ref,fhd_dir_diff]
-save_path = plot_path +"/temp/" ; folder_names+path_sep()+'ps'+path_sep()
-IF file_test(save_path) THEN file_delete,save_path,/quiet,/recursive
-file_mkdir,save_path
-ps_diff_wrapper, folder_names, diff_save_path=save_path, plot_path=plot_path
+save_path = plot_path ; +"/temp/" ; folder_names+path_sep()+'ps'+path_sep()
+;IF file_test(save_path) THEN file_delete,save_path,/quiet,/recursive
+;file_mkdir,save_path
+ps_diff_wrapper, folder_names, diff_save_path=save_path, plot_path=plot_path, /png
 
-file_delete,save_path,/quiet,/recursive
+;file_delete,save_path,/quiet,/recursive
 END
