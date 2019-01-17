@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH -t 4:00:00
-#SBATCH -n 3
-####SBATCH --array=0-1:1
-#SBATCH --mem=120G
+#SBATCH -t 2:00:00
+#SBATCH -n 2
+#SBATCH --array=0-0:1%20
+#SBATCH --mem=60G
 #SBATCH --account=jpober-condo
 #source activate HERA
 module load idl
@@ -11,25 +11,40 @@ module load imagemagick
 module load git
 
 shopt -s expand_aliases; source $IDL/envi53/bin/envi_setup.bash
-
+# Fornax was 1700 on array batch
+# Stability analysis should total 15586 observations
 #version=HERA_IDR2_Fornax_Decon
 #suffix=uvOC
-version=Decon 
-#version=Diffuse_test
-suffix=uvN
-data_loc=/users/jkerriga/data/shared/HERA_new/Mar26/
-outdir=/users/jkerriga/data/jkerriga/HERAFHD
+#version=IDR21_firstpassdiffuse_EoR0_minbsl1_phs2_${SLURM_ARRAY_TASK_ID}
+#thresh=($(seq 5 5 40))
+version=4Pol
+#version=CalOpt_bl20_bmthresh0p007_FoV45_PSPEC
+#Diffuse_bmthresh05_SI4p6_bl0 
+#SkyCal2_nfreq1_bl0_phase0_bmthresh05_GSMPNT
+
+suffix=uv
+#data_loc=/users/jkerriga/data/shared/HERA_new/Mar26/
+outdir=/users/jkerriga/data/jkerriga/FHD_HERA_ANALYSIS
+#outdir=/users/jkerriga/data/jkerriga/FHD_OUTRIGGERS
+#outdir=/users/jkerriga/data/jkerriga/FHD_IDR2_1
+#FHD_IDR2_1
 FHDpath=/users/jkerriga/scratch/FHD
 #data_loc=~/data/shared/HERA_new/IDR1/
 cd ${outdir} #${data_loc}
 
-obsids=(zen.2458107.33430.HH.uvOCRN.uvfits) #decon & diffuse
-#obsids=(zen.2458186.12526.HH.uvN.uvfits)
-#obsids=(zen.2458107.46852.HH.uvOC.uvfits)
-#obsids=(zen.grp1.of1.LST.0.81849.uvOCRSL.uvfits) #(zen.*.*.xx.HH.${suffix})
+#obsids=(zen.2458116.55054.HH.2.402447.uv.uvfits)
+#obsids=(zen.2458103.37904.HH.1.098248.uv.uvfits) #original stability obs
+
+#outriggers
+#obsids=(zen.2458189.18492.HH.1.370334.uv.uvfits)
+#obsids=(zen.2458111.50580.HH.2.030648.uv.uvfits) #zen.2458098.40887.HH.1.195886.uvOCRS.uvfits)
+
+#obsids=(zen.2458*098.*.HH.*.uv.uvfits)
+obsids=(zen.2458101.40141.HH.1.224403.uv.uvfits)
+#obsids=(zen.grp1.of1.LST.*.${suffix}.uvfits)
+#(zen.grp1.of1.xx.LST.1.08784.uvOCRSL.uvfits) #(zen.*.*.xx.HH.${suffix})
 obs=${obsids[$SLURM_ARRAY_TASK_ID]}
 #obs_base=(${obs//.xx.HH.${suffix}/ })
-
 
 #if [ ! -f ${outdir}/${obs_base}'.HH.'${suffix}'.uvfits' ]; then
 #    echo "UVFITS doesn't exist."
@@ -67,3 +82,4 @@ cd /users/jkerriga/scratch/FHD/Observations
 #cd /users/jkerriga/FHD/Observations
 #/usr/local/bin/idl 
 idl -IDL_DEVICE ps -quiet -IDL_CPU_TPOOL_NTHREADS $ncores -e hera_wrapper -args $obs_id $outdir $version
+#"${thresh[SLURM_ARRAY_TASK_ID]}"
