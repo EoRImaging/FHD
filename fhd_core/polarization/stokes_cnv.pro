@@ -99,7 +99,8 @@ ENDIF
 
 type=size(image_arr,/type)
 IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
-    sign=[1,-1,1,-complex(0,1)]
+    sign1=[1,1,1,complex(0,1)]
+    sign2=[1,-1,1,-complex(0,1)]
     source_list=image_arr
     ns_in=N_Elements(source_list)
     sx=source_list.x
@@ -126,7 +127,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
         stokes_i_offset=0
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i+4)
-        FOR pol_i=0,n_pol-1 DO *flux_pq[pol_i]=((*flux_arr[stokes_list1[pol_i]])+sign[pol_i]*(*flux_arr[stokes_list2[pol_i]]))/2.
+        FOR pol_i=0,n_pol-1 DO *flux_pq[pol_i]=(sign1[pol_i]*(*flux_arr[stokes_list1[pol_i]])+sign2[pol_i]*(*flux_arr[stokes_list2[pol_i]]))/2.
         FOR pol_i2=0,n_pol-1 DO BEGIN
             IF pol_i2 LE 1 THEN *flux_out[pol_i2]=Fltarr(ns) ELSE *flux_out[pol_i2]=Complexarr(ns) 
             FOR pol_i1=0,n_pol-1 DO BEGIN
@@ -144,7 +145,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
                 *flux_pq[pol_i2]+=*flux_arr[pol_i1]*weight_invert(*beam_use[pol_i1])*(*p_corr[pol_i1,pol_i2])[p_ind]
             ENDFOR
         ENDFOR
-        FOR pol_i=0,n_pol-1 DO *flux_out[pol_i]=Real_part((*flux_pq[stokes_list1[pol_i]])+sign[pol_i]*(*flux_pq[stokes_list2[pol_i]]))
+        FOR pol_i=0,n_pol-1 DO *flux_out[pol_i]=Real_part(sign1[pol_i]*(*flux_pq[stokes_list1[pol_i]])+sign2[pol_i]*(*flux_pq[stokes_list2[pol_i]]))
     ENDELSE
      ;indices of source_list.flux are [xx,yy,xy,yx,I,Q,U,V]
     FOR pol_i=0,n_pol-1 DO BEGIN
@@ -167,32 +168,31 @@ ENDIF ELSE BEGIN ;else case is array of images
     dimension=(size(*image_arr[0],/dimension))[0]
     elements=(size(*image_arr[0],/dimension))[1]
     
-    image_arr_pq=Ptrarr(n_pol)
+    image_arr_sky=Ptrarr(n_pol)
     ;stokes I can have proper inverse-variance weighting. (not used!)
     ; All other polarizations need to be converted to 'true sky' frame before they can be added
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
-        FOR pol_i=0,n_pol-1 DO image_arr_pq[pol_i]=$
-            Ptr_new(((*image_arr[stokes_list1[pol_i]])+sign[pol_i]*(*image_arr[stokes_list2[pol_i]]))/2.)
-        FOR pol_i2=0,n_pol-1 DO BEGIN
-            image_arr_out[pol_i2]=Ptr_new(fltarr(dimension,elements))
-            FOR pol_i1=0,n_pol-1 DO BEGIN
-                (*image_arr_out[pol_i2])[inds]+=(*image_arr_pq[pol_i1])[inds]*(*p_map[pol_i1,pol_i2])
+        FOR sky_pol=0,n_pol-1 DO image_arr_sky[sky_pol]=$
+            Ptr_new(((*image_arr[stokes_list1[sky_pol]])+sign[sky_pol]*(*image_arr[stokes_list2[sky_pol]]))/2.)
+        FOR instr_pol=0,n_pol-1 DO BEGIN
+            image_arr_out[instr_pol]=Ptr_new(fltarr(dimension,elements))
+            FOR sky_pol=0,n_pol-1 DO BEGIN
+                (*image_arr_out[instr_pol])[inds]+=(*image_arr_sky[sky_pol])[inds]*(*p_map[sky_pol,instr_pol])
             ENDFOR
-            *image_arr_out[pol_i2]*=*beam_use[pol_i2]
+            *image_arr_out[instr_pol]*=*beam_use[instr_pol]
         ENDFOR
         
     ENDIF ELSE BEGIN ;instrumental -> Stokes
-        image_arr_pq=Ptrarr(n_pol)
-        FOR pol_i2=0,n_pol-1 DO BEGIN
-            image_arr_pq[pol_i2]=Ptr_new(fltarr(dimension,elements))
-            FOR pol_i1=0,n_pol-1 DO BEGIN
-                (*image_arr_pq[pol_i2])[inds]+=(*image_arr[pol_i1]*weight_invert(*beam_use[pol_i1]))[inds]*(*p_corr[pol_i1,pol_i2])
+        FOR sky_pol=0,n_pol-1 DO BEGIN
+            image_arr_sky[sky_pol]=Ptr_new(fltarr(dimension,elements))
+            FOR instr_pol=0,n_pol-1 DO BEGIN
+                (*image_arr_sky[sky_pol])[inds]+=(*image_arr[instr_pol]*weight_invert(*beam_use[instr_pol]))[inds]*(*p_corr[instr_pol,sky_pol])
             ENDFOR
         ENDFOR
         FOR pol_i=0,n_pol-1 DO image_arr_out[pol_i]=$
-            Ptr_new((*image_arr_pq[stokes_list1[pol_i]])+sign[pol_i]*(*image_arr_pq[stokes_list2[pol_i]]))
+            Ptr_new((*image_arr_sky[stokes_list1[pol_i]])+sign[pol_i]*(*image_arr_sky[stokes_list2[pol_i]]))
     ENDELSE
-    Ptr_free,image_arr_pq
+    Ptr_free,image_arr_sky
     result=image_arr_out
 ENDELSE
 

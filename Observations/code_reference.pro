@@ -54,7 +54,8 @@ calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=ro
 
 firstpass=1
 
-dft_threshold=1
+dft_threshold=0
+double=1
 calibrate_visibilities=1
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF Keyword_Set(recalculate_all) THEN export_image=1 ELSE export_images=0
@@ -112,7 +113,6 @@ calibration_flag_iterate = 0
 no_calibration_frequency_flagging=1
 log_store=1 ;store output log to a file 
 time_cut=[-2,2]
-dft_threshold=1
 
 ;defaults not set in firstpass:
 interpolate_kernel=1
