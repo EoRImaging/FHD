@@ -5,7 +5,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
   debug_beam_conjugate=debug_beam_conjugate, beam_clip_floor=beam_clip_floor,$
   debug_clip_beam_mask=debug_clip_beam_mask,beam_per_baseline=beam_per_baseline,$
-  image_power_beam=image_power_beam,_Extra=extra
+  image_power_beam=image_power_beam,kernel_window=kernel_window,_Extra=extra
 
   icomp = Complex(0, 1)
   freq_center=antenna1.freq[freq_i]
@@ -43,10 +43,11 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
       (*Jones1[1,ant_pol1]*beam_ant1)*(Conj(*Jones2[1,ant_pol2])*beam_ant2)
   ENDELSE
 
-  if keyword_set(beam_per_baseline) then image_power_beam=power_beam/power_zenith
+  image_power_beam=power_beam/power_zenith
+  if keyword_set(kernel_window) then image_power_beam *= *(antenna1.pix_window)
 
   ;Generate UV beam and interpolate to a super resolution
-  psf_base_single=dirty_image_generate(power_beam/power_zenith,/no_real)
+  psf_base_single=dirty_image_generate(image_power_beam,/no_real)
   psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
   
   s=size(psf_base_superres, /dimensions)
