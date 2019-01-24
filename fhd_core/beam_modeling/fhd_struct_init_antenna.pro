@@ -2,7 +2,8 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,$
     psf_image_resolution=psf_image_resolution,timing=timing,$
     psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
-    inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra
+    inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
+    kernel_window=kernel_window,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
@@ -60,7 +61,7 @@ ENDFOR
 ;initialize antenna structure
 antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
     n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
-    delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1}
+    delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1,pix_window:Ptr_new()}
     
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data
@@ -75,7 +76,7 @@ endif
 IF ~Keyword_Set(psf_dim) THEN $
     psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
-if keyword_set(debug_dim) then psf_dim=20.
+if keyword_set(debug_dim) then psf_dim=18.
 
 IF Keyword_Set(psf_max_dim) THEN BEGIN
     psf_max_dim=Ceil(psf_max_dim/2.)*2 ;dimension MUST be even
@@ -101,6 +102,27 @@ dec_use=dec_arr[valid_i]
 Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate, refract=0
 za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
+
+if keyword_set(kernel_window) then begin
+  ;Get pixels which fall within the horizon
+  horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
+  xvals_instrument=za_arr*Sin(az_arr*!DtoR)
+  yvals_instrument=za_arr*Cos(az_arr*!DtoR)
+
+  ;Calculate the phase center in x,y coords
+  Eq2Hor,obs.orig_phasera,obs.orig_phasedec,Jdate_use,orig_phasealt,orig_phaseaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+  apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy
+  xval_center = (90. - orig_phasealt)*sin(orig_phaseaz*!dtor)
+  yval_center = (90. - orig_phasealt)*cos(orig_phaseaz*!dtor)
+  
+  ;Apply an image window to the pixels in the horizon, centered on the phase center
+  pix_window = fltarr(psf_image_dim,psf_image_dim)
+  if ~isa(kernel_window, /string) then kernel_window='Blackman-Harris^2'
+  pix_window[pix_use] = image_window(xvals_instrument[pix_use], yvals_instrument[pix_use], $
+    image_window_name = kernel_window,xval_center=xval_center,yval_center=yval_center,fractional_size=fractional_size)
+  ;Store image window in antenna structure
+  antenna[0].pix_window=ptr_new(pix_window)
+endif
 
 ;now, update antenna structure to include gains
 if N_elements(instrument) GT 1 then begin
