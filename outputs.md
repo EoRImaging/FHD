@@ -111,7 +111,7 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ### \<obsids\>\_uv_weights_\<pol\>.sav <br />
 
-  * **weights_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is a gridded UV plane where a value of 1 is gridded with the beam for each visibility wand where all frequencies have been gridded together.<br />
+  * **weights_uv**: a complex image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). This is a gridded UV plane where a value of 1 is gridded with the beam for each visibility and where all frequencies have been gridded together. The units are Jy/beam.<br />
 
   * **pol_i**: the polarization index of the gridded UV plane. In 2 polarizations, 0 = xx and 1 = yy.<br />
 
