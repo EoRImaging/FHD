@@ -8,7 +8,7 @@ IF size(tile_flag_list,/type) EQ 7 THEN BEGIN
         tile_i=(where(Strcompress(tile_names,/remove_all) EQ strcompress(tile_flag_list[flag_i],/remove_all),tile_match_flag))[0]
         IF tile_match_flag GT 0 THEN tile_flag_list_use=[tile_flag_list_use,tile_i+1]
     ENDFOR
-ENDIF ELSE tile_flag_list_use=tile_flag_list
+ENDIF ELSE message, "tile_flag_list is expected to be a string array of tile names"
 tile_A=(*obs.baseline_info).tile_A
 tile_B=(*obs.baseline_info).tile_B
 hist_A=histogram(tile_A,min=1,/bin,reverse=ra)
