@@ -30,6 +30,11 @@ pro vis_delay_filter, vis_model_arr,  params, obs
   auto_inds = where(params.antenna1 ne params.antenna2)
   match, bi_use, auto_inds, suba, subb
   bi_use = bi_use[suba]
+  ;Do not filter visibilities which rotate out of the uv-plane due to full-band assumption
+  c=299792458
+  in_uv_inds = where((c*sqrt(params.uu[bi_use]^2 + params.vv[bi_use]^2)) LT obs.dimension*obs.kpix,n_count)
+  if n_count GT 0 then bi_use = bi_use[in_uv_inds]
+
   
   data = data[*,bi_use,*]
   uu = params.uu[bi_use]
