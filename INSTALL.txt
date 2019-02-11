@@ -1,21 +1,20 @@
 Fast Holographic Deconvolution IDL installation instructions
 
 
-1 Download the latest versions of the following libraries:	
+1 Download the latest versions of the following libraries:
 
 a. this repository (https://github.com/EoRImaging/FHD/)
 
-b. the power spectrum generation code (https://github.com/EoRImaging/eppsilon/)
+b. the fhdps_utils repository (https://github.com/EoRImaging/fhdps_utils)
 
 c. the astro IDL library (http://idlastro.gsfc.nasa.gov/)
 
 d. the coyote library (http://www.idlcoyote.com/documents/programs.php)
 
-e. the HEALPix library (http://healpix.jpl.nasa.gov/healpixSoftwareCapabilities.shtml)
+e. the HEALPix library (https://healpix.sourceforge.io/)
 
-*****
-I got HEALPix from http://sourceforge.net/projects/healpix/ as the NASA page seemed out-of-date
-*****
+f. Optional: the power spectrum generation code (https://github.com/EoRImaging/eppsilon/)
+
 
 2 Add these libraries to your IDL path in the order listed
 
@@ -41,20 +40,19 @@ Reference: http://slugidl.pbworks.com/w/page/28913708/Adding%20Programs%20to%20Y
 4 Install Imagemagick if not already present (http://www.imagemagick.org)
 
 *****
-On eor-01, I had to install the i386 version of Imagemagick even though x86_64 was already installed. Maybe it's important to specify the version. 
+On eor-01, I had to install the i386 version of Imagemagick even though x86_64 was already installed. Maybe it's important to specify the version.
 *****
 
 5 Open a fresh terminal and start IDL to test the installation. Suggested test commands:
 
-print,cgHasImageMagick() 
+print,cgHasImageMagick()
 [prints error if coyote library not installed, returns 0 if coyote library installed but Imagemagick not installed correctly, and returns 1 if both are installed correctly]
 astrolib  [prints error if astro IDL library not installed correctly, prints message “ASTROLIB: Astronomy Library system variables have been added” if installed correctly]
 
-init_healpix 
+init_healpix
 [prints error if HEALPix not installed correctly]
 
-imagefast,randomN(5,256,256),file_path='some/output/path/testimage.png' 
+imagefast,randomN(5,256,256),file_path='some/output/path/testimage.png'
 [prints error if FHD not installed correctly, generates a 256x256 pixel image of poisson noise at path 'some/output/path/testimage.png' if installed correctly and read/write permissions are set correctly]
 
 If the above commands all work, it’s time to try it out on some data:
-
