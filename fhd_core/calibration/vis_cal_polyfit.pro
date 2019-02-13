@@ -62,10 +62,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
       gain=reform(gain_amp[freq_use,tile_i])
       
       ;*****Fit for amplitude
-      IF Keyword_Set(decompose_auto) THEN BEGIN
-        gain_fit=fltarr(n_freq)
-        gain_fit+=MEAN(gain)
-      ENDIF ELSE IF N_Elements(amp_degree) GT 0 THEN BEGIN
+      IF Keyword_Set(decompose_auto) THEN amp_degree=0
+      IF N_Elements(amp_degree) GE 0 THEN BEGIN
         fit_params=poly_fit(freq_use,gain,amp_degree)
         cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
         gain_fit=fltarr(n_freq)
