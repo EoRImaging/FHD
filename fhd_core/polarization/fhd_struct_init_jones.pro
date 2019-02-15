@@ -65,6 +65,7 @@ ant_pol2 = 1
 power_zenith_beam = Fltarr(dimension, elements)
 FOR ant_pol=0,1 DO FOR sky_pol=0,1 DO $
     power_zenith_beam += Real_part(*Jones[sky_pol,ant_pol]*Conj(*Jones[sky_pol, ant_pol]))
+power_zenith_beam /= 2.
 power_zenith=Interpolate(power_zenith_beam,obs_temp.zenx,obs_temp.zeny,cubic=-0.5)
 FOR ptr_i=0,3 DO *Jones[ptr_i] = (*Jones[ptr_i])[inds_use]/Sqrt(power_zenith)
 
