@@ -5,7 +5,6 @@ elements=obs.elements
 n_pol=cal.n_pol ;do not use the cross-polarizations if they are present!
 n_freq=obs.n_freq
 n_tile=obs.n_tile
-psf_dim=psf.dim
 n_spectral=obs.degrid_spectral_terms
 frequency_array=(*obs.baseline_info).freq
 freq_delta=(frequency_array-obs.freq_center)/obs.freq_center

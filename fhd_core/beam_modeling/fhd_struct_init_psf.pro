@@ -15,8 +15,8 @@ IF N_Elements(n_pol) EQ 0 THEN n_pol=1 ELSE n_pol=Fix(n_pol)
 IF N_Elements(n_freq) EQ 0 THEN n_freq=1 ELSE n_freq=Fix(n_freq)
 IF N_Elements(freq_cen) EQ 0 THEN freq_cen=Fltarr(n_freq) ELSE freq_cen=Float(freq_cen)
 IF N_Elements(beam_ptr) EQ 0 THEN beam_ptr=Ptr_new() ;will actually have dimensions (npol,nfreq,nbaselines)
-IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=1. ELSE psf_resolution=Float(psf_resolution);over-resolution
-IF N_Elements(psf_dim) EQ 0 THEN psf_dim=1. ELSE psf_dim=Float(psf_dim)
+IF N_Elements(psf_resolution) EQ 0 THEN psf_resolution=1 ELSE psf_resolution=Fix(psf_resolution);over-resolution
+IF N_Elements(psf_dim) EQ 0 THEN psf_dim=1L ELSE psf_dim=Long(psf_dim)
 IF N_Elements(xvals) EQ 0 THEN xvals=Ptrarr(1) ;will have dimensions of (resolution,resolution)
 IF N_Elements(pol_norm) EQ 0 THEN pol_norm=replicate(1.,n_pol) ELSE pol_norm=Float(pol_norm)
 IF N_Elements(freq_norm) EQ 0 THEN freq_norm=replicate(1.,n_freq) ELSE freq_norm=Float(freq_norm)

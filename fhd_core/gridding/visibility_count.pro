@@ -10,10 +10,10 @@ IF Min(ptr_valid(vis_weight_ptr)) EQ 0 THEN fhd_save_io,status_str,vis_weight_pt
 n_pol=obs.n_pol
 n_tile=obs.n_tile
 n_freq=obs.n_freq
-dimension=Float(obs.dimension)
-elements=Float(obs.elements)
+dimension=Long(obs.dimension)
+elements=Long(obs.elements)
 kbinsize=obs.kpix
-kx_span=kbinsize*dimension ;Units are # of wavelengths
+kx_span=kbinsize*Float(dimension) ;Units are # of wavelengths
 ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
@@ -53,10 +53,8 @@ IF n_conj GT 0 THEN BEGIN
     ycen[*,conj_i]=-ycen[*,conj_i]
 ENDIF
 
-xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
-ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
-;xmax=xmin+psf_dim-1
-;ymax=ymin+psf_dim-1
+xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
 
 IF n_dist_flag GT 0 THEN BEGIN
     xmin[flag_dist_i]=-1

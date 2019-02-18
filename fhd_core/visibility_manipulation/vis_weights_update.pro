@@ -6,10 +6,10 @@ heap_gc
 n_pol=obs.n_pol
 n_tile=obs.n_tile
 n_freq=obs.n_freq
-dimension=Float(obs.dimension)
-elements=Float(obs.elements)
+dimension=Long(obs.dimension)
+elements=Long(obs.elements)
 kbinsize=obs.kpix
-kx_span=kbinsize*dimension ;Units are # of wavelengths
+kx_span=kbinsize*Float(dimension) ;Units are # of wavelengths
 ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
@@ -42,9 +42,9 @@ IF n_conj GT 0 THEN BEGIN
 ENDIF
 
 xcen=frequency_array#kx_arr
-xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
+xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
 ycen=frequency_array#ky_arr
-ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
 
 range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)

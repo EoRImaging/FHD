@@ -29,10 +29,10 @@ n_freq=psf.n_freq
 pol_norm=psf.pnorm
 freq_norm=psf.fnorm
 rbin=0;psf_res/2
-xl=dimension/2.-Floor(psf_dim/2.)+1
-xh=dimension/2.-Floor(psf_dim/2.)+psf_dim
-yl=elements/2.-Floor(psf_dim/2.)+1
-yh=elements/2.-Floor(psf_dim/2.)+psf_dim
+xl=dimension/2-psf_dim/2+1
+xh=dimension/2-psf_dim/2+psf_dim
+yl=elements/2-psf_dim/2+1
+yh=elements/2-psf_dim/2+psf_dim
 
 group_id=psf.id[pol_i,0,*]
 group_n=histogram(group_id,min=0,/binsize,reverse_ind=ri_id)
