@@ -89,7 +89,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: if set to 1, becomes `mwa_eor0_highband_season1_cable_bandpass.fits` <br />
   
 **cal_convergence_threshold**: threshold at which calibration ends. <br />
-  -*Default*: !Q
+  -*Default*: !Q <br />
+  
+**cal_gain_init**: initial gain values for calibration. Selecting accurate inital calibration values speeds up calibration and can improve convergence. This keyword will not be used if calibration_auto_initialize is set. <br />
+  -*Default*: 1. <br />
 
 **cal_mode_fit**: determines whether calibration will fit for reflection in cables. This will be set if
 	`cal_reflection_mode_file`, `cal_reflection_mode_theory`, `cal_reflection_mode_delay`, or `cal_reflection_hyperresolve` is set. Setting it to a positive cable length (scalar or array) will specifically include the associated tiles for fitting. Setting it to a negative cable length (scalar or array) will specifically exclude the associated tiles from fitting. <br />
@@ -102,7 +105,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: undefined/defined <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 !Q <br />
-
   
 **cal_reflection_hyperresolve**: hyperresolve and fit residual gains using nominal reflection modes (calculated from `cal_reflection_mode_delay` or `cal_reflection_mode_theory`) , producing a finetuned mode fit, amplitude, and phase. Will be ignored if `cal_reflection_mode_file` is set because it is assumed that a file read-in contains mode/amp/phase to use. <br />
   -*Turn off/on*: 0/1 <br />
@@ -136,7 +138,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   
 **calibration_auto_fit**: use the autocorrelations to calibrate. This will suffer from increased, correlated noise and bit statistic errors. However, this will save the autos as the gain in the cal structure, which can be a useful diagnostic. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />  
+  -*Default*: 0 <br />
+
+**calibration_auto_initialize**: initialize gain values for calibration with the autocorrelations. If unset, gains will initialize to 1 or the value supplied by cal_gain_init. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
   
 **calibration_subtract_sidelobe_catalog**: set to subtract a catalog in the sidelobes that is different from that used in the primary beam <br />
   
