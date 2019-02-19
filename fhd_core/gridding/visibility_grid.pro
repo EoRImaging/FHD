@@ -13,10 +13,10 @@ heap_gc
 pol_names=obs.pol_names
 
 ;extract information from the structures
-dimension=Float(obs.dimension)
-elements=Float(obs.elements)
+dimension=Long(obs.dimension)
+elements=Long(obs.elements)
 kbinsize=obs.kpix
-kx_span=kbinsize*dimension ;Units are # of wavelengths
+kx_span=kbinsize*Float(dimension) ;Units are # of wavelengths
 ky_span=kx_span
 min_baseline=obs.min_baseline
 max_baseline=obs.max_baseline
@@ -102,8 +102,8 @@ if keyword_set(beam_per_baseline) then begin
     uv_grid_phase_only=1 ;w-terms have not been tested, thus they've been turned off for now
     psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
     psf_image_dim=(*psf.image_info).psf_image_dim
-    image_bot=-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
-    image_top=(psf_dim*psf_resolution-1)-Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+    image_bot=-(psf_dim/2)*psf_intermediate_res+psf_image_dim/2
+    image_top=(psf_dim*psf_resolution-1)-(psf_dim/2)*psf_intermediate_res+psf_image_dim/2
 
     n_tracked = l_m_n(obs, psf, l_mode=l_mode, m_mode=m_mode)
 
@@ -155,8 +155,8 @@ dx0dy0_arr = (1-dx_arr)*(1-dy_arr)
 dx0dy1_arr = (1-dx_arr)*dy_arr
 dx1dy0_arr = dx_arr*(1-dy_arr)
 dx1dy1_arr = Temporary(dx_arr) * Temporary(dy_arr)
-xmin=Long(Floor(Temporary(xcen))+dimension/2.-(psf_dim/2.-1))
-ymin=Long(Floor(Temporary(ycen))+elements/2.-(psf_dim/2.-1))
+xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
+ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
 
 range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
 range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)

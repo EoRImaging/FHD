@@ -14,7 +14,6 @@ freq_delta=(frequency_array-obs.freq_center)/obs.freq_center
 n_tile_use=N_Elements(auto_tile_i)
 freq_bin_i=(*obs.baseline_info).fbin_i
 nfreq_bin=Max(freq_bin_i)+1
-;psf_dim=psf.dim
 
 freq_i_use=where((*obs.baseline_info).freq_use)
 freq_i_flag=where((*obs.baseline_info).freq_use EQ 0, n_freq_flag)

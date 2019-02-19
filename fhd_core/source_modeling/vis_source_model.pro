@@ -31,8 +31,8 @@ pol_names=obs.pol_names
 ;extract information from the structures
 n_pol=obs.n_pol
 n_spectral=obs.degrid_spectral_terms
-dimension=obs.dimension
-elements=obs.elements
+dimension=Long(obs.dimension)
+elements=Long(obs.elements)
 degpix=obs.degpix
 kbinsize=obs.kpix
 kx_span=kbinsize*dimension ;Units are # of wavelengths
