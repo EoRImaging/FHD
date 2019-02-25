@@ -4,15 +4,18 @@ FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
     meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,$
     cotter_precess_fix=cotter_precess_fix,force_rephase_to_zenith=force_rephase_to_zenith,$
-    override_target_phasera=override_target_phasera,override_target_phasedec=override_target_phasedec,_Extra=extra
+    override_target_phasera=override_target_phasera,override_target_phasedec=override_target_phasedec,$
+    metafits_path=metafits_path,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
-metafits_ext='.metafits'
-metafits_dir=file_dirname(file_path_vis)
-metafits_name=file_basename(file_path_vis,'.sav',/fold_case)
-metafits_name=file_basename(metafits_name,'.uvfits',/fold_case)
-metafits_name=file_basename(metafits_name,'_cal',/fold_case) ;sometimes "_cal" is present, sometimes not.
-metafits_path=metafits_dir+path_sep()+metafits_name+metafits_ext
+IF N_Elements(metafits_path) EQ 0 THEN BEGIN
+    metafits_ext='.metafits'
+    metafits_dir=file_dirname(file_path_vis)
+    metafits_name=file_basename(file_path_vis,'.sav',/fold_case)
+    metafits_name=file_basename(metafits_name,'.uvfits',/fold_case)
+    metafits_name=file_basename(metafits_name,'_cal',/fold_case) ;sometimes "_cal" is present, sometimes not.
+    metafits_path=metafits_dir+path_sep()+metafits_name+metafits_ext
+ENDIF
 
 time=params.time
 b0i=Uniq(time)
