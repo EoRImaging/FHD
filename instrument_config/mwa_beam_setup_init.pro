@@ -15,6 +15,7 @@ FUNCTION mwa_beam_setup_init,obs,antenna_str,antenna_size=antenna_size,dead_dipo
 n_ant_pol=antenna_str.n_pol
 n_tiles=obs.n_tile
 n_dipoles=16
+dead_dipole_delay = 32
 nfreq_bin=antenna_str.nfreq_bin
 
 IF tag_exist(obs,'delays') THEN delay_settings=Pointer_copy(obs.delays) ;delays need to be generalized!
@@ -38,11 +39,16 @@ antenna_coords[0]=Ptr_new(xc_arr)
 antenna_coords[1]=Ptr_new(yc_arr)
 antenna_coords[2]=Ptr_new(zc_arr)
 
+n_flagged = 0
 IF not Ptr_valid(delay_settings) THEN BEGIN
     D0_d=xc_arr0*sin((90.-obs.obsalt)*!DtoR)*Sin(obs.obsaz*!DtoR)+yc_arr0*Sin((90.-obs.obsalt)*!DtoR)*Cos(obs.obsaz*!DtoR) 
     D0_d/=speed_light*base_delay_unit
     delay_settings=Ptr_new(Round(D0_d)) ;round to nearest real delay setting
-ENDIF
+ENDIF ELSE BEGIN
+    ; Flag any dipoles that are turned off for all tiles
+    dipole_flag = where(*delay_settings EQ dead_dipole_delay, n_flagged)
+ENDELSE
+
 *delay_settings*=base_delay_unit
 
 freq_center=antenna_str.freq
@@ -50,6 +56,7 @@ IF Keyword_Set(dipole_mutual_coupling_factor) THEN antenna_str.coupling=mwa_dipo
     ELSE FOR i=0L,N_Elements(antenna_str.coupling)-1 DO antenna_str.coupling[i]=Ptr_new(Complex(Identity(n_dipoles)))
 
 base_gain=fltarr(16)+1.
+IF n_flagged GT 0 THEN base_gain[dipole_flag] = 0.
 gain_arr=Ptrarr(n_ant_pol)
 FOR pol_i=0,n_ant_pol-1 DO gain_arr[pol_i]=Ptr_new(Rebin(reform(base_gain,1,n_dipoles),nfreq_bin,n_dipoles,/sample))
 
