@@ -4,7 +4,7 @@ FHD is an imaging algorithm for radio interferometers. It uses the full complex 
 
 Aside from the basic use of snapshot imaging, there are a number of extensions that expand its capabilities. Most notably, FHD can perform a joint deconvolution of any set of visibilities by regridding each snapshot to a common HEALPix mesh. This allows for long integrations, and even for joint deconvolution of data from different instruments. Additionally, if snapshot observations share precisely the same beam models (these models can change over time and be different for each antenna, the observations must simply have the same change over time etc..), then the mapping function can be re-used between them. This allows for long integrations without an excessively large memory requirement, since the same mapping function can be used for each snapshot.
 
-FHD is typically called by writing a script that is a wrapper for general_obs.pro. This script contains the full file paths to all of the uvfits files that will be used, the path to any ancillary catalog that will be used, and the desired paths where it will put the output. 
+FHD is typically called by writing a script that is a wrapper for general_obs.pro. This script contains the full file paths to all of the uvfits files that will be used, the path to any ancillary catalog that will be used, and the desired paths where it will put the output. These scripts are contained in the pipeline_scripts repository under FHD_IDL_wrappers.
 
 # Useful Resources
 
