@@ -41,16 +41,17 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
         
         response_grp=Ptrarr(nfreq_bin)
         FOR freq_i=0L,nfreq_bin-1 DO BEGIN
+            gain_sum = Total((*gain[pol_i])[freq_i,*])
             response=Complexarr(psf_image_dim,psf_image_dim)
             Kconv=(2.*!Pi)*(freq_center[freq_i]/c_light_vacuum) 
             antenna_gain_arr=Exp(-icomp*Kconv*D_d)
-            voltage_delay=Exp(icomp*2.*!Pi*delays*(freq_center[freq_i])*Reform((*gain[pol_i])[freq_i,*])) 
+            voltage_delay=Exp(icomp*2.*!Pi*delays*(freq_center[freq_i])) 
             meas_current=(*coupling[pol_i,freq_i])#voltage_delay
             zenith_norm=Mean((*coupling[pol_i,freq_i])#Replicate(1.,n_ant_elements))
             meas_current/=zenith_norm
 
             FOR ii=0L,n_ant_elements-1 DO BEGIN
-                response+=antenna_gain_arr[*,*,ii]*meas_current[ii]/n_ant_elements
+                response += ((*gain[pol_i])[freq_i,ii])*antenna_gain_arr[*,*,ii]*meas_current[ii]/gain_sum
             ENDFOR
             response_grp[freq_i]=Ptr_new(response)
         ENDFOR
