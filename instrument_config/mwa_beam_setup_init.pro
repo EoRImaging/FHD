@@ -41,11 +41,13 @@ antenna_coords[2]=Ptr_new(zc_arr)
 
 n_flagged = 0
 IF not Ptr_valid(delay_settings) THEN BEGIN
+    print, "Using default delay settings!"
     D0_d=xc_arr0*sin((90.-obs.obsalt)*!DtoR)*Sin(obs.obsaz*!DtoR)+yc_arr0*Sin((90.-obs.obsalt)*!DtoR)*Cos(obs.obsaz*!DtoR) 
     D0_d/=speed_light*base_delay_unit
     delay_settings=Ptr_new(Round(D0_d)) ;round to nearest real delay setting
 ENDIF ELSE BEGIN
     ; Flag any dipoles that are turned off for all tiles
+    print,"Using delay settings from metadata: ",*delay_settings
     dipole_flag = where(*delay_settings EQ dead_dipole_delay, n_flagged)
 ENDELSE
 
