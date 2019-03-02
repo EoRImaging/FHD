@@ -13,7 +13,7 @@ ps_export=0
 version=''
 image_filter_fn='filter_uv_uniform' ;applied ONLY to output images
 
-data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['HERA_DATA','testcal'])
+data_directory=rootdir('mwa')+filepath('',root='DATA2',subdir=['HERA_DATA','testcal1'])
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 IF n_files EQ 0 THEN vis_file_list=file_search(data_directory,'*.uvfits.sav',count=n_files) ;compatibility with my laptop 
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
