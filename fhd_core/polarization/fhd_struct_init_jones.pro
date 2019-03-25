@@ -55,7 +55,7 @@ hour_angle = hour_angle mod 360.
 apply_astrometry, obs, ra_arr=obs.obsra, dec_arr=obs.lat, x_arr=x_t, y_arr=y_t, /ad2xy
 apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad, /ignore_refraction
 
-obs_temp = fhd_struct_update_obs(obs, nfreq_avg=obs.n_freq, degpix=obs.degpix) ; Use only one average Jones matrix, not one per frequency
+obs_temp = fhd_struct_update_obs(obs, nfreq_avg=obs.n_freq) ; Use only one average Jones matrix, not one per frequency
 antenna=fhd_struct_init_antenna(obs_temp,beam_model_version=beam_model_version,psf_resolution=1.,$
     psf_dim=obs.dimension,psf_intermediate_res=1.,psf_image_resolution=1.,timing=t_ant)
 Jones=antenna[0].Jones[*,*,0]
