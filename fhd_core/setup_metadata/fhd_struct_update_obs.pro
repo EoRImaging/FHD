@@ -29,17 +29,18 @@ freq_bin_i=fltarr(n_freq)
 FOR bin=0L,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
 freq_center=Median(frequency_array)
 
+IF N_Elements(dimension) EQ 0 THEN dimension = obs.dimension
+IF N_Elements(elements) EQ 0 THEN elements = obs.elements
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
-IF ~Keyword_Set(kbinsize) THEN kbinsize=0.5 ;k-space resolution, in wavelengths per pixel
-IF N_Elements(degpix) EQ 0 THEN k_span=2.*max_baseline ELSE k_span=!RaDeg/degpix 
-dimension_test=2.^Round(ALOG10(k_span/kbinsize)/ALOG10(2.))
-
-max_baseline=max_baseline<(k_span/sqrt(2.))
-
-IF N_Elements(dimension) EQ 0 THEN dimension=dimension_test ELSE dimension=Float(dimension);dimension of the image in pixels; dimension = x direction
-IF N_Elements(elements) EQ 0 THEN elements=dimension ELSE elements=Float(elements);elements = y direction
-degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
-k_span=Sqrt(dimension*elements/2.)
+IF Keyword_Set(kbinsize) THEN BEGIN
+    degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
+ENDIF ELSE BEGIN
+    IF ~Keyword_Set(degpix) THEN BEGIN
+        degpix = obs.degpix
+    ENDIF
+    kbinsize=!RaDeg/(degpix*dimension) ;k-space resolution, in wavelengths per pixel
+ENDELSE
+k_span = (dimension > elements)*kbinsize
 max_baseline=max_baseline<(k_span/sqrt(2.))
 
 struct=obs
