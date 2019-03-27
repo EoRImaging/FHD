@@ -480,7 +480,7 @@ healpix_recalculate=0
 
 ## Resolution
 
-**baseline_threshold**: Positive numbers cut baselines shorter than the given number in wavelengths. Negative numbers cut baselines longer than the given number in wavelengths. <br />
+**baseline_threshold**: Positive numbers cut baselines shorter than the given number in wavelengths. Negative numbers cut baselines longer than the given number in wavelengths. This keyword is deprecated because it does not return the correct image normalization. Consider using min_baseline and max_baseline instead. <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
 
