@@ -29,8 +29,10 @@ freq_bin_i=fltarr(n_freq)
 FOR bin=0L,nfreq_bin-1 DO IF freq_ri[bin] LT freq_ri[bin+1] THEN freq_bin_i[freq_ri[freq_ri[bin]:freq_ri[bin+1]-1]]=bin
 freq_center=Median(frequency_array)
 
-IF N_Elements(dimension) EQ 0 THEN dimension = obs.dimension
-IF N_Elements(elements) EQ 0 THEN elements = obs.elements
+IF N_Elements(dimension) EQ 0 THEN BEGIN
+    dimension = obs.dimension
+    IF N_Elements(elements) EQ 0 THEN elements = obs.elements
+ENDIF ELSE IF N_Elements(elements) EQ 0 THEN elements = dimension
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
 IF Keyword_Set(kbinsize) THEN BEGIN
     degpix=!RaDeg/(kbinsize*dimension) ;image space resolution, in degrees per pixel
