@@ -3,13 +3,11 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_image_resolution=psf_image_resolution,timing=timing,$
     psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
     inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
-    kernel_window=kernel_window,_Extra=extra
+    import_pyuvdata_beam_filepath=import_pyuvdata_beam_filepath, _Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
 instrument=obs.instrument
-tile_gain_fn=instrument+'_beam_setup_gain' ;mwa_beam_setup_gain
-tile_init_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
 
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
@@ -62,81 +60,87 @@ ENDFOR
 antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
     n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
     delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1,pix_window:Ptr_new()}
-    
-;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
-;first, update to include basic configuration data
-antenna=Call_function(tile_init_fn[0],obs,antenna_str,_Extra=extra) ;mwa_beam_setup_init
-if N_elements(instrument) GT 1 then begin
-  if ~isa(inst_tile_ptr, 'POINTER', /ARRAY) then message, 'instrument_tile_ptr must be filled in when there is more than one instrument. See dictionary.'
-  for inst_i=1, N_elements(instrument)-1 do begin
-    antenna_temp=Call_function(tile_init_fn[inst_i],obs,antenna_str,_Extra=extra)
-    antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
-  endfor  
-endif  
-IF ~Keyword_Set(psf_dim) THEN $
-    psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
-psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
-;reset psf_dim if cetain conditions met.
-if keyword_set(debug_dim) then psf_dim=18.
-if keyword_set(kernel_window) then psf_dim=18.
 
-IF Keyword_Set(psf_max_dim) THEN BEGIN
-    psf_max_dim=Ceil(psf_max_dim/2.)*2 ;dimension MUST be even
-    IF psf_max_dim LT psf_dim THEN print,'Warning! PSF dim cut to '+Strn(psf_max_dim)+', fit dim was '+Strn(psf_dim)
-    psf_dim=psf_dim<psf_max_dim
-ENDIF
+IF Keyword_Set(import_pyuvdata_beam_filepath) THEN BEGIN
+    antenna = pyuvdata_beam_import(antenna_str, import_pyuvdata_beam_filepath)
+ENDIF ELSE BEGIN
+    tile_gain_fn=instrument+'_beam_setup_gain' ;mwa_beam_setup_gain
+    tile_init_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
+    ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
+    ;first, update to include basic configuration data
+    antenna=Call_function(tile_init_fn[0],obs,antenna_str,_Extra=extra) ;mwa_beam_setup_init
+    if N_elements(instrument) GT 1 then begin
+      if ~isa(inst_tile_ptr, 'POINTER', /ARRAY) then message, 'instrument_tile_ptr must be filled in when there is more than one instrument. See dictionary.'
+      for inst_i=1, N_elements(instrument)-1 do begin
+        antenna_temp=Call_function(tile_init_fn[inst_i],obs,antenna_str,_Extra=extra)
+        antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
+      endfor  
+    endif  
+    IF ~Keyword_Set(psf_dim) THEN $
+        psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
+    psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
+    ;reset psf_dim if cetain conditions met.
+    if keyword_set(debug_dim) then psf_dim=18.
+    if keyword_set(kernel_window) then psf_dim=18.
 
-psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
-psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
-psf_superres_dim=psf_dim*psf_resolution
-psf_scale=dimension*psf_intermediate_res/psf_image_dim
+    IF Keyword_Set(psf_max_dim) THEN BEGIN
+        psf_max_dim=Ceil(psf_max_dim/2.)*2 ;dimension MUST be even
+        IF psf_max_dim LT psf_dim THEN print,'Warning! PSF dim cut to '+Strn(psf_max_dim)+', fit dim was '+Strn(psf_dim)
+        psf_dim=psf_dim<psf_max_dim
+    ENDIF
 
-xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obsx
-yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
-;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
-apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
-valid_i=where(Finite(ra_arr),n_valid)
-ra_use=ra_arr[valid_i]
-dec_use=dec_arr[valid_i]
+    psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+    psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image space beam model
+    psf_superres_dim=psf_dim*psf_resolution
+    psf_scale=dimension*psf_intermediate_res/psf_image_dim
 
-;NOTE: Eq2Hor REQUIRES Jdate_use to have the same number of elements as RA and Dec for precession!!
-;;NOTE: The NEW Eq2Hor REQUIRES Jdate_use to be a scalar! They created a new bug when they fixed the old one
-Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate, refract=0
-za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
-az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
+    xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obsx
+    yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
+    ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
+    apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+    valid_i=where(Finite(ra_arr),n_valid)
+    ra_use=ra_arr[valid_i]
+    dec_use=dec_arr[valid_i]
 
-if keyword_set(kernel_window) then begin
-  print, 'Applying a modified gridding kernel. Beam is no longer instrumental. Do not use for calibration.'
+    ;NOTE: Eq2Hor REQUIRES Jdate_use to have the same number of elements as RA and Dec for precession!!
+    ;;NOTE: The NEW Eq2Hor REQUIRES Jdate_use to be a scalar! They created a new bug when they fixed the old one
+    Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate, refract=0
+    za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
+    az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 
-  ;Get pixels which fall within the horizon
-  horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
-  xvals_instrument=za_arr*Sin(az_arr*!DtoR)
-  yvals_instrument=za_arr*Cos(az_arr*!DtoR)
+    if keyword_set(kernel_window) then begin
+      print, 'Applying a modified gridding kernel. Beam is no longer instrumental. Do not use for calibration.'
 
-  ;Calculate the phase center in x,y coords
-  Eq2Hor,obs.orig_phasera,obs.orig_phasedec,Jdate_use,orig_phasealt,orig_phaseaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
-  apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy
-  xval_center = (90. - orig_phasealt)*sin(orig_phaseaz*!dtor)
-  yval_center = (90. - orig_phasealt)*cos(orig_phaseaz*!dtor)
-  
-  ;Apply an image window to the pixels in the horizon, centered on the phase center
-  pix_window = fltarr(psf_image_dim,psf_image_dim)
-  if typename(kernel_window) NE 'STRING' then kernel_window='Blackman-Harris^2'
-  pix_window[pix_use] = image_window(xvals_instrument[pix_use], yvals_instrument[pix_use], $
-    image_window_name = kernel_window,xval_center=xval_center,yval_center=yval_center,fractional_size=fractional_size)
-  ;Store image window in antenna structure
-  antenna.pix_window=ptr_new(pix_window)
-endif
+      ;Get pixels which fall within the horizon
+      horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
+      xvals_instrument=za_arr*Sin(az_arr*!DtoR)
+      yvals_instrument=za_arr*Cos(az_arr*!DtoR)
 
-;now, update antenna structure to include gains
-if N_elements(instrument) GT 1 then begin
-  for inst_i=0, N_elements(instrument)-1 do begin
-    antenna_temp = pointer_copy(antenna)
-    antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna_temp,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
-    antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
-    antenna[*inst_tile_ptr[inst_i]].antenna_type = instrument[inst_i] ;if more than one instrument, assign the correct antenna type for each subset for metadata purposes
-  endfor  
-endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+      ;Calculate the phase center in x,y coords
+      Eq2Hor,obs.orig_phasera,obs.orig_phasedec,Jdate_use,orig_phasealt,orig_phaseaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
+      apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy
+      xval_center = (90. - orig_phasealt)*sin(orig_phaseaz*!dtor)
+      yval_center = (90. - orig_phasealt)*cos(orig_phaseaz*!dtor)
+      
+      ;Apply an image window to the pixels in the horizon, centered on the phase center
+      pix_window = fltarr(psf_image_dim,psf_image_dim)
+      if typename(kernel_window) NE 'STRING' then kernel_window='Blackman-Harris^2'
+      pix_window[pix_use] = image_window(xvals_instrument[pix_use], yvals_instrument[pix_use], $
+        image_window_name = kernel_window,xval_center=xval_center,yval_center=yval_center,fractional_size=fractional_size)
+      ;Store image window in antenna structure
+      antenna.pix_window=ptr_new(pix_window)
+    endif
+
+    ;now, update antenna structure to include gains
+    if N_elements(instrument) GT 1 then begin
+      for inst_i=0, N_elements(instrument)-1 do begin
+        antenna_temp = pointer_copy(antenna)
+        antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna_temp,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+        antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
+        antenna[*inst_tile_ptr[inst_i]].antenna_type = instrument[inst_i] ;if more than one instrument, assign the correct antenna type for each subset for metadata purposes
+      endfor  
+    endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+ENDELSE
 
 ;Finally, update antenna structure to include the response of each antenna
 antenna=general_antenna_response(obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,_Extra=extra)
