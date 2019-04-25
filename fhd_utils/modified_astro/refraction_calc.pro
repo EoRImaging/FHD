@@ -17,7 +17,6 @@ zenith_angle=angle_difference(zendec,zenra,dec_vals,ra_vals,/degree,/nearest)
 hour_angle=ra_vals-zenra
 
 refract_amplitude_vals=refraction_air(freq,zenith_angle,/unit_Hz)
-;parallactic_angle_vals=parallactic_angle(latitude=lat,zenith_angle=zenith_angle,hour_angle=hour_angle)
 Eq2Hor,ra_vals,dec_vals,obs.JD0,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
 
 refract_amplitude=Fltarr(dimension,elements)

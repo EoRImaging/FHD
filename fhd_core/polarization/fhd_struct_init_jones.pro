@@ -46,11 +46,6 @@ dec_use=dec_arr[inds_use]
 xv=xvals[inds_use]
 yv=yvals[inds_use]
 
-hour_angle=obs.obsra - ra_use
-h_neg = where(hour_angle LT 0, N_neg)
-IF N_neg GT 0 THEN hour_angle[h_neg] = hour_angle[h_neg] + 360.
-hour_angle = hour_angle mod 360.
-
 ;Convert observatory latitude to same coordinate system 
 apply_astrometry, obs, ra_arr=obs.obsra, dec_arr=obs.lat, x_arr=x_t, y_arr=y_t, /ad2xy
 apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad, /ignore_refraction
@@ -58,7 +53,7 @@ apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad, /ignore_refrac
 obs_temp = fhd_struct_update_obs(obs, nfreq_avg=obs.n_freq) ; Use only one average Jones matrix, not one per frequency
 antenna=fhd_struct_init_antenna(obs_temp,beam_model_version=beam_model_version,psf_resolution=1.,$
     psf_dim=obs.dimension,psf_intermediate_res=1.,psf_image_resolution=1.,timing=t_ant)
-Jones=antenna[0].Jones[*,*,0]
+Jones=rotate_jones_matrix(obs, antenna[0].Jones[*,*,0])
 
 ; Calculate the normalization
 ant_pol1 = 0
