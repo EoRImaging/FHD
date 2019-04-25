@@ -42,13 +42,8 @@ lat_offset=-(zendec-phasedec)
 
 zenith_ang=angle_difference(phasedec,phasera,zendec,zenra,/degree)
 hour_angle=lon_offset
-;parallactic angle from http://www.astron.nl/aips++/docs/glossary/p.html#parallactic_angle 
-; with lambda=zendec, h=hour_angle, delta=phasedec
-;minus sign??
-parallactic_ang=-!Radeg*atan(-sin(!DtoR*hour_angle),$
-    cos(!DtoR*phasedec)*tan(!DtoR*zendec)-sin(!DtoR*phasedec)*cos(!DtoR*hour_angle))
+parallactic_ang = parallactic_angle(dec=phasedec, hour_angle=hour_angle, latitude=zendec)
 
-;parallactic_ang=(parallactic_ang-90.)
 xi=-Tan(zenith_ang*!DtoR)*Sin(parallactic_ang*!DtoR)
 eta=Tan(zenith_ang*!DtoR)*Cos(parallactic_ang*!DtoR)
 
@@ -69,6 +64,5 @@ MAKE_ASTR, astr, CD = Float(cd) , DELT = Float(delt), CRPIX = Float([x_c+1.,y_c+
     DATE_OBS=date_conv(JDate,'FITS'),NAXIS=Float([dimension,elements]),axes=[1,2]
 
 ad2xy,zenra,zendec,astr,zenx,zeny
-;ad2xy,obsra,obsdec,astr,obsx,obsy
 
 END

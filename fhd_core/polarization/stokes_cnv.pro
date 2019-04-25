@@ -133,6 +133,8 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
         stokes_cnv(*(source_list[extend_i[ext_i]].extend),jones,beam_arr=beam_arr,inverse=inverse,square=square,/no_extend)
     
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
+        sign1=[1,1,1,1]
+        sign2=[1,-1,-complex(0,1),complex(0,1)]
         stokes_i_offset=0
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i+4)
         FOR pol_i=0,n_pol-1 DO *flux_pq[pol_i]=(stokes_inv_term1[pol_i]*(*flux_arr[stokes_list1[pol_i]])+stokes_inv_term2[pol_i]*(*flux_arr[stokes_list2[pol_i]]))
@@ -144,6 +146,8 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
             *flux_out[pol_i2]*=*beam_use[pol_i2]
         ENDFOR
     ENDIF ELSE BEGIN ;instrumental -> Stokes
+        sign1=[1,1,1,complex(0,1)]
+        sign2=[1,-1,1,-complex(0,1)]
         stokes_i_offset=4  
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i)
         
@@ -179,6 +183,7 @@ ENDIF ELSE BEGIN ;else case is array of images
     ;stokes I can have proper inverse-variance weighting. (not used!)
     ; All other polarizations need to be converted to 'true sky' frame before they can be added
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
+        sign=[1,-1,-complex(0,1),complex(0,1)]
         FOR sky_pol=0,n_pol-1 DO image_arr_sky[sky_pol]=$
             Ptr_new(stokes_inv_term1[sky_pol]*(*image_arr[stokes_list1[sky_pol]])+stokes_inv_term2[sky_pol]*(*image_arr[stokes_list2[sky_pol]]))
         FOR instr_pol=0,n_pol-1 DO BEGIN
@@ -190,6 +195,8 @@ ENDIF ELSE BEGIN ;else case is array of images
         ENDFOR
         
     ENDIF ELSE BEGIN ;instrumental -> Stokes
+        sign1=[1,1,1,complex(0,1)]
+        sign2=[1,-1,1,-complex(0,1)]
         FOR sky_pol=0,n_pol-1 DO BEGIN
             image_arr_sky[sky_pol]=Ptr_new(fltarr(dimension,elements))
             FOR instr_pol=0,n_pol-1 DO BEGIN
