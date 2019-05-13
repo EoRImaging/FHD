@@ -99,8 +99,6 @@ ENDIF
 
 type=size(image_arr,/type)
 IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
-    sign1=[1,1,1,complex(0,1)]
-    sign2=[1,-1,1,-complex(0,1)]
     source_list=image_arr
     ns_in=N_Elements(source_list)
     sx=source_list.x
@@ -125,6 +123,8 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
         stokes_cnv(*(source_list[extend_i[ext_i]].extend),jones,beam_arr=beam_arr,inverse=inverse,square=square,/no_extend)
     
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
+        sign1=[1,1,1,1]
+        sign2=[1,-1,-complex(0,1),complex(0,1)]
         stokes_i_offset=0
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i+4)
         FOR pol_i=0,n_pol-1 DO *flux_pq[pol_i]=(sign1[pol_i]*(*flux_arr[stokes_list1[pol_i]])+sign2[pol_i]*(*flux_arr[stokes_list2[pol_i]]))/2.
@@ -136,6 +136,8 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
             *flux_out[pol_i2]*=*beam_use[pol_i2]
         ENDFOR
     ENDIF ELSE BEGIN ;instrumental -> Stokes
+        sign1=[1,1,1,complex(0,1)]
+        sign2=[1,-1,1,-complex(0,1)]
         stokes_i_offset=4  
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i)
         
@@ -158,7 +160,6 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     Ptr_free,flux_out,flux_arr,flux_pq
     result=source_list
 ENDIF ELSE BEGIN ;else case is array of images
-    sign=[1,-1,1,-1]
     n_pol=N_Elements(image_arr) ;redefine n_pol here, just to make sure it matches the images
     image_arr_out=Ptrarr(n_pol)
     IF ~Ptr_valid(image_arr[0]) THEN BEGIN
@@ -172,6 +173,7 @@ ENDIF ELSE BEGIN ;else case is array of images
     ;stokes I can have proper inverse-variance weighting. (not used!)
     ; All other polarizations need to be converted to 'true sky' frame before they can be added
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
+        sign=[1,-1,-complex(0,1),complex(0,1)]
         FOR sky_pol=0,n_pol-1 DO image_arr_sky[sky_pol]=$
             Ptr_new(((*image_arr[stokes_list1[sky_pol]])+sign[sky_pol]*(*image_arr[stokes_list2[sky_pol]]))/2.)
         FOR instr_pol=0,n_pol-1 DO BEGIN
@@ -183,6 +185,8 @@ ENDIF ELSE BEGIN ;else case is array of images
         ENDFOR
         
     ENDIF ELSE BEGIN ;instrumental -> Stokes
+        sign1=[1,1,1,complex(0,1)]
+        sign2=[1,-1,1,-complex(0,1)]
         FOR sky_pol=0,n_pol-1 DO BEGIN
             image_arr_sky[sky_pol]=Ptr_new(fltarr(dimension,elements))
             FOR instr_pol=0,n_pol-1 DO BEGIN
@@ -190,7 +194,7 @@ ENDIF ELSE BEGIN ;else case is array of images
             ENDFOR
         ENDFOR
         FOR pol_i=0,n_pol-1 DO image_arr_out[pol_i]=$
-            Ptr_new((*image_arr_sky[stokes_list1[pol_i]])+sign[pol_i]*(*image_arr_sky[stokes_list2[pol_i]]))
+            Ptr_new(sign1[pol_i]*(*image_arr_sky[stokes_list1[pol_i]])+sign2[pol_i]*(*image_arr_sky[stokes_list2[pol_i]]))
     ENDELSE
     Ptr_free,image_arr_sky
     result=image_arr_out
