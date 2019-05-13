@@ -21,12 +21,12 @@ IF Keyword_Set(update_last) THEN BEGIN
     p_map=Ptrarr(4,4,/allocate)
     p_corr=Ptrarr(4,4,/allocate)
     FOR pol_i2=0,3 DO FOR pol_i1=0,3 DO BEGIN
-        temp=fltarr(dimension_in,elements_in)
+        temp=dblarr(dimension_in,elements_in)
         temp[jones_in.inds]=*jones_in.Jmat[pol_i1,pol_i2]
         temp=Rebin(temp,dimension,elements)
         *p_map[pol_i1,pol_i2]=temp[inds_use]
         
-        temp=fltarr(dimension_in,elements_in)
+        temp=dblarr(dimension_in,elements_in)
         temp[jones_in.inds]=*jones_in.Jinv[pol_i1,pol_i2]
         temp=Rebin(temp,dimension,elements)
         *p_corr[pol_i1,pol_i2]=temp[inds_use]
@@ -59,10 +59,11 @@ obs_temp = fhd_struct_update_obs(obs, nfreq_avg=obs.n_freq) ; Use only one avera
 antenna=fhd_struct_init_antenna(obs_temp,beam_model_version=beam_model_version,psf_resolution=1.,$
     psf_dim=obs.dimension,psf_intermediate_res=1.,psf_image_resolution=1.,timing=t_ant)
 Jones=antenna[0].Jones[*,*,0]
+
 ; Calculate the normalization
 ant_pol1 = 0
 ant_pol2 = 1
-power_zenith_beam = Fltarr(dimension, elements)
+power_zenith_beam = dblarr(dimension, elements)
 FOR ant_pol=0,1 DO FOR sky_pol=0,1 DO $
     power_zenith_beam += Real_part(*Jones[sky_pol,ant_pol]*Conj(*Jones[sky_pol, ant_pol]))
 power_zenith_beam /= 2.
@@ -71,8 +72,8 @@ FOR ptr_i=0,3 DO *Jones[ptr_i] = (*Jones[ptr_i])[inds_use]/Sqrt(power_zenith)
 
 p_map=Ptrarr(4,4,/allocate)
 p_corr=Ptrarr(4,4,/allocate)
-FOR i=0,3 DO FOR j=0,3 DO *p_map[i,j]=fltarr(n_pix)
-FOR i=0,3 DO FOR j=0,3 DO *p_corr[i,j]=fltarr(n_pix)
+FOR i=0,3 DO FOR j=0,3 DO *p_map[i,j]=dblarr(n_pix)
+FOR i=0,3 DO FOR j=0,3 DO *p_corr[i,j]=dblarr(n_pix)
 order_1 = [0,1,0,1]
 order_2 = [0,1,1,0]
 
@@ -81,7 +82,7 @@ FOR pix=0L,n_pix-1 DO BEGIN
     ;Jmat converts [pp,qq,pq,qp] -> [xx,yy,xy,yx]
     ;Jinv converts [xx, yy, xy, yx] -> [pp, qq, pq, qp]
     ;Note: Stokes [I, Q, U, V] = (1./2.)*[(pp+qq), (qq-pp), (pq+qp), (iqp-ipq)]
-    Jmat = Fltarr(4,4)
+    Jmat = dblarr(4,4)
     FOR ii=0,3 DO BEGIN
         FOR jj = 0,3 DO BEGIN
             Jmat[ii, jj] = (*Jones[order_1[ii], order_1[jj]])[pix]*Conj((*Jones[order_2[ii], order_2[jj]])[pix])
