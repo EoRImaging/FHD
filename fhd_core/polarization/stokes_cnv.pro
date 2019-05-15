@@ -49,6 +49,12 @@ ENDELSE
 n_pix=N_Elements(inds)
 IF Keyword_Set(inverse) THEN p_use=p_map ELSE p_use=p_corr
 
+; Define the Stokes conversion:
+; I = xx* + yy*
+; Q = xx* - yy*
+; U = xy* + yx*
+; V = ixy* - iyx*
+; where x is in the RA direction and y is in the Dec direction
 stokes_mat_term1=[1,1,1,complex(0,1)]
 stokes_mat_term2=[1,-1,1,-complex(0,1)]
 stokes_inv_term1=[.5,.5,.5,.5]
