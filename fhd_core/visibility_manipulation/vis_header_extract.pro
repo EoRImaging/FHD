@@ -25,7 +25,7 @@ n_fields=sxpar(header,'tfields') ;12
 
 n_grp_params=sxpar(header,'pcount')
 param_list=Strarr(n_grp_params)
-ptype_list=String(format='("PTYPE",I1)',indgen(n_grp_params)+1)
+ptype_list=Strcompress(String(format='("PTYPE",I)',indgen(n_grp_params)+1), /remove_all)
 FOR pi=0,n_grp_params-1 DO param_list[pi]=StrTrim(sxpar(header,ptype_list[pi]),2)
 
 param_names = strlowcase(strtrim(sxpar(header, 'CTYPE*'), 2))
