@@ -197,7 +197,7 @@ ENDIF ELSE BEGIN ;else case is array of images
             ENDFOR
         ENDFOR
         FOR pol_i=0,n_pol-1 DO image_arr_out[pol_i]=$
-            Ptr_new(stokes_mat_term1[pol_i]*(*image_arr_sky[stokes_list1[pol_i]])+stokes_mat_term2[pol_i]*(*image_arr_sky[stokes_list2[pol_i]]))
+            Ptr_new(Real_part(stokes_mat_term1[pol_i]*(*image_arr_sky[stokes_list1[pol_i]])+stokes_mat_term2[pol_i]*(*image_arr_sky[stokes_list2[pol_i]])))
     ENDELSE
     Ptr_free,image_arr_sky
     result=image_arr_out
