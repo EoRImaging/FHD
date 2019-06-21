@@ -18,9 +18,9 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   beam_ant2=DComplex(Conj(*(antenna2.response[ant_pol2,freq_i])))
   beam_norm=1.
   
-  power_zenith_beam=Sqrt(((*Jones1[0,ant_pol1])^2.+(*Jones1[1,ant_pol1])^2.)*$
-    ((Conj(*Jones2[0,ant_pol2]))^2.+(Conj(*Jones2[1,ant_pol2]))^2.))
-  power_zenith=Interpolate(abs(power_zenith_beam),zen_int_x,zen_int_y,cubic=-0.5)
+  power_zenith_beam=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
+    (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
+  power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
   power_beam = power_zenith_beam*beam_ant1*beam_ant2
 
   image_power_beam=power_beam/power_zenith
