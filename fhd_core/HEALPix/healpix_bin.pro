@@ -10,7 +10,7 @@ hpx_res = sqrt(4*!Pi/(n_hpx))*!RaDeg
 dimension_hpx = ceil((obs.dimension*obs.degpix/hpx_res)*(1/2.))*2    ; Ensure even.
 elements_hpx = ceil((obs.elements*obs.degpix/hpx_res)*(1/2.))*2
 ; give new dimension/elements to update_obs
-obs_hpx = fhd_struct_update_obs(obs,dimension=dimension_hpx, elements=elements_hpx)
+obs_hpx = fhd_struct_update_obs(obs,dimension=dimension_hpx, elements=elements_hpx, degpix=hpx_res)
 
 ;apply_astrometry,obs_hpx, x_arr=meshgrid(dimension_hpx,elements_hpx,1), y_arr=meshgrid(dimension_hpx, elements_hpx, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 ;radec_i=where(Finite(ra_arr))
@@ -88,6 +88,5 @@ FOR map_i=0,n_map-1 DO BEGIN
 
     IF Ptr_flag THEN *map_interp[map_i]=model_img*pixel_area_cnv ELSE map_interp=model_img*pixel_area_cnv   ; Jy/pixel for the orthoslant pixel area
 ENDFOR
-
 RETURN,map_interp
 END
