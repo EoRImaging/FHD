@@ -258,10 +258,13 @@ instr_sources=Ptrarr(n_pol)
 instr_rings=Ptrarr(n_pol)
 filter_arr=Ptrarr(n_pol,/allocate) 
 FOR pol_i=0,n_pol-1 DO BEGIN
+    complex_flag = pol_i GT 1 ? 1 : 0
     instr_dirty_arr[pol_i]=Ptr_new(dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],beam_ptr=beam_base_out[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],$
+        beam_ptr=beam_base_out[pol_i],no_real=complex_flag,_Extra=extra))
     IF model_flag THEN instr_model_arr[pol_i]=Ptr_new(dirty_image_generate(*model_uv_arr[pol_i],degpix=degpix,weights=*weights_arr[pol_i],/antialias,$
-        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],beam_ptr=beam_base_out[pol_i],_Extra=extra));*(*beam_correction_out[pol_i]))
+        image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,file_path_fhd=file_path_fhd,filter=filter_arr[pol_i],$
+        beam_ptr=beam_base_out[pol_i],no_real=complex_flag,_Extra=extra))
     IF source_flag THEN BEGIN
         IF Keyword_Set(ring_radius) THEN instr_rings[pol_i]=Ptr_new(source_image_generate(source_arr_out,obs_out,pol_i=pol_i,resolution=16,$
             dimension=dimension,restored_beam_width=restored_beam_width,ring_radius=ring_radius,_Extra=extra))
@@ -291,6 +294,14 @@ ENDIF ELSE BEGIN
     instr_residual_arr=instr_dirty_arr
     stokes_residual_arr=stokes_dirty_arr
 ENDELSE
+
+weights_use = Pointer_copy(weights_arr)
+; The cross-polarization XY and YX images are both complex, but are conjugate mirrors of each other
+; To make images of these, we simply take the real and imaginary parts separately
+crosspol_split_real_imaginary, instr_dirty_arr, pol_names=pol_names
+crosspol_split_real_imaginary, instr_model_arr
+crosspol_split_real_imaginary, instr_residual_arr
+crosspol_split_real_imaginary, weights_use
 
 IF source_flag THEN BEGIN
     stokes_sources=stokes_cnv(instr_sources,jones_out,beam=beam_base_out,_Extra=extra) ;returns null pointer if instr_sources is a null pointer 
@@ -435,9 +446,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
     
     IF ~Keyword_Set(no_png) THEN BEGIN
-        IF weights_flag THEN Imagefast,Abs(*weights_arr[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
+        IF weights_flag THEN Imagefast,Abs(*weights_use[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
-            low=Min(Abs(*weights_arr[pol_i])*obs.n_vis),high=Max(Abs(*weights_arr[pol_i])*obs.n_vis),_Extra=extra
+            low=Min(Abs(*weights_use[pol_i])*obs.n_vis),high=Max(Abs(*weights_use[pol_i])*obs.n_vis),_Extra=extra
         IF model_flag THEN BEGIN
             Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
@@ -487,7 +498,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
         FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
-        IF weights_flag THEN FitsFast,Abs(*weights_arr[pol_i])*obs.n_vis,fits_header_uv,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
+        IF weights_flag THEN FitsFast,Abs(*weights_use[pol_i])*obs.n_vis,fits_header_uv,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
         IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
     ENDIF
     
