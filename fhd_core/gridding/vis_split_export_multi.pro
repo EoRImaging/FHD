@@ -20,7 +20,10 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     IF obs_i EQ 0 THEN obs_arr=Replicate(obs,n_obs) ELSE obs_arr[obs_i]=obs
 ENDFOR
 
-n_pol=Min(obs_arr.n_pol)
+; We don't use the cross polarizations currently.
+; To use them in the future, the healpix cubes will need to be complex for XY and YX
+; See crosspol_reformat.pro for details on the way XY and YX are stored
+n_pol=Min(obs_arr.n_pol) < 2
 n_freq=Min(obs_arr.n_freq)
 IF N_Elements(n_avg) EQ 0 THEN n_avg=Float(Round(n_freq/48.)) ;default of 48 output frequency bins
 n_freq_use=Floor(n_freq/n_avg)
