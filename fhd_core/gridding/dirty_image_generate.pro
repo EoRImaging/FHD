@@ -76,7 +76,9 @@ IF Keyword_Set(image_filter_fn) THEN BEGIN
     ENDCASE
 ENDIF
 
-IF not Keyword_Set(double_flag) THEN dirty_image=Float(dirty_image)
+IF not Keyword_Set(double_flag) THEN BEGIN
+    IF Keyword_Set(no_real) THEN dirty_image=Complex(dirty_image) ELSE dirty_image=Float(dirty_image)
+ENDIF
 IF Keyword_Set(normalization) THEN dirty_image*=normalization
 RETURN,dirty_image
 END
