@@ -193,7 +193,7 @@ ENDIF ELSE BEGIN ;else case is array of images
         FOR sky_pol=0,n_pol-1 DO BEGIN
             image_arr_sky[sky_pol]=Ptr_new(fltarr(dimension,elements))
             FOR instr_pol=0,n_pol-1 DO BEGIN
-                (*image_arr_sky[sky_pol])[inds]+=(*image_arr[instr_pol]*weight_invert(*beam_use[instr_pol]))[inds]*(*p_corr[instr_pol,sky_pol])
+                (*image_arr_sky[sky_pol])[inds]+=((*image_arr[instr_pol])[inds]*weight_invert(*beam_use[instr_pol]))[inds]*(*p_corr[instr_pol,sky_pol])
             ENDFOR
         ENDFOR
         FOR pol_i=0,n_pol-1 DO image_arr_out[pol_i]=$
