@@ -67,8 +67,8 @@ FOR ptr_i=0,3 DO *Jones[ptr_i] = (*Jones[ptr_i])[inds_use]/Sqrt(power_zenith)
 
 p_map=Ptrarr(4,4,/allocate)
 p_corr=Ptrarr(4,4,/allocate)
-FOR i=0,3 DO FOR j=0,3 DO *p_map[i,j]=dblarr(n_pix)
-FOR i=0,3 DO FOR j=0,3 DO *p_corr[i,j]=dblarr(n_pix)
+FOR i=0,3 DO FOR j=0,3 DO *p_map[i,j]=Dcomplexarr(n_pix)
+FOR i=0,3 DO FOR j=0,3 DO *p_corr[i,j]=Dcomplexarr(n_pix)
 order_1 = [0,1,0,1]
 order_2 = [0,1,1,0]
 
@@ -77,7 +77,7 @@ FOR pix=0L,n_pix-1 DO BEGIN
     ;Jmat converts [pp,qq,pq,qp] -> [xx,yy,xy,yx]
     ;Jinv converts [xx, yy, xy, yx] -> [pp, qq, pq, qp]
     ;Note: Stokes [I, Q, U, V] = (1./2.)*[(pp+qq), (qq-pp), (pq+qp), (iqp-ipq)]
-    Jmat = dblarr(4,4)
+    Jmat = Dcomplexarr(4,4)
     FOR ii=0,3 DO BEGIN
         FOR jj = 0,3 DO BEGIN
             Jmat[ii, jj] = (*Jones[order_1[ii], order_1[jj]])[pix]*Conj((*Jones[order_2[ii], order_2[jj]])[pix])
