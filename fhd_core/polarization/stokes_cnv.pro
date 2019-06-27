@@ -191,7 +191,7 @@ ENDIF ELSE BEGIN ;else case is array of images
         
     ENDIF ELSE BEGIN ;instrumental -> Stokes
         FOR sky_pol=0,n_pol-1 DO BEGIN
-            image_arr_sky[sky_pol]=Ptr_new(fltarr(dimension,elements))
+            image_arr_sky[sky_pol]=Ptr_new(Dcomplexarr(dimension,elements))
             FOR instr_pol=0,n_pol-1 DO BEGIN
                 (*image_arr_sky[sky_pol])[inds]+=(*image_arr[instr_pol]*weight_invert(*beam_use[instr_pol]))[inds]*(*p_corr[instr_pol,sky_pol])
             ENDFOR
