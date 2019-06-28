@@ -9,7 +9,7 @@ b. the fhdps_utils repository (https://github.com/EoRImaging/fhdps_utils)
 
 c. the astro IDL library (http://idlastro.gsfc.nasa.gov/)
 
-d. the coyote library (http://www.idlcoyote.com/documents/programs.php)
+d. the coyote library (https://github.com/idl-coyote/coyote)
 
 e. the HEALPix library (https://healpix.sourceforge.io/)
 
