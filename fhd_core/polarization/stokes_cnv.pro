@@ -117,6 +117,8 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     ind_arr[inds]=Lindgen(N_Elements(inds))
     p_ind=ind_arr[sx,sy]
     s_use=where(p_ind GE 0,ns)
+    print, ns
+    IF ns EQ 0 THEN message, "Error: ns=0, probably no sources above the horizon"
     sx=sx[s_use]
     sy=sy[s_use]
     p_ind=p_ind[s_use]
