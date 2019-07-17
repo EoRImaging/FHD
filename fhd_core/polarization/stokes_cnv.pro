@@ -6,6 +6,9 @@ FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
 ;requires the jones structure from fhd_struct_init_jones.pro
 
+;Adjusts error handling so that if an error occurs, it halts execution and returns to the line at which the error occurred
+ON_ERROR, 2
+
 IF Min(Ptr_valid(beam_arr)) EQ 0 THEN BEGIN
     n_pol=4
     beam_use=Ptrarr(n_pol,/allocate)
@@ -117,6 +120,7 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     ind_arr[inds]=Lindgen(N_Elements(inds))
     p_ind=ind_arr[sx,sy]
     s_use=where(p_ind GE 0,ns)
+    IF ns EQ 0 THEN message, "Error: ns=0, probably no sources above the horizon"
     sx=sx[s_use]
     sy=sy[s_use]
     p_ind=p_ind[s_use]
