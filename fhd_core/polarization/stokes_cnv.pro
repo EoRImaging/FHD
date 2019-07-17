@@ -6,6 +6,7 @@ FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
 ;requires the jones structure from fhd_struct_init_jones.pro
 
+;Adjusts error handling so that if an error occurs, it halts execution and returns to the line at which the error occurred
 ON_ERROR, 2
 
 IF Min(Ptr_valid(beam_arr)) EQ 0 THEN BEGIN
