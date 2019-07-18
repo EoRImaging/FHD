@@ -161,5 +161,4 @@ ENDIF ELSE BEGIN
     ENDELSE
 ENDELSE
 
-model_uv_full=crosspol_reformat(model_uv_full, /inverse)
 END
