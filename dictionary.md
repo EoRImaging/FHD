@@ -332,6 +332,12 @@ WARNING! Options in this section may change without notice, and should never be 
 **image_filter_fn**: weighting filter to be applyed to resulting snapshot images and fits files. Options include  filter_uv_hanning, filter_uv_natural, filter_uv_radial, filter_uv_tapered_uniform, filter_uv_uniform, and filter_uv_weighted. Specifics on these filters can be found in `FHD/fhd_output/fft_filters`.<br />
   -*EoR_firstpass settings*: filter_uv_uniform <br />
   -*Default*: filter_uv_uniform <br />
+  
+**instr_high**: maximum colorbar value for exported instrumental polarization .ps or .png images. Applies to all instrumental polarization images: XX, YY, and XY real and imaginary.<br />
+  -*Default*: not set <br />
+
+**instr_low**: minimum colorbar value for exported instrumental polarization .ps or .png images. Applies to all instrumental polarization images: XX, YY, and XY real and imaginary.<br />
+  -*Default*: not set <br />
 
 **no_fits**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
   -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
@@ -364,14 +370,20 @@ WARNING! Options in this section may change without notice, and should never be 
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 probably <br /> 
   
-**snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: 0 <br />
-
 **silent**: do not print messages. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 probably <br /> 
   
+**snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
+  -*EoR_firstpass settings*: 1 <br />
+  -*Default*: 0 <br />
+
+**stokes_high**: maximum colorbar value for exported Stokes .ps or .png images. Applies to all Stokes images: I, Q, U, and V.<br />
+  -*Default*: not set <br />
+
+**stokes_low**: minimum colorbar value for exported Stokes .ps or .png images. Applies to all Stokes images: I, Q, U, and V.<br />
+  -*Default*: not set <br />
+
 **split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. <br />
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: not set <br /> 
