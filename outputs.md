@@ -77,8 +77,8 @@ Pointers and large arrays in **cal** structure:
       * **y**: The centroided pixel row coordinate of the source.
       * **ra**: the RA coordinate value of the source
       * **dec**: the DEC coordinate value of the source
-      * **ston**: not used in the calibration source list (!Q right?)
-      * **freq**: frequency of the source model
+      * **ston**: not used in the calibration source list (see Deconvolution)
+      * **freq**: frequency of the source model in MHz
       * **alpha**: spectral index of the source
       * **gain**: not used in the calibration source list (!Q right?)
       * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
@@ -92,6 +92,54 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 ##  Deconvolution (deconvolution only)<br />
 
 ### \<obsids\>\_fhd.sav <br />
+
+  * **astr**: Structure containing the fits image header information.<br />
+  
+  * **beam_base**<br />
+  
+  * **beam_correction**<br />
+  
+  * **component_array**: an array of structures of dimension N<sub>components</sub>. Gives the deconvolution components before clustering.
+      * **id**: A unique ID labeling each component.
+      * **x**: The centroided pixel column coordinate of the component.
+      * **y**: The centroided pixel row coordinate of the component.
+      * **ra**: The RA coordinate value of the component.
+      * **dec**: The DEC coordinate value of the component.
+      * **ston**: Signal-to-noise of the component. Calculated as the beam-weighted component flux density divided by the standard deviation across the beam-weighted residual.
+      * **freq**: Frequency of the component in MHz.
+      * **alpha**: Spectral index of the component. Deconvolution does not calculate a spectral index and defaults to -0.8.
+      * **gain**: !Q
+      * **flag**: Type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination.
+      * **extend**: A Null pointer. Not used for component_array.
+      * **flux**: Structure of the fluxes for the component. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
+  
+  * **dirty_array**<br />
+  
+  * **image_uv_arr**<br />
+  
+  * **model_uv_full**<br />
+  
+  * **model_uv_holo**<br />
+  
+  * **residual_array**<br />
+  
+  * **source_array**: an array of structures of dimension N<sub>sources</sub>. Gives the clustered deconvolution sources. Use generate_calibration_catalog.pro to extract this source array.<br />
+      * **id**: A source label.
+      * **x**: The centroided pixel column coordinate of the source.
+      * **y**: The centroided pixel row coordinate of the source.
+      * **ra**: The RA coordinate value of the source.
+      * **dec**: The DEC coordinate value of the source.
+      * **ston**: Signal-to-noise of the source. Calculated as the beam-weighted source flux density divided by the standard deviation across the beam-weighted residual.
+      * **freq**: Frequency of the source in MHz.
+      * **alpha**: Spectral index of the source. Deconvolution does not calculate a spectral index and defaults to -0.8.
+      * **gain**: !Q
+      * **flag**: Type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination.
+      * **extend**: A pointer. For extended sources, the pointer references a new source_array structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
+      * **flux**: Structure of the fluxes for the source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
+  
+  * **source_mask**<br />
+  
+  * **weights_arr**<br />
 
 ### \<obsids\>\_fhd_params.sav <br />
 
