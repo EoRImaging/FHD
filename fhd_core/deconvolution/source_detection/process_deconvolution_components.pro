@@ -23,5 +23,15 @@ source_mask=Rebin(source_mask,dimension,elements,/sample)
 source_array=components2sources(component_array,obs,fhd_params,radius=beam_width>1.5,noise_map=noise_map,$
     gain_factor=gain_factor,source_mask=source_mask,_Extra=extra)
 
+; Add beam information to the source and component lists
+FOR pol_i=0,n_pol-1 DO BEGIN
+    beam_use = sqrt(*beam_arr[pol_i])
+    component_array.beam.(pol_i) = beam_use[Round(component_array.x), Round(component_array.y)]
+    source_array.beam.(pol_i) = beam_use[Round(source_array.x), Round(source_array.y)]
+    ;also convert extended source components.
+    extend_i=where(Ptr_valid(source_array.extend),n_ext)
+    FOR ext_i=0L,n_ext-1 DO *(source_array[extend_i[ext_i]].extend).beam.(pol_i) = source_array[extend_i[ext_i]].beam.(pol_i)
+ENDFOR
+
 RETURN source_array
 END
