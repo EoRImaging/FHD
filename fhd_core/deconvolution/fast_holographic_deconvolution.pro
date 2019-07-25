@@ -398,21 +398,16 @@ converge_check2=converge_check2[0:iter-1]
 converge_check=converge_check[0:i2]
 
 ; Section 3: Cull deconvolved clean components, and condense valid components to form a final source catalog
-fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
-noise_map=fhd_params.convergence*beam_corr_avg
-noise_map=Rebin(noise_map,dimension,elements)
-beam_width=beam_width_calculate(obs,min_restored_beam_width=1.,/FWHM)
-IF Keyword_Set(independent_fit) THEN noise_map*=Sqrt(n_pol)
-comp_i_use=where(component_array.flux.I GT 0)
-component_array=component_array[comp_i_use]
-fhd_params.n_iter=iter
-fhd_params.n_components=N_Elements(component_array)
 fhd_params.detection_threshold=detection_threshold
+fhd_params.convergence=Stddev(image_use[where(beam_mask*source_mask)],/nan)
+fhd_params.n_iter=iter
 source_n_arr=source_n_arr[0:iter-1]
 detection_threshold_arr=detection_threshold_arr[0:iter-1]
-source_mask=Rebin(source_mask,dimension,elements,/sample)
-source_array=components2sources(component_array,obs,fhd_params,radius=beam_width>1.5,noise_map=noise_map,$
-    gain_factor=gain_factor,source_mask=source_mask,_Extra=extra)
+
+source_array = process_deconvolution_components(component_array,obs,fhd_params,noise_map,$
+    independent_fit=independent_fit,gain_factor=gain_factor,source_mask=source_mask,_Extra=extra)
+
+fhd_params.n_components=N_Elements(component_array)
 fhd_params.n_sources=N_Elements(source_array)
 info_struct={convergence_iter:converge_check2,source_n_iter:source_n_arr,detection_threshold_iter:detection_threshold_arr}
 fhd_params.info=Ptr_new(info_struct)
