@@ -22,7 +22,7 @@ ENDIF ELSE BEGIN
     y_loc_use=y_loc
     flux_use=flux
 ENDELSE
-  
+
 IF N_Elements(xvals) EQ 0 THEN BEGIN
     IF N_Elements(elements) EQ 0 THEN elements=Float(dimension)
     xvals=Reform(meshgrid(dimension,elements,1)-dimension/2,dimension*elements)
@@ -46,22 +46,22 @@ x_use*=(2.*Pi/dimension)
 y_use*=(2.*Pi/dimension)
 
 element_check=Long64(N_Elements(xvals))*Long64(N_Elements(x_use))
-  
+
 IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the same locations to be used for multiple sets of fluxes
     fbin_use=where(Ptr_valid(flux_use),n_fbin)
     source_uv_vals=Ptrarr(size(flux_use,/dimension))
     IF size(*flux_use[0],/type) GE 6 THEN complex_flag=1 ELSE complex_flag=0
-    FOR fbin_i=0L,n_fbin-1 DO source_uv_vals[fbin_use[fbin_i]]=Ptr_new(Complexarr(size(xvals,/dimension)))
-    
+    FOR fbin_i=0L,n_fbin-1 DO source_uv_vals[fbin_use[fbin_i]]=Ptr_new(Dcomplexarr(size(xvals,/dimension)))
+
     ;*****Start memory-managed DFT
     ;If the max memory is less than the estimated memory needed to DFT all sources at once, then break the DFT into chunks
     IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
         memory_bins=Ceil(element_check/mem_thresh) ;Estimate number of memory bins needed to maintain memory threshold
-      
+
         n0=N_Elements(x_use) ;Number of sources in primary beam to be DFTd
         sources_per_bin=Round(n0/memory_bins)
         binsize=Lonarr(memory_bins)+sources_per_bin ;Array of number of sources to DFT per bin
-      
+
         ;***Start special case of memory bins not being able to hold needed binsize for all DFTs
         if memory_bins*sources_per_bin LT n0 then begin
             unbinned_sources=n0-Total(binsize) ;Number of leftover sources that can't held currently
@@ -70,7 +70,7 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
             binsize=Lonarr(memory_bins)+sources_per_bin ;Recalculate binsize given new memory bins
         endif
         ;***End special case
-      
+
         ;Make the last bin forces number of sources distributed throughout bins equals the total num of sources.
         binsize[memory_bins-1]-=Total(binsize)-n0
         bin_start=[0,Total(binsize,/cumulative)]
@@ -88,7 +88,7 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
             cos_term=(sin_term=0) ;free memory
         ENDFOR
     ;*****End of memory-managed DFT
-      
+
     ENDIF ELSE BEGIN
       phase=matrix_multiply(xvals,x_use)+matrix_multiply(yvals,y_use)
       cos_term=Cos(phase)
@@ -96,7 +96,7 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
       FOR fbin_i=0L,n_fbin-1 DO BEGIN
         source_uv_real_vals=matrix_multiply(cos_term,*flux_use[fbin_use[fbin_i]])
         source_uv_im_vals=matrix_multiply(sin_term,*flux_use[fbin_use[fbin_i]])
-        *source_uv_vals[fbin_use[fbin_i]]+=DComplex(source_uv_real_vals,source_uv_im_vals)
+        *source_uv_vals[fbin_use[fbin_i]]+=Temporary(source_uv_real_vals) + icomp*Temporary(source_uv_im_vals)
       ENDFOR
       cos_term=(sin_term=0) ;free memory
     ENDELSE
@@ -136,4 +136,3 @@ ENDELSE
 IF Keyword_Set(flux_ptr_cleanup) THEN Ptr_free,flux_use
 RETURN,source_uv_vals
 END
-
