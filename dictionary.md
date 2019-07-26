@@ -208,10 +208,13 @@ WARNING! Options in this section may change without notice, and should never be 
 **debug_beam_clip_grow**: Set to grow the UV beam mask by one full-resolution pixel in all directions, after applying the clip set by `beam_mask_threshold` <br />
   -*Turn on*:: 1
 
+**debug_beam_clip_floor**: Set to subtract the minimum non-zero value of the beam model from all pixels, and rescale to preserve normalization. <br />
+  -*Turn on*: 1
+
 **debug_clip_beam_mask**: Set to mask pixels in the UV beam model if the pixel would be masked for any super-resolution offset. <br />
   -*Turn on*: 1
 
-**debug_beam_clip_floor**: Set to subtract the minimum non-zero value of the beam model from all pixels, and rescale to preserve normalization. <br />
+**debug_flip**: Swap the X and Y beams (use the Y beam for X and the X beam for Y). <br />
   -*Turn on*: 1
 
 ## Deconvolution
