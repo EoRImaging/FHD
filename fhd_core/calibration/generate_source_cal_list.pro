@@ -27,9 +27,8 @@ ENDIF ELSE BEGIN
             endelse
         ENDIF
     ENDIF ELSE catalog_path_full=catalog_path
-    
-    cat_init=source_comp_init(n_sources=0) ;define structure BEFORE restoring, in case the definition has changed
-    RESTORE,catalog_path_full,/relaxed ;catalog
+
+    catalog = load_source_catalog(catalog_path_full, varname='catalog')
 ENDELSE
 
 dimension=obs.dimension

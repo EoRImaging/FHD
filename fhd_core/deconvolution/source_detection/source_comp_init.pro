@@ -1,5 +1,5 @@
 FUNCTION source_comp_init,source_comp_in,n_sources=n_sources,xvals=xvals,yvals=yvals,frequency=frequency,$
-    ra=ra,dec=dec,flux=flux,id=id,StoN=StoN,alpha=alpha,extend=extend,gain_factor=gain_factor,overwrite=overwrite
+    ra=ra,dec=dec,flux=flux,id=id,StoN=StoN,alpha=alpha,extend=extend,gain_factor=gain_factor,overwrite=overwrite,_Extra=extra
 
 IF N_Elements(n_sources) EQ 0 THEN $
     n_sources=Max([N_Elements(xvals),N_Elements(yvals),N_Elements(ra),N_Elements(dec),1.])
@@ -23,6 +23,6 @@ IF Keyword_Set(extend) THEN source_comp_new.extend=extend ;extended source compo
 IF Keyword_Set(frequency) THEN IF Mean(frequency) GT 1E5 THEN source_comp_new.freq=frequency/1E6 ELSE source_comp_new.freq=frequency ;frequency in MHz
 IF Keyword_Set(gain_factor) THEN source_comp_new.gain=gain_factor
 
-IF N_Elements(source_comp_in) GT 0 AND ~Keyword_Set(overwrite) THEN source_comp=[source_comp_in,source_comp_new] ELSE source_comp=source_comp_new
+IF Keyword_Set(source_comp_in) AND ~Keyword_Set(overwrite) THEN source_comp=[source_comp_in,source_comp_new] ELSE source_comp=source_comp_new
 RETURN,source_comp
 END  
