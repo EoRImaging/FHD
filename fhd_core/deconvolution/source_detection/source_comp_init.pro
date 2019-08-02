@@ -1,5 +1,8 @@
 FUNCTION source_comp_init,source_comp_in,n_sources=n_sources,xvals=xvals,yvals=yvals,frequency=frequency,$
     ra=ra,dec=dec,flux=flux,id=id,StoN=StoN,alpha=alpha,extend=extend,gain_factor=gain_factor,overwrite=overwrite,_Extra=extra
+; NOTE: It is very important that the tags of the source structure be able to autocomplete to the keywords of this function
+; For example, the current xvals is fine, because the .x tag can autocomplete to xvals. If a new x_error (for example)
+; keyword or tag were introduced, this would break load_source_catalog.pro
 
 IF N_Elements(n_sources) EQ 0 THEN $
     n_sources=Max([N_Elements(xvals),N_Elements(yvals),N_Elements(ra),N_Elements(dec),1.])
