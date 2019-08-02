@@ -15,7 +15,11 @@ IF Keyword_Set(xvals) THEN source_comp_new.x=xvals
 IF Keyword_Set(yvals) THEN source_comp_new.y=yvals
 IF Keyword_Set(ra) THEN source_comp_new.ra=ra
 IF Keyword_Set(dec) THEN source_comp_new.dec=dec
-IF Keyword_Set(flux) THEN source_comp_new.flux.I=flux 
+IF Keyword_Set(flux) THEN BEGIN
+    IF size(flux,/type) EQ 8 THEN BEGIN ;check if a structure
+        FOR ii=0,7 DO source_comp_new.flux.(ii) = flux.(ii)
+    ENDIF ELSE source_comp_new.flux.I=flux 
+ENDIF
 IF Keyword_Set(StoN) THEN source_comp_new.ston=StoN ;signal to noise
 IF Keyword_Set(id) THEN source_comp_new.id=id ;unique source id
 IF Keyword_Set(alpha) THEN source_comp_new.alpha=alpha ;spectral index
