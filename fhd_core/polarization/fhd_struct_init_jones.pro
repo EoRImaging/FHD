@@ -23,12 +23,12 @@ IF Keyword_Set(update_last) THEN BEGIN
     FOR pol_i2=0,3 DO FOR pol_i1=0,3 DO BEGIN
         temp=Dcomplexarr(dimension_in,elements_in)
         temp[jones_in.inds]=*jones_in.Jmat[pol_i1,pol_i2]
-        temp=Rebin(temp,dimension,elements)
+        temp=Dcomplex(Rebin(real_part(temp),dimension,elements), Rebin(Imaginary(temp),dimension,elements))
         *p_map[pol_i1,pol_i2]=temp[inds_use]
         
         temp=Dcomplexarr(dimension_in,elements_in)
         temp[jones_in.inds]=*jones_in.Jinv[pol_i1,pol_i2]
-        temp=Rebin(temp,dimension,elements)
+        temp=Dcomplex(Rebin(real_part(temp),dimension,elements), Rebin(Imaginary(temp),dimension,elements))
         *p_corr[pol_i1,pol_i2]=temp[inds_use]
     ENDFOR
     jones={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
