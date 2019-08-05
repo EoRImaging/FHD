@@ -21,12 +21,12 @@ IF Keyword_Set(update_last) THEN BEGIN
     p_map=Ptrarr(4,4,/allocate)
     p_corr=Ptrarr(4,4,/allocate)
     FOR pol_i2=0,3 DO FOR pol_i1=0,3 DO BEGIN
-        temp=dblarr(dimension_in,elements_in)
+        temp=Dcomplexarr(dimension_in,elements_in)
         temp[jones_in.inds]=*jones_in.Jmat[pol_i1,pol_i2]
         temp=Rebin(temp,dimension,elements)
         *p_map[pol_i1,pol_i2]=temp[inds_use]
         
-        temp=dblarr(dimension_in,elements_in)
+        temp=Dcomplexarr(dimension_in,elements_in)
         temp[jones_in.inds]=*jones_in.Jinv[pol_i1,pol_i2]
         temp=Rebin(temp,dimension,elements)
         *p_corr[pol_i1,pol_i2]=temp[inds_use]
