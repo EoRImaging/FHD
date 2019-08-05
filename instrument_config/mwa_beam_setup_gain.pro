@@ -51,9 +51,11 @@ CASE beam_model_version OF
             theta_arr[ext_i,*]=Jmat1[0,*] ;zenith angle in degrees
             phi_arr[ext_i,*]=Jmat1[1,*] ;azimuth angle in degrees, clockwise from East
             FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO BEGIN
-                Jmat_arr[ext_i,p_i,p_j,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
-                if keyword_set(debug_flip) then Jmat_arr[ext_i,p_j,p_i,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
-                if keyword_set(debug_equal_beams) then Jmat_arr[ext_i,p_i,p_j,*]=Jmat1[2+p_i*2,*]+icomp*Jmat1[2+p_i*2+1,*]
+                if ~keyword_set(debug_flip) and ~keyword_set(debug_equal_beams) then $
+                    Jmat_arr[ext_i,p_i,p_j,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*] else begin
+                    if keyword_set(debug_flip) then Jmat_arr[ext_i,p_j,p_i,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
+                    if keyword_set(debug_equal_beams) then Jmat_arr[ext_i,p_i,p_j,*]=Jmat1[2+p_i*2,*]+icomp*Jmat1[2+p_i*2+1,*]
+                endelse
             ENDFOR
             freq_arr_Jmat[ext_i]=Float(sxpar(header,'FREQ')) ;in Hz
         ENDFOR
