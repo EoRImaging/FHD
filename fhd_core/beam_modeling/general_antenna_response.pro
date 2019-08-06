@@ -1,5 +1,5 @@
 FUNCTION general_antenna_response,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,$
-    debug_flip=debug_flip, debug_equal_beams=debug_equal_beams, _Extra=extra
+    debug_flip=debug_flip, debug_equal_beams=debug_equal_beams
 
 n_ant=obs.n_tile
 n_ant_pol=antenna[0].n_pol ;this needs to be the same for all antennas!
