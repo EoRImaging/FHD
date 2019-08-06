@@ -180,8 +180,6 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     IF Keyword_Set(flag_calibration) THEN vis_calibration_flag,obs,cal,n_tile_cut=n_tile_cut,_Extra=extra
     IF Keyword_Set(n_tile_cut) THEN BREAK
   ENDFOR
-  IF n_pol EQ 4 THEN $
-    cal = vis_calibrate_crosspol_phase(vis_ptr,vis_weight_ptr,obs,cal)
   t3_a=Systime(1)
   t2+=t3_a-t2_a
   cal_base=Pointer_copy(cal)
@@ -224,6 +222,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
  
   IF Keyword_Set(calibration_auto_fit) THEN cal=cal_auto
   vis_cal=vis_calibration_apply(vis_ptr,cal)
+  IF n_pol EQ 4 THEN $
+    vis_calibrate_crosspol_phase, vis_cal, vis_model_arr, vis_weight_ptr, obs, cal
   cal.gain_residual=cal_res.gain
   undefine_fhd,cal_base
 
