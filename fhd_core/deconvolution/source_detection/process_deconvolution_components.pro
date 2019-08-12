@@ -33,5 +33,5 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR ext_i=0L,n_ext-1 DO *(source_array[extend_i[ext_i]].extend).beam.(pol_i) = source_array[extend_i[ext_i]].beam.(pol_i)
 ENDFOR
 
-RETURN source_array
+RETURN, source_array
 END
