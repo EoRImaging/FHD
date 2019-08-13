@@ -405,7 +405,7 @@ source_n_arr=source_n_arr[0:iter-1]
 detection_threshold_arr=detection_threshold_arr[0:iter-1]
 
 source_array = process_deconvolution_components(component_array,obs,fhd_params,noise_map,$
-    independent_fit=independent_fit,gain_factor=gain_factor,source_mask=source_mask,_Extra=extra)
+    beam_arr=beam_base,independent_fit=independent_fit,gain_factor=gain_factor,source_mask=source_mask,_Extra=extra)
 
 fhd_params.n_components=N_Elements(component_array)
 fhd_params.n_sources=N_Elements(source_array)
