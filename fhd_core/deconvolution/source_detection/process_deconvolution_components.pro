@@ -30,7 +30,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     source_array.beam.(pol_i) = beam_use[Round(source_array.x), Round(source_array.y)]
     ;also convert extended source components.
     extend_i=where(Ptr_valid(source_array.extend),n_ext)
-    IF n_ext GT 0 THEN FOR ext_i=0L,n_ext-1 DO *(source_array[extend_i[ext_i]].extend).beam.(pol_i) = source_array[extend_i[ext_i]].beam.(pol_i)
+    IF n_ext GT 0 THEN FOR ext_i=0L,n_ext-1 DO (*source_array[extend_i[ext_i]].extend).beam.(pol_i) = source_array[extend_i[ext_i]].beam.(pol_i)
 ENDFOR
 
 RETURN, source_array
