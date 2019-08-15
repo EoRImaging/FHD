@@ -207,14 +207,14 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
 
   ;Perform bandpass (amp and phase per fine freq) and polynomial fitting (low order amp and phase fit plus cable reflection fit)
   IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-    IF Keyword_Set(decompose_auto) THEN auto_gain=gain_cal_auto_divide(obs,cal,vis_auto=vis_auto,auto_tile_i=auto_tile_i)
+    IF Keyword_Set(decompose_auto) THEN auto_ratio=gain_cal_auto_divide(obs,cal,vis_auto=vis_auto,auto_tile_i=auto_tile_i)
     cal_bandpass=vis_cal_bandpass(cal,obs,params,cal_remainder=cal_remainder,decompose_auto=decompose_auto,file_path_fhd=file_path_fhd,_Extra=extra)
     
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
-        cal_polyfit=vis_cal_polyfit(cal_remainder,obs,decompose_auto=decompose_auto,_Extra=extra)
+        cal_polyfit=vis_cal_polyfit(cal_remainder,obs,auto_ratio=auto_ratio,_Extra=extra)
         cal=vis_cal_combine(cal_polyfit,cal_bandpass)
     ENDIF ELSE cal=cal_bandpass
-    IF Keyword_Set(decompose_auto) THEN gain_cal_auto_remultiply,obs,cal,auto_gain,auto_tile_i=auto_tile_i
+    IF Keyword_Set(decompose_auto) THEN gain_cal_auto_remultiply,obs,cal,auto_ratio,auto_tile_i=auto_tile_i
     
   ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,_Extra=extra)
    

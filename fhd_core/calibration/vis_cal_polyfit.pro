@@ -1,6 +1,6 @@
 FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_reflection_hyperresolve=cal_reflection_hyperresolve,cal_reflection_mode_theory=cal_reflection_mode_theory,$
-    cal_reflection_mode_file=cal_reflection_mode_file,cal_reflection_mode_delay=cal_reflection_mode_delay,decompose_auto=decompose_auto,$
+    cal_reflection_mode_file=cal_reflection_mode_file,cal_reflection_mode_delay=cal_reflection_mode_delay,auto_ratio=auto_ratio,$
     no_phase_calibration=no_phase_calibration,digital_gain_jump_polyfit=digital_gain_jump_polyfit,_Extra=extra
     
   IF Keyword_Set(cal_reflection_mode_theory) OR Keyword_Set(cal_reflection_mode_file) $
@@ -62,7 +62,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
       gain=reform(gain_amp[freq_use,tile_i])
       
       ;*****Fit for amplitude
-      IF Keyword_Set(decompose_auto) THEN amp_degree=0
+      IF Keyword_Set(auto_ratio) THEN amp_degree=0
       IF N_Elements(amp_degree) GE 0 THEN BEGIN
         fit_params=poly_fit(freq_use,gain,amp_degree)
         cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
@@ -239,7 +239,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     FOR pol_i=0,n_pol-1 DO BEGIN
       gain_arr=*cal.gain[pol_i]
       gain_arr_fit=*cal_return.gain[pol_i]
-      IF Keyword_Set(decompose_auto) THEN BEGIN
+      IF Keyword_Set(auto_ratio) THEN BEGIN
         print, 'decompose_auto set, only fit the reflection mode in the phase'
         phase_res=-Atan(gain_arr_fit/gain_arr,/phase)
         gain_arr = phase_res
@@ -259,14 +259,24 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
           nmodes=101 ; range around the central mode to test
           modes=(dindgen(nmodes)-nmodes/2)*dmode+mode0 ; array of modes to try
           modes=rebin(modes,nmodes,nf_use) ; reshape for ease of computing
-          IF Keyword_Set(decompose_auto) THEN BEGIN
-            gain_temp=rebin(transpose(reform(gain_arr[freq_use,tile_i])),nmodes,nf_use)
+          IF Keyword_Set(auto_ratio) THEN BEGIN
+            inds = where((*obs.baseline_info).tile_use AND mode_i_arr[pol_i,*] gt 0 AND Abs(mode_i_arr[pol_i,*]-mode_i) gt 0.01, ninds)
+            freq_flag = where((*obs.baseline_info).freq_use eq 0)
+            resautos = rebin((*auto_ratio[pol_i])[*, tile_i], n_freq, ninds) / (*auto_ratio[pol_i])[*, inds]
+            resautos = resautos / rebin(transpose(Mean(resautos, dimension=1, /NAN)), n_freq, ninds)
+            resautos = Mean(resautos, dimension=2, /NAN)
+            resautos = resautos - Mean(resautos)
+            resphase = gain_arr[*, tile_i] - Mean(gain_arr[*, inds], dimension=2, /NAN)
+            resautos=rebin(transpose(reform(resautos[freq_use])),nmodes,nf_use)
             freq_mat=rebin(transpose(freq_use),nmodes,nf_use)
-            test1=Total(sin(2.*!Pi/n_freq*modes*freq_mat)*gain_temp,2)
-            test2=Total(cos(2.*!Pi/n_freq*modes*freq_mat)*gain_temp,2)
-            amp_use=max(sqrt(test1*test1+test2*test2),mode_ind)/nf_use
-            phase_use=-atan(test1[mode_ind]/test2[mode_ind])
+            test1=Total(sin(2.*!Pi/n_freq*modes*freq_mat)*resautos,2)
+            test2=Total(cos(2.*!Pi/n_freq*modes*freq_mat)*resautos,2)
+            ampmax = max(sqrt(test1*test1+test2*test2),mode_ind) ; use auto ratios to find the mode
             mode_i=modes[mode_ind,0]
+            t1 = Mean(sin(2.*!Pi/n_freq*mode_i*freq_use)*resphase[freq_use])
+            t2 = Mean(cos(2.*!Pi/n_freq*mode_i*freq_use)*resphase[freq_use])
+            amp_use=sqrt(t1*t1+t2*t2)
+            phase_use=-atan(t1/t2)
           ENDIF ELSE BEGIN
             gain_temp=rebin_complex(transpose(reform(gain_arr[freq_use,tile_i])),nmodes,nf_use) ; dimension manipulation, add dim for mode fitting
             freq_mat=rebin(transpose(freq_use),nmodes,nf_use) ; freq_use matrix to multiply/collapse in fit
@@ -287,8 +297,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         ENDELSE
         
         ; Rebuild the reflection ripple, and add to polyfit gains
-        IF Keyword_Set(decompose_auto) AND Keyword_Set(cal_reflection_hyperresolve) THEN BEGIN
-          phase_ripple=2.*test1[mode_ind]*sin(2.*!Pi*(mode_i*findgen(n_freq)/n_freq))/nf_use+2.*test2[mode_ind]*cos(2.*!Pi*(mode_i*findgen(n_freq)/n_freq))/nf_use
+        IF Keyword_Set(auto_ratio) AND Keyword_Set(cal_reflection_hyperresolve) THEN BEGIN
+          phase_ripple=2.*t1*sin(2.*!Pi*(mode_i*findgen(n_freq)/n_freq))+2.*t2*cos(2.*!Pi*(mode_i*findgen(n_freq)/n_freq))
           gain_mode_fit=exp(i_comp*phase_ripple)
           gain_arr_fit[*,tile_i]*=gain_mode_fit
         ENDIF ELSE BEGIN
