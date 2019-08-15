@@ -1,4 +1,4 @@
-PRO gain_cal_auto_remultiply,obs,cal,auto_gain,auto_tile_i=auto_tile_i
+PRO gain_cal_auto_remultiply,obs,cal,auto_ratio,auto_tile_i=auto_tile_i
 
 n_pol=cal.n_pol
 n_freq=obs.n_freq
@@ -12,7 +12,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     FOR tile_i_i=0L,n_tile_use-1 DO BEGIN
         tile_i=auto_tile_i[tile_i_i]
         gain_tile_i = (*gain_cross[pol_i])[*,tile_i]
-        gain_auto_single=Abs((*auto_gain[pol_i])[*,tile_i])
+        gain_auto_single=Abs((*auto_ratio[pol_i])[*,tile_i])
         FOR freq_i=0L,n_freq-1 DO BEGIN
             gain_tile_i[freq_i] *=  gain_auto_single[freq_i]
         ENDFOR
