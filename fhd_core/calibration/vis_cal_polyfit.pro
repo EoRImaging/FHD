@@ -212,7 +212,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     
     ;Option to fit only certain cable lengths, can specify more than one length
     ;Positive length indicates fit mode, negative length indicates exclude mode
-    IF total(cal_mode_fit) NE 1 THEN BEGIN
+    IF total(cal_mode_fit) NE 1 AND ~Keyword_Set(auto_ratio) THEN BEGIN
       tile_ref_logic = FLTARR(n_tile)
       if ~keyword_set(cable_len) then begin
         cable_filepath=filepath(obs.instrument+'_cable_length.txt',root=rootdir('FHD'),subdir='instrument_config')
@@ -240,7 +240,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
       gain_arr=*cal.gain[pol_i]
       gain_arr_fit=*cal_return.gain[pol_i]
       IF Keyword_Set(auto_ratio) THEN BEGIN
-        print, 'decompose_auto set, only fit the reflection mode in the phase'
+        print, 'auto_ratio_calibration set, only fit the reflection mode in the phase'
         phase_res=-Atan(gain_arr_fit/gain_arr,/phase)
         gain_arr = phase_res
       ENDIF ELSE BEGIN 
