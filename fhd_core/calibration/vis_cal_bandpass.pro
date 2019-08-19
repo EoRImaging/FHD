@@ -1,6 +1,6 @@
 FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
     bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,$
-    cal_bp_transfer=cal_bp_transfer,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,decompose_auto=decompose_auto,Extra=extra
+    cal_bp_transfer=cal_bp_transfer,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,auto_ratio_calibration=auto_ratio_calibration,Extra=extra
   ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.
     
   ;Extract needed elements from the input structures
@@ -57,9 +57,9 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
     bandpass_arr=Fltarr((n_pol)*n_cable+1,n_freq)
     bandpass_arr[0,*]=freq_arr
     bandpass_col_count=0
-    IF Keyword_set(decompose_auto) THEN BEGIN
+    IF Keyword_set(auto_ratio_calibration) THEN BEGIN
       normal_bp_cal=1
-      print, 'Auto has been divided out, using global bandpass'
+      print, 'auto_ratio_calibration is set, using global bandpass'
     ENDIF
     ;Main gain calculation loop
     FOR cable_i=0,n_cable-1 DO BEGIN
