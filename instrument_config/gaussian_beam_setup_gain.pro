@@ -43,7 +43,7 @@ case beam_model_version of
     5: sigma = 10./(2*sqrt(2.*alog(2.)))
 END
 print, 'hwhm = ', sigma*2.355/2., ' model: ', beam_model_version
-beam_vals = Exp(-za_arr^2./(2.*sigma^2.));/(2 * sigma * sqrt(2*!pi))
+beam_vals = Exp(-(za_arr*!DtoR)^2./(2.*sigma^2.));/(2 * sigma * sqrt(2*!pi))
 
 FOR pol_i=0,1 DO BEGIN
     ;FOR freq_i=0,nfreq_bin-1 DO Jones_matrix[pol_i,pol_i,freq_i]=Ptr_new(Interpolate(beam_vals, xvals_interp, yvals_interp)*horizon_mask)
