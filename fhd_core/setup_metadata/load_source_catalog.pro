@@ -27,18 +27,18 @@ FUNCTION load_source_catalog, catalog_filepath, varname=varname
         IF Max(strmatch(restored_tags,source_tags[tag_i],/fold_case)) EQ 0 THEN BEGIN
             n_missing += 1
             missing_tags = [missing_tags, source_tags[tag_i]]
-        ENDIF ELSE BEGIN
-            IF Max(strmatch(ignore_tags,source_tags[tag_i],/fold_case)) EQ 0 THEN BEGIN
-                good_tag_ids = [good_tag_ids, tag_i]
-                good_tag_names = [good_tag_names, source_tags[tag_i]]
-            ENDIF
-        ENDELSE
+        ENDIF
     ENDFOR
     FOR tag_i=0,nr_tags-1 DO BEGIN
         IF Max(strmatch(source_tags,restored_tags[tag_i],/fold_case)) EQ 0 THEN BEGIN
             n_extra += 1
             extra_tags = [extra_tags, restored_tags[tag_i]]
-        ENDIF
+        ENDIF ELSE BEGIN
+            IF Max(strmatch(ignore_tags,restored_tags[tag_i],/fold_case)) EQ 0 THEN BEGIN
+                good_tag_ids = [good_tag_ids, tag_i]
+                good_tag_names = [good_tag_names, restored_tags[tag_i]]
+            ENDIF
+        ENDELSE
     ENDFOR
     IF n_missing + n_extra GT 0 THEN BEGIN
         IF n_missing GT 0 THEN BEGIN
