@@ -73,10 +73,7 @@ order_1 = [0,1,0,1]
 order_2 = [0,1,1,0]
 
 FOR pix=0L,n_pix-1 DO BEGIN
-    ;calculate tensor product J(X)J* 
-    ;Jmat converts [pp,qq,pq,qp] -> [xx,yy,xy,yx]
-    ;Jinv converts [xx, yy, xy, yx] -> [pp, qq, pq, qp]
-    ;Note: Stokes [I, Q, U, V] = (1./2.)*[(pp+qq), (qq-pp), (pq+qp), (iqp-ipq)]
+    ;calculate tensor product J(X)J*
     Jmat = Dcomplexarr(4,4)
     FOR ii=0,3 DO BEGIN
         FOR jj = 0,3 DO BEGIN
@@ -85,10 +82,10 @@ FOR pix=0L,n_pix-1 DO BEGIN
     ENDFOR
 ;    Note that we re-order the matrix elements after the Kronecker product
 ;    Leave the following code in as a reference for the final matrix element ordering
-;    Jmat=Abs([[J11[pix]*Conj(J11[pix]),J12[pix]*Conj(J12[pix]),J11[pix]*Conj(J12[pix]),J12[pix]*Conj(J11[pix])],$
-;              [J21[pix]*Conj(J21[pix]),J22[pix]*Conj(J22[pix]),J21[pix]*Conj(J22[pix]),J22[pix]*Conj(J21[pix])],$
-;              [J11[pix]*Conj(J21[pix]),J12[pix]*Conj(J22[pix]),J11[pix]*Conj(J22[pix]),J12[pix]*Conj(J21[pix])],$
-;              [J21[pix]*Conj(J11[pix]),J22[pix]*Conj(J12[pix]),J21[pix]*Conj(J12[pix]),J22[pix]*Conj(J11[pix])]])
+;    Jmat=[[J11[pix]*Conj(J11[pix]),J12[pix]*Conj(J12[pix]),J11[pix]*Conj(J12[pix]),J12[pix]*Conj(J11[pix])],$
+;          [J21[pix]*Conj(J21[pix]),J22[pix]*Conj(J22[pix]),J21[pix]*Conj(J22[pix]),J22[pix]*Conj(J21[pix])],$
+;          [J11[pix]*Conj(J21[pix]),J12[pix]*Conj(J22[pix]),J11[pix]*Conj(J22[pix]),J12[pix]*Conj(J21[pix])],$
+;          [J21[pix]*Conj(J11[pix]),J22[pix]*Conj(J12[pix]),J21[pix]*Conj(J12[pix]),J22[pix]*Conj(J11[pix])]]
     Jinv=Invert(Jmat)
     
     FOR i=0,3 DO FOR j=0,3 DO (*p_map[i,j])[pix]=Jmat[i,j]
