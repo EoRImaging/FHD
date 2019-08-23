@@ -1,13 +1,13 @@
-PRO vis_calibrate_crosspol_phase,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal
+FUNCTION vis_calibrate_crosspol_phase,vis_ptr,vis_model_ptr,vis_weight_ptr,cal
 
-n_pol = obs.n_pol
+n_pol = N_Elements(vis_ptr)
 IF n_pol LT 4 THEN RETURN
 
 icomp = Complex(0,1)
 n_freq=cal.n_freq
 n_tile=cal.n_tile
 n_time=cal.n_time
-n_baselines=obs.nbaselines
+n_baselines=n_baselines=Long(N_Elements(cal.tile_A))
 
 ;Use the xx flags (yy should be identical at this point)
 weights_use = 0>Reform(*vis_weight_ptr[0],n_freq,n_baselines,n_time)<1
@@ -36,10 +36,4 @@ cross_phase = atan(vis_sum, /phase)
 print,"Phase fit between X and Y antenna polarizations:", cross_phase
 
 cal.cross_phase = cross_phase
-*(cal.gain[0]) *= Exp(-icomp*cross_phase/2.0)
-*(cal.gain[1]) *= Exp(icomp*cross_phase/2.0)
-
-*vis_ptr[2] *= Exp(icomp*cross_phase)
-*vis_ptr[3] *= Exp(-icomp*cross_phase)
-
 END

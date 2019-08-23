@@ -221,9 +221,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     debug_calibration_options,obs, cal, cal_base, debug_phase_longrun=debug_phase_longrun, debug_amp_longrun=debug_amp_longrun
  
   IF Keyword_Set(calibration_auto_fit) THEN cal=cal_auto
-  vis_cal=vis_calibration_apply(vis_ptr,cal)
-  IF n_pol EQ 4 THEN $
-    vis_calibrate_crosspol_phase, vis_cal, vis_model_arr, vis_weight_ptr, obs, cal
+  vis_cal=vis_calibration_apply(vis_ptr,cal, vis_model_ptr=vis_model_arr, vis_weight_ptr=vis_weight_ptr)
   cal.gain_residual=cal_res.gain
   undefine_fhd,cal_base
 

@@ -1,4 +1,5 @@
-FUNCTION vis_calibration_apply,vis_ptr,cal,preserve_original=preserve_original,invert_gain=invert_gain
+FUNCTION vis_calibration_apply,vis_ptr,cal,preserve_original=preserve_original,invert_gain=invert_gain,$
+    vis_model_ptr=vis_model_ptr, vis_weight_ptr=vis_weight_ptr
 
 n_pol_ant=cal.n_pol
 n_pol_vis=N_Elements(vis_ptr)
@@ -31,6 +32,14 @@ FOR pol_i=0,n_pol_vis-1 DO BEGIN
     vis_gain=gain_arr1[inds_A]*Conj(gain_arr2[inds_B])
     *vis_cal_ptr[pol_i]*=Weight_invert(vis_gain)
 ENDFOR
+
+IF Keyword_Set(vis_model_ptr) AND Keyword_Set(vis_weight_ptr) THEN $
+    vis_calibrate_crosspol_phase, vis_cal_ptr, vis_model_ptr, vis_weight_ptr, cal
+
+IF n_pol_vis EQ 4 THEN BEGIN
+    *vis_cal_ptr[2] *= Exp(icomp*cal.cross_phase)
+    *vis_cal_ptr[3] *= Exp(-icomp*cal.cross_phase)
+ENDIF
 RETURN,vis_cal_ptr
 
 END
