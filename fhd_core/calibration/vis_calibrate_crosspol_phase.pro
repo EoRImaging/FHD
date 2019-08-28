@@ -1,4 +1,4 @@
-FUNCTION vis_calibrate_crosspol_phase,vis_ptr,vis_model_ptr,vis_weight_ptr,cal
+PRO vis_calibrate_crosspol_phase,vis_ptr,vis_model_ptr,vis_weight_ptr,cal
 
 n_pol = N_Elements(vis_ptr)
 
@@ -7,7 +7,7 @@ IF n_pol EQ 4 THEN BEGIN
   n_freq=cal.n_freq
   n_tile=cal.n_tile
   n_time=cal.n_time
-  n_baselines=Long(N_Elements(cal.tile_A))
+  n_baselines=Long(N_Elements(cal.tile_A)/n_time)
   
   ;Use the xx flags (yy should be identical at this point)
   weights_use = 0>Reform(*vis_weight_ptr[0],n_freq,n_baselines,n_time)<1
