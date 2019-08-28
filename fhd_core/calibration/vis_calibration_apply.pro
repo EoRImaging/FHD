@@ -10,6 +10,7 @@ bin_offset=cal.bin_offset
 tile_A_i=cal.tile_A-1 ;tile numbering starts at 1
 tile_B_i=cal.tile_B-1 ;tile numbering starts at 1
 n_baselines=Long(N_Elements(tile_A_i))
+icomp = Complex(0,1)
 
 gain_pol_arr1=[0,1,0,1]
 gain_pol_arr2=[0,1,1,0]
