@@ -310,17 +310,19 @@ ENDIF
 
 IF source_flag THEN source_array_export,source_arr_out,obs_out,beam=beam_avg,stokes_images=stokes_residual_arr,file_path=output_path+'_source_list'
 
-; plot calibration solutions, export to png
-IF size(cal,/type) EQ 8 THEN BEGIN
-   IF cal.skymodel.n_sources GT 0 THEN BEGIN
-      IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
-         vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
-         plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist
-      ENDIF ELSE BEGIN
-         plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
-      ENDELSE
-   ENDIF ELSE plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
-endif
+; plot calibration solutions, export to png if allowed
+IF ~Keyword_Set(no_png) THEN BEGIN
+    IF size(cal,/type) EQ 8 THEN BEGIN
+        IF cal.skymodel.n_sources GT 0 THEN BEGIN
+            IF file_test(file_path_fhd+'_cal_hist.sav') THEN BEGIN
+                vis_baseline_hist=getvar_savefile(file_path_fhd+'_cal_hist.sav','vis_baseline_hist')
+                plot_cals,cal,obs,file_path_base=image_path,vis_baseline_hist=vis_baseline_hist
+            ENDIF ELSE BEGIN
+                plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
+            ENDELSE
+        ENDIF ELSE plot_cals,cal,obs,file_path_base=image_path,_Extra=extra
+    ENDIF
+ENDIF
 
 ;Build a fits header
 mkhdr,fits_header,*instr_dirty_arr[0]
@@ -571,7 +573,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
     ENDIF
 ENDFOR
-IF Keyword_Set(output_residual_histogram) THEN $
+IF Keyword_Set(output_residual_histogram) AND ~Keyword_Set(no_png) THEN $
     residual_statistics,(*stokes_residual_arr[0])*beam_mask,obs_out,beam_base=beam_base_out,$
         /center,file_path_base=image_path+filter_name,_Extra=extra
 
