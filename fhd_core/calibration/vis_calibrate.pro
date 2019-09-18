@@ -7,7 +7,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,$
     calibration_auto_fit=calibration_auto_fit,cal_stop=cal_stop, model_transfer=model_transfer,$
     sim_over_calibrate=sim_over_calibrate,debug_phase_longrun=debug_phase_longrun,sim_perf_calibrate=sim_perf_calibrate,$
-    debug_ave_ref=debug_ave_ref,debug_amp_longrun=debug_amp_longrun,_Extra=extra
+    debug_ave_ref=debug_ave_ref,debug_amp_longrun=debug_amp_longrun,no_png=no_png,_Extra=extra
     
   t0_0=Systime(1)
   error=0
@@ -214,8 +214,10 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   basename=file_basename(file_path_fhd)
   dirpath=file_dirname(file_path_fhd)
   image_path=filepath(basename,root=dirpath,sub='output_images')
-  ;make sure to plot both, if autocorrelations are used for the calibration solution
-  plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
+  IF ~Keyword_Set(no_png) THEN BEGIN
+      ;make sure to plot both, if autocorrelations are used for the calibration solution
+      plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
+  ENDIF
 
   if keyword_set(debug_phase_longrun) OR keyword_set(debug_amp_longrun) THEN $
     debug_calibration_options,obs, cal, cal_base, debug_phase_longrun=debug_phase_longrun, debug_amp_longrun=debug_amp_longrun
