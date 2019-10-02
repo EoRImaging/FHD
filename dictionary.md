@@ -7,6 +7,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **beam_cal_threshold**: the fractional power response relative to the peak from which to include sources for calibration.<br />
   -*Default*: 0.05, or 0.01 if `allow_sidelobe_sources` set <br />
+  
+**beam_clip_floor**: Set to subtract the minimum non-zero value of the beam model from all pixels. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1
 
 **beam_mask_threshold**: the factor at which to clip the beam model. For example, a factor of 100 would clip the beam model at 100x down from the maximum value. This removes extraneous and uncertain modelling at low levels.  <br />
   -*Default*: 100 <br />
@@ -207,9 +211,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **debug_beam_clip_grow**: Set to grow the UV beam mask by one full-resolution pixel in all directions, after applying the clip set by `beam_mask_threshold` <br />
   -*Turn on*:: 1
-
-**debug_beam_clip_floor**: Set to subtract the minimum non-zero value of the beam model from all pixels, and rescale to preserve normalization. <br />
-  -*Turn on*: 1
 
 **debug_clip_beam_mask**: Set to mask pixels in the UV beam model if the pixel would be masked for any super-resolution offset. <br />
   -*Turn on*: 1
