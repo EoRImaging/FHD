@@ -117,7 +117,7 @@ if keyword_set(kernel_window) then begin
   
   ;Apply an image window to the pixels in the horizon, centered on the phase center
   pix_window = fltarr(psf_image_dim,psf_image_dim)
-  if ~isa(kernel_window, /string) then kernel_window='Blackman-Harris^2'
+  if typename(kernel_window) NE 'STRING' then kernel_window='Blackman-Harris^2'
   pix_window[pix_use] = image_window(xvals_instrument[pix_use], yvals_instrument[pix_use], $
     image_window_name = kernel_window,xval_center=xval_center,yval_center=yval_center,fractional_size=fractional_size)
   ;Store image window in antenna structure
