@@ -14,56 +14,16 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
   obs_id = file_basename(file_path_vis, '.uvfits')
   
   ;restore model visibilities given the in_situ_sim_input to act as the input data visibilities
-  if isa(in_situ_sim_input,'String') then begin
+  if typename(in_situ_sim_input) EQ 'STRING' then begin
     for pol_i=0, n_pol-1 do begin
-      vis_model_arr[pol_i] = GETVAR_SAVEFILE(in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
-      print, "Using " + in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav as input model'
+      if strmid(in_situ_sim_input,2,3,/reverse_offset) EQ 'sav' then begin
+        vis_model_arr[pol_i] = GETVAR_SAVEFILE(in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
+        print, "Using " + in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav as input model'
+      endif else if strmid(in_situ_sim_input,5,6,/reverse_offset) EQ 'uvfits' then begin
+        uvfits_read,hdr,params,layout,vis_model_arr,vis_weights,file_path_vis=in_situ_sim_input,n_pol=n_pol,silent=silent,error=error,_Extra=extra
+      endif
     endfor
-  endif
-  
-  ;***Begin in-situ model making to act as input data visibilities if read-in is not available
-  IF *vis_model_arr[0] EQ !NULL then begin
-    print, "Read-in file not found/provided in in_situ_sim_input. Creating model"
-    
-    ;Note: explicitly reference dft_threshold here to remove it from EXTRA, which would be passed on to lower-level routines
-    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra)
-    n_pol=obs.n_pol
-    n_freq=obs.n_freq
-    
-    IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(obs,params,vis_arr,direction=deproject_w_term)
-    
-    ;Read in or construct a new beam model. Also sets up the structure PSF
-    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
-    jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
-    
-    vis_weights=vis_flag_basic(vis_weights,obs,params,n_pol=n_pol,n_freq=n_freq,freq_start=freq_start,$
-      freq_end=freq_end,tile_flag_list=tile_flag_list,vis_ptr=vis_arr,unflag_all=1,no_frequency_flagging=1,_Extra=extra)
-    vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
-    
-    IF Keyword_Set(calibration_catalog_file_path) THEN catalog_use=calibration_catalog_file_path
-    IF ~Keyword_Set(calibration_source_list) THEN $
-      calibration_source_list=generate_source_cal_list(obs,psf,catalog_path=catalog_use,_Extra=extra)
-    skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,diffuse_model=diffuse_calibrate,_Extra=extra)
-    cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
-      catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
-      
-    vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weights,cal,jones,model_uv_arr=model_uv_arr,fill_model_vis=1,$
-      timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
-    for pol_i=0, n_pol-1 do begin
-      vis_weights_use=0>*vis_weights[pol_i]<1
-      *vis_model_arr[pol_i]=*vis_model_arr[pol_i]*vis_weights_use
-    endfor
-    
-    print, "Saving input model visibilities to " + file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
-    file_mkdir, file_dirname(file_path_fhd) +'/sim_outputs'
-    save, vis_model_arr, filename=file_dirname(file_path_fhd) +'/sim_outputs/'+obs_id+'_input_model.sav'
-    
-    fhd_log_settings,file_path_fhd,obs=obs,psf=psf,cal=cal,antenna=antenna,skymodel=skymodel,cmd_args=cmd_args,/overwrite,sub_dir='sim_outputs'
-    
-    undefine, psf, jones, skymodel_cal, cal, calibration_source_list
-    
-  endif
-  ;***End in-situ model making to act as input data visibilities if read-in is not available
+  endif else message, 'Please specify the directory and/or filename of the input visibilities in in_situ_sim_input'
   
   vis_arr=temporary(vis_model_arr)
   
