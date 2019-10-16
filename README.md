@@ -3,7 +3,7 @@ Fast Holographic Deconvolution
 
 ## Introduction
 
-FHD is an open-source imaging algorithm for radio interferometers, specifically tested on MWA Phase I, MWA Phase II, PAPER, and HERA. There are three main use-cases for FHD: efficient image deconvolution for general radio astronomy, fast-mode Epoch of Reionization analysis, and simulation.
+FHD is an open-source imaging algorithm for radio interferometers, specifically tested on MWA Phase I, MWA Phase II, PAPER, and HERA. There are three main use-cases for FHD: efficient image deconvolution for general radio astronomy, fast-mode Epoch of Reionization analysis, and simulation. A license for IDL 8.2 or above is required.
 
 For further details, please see [Sullivan et al 2012](https://arxiv.org/abs/1209.1653) or [Barry et al 2019a](https://arxiv.org/abs/1901.02980).
 
@@ -41,6 +41,8 @@ prints error if HEALPix not installed correctly
 d. `imagefast,randomN(5,256,256),file_path='some/output/path/testimage.png'`  
 prints error if FHD not installed correctly, generates a 256x256 pixel image of poisson noise at path 'some/output/path/testimage.png' if installed correctly and read/write permissions are set correctly.
 
+## Community Guidelines
+We are an open-source community that interacts and discusses issues via GitHub. Please feel free to submit [issues](https://github.com/EoRImaging/FHD/issues) or [pull requests](https://github.com/EoRImaging/FHD/pulls). Comments and suggestions are welcome.
 
 ## Maintainers
-FHD was built by Ian Sullivan and the University of Washington radio astronomy team. Maintainance is a group effort split across University of Washington and Brown University, with contributions from University of Melbourne and Arizona State University. Please feel free to submit [issues](https://github.com/EoRImaging/FHD/issues).
+FHD was built by Ian Sullivan and the University of Washington radio astronomy team. Maintainance is a group effort split across University of Washington and Brown University, with contributions from University of Melbourne and Arizona State University. 
