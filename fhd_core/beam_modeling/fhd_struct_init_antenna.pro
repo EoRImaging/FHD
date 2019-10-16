@@ -104,6 +104,8 @@ za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 
 if keyword_set(kernel_window) then begin
+  print, 'Applying a modified gridding kernel. Beam is no longer instrumental. Do not use for calibration.'
+
   ;Get pixels which fall within the horizon
   horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
   xvals_instrument=za_arr*Sin(az_arr*!DtoR)
