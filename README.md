@@ -24,7 +24,7 @@ e. The [HEALPix](https://healpix.sourceforge.io/) library
 f. Optional: the [eppsilon](https://github.com/EoRImaging/eppsilon/) power spectrum generation code    
 
 Add these libraries to your IDL path. Be sure to use the correct separator (; or : ) and include the ‘+’ sign at the start of `+path/to/library/`. Optionally, you can create an IDL startup file to set the IDL path.    
-a. Windows: `!PATH = !PATH + ';' + Expand_Path('+path\to\library\')`
+a. Windows: `!PATH = !PATH + ';' + Expand_Path('+path\to\library\')`   
 b. Unix: `!PATH = Expand_Path('+path/to/library/') + ':' + !PATH`
 
 Install [HEALPix](http://healpix.jpl.nasa.gov/html/install.htm)    
