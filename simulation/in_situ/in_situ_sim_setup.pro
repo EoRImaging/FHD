@@ -98,12 +98,12 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
   ;Optionally add any general visibilities
   if keyword_set(extra_vis_filepath) then begin
 
-    if file_test(extra_vis_filepath) then begin
+    if total(file_test(extra_vis_filepath)) GT 0 then begin
       if strmid(extra_vis_filepath,5,6,/reverse_offset) EQ 'uvfits' then begin
         uvfits_read,hdr,params,layout,vis_extra,vis_extra_weights,file_path_vis=extra_vis_filepath,n_pol=n_pol,silent=silent,error=error,_Extra=extra
-      endif else "File " + extra_vis_filepath + " needs to be a uvfits."
+      endif else message, "File " + extra_vis_filepath + " needs to be a uvfits."
     endif else message, "File " + extra_vis_filepath + " not found."
-
+    
     ;Add the noise to the visibilities, but keeping zeroed visibilities fully zero
     for pol_i=0, n_pol-1 do *vis_arr[pol_i] = *vis_arr[pol_i]+*vis_extra[pol_i]
 
