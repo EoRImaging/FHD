@@ -16,7 +16,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
   ;restore model visibilities given the in_situ_sim_input to act as the input data visibilities
   if typename(in_situ_sim_input) EQ 'STRING' then begin
     for pol_i=0, n_pol-1 do begin
-      if strmid(in_situ_sim_input,2,3,/reverse_offset) EQ 'sav' then begin
+      if total(file_test(in_situ_sim_input,/directory)) GT 0 then begin
         vis_model_arr[pol_i] = GETVAR_SAVEFILE(in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
         print, "Using " + in_situ_sim_input+'/vis_data/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav as input model'
       endif else if strmid(in_situ_sim_input,5,6,/reverse_offset) EQ 'uvfits' then begin
