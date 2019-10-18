@@ -16,12 +16,22 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
   ;restore model visibilities given the in_situ_sim_input to act as the input data visibilities
   if typename(in_situ_sim_input) EQ 'STRING' then begin
     for pol_i=0, n_pol-1 do begin
+    
+      ;if directory, assume we are looking for model vis sav files
       if total(file_test(in_situ_sim_input,/directory)) GT 0 then begin
-        vis_model_arr[pol_i] = GETVAR_SAVEFILE(in_situ_sim_input+'/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav', 'vis_model_ptr')
-        print, "Using " + in_situ_sim_input+'/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav as input model'
+        file_name = in_situ_sim_input+'/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav'
+        if total(file_test(file_name)) LT 1 then $
+          message, file_name + ' not found'
+        vis_model_arr[pol_i] = GETVAR_SAVEFILE(filename, 'vis_model_ptr')
+      ;if a uvfits file, assume it has all the polarizations
       endif else if strmid(in_situ_sim_input,5,6,/reverse_offset) EQ 'uvfits' then begin
-        uvfits_read,hdr,params,layout,vis_model_arr,vis_weights,file_path_vis=in_situ_sim_input,n_pol=n_pol,silent=silent,error=error,_Extra=extra
+        file_name = in_situ_sim_input
+        if total(file_test(file_name)) LT 1 then message, file_name + ' not found'
+        uvfits_read,hdr,params,layout,vis_model_arr,vis_weights,file_path_vis=file_name,$
+          n_pol=n_pol,silent=silent,error=error,_Extra=extra
       endif
+      print, "Using " + file_name + ' as input model'
+      
     endfor
   endif else message, 'Please specify the directory and/or filename of the input visibilities in in_situ_sim_input'
   
