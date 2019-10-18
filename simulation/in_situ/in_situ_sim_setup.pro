@@ -22,7 +22,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
         file_name = in_situ_sim_input+'/'+obs_id+'_vis_model_'+pol_name[pol_i]+'.sav'
         if total(file_test(file_name)) LT 1 then $
           message, file_name + ' not found'
-        vis_model_arr[pol_i] = GETVAR_SAVEFILE(filename, 'vis_model_ptr')
+        vis_model_arr[pol_i] = GETVAR_SAVEFILE(file_name, 'vis_model_ptr')
       ;if a uvfits file, assume it has all the polarizations
       endif else if strmid(in_situ_sim_input,5,6,/reverse_offset) EQ 'uvfits' then begin
         file_name = in_situ_sim_input
