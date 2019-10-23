@@ -93,13 +93,13 @@ model_uv_transfer = '<path>/<to>/<FHDdir>/cal_prerun/' + obs_id + '_model_uv_arr
 
 
 ### Modified Gridding Kernel
-In order to produce EoR limit quality power spectra, a modified gridding kernel must be used to avoid model degridding errors and image aliasing (see [Barry et al 2019a](https://arxiv.org/abs/1901.02980) and [Barry et al 2019b](https://arxiv.org/abs/1909.00561). These options cannot be used to generate calibration solutions, please use [Calibration only](calibration-only) using an instrumental beam. 
+In order to produce EoR limit quality power spectra, a modified gridding kernel must be used to avoid model degridding errors and image aliasing (see [Barry et al 2019a](https://arxiv.org/abs/1901.02980) and [Barry et al 2019b](https://arxiv.org/abs/1909.00561)). These options cannot be used to generate calibration solutions, please use [Calibration only](calibration-only) using an instrumental beam. 
 
 Default modified kernel window is a Blackman-Harris squared, can optionally set to any window present in [spectral_window.pro](https://github.com/EoRImaging/fhdps_utils/blob/master/spectral_window.pro).
 ~~~
 kernel_window=1
 ~~~
-Depending on the modified kernel window chosen, change these keywords (please see [dictionary.md](https://github.com/EoRImaging/FHD/blob/master/dictionary.md))
+Depending on the modified kernel window chosen, change these keywords (please see [dictionary.md](https://github.com/EoRImaging/FHD/blob/master/dictionary.md)) 
 ~~~
 debug_dim=1
 beam_mask_threshold=1e3
