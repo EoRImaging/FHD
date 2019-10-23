@@ -125,7 +125,7 @@ if keyword_set(kernel_window) then begin
   pix_window[pix_use] = image_window(xvals_instrument[pix_use], yvals_instrument[pix_use], $
     image_window_name = kernel_window,xval_center=xval_center,yval_center=yval_center,fractional_size=fractional_size)
   ;Store image window in antenna structure
-  antenna[0].pix_window=ptr_new(pix_window)
+  antenna.pix_window=ptr_new(pix_window)
 endif
 
 ;now, update antenna structure to include gains
