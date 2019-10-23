@@ -76,7 +76,9 @@ endif
 IF ~Keyword_Set(psf_dim) THEN $
     psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
+;reset psf_dim if cetain conditions met.
 if keyword_set(debug_dim) then psf_dim=18.
+if keyword_set(kernel_window) then psf_dim=18.
 
 IF Keyword_Set(psf_max_dim) THEN BEGIN
     psf_max_dim=Ceil(psf_max_dim/2.)*2 ;dimension MUST be even
