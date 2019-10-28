@@ -37,10 +37,6 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
   
   vis_arr=temporary(vis_model_arr)
   
-  ;Remove all weighting to remove pfb effects and flagged channels. Remove calibration flagging.
-  if keyword_set(remove_sim_flags) then for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
-  flag_calibration=0
-  
   ;restore EoR visibilities
   If keyword_set(eor_vis_filepath) then begin
     vis_eor=PTRARR(n_pol,/allocate)
@@ -68,7 +64,8 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
           
           ;Restore visibilities that are in the <obsid>_vis_XX/vis_YY format
           vis_eor[pol_i] = GETVAR_SAVEFILE(eor_vis_filepath + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav', vis_varname)
-        endif else message, "eor_vis_filepath not found! Tried " + eor_vis_filepath + " and " + eor_vis_filepath + '/' + obs_id + "_vis_" + pol_name[pol_i] + ".sav (for all pol)"
+        endif else message, "eor_vis_filepath not found! Tried " + eor_vis_filepath + " and " + eor_vis_filepath + '/' + obs_id + "_vis_" $
+          + pol_name[pol_i] + ".sav (for all pol)"
       endfor
     endelse
     ;*End of search for the specified eor savefile
@@ -76,11 +73,11 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
     ;Boost the eor signal by a specified amount
     If keyword_set(enhance_eor) then begin
       print, "Enhancing input EoR by "+enhance_eor+"x"
-      for pol_i=0,n_pol-1 do *vis_eor[pol_i]=*vis_eor[pol_i]*enhance_eor
+      for pol_i=0,n_pol-1 do (*vis_eor[pol_i])=(*vis_eor[pol_i])*enhance_eor
     endif
     
     ;Combine the calibrated visibilities in the correct format for the script
-    for pol_i=0,n_pol-1 do *vis_arr[pol_i] = *vis_arr[pol_i]+*vis_eor[pol_i]
+    for pol_i=0,n_pol-1 do (*vis_arr[pol_i]) = (*vis_arr[pol_i])+(*vis_eor[pol_i])
     
   endif
   
@@ -110,14 +107,19 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 
     if total(file_test(extra_vis_filepath)) GT 0 then begin
       if strmid(extra_vis_filepath,5,6,/reverse_offset) EQ 'uvfits' then begin
-        uvfits_read,hdr,params,layout,vis_extra,vis_extra_weights,file_path_vis=extra_vis_filepath,n_pol=n_pol,silent=silent,error=error,_Extra=extra
+        uvfits_read,hdr_extra,params_extra,layout_extra,vis_extra,vis_extra_weights,file_path_vis=extra_vis_filepath,n_pol=n_pol,$
+          silent=silent,error=error,_Extra=extra
       endif else message, "File " + extra_vis_filepath + " needs to be a uvfits."
     endif else message, "File " + extra_vis_filepath + " not found."
     
-    ;Add the noise to the visibilities, but keeping zeroed visibilities fully zero
-    for pol_i=0, n_pol-1 do *vis_arr[pol_i] = *vis_arr[pol_i]+*vis_extra[pol_i]
+    ;Add visibilities
+    for pol_i=0, n_pol-1 do (*vis_arr[pol_i]) = (*vis_arr[pol_i])+(*vis_extra[pol_i])
 
   endif
+
+  ;Remove all weighting to remove pfb effects and flagged channels. Remove calibration flagging.
+  if keyword_set(remove_sim_flags) then for pol_i=0, n_pol-1 do (*vis_weights[pol_i])[*,*]=1.
+  flag_calibration=0
 
   return
 END
