@@ -388,9 +388,8 @@ WARNING! Options in this section may change without notice, and should never be 
 **stokes_low**: minimum colorbar value for exported Stokes .ps or .png images. Applies to all Stokes images: I, Q, U, and V.<br />
   -*Default*: not set <br />
 
-**split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. <br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: not set <br />
+**split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. Requires more than one time sample. <br />
+  -*Default*: 1 <br />
 
 **write_healpix_fits**: create Healpix fits files. <br />
   -*Turn off/on*: 0/1 <br />
