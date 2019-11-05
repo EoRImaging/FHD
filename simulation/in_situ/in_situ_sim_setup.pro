@@ -44,6 +44,12 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
     if file_test(eor_vis_filepath) AND (strmid(eor_vis_filepath,5,6,/reverse_offset) EQ 'uvfits') then begin
       uvfits_read,hdr,params,layout,vis_eor,eor_weights,file_path_vis=eor_vis_filepath,n_pol=n_pol,silent=silent,error=error,_Extra=extra
 
+    ;Check size of visibilties 
+    for pol_i=0, n_pol-1 do begin
+      if (size(*vis_arr[pol_i]))[1] NE (size(*vis_eor[pol_i]))[1] then message, "EoR in situ visibilities do not match inherent vis size"
+      if (size(*vis_arr[pol_i]))[2] NE (size(*vis_eor[pol_i]))[2] then message, "EoR in situ visibilities do not match inherent vis size"
+    endfor
+
     ;*Search for the specified eor savefile
     endif else if (total(file_test(eor_vis_filepath)) GT 0) AND (file_test(eor_vis_filepath,/directory) EQ 0) then begin
       size_savefile=(size(eor_vis_filepath))[1]
@@ -111,6 +117,12 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
           silent=silent,error=error,_Extra=extra
       endif else message, "File " + extra_vis_filepath + " needs to be a uvfits."
     endif else message, "File " + extra_vis_filepath + " not found."
+    
+    ;Check size of visibilties 
+    for pol_i=0, n_pol-1 do begin
+      if (size(*vis_arr[pol_i]))[1] NE (size(*vis_extra[pol_i]))[1] then message, "Extra in situ visibilities do not match inherent vis size"
+      if (size(*vis_arr[pol_i]))[2] NE (size(*vis_extra[pol_i]))[2] then message, "Extra in situ visibilities do not match inherent vis size"
+    endfor
     
     ;Add visibilities
     for pol_i=0, n_pol-1 do (*vis_arr[pol_i]) = (*vis_arr[pol_i])+(*vis_extra[pol_i])
