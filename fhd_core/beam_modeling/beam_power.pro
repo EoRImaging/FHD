@@ -21,7 +21,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   power_zenith_beam=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
     (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
   power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
-  power_beam = power_zenith_beam*beam_ant1*beam_ant2
+  power_beam = power_zenith_beam*beam_ant1*Conj(beam_ant2)
 
   image_power_beam=power_beam/power_zenith
   if keyword_set(kernel_window) then image_power_beam *= *(antenna1.pix_window)
