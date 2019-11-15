@@ -43,7 +43,6 @@ Function calfits_read,file_path_fits,obs,params,silent=silent,_Extra=extra
     IF (data_index EQ 0) AND (ant_index EQ 5) AND (freq_index EQ 3) AND (time_index EQ 2) AND (jones_index EQ 1) AND (spec_wind_index EQ 4) then begin  ; calfits conforms to the Fall 2018 pyuvdata convention
       if (size(data_array))[5] ne 1 then message, 'Calfits file includes more than one spectral window. Note that this feature is not yet supported in FHD.'
       data_array = mean(data_array, dimension=5)  ; Remove spectral window dimension for compatibility
-      data_array = data_array/2.  ; For some reason the calfits reports twice the gains
     endif else message, 'Calfits file does not appear to adhere to standard. Please see github:pyuvdata/docs/references'
   endif 
 
