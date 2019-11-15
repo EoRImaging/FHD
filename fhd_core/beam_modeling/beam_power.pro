@@ -17,31 +17,14 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   beam_ant1=DComplex(*(antenna1.response[ant_pol1,freq_i]))
   beam_ant2=DComplex(Conj(*(antenna2.response[ant_pol2,freq_i])))
   beam_norm=1.
-
-  IF ant_pol1 NE ant_pol2 THEN BEGIN
-    power_zenith_beam1=abs((*Jones1[0,ant_pol1])*(Conj(*Jones2[0,ant_pol1]))+$
-      (*Jones1[1,ant_pol1])*(Conj(*Jones2[1,ant_pol1])))
-    power_zenith1=Interpolate(power_zenith_beam1,zen_int_x,zen_int_y,cubic=-0.5)
-    power_zenith_beam2=abs((*Jones1[0,ant_pol2])*(Conj(*Jones2[0,ant_pol2]))+$
-      (*Jones1[1,ant_pol2])*(Conj(*Jones2[1,ant_pol2])))
-    power_zenith2=Interpolate(power_zenith_beam2,zen_int_x,zen_int_y,cubic=-0.5)
-    power_zenith=Sqrt(power_zenith1*power_zenith2)
-
-    power_beam1=(*Jones1[0,ant_pol1]*beam_ant1)*(Conj(*Jones2[0,ant_pol1])*beam_ant2)+$
-      (*Jones1[1,ant_pol1]*beam_ant1)*(Conj(*Jones2[1,ant_pol1])*beam_ant2)
-    power_beam2=(*Jones1[0,ant_pol2]*beam_ant1)*(Conj(*Jones2[0,ant_pol2])*beam_ant2)+$
-      (*Jones1[1,ant_pol2]*beam_ant1)*(Conj(*Jones2[1,ant_pol2])*beam_ant2)
-    power_beam=Sqrt(power_beam1*power_beam2)
-    debug_point=1
-  ENDIF ELSE BEGIN
-    power_zenith_beam=abs((*Jones1[0,ant_pol1])*(Conj(*Jones2[0,ant_pol2]))+$
-      (*Jones1[1,ant_pol1])*(Conj(*Jones2[1,ant_pol2])))
-    power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
-    ;power_zenith=abs((*Jones1[0,ant_pol1])[zen_int_x,zen_int_y]*(Conj(*Jones2[0,ant_pol2]))[zen_int_x,zen_int_y]+$
-    ;             (*Jones1[1,ant_pol1])[zen_int_x,zen_int_y]*(Conj(*Jones2[1,ant_pol2]))[zen_int_x,zen_int_y])
-    power_beam=(*Jones1[0,ant_pol1]*beam_ant1)*(Conj(*Jones2[0,ant_pol2])*beam_ant2)+$
-      (*Jones1[1,ant_pol1]*beam_ant1)*(Conj(*Jones2[1,ant_pol2])*beam_ant2)
-  ENDELSE
+  
+  ;Amplitude of the response from ant1 is Sqrt(|J1[0,pol1]|^2 + |J1[1,pol1]|^2)
+  ;Amplitude of the response from ant2 is Sqrt(|J2[0,pol2]|^2 + |J2[1,pol2]|^2)
+  ;Amplitude of the baseline response is the product of the antenna responses
+  power_zenith_beam=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
+    (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
+  power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
+  power_beam = power_zenith_beam*beam_ant1*beam_ant2
 
   image_power_beam=power_beam/power_zenith
   if keyword_set(kernel_window) then image_power_beam *= *(antenna1.pix_window)
