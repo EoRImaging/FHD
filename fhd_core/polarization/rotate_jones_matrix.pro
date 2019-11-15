@@ -21,6 +21,7 @@ hour_angle = hour_angle mod 360.
 ; North along the -ZA axis and East along the -Az axis.
 ; A rotation angle of 90 degrees is defined with
 ; North along the +Az axis and East along the -ZA axis.
+; See parallactic_angle_memo.pdf for a derivation of the parallactic angle
 par_ang = parallactic_angle(latitude=obs.zendec,hour_angle=hour_angle,dec=dec_use)
 
 ; Now define the elements of the rotation matrix

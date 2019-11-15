@@ -1,4 +1,6 @@
 PRO vis_calibrate_crosspol_phase,vis_ptr,vis_model_ptr,vis_weight_ptr,cal
+; Calculates the phase fit between X and Y antenna polarizations
+; See crosspol_phase_calculation_memo.pdf for a discussion of this calculation
 
 n_pol = N_Elements(vis_ptr)
 
