@@ -159,8 +159,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br />  
 
-**diffuse_calibrate**: a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. <br />
-  -*EoR_firstpass settings*: filepath('EoR0_diffuse_model_94.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+**diffuse_calibrate**: path to the .sav file containing a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. See diffuse_model for information about the formatting of the .sav file. <br />
   -*Default*: undefined (off) <br />
 
 **digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
@@ -272,17 +271,6 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set <br />
 
 
-## Diffuse
-
-**diffuse_model**: File path to the diffuse model sav file. <br />
-  -*Currently only on diffuse_simulations branch* <br />
-  -*Default*: filepath('gsm_150MHz.sav',root=rootdir('FHD'),subdir='catalog_data')<br />
-  -Replace gsm_150MHz.sav with any other diffuse .sav file. This file should contain the following:<br />
-  - MODEL_ARR = A healpix map with the diffuse model<br />
-  - NSIDE = The corresponding NSIDE parameter<br />
-  - HPX_INDS = The corresponding healpix indices of the model_arr<br />
-  - coord_sys = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
-
 ## In situ simulation
 
 **enhance_eor**: input a multiplicative factor to boost the signal of the EoR in the dirty input visibilities. <br />
@@ -308,6 +296,14 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: Additional sidelobe sources are not included. If `return_cal_visibilities` and `allow_sidelobe_cal_sources` are both set, then the model will include those sources in the sidelobes that were used in calibration. <br />
   -*Default*: Additional sidelobe sources are not included. If `return_cal_visibilities` and `allow_sidelobe_cal_sources` are both set, then the model will include those sources in the sidelobes that were used in calibration. !Q <br />
+  
+**diffuse_model**: File path to the diffuse model sav file. <br />
+  -*Default*: not set <br />
+  -The .sav file should contain the following:<br />
+  - MODEL_ARR = A healpix map with the diffuse model in units Jy/pixel. This can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
+  - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
+  - HPX_INDS = The corresponding healpix indices of the model_arr.<br />
+  - COORD_SYS = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
 
 **max_model_sources**: limits the number of sources used in the model. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. If `return_cal_visibilities` is set, then the final model will include all calibration sources and all model sources (duplicates are caught and included only once). <br />
@@ -391,7 +387,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. Requires more than one time sample. <br />
   -*Default*: 1 <br />
 
-**write_healpix_fits**: create Healpix fits files. <br />
+**write_healpix_fits**: create Healpix fits files. Healpix fits maps are in units Jy/sr. <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
