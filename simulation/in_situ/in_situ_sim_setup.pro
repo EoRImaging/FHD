@@ -78,7 +78,7 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
     
     ;Boost the eor signal by a specified amount
     If keyword_set(enhance_eor) then begin
-      print, "Enhancing input EoR by "+enhance_eor+"x"
+      print, "Enhancing input EoR by "+strtrim(enhance_eor,2)+"x"
       for pol_i=0,n_pol-1 do (*vis_eor[pol_i])=(*vis_eor[pol_i])*enhance_eor
     endif
     
