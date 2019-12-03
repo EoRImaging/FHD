@@ -71,7 +71,7 @@ yv_arr=Ptrarr(n_obs,/allocate)
 uv_i_arr=Ptrarr(n_obs,/allocate)
 
 box_coords=Lonarr(n_obs,4)
-norm_arr=Fltarr(n_obs)
+norm_arr=Fltarr(n_pol,n_obs)
 IF Keyword_Set(transfer_mapfn) THEN BEGIN
     IF N_Elements(transfer_mapfn) EQ 1 THEN BEGIN
         print,String(format='("Transferring mapfn from: ",A)',transfer_mapfn)
@@ -186,7 +186,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         undefine_fhd,gal_model_uv
     ENDIF
 ;    *uv_mask_arr[obs_i]=source_uv_mask
-    norm_arr[obs_i]=gain_normalization
+    norm_arr[*,obs_i]=gain_normalization
     
     uv_i_use=where(Temporary(source_uv_mask),n_uv_use)
     uv_use_frac=Float(n_uv_use)/(dimension*elements)
@@ -249,7 +249,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         FOR pol_i=0,n_pol-1 DO BEGIN
             t1_0=Systime(1)
             residual=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
-                degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[obs_i])
+                degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[pol_i,obs_i])
             
             t2_0a=Systime(1)
             t1+=t2_0a-t1_0
@@ -356,7 +356,7 @@ FOR obs_i=0L,n_obs-1 DO *comp_arr[obs_i]=(*comp_arr[obs_i])[0:si-1] ;truncate co
 FOR obs_i=0L,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO BEGIN
         *residual_array[pol_i,obs_i]=dirty_image_generate(*dirty_uv_arr[pol_i,obs_i]-*model_uv_holo[pol_i,obs_i],$
-            degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[obs_i])*(*beam_corr[pol_i,obs_i])
+            degpix=obs_arr[obs_i].degpix,filter=filter_arr[pol_i,obs_i],/antialias,norm=norm_arr[pol_i,obs_i])*(*beam_corr[pol_i,obs_i])
     ENDFOR
     res_stokes=stokes_cnv(residual_array[*,obs_i],jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],_Extra=extra)
     image_use=*res_stokes[0]*Sqrt(*obs_weight[obs_i])

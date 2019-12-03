@@ -37,10 +37,6 @@ IF Keyword_Set(uvfilter_count_threshold) THEN BEGIN
     i_cut_count = where(vis_count LT uvfilter_count_threshold, n_cut_count)
     IF n_cut_count GT 0 THEN filter_use[i_cut_count] = 0
 ENDIF
-wts_i=where(filter_use,n_wts)
-IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE print,"WARNING: Weights all 0!"
-
-IF Ptr_valid(filter) THEN *filter=filter_use
 
 image_uv_filtered=image_uv*filter_use
 RETURN,image_uv_filtered
