@@ -34,6 +34,20 @@ Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
 
 ;build the instrumental pol Jones matrix
 CASE beam_model_version OF
+    ;Nicolas Fagnoni Beams read in through pyuvdata
+    4: BEGIN
+        pyuvdata_filepath=filepath('NF_HERA_Vivaldi_efield_beam.fits',root=rootdir('HERA-Beams'),sub='NicolasFagnoniBeams')
+        print,"Reading in: " + pyuvdata_filepath
+        Jones_matrix = pyuvdata_beam_import(obs, antenna, pyuvdata_filepath,$
+            za_arr=za_arr, az_arr=az_arr, psf_image_dim=psf_image_dim)
+    END
+    ;Nicolas Fagnoni Beams read in through pyuvdata
+    3: BEGIN
+        pyuvdata_filepath=filepath('NF_HERA_Dipole_efield_beam.fits',root=rootdir('HERA-Beams'),sub='NicolasFagnoniBeams')
+        print,"Reading in: " + pyuvdata_filepath
+        Jones_matrix = pyuvdata_beam_import(obs, antenna, pyuvdata_filepath,$
+            za_arr=za_arr, az_arr=az_arr, psf_image_dim=psf_image_dim)
+    END
     ;Beams created by Dave Deboer in 2016
     2: BEGIN
     

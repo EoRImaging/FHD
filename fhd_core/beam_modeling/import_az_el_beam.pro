@@ -17,25 +17,62 @@ fits_info,file_path_J_matrix,/silent,n_ext=n_ext
 n_ext+=1 ;n_ext starts counting AFTER the 0th extension, which it considers to be the main data unit, but we use that one too
 freq_arr_Jmat=Fltarr(n_ext)
 
-FOR ext_i=0,n_ext-1 DO BEGIN
-    Jmat1=mrdfits(file_path_J_matrix,ext_i,header,status=status,/silent)
-    IF ext_i EQ 0 THEN BEGIN
-        n_ang=Float(sxpar(header,'NAXIS2'))
-        Jmat_arr=Dcomplexarr(n_ext,n_ant_pol,n_ant_pol,n_ang)
-        theta_arr=Dblarr(n_ext,n_ang)
-        phi_arr=Dblarr(n_ext,n_ang)
-    ENDIF
-    theta_arr[ext_i,*]=Jmat1[0,*] ;zenith angle in degrees
-    phi_arr[ext_i,*]=Jmat1[1,*] ;azimuth angle in degrees, clockwise from East
-    FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO BEGIN
-        Jmat_arr[ext_i,p_i,p_j,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
-        if keyword_set(debug_flip) then Jmat_arr[ext_i,p_j,p_i,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
+;FOR ext_i=0,n_ext-1 DO BEGIN
+;    Jmat1=mrdfits(file_path_J_matrix,ext_i,header,status=status,/silent)
+;    IF ext_i EQ 0 THEN BEGIN
+;        n_ang=Float(sxpar(header,'NAXIS2'))
+;        Jmat_arr=Dcomplexarr(n_ext,n_ant_pol,n_ant_pol,n_ang)
+;        theta_arr=Dblarr(n_ext,n_ang)
+;        phi_arr=Dblarr(n_ext,n_ang)
+;    ENDIF
+;    theta_arr[ext_i,*]=Jmat1[0,*] ;zenith angle in degrees
+;    phi_arr[ext_i,*]=Jmat1[1,*] ;azimuth angle in degrees, clockwise from East
+;    FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO BEGIN
+;        Jmat_arr[ext_i,p_i,p_j,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
+;        if keyword_set(debug_flip) then Jmat_arr[ext_i,p_j,p_i,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
+;    ENDFOR
+;    freq_arr_Jmat[ext_i]=Float(sxpar(header,'FREQ')) ;in Hz
+;ENDFOR
+;theta_arr=median(theta_arr,dimension=1) ; all actually the same across freq, so reduce dimension
+;phi_arr=median(phi_arr,dimension=1) ; all actually the same across freq, so reduce dimension
+
+;Begin hacks for pyuvdata beam
+; CTYPE1: Azimuth in degrees, from 0 and increment of 1. Don't know origin: guessing clockwise from East
+; CTYPE2: Zenith angle in degrees, from 0 and increment of 1
+; CTYPE3: Frequency in Hz, from 50,000,000 and increment of 1,000,000
+; CTYPE4: "Feed index", X then Y
+; CTYPE5: Spectral window number. There is only one.
+; CTYPE6: Basis vector index. guessing these are theta then phi
+; CTYPE7: Complex, real then imaginary component. 
+Jmat0=mrdfits(file_path_J_matrix,0,header,status=status,/silent)
+n_za_ang = sxpar(header,'naxis2')
+n_az_ang = sxpar(header,'naxis1')
+n_freq = sxpar(header, 'naxis3')
+n_feed = sxpar(header, 'naxis4')
+n_basis = sxpar(header, 'naxis6')
+n_ang = n_za_ang*n_az_ang
+
+theta_arr0 = findgen(n_za_ang)*sxpar(header,'cdelt2') + sxpar(header, 'crval2') ;in degrees
+phi_arr0 = findgen(n_az_ang)*sxpar(header,'cdelt1') + sxpar(header, 'crval1') ;in degrees
+freq_arr_Jmat = findgen(sxpar(header,'naxis3'))*sxpar(header,'cdelt3') + sxpar(header, 'crval3') ; in Hz
+
+az_ind_arr = Reform(Fix(meshgrid(n_az_ang, n_za_ang, 1)), n_ang)
+za_ind_arr = Reform(Fix(meshgrid(n_az_ang, n_za_ang, 2)), n_ang)
+theta_arr = theta_arr0[za_ind_arr]
+phi_arr = phi_arr0[az_ind_arr]
+
+Jmat_arr=Dcomplexarr(n_freq,n_basis,n_feed,n_ang)
+FOR freq_i=0,n_freq-1 DO BEGIN
+    FOR f_i=0,n_feed-1 DO BEGIN
+        FOR b_i=0,n_basis-1 DO BEGIN
+            Jmat1 = Jmat0[*, *, freq_i, f_i, 0, b_i, 0] + icomp*Jmat0[*, *, freq_i, f_i, 0, b_i, 1]
+            Jmat_arr[freq_i,f_i,b_j,*] = Reform(Jmat1, n_ang)
+        ENDFOR
     ENDFOR
-    freq_arr_Jmat[ext_i]=Float(sxpar(header,'FREQ')) ;in Hz
 ENDFOR
-theta_arr=median(theta_arr,dimension=1) ; all actually the same across freq, so reduce dimension
-phi_arr=median(phi_arr,dimension=1) ; all actually the same across freq, so reduce dimension
+
 phi_arr=270.-phi_arr ;change azimuth convention
+
 
 Jmat_interp=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
 FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO Jmat_interp[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(n_ang))
