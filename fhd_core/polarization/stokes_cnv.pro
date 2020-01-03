@@ -186,7 +186,7 @@ ENDIF ELSE BEGIN ;else case is array of images
         FOR sky_pol=0,n_pol-1 DO image_arr_sky[sky_pol]=$
             Ptr_new(stokes_inv_term1[sky_pol]*(*image_arr[stokes_list1[sky_pol]])+stokes_inv_term2[sky_pol]*(*image_arr[stokes_list2[sky_pol]]))
         FOR instr_pol=0,n_pol-1 DO BEGIN
-            image_arr_out[instr_pol]=Ptr_new(fltarr(dimension,elements))
+            image_arr_out[instr_pol]=Ptr_new(Dcomplexarr(dimension,elements))
             FOR sky_pol=0,n_pol-1 DO BEGIN
                 (*image_arr_out[instr_pol])[inds]+=(*image_arr_sky[sky_pol])[inds]*(*p_map[sky_pol,instr_pol])
             ENDFOR
