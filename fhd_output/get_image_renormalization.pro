@@ -9,14 +9,14 @@ dimension=obs.dimension
 elements=obs.elements
 IF N_Elements(filter_arr) EQ 0 THEN filter_arr=intarr(n_pol)
 
-normalization_arr=fltarr(n_pol)
+renorm_factor=fltarr(n_pol)
 FOR pol_i=0,n_pol-1 DO BEGIN    
-    normalization_arr[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
+    renorm_factor[pol_i]=1./(dirty_image_generate(*weights_arr[pol_i],degpix=degpix,obs=obs,psf=psf,params=params,$
         weights=*weights_arr[pol_i],pad_uv_image=pad_uv_image,image_filter_fn=image_filter_fn,$
         filter=filter_arr[pol_i],antialias=antialias,beam_ptr=beam_base[pol_i],_Extra=extra))[dimension/2.,elements/2.]
-    normalization_arr[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
+    renorm_factor[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
-renorm_factor=mean(normalization_arr[0:n_pol-1])
+IF filter_name NE 'weighted' THEN renorm_factor[*]=mean(renorm_factor)
 
 ;pix_area=beam_width_calculate(obs,min_restored_beam_width=0,/area)
 ;renorm_factor/=pix_area

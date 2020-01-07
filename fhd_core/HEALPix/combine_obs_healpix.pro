@@ -177,8 +177,8 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     ;We will divide by the sum of the variances at the end to make this a variance-weighted average
     pixel_area_cnv=(4.*!Pi / npix) * weight_invert(pixel_area(obs))
     FOR pol_i=0,n_pol-1 DO BEGIN
-        *stokes_dirty[pol_i]*=renorm_factor*stokes_weights * pixel_area_cnv
-        IF model_flag THEN *stokes_model[pol_i]*=renorm_factor*stokes_weights * pixel_area_cnv
+        *stokes_dirty[pol_i]*=renorm_factor[pol_i]*stokes_weights * pixel_area_cnv
+        IF model_flag THEN *stokes_model[pol_i]*=renorm_factor[pol_i]*stokes_weights * pixel_area_cnv
         IF source_flag THEN *stokes_sources[pol_i]*=stokes_weights * pixel_area_cnv
     ENDFOR
     
