@@ -6,7 +6,7 @@ Current MWA examples include:
 [Deconvolution](#deconvolution)   
 [Drift scan](#drift-scan)   
 [MWA Phase II](#mwa-phase-ii)   
-[Calibration only](calibration-only)  
+[Calibration only](#calibration-only)  
 [Modified gridding kernel](#modified-gridding-kernel)  
 
 There are also examples for:    
