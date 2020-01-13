@@ -300,10 +300,14 @@ WARNING! Options in this section may change without notice, and should never be 
 **diffuse_model**: File path to the diffuse model sav file. <br />
   -*Default*: not set <br />
   -The .sav file should contain the following:<br />
-  - MODEL_ARR = A healpix map with the diffuse model in units Jy/pixel. This can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
+  - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/pixel unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
   - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
   - HPX_INDS = The corresponding healpix indices of the model_arr.<br />
   - COORD_SYS = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
+  
+**diffuse_units_kelvin**: defines the units of the diffuse model to be in units Kelvin. Used if either diffuse_model or diffuse_calibrate are set. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
 
 **max_model_sources**: limits the number of sources used in the model. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. If `return_cal_visibilities` is set, then the final model will include all calibration sources and all model sources (duplicates are caught and included only once). <br />
