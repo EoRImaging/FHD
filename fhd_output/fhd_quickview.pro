@@ -280,8 +280,8 @@ IF Keyword_Set(cal_source_flag) THEN cal_sources = source_image_generate(cal_sou
 renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
   image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix,/antialias)
 for pol_i=0,n_pol-1 do begin
-  *instr_dirty_arr[pol_i]*=renorm_factor[pol_i]
-  IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor[pol_i]
+  *instr_dirty_arr[pol_i]*=renorm_factor[pol_i]/(degpix*!DtoR)^2.
+  IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor[pol_i]/(degpix*!DtoR)^2.
 endfor
 
 stokes_dirty_arr=stokes_cnv(instr_dirty_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
@@ -329,10 +329,10 @@ mkhdr,fits_header,*instr_dirty_arr[0]
 putast, fits_header, astr_out;, cd_type=1
 
 fits_header_Jy=fits_header
-sxaddpar,fits_header_Jy,'BUNIT','Jy/beam'
+sxaddpar,fits_header_Jy,'BUNIT','Jy/sr'
 
 fits_header_apparent=fits_header
-sxaddpar,fits_header_apparent,'BUNIT','Jy/beam (apparent)'
+sxaddpar,fits_header_apparent,'BUNIT','Jy/sr (apparent)'
 
 mkhdr,fits_header_uv,Abs(*weights_arr[0])
 sxaddpar,fits_header_uv,'CD1_1',obs.kpix,'Wavelengths / Pixel'
