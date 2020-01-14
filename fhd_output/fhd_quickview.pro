@@ -28,6 +28,7 @@ IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=beam_threshold/2.
 IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
 IF status_str.fhd EQ 0 THEN model_recalculate=0
+IF ~keyword_set(image_filter_fn) THEN image_filter_fn='filter_uv_uniform'
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
@@ -276,12 +277,11 @@ ENDFOR
 IF Keyword_Set(cal_source_flag) THEN cal_sources = source_image_generate(cal_source_arr_out,obs_out,pol_i=4,resolution=16,$
     dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)
 
-; renormalize based on weights
 renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
   image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix,/antialias)
 for pol_i=0,n_pol-1 do begin
-  *instr_dirty_arr[pol_i]*=renorm_factor[pol_i]/(degpix*!DtoR)^2.
-  IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor[pol_i]/(degpix*!DtoR)^2.
+  *instr_dirty_arr[pol_i]*=renorm_factor[pol_i]
+  IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor[pol_i]
 endfor
 
 stokes_dirty_arr=stokes_cnv(instr_dirty_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
