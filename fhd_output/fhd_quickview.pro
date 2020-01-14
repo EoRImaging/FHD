@@ -554,6 +554,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             healpix_source_stokes = healpix_cnv_apply(stokes_source,hpx_cnv)
             write_fits_cut4,healpix_source_path,hpx_inds_nest,healpix_source_stokes,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         ENDIF
+        IF model_flag THEN BEGIN
+            healpix_model_path = output_path+filter_name+'_Model_'+pol_names[pol_i+4]+'_HEALPix.fits'
+            healpix_model_stokes = healpix_cnv_apply(stokes_model,hpx_cnv)
+            write_fits_cut4,healpix_model_path,hpx_inds_nest,healpix_model_stokes,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        ENDIF
         healpix_residual_path = output_path+filter_name+res_name+pol_names[pol_i+4]+'_HEALPix.fits'
         healpix_residual_stokes = healpix_cnv_apply(stokes_residual,hpx_cnv)
         write_fits_cut4,healpix_residual_path,hpx_inds_nest,healpix_residual_stokes,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
