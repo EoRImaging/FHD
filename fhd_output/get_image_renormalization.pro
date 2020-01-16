@@ -16,7 +16,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         filter=filter_arr[pol_i],antialias=antialias,beam_ptr=beam_base[pol_i],_Extra=extra))[dimension/2.,elements/2.]
     renorm_factor[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
 ENDFOR
-IF filter_name NE 'weighted' THEN renorm_factor[*]=mean(renorm_factor)
+IF keyword_set(image_filter_fn) THEN IF image_filter_fn NE 'filter_uv_weighted' THEN renorm_factor[*]=mean(renorm_factor)
 
 ;pix_area=beam_width_calculate(obs,min_restored_beam_width=0,/area)
 ;renorm_factor/=pix_area
