@@ -220,6 +220,9 @@ calibration_polyfit=2 <br />
 **calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
   -*Default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
 
+**vis_baseline_hist**: !Q <br />
+  -*Default*: 1
+
 ## Debug
 WARNING! Options in this section may change without notice, and should never be turned on by default. <br />
 
@@ -592,8 +595,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **ps_tile_flag_list** :  <br />
   -*Default*: not set<br />
-
-vis_baseline_hist=1
 
 max_sources=20000   (Cut this -- Only max_calibration_sources or max_model_sources is used)
 
