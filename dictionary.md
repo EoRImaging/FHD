@@ -7,7 +7,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **beam_cal_threshold**: the fractional power response relative to the peak from which to include sources for calibration.<br />
   -*Default*: 0.05, or 0.01 if `allow_sidelobe_sources` set <br />
-  
+
 **beam_clip_floor**: Set to subtract the minimum non-zero value of the beam model from all pixels. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1
@@ -61,6 +61,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. <br />
   -*Default*: not set <br />
+
+**interpolate_kernel**: use interpolation of the gridding kernel while gridding and degridding, rather than selecting the closest super-resolution kernel. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
 
 
 ## Calibration
@@ -197,11 +201,24 @@ catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),sub
 calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
 bandpass_calibrate=1 <br />
 calibration_polyfit=2 <br />
-no_restrict_cal_sources=1 <br />
 
 **include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
-   -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q
+   -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
+
+**calibration_visibilities_subtract**: Subtract model visibilities from calibrated dirty visibilities, leaving only residual calibrated visibilities. Recommended to be deprecated in issue #187. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*:0 <br />
+
+**no_restrict_cal_sources**: Ignore beam threshold values and and edge distance when selecting sources to include in the calibration catalog. (Does not look like this is used in any meaningful way anywhere, i.e. deprecated) <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
+
+**calibration_flag_iterate**: number of times to repeat calibration in order to better identify and flag bad antennas so as to exclude them from the final result. <br />
+  -*Default*: 0 (repeat 0 times i.e. do not repeat) <br />
+
+**calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
+  -*Default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
 
 ## Debug
 WARNING! Options in this section may change without notice, and should never be turned on by default. <br />
@@ -296,7 +313,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: Additional sidelobe sources are not included. If `return_cal_visibilities` and `allow_sidelobe_cal_sources` are both set, then the model will include those sources in the sidelobes that were used in calibration. <br />
   -*Default*: Additional sidelobe sources are not included. If `return_cal_visibilities` and `allow_sidelobe_cal_sources` are both set, then the model will include those sources in the sidelobes that were used in calibration. !Q <br />
-  
+
 **diffuse_model**: File path to the diffuse model sav file. <br />
   -*Default*: not set <br />
   -The .sav file should contain the following:<br />
@@ -304,7 +321,7 @@ WARNING! Options in this section may change without notice, and should never be 
   - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
   - HPX_INDS = The corresponding healpix indices of the model_arr.<br />
   - COORD_SYS = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
-  
+
 **diffuse_units_kelvin**: defines the units of the diffuse model to be in units Kelvin. Used if either diffuse_model or diffuse_calibrate are set. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
@@ -395,6 +412,14 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
+
+**combine_healpix**: old way to integrate all observations from one FHD run into a single Healpix-gridded image <br />
+  -*Turn off/on*: 0/1 <br \>
+  -*Default*: 0 <br />
+
+**combine_obs**: Another option to integrate observations together. Instead of using Healpix, this picks an ortho-slant projection from a given obs and warps the others to match. (It does not look like this is actually used anywhere i.e. deprecated.) <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0
 
 ## Flagging
 
@@ -498,6 +523,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
 
+**cleanup**: deletes some intermediate data products that are easy to recalculate in order to save disk space
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0<br />
+
 ## Resolution
 
 **baseline_threshold**: Positive numbers cut baselines shorter than the given number in wavelengths. Negative numbers cut baselines longer than the given number in wavelengths. This keyword is deprecated because it does not return the correct image normalization. Consider using min_baseline and max_baseline instead. <br />
@@ -564,22 +593,8 @@ WARNING! Options in this section may change without notice, and should never be 
 **ps_tile_flag_list** :  <br />
   -*Default*: not set<br />
 
-
-cleanup=0
-combine_healpix=0
-deconvolve=0
-
 vis_baseline_hist=1
-calibration_visibilities_subtract=0
-
-n_avg=2
-deconvolution_filter='filter_uv_uniform'
 
 max_sources=20000   (Cut this -- Only max_calibration_sources or max_model_sources is used)
 
-
-ring_radius=10.*pad_uv_image
-combine_obs=0
 smooth_width=32.
-
-calibration_flag_iterate = 0
