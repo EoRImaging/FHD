@@ -20,11 +20,10 @@ All sky catalogs are located in `catalog_data`.
 * **GLEAM_v2_plus_rlb2019.sav**: GLEAM release version 2 at 181MHz for the full-sky with added bright (A-team) sources. It includes a Fornax A component model produced by Patti Carroll with FHD. It does not include Gaussian fitting or spectral slopes.
 * **MRC_calibration_catalog.sav**:	Convert MRC catalog to calibration catalog format	6 years ago
 * **MRC_full_radio_catalog.fits**:	Bug fix:MRC catalog	7 years ago
-* **simulation/RFI_PLAW_1000s_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **simulation/RFI_PLAW_1000x_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **simulation/RFI_PLAW_100x_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **simulation/RFI_PLAW_10x_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **simulation/RFI_PLAW_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
+* **simulation/RFI_PLAW_1000s_Cat.sav**:	1000 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
+* **simulation/RFI_PLAW_10x_Cat.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 1 mJy - 1 Jy
+* **simulation/RFI_PLAW_Cat.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
+* **simulation/test_RFI_source_1061315448_zenith.sav**: A 1 Jy source at zenith for MWA obsid 1061315448
 * **RTS_catalog.sav**:	fixed RTS catalog	5 years ago
 * **RTS_catalog2.sav**:	try shifting RTS sources by small amount	5 years ago
 * **arn_eor0_low_cat_patti_catalog.sav**:	add patti eor0 low catalog and eor version	5 years ago
