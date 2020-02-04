@@ -15,9 +15,9 @@ All sky catalogs are located in `catalog_data`.
 * **GLEAM_EGC_catalog.sav**:	Adding full published GLEAM extragalactic catalog as GLEAM_EGC_catalo…	3 years ago
 * **GLEAM_EGC_catalog_KGSscale_ssextended.sav**:	KGS-scaled GLEAM with extended model for southern sidelobe source	3 years ago
 * **GLEAM_EGC_v2_181MHz.sav**:	GLEAM release version 2 at 181MHz for the full-sky except A-team sources and the galactic plane. Only has point-source information; does not include Gaussian fitting or spectral slopes.
-* **GLEAM_plus_rlb2017.sav**:	new catalog	2 years ago
-* **GLEAM_v2_plus_gaussian_sources_rlb2019.sav**:	updated catalogs: GLEAM v2 with and without gaussian models	13 months ago
-* **GLEAM_v2_plus_rlb2019.sav**:	updated catalogs: GLEAM v2 with and without gaussian models	13 months ago
+* **GLEAM_plus_rlb2017.sav**:	GLEAM release version 1 at 181MHz for the full-sky with added bright (A-team) sources. It includes a Fornax A component model produced by Patti Carroll with FHD. It does not include Gaussian fitting or spectral slopes.
+* **GLEAM_v2_plus_gaussian_sources_rlb2019.sav**:	GLEAM release version 2 at 181MHz for the full-sky with added bright (A-team) sources and some Gaussian source models. This catalog is designed for implementation with FHD's gaussian_source_models branch, which has not yet been fully tested.
+* **GLEAM_v2_plus_rlb2019.sav**: GLEAM release version 2 at 181MHz for the full-sky with added bright (A-team) sources. It includes a Fornax A component model produced by Patti Carroll with FHD. It does not include Gaussian fitting or spectral slopes.
 * **MRC_calibration_catalog.sav**:	Convert MRC catalog to calibration catalog format	6 years ago
 * **MRC_full_radio_catalog.fits**:	Bug fix:MRC catalog	7 years ago
 * **simulation/RFI_PLAW_1000s_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
