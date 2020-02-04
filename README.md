@@ -14,6 +14,7 @@ For further details, please see [Sullivan et al 2012](https://arxiv.org/abs/1209
 * [Examples](https://github.com/EoRImaging/FHD/blob/master/examples.md): Please visit the examples page for brief tutorials on specific cases.
 * [Outputs](https://github.com/EoRImaging/FHD/blob/master/outputs.md): For documentation of the various outputs, see the outputs page.
 * [Inputs](https://github.com/EoRImaging/FHD/blob/master/inputs.md): FHD inputs beam models, calibration files, and sky model catalogs. Currently available inputs are described on this page.
+* [Publications](https://github.com/EoRImaging/FHD/blob/master/publications.md): FHD has been used in a variety of publications, documented on this page.
 
 ## Installation
 Download the latest versions of these libraries/repos.    
