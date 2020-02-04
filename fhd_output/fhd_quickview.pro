@@ -28,7 +28,10 @@ IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=beam_threshold/2.
 IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
 IF status_str.fhd EQ 0 THEN model_recalculate=0
-IF ~keyword_set(image_filter_fn) THEN image_filter_fn='filter_uv_uniform'
+IF ~keyword_set(image_filter_fn) THEN BEGIN
+  print, 'WARNING: image_filter_fn not set. Using "filter_uv_uniform."'
+  image_filter_fn='filter_uv_uniform'
+ENDIF
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
