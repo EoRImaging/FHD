@@ -12,6 +12,8 @@ IF Keyword_Set(skymodel) THEN diffuse_spectral_index=skymodel.diffuse_spectral_i
 apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 radec_i=where(Finite(ra_arr))
 IF Keyword_Set(flatten_spectrum) THEN alpha_corr=obs.alpha ELSE alpha_corr=0.
+IF N_Elements(diffuse_units_kelvin) EQ 0 THEN diffuse_units_kelvin = 0
+IF Keyword_Set(diffuse_units_kelvin) THEN from_jy_per_sr = 0 ELSE from_jy_per_sr = 1
 
 ;freq_use=where((*obs.baseline_info).freq_use,nf_use)
 ;f_bin=(*obs.baseline_info).fbin_i
@@ -52,7 +54,7 @@ IF size(diffuse_spectral_index,/type) EQ 10 THEN BEGIN ;check if pointer type
     print,"A spectral index is defined in the saved diffuse model, but this is not yet supported!"
 ENDIF ;case of specifying a single scalar to be applied to the entire diffuse model is treated AFTER building the model in instrumental polarization
 
-model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_kelvin=diffuse_units_kelvin,coord_sys=coord_use)
+model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,from_jy_per_sr=from_jy_per_sr,from_kelvin=diffuse_units_kelvin,coord_sys=coord_use)
 IF size(model_stokes_arr,/type) EQ 10 THEN BEGIN
     np_hpx=Total(Ptr_valid(model_hpx_arr))
     IF Keyword_Set(no_polarized_diffuse) THEN np_hpx=1

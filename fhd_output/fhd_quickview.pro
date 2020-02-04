@@ -28,6 +28,10 @@ IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 IF N_Elements(beam_output_threshold) EQ 0 THEN beam_output_threshold=beam_threshold/2.
 IF N_Elements(image_mask_horizon) EQ 0 THEN image_mask_horizon=1
 IF status_str.fhd EQ 0 THEN model_recalculate=0
+IF ~keyword_set(image_filter_fn) THEN BEGIN
+  print, 'WARNING: image_filter_fn not set. Using "filter_uv_uniform."'
+  image_filter_fn='filter_uv_uniform'
+ENDIF
 
 grid_spacing=10.
 offset_lat=grid_spacing/2;15. paper 10 memo
@@ -276,12 +280,13 @@ ENDFOR
 IF Keyword_Set(cal_source_flag) THEN cal_sources = source_image_generate(cal_source_arr_out,obs_out,pol_i=4,resolution=16,$
     dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)
 
-; renormalize based on weights
 renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_base=beam_base_out,filter_arr=filter_arr,$
   image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,degpix=degpix,/antialias)
 for pol_i=0,n_pol-1 do begin
   *instr_dirty_arr[pol_i]*=renorm_factor[pol_i]
   IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor[pol_i]
+  IF source_flag THEN *instr_sources[pol_i]*=renorm_factor[pol_i]
+  IF Keyword_Set(ring_radius) THEN *instr_rings[pol_i]*=renorm_factor[pol_i]
 endfor
 
 stokes_dirty_arr=stokes_cnv(instr_dirty_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
@@ -329,10 +334,10 @@ mkhdr,fits_header,*instr_dirty_arr[0]
 putast, fits_header, astr_out;, cd_type=1
 
 fits_header_Jy=fits_header
-sxaddpar,fits_header_Jy,'BUNIT','Jy/beam'
+sxaddpar,fits_header_Jy,'BUNIT','Jy/sr'
 
 fits_header_apparent=fits_header
-sxaddpar,fits_header_apparent,'BUNIT','Jy/beam (apparent)'
+sxaddpar,fits_header_apparent,'BUNIT','Jy/sr (apparent)'
 
 mkhdr,fits_header_uv,Abs(*weights_arr[0])
 sxaddpar,fits_header_uv,'CD1_1',obs.kpix,'Wavelengths / Pixel'
@@ -553,6 +558,11 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             healpix_source_path = output_path+filter_name+'_Sources_'+pol_names[pol_i+4]+'_HEALPix.fits'
             healpix_source_stokes = healpix_cnv_apply(stokes_source,hpx_cnv)
             write_fits_cut4,healpix_source_path,hpx_inds_nest,healpix_source_stokes,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
+        ENDIF
+        IF model_flag THEN BEGIN
+            healpix_model_path = output_path+filter_name+'_Model_'+pol_names[pol_i+4]+'_HEALPix.fits'
+            healpix_model_stokes = healpix_cnv_apply(stokes_model,hpx_cnv)
+            write_fits_cut4,healpix_model_path,hpx_inds_nest,healpix_model_stokes,n_obs_hpx,err_map,nside=nside,/nested,coord='C'
         ENDIF
         healpix_residual_path = output_path+filter_name+res_name+pol_names[pol_i+4]+'_HEALPix.fits'
         healpix_residual_stokes = healpix_cnv_apply(stokes_residual,hpx_cnv)
