@@ -29,7 +29,7 @@ ENDFOR
 CASE beam_model_version OF
     2: BEGIN
         file_path_J_matrix=filepath('mwa_Jmatrix.fits',root=rootdir('FHD'),sub='instrument_config') ; NOTE STILL NEED THIS
-        Jones_matrix = import_az_el_beam(obs, antenna, file_path_J_matrix,
+        Jones_matrix = import_az_el_beam(obs, antenna, file_path_J_matrix,$
                                          za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim)
     END
     0: BEGIN

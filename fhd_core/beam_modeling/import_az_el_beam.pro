@@ -56,8 +56,8 @@ theta_arr0 = findgen(n_za_ang)*sxpar(header,'cdelt2') + sxpar(header, 'crval2') 
 phi_arr0 = findgen(n_az_ang)*sxpar(header,'cdelt1') + sxpar(header, 'crval1') ;in degrees
 freq_arr_Jmat = findgen(sxpar(header,'naxis3'))*sxpar(header,'cdelt3') + sxpar(header, 'crval3') ; in Hz
 
-az_ind_arr = Reform(Fix(meshgrid(n_az_ang, n_za_ang, 1)), n_ang)
-za_ind_arr = Reform(Fix(meshgrid(n_az_ang, n_za_ang, 2)), n_ang)
+az_ind_arr = Reform(Fix(meshgrid(n_za_ang, n_az_ang, 2)), n_ang)
+za_ind_arr = Reform(Fix(meshgrid(n_za_ang, n_az_ang, 1)), n_ang)
 theta_arr = theta_arr0[za_ind_arr]
 phi_arr = phi_arr0[az_ind_arr]
 

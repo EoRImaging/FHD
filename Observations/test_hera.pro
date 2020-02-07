@@ -58,7 +58,7 @@ output_residual_histogram=1
 show_beam_contour=1
 contour_level=[0,0.01,0.05,0.1,0.2,0.5,0.67,0.9]
 contour_color='blue'
-import_pyuvdata_beam_filepath = 
+;import_pyuvdata_beam_filepath = 'D:\MWA\IDL_code\HERA-Beams\NicolasFagnoniBeams\NF_HERA_Dipole_efield_beam_healpix.fits'
 
 default_diffuse='D:\MWA\IDL_code\FHD\catalog_data\EoR0_polarized_diffuse_2.sav'
 IF N_Elements(extra) GT 0 THEN IF Tag_exist(extra,'diffuse_calibrate') THEN IF extra.diffuse_calibrate EQ 1 THEN $
@@ -72,7 +72,7 @@ n_pol=2
 restore_vis_savefile=0
 firstpass=1
 max_cal_iter=1000L
-beam_model_version=1
+beam_model_version=3
 dft_threshold=1
 init_healpix
 
