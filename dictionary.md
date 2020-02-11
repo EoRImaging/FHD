@@ -51,6 +51,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: Not set (same as 0) <br />
 
+**kernel_window**: modify the gridding kernel by applying a window function to the primary beam according to a user choice. If set, but not a string and nonzero, assigns 'Blackman-Harris^2' <br />
+  -*Options*: 'Hann', 'Hamming', 'Blackman', 'Nutall', 'Blackman-Nutall',  <br />
+               'Blackman-Harris', 'Blackman-Harris^2', 'Tukey' <br />
+  -*Default*: Not set (not the same as setting to 0!) <br />
+
 **nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. <br />
   -*EoR_firstpass settings*: 16 <br />
   -*Default*: 1 <br />
