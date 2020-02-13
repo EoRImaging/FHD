@@ -1,4 +1,4 @@
-PRO general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$
+PRO general_obs,cleanup=cleanup,recalculate_all=recalculate_all,export_images=export_images,version=version,$
     mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,snapshot_recalculate=snapshot_recalculate,deconvolve=deconvolve,$
     image_filter_fn=image_filter_fn,data_directory=data_directory,output_directory=output_directory,n_pol=n_pol,precess=precess,$
     vis_file_list=vis_file_list,fhd_file_list=fhd_file_list,healpix_path=healpix_path,catalog_file_path=catalog_file_path,$
@@ -42,8 +42,7 @@ ENDIF
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=0
 IF N_Elements(export_images) EQ 0 THEN export_images=0
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
-IF N_Elements(ps_export) EQ 0 THEN ps_export=0
-IF Keyword_Set(snapshot_healpix_export) THEN ps_export=0 ELSE snapshot_healpix_export=0
+IF N_elements(snapshot_healpix_export) EQ 0 THEN snapshot_healpix_export=0
 
 ;Set up paths
 ;Convoluted way of setting up 'instrument' for use here, while still leaving it to be passed in Extra
@@ -206,7 +205,6 @@ ENDIF
 combine_obs_sources,fhd_file_list,status_arr,restore_last=0,output_path=healpix_path,_Extra=extra
 map_projection='orth'
 IF Keyword_Set(combine_healpix) THEN BEGIN
-;    IF Keyword_Set(ps_export) THEN weight_threshold=0 ELSE weight_threshold=0.2
     combine_obs_healpix,fhd_file_list,status_arr,hpx_inds,obs_arr,n_obs_hpx=n_obs_hpx,stokes_dirty_hpx=stokes_dirty_hpx,$
         stokes_model_hpx=stokes_model_hpx,weights_hpx=weights_hpx,stokes_sources_hpx=stokes_sources_hpx,nside=nside,$
         output_path=healpix_path,image_filter_fn=image_filter_fn,catalog_file_path=catalog_file_path,_Extra=extra
