@@ -53,6 +53,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **interpolate_beam_threshold**: set to smoothly interpolate the UV beam model to zero (in amplitude) beyond the clip set by `beam_mask_threshold`. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: Not set (same as 0) <br />
+  
+**interpolate_kernel**: use interpolation of the gridding kernel while gridding and degridding, rather than selecting the closest super-resolution kernel. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **kernel_window**: modify the gridding kernel by applying a window function to the primary beam according to a user choice. If set, but not a string and nonzero, assigns 'Blackman-Harris^2' <br />
   -*Options*: 'Hann', 'Hamming', 'Blackman', 'Nutall', 'Blackman-Nutall',  <br />
@@ -70,11 +75,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. <br />
   -*Default*: not set <br />
-
-**interpolate_kernel**: use interpolation of the gridding kernel while gridding and degridding, rather than selecting the closest super-resolution kernel. <br />
-  -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />
-  -*eor_wrapper_defaults*: 1 <br />
 
 
 ## Calibration
@@ -159,8 +159,14 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **calibration_auto_initialize**: initialize gain values for calibration with the autocorrelations. If unset, gains will initialize to 1 or the value supplied by cal_gain_init. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-
-**calibration_subtract_sidelobe_catalog**: set to subtract a catalog in the sidelobes that is different from that used in the primary beam <br />
+  
+**calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
+  -*Default*: filepath(`instrument`+'_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+  -*eor_wrapper_default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+  
+**calibration_flag_iterate**: number of times to repeat calibration in order to better identify and flag bad antennas so as to exclude them from the final result. <br />
+  -*Default*: 0 (repeat 0 times i.e. do not repeat) <br />
+  -*eor_wrapper_defaults*: 0 <br />
 
 **calibration_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the calibration sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
   -*EoR_firstpass settings*: not set <br />
@@ -170,6 +176,13 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
+  
+**calibration_subtract_sidelobe_catalog**: set to subtract a catalog in the sidelobes that is different from that used in the primary beam <br />
+
+**calibration_visibilities_subtract**: Subtract model visibilities from calibrated dirty visibilities, leaving only residual calibrated visibilities. Recommended to be deprecated in issue #187. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+  -*eor_wrapper_defaults*: 0 <br />
 
 **diffuse_calibrate**: path to the .sav file containing a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. See diffuse_model for information about the formatting of the .sav file. <br />
   -*Default*: undefined (off) <br />
@@ -178,14 +191,18 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
+  
+**include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
+   -*Default* : 0 <br />
+   -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
 
+**max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
+  -*Default*: equal to `max_baseline` <br />
+  
 **max_calibration_sources**: limits the number of sources used in the calibration. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
   -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set. <br />
   -*EoR_firstpass settings*: 20000 <br />
   -*Default*: All valid sources in the catalog are used. <br />
-
-**max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
-  -*Default*: equal to `max_baseline` <br />
 
 **min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
   -*Default*: equal to `min_baseline`<br />
@@ -197,6 +214,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **n_avg**: number of frequencies to average over to smooth the frequency band. <br />
   -*Default*: !Q <br />
   -*eor_wrapper_defaults*: 2 <br />
+  
+**no_restrict_cal_sources**: Ignore beam threshold values and and edge distance when selecting sources to include in the calibration catalog. (Does not look like this is used in any meaningful way anywhere, i.e. deprecated) <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: unset <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. If n_pol = 4 (full pol mode), return_cal_visibilites must be set because the visibilites are required for calculating the mixing angle between Q and U. <br />
   -*Turn off/on*: 0/1 <br />
@@ -206,28 +228,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, the full file path to a npy file, or the full file path to a fits file that adheres to calfits format. Note that this will calibrate, but not generate a model. Please set model visibility keywords separately to generate a subtraction model. <br />
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
-
-**include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
-   -*Default* : 0 <br />
-   -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
-
-**calibration_visibilities_subtract**: Subtract model visibilities from calibrated dirty visibilities, leaving only residual calibrated visibilities. Recommended to be deprecated in issue #187. <br />
-  -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />
-  -*eor_wrapper_defaults*: 0 <br />
-
-**no_restrict_cal_sources**: Ignore beam threshold values and and edge distance when selecting sources to include in the calibration catalog. (Does not look like this is used in any meaningful way anywhere, i.e. deprecated) <br />
-  -*Turn off/on*: 0/1 <br />
-  -*Default*: unset <br />
-  -*eor_wrapper_defaults*: 1 <br />
-
-**calibration_flag_iterate**: number of times to repeat calibration in order to better identify and flag bad antennas so as to exclude them from the final result. <br />
-  -*Default*: 0 (repeat 0 times i.e. do not repeat) <br />
-  -*eor_wrapper_defaults*: 0 <br />
-
-**calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
-  -*Default*: filepath(`instrument`+'_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
-  -*eor_wrapper_default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
 
 **vis_baseline_hist**: !Q <br />
   -*Default*: 1 <br />
@@ -364,6 +364,11 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Export
 
+**combine_healpix**: old way to integrate all observations from one FHD run into a single Healpix-gridded image <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+  -*eor_wrapper_defaults*: 0 <br />
+
 **export_images**: export fits files and images of the sky. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
@@ -414,6 +419,10 @@ WARNING! Options in this section may change without notice, and should never be 
 **snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
+  
+**split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. Requires more than one time sample. <br />
+  -*Default*: 1 <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **stokes_high**: maximum colorbar value for exported Stokes .ps or .png images. Applies to all Stokes images: I, Q, U, and V.<br />
   -*Default*: not set <br />
@@ -421,19 +430,10 @@ WARNING! Options in this section may change without notice, and should never be 
 **stokes_low**: minimum colorbar value for exported Stokes .ps or .png images. Applies to all Stokes images: I, Q, U, and V.<br />
   -*Default*: not set <br />
 
-**split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. Requires more than one time sample. <br />
-  -*Default*: 1 <br />
-  -*eor_wrapper_defaults*: 1 <br />
-
 **write_healpix_fits**: create Healpix fits files. Healpix fits maps are in units Jy/sr. <br />
   -*Turn off/on*: 0/1 <br />
   -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
-
-**combine_healpix**: old way to integrate all observations from one FHD run into a single Healpix-gridded image <br />
-  -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />
-  -*eor_wrapper_defaults*: 0 <br />
 
 
 ## Flagging
@@ -465,6 +465,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 (flag/don't flag) <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 1 <br />
+  
+**no_ps** : Do not save output images in postscript format. Only png and fits.<br />
+  -*Default*: 1 <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **tile_flag_list**: a string array of tile names to manually flag tiles. Note that this is an array of tile names, not tile indices! <br />
   -*Default*: not set <br />
@@ -478,10 +482,6 @@ WARNING! Options in this section may change without notice, and should never be 
 **unflag_all**: unflag all tiles/antennas and frequencies. While not practical for real data, this is useful for creating unflagged model visibilities for the input of an in-situ simulations. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
-
-**no_ps** : Do not save output images in postscript format. Only png and fits.<br />
-  -*Default*: 1 <br />
-  -*eor_wrapper_defaults*: 1 <br />
 
 ## Instrument Parameters
 
@@ -499,30 +499,30 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
-
-**override_target_phasera**: RA of the target phase center, which overrides the value supplied in the metafits under the header keyword RAPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword RA.<br />
-  -*Default*: not set<br />
-
+  
 **override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
   -*Default*: not set<br />
 
-**time_offset**: time offset of phase center in seconds from start time of the observation. <br />
-  -*Default*: 0 second offset <br />
-
+**override_target_phasera**: RA of the target phase center, which overrides the value supplied in the metafits under the header keyword RAPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword RA.<br />
+  -*Default*: not set<br />
+  
 **rephase_weights**: if turned off, target phase center is the pointing center (as defined by Cotter). Setting rephase_weights=0 overrides override_target_phasera and override_target_phasedec. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
 
+**time_offset**: time offset of phase center in seconds from start time of the observation. <br />
+  -*Default*: 0 second offset <br />
+
 
 ## Import
-
-**uvfits_version**: the version number of the uvfits. See `uvfits_subversion` for the uvfits versions available. <br />
-  -*Range*: currently 3 to 5 <br />
-  -*eor_wrapper_defaults*: 5 <br />
 
 **uvfits_subversion**: the subversion number of the uvfits. Here are the available uvfits versions, ordered by version number and subversion number: 3,3 was used to test compressed fits; 3,4 was a rerun of 3,1 with a newer version of cotter before that version was recorded; 4,0 went back to old settings for an industrial run; 4,1 was the same as 4,0 but for running on compressed gpubox files; 5,0 was a test to phase all obs to zenith (phasing needs to be added per obs currently); 5,1 incorperates flag files and runs cotter without the bandpass applied, with all the other default settings.<br />
   -*Range*: currently 0 to 4 <br />
   -*eor_wrapper_defaults*: 1 <br />
+
+**uvfits_version**: the version number of the uvfits. See `uvfits_subversion` for the uvfits versions available. <br />
+  -*Range*: currently 3 to 5 <br />
+  -*eor_wrapper_defaults*: 5 <br />
 
 
 ## Recalculation
@@ -567,15 +567,15 @@ WARNING! Options in this section may change without notice, and should never be 
 **dimension**: the number of pixels in the UV plane along one axis. <br />
   -*Default*: 2 to the power of the rounded result of log&#8322;(k_span/k_binsize).<br />
   -*eor_wrapper_defaults*: 2048 <br />
+  
+**FoV**: A proxy for the field of view in degrees. `FoV` is actually used to determine `kbinsize`, which will be set to `!RaDeg/FoV`. This means that the pixel size at phase center times `dimension` is approximately equal to `FoV`, which is not equal to the actual field of view owing to larger pixel sizes away from phase center. If set to 0, then `kbinsize` determines the UV resolution. <br />
+  -*Default*: not set <br />
+  -*eor_wrapper_defaults*: 0 <br />
 
 **kbinsize**: size of UV pixels in wavelengths. Given a defined number of pixels in `dimension`, this sets the UV space extent. This will supersede `degpix` if `dimension` is also set. <br />
   -*Dependency*: will only go into effect if `FoV` is not set. <br />
   -*Default*: 0.5 if `dimension`, and `kbinsize`, `FoV` are not set <br />
   -*eor_wrapper_defaults*: 0.5 <br />
-
-**FoV**: A proxy for the field of view in degrees. `FoV` is actually used to determine `kbinsize`, which will be set to `!RaDeg/FoV`. This means that the pixel size at phase center times `dimension` is approximately equal to `FoV`, which is not equal to the actual field of view owing to larger pixel sizes away from phase center. If set to 0, then `kbinsize` determines the UV resolution. <br />
-  -*Default*: not set <br />
-  -*eor_wrapper_defaults*: 0 <br />
 
 **max_baseline**: the maximum baseline length in wavelengths to include in the analysis. <br />
   -*EoR_firstpass settings*: net set <br />
@@ -591,14 +591,14 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **ps_beam_threshold** : Minimum value to which to calculate the beam out to in image space. The beam in UV space is pre-calculated and may have its own `beam_threshold` (see that keyword for more information), and this is only an additional cut in image space. <br />
   -*Default*: not set<br />     
+  
+**ps_degpix** : Degrees per pixel for Healpix cube generation. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
+  -*Dependency*: `ps_kspan` and `ps_dimension` must not be set in order for the keyword to take effect. <br />
+  -*Default*: not set<br />  
 
 **ps_dimension** : UV plane dimension in pixel number for Healpix cube generation. Overrides `ps_degpix` if set. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
   -*Dependency*: `ps_kspan` must not be set in order for the keyword to take effect. <br />
-  -*Default*: not set<br />   
-
-**ps_degpix** : Degrees per pixel for Healpix cube generation. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
-  -*Dependency*: `ps_kspan` and `ps_dimension` must not be set in order for the keyword to take effect. <br />
-  -*Default*: not set<br />   
+  -*Default*: not set<br />    
 
 **ps_fov** : Field of view in degrees for Healpix cube generation. Overrides `kpix` in the obs structure if set.<br />
   -*Dependency*: `ps_kbinsize` must not be set in order for the keyword to take effect. <br />
