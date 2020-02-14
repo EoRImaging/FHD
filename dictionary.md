@@ -12,7 +12,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **beam_clip_floor**: Set to subtract the minimum non-zero value of the beam model from all pixels. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 1
+  -*Default*: 0 (unset) <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **beam_mask_threshold**: the factor at which to clip the beam model. For example, a factor of 100 would clip the beam model at 100x down from the maximum value. This removes extraneous and uncertain modelling at low levels.  <br />
   -*Default*: 100 <br />
@@ -29,9 +30,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*eor_wrapper_defaults*: 2 <br />
 
 **beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
-  -*EoR_firstpass settings*: 56 <br />
-  -*Default*: 0 <br />
   -*Range*: 0-# of seconds in an observation <br />
+  -*Default*: 0 <br />
+  -*eor_wrapper_defaults*: 56 <br />
 
 **complex_beam**: set if the beam is complex. Affects how gridding is handled. <br />
   -*Turn off/on*: 0/1 <br />
@@ -72,7 +73,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **interpolate_kernel**: use interpolation of the gridding kernel while gridding and degridding, rather than selecting the closest super-resolution kernel. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 1 <br />
+  -*Default*: 0 <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 
 ## Calibration
@@ -84,25 +86,24 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **bandpass_calibrate**: calculates a bandpass. This is an average of tiles by frequency by polarization (default), beamformer-to-LNA cable types by frequency by polarization (see `cable_bandpass_fit`), or over the whole season by pointing by by cable type by frequency by polarization via a read-in file (see `saved_run_bp`). If unset, no by-frequency bandpass is used. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br />  
+  -*eor_wrapper_defaults*: 1 <br />
 
 **cable_bandpass_fit**: average the calibration solutions across tiles within a cable grouping for the particular instrument. <br />
   -*Dependency*: instrument_config/\<instrument\>_cable_length.txt <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: 1 !Q <br />
+  -*Default*: 0 (not set) <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **cal_amp_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the amplitude of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
   -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
-  -*Turn off/on*: undefined/defined <br />
-  -*EoR_firstpass settings*: 2 <br />
-  -*Default*: 2 !Q <br />
+  -*Default*: unused (`calibration_polyfit` is unset) <br />
+  -*eor_wrapper_defaults*: 2 <br />
 
-**cal_bp_transfer**: use a saved bandpass for bandpass calibration. Read in the specified file (.sav, .txt, or .fits), with calfits format greatly preferred. <br />
+**cal_bp_transfer**: use a saved bandpass for bandpass calibration. Read in the specified file (.sav, .txt, or .fits), with calfits format greatly preferred. If set to 1, becomes `mwa_eor0_highband_season1_cable_bandpass.fits`. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: if set to 1, becomes `mwa_eor0_highband_season1_cable_bandpass.fits` <br />
+  -*Default*: 0 (unset) <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **cal_convergence_threshold**: threshold at which calibration ends. <br />
   -*Default*: !Q <br />
@@ -117,15 +118,14 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 1 <br />
 
 **cal_phase_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
-  -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
-  -*Turn off/on*: undefined/defined <br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: 1 !Q <br />
+  -*Dependency*: `calibration_polyfit` must be on for the polynomial fitting to occur. <br />
+  -*Default*: unused (`calibration_polyfit` is unset) <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **cal_reflection_hyperresolve**: hyperresolve and fit residual gains using nominal reflection modes (calculated from `cal_reflection_mode_delay` or `cal_reflection_mode_theory`) , producing a finetuned mode fit, amplitude, and phase. Will be ignored if `cal_reflection_mode_file` is set because it is assumed that a file read-in contains mode/amp/phase to use. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 1 <br />
   -*Default*: not set <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **cal_reflection_mode_delay**: calculate cable reflection modes by Fourier transforming the residual gains, removing modes contaminated by frequency flagging, and choosing the maximum mode. <br />
   -*EoR_firstpass settings*: not set <br />
@@ -136,8 +136,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: undefined <br />
 
 **cal_reflection_mode_theory**: calculate theoretical cable reflection modes given the velocity and length data stored in a config file named `<instrument>_cable_length.txt`. File must have a header line and at least five columns (tile index, tile name, cable length, cable velocity factor, logic on whether to fit (1) or not (0)). Can set it to positive/negative cable lengths (see `cal_mode_fit`) to include/exclude certain cable types. <br />
-  -*EoR_firstpass settings*: 150 <br />
   -*Default*: not set <br />
+  -*eor_wrapper_defaults*: 150 <br />
 
 **cal_stop**: stops the code right after calibration, and saves unflagged model visibilities along with the obs structure in a folder called cal_prerun in the FHD file structure. This allows for post-processing calibration steps like multi-day averaging, but still has all of the needed information for minimal reprocessing to get to the calibration step. To run a post-processing run, see keywords `model_transfer` and `transfer_psf`.<br />
   -*Turn off/on*: 0/1 <br />
@@ -168,11 +168,12 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **calibration_polyfit**: calculates a polynomial fit across the frequency band for the gain, and allows a cable reflection to be fit. The orders of the polynomial fit are determined by `cal_phase_degree_fit` and `cal_amp_degree_fit`. If unset, no polynomial fit or cable reflection fit are used. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 1 <br />
-  -*Default*: 1 <br />  
+  -*Default*: 0 <br />
+  -*eor_wrapper_defaults*: 1 <br />
 
 **diffuse_calibrate**: path to the .sav file containing a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. See diffuse_model for information about the formatting of the .sav file. <br />
   -*Default*: undefined (off) <br />
+  -*eor_wrapper_defaults*: 0 <br />
 
 **digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
   -*Turn off/on*: 0/1 <br />
@@ -206,11 +207,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 
-catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data') <br />
-calibration_catalog_file_path=filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
-bandpass_calibrate=1 <br />
-calibration_polyfit=2 <br />
-
 **include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
    -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
@@ -230,7 +226,8 @@ calibration_polyfit=2 <br />
   -*eor_wrapper_defaults*: 0 <br />
 
 **calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
-  -*Default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+  -*Default*: filepath(`instrument`+'_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
+  -*eor_wrapper_default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
 
 **vis_baseline_hist**: !Q <br />
   -*Default*: 1 <br />
@@ -334,7 +331,9 @@ WARNING! Options in this section may change without notice, and should never be 
   -*eor_wrapper_defaults*: 1 <br />
 
 **diffuse_model**: File path to the diffuse model sav file. <br />
+  -*Turn off/on*: 0/1 <br />
   -*Default*: not set <br />
+  -*eor_wrapper_defaults*: 0 <br />
   -The .sav file should contain the following:<br />
   - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/pixel unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
   - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
@@ -351,8 +350,8 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **model_catalog_file_path**: a catalog of sources to be used to make model visibilities for subtraction. <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect.  <br />
-  -*EoR_firstpass settings*: filepath('mwa_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*Default*: not set <br />
+  -*eor_wrapper_defaults*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
 
 **model_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the model sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect.  <br />
@@ -613,13 +612,11 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set<br />
   -*eor_wrapper_defaults*: 600. <br />
 
-**ps_nfreq_avg** :  <br />
+**ps_nfreq_avg** : !Q <br />
   -*Default*: not set<br />
 
-**ps_psf_resolution** :  <br />
+**ps_psf_resolution** : !Q <br />
   -*Default*: not set<br />
 
-**ps_tile_flag_list** :  <br />
+**ps_tile_flag_list** : !Q <br />
   -*Default*: not set<br />
-
-smooth_width=32.
