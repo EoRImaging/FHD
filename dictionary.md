@@ -114,7 +114,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **cal_mode_fit**: determines whether calibration will fit for reflection in cables. This will be set if
 	`cal_reflection_mode_file`, `cal_reflection_mode_theory`, `cal_reflection_mode_delay`, or `cal_reflection_hyperresolve` is set. Setting it to a positive cable length (scalar or array) will specifically include the associated tiles for fitting. Setting it to a negative cable length (scalar or array) will specifically exclude the associated tiles from fitting. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: undefined <br />
   -*Default*: 1 <br />
 
 **cal_phase_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
@@ -128,11 +127,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*eor_wrapper_defaults*: 1 <br />
 
 **cal_reflection_mode_delay**: calculate cable reflection modes by Fourier transforming the residual gains, removing modes contaminated by frequency flagging, and choosing the maximum mode. <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 
 **cal_reflection_mode_file**: use predetermined cable reflection parameters (mode, amplitude, and phase) in the calibration solutions. Set to 1 to correct antennas using default tile for instrument (e.g. `FHD/instrument_config/mwa_cable_reflection_coefficients.txt`) or set to a filepath with the reflection coefficients. The specified format of the text file must have one header line and eleven columns (tile index, tile name, cable length, cable velocity factor, logic on whether to fit (1) or not (0), mode for X, amplitude for X, phase for X, mode for Y, amplitude for Y, phase for Y). See `vis_cal_polyfit.pro` for units. <br />
-  -*EoR_firstpass settings*: undefined <br />
   -*Default*: undefined <br />
 
 **cal_reflection_mode_theory**: calculate theoretical cable reflection modes given the velocity and length data stored in a config file named `<instrument>_cable_length.txt`. File must have a header line and at least five columns (tile index, tile name, cable length, cable velocity factor, logic on whether to fit (1) or not (0)). Can set it to positive/negative cable lengths (see `cal_mode_fit`) to include/exclude certain cable types. <br />
@@ -169,7 +166,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*eor_wrapper_defaults*: 0 <br />
 
 **calibration_flux_threshold**: this sets an lower exclusion threshold in flux (Jy) for the calibration sources. If the flux threshold is negative, then it is treated as a upper exlusion threshold in flux (Jy). <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 
 **calibration_polyfit**: calculates a polynomial fit across the frequency band for the gain, and allows a cable reflection to be fit. The orders of the polynomial fit are determined by `cal_phase_degree_fit` and `cal_amp_degree_fit`. If unset, no polynomial fit or cable reflection fit are used. <br />
@@ -201,7 +197,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   
 **max_calibration_sources**: limits the number of sources used in the calibration. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
   -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set. <br />
-  -*EoR_firstpass settings*: 20000 <br />
   -*Default*: All valid sources in the catalog are used. <br />
 
 **min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
@@ -226,7 +221,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*eor_wrapper_defaults*: 1 <br />
 
 **transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, the full file path to a npy file, or the full file path to a fits file that adheres to calfits format. Note that this will calibrate, but not generate a model. Please set model visibility keywords separately to generate a subtraction model. <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 
 **vis_baseline_hist**: !Q <br />
@@ -263,7 +257,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **filter_background**: filters out large-scale background fluctuations before deconvolving point sources. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 1 <br />
   -*Default*: 1 <br />
 
 **gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
@@ -286,7 +279,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **return_sidelobe_catalog**: include sidelobes sources from the `subtract_sidelobe_catalog` in the component/source list. Source finding will be performed on the input sidelobe sources. This will also include the sidelobe sources in foreground subtraction. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. `subtract_sidelobe_catalog` must also be set. <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 
 **sigma_cut**: only include source components detected with signal to noise greater than the specified standard deviation. Also used when condensing components to sources after deconvolution. <br />
@@ -300,7 +292,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
-  -*EoR_firstpass settings*: not set <br />
   -*Default*: not set <br />
 
 
@@ -432,7 +423,6 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **write_healpix_fits**: create Healpix fits files. Healpix fits maps are in units Jy/sr. <br />
   -*Turn off/on*: 0/1 <br />
-  -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
 
 
@@ -558,7 +548,6 @@ WARNING! Options in this section may change without notice, and should never be 
 ## Resolution
 
 **baseline_threshold**: Positive numbers cut baselines shorter than the given number in wavelengths. Negative numbers cut baselines longer than the given number in wavelengths. This keyword is deprecated because it does not return the correct image normalization. Consider using min_baseline and max_baseline instead. <br />
-  -*EoR_firstpass settings*: 0 <br />
   -*Default*: 0 <br />
 
 **dft_threshold**: set equal to 1 to use the DFT approximation. When set equal to 0 the true DFT is calculated for each source. It can also be explicitly set to a value that determines the accuracy of the approximation. <br />
@@ -578,7 +567,6 @@ WARNING! Options in this section may change without notice, and should never be 
   -*eor_wrapper_defaults*: 0.5 <br />
 
 **max_baseline**: the maximum baseline length in wavelengths to include in the analysis. <br />
-  -*EoR_firstpass settings*: net set <br />
   -*Default*: the maximum baseline length in wavelengths of the instrument, specifically calculated from the params structure  <br />
 
 **min_baseline**: the minimum baseline length in wavelengths to include in the analysis. <br />
