@@ -321,6 +321,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
+**conserve_memory**: split the model DFT into matrix chunks to reduce the memory load at the cost of extra walltime. If set to greater than 1e6, then it will set the maximum memory used in bytes. <br />
+  -*Default*: 1 (100 Mb) <br />
+  -*Turn off/on*: 0/1 (optionally set to bytes)<br />
+  
 **diffuse_model**: File path to the diffuse model sav file. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: not set <br />
