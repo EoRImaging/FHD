@@ -97,7 +97,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **cal_amp_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the amplitude of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
   -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
-  -*Default*: unused (`calibration_polyfit` is unset) <br />
+  -*Default*: 0 if `calibration_polyfit` is unset, 2 if `calibration_polyfit` is set <br />
   -*eor_wrapper_defaults*: 2 <br />
 
 **cal_bp_transfer**: use a saved bandpass for bandpass calibration. Read in the specified file (.sav, .txt, or .fits), with calfits format greatly preferred. If set to 1, becomes `mwa_eor0_highband_season1_cable_bandpass.fits`. <br />
@@ -118,12 +118,12 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **cal_phase_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
   -*Dependency*: `calibration_polyfit` must be on for the polynomial fitting to occur. <br />
-  -*Default*: unused (`calibration_polyfit` is unset) <br />
+  -*Default*: 0 if `calibration_polyfit` is unset, 1 if `calibration_polyfit` is set <br />
   -*eor_wrapper_defaults*: 1 <br />
 
 **cal_reflection_hyperresolve**: hyperresolve and fit residual gains using nominal reflection modes (calculated from `cal_reflection_mode_delay` or `cal_reflection_mode_theory`) , producing a finetuned mode fit, amplitude, and phase. Will be ignored if `cal_reflection_mode_file` is set because it is assumed that a file read-in contains mode/amp/phase to use. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: not set <br />
+  -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
 **cal_reflection_mode_delay**: calculate cable reflection modes by Fourier transforming the residual gains, removing modes contaminated by frequency flagging, and choosing the maximum mode. <br />
@@ -133,7 +133,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: undefined <br />
 
 **cal_reflection_mode_theory**: calculate theoretical cable reflection modes given the velocity and length data stored in a config file named `<instrument>_cable_length.txt`. File must have a header line and at least five columns (tile index, tile name, cable length, cable velocity factor, logic on whether to fit (1) or not (0)). Can set it to positive/negative cable lengths (see `cal_mode_fit`) to include/exclude certain cable types. <br />
-  -*Default*: not set <br />
+  -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 150 <br />
 
 **cal_stop**: stops the code right after calibration, and saves unflagged model visibilities along with the obs structure in a folder called cal_prerun in the FHD file structure. This allows for post-processing calibration steps like multi-day averaging, but still has all of the needed information for minimal reprocessing to get to the calibration step. To run a post-processing run, see keywords `model_transfer` and `transfer_psf`.<br />
