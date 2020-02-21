@@ -2,7 +2,7 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     pflag=pflag, n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,double_precision=double_precision,$
     FoV=FoV,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
-    nfreq_avg=nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
+    beam_nfreq_avg=beam_nfreq_avg,freq_bin=freq_bin,time_cut=time_cut,spectral_index=spectral_index,$
     dft_threshold=dft_threshold,psf_dim=psf_dim,nside=nside,restrict_hpx_inds=restrict_hpx_inds,$
     n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,$
     degrid_spectral_terms=degrid_spectral_terms,grid_spectral_terms=grid_spectral_terms,$
@@ -37,9 +37,9 @@ n_vis_arr=Lonarr(n_freq)
 
 freq_res=hdr.freq_res
 frequency_array=hdr.freq_arr
-IF N_Elements(nfreq_avg) EQ 0 THEN nfreq_avg=1.
+IF N_Elements(beam_nfreq_avg) EQ 0 THEN beam_nfreq_avg=1.
 
-IF N_Elements(freq_bin) EQ 0 THEN freq_bin=nfreq_avg*freq_res  ;Hz
+IF N_Elements(freq_bin) EQ 0 THEN freq_bin=beam_nfreq_avg*freq_res  ;Hz
 freq_hist=histogram(frequency_array,locations=freq_bin_val,binsize=freq_bin,reverse_ind=freq_ri)
 nfreq_bin=N_Elements(freq_hist)
 freq_bin_i=fltarr(n_freq)

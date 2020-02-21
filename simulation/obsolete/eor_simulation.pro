@@ -52,7 +52,7 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
   min_baseline=1.
   min_cal_baseline=50.
   ring_radius=10.*pad_uv_image
-  nfreq_avg=16
+  beam_nfreq_avg=16
   ;max_calibration_sources=10000.
   no_rephase=1 ;set to use obsra, obsdec for phase center even if phasera, phasedec present in a .metafits file
   ;no_fits=1
@@ -100,7 +100,7 @@ PRO eor_simulation,cleanup=cleanup,recalculate_all=recalculate_all,export_images
       model_uvf_cube=model_uvf_cube, model_image_cube=model_image_cube,$
       export_images=export_images,dimension=dimension,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
       complex=complex_beam,double=double_precison_beam,precess=precess,error=error,weights_grid=weights_grid,$
-      save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,FoV=FoV,no_ps=no_ps,nfreq_avg=nfreq_avg,$
+      save_visibilities=save_visibilities,healpix_recalculate=healpix_recalculate,FoV=FoV,no_ps=no_ps,beam_nfreq_avg=beam_nfreq_avg,$
       snapshot_healpix_export=snapshot_healpix_export,split_ps_export=split_ps_export, $
       n_avg=n_avg,ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,save_uvf=save_uvf,save_imagecube=save_imagecube,_Extra=extra
            

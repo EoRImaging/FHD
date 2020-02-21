@@ -52,7 +52,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   nside_use=nside_use>Nside_chk
   IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
   
-  obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,nfreq_avg=ps_nfreq_avg,FoV=FoV_use,dimension=dimension_use)
+  obs_out=fhd_struct_update_obs(obs_in,n_pol=n_pol,beam_nfreq_avg=ps_nfreq_avg,FoV=FoV_use,dimension=dimension_use)
   ps_psf_resolution=Round(psf_in.resolution*obs_out.kpix/obs_in.kpix)
   IF (kbinsize EQ obs_in.kpix) AND Min((*obs_out.baseline_info).fbin_i EQ (*obs_in.baseline_info).fbin_i) THEN BEGIN
     ;If the beam model to be used for making the snapshot cubes is the same as the one used for imaging, then simply copy the existing data and don't recalculate it
