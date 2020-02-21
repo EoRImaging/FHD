@@ -105,8 +105,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 (unset) <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**cal_convergence_threshold**: threshold at which calibration ends. <br />
-  -*Default*: !Q <br />
+**cal_convergence_threshold**: threshold at which calibration ends. Calibration convergence is quantified by the absolute value of the fractional change in the gains over the last calibration iteration. If this quantity is less than `cal_convergence_threshold` then calibration terminates. <br />
+  -*Default*: 1E-7 <br />
 
 **cal_gain_init**: initial gain values for calibration. Selecting accurate inital calibration values speeds up calibration and can improve convergence. This keyword will not be used if calibration_auto_initialize is set. <br />
   -*Default*: 1. <br />
