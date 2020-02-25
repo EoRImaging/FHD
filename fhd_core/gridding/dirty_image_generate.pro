@@ -69,11 +69,11 @@ IF Keyword_Set(degpix) THEN di_uv_use/=(degpix*!DtoR)^2. ;FFT normalization
 IF Keyword_Set(no_real) THEN dirty_image=fft_shift(FFT(fft_shift(di_uv_use),double=1)) $
     ELSE dirty_image=Real_part(fft_shift(FFT(fft_shift(di_uv_use),double=1)))
 
-; filter_uv_weighted produces images that are weighted by one factor of the beam
+; filter_uv_optimal produces images that are weighted by one factor of the beam
 ; Weight by an additional factor of the beam to align with FHD's convention
 IF Keyword_Set(image_filter_fn) THEN BEGIN
     CASE image_filter_fn OF
-        'filter_uv_weighted': IF Ptr_valid(beam_ptr) THEN dirty_image *= *beam_ptr
+        'filter_uv_optimal': IF Ptr_valid(beam_ptr) THEN dirty_image *= *beam_ptr
         ELSE:
     ENDCASE
 ENDIF

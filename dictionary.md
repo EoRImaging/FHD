@@ -369,7 +369,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**image_filter_fn**: weighting filter to be applyed to resulting snapshot images and fits files. Options include  filter_uv_hanning, filter_uv_natural, filter_uv_radial, filter_uv_tapered_uniform, filter_uv_uniform, and filter_uv_weighted. Specifics on these filters can be found in `FHD/fhd_output/fft_filters`.<br />
+**image_filter_fn**: weighting filter to be applyed to resulting snapshot images and fits files. Options include  filter_uv_hanning, filter_uv_natural, filter_uv_radial, filter_uv_tapered_uniform, filter_uv_uniform, and filter_uv_optimal. Specifics on these filters can be found in `FHD/fhd_output/fft_filters`.<br />
   -*Default*: filter_uv_uniform <br />
   -*eor_wrapper_defaults*: filter_uv_uniform <br />
 
