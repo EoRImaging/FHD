@@ -174,6 +174,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     ENDFOR
     gain_normalization = get_image_renormalization(obs,weights_arr=weights_arr[*,obs_i],beam_base=beam_model[*,obs_i],$
         filter_arr=filter_arr[*,obs_i],image_filter_fn=decon_filter,degpix=obs.degpix,/antialias,file_path_fhd=file_path_fhd)
+    gain_normalization *= (obs.degpix*!DtoR)^2. ; Convert images from Jy/sr to Jy/pixel
     
     *comp_arr[obs_i]=source_comp_init(n_sources=max_sources,gain_factor=gain_factor)
     

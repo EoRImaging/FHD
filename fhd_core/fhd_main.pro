@@ -230,8 +230,8 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
 ENDIF
   
-IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,/compatibility_mode,_Extra=extra
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,/compatibility_mode,_Extra=extra
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'

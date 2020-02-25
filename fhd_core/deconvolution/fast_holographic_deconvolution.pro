@@ -169,6 +169,7 @@ print,"Fractional uv coverage: ",uv_use_frac
 filter_arr=Ptrarr(n_pol,/allocate)
 gain_normalization = get_image_renormalization(obs,psf=psf,params=params,weights_arr=weights_arr,$
     beam_base=beam_base,filter_arr=filter_arr,image_filter_fn=decon_filter,degpix=degpix,file_path_fhd=file_path_fhd,/antialias)
+gain_normalization *= (obs.degpix*!DtoR)^2. ; Convert images from Jy/sr to Jy/pixel
 
 FOR pol_i=0,n_pol-1 DO BEGIN 
     *dirty_array[pol_i]=dirty_image_generate(*image_uv_arr[pol_i],degpix=degpix,obs=obs_fit,psf=psf,params=params,$
