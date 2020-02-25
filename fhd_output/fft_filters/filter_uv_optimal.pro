@@ -4,11 +4,7 @@ FUNCTION filter_uv_optimal,image_uv,obs=obs,psf=psf,params=params,weights=weight
 ;NOTE: 'params' can actually be EITHER params OR 'cal' structure!
 
 name='optimal'
-IF Keyword_Set(return_name_only) THEN BEGIN
-    print,"WARNING! 'Weighted' uv filter produces images weighted by only one factor of the primary beam."
-    print,"WARNING! All FHD code expects images to be weighted by the beam squared, so expect strange results."
-    RETURN,image_uv
-ENDIF
+IF Keyword_Set(return_name_only) THEN RETURN,image_uv
 
 IF ~(Keyword_Set(obs) AND Keyword_Set(psf) AND Keyword_Set(params)) THEN BEGIN
     IF Keyword_Set(file_path_fhd) THEN BEGIN
