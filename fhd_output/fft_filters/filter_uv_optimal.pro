@@ -1,9 +1,9 @@
-FUNCTION filter_uv_weighted,image_uv,obs=obs,psf=psf,params=params,weights=weights,name=name,filter=filter,$
+FUNCTION filter_uv_optimal,image_uv,obs=obs,psf=psf,params=params,weights=weights,name=name,filter=filter,$
     file_path_fhd=file_path_fhd,return_name_only=return_name_only,uvfilter_weight_threshold=uvfilter_weight_threshold,$
     uvfilter_count_threshold=uvfilter_count_threshold,_Extra=extra
 ;NOTE: 'params' can actually be EITHER params OR 'cal' structure!
 
-name='weighted'
+name='optimal'
 IF Keyword_Set(return_name_only) THEN BEGIN
     print,"WARNING! 'Weighted' uv filter produces images weighted by only one factor of the primary beam."
     print,"WARNING! All FHD code expects images to be weighted by the beam squared, so expect strange results."
