@@ -385,6 +385,9 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
+**output_directory**: the absolute path to the output directory for the FHD output run folder. See `version`.     
+  -*Default*: not set <br />    
+
 **pad_uv_image**: pad the UV image by this factor with 0's along the outside so that output images are at a higher resolution. <br />
   -*Default*: 1. <br />
   -*eor_wrapper_defaults*: 1. <br />
@@ -424,6 +427,8 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **stokes_low**: minimum colorbar value for exported Stokes .ps or .png images. Applies to all Stokes images: I, Q, U, and V.<br />
   -*Default*: not set <br />
+
+**version**: unique identifier for the output folder. The absolute path to the output will then be `<output_directory>/fhd_<version>`. This can be used to build case statements to call specific sets of keywords in a personal script.
 
 **write_healpix_fits**: create Healpix fits files. Healpix fits maps are in units Jy/sr. <br />
   -*Turn off/on*: 0/1 <br />
@@ -493,6 +498,9 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
+
+**obs_id**: the unique identifier for the observation. Examples are GPS seconds or Julian Dates. The input uvfits file must share this unique identifier name: `<obs_id>.uvfits`.    
+  -*Default*: not set    
 
 **override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
   -*Default*: not set<br />
