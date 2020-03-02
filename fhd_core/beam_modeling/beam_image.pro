@@ -1,6 +1,8 @@
 ;+
 ; :Description:
-;    Generates the average beam image for one polarization
+;    Generates the average beam image for one polarization.
+;    Note that the UV->sky transformation uses the inverse FFT for the beam but the forward FFT for the image.
+;    This convention ensures the correct orientation of the UV-space beam for gridding visibilities.
 ;
 ; :Params:
 ;    psf_base_ptr - equal to psf.base standard structure.
