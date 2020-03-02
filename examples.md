@@ -1,6 +1,9 @@
 # Examples of specific run cases    
 FHD is very flexible, and has been designed to encompass a wide variety of instruments, simulations, and accuracy vs. speed runs. Documented below is typical examples with keywords and expected results. All keywords are additions to the [eor_wrapper_defaults.pro](https://github.com/EoRImaging/pipeline_scripts/blob/master/FHD_IDL_wrappers/eor_wrapper_defaults.pro) keywords.    
 
+The basic run commands are detailed in:    
+[General](#general)  
+
 Current MWA examples include:   
 [Firstpass](#firstpass)   
 [Deconvolution](#deconvolution)   
@@ -11,6 +14,39 @@ Current MWA examples include:
 
 There are also examples for:    
 [In situ simulation](#in-situ-simulation)
+
+## General
+
+This is a template for the most basic run of FHD:    
+~~~
+pro my_run_script
+
+  ; Keywords
+  obs_id = '<Observation ID string>'
+  output_directory = '/path/to/output/dir/'
+  version = '<unique version name>'
+  vis_file_list = 'path/to/uvfits/' + string(obs_id) +'.uvfits'
+
+  ; Directory setup
+  fhd_file_list=fhd_path_setup(vis_file_list,version=version,output_directory=output_directory)
+  healpix_path=fhd_path_setup(output_dir=output_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
+
+  ; Set global defaults and bundle all the variables into a structure.
+  ; Any keywords set on the command line or in the top-level wrapper will supercede these defaults
+  eor_wrapper_defaults,extra
+  fhd_depreciation_test, _Extra=extra
+
+  print,""
+  print,"Keywords set in wrapper:"
+  print,structure_to_text(extra)
+  print,""
+  general_obs,_Extra=extra
+  
+end
+~~~     
+Add keywords as necessary to change the analysis. All keywords are additions to the [eor_wrapper_defaults.pro](https://github.com/EoRImaging/pipeline_scripts/blob/master/FHD_IDL_wrappers/eor_wrapper_defaults.pro) keywords.     
+
+FHD requires input data to be in uvfits format. Conversion into uvfits can be performed with [pyuvdata](https://github.com/RadioAstronomySoftwareGroup/pyuvdata) or CASA if necessary. Observations must have a unique string identifier (typically GPS seconds or Julian Dates).     
 
 
 ## MWA    
