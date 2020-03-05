@@ -31,7 +31,7 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
 
   ;Generate UV beam and interpolate to a super resolution
   ;Beam uses the forward FFT for the sky->UV transformation (note that the image uses the inverse FFT)
-  psf_base_single=fft_shift(FFT(fft_shift(di_uv_use)))
+  psf_base_single=fft_shift(FFT(fft_shift(image_power_beam)))
   psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
   
   s=size(psf_base_superres, /dimensions)
