@@ -49,6 +49,9 @@ x_use*=(2.*Pi/dimension)
 y_use*=(2.*Pi/dimension)
 if n_elements(gaussian_x) gt 0 then gauss_x_use=gaussian_x*(2.*Pi/dimension)
 if n_elements(gaussian_y) gt 0 then gauss_y_use=gaussian_y*(2.*Pi/dimension)
+if n_elements(gaussian_rot) gt 0 then begin
+    if total(abs(gaussian_rot)) EQ 0 then undefine, gaussian_rot
+endif
 
 element_check=Long64(N_Elements(xvals))*Long64(N_Elements(x_use))
 

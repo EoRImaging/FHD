@@ -51,9 +51,9 @@ ENDFOR
 
 IF keyword_set(gaussian_source_models) then begin
   if tag_exist(source_array, 'shape') then begin
-    gaussian_x=make_array(n_elements(source_array),/float)
-    gaussian_y=make_array(n_elements(source_array),/float)
-    gaussian_rot=make_array(n_elements(source_array),/float)
+    gaussian_x=make_array(n_elements(source_array),/double)
+    gaussian_y=make_array(n_elements(source_array),/double)
+    gaussian_rot=make_array(n_elements(source_array),/double)
     for source_ind=0,n_elements(source_array)-1 do begin
       if tag_exist(source_array[source_ind], 'shape') then begin
         ;Convert from FWHM in arcsec to stddev in deg
@@ -77,16 +77,15 @@ IF keyword_set(gaussian_source_models) then begin
         [source_array.ra+0.5*gaussian_y*Sin(gaussian_rot)], [source_array.ra-0.5*gaussian_y*Sin(gaussian_rot)]]
       gaussian_dec_vals = [[source_array.dec+0.5*gaussian_x*Sin(gaussian_rot)], [source_array.dec-0.5*gaussian_x*Sin(gaussian_rot)], $
         [source_array.dec+0.5*gaussian_y*Cos(gaussian_rot)], [source_array.dec-0.5*gaussian_y*Cos(gaussian_rot)]]
-      apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=gaussian_ra_vals, dec_arr=gaussian_dec_vals, /ad2xy
-      gaussian_x = sqrt((gaussian_x_vals[*,0]-gaussian_x_vals[*,1])^2.+(gaussian_y_vals[*,0]-gaussian_y_vals[*,1])^2.)
-      gaussian_y = sqrt((gaussian_x_vals[*,2]-gaussian_x_vals[*,3])^2.+(gaussian_y_vals[*,2]-gaussian_y_vals[*,3])^2.)
+
+      gaussian_x = sqrt((gaussian_ra_vals[*,0]-gaussian_ra_vals[*,1])^2.+(gaussian_dec_vals[*,0]-gaussian_dec_vals[*,1])^2.)/obs.degpix
+      gaussian_y = sqrt((gaussian_ra_vals[*,2]-gaussian_ra_vals[*,3])^2.+(gaussian_dec_vals[*,2]-gaussian_dec_vals[*,3])^2.)/obs.degpix
     endelse
   endif else begin
     print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
     undefine, gaussian_source_models
   endelse
 ENDIF
-
 
 IF Keyword_Set(n_spectral) THEN BEGIN
 ;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg
@@ -208,5 +207,4 @@ ENDIF ELSE BEGIN
     ENDELSE
 ENDELSE
 
-model_uv_full=crosspol_reformat(model_uv_full, /inverse)
 END
