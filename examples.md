@@ -46,24 +46,6 @@ end
 ~~~     
 Add keywords as necessary to change the analysis. All keywords are additions to the [eor_wrapper_defaults.pro](https://github.com/EoRImaging/pipeline_scripts/blob/master/FHD_IDL_wrappers/eor_wrapper_defaults.pro) keywords.     
 
-FHD requires input data to be in uvfits format. Conversion into uvfits can be performed with [pyuvdata](https://github.com/RadioAstronomySoftwareGroup/pyuvdata) or CASA if necessary. Observations must have a unique string identifier (typically GPS seconds or Julian Dates). 
-
-To acquire MWA uvfits files, you may use the [MWA ASVO service](https://asvo.mwatelescope.org/dashboard). Once registered and logged in, click "Data Job" in the upper right, select "New Data Job," and then select "Data Conversion Job" from the dropdown menu. We recommend starting with obsid 1061315448, which is zenith-pointed on the EoR0 field (centered on RA: 0, Dec: -27 deg) on August 23rd, 2013, and has minimal radio frequency interference. Proper settings for the query are as follows
-
- - Observation ID: 1061315448
- - Time Resolution (s): 2 
- - Freq Resolution (kHz): 80
- - Edge Width (kHz): 80
- - Output: UVFITS
- 
-Check only the following boxes:
-
- - Do not flag auto-correlations
- - Do not correct for the digital gains
- - Do not abort when not all visibility files are available
- - Flag the centre channel of each coarse channel
- - Centre on pointing centre
-
 
 ## MWA    
 
