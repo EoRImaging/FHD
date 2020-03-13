@@ -53,7 +53,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **interpolate_beam_threshold**: set to smoothly interpolate the UV beam model to zero (in amplitude) beyond the clip set by `beam_mask_threshold`. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: Not set (same as 0) <br />
-  
+
 **interpolate_kernel**: use interpolation of the gridding kernel while gridding and degridding, rather than selecting the closest super-resolution kernel. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
@@ -81,7 +81,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **allow_sidelobe_cal_sources**: allows FHD to calibrate on sources in the sidelobes. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of a calibration source catalog for the particular observation. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />
+  -*Default*: Unset, unless calibration_subtract_sidelobe_catalog is set <br />
   -*eor_wrapper_defaults*: 1 <br />
 
 **bandpass_calibrate**: calculates a bandpass. This is an average of tiles by frequency by polarization (default), beamformer-to-LNA cable types by frequency by polarization (see `cable_bandpass_fit`), or over the whole season by pointing by by cable type by frequency by polarization via a read-in file (see `saved_run_bp`). If unset, no by-frequency bandpass is used. <br />
@@ -97,7 +97,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **cal_amp_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the amplitude of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
   -*Dependency*: calibration_polyfit must be on for the polynomial fitting to occur. <br />
-  -*Default*: unused (`calibration_polyfit` is unset) <br />
+  -*Default*: 0 if `calibration_polyfit` is unset, 2 if `calibration_polyfit` is set <br />
   -*eor_wrapper_defaults*: 2 <br />
 
 **cal_bp_transfer**: use a saved bandpass for bandpass calibration. Read in the specified file (.sav, .txt, or .fits), with calfits format greatly preferred. If set to 1, becomes `mwa_eor0_highband_season1_cable_bandpass.fits`. <br />
@@ -105,8 +105,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 (unset) <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**cal_convergence_threshold**: threshold at which calibration ends. <br />
-  -*Default*: !Q <br />
+**cal_convergence_threshold**: threshold at which calibration ends. Calibration convergence is quantified by the absolute value of the fractional change in the gains over the last calibration iteration. If this quantity is less than `cal_convergence_threshold` then calibration terminates. <br />
+  -*Default*: 1E-7 <br />
 
 **cal_gain_init**: initial gain values for calibration. Selecting accurate inital calibration values speeds up calibration and can improve convergence. This keyword will not be used if calibration_auto_initialize is set. <br />
   -*Default*: 1. <br />
@@ -118,12 +118,12 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **cal_phase_degree_fit**: the order of the polynomial fit over the whole band to create calibration solutions for the phase of the gain. Setting it to 0 gives a 0th order polynomial fit (one number for the whole band), 1 gives a 1st order polynomial fit (linear fit), 2 gives a 2nd order polynomial fit (quadratic), etc etc. <br />
   -*Dependency*: `calibration_polyfit` must be on for the polynomial fitting to occur. <br />
-  -*Default*: unused (`calibration_polyfit` is unset) <br />
+  -*Default*: 0 if `calibration_polyfit` is unset, 1 if `calibration_polyfit` is set <br />
   -*eor_wrapper_defaults*: 1 <br />
 
 **cal_reflection_hyperresolve**: hyperresolve and fit residual gains using nominal reflection modes (calculated from `cal_reflection_mode_delay` or `cal_reflection_mode_theory`) , producing a finetuned mode fit, amplitude, and phase. Will be ignored if `cal_reflection_mode_file` is set because it is assumed that a file read-in contains mode/amp/phase to use. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: not set <br />
+  -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
 **cal_reflection_mode_delay**: calculate cable reflection modes by Fourier transforming the residual gains, removing modes contaminated by frequency flagging, and choosing the maximum mode. <br />
@@ -133,7 +133,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: undefined <br />
 
 **cal_reflection_mode_theory**: calculate theoretical cable reflection modes given the velocity and length data stored in a config file named `<instrument>_cable_length.txt`. File must have a header line and at least five columns (tile index, tile name, cable length, cable velocity factor, logic on whether to fit (1) or not (0)). Can set it to positive/negative cable lengths (see `cal_mode_fit`) to include/exclude certain cable types. <br />
-  -*Default*: not set <br />
+  -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 150 <br />
 
 **cal_stop**: stops the code right after calibration, and saves unflagged model visibilities along with the obs structure in a folder called cal_prerun in the FHD file structure. This allows for post-processing calibration steps like multi-day averaging, but still has all of the needed information for minimal reprocessing to get to the calibration step. To run a post-processing run, see keywords `model_transfer` and `transfer_psf`.<br />
@@ -156,11 +156,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **calibration_auto_initialize**: initialize gain values for calibration with the autocorrelations. If unset, gains will initialize to 1 or the value supplied by cal_gain_init. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
-  
+
 **calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
   -*Default*: filepath(`instrument`+'_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*eor_wrapper_default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
-  
+
 **calibration_flag_iterate**: number of times to repeat calibration in order to better identify and flag bad antennas so as to exclude them from the final result. <br />
   -*Default*: 0 (repeat 0 times i.e. do not repeat) <br />
   -*eor_wrapper_defaults*: 0 <br />
@@ -172,7 +172,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
-  
+
 **calibration_subtract_sidelobe_catalog**: set to subtract a catalog in the sidelobes that is different from that used in the primary beam <br />
 
 **calibration_visibilities_subtract**: Subtract model visibilities from calibrated dirty visibilities, leaving only residual calibrated visibilities. Recommended to be deprecated in issue #187. <br />
@@ -187,14 +187,14 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
-  
+
 **include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
    -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
 
 **max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
   -*Default*: equal to `max_baseline` <br />
-  
+
 **max_calibration_sources**: limits the number of sources used in the calibration. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
   -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set. <br />
   -*Default*: All valid sources in the catalog are used. <br />
@@ -209,7 +209,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **n_avg**: number of frequencies to average over to smooth the frequency band. <br />
   -*Default*: !Q <br />
   -*eor_wrapper_defaults*: 2 <br />
-  
+
 **no_restrict_cal_sources**: Ignore beam threshold values and and edge distance when selecting sources to include in the calibration catalog. (Does not look like this is used in any meaningful way anywhere, i.e. deprecated) <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: unset <br />
@@ -217,7 +217,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. If n_pol = 4 (full pol mode), return_cal_visibilites must be set because the visibilites are required for calculating the mixing angle between Q and U. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 1 <br />
+  -*Default*: If firstpass keyword is set, and this one is not, defaults to 1, else is unset. <br />
   -*eor_wrapper_defaults*: 1 <br />
 
 **transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, the full file path to a npy file, or the full file path to a fits file that adheres to calfits format. Note that this will calibrate, but not generate a model. Please set model visibility keywords separately to generate a subtraction model. <br />
@@ -318,13 +318,13 @@ WARNING! Options in this section may change without notice, and should never be 
 **allow_sidelobe_model_sources**: allows FHD to model sources in the sidelobes for subtraction. Forces the beam_threshold to 0.01 in order to go down to 1% of the beam to capture sidelobe sources during the generation of a model calibration source catalog for the particular observation. <br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />
+  -*Default*: Unset, unless model_visibilities and model_subtract_sidelobe_catalog are set OR deconvolve and subtract_sidelobe_catalog are set <br />
   -*eor_wrapper_defaults*: 1 <br />
 
 **conserve_memory**: split the model DFT into matrix chunks to reduce the memory load at the cost of extra walltime. If set to greater than 1e6, then it will set the maximum memory used in bytes. <br />
   -*Default*: 1 (100 Mb) <br />
   -*Turn off/on*: 0/1 (optionally set to bytes)<br />
-  
+
 **diffuse_model**: File path to the diffuse model sav file. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: not set <br />
@@ -385,6 +385,9 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
+**output_directory**: the absolute path to the output directory for the FHD output run folder. See `version`.     
+  -*Default*: not set <br />    
+
 **pad_uv_image**: pad the UV image by this factor with 0's along the outside so that output images are at a higher resolution. <br />
   -*Default*: 1. <br />
   -*eor_wrapper_defaults*: 1. <br />
@@ -414,7 +417,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
-  
+
 **split_ps_export**: split up the Healpix outputs into even and odd time samples. This is essential to propogating errors in &epsilon;ppsilon. Requires more than one time sample. <br />
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 1 <br />
@@ -424,6 +427,8 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **stokes_low**: minimum colorbar value for exported Stokes .ps or .png images. Applies to all Stokes images: I, Q, U, and V.<br />
   -*Default*: not set <br />
+
+**version**: unique identifier for the output folder. The absolute path to the output will then be `<output_directory>/fhd_<version>`. This can be used to build case statements to call specific sets of keywords in a personal script.
 
 **write_healpix_fits**: create Healpix fits files. Healpix fits maps are in units Jy/sr. <br />
   -*Turn off/on*: 0/1 <br />
@@ -459,7 +464,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 (flag/don't flag) <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 1 <br />
-  
+
 **no_ps** : Do not save output images in postscript format. Only png and fits.<br />
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 1 <br />
@@ -493,13 +498,16 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
-  
+
+**obs_id**: the unique identifier for the observation. Examples are GPS seconds or Julian Dates. The input uvfits file must share this unique identifier name: `<obs_id>.uvfits`.    
+  -*Default*: not set    
+
 **override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
   -*Default*: not set<br />
 
 **override_target_phasera**: RA of the target phase center, which overrides the value supplied in the metafits under the header keyword RAPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword RA.<br />
   -*Default*: not set<br />
-  
+
 **rephase_weights**: if turned off, target phase center is the pointing center (as defined by Cotter). Setting rephase_weights=0 overrides override_target_phasera and override_target_phasedec. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
@@ -525,7 +533,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0<br />
   -*eor_wrapper_defaults*: 0
-  
+
 **grid_recalculate**: !Q <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 if `recalculate_all` is not set<br />
@@ -542,7 +550,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 0 <br />
-  
+
 **snapshot_recalculate**: !Q <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 if `recalculate_all` is not set<br />
@@ -560,7 +568,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **dimension**: the number of pixels in the UV plane along one axis. <br />
   -*Default*: 2 to the power of the rounded result of log&#8322;(k_span/k_binsize).<br />
   -*eor_wrapper_defaults*: 2048 <br />
-  
+
 **FoV**: A proxy for the field of view in degrees. `FoV` is actually used to determine `kbinsize`, which will be set to `!RaDeg/FoV`. This means that the pixel size at phase center times `dimension` is approximately equal to `FoV`, which is not equal to the actual field of view owing to larger pixel sizes away from phase center. If set to 0, then `kbinsize` determines the UV resolution. <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 0 <br />
@@ -583,7 +591,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **ps_beam_threshold** : Minimum value to which to calculate the beam out to in image space. The beam in UV space is pre-calculated and may have its own `beam_threshold` (see that keyword for more information), and this is only an additional cut in image space. <br />
   -*Default*: not set<br />     
-  
+
 **ps_degpix** : Degrees per pixel for Healpix cube generation. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
   -*Dependency*: `ps_kspan` and `ps_dimension` must not be set in order for the keyword to take effect. <br />
   -*Default*: not set<br />  

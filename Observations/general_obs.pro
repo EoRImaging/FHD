@@ -79,8 +79,6 @@ IF Keyword_Set(simultaneous) THEN BEGIN
     export_images=0
 ENDIF
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1 
-IF Keyword_Set(recalculate_all) AND (N_Elements(deconvolve) EQ 0) THEN deconvolve=1
-;IF N_Elements(deconvolve) EQ 0 THEN deconvolve=recalculate_all
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 IF size(transfer_mapfn,/type) EQ 7 THEN IF StrLowCase(Strmid(transfer_mapfn[0],3,/reverse)) EQ '.txt' THEN $
     transfer_mapfn=string_list_read(transfer_mapfn,data_directory=data_directory)
