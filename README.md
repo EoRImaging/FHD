@@ -54,5 +54,7 @@ prints error if FHD not installed correctly, generates a 256x256 pixel image of 
 ## Community Guidelines
 We are an open-source community that interacts and discusses issues via GitHub. We encourage collaborative development. New users are encouraged to submit [issues](https://github.com/EoRImaging/FHD/issues) and [pull requests](https://github.com/EoRImaging/FHD/pulls) and to create branches for new development and exploration. Comments and suggestions are welcome.
 
+Please cite [Sullivan et al 2012](https://arxiv.org/abs/1209.1653) and [Barry et al 2019a](https://arxiv.org/abs/1901.02980) when publishing data reduction from FHD.
+
 ## Maintainers
 FHD was built by Ian Sullivan and the University of Washington radio astronomy team. Maintainance is a group effort split across University of Washington and Brown University, with contributions from University of Melbourne and Arizona State University. 
