@@ -499,12 +499,9 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-<<<<<<< deafd82b048010b433a7baa7efb600dffe5e31c6
 **obs_id**: the unique identifier for the observation. Examples are GPS seconds or Julian Dates. The input uvfits file must share this unique identifier name: `<obs_id>.uvfits`.    
   -*Default*: not set    
 
-=======
->>>>>>> Change nfreq_avg to beam_nfreq_avg
 **override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
   -*Default*: not set<br />
 
