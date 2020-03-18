@@ -12,9 +12,6 @@ elements_hpx = ceil((obs.elements*obs.degpix/hpx_res)*(1/2.))*2
 ; give new dimension/elements to update_obs
 obs_hpx = fhd_struct_update_obs(obs,dimension=dimension_hpx, elements=elements_hpx, degpix=hpx_res)
 
-;apply_astrometry,obs_hpx, x_arr=meshgrid(dimension_hpx,elements_hpx,1), y_arr=meshgrid(dimension_hpx, elements_hpx, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
-;radec_i=where(Finite(ra_arr))
-
 IF size(healpix_map,/type) EQ 10 THEN BEGIN ;check if pointer type, and if so allow it to be a pointer array
     ptr_flag=1
     n_map=N_Elements(healpix_map)
@@ -58,15 +55,11 @@ y_frac=1.-(yv_hpx-Floor(yv_hpx))
 IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,degpix=obs.degpix,freq=obs.freq_center) $
     ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/n_hpx) ; (steradian/new pixel)/(steradian/old pixel)
 
-;;orthoslant_scale = pixel_area(obs_hpx, /relative)    ; Pixel areas to projected pixel areas.
-
 FOR map_i=0,n_map-1 DO BEGIN
     model_img = fltarr(dimension_hpx,elements_hpx)
     IF Ptr_flag THEN hpx_vals=(*healpix_map[map_i])[hpx_i_use] ELSE hpx_vals=healpix_map[hpx_i_use] 
-;    hpx_vals*=pixel_area_cnv ;convert to Jy/pixel for the new Healpix pixels
 
     for ni=0,n_hpx_use-1 DO model_img[round(xv_hpx[ni]),round(yv_hpx[ni])] += hpx_vals[ni]
-;;    model_img *= orthoslant_scale
     model_uv = fft_shift(FFT(model_img * image_mask))
 
     ; Zero pad or truncate to the true orthoslant dimension
@@ -83,8 +76,7 @@ FOR map_i=0,n_map-1 DO BEGIN
             ele_out/2. - elements_hpx/2.: ele_out/2. + elements_hpx/2. -1] = model_uv
     ENDELSE
 
-    scale=1.0
-    model_img = FFT(fft_shift(model_uv_full*scale),/inverse)
+    model_img = FFT(fft_shift(model_uv_full),/inverse)
 
     IF Ptr_flag THEN *map_interp[map_i]=model_img*pixel_area_cnv ELSE map_interp=model_img*pixel_area_cnv   ; Jy/pixel for the orthoslant pixel area
 ENDFOR
