@@ -64,7 +64,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
                'Blackman-Harris', 'Blackman-Harris^2', 'Tukey' <br />
   -*Default*: Not set (not the same as setting to 0!) <br />
 
-**nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (nfreq_avg=1). However, this is computationally difficult for most machines. <br />
+**beam_nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (beam_nfreq_avg=1). However, this is computationally difficult for most machines. <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 16 <br />

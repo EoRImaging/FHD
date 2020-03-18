@@ -56,7 +56,7 @@ psf_out_arr=Ptrarr(n_obs)
 FOR obs_i=0.,n_obs-1 DO BEGIN
     file_path_fhd=fhd_file_list[obs_i]
     model_flag[obs_i]=file_test(file_path_fhd+'_fhd.sav')
-    obs_out=vis_struct_update_obs(obs_arr[obs_i],n_pol=n_pol,nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
+    obs_out=vis_struct_update_obs(obs_arr[obs_i],n_pol=n_pol,beam_nfreq_avg=n_avg,FoV=FoV_use,dimension=dimension_use)
     obs_out_arr[obs_i]=obs_out
     dimension=obs_out.dimension
     elements=obs_out.elements
