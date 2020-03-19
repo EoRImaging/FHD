@@ -616,8 +616,8 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set<br />
   -*eor_wrapper_defaults*: 600. <br />
 
-**ps_nfreq_avg** : !Q <br />
-  -*Default*: not set<br />
+**ps_nfreq_avg** : A factor to average up the frequency resolution of the HEALPix cubes from the analysis frequency resolution. <br />
+  -*Default*: averages by a factor of 2 <br />
 
 **ps_psf_resolution** : !Q <br />
   -*Default*: not set<br />
