@@ -51,35 +51,61 @@ ENDFOR
 
 IF keyword_set(gaussian_source_models) then begin
   if tag_exist(source_array, 'shape') then begin
-    gaussian_x=make_array(n_elements(source_array),/double)
-    gaussian_y=make_array(n_elements(source_array),/double)
+    gaussian_ra=make_array(n_elements(source_array),/double)
+    gaussian_dec=make_array(n_elements(source_array),/double)
     gaussian_rot=make_array(n_elements(source_array),/double)
     for source_ind=0,n_elements(source_array)-1 do begin
       if tag_exist(source_array[source_ind], 'shape') then begin
         ;Convert from FWHM in arcsec to stddev in deg
-        gaussian_x[source_ind]=source_array[source_ind].shape.x/(7200*sqrt(2*alog(2)))
-        gaussian_y[source_ind]=source_array[source_ind].shape.y/(7200*sqrt(2*alog(2)))
+        gaussian_ra[source_ind]=source_array[source_ind].shape.x/(7200*sqrt(2*alog(2)))
+        gaussian_dec[source_ind]=source_array[source_ind].shape.y/(7200*sqrt(2*alog(2)))
         ;Convert from deg to rad
         gaussian_rot[source_ind]=source_array[source_ind].shape.angle*!Pi/180.
       endif else begin
-        gaussian_x[source_ind]=0
-        gaussian_y[source_ind]=0
+        gaussian_ra[source_ind]=0
+        gaussian_dec[source_ind]=0
         gaussian_rot[source_ind]=0
       endelse
     endfor
-    null=where(gaussian_x,n_gauss_params)
+    inds_gauss=where(gaussian_ra,n_gauss_params,complement=inds_point)
     if n_gauss_params eq 0 then begin
       print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
       undefine, gaussian_source_models
     endif else begin
-      ;Convert from deg to pixels
-      gaussian_ra_vals = [[source_array.ra+0.5*gaussian_x*Cos(gaussian_rot)], [source_array.ra-0.5*gaussian_x*Cos(gaussian_rot)], $
-        [source_array.ra+0.5*gaussian_y*Sin(gaussian_rot)], [source_array.ra-0.5*gaussian_y*Sin(gaussian_rot)]]
-      gaussian_dec_vals = [[source_array.dec+0.5*gaussian_x*Sin(gaussian_rot)], [source_array.dec-0.5*gaussian_x*Sin(gaussian_rot)], $
-        [source_array.dec+0.5*gaussian_y*Cos(gaussian_rot)], [source_array.dec-0.5*gaussian_y*Cos(gaussian_rot)]]
 
-      gaussian_x = sqrt((gaussian_ra_vals[*,0]-gaussian_ra_vals[*,1])^2.+(gaussian_dec_vals[*,0]-gaussian_dec_vals[*,1])^2.)/obs.degpix
-      gaussian_y = sqrt((gaussian_ra_vals[*,2]-gaussian_ra_vals[*,3])^2.+(gaussian_dec_vals[*,2]-gaussian_dec_vals[*,3])^2.)/obs.degpix
+      ;Gaussian source model major and minor axes RA DEC
+      ;           _ a_2,d_2
+      ;          / \
+      ; a_3,d_3 |   | a_1,d_1
+      ;          \_/
+      ;   a_4,d_4
+      ;
+      ;Convert from deg to pixels
+      ;Assumption: the extent of the source is small enough to not be affected by sky curvature and/or
+      ;the source finder did not fit for sky curvature
+      gaussian_ra_vals = [[source_array.ra+.5*gaussian_ra*cos(gaussian_rot)], [source_array.ra-.5*gaussian_dec*sin(gaussian_rot)], $
+        [source_array.ra-.5*gaussian_ra*cos(gaussian_rot)], [source_array.ra+.5*gaussian_dec*sin(gaussian_rot)]]
+      gaussian_dec_vals = [[source_array.dec+.5*gaussian_ra*sin(gaussian_rot)], [source_array.dec+.5*gaussian_dec*cos(gaussian_rot)], $
+        [source_array.dec-.5*gaussian_ra*sin(gaussian_rot)], [source_array.dec-.5*gaussian_dec*cos(gaussian_rot)]]
+      undefine, gaussian_ra, gaussian_dec, gaussian_rot
+
+      ;Curved sky gaussian widths in pixel coords
+      apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=gaussian_ra_vals, dec_arr=gaussian_dec_vals, /ad2xy
+      curved_sky_gaussian_x = sqrt((gaussian_x_vals[*,0]-gaussian_x_vals[*,2])^2+(gaussian_y_vals[*,0]-gaussian_y_vals[*,2])^2)
+      curved_sky_gaussian_y = sqrt((gaussian_x_vals[*,1]-gaussian_x_vals[*,3])^2+(gaussian_y_vals[*,1]-gaussian_y_vals[*,3])^2)
+
+      ;Orthoslant projected gaussian widths
+      gaussian_x = sqrt((gaussian_ra_vals[*,0]-gaussian_ra_vals[*,2])^2+(gaussian_dec_vals[*,0]-gaussian_dec_vals[*,2])^2)/obs.degpix
+      gaussian_y = sqrt((gaussian_ra_vals[*,1]-gaussian_ra_vals[*,3])^2+(gaussian_dec_vals[*,1]-gaussian_dec_vals[*,3])^2)/obs.degpix
+      undefine, gaussian_ra_vals, gaussian_dec_vals    
+
+      ;Projection effect on total integrated flux 
+      flux_factor = (curved_sky_gaussian_x*curved_sky_gaussian_y)/(gaussian_x*gaussian_y)
+      FOR pol_i=0,n_pol-1 DO BEGIN
+          source_array_use[inds_gauss].flux.(pol_i)*=flux_factor[inds_gauss]
+      ENDFOR
+      undefine, flux_factor, curved_sky_gaussian_x, curved_sky_gaussian_y
+
     endelse
   endif else begin
     print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
