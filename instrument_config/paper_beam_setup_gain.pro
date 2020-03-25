@@ -8,6 +8,7 @@ n_tile=obs.n_tile
 beam_model_version=Max(antenna.model_version)
 xvals_instrument=za_arr*Sin(az_arr*!DtoR)
 yvals_instrument=za_arr*Cos(az_arr*!DtoR)
+pix_use=*antenna[0].pix_use
 freq_center=antenna[0].freq ;all need to be identical, so just use the first
 speed_light=299792458. ;speed of light, in meters/second
 icomp=Complex(0,1)
@@ -72,9 +73,9 @@ CASE beam_model_version OF
                 freq_i_test=Min(abs(freq_arr-freq_center[freq_i]),freq_i_use)
                 beam_slice=Reform(beam_cube[*,*,freq_i_use])
                 tile_beam=Float(interpolate(beam_slice,x_int,y_int,missing=0,cubic=-0.5))>0.
-                Jones_matrix[pol_i,pol_i,freq_i]=Ptr_new(tile_beam)
+                Jones_matrix[pol_i,pol_i,freq_i]=Ptr_new((tile_beam)[pix_use])
                 xpol_i=Abs(1-pol_i)
-                Jones_matrix[xpol_i,pol_i,freq_i]=Ptr_new(Fltarr(size(tile_beam,/dimension))) ;all zeroes
+                Jones_matrix[xpol_i,pol_i,freq_i]=Ptr_new(Fltarr(N_elements(pix_use))) ;all zeroes
             ENDFOR
         ENDFOR
     END
@@ -87,14 +88,10 @@ CASE beam_model_version OF
             groundplane=2.*Sin(Cos(za_arr*!DtoR)*(2.*!Pi*(antenna_height)/wavelength[freq_i])) ;should technically have zc_arr, but until that is nonzero this is the same and faster
             groundplane0=2.*Sin(Cos(0.*!DtoR)*2.*!Pi*antenna_height/wavelength[freq_i]) ;normalization factor
             groundplane/=groundplane0
-            Jones_matrix[0,0,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Sin(az_arr*!DtoR)*groundplane)
-            Jones_matrix[1,0,freq_i]=Ptr_new(Cos(az_arr*!DtoR)*groundplane)
-            Jones_matrix[0,1,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)
-            Jones_matrix[1,1,freq_i]=Ptr_new(-Sin(az_arr*!DtoR)*groundplane)
-;            Jones_matrix[0,0,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)
-;            Jones_matrix[1,0,freq_i]=Ptr_new(Sin(az_arr*!DtoR)*groundplane)
-;            Jones_matrix[0,1,freq_i]=Ptr_new(Cos(za_arr*!DtoR)*Sin(az_arr*!DtoR)*groundplane)
-;            Jones_matrix[1,1,freq_i]=Ptr_new(-Cos(az_arr*!DtoR)*groundplane)
+            Jones_matrix[0,0,freq_i]=Ptr_new((Cos(za_arr*!DtoR)*Sin(az_arr*!DtoR)*groundplane)[pix_use])
+            Jones_matrix[1,0,freq_i]=Ptr_new((Cos(az_arr*!DtoR)*groundplane)[pix_use])
+            Jones_matrix[0,1,freq_i]=Ptr_new((Cos(za_arr*!DtoR)*Cos(az_arr*!DtoR)*groundplane)[pix_use])
+            Jones_matrix[1,1,freq_i]=Ptr_new((-Sin(az_arr*!DtoR)*groundplane)[pix_use])
         ENDFOR
     ENDELSE
 ENDCASE
