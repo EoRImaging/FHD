@@ -2,6 +2,7 @@ FUNCTION general_antenna_response,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_im
 
 n_ant=obs.n_tile
 n_ant_pol=antenna[0].n_pol ;this needs to be the same for all antennas!
+pix_use=*antenna[0].pix_use
 icomp=Complex(0,1)
 c_light_vacuum=299792458.
 
@@ -41,7 +42,7 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
         
         response_grp=Ptrarr(nfreq_bin)
         FOR freq_i=0L,nfreq_bin-1 DO BEGIN
-            response=Complexarr(psf_image_dim,psf_image_dim)
+            response=Complexarr(N_elements(pix_use))
             Kconv=(2.*!Pi)*(freq_center[freq_i]/c_light_vacuum) 
             antenna_gain_arr=Exp(-icomp*Kconv*D_d)
             voltage_delay=Exp(icomp*2.*!Pi*delays*(freq_center[freq_i])*Reform((*gain[pol_i])[freq_i,*])) 
@@ -50,7 +51,7 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
             meas_current/=zenith_norm
 
             FOR ii=0L,n_ant_elements-1 DO BEGIN
-                response+=antenna_gain_arr[*,*,ii]*meas_current[ii]/n_ant_elements
+                response+=(antenna_gain_arr[*,*,ii]*meas_current[ii]/n_ant_elements)[pix_use]
             ENDFOR
             response_grp[freq_i]=Ptr_new(response)
         ENDFOR
