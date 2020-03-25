@@ -10,18 +10,22 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   icomp = Complex(0, 1)
   freq_center=antenna1.freq[freq_i]
   dimension_super=(size(xvals_uv_superres,/dimension))[0]
+  pix_use=*antenna1[0].pix_use
 
   Jones1=antenna1.Jones[*,*,freq_i]
   Jones2=antenna2.Jones[*,*,freq_i]
 
-  beam_ant1=DComplex(*(antenna1.response[ant_pol1,freq_i]))
-  beam_ant2=DComplex(Conj(*(antenna2.response[ant_pol2,freq_i])))
+  beam_ant1=DComplexarr(psf_image_dim,psf_image_dim)
+  beam_ant2=DComplexarr(psf_image_dim,psf_image_dim)
+  beam_ant1[pix_use]=DComplex(*(antenna1.response[ant_pol1,freq_i]))
+  beam_ant2[pix_use]=DComplex(Conj(*(antenna2.response[ant_pol2,freq_i])))
   beam_norm=1.
   
   ;Amplitude of the response from ant1 is Sqrt(|J1[0,pol1]|^2 + |J1[1,pol1]|^2)
   ;Amplitude of the response from ant2 is Sqrt(|J2[0,pol2]|^2 + |J2[1,pol2]|^2)
   ;Amplitude of the baseline response is the product of the antenna responses
-  power_zenith_beam=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
+  power_zenith_beam=Dcomplexarr(psf_image_dim,psf_image_dim)
+  power_zenith_beam[pix_use]=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
     (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
   power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
   power_beam = power_zenith_beam*beam_ant1*beam_ant2

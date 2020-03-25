@@ -91,7 +91,7 @@ CASE beam_model_version OF
         IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0  
         Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
-            Jones_matrix[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(psf_image_dim,psf_image_dim))
+            Jones_matrix[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(n_pix))
             
         interp_res=obs.degpix
         angle_slice_i0=Uniq(phi_arr)
@@ -113,7 +113,7 @@ CASE beam_model_version OF
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO BEGIN
             Jmat_use=Reform(*Jmat_interp[p_i,p_j,freq_i],n_zen_slice,n_ang_slice)
             Expand,Jmat_use,n_zen_ang,n_az_ang,Jmat_single
-            (*Jones_matrix[p_i,p_j,freq_i])[pix_use]=Interpolate(Jmat_single,zen_ang_inst/interp_res,az_ang_inst/interp_res,cubic=-0.5)
+            (*Jones_matrix[p_i,p_j,freq_i])=Interpolate(Jmat_single,zen_ang_inst/interp_res,az_ang_inst/interp_res,cubic=-0.5)
             debug_point=1
         ENDFOR
         debug_point=1
@@ -186,7 +186,6 @@ ENDCASE
 ;    zenith_norm[pol_i,freq_i]=Sqrt(Max(abs((*Jones_matrix[0,pol_i,freq_i])*(Conj(*Jones_matrix[0,pol_i,freq_i]))+$
 ;         (*Jones_matrix[1,pol_i,freq_i])*(Conj(*Jones_matrix[1,pol_i,freq_i])))))
 antenna.jones=Jones_matrix
-
 
 RETURN,antenna
 END
