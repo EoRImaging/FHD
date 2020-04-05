@@ -81,30 +81,33 @@ IF keyword_set(gaussian_source_models) then begin
       ;   a_4,d_4
       ;
       ;Convert from deg to pixels
-      ;Assumption: the extent of the source is small enough to not be affected by sky curvature and/or
-      ;the source finder did not fit for sky curvature
-      gaussian_ra_vals = [[source_array.ra+.5*gaussian_ra*cos(gaussian_rot)], [source_array.ra-.5*gaussian_dec*sin(gaussian_rot)], $
-        [source_array.ra-.5*gaussian_ra*cos(gaussian_rot)], [source_array.ra+.5*gaussian_dec*sin(gaussian_rot)]]
-      gaussian_dec_vals = [[source_array.dec+.5*gaussian_ra*sin(gaussian_rot)], [source_array.dec+.5*gaussian_dec*cos(gaussian_rot)], $
-        [source_array.dec-.5*gaussian_ra*sin(gaussian_rot)], [source_array.dec-.5*gaussian_dec*cos(gaussian_rot)]]
-      undefine, gaussian_ra, gaussian_dec, gaussian_rot
+      ;Assumption: the RA/DEC of the gaussian can be approximated in a xy coord system where RA->x and DEC->y. DEC translates
+      ;well to xy coords, but RA does not, especially near celestial poles.
+      gaussian_ra_angular = acos(cos(gaussian_ra*!Dpi/180)/cos(source_array.dec*!Dpi/180)^2 - tan(source_array.dec*!Dpi/180)^2) * 180/!Dpi
+      gaussian_ra_vals = [[source_array.ra+.5*gaussian_ra_angular*cos(gaussian_rot)], [source_array.ra-.5*gaussian_dec*sin(gaussian_rot)], $
+        [source_array.ra-.5*gaussian_ra_angular*cos(gaussian_rot)], [source_array.ra+.5*gaussian_dec*sin(gaussian_rot)]]
+      gaussian_dec_vals = [[source_array.dec+.5*gaussian_ra_angular*sin(gaussian_rot)], [source_array.dec+.5*gaussian_dec*cos(gaussian_rot)], $
+        [source_array.dec-.5*gaussian_ra_angular*sin(gaussian_rot)], [source_array.dec-.5*gaussian_dec*cos(gaussian_rot)]]
+      undefine, gaussian_ra, gaussian_ra_angular, gaussian_dec, gaussian_rot
 
       ;Curved sky gaussian widths in pixel coords
       apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=gaussian_ra_vals, dec_arr=gaussian_dec_vals, /ad2xy
-      curved_sky_gaussian_x = sqrt((gaussian_x_vals[*,0]-gaussian_x_vals[*,2])^2+(gaussian_y_vals[*,0]-gaussian_y_vals[*,2])^2)
-      curved_sky_gaussian_y = sqrt((gaussian_x_vals[*,1]-gaussian_x_vals[*,3])^2+(gaussian_y_vals[*,1]-gaussian_y_vals[*,3])^2)
+      gaussian_x = sqrt((gaussian_x_vals[*,0]-gaussian_x_vals[*,2])^2+(gaussian_y_vals[*,0]-gaussian_y_vals[*,2])^2)
+      gaussian_y = sqrt((gaussian_x_vals[*,1]-gaussian_x_vals[*,3])^2+(gaussian_y_vals[*,1]-gaussian_y_vals[*,3])^2)
 
-      ;Orthoslant projected gaussian widths
-      gaussian_x = sqrt((gaussian_ra_vals[*,0]-gaussian_ra_vals[*,2])^2+(gaussian_dec_vals[*,0]-gaussian_dec_vals[*,2])^2)/obs.degpix
-      gaussian_y = sqrt((gaussian_ra_vals[*,1]-gaussian_ra_vals[*,3])^2+(gaussian_dec_vals[*,1]-gaussian_dec_vals[*,3])^2)/obs.degpix
+      ;Flat sky gaussian widths in pixel coords
+      flat_sky_gaussian_x = sqrt((gaussian_ra_vals[*,0]-gaussian_ra_vals[*,2])^2+(gaussian_dec_vals[*,0]-gaussian_dec_vals[*,2])^2)/obs.degpix
+      flat_sky_gaussian_y = sqrt((gaussian_ra_vals[*,1]-gaussian_ra_vals[*,3])^2+(gaussian_dec_vals[*,1]-gaussian_dec_vals[*,3])^2)/obs.degpix
       undefine, gaussian_ra_vals, gaussian_dec_vals    
 
-      ;Projection effect on total integrated flux 
-      flux_factor = (curved_sky_gaussian_x*curved_sky_gaussian_y)/(gaussian_x*gaussian_y)
+      ;Projection effect on total integrated flux *in uv-space only*
+      flux_factor = (gaussian_x*gaussian_y)/(flat_sky_gaussian_x*flat_sky_gaussian_y)
       FOR pol_i=0,n_pol-1 DO BEGIN
           source_array_use[inds_gauss].flux.(pol_i)*=flux_factor[inds_gauss]
       ENDFOR
-      undefine, flux_factor, curved_sky_gaussian_x, curved_sky_gaussian_y
+      gaussian_x[inds_point]=0
+      gaussian_y[inds_point]=0
+      undefine, flux_factor, flat_sky_gaussian_x, flat_sky_gaussian_y
 
     endelse
   endif else begin
