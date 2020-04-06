@@ -348,6 +348,11 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect.  <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
+  
+**no_png**: do not export any pngs (including standard images and images of calibration solutions). <br />
+  -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
 
 **pad_uv_image**: pad the UV image by this factor with 0's along the outside so that output images are at a higher resolution. <br />
   -*EoR_firstpass settings*: 1. <br />
