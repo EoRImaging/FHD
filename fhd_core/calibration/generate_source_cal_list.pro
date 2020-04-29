@@ -17,7 +17,7 @@ ENDIF ELSE BEGIN
     IF file_test(catalog_path) EQ 0 THEN BEGIN
         catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
         IF file_test(catalog_path_full) EQ 0 THEN BEGIN
-            print,String(format='(A," not found! Critical problem, quitting!',catalog_path)
+            print, catalog_path+' not found! Critical problem, quitting!'
             exit
         ENDIF
     ENDIF ELSE catalog_path_full=catalog_path
