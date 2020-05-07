@@ -9,6 +9,14 @@ FHD outputs various data products, outlined and described below. Items marked wi
 
 ### \<obsid\>\_jones.sav <br />
 
+**jones**: structure containing the Mueller matrix information. Jones matrices are 2x2 matrices that relate the antenna responses to polarization directions on the sky. The Mueller matrix is the Kroeneker product of the Jones matrices. Mueller matrices are 4x4 matrices that relate the polarized visibility responses to the coherencies on the sky. They are direction-dependent: different directions on the sky have different associated Mueller matrices.
+  * **inds**: long array; pixel indices relating jmat and jinv to directions on the sky
+  * **dimension**: float; the number of pixels in the x-coordinate direction
+  * **elements**: float; the number of pixels in the y-coordinate direction
+  * **jmat**: 4x4 array of pointers. Each element is a pointer to a dcomplex array of length equal to the length of inds. Value (\*jones.jmat[i,j])[k] is the (i,j) element of the Mueller matrix at the direction on the sky given by pixel inds[k]. Each 4x4 Mueller matrix converts the vector [RR*, DD*, RD*, DR*] to instrumental polarization apparent sky [xx*, yy*, xy*, yx*] where R refers to the Right Ascension direction and D refers to the Declination direction.
+  * **jinv**: 4x4 array of pointers. Each element is a pointer to a dcomplex array of length equal to the length of inds. Value (\*jones.jmat[i,j])[k] is the (i,j) element of the inverse Mueller matrix at the direction on the sky given by pixel inds[k]. Each 4x4 inverse Mueller matrix converts the instrumental polarization apparent sky vector [xx*, yy*, xy*, yx*] to [RR*, DD*, RD*, DR*] where R refers to the Right Ascension direction and D refers to the Declination direction.
+  
+
 ## Calibration <br />
 
 ### \<obsids\>\_cal.sav <br />
