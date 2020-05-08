@@ -90,11 +90,11 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 ### \<obsids\>\_fhd.sav <br />
 
   * **astr**: structure containing the fits image header information.<br />
-  
+
   * **beam_base**<br />
-  
+
   * **beam_correction**<br />
-  
+
   * **component_array**: an array of structures of dimension N<sub>components</sub>. Gives the deconvolution components before clustering
       * **id**: unique ID labeling each component
       * **x**: centroided pixel column coordinate of the component
@@ -108,17 +108,17 @@ Text file of generated bandpass solutions. The first column is the frequency cha
       * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
       * **extend**: a Null pointer. Not used for component_array.
       * **flux**: structure of the fluxes for the component. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
-  
+
   * **dirty_array**<br />
-  
+
   * **image_uv_arr**<br />
-  
+
   * **model_uv_full**<br />
-  
+
   * **model_uv_holo**<br />
-  
+
   * **residual_array**<br />
-  
+
   * **source_array**: an array of structures of dimension N<sub>sources</sub>. Gives the clustered deconvolution sources. Use generate_calibration_catalog.pro to extract this source array.<br />
       * **id**: A source label.
       * **x**: centroided pixel column coordinate of the source.
@@ -132,12 +132,20 @@ Text file of generated bandpass solutions. The first column is the frequency cha
       * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination.
       * **extend**: a pointer. For extended sources, the pointer references a new source_array structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
       * **flux**: structure of the fluxes for the source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
-  
+
   * **source_mask**<br />
-  
+
   * **weights_arr**<br />
 
 ### \<obsids\>\_fhd_params.sav <br />
+  * **params**: Structure with arrays that contain various metadata in attributes listed below.
+      * **antenna1**: Array of first antenna indices.
+      * **antenna2**: Array of second antenna indices.
+      * **baseline_arr**: Array of baseline indices. Obtained by a product of antenna1 and antenna2 plus a shift proportional to Nants. !Q
+      * **time**: Array of times. Each block of Nants^2 entries are identical. Looks like LST. Unsure of units.
+      * **UU**: Array of u-coordinate of baselines? Units? Numbers are order 1e-6 for MWA data. !Q
+      * **VV**: Array of v-coordinate of baselines in baseline array? Units? !Q
+      * **WW**: Array of w-coordinate of baselines in baseline array? Units? !Q
 
 ## Grid Data<br />
 
@@ -221,7 +229,7 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **nf_vis**:          LONG      Array[384]
    * **primary_beam_area**: a pointer array of dimension N<sub>pol</sub> which points to an array of dimension N<sub>freq</sub>. Each entry is the primary beam area for that frequnecy and polarization in degrees.
    * **primary_beam_sq_area**: a pointer array of dimension N<sub>pol</sub> which points to an array of dimension N<sub>freq</sub>. Each entry is the primary beam squared area for that frequnecy and polarization in degrees.
-   * **pol_names**: string array of the names of the polarizations, starting with four instrumental polarizations and ending with the four stokes polarizations 
+   * **pol_names**: string array of the names of the polarizations, starting with four instrumental polarizations and ending with the four stokes polarizations
    * **jd0**: double of the julian date of the observation (including a time offset if supplied)
    * **max_baseline**: float of the maximum baselines in wavelengths
    * **min_baseline**: float of the minimun baselines in wavelengths
@@ -263,7 +271,7 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **META_HDR**:        POINTER   <PtrHeapVar8>
    * **DEGRID_SPECTRAL_TERMS**:
                    INT              0
-   * **GRID_SPECTRAL_TERMS**: 
+   * **GRID_SPECTRAL_TERMS**:
                    INT              0
    * **GRID_INFO**:        POINTER   <NullPointer>
    * **HEALPIX**:          STRUCT    -> <Anonymous> Array[1]
@@ -320,6 +328,8 @@ Saved only if keyword `save_uvf` is set.
 ##  Vis Data<br />
 
 ### \<obsids\>\_autos.sav <br />
+
+  * **auto_corr**: Pointer array. Each points to an array of autocorrelations of a single pol. Shape is [Nfreqs, Nants X Ntimes]. Unsure of pol order or packing order for second axis.
 
 ### \<obsids\>\_flags.sav <br />
 
