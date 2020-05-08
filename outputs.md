@@ -185,7 +185,7 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
   * **variance_cube/weights_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of 1's gridded with the beam for all visibilities (weights) or 1's gridded with the beam squared for all visibilities (variances).
 
-  * **dirty_cube*/model_cube*: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of the calibrated data (or model).
+  * **dirty_cube/model_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of the calibrated data (or model).
 
   * **beam_squared_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of the beam squared, where the square has taken place in image space. Used for general diagnostic or image-space weighting.
 
@@ -216,14 +216,14 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **obsdec**: float of the observation's DEC in degrees
    * **zenra**: float of the zenith RA in degrees for the instrument and julian date specified
    * **zendec**: float of the zenith DEC in degrees for the instrument and julian date specified
-   * **obsx**: float number of the positive x-axis for the observation, set by dimension/2
-   * **obsy**: float number of the positive y-axis for the observation, set by elements/2
-   * **zenx**: float number of the positive x-axis for the zenith, set by dimension/2
-   * **zeny**: float number of the positive y-axis for the zenith, set by elements/2
-   * **phasera**:         FLOAT           359.849
-   * **phasedec**:        FLOAT          -26.7836
-   * **orig_phasera**:    FLOAT           0.00000
-   * **orig_phasedec**:   FLOAT          -27.0000
+   * **obsx**: float of the positive x-axis for the observation, set by dimension/2
+   * **obsy**: float of the positive y-axis for the observation, set by elements/2
+   * **zenx**: float of the positive x-axis for the zenith, set by dimension/2
+   * **zeny**: float of the positive y-axis for the zenith, set by elements/2
+   * **phasera**: float of the RA of the phase center for the observation
+   * **phasedec**: float of the DEC of the phase center for the observation
+   * **orig_phasera**: float of the RA of the phase center of the input uvfits file, which may not be the desired phase center
+   * **orig_phasedec**: float of the DEC of the phase center of the input uvfits file, which may not be the desired phase center
    * **n_pol**: integer number of polarizations
    * **n_tile**: long number of tiles
    * **n_tile_flag**: long number of flagged tiles
@@ -231,10 +231,10 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **n_freq_flag**: long number of flagged frequency channels
    * **n_time**: long number of time channels
    * **n_time_flag**: long number of flagged time channels
-   * **n_vis**:           LONG          96988320
-   * **n_vis_in**:        LONG         136548552
-   * **n_vis_raw**:       LONG         174784512
-   * **nf_vis**:          LONG      Array[384]
+   * **n_vis**: long number of visibilities for one polarization that have a weight greater than 0 after processing (i.e. after cuts in u,v space)
+   * **n_vis_in**: long number of the visibilities for one polarization after basic time/frequency instrument flagging
+   * **n_vis_raw**: long number of the total possible input visibilities from the uvfits file. This disregards any input flagging, and is theoretically largest possible amount of visibilities for one polarization.
+   * **nf_vis**: long array of the number of gridded visibilities per frequency
    * **primary_beam_area**: a pointer array of dimension N<sub>pol</sub> which points to an array of dimension N<sub>freq</sub>. Each entry is the primary beam area for that frequnecy and polarization in degrees.
    * **primary_beam_sq_area**: a pointer array of dimension N<sub>pol</sub> which points to an array of dimension N<sub>freq</sub>. Each entry is the primary beam squared area for that frequnecy and polarization in degrees.
    * **pol_names**: string array of the names of the polarizations, starting with four instrumental polarizations and ending with the four stokes polarizations
@@ -248,27 +248,27 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **freq_center**: center frequency of the observation in Hz
    * **freq_res**: frequency resolution of the observation in Hz
    * **time_res**: time resolution of the observation in seconds
-   * **ASTR**: structure of header keywords and values relating to astrometry
-      NAXIS           FLOAT     Array[2]
-   CD              FLOAT     Array[2, 2]
-   CDELT           FLOAT     Array[2]
-   CRPIX           FLOAT     Array[2]
-   CRVAL           DOUBLE    Array[2]
-   CTYPE           STRING    Array[2]
-   LONGPOLE        DOUBLE           180.00000
-   LATPOLE         DOUBLE           0.0000000
-   PV2             DOUBLE    Array[2]
-   PV1             DOUBLE    Array[5]
-   AXES            INT       Array[2]
-   REVERSE         BYTE         0
-   COORD_SYS       STRING    'C'
-   PROJECTION      STRING    'SIN'
-   KNOWN           BYTE      Array[1]
-   RADECSYS        STRING    'FK5'
-   EQUINOX         DOUBLE           2000.0000
-   DATEOBS         STRING    '2013-08-23T18:04:40.00'
-   MJDOBS          DOUBLE           56527.753
-   X0Y0            DOUBLE    Array[2]
+   * **astr**: structure of header keywords and values relating to astrometry following the fits standard
+      * **naxis**: number of pixels per axis
+      * **cd**: coordinate description matrix
+      * **cdelt**: delta per pixel of the coordinate description matrix (degrees per pixel)
+      * **crpix**: 2 element vector giving X and Y coordinates of reference pixel (def = NAXIS/2). Values must be in fits convention (first pixel is [1,1])
+      * **crval**: 2 element double precision vector giving RA and DEC of reference pixel in degrees
+      * **ctype**: 2 element string vector giving projection types, default ['RA---SIN','DEC--SIN'] (slant orthographic)
+      * **longpole**: scalar longitude of north pole, default = 180. Note that the default value of 180 is valid only for zenithal projections; it should be set to PV2_1 for conic projections, and zero for other projections.
+      * **latpole**: scalar latitude of the north pole, default = 0
+      * **pv2**: vector of projection parameters associated with the latitude axis of the slant orthographic system, corresponding to Xi and eta. This is an advanced extension of the AIPS SIN convention.
+      * **pv1**: vector of projection parameters associated with longitude axis
+      * **axes**: axis numerical labels in fits convention, default [1,2]
+      * **reverse**: byte, true if first astrometry axis is DEC/latitude
+      * **coord_sys**: 1 or 2 character code giving coordinate system, including 'C' = RA/DEC, 'G' = Galactic, 'E' = Ecliptic, 'X' = unknown
+      * **projection**: projection type, default 'SIN' (slant orthographic)
+      * **known**: true if IDL WCS routines recognise this projection
+      * **radecsys**: the system that describes RA/DEC coordinates, defaulted to IAU 1984 (FK5) standard
+      * **equinox**: coordinate equinox in J2000 standard
+      * **dateobs**: date and time string of the start of the observation, ordered as '2013-08-23T18:04:40.00'
+      * **mjobs**: Modified Julian Date at start of observation
+      * **x0y0**: Implied offset in intermediate world coordinates (x,y) if a non-standard fiducial point is set via PV1 and also PV1_0a =/ 0, indicating that an offset should be applied to place CRVAL at the (x,y) origin.
    * **alpha**: overall spectral index of the point-source catalog, generally -0.8
    * **pflag**: not currently used
    * **cal**: unknown
