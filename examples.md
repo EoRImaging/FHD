@@ -61,7 +61,7 @@ Fast Holographic Deconvolution: A New Technique for Precision Radio Interferomet
 Deconvolution settings   
 ~~~
 deconvolve = 1 
-max_sources = 200000
+max_deconvolution_components = 100000
 return_decon_visibilities = 1
 deconvolution_filter = 'filter_uv_uniform'
 ~~~
