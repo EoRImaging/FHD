@@ -298,9 +298,21 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ### \<obsids\>\_Beam_\<pol\>.sav <br />
 
-### \<obsids\>\_\<filter\>_Dirty_\<pol\>.fits / \<obsids\>\_\<filter\>\_Model_\<pol\>.fits / \<obsids\>\_\<filter\>\_Residual_\<pol\>.fits <br />
+### \<obsids\>\_\<filter\>\_Dirty\_\<pol\>.fits / \<obsids\>\_\<filter\>\_Model_\<pol\>.fits / \<obsids\>\_\<filter\>\_Residual_\<pol\>.fits <br />
+
+Fits files containing the dirty, model, and residual (dirty minus model) images. These images are constrained to be real for XX and YY instrumental polarizations. Units are Jy per sterradian.
+
+### \<obsids\>\_\<filter\>\_Dirty_XY_real.fits / \<obsids\>\_\<filter\>\_Model_XY_real.fits / \<obsids\>\_\<filter\>\_Residual_XY_real.fits <br />
+
+Fits files containing the real part of the dirty, model, and residual XY- and YX-polarized images (XY- and YX-polarized images are complex conjugates of one another). Units are Jy per sterradian. Produced only when `n_pol=4`.
+
+### \<obsids\>\_\<filter\>\_Dirty_XY_imaginary.fits / \<obsids\>\_\<filter\>\_Model_XY_imaginary.fits / \<obsids\>\_\<filter\>\_Residual_XY_imaginary.fits <br />
+
+Fits files containing the imaginary part of the dirty, model, and residual XY-polarized images. Equal to the opposite of the imaginary part of the YX-polarized images because XY- and YX-polarized images are complex conjugates of one another. Units are Jy per sterradian. Produced only when `n_pol=4`.
 
 ### \<obsids\>\_\<filter\>\_Restored_rings_\<pol\>.fits <br />
+
+Fits file consisting of the residual image with the subtracted sources over-plotted. Each source is plotted with a ring around it; the ring size is set with the `ring_radius` keyword. Set `ring_radius=0` to turn off rings. Because this is a combined diffuse and point source image the units are not well-defined.
 
 ### \<obsids\>\_\<filter\>\_UV_weights_\<pol\>.fits <br />
 
@@ -320,7 +332,19 @@ See cal.skymodel.source_list in Calibration for structure description. This outp
 
 ### \<obsids\>\_\<filter\>\_Dirty_\<pol\>.png / \<obsids\>\_\<filter\>\_Model_\<pol\>.png / \<obsids\>\_\<filter\>\_Residual_\<pol\>.png <br />
 
+Dirty, model, and residual (dirty minus model) images. These images are constrained to be real for XX and YY instrumental polarizations. Units are Jy per sterradian.
+
+### \<obsids\>\_\<filter\>\_Dirty_XY_real.png / \<obsids\>\_\<filter\>\_Model_XY_real.png / \<obsids\>\_\<filter\>\_Residual_XY_real.png <br />
+
+Real part of the dirty, model, and residual XY- and YX-polarized images (XY- and YX-polarized images are complex conjugates of one another). Units are Jy per sterradian. Produced only when `n_pol=4`.
+
+### \<obsids\>\_\<filter\>\_Dirty_XY_imaginary.png / \<obsids\>\_\<filter\>\_Model_XY_imaginary.png / \<obsids\>\_\<filter\>\_Residual_XY_imaginary.png <br />
+
+Imaginary part of the dirty, model, and residual XY-polarized images. Equal to the opposite of the imaginary part of the YX-polarized images because XY- and YX-polarized images are complex conjugates of one another. Units are Jy per sterradian. Produced only when `n_pol=4`.
+
 ### \<obsids\>\_\<filter\>\_Restored_rings_\<pol\>.png <br />
+
+Residual image with the subtracted sources over-plotted. Each source is plotted with a ring around it; the ring size is set with the `ring_radius` keyword. Set `ring_radius=0` to turn off rings. Because this is a combined diffuse and point source image the units are not well-defined.
 
 ### \<obsids\>\_\<filter\>\_Sources_\<pol\>.png <br />
 
