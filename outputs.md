@@ -15,7 +15,7 @@ FHD outputs various data products, outlined and described below. Items marked wi
   * **elements**: float; the number of pixels in the y-coordinate direction
   * **jmat**: 4x4 array of pointers. Each element is a pointer to a dcomplex array of length equal to the length of inds. Value (\*jones.jmat[i,j])[k] is the (i,j) element of the Mueller matrix at the direction on the sky given by pixel inds[k]. Each 4x4 Mueller matrix converts the vector [RR*, DD*, RD*, DR*] to instrumental polarization apparent sky [xx*, yy*, xy*, yx*] where R refers to the Right Ascension direction and D refers to the Declination direction.
   * **jinv**: 4x4 array of pointers. Each element is a pointer to a dcomplex array of length equal to the length of inds. Value (\*jones.jinv[i,j])[k] is the (i,j) element of the inverse Mueller matrix at the direction on the sky given by pixel inds[k]. Each 4x4 inverse Mueller matrix converts the instrumental polarization apparent sky vector [xx*, yy*, xy*, yx*] to [RR*, DD*, RD*, DR*] where R refers to the Right Ascension direction and D refers to the Declination direction.
-  
+
 
 ## Calibration <br />
 
@@ -150,10 +150,10 @@ Text file of generated bandpass solutions. The first column is the frequency cha
       * **antenna1**: Array of first antenna indices.
       * **antenna2**: Array of second antenna indices.
       * **baseline_arr**: Array of baseline indices. Obtained by a product of antenna1 and antenna2 plus a shift proportional to Nants. !Q
-      * **time**: Array of times. Each block of Nants^2 entries are identical. Looks like LST. Unsure of units.
-      * **UU**: Array of u-coordinate of baselines? Units? Numbers are order 1e-6 for MWA data. !Q
-      * **VV**: Array of v-coordinate of baselines in baseline array? Units? !Q
-      * **WW**: Array of w-coordinate of baselines in baseline array? Units? !Q
+      * **time**: Array of times. Each block of Nants^2 entries are identical. Looks like LST. Unsure of units. fhd_struct_init_obs suggests it is some unit of "days" !Q
+      * **UU**: Array of u-coordinate of baselines. Units: lightseconds.
+      * **VV**: Array of v-coordinate of baselines in baseline array? Units: lightseconds.
+      * **WW**: Array of w-coordinate of baselines in baseline array? Units: lightseconds.
 
 ## Grid Data<br />
 
