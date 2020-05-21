@@ -361,7 +361,9 @@ Saved only if keyword `save_uvf` is set.
 
 ### \<obsids\>\_autos.sav <br />
 
-  * **auto_corr**: Pointer array. Each points to an array of autocorrelations of a single pol. Shape is [Nfreqs, Nants X Ntimes]. Unsure of pol order or packing order for second axis.
+  * **auto_corr**: Pointer array. Each points to an array of autocorrelations of a single pol. Shape is [Nfreqs, Nants X Ntimes]. Unsure of pol order or packing order for second axis. !Q
+
+  * **obs**: See <obsids>_obs.sav under metadata.
 
 ### \<obsids\>\_flags.sav <br />
 
