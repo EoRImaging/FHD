@@ -270,11 +270,19 @@ Text file of generated bandpass solutions. The first column is the frequency cha
       * **mjobs**: Modified Julian Date at start of observation
       * **x0y0**: Implied offset in intermediate world coordinates (x,y) if a non-standard fiducial point is set via PV1 and also PV1_0a =/ 0, indicating that an offset should be applied to place CRVAL at the (x,y) origin.
    * **alpha**: overall spectral index of the point-source catalog, generally -0.8
-   * **pflag**: not currently used
-   * **cal**: unknown
-   * **residual**: unknown
+   * **residual**: flag option to create residual HEALPix cubes (rather than letting the power spectrum code find the residual in 3D PS space using the calibrated data and simulated model)
    * **vis_noise**: pointer to an array of dimension N<sub>pol</sub>, N<sub>freq</sub> with the calculated visibility noise in units of Jy via even--odd subtractions
-   * **BASELINE_INFO**:   POINTER   <PtrHeapVar9>
+   * **baseline_info**: pointer to a structure filled with information about each baseline    
+      * **tile_a**: index of the first tile in each auto- and cross-correlation visibility vector
+      * **tile_b**: index of the second tile in each auto- and cross-correlation visibility vector
+      * **bin_offset**: the first index of each new time sample in the visibility vector
+      * **JDate**: Julian Date (J2000) of each time step in an observation
+      * **fbin_i**: index of the beam frequency for every frequency sample (i.e. if only one beam is used for all frequencies, then it will be an array of 0's, if a new beam is used per frequency, then it will be an ordered array)
+      * **freq_use**: array of frequencies used in the observation (0 is flagged, 1 is used)tile_use: array of tiles used in the observation (0 is flagged, 1 is used)
+      * **time_use**: array of times used in the observation (0 is flagged, 1 is used)
+      * **tile_names**: name of each tile, which is stored as a string in case the naming system is not number-based
+      * **tile_height**: height of each tile, taken directly from the metadata header 
+      * **tile_flag**: flags for tiles taken directly from the metadata header (and thus the flags given by the uvfits/metadata rather than flags generated during analysis)
    * **META_DATA**:       POINTER   <PtrHeapVar7>
    * **META_HDR**:        POINTER   <PtrHeapVar8>
    * **DEGRID_SPECTRAL_TERMS**:
