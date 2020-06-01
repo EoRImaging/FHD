@@ -129,8 +129,13 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     
     IF Keyword_Set(dft_threshold) THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
-        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
-            n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        if ~keyword_set(gaussian_source_models) then begin
+            edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
+                n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        endif else begin
+            edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
+                gaussian_ra,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        endelse
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
@@ -155,8 +160,8 @@ IF Keyword_Set(n_spectral) THEN BEGIN
             Ptr_free,model_uv_arr2
         ENDIF
         IF not Keyword_Set(silent) THEN BEGIN
-            print,"Center sources using DFT approximation: " + Strn(n_center_pix)
-            print,"Edge sources using true DFT: " + Strn(n_edge_pix)
+            print,"Center source components using DFT approximation: " + Strn(n_center_pix)
+            print,"Edge source components or gaussian components using true DFT: " + Strn(n_edge_pix)
         ENDIF
         Ptr_free,flux_arr
     ENDIF ELSE BEGIN
@@ -196,8 +201,13 @@ ENDIF ELSE BEGIN
     ENDIF
     IF Keyword_Set(dft_threshold) THEN BEGIN
         model_uv_arr=Ptrarr(n_pol)
-        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
-            n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        if ~keyword_set(gaussian_source_models) then begin
+            edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
+                n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        endif else begin
+            edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
+                gaussian_ra,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        endelse
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
@@ -221,8 +231,8 @@ ENDIF ELSE BEGIN
         ENDIF
         FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]
         IF not Keyword_Set(silent) THEN BEGIN
-            print,"Center sources using DFT approximation: " + Strn(n_center_pix)
-            print,"Edge sources using true DFT: " + Strn(n_edge_pix)
+            print,"Center source components using DFT approximation: " + Strn(n_center_pix)
+            print,"Edge source components or gaussian components using true DFT: " + Strn(n_edge_pix)
         ENDIF
         undefine_fhd,model_uv_arr,flux_arr
     ENDIF ELSE BEGIN
