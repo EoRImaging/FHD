@@ -139,10 +139,6 @@ IF size(flux_use,/type) EQ 10 THEN BEGIN ;check if pointer type. This allows the
       *source_uv_vals[fbin_use[fbin_i]]=Complex(Temporary(*source_uv_vals[fbin_use[fbin_i]]))
   ENDIF ELSE BEGIN
     IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
-        if keyword_set(gaussian_source_models) then begin
-          print, 'Gaussian source modeling is not compatible with keyword conserve_memory at this time. Unsetting keyword gaussian_source_models.'
-          undefine, gaussian_source_models
-        endif
         memory_bins=Round(element_check/mem_thresh)
         source_uv_vals=DComplexarr(size(xvals,/dimension))
         n0=N_Elements(x_use)
