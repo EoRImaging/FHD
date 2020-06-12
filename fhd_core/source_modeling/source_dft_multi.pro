@@ -88,7 +88,7 @@ IF keyword_set(gaussian_source_models) then begin
         [source_array.ra-.5*gaussian_ra_angular*cos(gaussian_rot)], [source_array.ra+.5*gaussian_dec*sin(gaussian_rot)]]
       gaussian_dec_vals = [[source_array.dec+.5*gaussian_ra_angular*sin(gaussian_rot)], [source_array.dec+.5*gaussian_dec*cos(gaussian_rot)], $
         [source_array.dec-.5*gaussian_ra_angular*sin(gaussian_rot)], [source_array.dec-.5*gaussian_dec*cos(gaussian_rot)]]
-      undefine, gaussian_ra, gaussian_ra_angular, gaussian_dec, gaussian_rot
+      undefine, gaussian_ra, gaussian_ra_angular, gaussian_dec
 
       ;Curved sky gaussian widths in pixel coords
       apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=gaussian_ra_vals, dec_arr=gaussian_dec_vals, /ad2xy
@@ -134,14 +134,14 @@ IF Keyword_Set(n_spectral) THEN BEGIN
                 n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         endif else begin
             edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
-                gaussian_ra,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+                gaussian_x,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         endelse
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
                 conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision,$
-                gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
-                gaussian_rot=gaussian_rot)
+                gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x[edge_i], gaussian_y=gaussian_y[edge_i], $
+                gaussian_rot=gaussian_rot[edge_i])
             FOR pol_i=0,n_pol-1 DO BEGIN
                 FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
                     single_uv=Complexarr(dimension,elements)
@@ -206,14 +206,14 @@ ENDIF ELSE BEGIN
                 n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         endif else begin
             edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
-                gaussian_ra,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+                gaussian_x,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         endelse
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
                 conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision,$
-                gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
-                gaussian_rot=gaussian_rot)
+                gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x[edge_i], gaussian_y=gaussian_y[edge_i], $
+                gaussian_rot=gaussian_rot[edge_i])
             FOR pol_i=0,n_pol-1 DO BEGIN
                 single_uv=Complexarr(dimension,elements)
                 single_uv[uv_i_use]=*model_uv_vals[pol_i] 
