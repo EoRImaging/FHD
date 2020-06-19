@@ -87,8 +87,6 @@ CASE beam_model_version OF
 ;        IF n_zenith GT 0 THEN $
 ;            FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO (*Jmat_interp[p_i,p_j,freq_i])[zenith_i]=Sqrt(Mean(Abs((*Jmat_interp[p_i,p_j,freq_i])[zenith_i])^2.))
         
-        horizon_mask=fltarr(psf_image_dim,psf_image_dim)+1
-        IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0  
         Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
         FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
             Jones_matrix[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(n_pix))
