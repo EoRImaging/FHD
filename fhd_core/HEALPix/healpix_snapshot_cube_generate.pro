@@ -210,6 +210,39 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         beam_squared_cube=fltarr(n_hpx,n_freq_use)
         FOR fi=Long64(0),n_freq_use-1 DO beam_squared_cube[n_hpx*fi]=Temporary(*beam_hpx_arr[pol_i,fi])
         
+        print, 'nfrequse', n_freq_use
+        print, 'nfreq', n_freq
+        print, 'n_avg', n_avg
+        print, 'nhpx', n_hpx
+        
+        weights = reform(weights_cube, SQRT(n_hpx), SQRT(n_hpx), n_freq_use)
+        weights_uv_arr = fft_shift_cube(weights)
+        weights_uv_arr = FFT(weights_uv_arr, dimension=1)
+        weights_uv_arr = FFT(weights_uv_arr, dimension=2)
+        weights_uv_arr = fft_shift_cube(weights_uv_arr)
+
+        
+        dirty = reform(dirty_cube, SQRT(n_hpx), SQRT(n_hpx), n_freq_use)
+        dirty_uv_arr = fft_shift_cube(dirty)
+        dirty_uv_arr = FFT(dirty_uv_arr, dimension=1)
+        dirty_uv_arr = FFT(dirty_uv_arr, dimension=2)
+        dirty_uv_arr = fft_shift_cube(dirty_uv_arr)
+
+        var = reform(variance_cube, SQRT(n_hpx), SQRT(n_hpx), n_freq_use)
+        variance_uv_arr = fft_shift_cube(var)
+        variance_uv_arr = FFT(variance_uv_arr, dimension=1)
+        variance_uv_arr = FFT(variance_uv_arr, dimension=2)
+        variance_uv_arr = fft_shift_cube(variance_uv_arr)
+
+        model = reform(model_cube, SQRT(n_hpx), SQRT(n_hpx), n_freq_use)
+        model_uv_arr = fft_shift_cube(model)
+        model_uv_arr = FFT(model_uv_arr, dimension=1)
+        model_uv_arr = FFT(model_uv_arr, dimension=2)
+        model_uv_arr = fft_shift_cube(model_uv_arr)
+
+        uvf_filepath = file_path_fhd+ '_' + uvf_name[iter] +'_gridded_uvf.sav'
+        save, filename = uvf_filepath, dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, /compress
+        
         ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save,_Extra=extra 
         IF file_test(file_dirname(path_use)) EQ 0 THEN file_mkdir,file_dirname(path_use)
@@ -222,6 +255,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     undefine_fhd,dirty_hpx_arr,model_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr,residual_hpx_arr
 ENDFOR
 obs_out=obs ;for return
+
+
 Ptr_free,vis_weights_use
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx

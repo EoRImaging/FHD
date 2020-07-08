@@ -17,9 +17,11 @@ ENDIF ELSE IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,fil
 t00=Systime(1)
 dimension=obs.dimension
 elements=obs.elements
+print, dimension, elements
 
 IF N_Elements(hpx_radius) EQ 0 THEN BEGIN
     IF Keyword_Set(mask) THEN BEGIN
+      
         xv_arr=meshgrid(dimension,elements,1)
         yv_arr=meshgrid(dimension,elements,2)
         ;set /ignore_refraction for speed, since we don't need to be exact
@@ -32,7 +34,7 @@ ENDIF ELSE radius=hpx_radius
 
 ;all angles in DEGREES
 ;uses RING index scheme
-
+print, obs.grid_info
 ;check if a string, if it is assume it is a filepath to a save file with the desired indices 
 ; (will NOT be over-written with the indices)
 IF Keyword_Set(restrict_hpx_inds) AND (size(restrict_hpx_inds,/type) NE 7) THEN restrict_hpx_inds=observation_healpix_inds_select(obs)
@@ -52,6 +54,7 @@ ENDIF
 IF ~Keyword_Set(nside) THEN BEGIN
     pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(obs.astr.cdelt))
     Nside=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
+    print, "i here", Nside
 ENDIF
 npix=nside2npix(nside)
 
@@ -60,9 +63,23 @@ IF Keyword_Set(divide_pixel_area) THEN BEGIN
 ENDIF ELSE pixel_area_cnv=1. ;turn this off for now
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
-    pix2vec_ring,nside,hpx_inds,pix_coords
-    vec2ang,pix_coords,pix_dec,pix_ra,/astro
-    apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+    ;pix2vec_ring,nside,hpx_inds,pix_coords
+    ;vec2ang,pix_coords,pix_dec,pix_ra,/astro
+    ;apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+    x_vals = repmat(findgen(obs.dimension), 1, obs.dimension)
+    y_vals = Transpose(x_vals)
+    print,N_ELEMENTS(x_vals)
+    x_vals = reform(x_vals, obs.dimension^2)
+    y_vals = reform(y_vals, obs.dimension^2)
+    apply_astrometry, obs, x_arr=x_vals, y_arr=y_vals, ra_arr=ra_vals, dec_arr=dec_vals, /xy2ad
+    ;SAVE,FILENAME='pix_coords.sav',pix_ra,pix_dec 
+    ;file = '/home/lmberkhout/data/MWA/pipeline_scripts/FHD_IDL_wrappers/pix_coords.sav'
+    ;RESTORE,file
+    ;load obs_ra obs_dec 
+    apply_astrometry, obs, ra_arr=ra_vals, dec_arr=dec_vals, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+    ;apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+    ;SAVE,FILENAME='hpxcords.sav',xv_hpx,yv_hpx
+
 ENDIF ELSE BEGIN
     ang2vec,obs.obsdec,obs.obsra,cen_coords,/astro
     Query_disc,nside,cen_coords,radius,hpx_inds0,ninds,/deg
@@ -90,27 +107,29 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 ; Test for pixels past the horizon. We don't need to be precise with this, so turn off precession, etc..
-Eq2Hor,pix_ra, pix_dec, obs.JD0, alt_arr, az_arr, nutate=0,precess=0,aberration=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-horizon_i = where(alt_arr LE 0, n_horizon, complement=h_use)
-IF n_horizon GT 0 THEN BEGIN
-    print,String(format='("Cutting ",A, " HEALPix pixels that were below the horizon.")',Strn(n_horizon))
-    xv_hpx = xv_hpx[h_use]
-    yv_hpx = yv_hpx[h_use]
-    hpx_inds = hpx_inds[h_use]
-ENDIF
+;Eq2Hor,pix_ra, pix_dec, obs.JD0, alt_arr, az_arr, nutate=0,precess=0,aberration=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+;horizon_i = where(alt_arr LE 0, n_horizon, complement=h_use)
+;IF n_horizon GT 0 THEN BEGIN
+;    print, "im  here"
+;    print,String(format='("Cutting ",A, " HEALPix pixels that were below the horizon.")',Strn(n_horizon))
+;    xv_hpx = xv_hpx[h_use]
+;   yv_hpx = yv_hpx[h_use]
+;    hpx_inds = hpx_inds[h_use]
+;ENDIF
 
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
 
 min_bin=Min(Floor(xv_hpx)+dimension*Floor(yv_hpx))>0L
-max_bin=Max(Ceil(xv_hpx)+dimension*Ceil(yv_hpx))<(dimension*elements-1L)
+max_bin=Max(Ceil(xv_hpx)+dimension*Ceil(yv_hpx))<(dimension*elements-1L) 
+; give hist some data, min and max for bins, binsize=1?
 h00=histogram(Floor(xv_hpx)+dimension*Floor(yv_hpx),min=min_bin,max=max_bin,/binsize,reverse_ind=ri00)
 h01=histogram(Floor(xv_hpx)+dimension*Ceil(yv_hpx),min=min_bin,max=max_bin,/binsize,reverse_ind=ri01)
 h10=histogram(Ceil(xv_hpx)+dimension*Floor(yv_hpx),min=min_bin,max=max_bin,/binsize,reverse_ind=ri10)
 h11=histogram(Ceil(xv_hpx)+dimension*Ceil(yv_hpx),min=min_bin,max=max_bin,/binsize,reverse_ind=ri11)
+
 htot=h00+h01+h10+h11
 inds=where(htot,n_img_use)
-
 n_arr=htot[inds]
 
 i_use=inds+min_bin
@@ -151,7 +170,8 @@ FOR i=0L,n_img_use-1L DO BEGIN
     *ija[i]=ija0
         
 ENDFOR
-
+;sa=weighting function?
+hpx_inds = findgen(obs.dimension^2)
 hpx_cnv={nside:nside,ija:ija,sa:sa,i_use:i_use,inds:hpx_inds}
 IF tag_exist(obs,'healpix') THEN BEGIN
     IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=restrict_hpx_inds
