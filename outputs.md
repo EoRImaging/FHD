@@ -1,15 +1,11 @@
 # Outputs <br />
-FHD outputs various data products. We outline and describe these below. Items marked with (!Q are currently not defined -- ask Ian if needed and update please!)<br />
+FHD outputs various data products, outlined and described below. Items marked with (!Q are currently not defined -- ask Ian if needed and update please!)<br />
 
 ## Beam <br />
 
 ### \<obsid\>\_beams.sav <br />
 
-**beam_ptr**: a pointer to a pointer array of dimensions N<sub>polarizations</sub> x N<sub>frequencies</sub> x N<sub>baselines</sub>, which themselves are pointer arrays of dimension N<sub>UVresolution</sub> x N<sub>UVresolution</sub> to the appropriate hyperresolution uv complex beam model for that particular frequency, polarization, and baseline sampled at the uv resolution pixel. There is a one-pixel offset in the UV resolution for interpolation purposes. The final result is a vectorized image, where each slice has been concatenated into a vector that can be efficiently used in matrix multiplication algorithms. Image below shows the output of fully dereferencing the beam_ptr, and what it pictorially represents.
-
-<p align="center">
-  <img src="https://github.com/nicholebarry/MWA_data_analysis/blob/master/image_docs/beam_ptr2-crop.pdf" width="350"/>
-</p>
+**beam_ptr**: a pointer to a pointer array of dimensions N<sub>polarizations</sub> x N<sub>frequencies</sub> x N<sub>baselines</sub>, which themselves are pointer arrays of dimension N<sub>UVresolution</sub> x N<sub>UVresolution</sub> to the appropriate hyperresolution uv complex beam model for that particular frequency, polarization, and baseline sampled at the uv resolution pixel. There is a one-pixel offset in the UV resolution for interpolation purposes. The final result is a vectorized image, where each slice has been concatenated into a vector that can be efficiently used in matrix multiplication algorithms.
 
 ### \<obsid\>\_jones.sav <br />
 
@@ -17,15 +13,15 @@ FHD outputs various data products. We outline and describe these below. Items ma
 
 ### \<obsids\>\_cal.sav <br />
 
-**cal**: a structure of the various calibration parameters. Pointers and large arrays in this structure are defined below. Other variables in the structure include:
+**cal**: structure of the various calibration parameters. Pointers and large arrays in this structure are defined below. Other variables in the structure include:
   * **n_pol**: long number of polarizations
   * **n_freq**: long number of frequency channels
   * **n_tile**: long number of tiles
   * **n_time**: long number of time steps
-  * **auto_initialize**: integer 1/0 value of whether window scaled autocorrelations were used/not used to set the initial calibration solution before iteration.
+  * **auto_initialize**: integer 1/0 value of whether window scaled autocorrelations were used/not used to set the initial calibration solution before iteration
   * **max_iter**: long number of maximum iterations in the X<sup>2</sup> calibration subroutine
   * **phase_iter**: long number of maximum iterations in the X<sup>2</sup> calibration subroutine where only the phase was updated
-  * **auto_scale**: The average amplitude of the calibration solutions fit from the auto-correlations.
+  * **auto_scale**: average amplitude of the calibration solutions fit from the auto-correlations
   * **tile_names**: string array of the tile names specified in the metafits and if unspecified then indices of tiles starting at 1
   * **freq**: float array of frequency values in Hz
   * **min_cal_baseline**: float of the minimum baseline length included in calibration
@@ -34,17 +30,17 @@ FHD outputs various data products. We outline and describe these below. Items ma
   * **time_avg**: integer 1/0 value of whether or not visibilities were averaged in time during the X<sup>2</sup> calibration subroutine
   * **min_sols**: integer minimum number of equations used in the X<sup>2</sup> calibration subroutine per frequency channel
   * **ref_antenna**: long number index of tile to reference phases from
-  * **ref_antenna_name**: name of the antenna used as the phase reference.
+  * **ref_antenna_name**: name of the antenna used as the phase reference
   * **conv_thresh**: float number of the required convergence threshold
   * **polyfit**: integer 1/0 value of whether or not polynomials were fit
   * **amp_degree**: integer number of degree of coefficients used in fitting the amplitude of the cal solutions i.e. 2 = 2<sup>nd</sup> order polynomial
   * **phase_degree**: integer number of degree of coefficients used in fitting the phase of the cal solutions i.e. 2 = 2<sup>nd</sup> order polynomial
   * **bandpass**: integer 1/0 value of whether or not a bandpass was fit
-  * **mode_fit**: integer 1/0 value of whether or not cable reflection mode-fitting was done,
-  * **mean_gain**: The average amplitude of the calibration solutions for each polarization.
-  * **mean_gain_residual**: The average amplitude of the residual calibration solutions, after the fitted solutions have been subtracted.
-  * **mean_gain_restrict**: The average amplitude of the residual calibration solutions excluding outliers, after the fitted solutions have been subtracted.
-  * **stddev_gain_residual**: A pointer. For extended sources, the pointer references a new source_list structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
+  * **mode_fit**: integer 1/0 value of whether or not cable reflection mode-fitting was done
+  * **mean_gain**: average amplitude of the calibration solutions for each polarization
+  * **mean_gain_residual**: average amplitude of the residual calibration solutions, after the fitted solutions have been subtracted
+  * **mean_gain_restrict**: average amplitude of the residual calibration solutions excluding outliers, after the fitted solutions have been subtracted
+  * **stddev_gain_residual**: pointer which references a new source_list structure containing all of the extended components for extended sources, or a Null pointer for point sources
   * **cal_origin**: result of `git describe` run on the FHD repo during calibration. Effectively the git hash, does not include the branch name.
 
 Pointers and large arrays in **cal** structure:
@@ -63,55 +59,55 @@ Pointers and large arrays in **cal** structure:
 
   * **cal.amp_params/cal.phase_params/cal.mode_params**: a pointer array of dimension N<sub>pol</sub> by N<sub>tile</sub> which points to an array of coefficients used in the polynomial or mode fitting. The amplitude and phase parameters are ordered by the least-degree to the highest-degree; a polynomial fit of A + Bx + Cx<sup>2</sup> has an array of three values A,B, and C. The mode parameters are ordered by mode in index units of the Fourier transform (can be a non-integer for the hyperfine DFT option), amplitude of the mode, and phase of the mode. The wave can be reconstructed by amp * e<sup>-i2pi*(mode*[0,1,2...n_freq-1]/n_freq)+i*phase</sup>. If mode parameters (or amplitude or phase parameters) are not calculated for that tile, there will be a Null pointer in that place.
 
-  * **cal.skymodel**: a structure of the various skymodel parameters used in calibration.
-    * **include_calibration**: integer 1/0 value of whether or not the sources used for calibration are included in the source list.
+  * **cal.skymodel**: a structure of the various skymodel parameters used in calibration
+    * **include_calibration**: integer 1/0 value of whether or not the sources used for calibration are included in the source list
     * **n_sources**: number of sources included in the calibration skymodel
     * **catalog_name**: name of the catalog used in the calibration
     * **galaxy_model**: integer 1/0 value of whether or not a galaxy model was used
     * **galaxy_spectral_index**: the spectral index of the galaxy model used or NaN if no galaxy model was used
     * **diffuse_model**: name of the diffuse model used in the calibration
-    * **diffuse_spectral_index**: the spectral index of the diffuse model used of NaN if no diffuse model was used.
+    * **diffuse_spectral_index**: the spectral index of the diffuse model used of NaN if no diffuse model was used
 
-    * **cal.skymodel.source_list**: an array of structures of dimension N<sub>sources</sub>.
-      * **x**: The centroided pixel column coordinate of the source.
-      * **y**: The centroided pixel row coordinate of the source.
-      * **ra**: the RA coordinate value of the source
-      * **dec**: the DEC coordinate value of the source
+    * **cal.skymodel.source_list**: an array of structures of dimension N<sub>sources</sub>
+      * **x**: centroided pixel column coordinate of the source
+      * **y**: centroided pixel row coordinate of the source
+      * **ra**: RA coordinate value of the source
+      * **dec**: DEC coordinate value of the source
       * **ston**: not used in the calibration source list (see Deconvolution)
       * **freq**: frequency of the source model in MHz
       * **alpha**: spectral index of the source
-      * **gain**: not used in the calibration source list (!Q right?)
+      * **gain**: not used in the calibration source list (see Deconvolution)
       * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
       * **extend**: A pointer. For extended sources, the pointer references a new source_list structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
       * **flux**: structure of the fluxes for that source, where the dimension depends on what polarizations are reported for that source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness.
 
 ### \<obsids\>\_bandpass.txt <br />
 
-Text file of generated bandpass solutions. The first column is the frequency channels in Hz, and the following columns depend on the type of bandpass calibration used. For a global bandpass, the next columns are the average xx and yy instrumental polarization bandpass solutions. For a cable-dependent bandpass, the next columns are cable 90m xx, cable 90m yy, cable 150m xx, cable 150m yy, cable 230m xx, cable 230m yy, cable 320m xx, cable 320m yy, cable 400m xx, cable 400m yy, cable 524m xx, and cable 524m yy.
+Text file of generated bandpass solutions. The first column is the frequency channels in Hz, and the following columns depend on the type of bandpass calibration used. For a global bandpass, the next columns are the average xx and yy instrumental polarization bandpass solutions. For a cable-dependent bandpass, the next columns are cable 90m xx, cable 90m yy, cable 150m xx, cable 150m yy, cable 230m xx, cable 230m yy, cable 320m xx, cable 320m yy, cable 400m xx, cable 400m yy, cable 524m xx, and cable 524m yy for MWA Phase I.
 
 ##  Deconvolution (deconvolution only)<br />
 
 ### \<obsids\>\_fhd.sav <br />
 
-  * **astr**: Structure containing the fits image header information.<br />
+  * **astr**: structure containing the fits image header information.<br />
   
   * **beam_base**<br />
   
   * **beam_correction**<br />
   
-  * **component_array**: an array of structures of dimension N<sub>components</sub>. Gives the deconvolution components before clustering.
-      * **id**: A unique ID labeling each component.
-      * **x**: The centroided pixel column coordinate of the component.
-      * **y**: The centroided pixel row coordinate of the component.
-      * **ra**: The RA coordinate value of the component.
-      * **dec**: The DEC coordinate value of the component.
-      * **ston**: Signal-to-noise of the component. Calculated as the beam-weighted component flux density divided by the standard deviation across the beam-weighted residual.
-      * **freq**: Frequency of the component in MHz.
-      * **alpha**: Spectral index of the component. Deconvolution does not calculate a spectral index and defaults to -0.8.
+  * **component_array**: an array of structures of dimension N<sub>components</sub>. Gives the deconvolution components before clustering
+      * **id**: unique ID labeling each component
+      * **x**: centroided pixel column coordinate of the component
+      * **y**: centroided pixel row coordinate of the component
+      * **ra**: RA coordinate value of the component
+      * **dec**: DEC coordinate value of the component
+      * **ston**: signal-to-noise of the component. Calculated as the beam-weighted component flux density divided by the standard deviation across the beam-weighted residual.
+      * **freq**: frequency of the component in MHz
+      * **alpha**: spectral index of the component. Deconvolution does not calculate a spectral index and defaults to -0.8.
       * **gain**: !Q
-      * **flag**: Type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination.
-      * **extend**: A Null pointer. Not used for component_array.
-      * **flux**: Structure of the fluxes for the component. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
+      * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
+      * **extend**: a Null pointer. Not used for component_array.
+      * **flux**: structure of the fluxes for the component. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
   
   * **dirty_array**<br />
   
@@ -125,17 +121,17 @@ Text file of generated bandpass solutions. The first column is the frequency cha
   
   * **source_array**: an array of structures of dimension N<sub>sources</sub>. Gives the clustered deconvolution sources. Use generate_calibration_catalog.pro to extract this source array.<br />
       * **id**: A source label.
-      * **x**: The centroided pixel column coordinate of the source.
-      * **y**: The centroided pixel row coordinate of the source.
-      * **ra**: The RA coordinate value of the source.
-      * **dec**: The DEC coordinate value of the source.
-      * **ston**: Signal-to-noise of the source. Calculated as the beam-weighted source flux density divided by the standard deviation across the beam-weighted residual.
-      * **freq**: Frequency of the source in MHz.
-      * **alpha**: Spectral index of the source. Deconvolution does not calculate a spectral index and defaults to -0.8.
+      * **x**: centroided pixel column coordinate of the source.
+      * **y**: centroided pixel row coordinate of the source.
+      * **ra**: RA coordinate value of the source.
+      * **dec**: DEC coordinate value of the source.
+      * **ston**: signal-to-noise of the source. Calculated as the beam-weighted source flux density divided by the standard deviation across the beam-weighted residual.
+      * **freq**: frequency of the source in MHz.
+      * **alpha**: spectral index of the source. Deconvolution does not calculate a spectral index and defaults to -0.8.
       * **gain**: !Q
-      * **flag**: Type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination.
-      * **extend**: A pointer. For extended sources, the pointer references a new source_array structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
-      * **flux**: Structure of the fluxes for the source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
+      * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination.
+      * **extend**: a pointer. For extended sources, the pointer references a new source_array structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
+      * **flux**: structure of the fluxes for the source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
   
   * **source_mask**<br />
   
@@ -186,6 +182,91 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 ##  Metadata<br />
 
 ### \<obsids\>\_obs.sav <br />
+
+**obs**: structure of the various observation parameters. Pointers and large arrays in this structure are defined below. Other variables in the structure include:
+   * **code_version**: githash string of the observation run
+   * **instrument**: string of the instrument name
+   * **obsname**: string of the observation name identifier, which depends on the instrument
+   * **dimension**: float number of the pixels on the u-axis
+   * **elements**: float number of the pixels on the v-axis      
+   * **nbaselines**: long number of of baselines in the observation
+   * **dft_threshold**: if set, float threshold for the DFT image
+   * **double_precision**: integer flag of 0/1 to indication if double precision (1) or float precision (1) was used in calculations
+   * **kpix**: float of the uv (and thus k) resolution
+   * **degpix**: float of the number of degrees per pixel in image space
+   * **obsaz**: float of the observation's azimuth in degrees calculated from the equatorial coordinates
+   * **obsalt**: float of the observation's altitude in degrees calculated from the equatorial coordinates
+   * **obsra**: float of the observation's RA in degrees
+   * **obsdec**: float of the observation's DEC in degrees
+   * **zenra**: float of the zenith RA in degrees for the instrument and julian date specified
+   * **zendec**: float of the zenith DEC in degrees for the instrument and julian date specified
+   * **obsx**: float number of the positive x-axis for the observation, set by dimension/2
+   * **obsy**: float number of the positive y-axis for the observation, set by elements/2
+   * **zenx**: float number of the positive x-axis for the zenith, set by dimension/2
+   * **zeny**: float number of the positive y-axis for the zenith, set by elements/2
+   * **phasera**:         FLOAT           359.849
+   * **phasedec**:        FLOAT          -26.7836
+   * **orig_phasera**:    FLOAT           0.00000
+   * **orig_phasedec**:   FLOAT          -27.0000
+   * **n_pol**: integer number of polarizations
+   * **n_tile**: long number of tiles
+   * **n_tile_flag**: long number of flagged tiles
+   * **n_freq**: long number of frequency channels
+   * **n_freq_flag**: long number of flagged frequency channels
+   * **n_time**: long number of time channels
+   * **n_time_flag**: long number of flagged time channels
+   * **n_vis**:           LONG          96988320
+   * **n_vis_in**:        LONG         136548552
+   * **n_vis_raw**:       LONG         174784512
+   * **nf_vis**:          LONG      Array[384]
+   * **primary_beam_area**: a pointer array of dimension N<sub>pol</sub> which points to an array of dimension N<sub>freq</sub>. Each entry is the primary beam area for that frequnecy and polarization in degrees.
+   * **primary_beam_sq_area**: a pointer array of dimension N<sub>pol</sub> which points to an array of dimension N<sub>freq</sub>. Each entry is the primary beam squared area for that frequnecy and polarization in degrees.
+   * **pol_names**: string array of the names of the polarizations, starting with four instrumental polarizations and ending with the four stokes polarizations 
+   * **jd0**: double of the julian date of the observation (including a time offset if supplied)
+   * **max_baseline**: float of the maximum baselines in wavelengths
+   * **min_baseline**: float of the minimun baselines in wavelengths
+   * **delays**: pointer to a float array of dimension N<sub>antennas</sub> that describes the individual antenna delays to point the instrument, particularly for the MWA
+   * **lon**: longitude of the instrument
+   * **lat**: latitude of the instrument                                                
+   * **alt**: altitude of the instrument
+   * **freq_center**: center frequency of the observation in Hz
+   * **freq_res**: frequency resolution of the observation in Hz
+   * **time_res**: time resolution of the observation in seconds
+   * **ASTR**: structure of header keywords and values relating to astrometry
+      NAXIS           FLOAT     Array[2]
+   CD              FLOAT     Array[2, 2]
+   CDELT           FLOAT     Array[2]
+   CRPIX           FLOAT     Array[2]
+   CRVAL           DOUBLE    Array[2]
+   CTYPE           STRING    Array[2]
+   LONGPOLE        DOUBLE           180.00000
+   LATPOLE         DOUBLE           0.0000000
+   PV2             DOUBLE    Array[2]
+   PV1             DOUBLE    Array[5]
+   AXES            INT       Array[2]
+   REVERSE         BYTE         0
+   COORD_SYS       STRING    'C'
+   PROJECTION      STRING    'SIN'
+   KNOWN           BYTE      Array[1]
+   RADECSYS        STRING    'FK5'
+   EQUINOX         DOUBLE           2000.0000
+   DATEOBS         STRING    '2013-08-23T18:04:40.00'
+   MJDOBS          DOUBLE           56527.753
+   X0Y0            DOUBLE    Array[2]
+   * **alpha**: overall spectral index of the point-source catalog, generally -0.8
+   * **pflag**: not currently used
+   * **cal**: unknown
+   * **residual**: unknown
+   * **vis_noise**: pointer to an array of dimension N<sub>pol</sub>, N<sub>freq</sub> with the calculated visibility noise in units of Jy via even--odd subtractions
+   * **BASELINE_INFO**:   POINTER   <PtrHeapVar9>
+   * **META_DATA**:       POINTER   <PtrHeapVar7>
+   * **META_HDR**:        POINTER   <PtrHeapVar8>
+   * **DEGRID_SPECTRAL_TERMS**:
+                   INT              0
+   * **GRID_SPECTRAL_TERMS**: 
+                   INT              0
+   * **GRID_INFO**:        POINTER   <NullPointer>
+   * **HEALPIX**:          STRUCT    -> <Anonymous> Array[1]
 
 ### \<obsids\>\_params.sav <br />
 

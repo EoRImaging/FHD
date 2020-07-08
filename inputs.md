@@ -1,39 +1,48 @@
 # Inputs <br />
 FHD inputs various models and catalogs, described below.
 
+## UVFits <br />
+FHD requires input data to be in [uvfits format](ftp://ftp.aoc.nrao.edu/pub/software/aips/TEXT/PUBL/AIPSMEM117.PDF). Conversion into uvfits can be performed with [pyuvdata](https://github.com/RadioAstronomySoftwareGroup/pyuvdata) or CASA if necessary. Observations must have a unique string identifier (typically GPS seconds or Julian Dates). 
+
+### Acquiring MWA Data <br />
+To acquire MWA uvfits files, you may use the [MWA ASVO service](https://asvo.mwatelescope.org/dashboard). Once registered and logged in, click "Data Job" in the upper right, select "New Data Job," and then select "Data Conversion Job" from the dropdown menu. We recommend starting with obsid 1061315448, which is zenith-pointed on the EoR0 field (centered on RA: 0, Dec: -27 deg) on August 23rd, 2013, and has minimal radio frequency interference. Proper settings for the query are as follows
+
+ - Observation ID: 1061315448
+ - Time Resolution (s): 2 
+ - Freq Resolution (kHz): 80
+ - Edge Width (kHz): 80
+ - Output: UVFITS
+ 
+Check only the following boxes:
+
+ - Do not flag auto-correlations
+ - Do not correct for the digital gains
+ - Do not abort when not all visibility files are available
+ - Flag the centre channel of each coarse channel
+ - Centre on pointing centre
+
+By default, the MWA ASVO service applies RFI flags in the conversion to uvfits. The flags are calculated using [AOFlagger](https://sourceforge.net/projects/aoflagger/). Another RFI flagger that has been successful for MWA data is [SSINS](https://github.com/mwilensky768/SSINS).
+
+## MetaFits <br />
+
 ## Beam Models <br />
 
 ## Sky catalogs <br />
 All sky catalogs are located in `catalog_data`.
 
-* **EoR0_diffuse_model.sav**:	changed firstpass version, added EoR0 diffuse model	5 years ago
-* **EoR0_diffuse_model_94.sav**:	Added a couple new EoR0 diffuse models	5 years ago
-* **EoR0_diffuse_model_94_tapered.sav**:	Added a couple new EoR0 diffuse models	5 years ago
-* **EoR0_low_polarized_diffuse.sav**:	Low band polarized diffuse maps in Stokes I and Q added	4 years ago
-* **EoR0_polarized_diffuse.sav**:	New polarized diffuse model from firstpass std	4 years ago
 * **GLEAMIDR4_181_consistent.sav**:	GLEAM Internal Data Release 4 for 181 MHz, with no sources consistent…	4 years ago
 * **GLEAM_EGC_catalog.sav**:	Adding full published GLEAM extragalactic catalog as GLEAM_EGC_catalo…	3 years ago
 * **GLEAM_EGC_catalog_KGSscale_ssextended.sav**:	KGS-scaled GLEAM with extended model for southern sidelobe source	3 years ago
 * **GLEAM_EGC_v2_181MHz.sav**:	GLEAM release version 2 at 181MHz for the full-sky except A-team sources and the galactic plane. Only has point-source information; does not include Gaussian fitting or spectral slopes.
-* **GLEAM_plus_rlb2017.sav**:	new catalog	2 years ago
-* **GLEAM_v2_plus_gaussian_sources_rlb2019.sav**:	updated catalogs: GLEAM v2 with and without gaussian models	13 months ago
-* **GLEAM_v2_plus_rlb2019.sav**:	updated catalogs: GLEAM v2 with and without gaussian models	13 months ago
+* **GLEAM_plus_rlb2017.sav**:	GLEAM release version 1 at 181MHz for the full-sky with added bright (A-team) sources. It includes a Fornax A component model produced by Patti Carroll with FHD. It does not include Gaussian fitting or spectral slopes.
+* **GLEAM_v2_plus_gaussian_sources_rlb2019.sav**:	GLEAM release version 2 at 181MHz for the full-sky with added bright (A-team) sources and some Gaussian source models. This catalog is designed for implementation with FHD's gaussian_source_models branch, which has not yet been fully tested.
+* **GLEAM_v2_plus_rlb2019.sav**: GLEAM release version 2 at 181MHz for the full-sky with added bright (A-team) sources. It includes a Fornax A component model produced by Patti Carroll with FHD. It does not include Gaussian fitting or spectral slopes.
 * **MRC_calibration_catalog.sav**:	Convert MRC catalog to calibration catalog format	6 years ago
 * **MRC_full_radio_catalog.fits**:	Bug fix:MRC catalog	7 years ago
-* **RFI_PLAW_1000s_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **RFI_PLAW_1000x_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **RFI_PLAW_100x_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **RFI_PLAW_10x_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **RFI_PLAW_Cat.sav**:	Add RFI catalogs and various debug changes for in situ setup	3 months ago
-* **RTS_catalog.sav**:	fixed RTS catalog	5 years ago
-* **RTS_catalog2.sav**:	try shifting RTS sources by small amount	5 years ago
-* **arn_eor0_low_cat_patti_catalog.sav**:	add patti eor0 low catalog and eor version	5 years ago
 * **component_maps_408locked.fits**:	Add catalog data to repo, and modify paths in wrappers	7 years ago
 * **components.fits**:	Add catalog data to repo, and modify paths in wrappers	7 years ago
 * **eor01_calibration_source_list.sav**:	New EOR0 and EOR1 source list	6 years ago
 * **eor1_calibration_source_list.sav**:	New EoR1 high band deconvolved source list	5 years ago
-* **eor_power_1d.idlsave**:	Added code for making EoR simulations	6 years ago
-* **flat_power_1d.idlsave**:	Added flat power savefile to catalog data for simulation plots.	5 years ago
 * **gsm_150MHz.sav**:	Attempt to read coord_sys from diffuse model healpix file, defaulting…	3 years ago
 * **lambda_haslam408_dsds.fits**:	Convert haslam binary table to useable format	7 years ago
 * **master_sgal_cat.sav**:	Add new KGS+MWACS+MRC master catalog and NGC253 extended model.	4 years ago
@@ -47,10 +56,15 @@ All sky catalogs are located in `catalog_data`.
 * **mwa_commissioning_source_list_add_BenMcKinley_fornax_and_VLA_pic_halfpixeloffset.sav**:	add ben fornax model with halfpixeloffset correction	5 years ago
 * **mwa_commissioning_source_list_add_FHDaug23deconvolve_fornax_and_VLA_pic.sav**:	add FHD fornax model and setup firstpass eor1 run	5 years ago
 * **mwa_galactic_center_catalog.sav**:	Update defaults, pass more keywords to fhd_init	6 years ago
-* **one_jy_source_at_eor0_center.sav**:	test one jy source at eor0 center	4 years ago
 * **planck_map_read.pro**:	Bug fix in wrapper	5 years ago
 * **vlssr_and_mwacs_and_ben_fornax_and_pic_vla.sav**:	added catalog with mwacs, Fornax, and Pic along with VLSSR for source…	5 years ago
 * **vlssr_dec_gt_m15.sav**:	added vlssr catalogue greater than minus 15 degrees dec to cover area…	5 years ago
 
+* **simulation/eor_power_1d.idlsave**:	Added code for making EoR simulations	6 years ago
+* **simulation/flat_power_1d.idlsave**:	Added flat power savefile to catalog data for simulation plots.	5 years ago
+* **simulation/RFI_PLAW_1000s_Cat.sav**:	1000 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
+* **simulation/RFI_PLAW_10x_Cat.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 1 mJy - 1 Jy
+* **simulation/RFI_PLAW_Cat.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
+* **simulation/test_RFI_source_1061315448_zenith.sav**: A 1 Jy source at zenith for MWA obsid 1061315448
 
 ## Calibration files <br />

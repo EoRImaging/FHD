@@ -7,6 +7,14 @@ FHD is an open-source imaging algorithm for radio interferometers, specifically 
 
 For further details, please see [Sullivan et al 2012](https://arxiv.org/abs/1209.1653) or [Barry et al 2019a](https://arxiv.org/abs/1901.02980).
 
+## Quick Start Guide
+
+1. Acquire an IDL 8.2 or above license and install.
+2. [Install FHD](#installation).
+3. Acquire a data file in the uvfits format. For an explanation of the format and instructions for acquiring public MWA data is available in the [Inputs resource](https://github.com/EoRImaging/FHD/blob/master/inputs.md).
+4. Create a wrapper script with the appropriate keywords. For examples of FHD run wrappers see the [Examples resource](https://github.com/EoRImaging/FHD/blob/master/examples.md). For an explanation of the keywords see the [Dictionary resource](https://github.com/EoRImaging/FHD/blob/master/dictionary.md).
+5. Read and abide by the [Community Guidelines](#community-guidelines).
+
 ## Useful Documentation Resources
 
 * [Dictionary](https://github.com/EoRImaging/FHD/blob/master/dictionary.md): FHD is run by specifying keywords in a wrapper that is passed to the main code. These keywords change the functionality of FHD for fine-tuning and flexibility. Please visit the dictionary for keywords and their definitions.
@@ -14,6 +22,7 @@ For further details, please see [Sullivan et al 2012](https://arxiv.org/abs/1209
 * [Examples](https://github.com/EoRImaging/FHD/blob/master/examples.md): Please visit the examples page for brief tutorials on specific cases.
 * [Outputs](https://github.com/EoRImaging/FHD/blob/master/outputs.md): For documentation of the various outputs, see the outputs page.
 * [Inputs](https://github.com/EoRImaging/FHD/blob/master/inputs.md): FHD inputs beam models, calibration files, and sky model catalogs. Currently available inputs are described on this page.
+* [Publications](https://github.com/EoRImaging/FHD/blob/master/publications.md): FHD has been used in a variety of publications, documented on this page.
 
 ## Installation
 Download the latest versions of these libraries/repos.    
@@ -43,7 +52,7 @@ d. `imagefast,randomN(5,256,256),file_path='some/output/path/testimage.png'`
 prints error if FHD not installed correctly, generates a 256x256 pixel image of poisson noise at path 'some/output/path/testimage.png' if installed correctly and read/write permissions are set correctly.
 
 ## Community Guidelines
-We are an open-source community that interacts and discusses issues via GitHub. Please feel free to submit [issues](https://github.com/EoRImaging/FHD/issues) or [pull requests](https://github.com/EoRImaging/FHD/pulls). Comments and suggestions are welcome.
+We are an open-source community that interacts and discusses issues via GitHub. We encourage collaborative development. New users are encouraged to submit [issues](https://github.com/EoRImaging/FHD/issues) and [pull requests](https://github.com/EoRImaging/FHD/pulls) and to create branches for new development and exploration. Comments and suggestions are welcome.
 
 ## Maintainers
 FHD was built by Ian Sullivan and the University of Washington radio astronomy team. Maintainance is a group effort split across University of Washington and Brown University, with contributions from University of Melbourne and Arizona State University. 

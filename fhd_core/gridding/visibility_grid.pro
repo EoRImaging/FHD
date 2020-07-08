@@ -200,7 +200,7 @@ bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0) ;should 
 bin_i=where(bin_n,n_bin_use)
 
 ind_ref=indgen(max(bin_n))
-n_vis=Float(Total(bin_n))
+n_vis=(Total(double(bin_n)))
 FOR fi=0L,n_f_use-1 DO n_vis_arr[fi_use[fi]]=Total(Long(xmin[fi,*] GT 0))
 obs.nf_vis=n_vis_arr
 

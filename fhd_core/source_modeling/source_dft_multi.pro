@@ -1,7 +1,8 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
     conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,silent=silent,$
     dimension=dimension,elements=elements,n_pol=n_pol,spectral_model_uv_arr=spectral_model_uv_arr,$
-    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,double_precision=double_precision,_Extra=extra
+    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,double_precision=double_precision,$
+    gaussian_source_models = gaussian_source_models,_Extra=extra
 
 alpha_corr=0.
 IF Keyword_Set(obs) THEN BEGIN
@@ -48,6 +49,72 @@ FOR a_i=0L,n_alpha-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO source_array_use[alpha_i[a_i]].flux.(pol_i)*=flux_scale
 ENDFOR
 
+IF keyword_set(gaussian_source_models) then begin
+  if tag_exist(source_array, 'shape') then begin
+    gaussian_ra=make_array(n_elements(source_array),/double)
+    gaussian_dec=make_array(n_elements(source_array),/double)
+    gaussian_rot=make_array(n_elements(source_array),/double)
+    for source_ind=0,n_elements(source_array)-1 do begin
+      if tag_exist(source_array[source_ind], 'shape') then begin
+        ;Convert from FWHM in arcsec to stddev in deg
+        gaussian_ra[source_ind]=source_array[source_ind].shape.x/(7200*sqrt(2*alog(2)))
+        gaussian_dec[source_ind]=source_array[source_ind].shape.y/(7200*sqrt(2*alog(2)))
+        ;Convert from deg to rad
+        gaussian_rot[source_ind]=source_array[source_ind].shape.angle*!Pi/180.
+      endif else begin
+        gaussian_ra[source_ind]=0
+        gaussian_dec[source_ind]=0
+        gaussian_rot[source_ind]=0
+      endelse
+    endfor
+    inds_gauss=where(gaussian_ra,n_gauss_params,complement=inds_point)
+    if n_gauss_params eq 0 then begin
+      print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
+      undefine, gaussian_source_models
+    endif else begin
+
+      ;Gaussian source model major and minor axes RA DEC
+      ;           _ a_2,d_2
+      ;          / \
+      ; a_3,d_3 |   | a_1,d_1
+      ;          \_/
+      ;   a_4,d_4
+      ;
+      ;Convert from deg to pixels
+      ;Assumption: the RA/DEC of the gaussian can be approximated in a xy coord system where RA->x and DEC->y. DEC translates
+      ;well to xy coords, but RA does not, especially near celestial poles.
+      gaussian_ra_angular = acos(cos(gaussian_ra*!Dpi/180)/cos(source_array.dec*!Dpi/180)^2 - tan(source_array.dec*!Dpi/180)^2) * 180/!Dpi
+      gaussian_ra_vals = [[source_array.ra+.5*gaussian_ra_angular*cos(gaussian_rot)], [source_array.ra-.5*gaussian_dec*sin(gaussian_rot)], $
+        [source_array.ra-.5*gaussian_ra_angular*cos(gaussian_rot)], [source_array.ra+.5*gaussian_dec*sin(gaussian_rot)]]
+      gaussian_dec_vals = [[source_array.dec+.5*gaussian_ra_angular*sin(gaussian_rot)], [source_array.dec+.5*gaussian_dec*cos(gaussian_rot)], $
+        [source_array.dec-.5*gaussian_ra_angular*sin(gaussian_rot)], [source_array.dec-.5*gaussian_dec*cos(gaussian_rot)]]
+      undefine, gaussian_ra, gaussian_ra_angular, gaussian_dec, gaussian_rot
+
+      ;Curved sky gaussian widths in pixel coords
+      apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=gaussian_ra_vals, dec_arr=gaussian_dec_vals, /ad2xy
+      gaussian_x = sqrt((gaussian_x_vals[*,0]-gaussian_x_vals[*,2])^2+(gaussian_y_vals[*,0]-gaussian_y_vals[*,2])^2)
+      gaussian_y = sqrt((gaussian_x_vals[*,1]-gaussian_x_vals[*,3])^2+(gaussian_y_vals[*,1]-gaussian_y_vals[*,3])^2)
+
+      ;Flat sky gaussian widths in pixel coords
+      flat_sky_gaussian_x = sqrt((gaussian_ra_vals[*,0]-gaussian_ra_vals[*,2])^2+(gaussian_dec_vals[*,0]-gaussian_dec_vals[*,2])^2)/obs.degpix
+      flat_sky_gaussian_y = sqrt((gaussian_ra_vals[*,1]-gaussian_ra_vals[*,3])^2+(gaussian_dec_vals[*,1]-gaussian_dec_vals[*,3])^2)/obs.degpix
+      undefine, gaussian_ra_vals, gaussian_dec_vals    
+
+      ;Projection effect on total integrated flux *in uv-space only*
+      flux_factor = (gaussian_x*gaussian_y)/(flat_sky_gaussian_x*flat_sky_gaussian_y)
+      FOR pol_i=0,n_pol-1 DO BEGIN
+          source_array_use[inds_gauss].flux.(pol_i)*=flux_factor[inds_gauss]
+      ENDFOR
+      gaussian_x[inds_point]=0
+      gaussian_y[inds_point]=0
+      undefine, flux_factor, flat_sky_gaussian_x, flat_sky_gaussian_y
+
+    endelse
+  endif else begin
+    print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
+    undefine, gaussian_source_models
+  endelse
+ENDIF
 
 IF Keyword_Set(n_spectral) THEN BEGIN
 ;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg
@@ -67,7 +134,9 @@ IF Keyword_Set(n_spectral) THEN BEGIN
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision)
+                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision,$
+                gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
+                gaussian_rot=gaussian_rot)
             FOR pol_i=0,n_pol-1 DO BEGIN
                 FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
                     single_uv=Complexarr(dimension,elements)
@@ -93,7 +162,9 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-            conserve_memory=conserve_memory,silent=silent,double_precision=double_precision)
+            conserve_memory=conserve_memory,silent=silent,double_precision=double_precision,$
+            gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
+            gaussian_rot=gaussian_rot)
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
@@ -130,7 +201,9 @@ ENDIF ELSE BEGIN
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision)
+                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision,$
+                gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
+                gaussian_rot=gaussian_rot)
             FOR pol_i=0,n_pol-1 DO BEGIN
                 single_uv=Complexarr(dimension,elements)
                 single_uv[uv_i_use]=*model_uv_vals[pol_i] 
@@ -155,7 +228,9 @@ ENDIF ELSE BEGIN
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-            silent=silent,conserve_memory=conserve_memory,double_precision=double_precision)
+            silent=silent,conserve_memory=conserve_memory,double_precision=double_precision,$
+            gaussian_source_models=gaussian_source_models, gaussian_x=gaussian_x, gaussian_y=gaussian_y, $
+            gaussian_rot=gaussian_rot)
         FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
         undefine_fhd,model_uv_vals,flux_arr
     ENDELSE

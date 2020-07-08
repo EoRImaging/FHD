@@ -30,7 +30,8 @@ FUNCTION beam_power,antenna1,antenna2,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i
   if keyword_set(kernel_window) then image_power_beam *= *(antenna1.pix_window)
 
   ;Generate UV beam and interpolate to a super resolution
-  psf_base_single=dirty_image_generate(image_power_beam,/no_real)
+  ;Beam uses the forward FFT for the sky->UV transformation (note that the image uses the inverse FFT)
+  psf_base_single=fft_shift(FFT(fft_shift(image_power_beam)))
   psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
   
   s=size(psf_base_superres, /dimensions)

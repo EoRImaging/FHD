@@ -18,7 +18,6 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     renorm_factor[pol_i]*=((*beam_base[pol_i])[obs.obsx,obs.obsy])^2.
     renorm_factor[pol_i]/=(degpix*!DtoR)^2. ; Convert from Jy/pixel to Jy/sr
 ENDFOR
-renorm_factor[*]=mean(renorm_factor)
 
 RETURN,renorm_factor
 

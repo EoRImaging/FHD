@@ -47,7 +47,7 @@ WHILE n_sources LE 0 DO BEGIN
     source_ra=ra_hpx[source_i]
     source_dec=dec_hpx[source_i]
     
-    ;IF (n_src<max_add_sources)+si GE max_sources THEN max_add_sources=max_sources-(si+1)
+    ;IF (n_src<max_add_sources)+si GE max_deconvolution_components THEN max_add_sources=max_deconvolution_components-(si+1)
     IF n_src GT max_add_sources THEN source_i=source_i[0:max_add_sources-1]
     n_src=Long(N_Elements(source_i))
     

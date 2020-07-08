@@ -1,5 +1,5 @@
 PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cleanup, recalculate_all=recalculate_all,$
-    mapfn_recalculate=mapfn_recalculate, grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate, grid_recalculate=grid_recalculate,beam_recalculate=beam_recalculate,$
     n_pol=n_pol, flag_visibilities=flag_visibilities, silent=silent, deconvolve=deconvolve, transfer_mapfn=transfer_mapfn,$
     tile_flag_list=tile_flag_list, diffuse_calibrate=diffuse_calibrate, diffuse_model=diffuse_model,$
     file_path_fhd=file_path_fhd, force_data=force_data, force_no_data=force_no_data, freq_start=freq_start, freq_end=freq_end,$
@@ -29,7 +29,7 @@ log_filepath=file_path_fhd+'_log.txt'
 IF Keyword_Set(!Journal) THEN journal
 
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
-    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,beam_recalculate=beam_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     transfer_weights=transfer_weights,file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
@@ -74,10 +74,15 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(obs,params,vis_arr,direction=deproject_w_term)
     
     ;Read in or construct a new beam model. Also sets up the structure PSF
-    print,'Calculating beam model'
-    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
-    IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
-    jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
+    IF keyword_set(beam_recalculate) THEN BEGIN
+        print,'Calculating beam model'
+        psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+        IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
+        jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
+    ENDIF ELSE BEGIN
+        fhd_save_io,status_str,psf,file_path_fhd=file_path_fhd,var_name='psf',/restore
+        fhd_save_io,status_str,jones,file_path_fhd=file_path_fhd,var_name='jones',/restore
+    ENDELSE
 
     IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;
@@ -149,7 +154,9 @@ IF data_flag LE 0 THEN BEGIN
         vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
         if keyword_set(cal_stop) then begin
           fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;need beam_integral for PS
-          message, "cal_stop initiated"
+          print, "cal_stop initiated. Returning."
+          run_report, start_mem, t0, silent=silent
+          RETURN
         endif
     ENDIF
     
@@ -230,8 +237,8 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
 ENDIF
   
-IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,_Extra=extra
+IF N_Elements(cal) EQ 0 THEN fhd_save_io,status_str,cal,var='cal',/restore,file_path_fhd=file_path_fhd,/compatibility_mode,_Extra=extra
+IF N_Elements(obs) EQ 0 THEN fhd_save_io,status_str,obs,var='obs',/restore,file_path_fhd=file_path_fhd,/compatibility_mode,_Extra=extra
 ;deconvolve point sources using fast holographic deconvolution
 IF Keyword_Set(deconvolve) THEN BEGIN
     print,'Deconvolving point sources'
@@ -272,12 +279,7 @@ ENDIF
 undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,vis_weights,vis_model_arr
 undefine_fhd,obs,cal,jones,layout,psf,antenna,fhd_params,skymodel,skymodel_cal,skymodel_update
 
-end_mem = (MEMORY(/HIGHWATER) - start_mem)/1e9
-timing=Systime(1)-t0
-IF ~Keyword_Set(silent) THEN BEGIN
-  print,'Memory required (GB): ',Strn(Round(end_mem))
-  print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
-ENDIF
+run_report, start_mem, t0, silent=silent
 print,''
 !except=except
 

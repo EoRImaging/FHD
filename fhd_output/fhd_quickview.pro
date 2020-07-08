@@ -285,8 +285,10 @@ renorm_factor = get_image_renormalization(obs_out,weights_arr=weights_arr,beam_b
 for pol_i=0,n_pol-1 do begin
   *instr_dirty_arr[pol_i]*=renorm_factor[pol_i]
   IF model_flag THEN *instr_model_arr[pol_i]*=renorm_factor[pol_i]
-  IF source_flag THEN *instr_sources[pol_i]*=renorm_factor[pol_i]
-  IF Keyword_Set(ring_radius) THEN *instr_rings[pol_i]*=renorm_factor[pol_i]
+  IF source_flag THEN BEGIN
+    *instr_sources[pol_i]*=renorm_factor[pol_i]
+    IF Keyword_Set(ring_radius) THEN *instr_rings[pol_i]*=renorm_factor[pol_i]
+  ENDIF
 endfor
 
 stokes_dirty_arr=stokes_cnv(instr_dirty_arr,jones_out,beam=beam_base_out,/square,_Extra=extra)
@@ -503,6 +505,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             FitsFast,instr_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
             FitsFast,instr_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i]
             FitsFast,stokes_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i+4]
+            FitsFast,stokes_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i+4]
         ENDIF
         FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
