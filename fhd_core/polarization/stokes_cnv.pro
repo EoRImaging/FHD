@@ -64,7 +64,6 @@ stokes_inv_term1=[.5,.5,.5,.5]
 stokes_inv_term2=[.5,-.5,-complex(0,.5),complex(0,.5)]
 stokes_list1=[0,0,2,2]
 stokes_list2=[1,1,3,3]
-IF n_pol EQ 1 THEN stokes_list1=(stokes_list2=[0,0,0,0])
 
 IF Keyword_Set(no_dipole_projection_rotation) THEN BEGIN
     ;this is meant as a debugging tool!
