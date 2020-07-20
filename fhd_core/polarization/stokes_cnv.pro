@@ -64,7 +64,6 @@ stokes_inv_term1=[.5,.5,.5,.5]
 stokes_inv_term2=[.5,-.5,-complex(0,.5),complex(0,.5)]
 stokes_list1=[0,0,2,2]
 stokes_list2=[1,1,3,3]
-IF n_pol EQ 1 THEN stokes_list1=(stokes_list2=[0,0,0,0])
 
 IF Keyword_Set(no_dipole_projection_rotation) THEN BEGIN
     ;this is meant as a debugging tool!
@@ -124,8 +123,9 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     sx=sx[s_use]
     sy=sy[s_use]
     p_ind=p_ind[s_use]
-    flux_arr=Ptrarr(n_pol,/allocate)
-    flux_pq=Ptrarr(n_pol,/allocate)
+    if keyword_set(inverse) then n_pol_stokes=4 else n_pol_stokes=n_pol
+    flux_arr=Ptrarr(n_pol_stokes,/allocate)
+    flux_pq=Ptrarr(n_pol_stokes,/allocate)
     flux_out=Ptrarr(n_pol,/allocate)
     ;if the beam model is supplied as a vector, assume it is already calculated for each component. Otherwise, assume it is a 2D array the same size as the image
     IF size(*beam_use[0],/n_dimension) GT 1 THEN FOR pol_i=0,n_pol-1 DO *beam_use[pol_i]=(*beam_use[pol_i])[sx,sy]
@@ -138,11 +138,11 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
         stokes_i_offset=0
-        FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i+4)
-        FOR pol_i=0,n_pol-1 DO *flux_pq[pol_i]=(stokes_inv_term1[pol_i]*(*flux_arr[stokes_list1[pol_i]])+stokes_inv_term2[pol_i]*(*flux_arr[stokes_list2[pol_i]]))
+        FOR pol_i=0,n_pol_stokes-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i+4)
+        FOR pol_i=0,n_pol_stokes-1 DO *flux_pq[pol_i]=(stokes_inv_term1[pol_i]*(*flux_arr[stokes_list1[pol_i]])+stokes_inv_term2[pol_i]*(*flux_arr[stokes_list2[pol_i]]))
         FOR pol_i2=0,n_pol-1 DO BEGIN
             IF pol_i2 LE 1 THEN *flux_out[pol_i2]=Fltarr(ns) ELSE *flux_out[pol_i2]=Complexarr(ns) 
-            FOR pol_i1=0,n_pol-1 DO BEGIN
+            FOR pol_i1=0,n_pol_stokes-1 DO BEGIN
                 *flux_out[pol_i2]+=*flux_pq[pol_i1]*(*p_map[pol_i1,pol_i2])[p_ind]
             ENDFOR
             *flux_out[pol_i2]*=*beam_use[pol_i2]
