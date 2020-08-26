@@ -74,6 +74,27 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     print,'Calibration transferred from ' + cal_file_use
     timing=Systime(1)-t0_0
 
+    ;;Check that the flagging of the restored cal is accurately captured in the obs structure
+    ;; and broadcast flags across all pols  
+    for pol_i=0,obs.n_pol-1 do begin
+      tile_total=FLTARR(cal.n_tile)
+      freq_total=FLTARR(cal.n_freq)
+      for tile_i=0, cal.n_tile-1 do tile_total[tile_i] = total(abs((*cal.gain[pol_i])[*,tile_i]),/NAN)
+      for freq_i=0, cal.n_freq-1 do freq_total[freq_i] = total(abs((*cal.gain[pol_i])[freq_i,*]),/NAN)
+      tile_flag_inds = where(tile_total EQ 0,n_tile_flag)                          
+      freq_flag_inds = where(freq_total EQ 0,n_freq_flag)
+      if n_tile_flag GT 0 then begin
+        (*obs.baseline_info).tile_use[tile_flag_inds]=0
+        temp = where((*obs.baseline_info).tile_use EQ 0,n_tile_flag)
+        obs.n_tile_flag = n_tile_flag
+      endif
+      if n_freq_flag GT 0 then begin
+        (*obs.baseline_info).freq_use[freq_flag_inds]=0
+        temp = where((*obs.baseline_info).freq_use EQ 0,n_freq_flag)
+        obs.n_freq_flag = n_freq_flag
+      endif
+    endfor
+
     if keyword_set(model_transfer) then begin
       ;Option to transfer pre-made and unflagged model visbilities
       vis_model_arr=PTRARR(obs.n_pol,/allocate)
