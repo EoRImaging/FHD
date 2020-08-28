@@ -3,7 +3,7 @@ PRO vis_noise_calc,obs,vis_arr,vis_weights,noise_arr=noise_arr,bi_use=bi_use,_Ex
 
 n_pol=obs.n_pol
 n_freq=Long(obs.n_freq)
-noise_arr=fltarr(n_pol,n_freq)
+noise_arr=dblarr(n_pol,n_freq)
 
 IF obs.n_time LT 2 THEN RETURN ;exit if not enough data to calculate noise
 IF N_Elements(bi_use) NE 2 THEN BEGIN

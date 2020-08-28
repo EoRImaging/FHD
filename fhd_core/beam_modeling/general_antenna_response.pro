@@ -3,16 +3,18 @@ FUNCTION general_antenna_response,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_im
 n_ant=obs.n_tile
 n_ant_pol=antenna[0].n_pol ;this needs to be the same for all antennas!
 pix_use=*antenna[0].pix_use
-icomp=Complex(0,1)
+icomp=DComplex(0,1)
 c_light_vacuum=299792458.
+Pi=!DPi
+DtoR=Pi/180
 
 response=Ptrarr(n_ant_pol,n_ant)
 nfreq_bin=antenna[0].nfreq_bin
 freq_center=antenna[0].freq
 
-proj_east=Sin(za_arr*!DtoR)*Sin(az_arr*!DtoR) & proj_east_use=Reform(proj_east,(psf_image_dim)^2.)
-proj_north=Sin(za_arr*!DtoR)*Cos(az_arr*!DtoR) & proj_north_use=Reform(proj_north,(psf_image_dim)^2.)
-proj_z=Cos(za_arr*!DtoR) & proj_z_use=Reform(proj_z,(psf_image_dim)^2.)
+proj_east=Sin(za_arr*DtoR)*Sin(az_arr*DtoR) & proj_east_use=Reform(proj_east,(psf_image_dim)^2.)
+proj_north=Sin(za_arr*DtoR)*Cos(az_arr*DtoR) & proj_north_use=Reform(proj_north,(psf_image_dim)^2.)
+proj_z=Cos(za_arr*DtoR) & proj_z_use=Reform(proj_z,(psf_image_dim)^2.)
 
 ;;initialize antenna structure
 ;antenna_str={n_pol:n_ant_pol,antenna_type:instrument,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
@@ -42,10 +44,10 @@ FOR pol_i=0,n_ant_pol-1 DO BEGIN
         
         response_grp=Ptrarr(nfreq_bin)
         FOR freq_i=0L,nfreq_bin-1 DO BEGIN
-            response=Complexarr(N_elements(pix_use))
-            Kconv=(2.*!Pi)*(freq_center[freq_i]/c_light_vacuum) 
+            response=DComplexarr(N_elements(pix_use))
+            Kconv=(2.*Pi)*(freq_center[freq_i]/c_light_vacuum) 
             antenna_gain_arr=Exp(-icomp*Kconv*D_d)
-            voltage_delay=Exp(icomp*2.*!Pi*delays*(freq_center[freq_i])*Reform((*gain[pol_i])[freq_i,*])) 
+            voltage_delay=Exp(icomp*2.*Pi*delays*(freq_center[freq_i])*Reform((*gain[pol_i])[freq_i,*])) 
             meas_current=(*coupling[pol_i,freq_i])#voltage_delay
             zenith_norm=Mean((*coupling[pol_i,freq_i])#Replicate(1.,n_ant_elements))
             meas_current/=zenith_norm
