@@ -197,7 +197,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             ENDIF
         ENDFOR
         IF i EQ max_cal_iter THEN BEGIN
-            print,String(format='("Calibration reached max iterations before converging for pol_i: ", A, " freq_i: ",A)', Strn(pol_i), Strn(fi)) 
+            print, String(format='("Calibration reached max iterations before converging for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
+                          Strn(pol_i), Strn(fi), Strn(conv_test[fii,i-1], format="(e12.2)"), Strn(conv_thresh, format="(e12.2)")) 
         ENDIF
         convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
         Ptr_free,A_ind_arr
