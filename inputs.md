@@ -66,5 +66,6 @@ All sky catalogs are located in `catalog_data`.
 * **simulation/100_source_plaw_1-1000mJy.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 1 mJy - 1 Jy
 * **simulation/100_source_plaw_0.1-100mJy.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
 * **simulation/test_RFI_source_1061315448_zenith.sav**: A 1 Jy source at zenith (which is close to phase center) for MWA obsid 1061315448
+* **simulation/test_source_1Jy_RA_350_dec_-26.8.sav**: A 1 Jy source at RA 350, dec -26.8 (degrees).
 
 ## Calibration files <br />
