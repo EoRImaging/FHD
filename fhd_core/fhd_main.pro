@@ -73,16 +73,11 @@ IF data_flag LE 0 THEN BEGIN
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end
     IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(obs,params,vis_arr,direction=deproject_w_term)
     
-    ;Read in or construct a new beam model. Also sets up the structure PSF
-    IF keyword_set(beam_recalculate) THEN BEGIN
-        print,'Calculating beam model'
-        psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
-        IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
-        jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
-    ENDIF ELSE BEGIN
-        fhd_save_io,status_str,psf,file_path_fhd=file_path_fhd,var_name='psf',/restore
-        fhd_save_io,status_str,jones,file_path_fhd=file_path_fhd,var_name='jones',/restore
-    ENDELSE
+    ;Construct a new beam model. Also sets up the structure PSF
+    print,'Calculating beam model'
+    psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
+    IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
+    jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask,_Extra=extra)
 
     IF Keyword_Set(transfer_weights) THEN BEGIN
         flag_visibilities=0 ;

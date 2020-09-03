@@ -31,12 +31,6 @@ IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
-IF N_Elements(beam_recalculate) EQ 0 THEN beam_recalculate=recalculate_all
-IF Keyword_Set(beam_recalculate) THEN BEGIN
-    status_str.psf=0
-    status_str.antenna=0
-    status_str.jones=0
-ENDIF
 
 IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE BEGIN
     IF status_str.obs GT 0 THEN BEGIN
@@ -79,11 +73,6 @@ ENDIF ELSE IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=0
 IF mapfn_recalculate GT 0 THEN grid_recalculate=1
 IF grid_recalculate GT 0 THEN data_flag=0
 
-IF Keyword_Set(beam_recalculate) THEN BEGIN
-    status_str.psf=0
-    status_str.antenna=0
-    status_str.jones=0
-ENDIF
 status_str.hpx_cnv=0
 IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 IF Keyword_Set(grid_recalculate) THEN BEGIN
