@@ -5,10 +5,10 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     
   IF Keyword_Set(cal_reflection_mode_theory) OR Keyword_Set(cal_reflection_mode_file) $
     OR Keyword_Set(cal_reflection_mode_delay) OR Keyword_Set(cal_reflection_hyperresolve) THEN BEGIN
-    IF (cal.mode_fit EQ 0) THEN cal.mode_fit=1.
+    IF not Keyword_Set(cal.mode_fit) THEN cal.mode_fit=1.
   ENDIF
   cal_mode_fit=cal.mode_fit
-  IF (cal_mode_fit EQ 1) AND keyword_set(cal_reflection_mode_theory) then $
+  IF Keyword_Set(cal_mode_fit) AND keyword_set(cal_reflection_mode_theory) then $
     if (abs(cal_reflection_mode_theory) GT 1) then cal_mode_fit = cal_reflection_mode_theory
   IF Tag_exist(cal,"amp_degree") THEN amp_degree = cal.amp_degree ELSE amp_degree=2
   IF Tag_exist(cal,"phase_degree") THEN phase_degree = cal.phase_degree ELSE phase_degree=1
