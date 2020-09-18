@@ -3,7 +3,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
     rephase_weights=rephase_weights,n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
     restrict_hpx_inds=restrict_hpx_inds,hpx_radius=hpx_radius,cmd_args=cmd_args,save_uvf=save_uvf,save_imagecube=save_imagecube,$
-    obs_out=obs_out,psf_out=psf_out,ps_tile_flag_list=ps_tile_flag_list,_Extra=extra
+    obs_out=obs_out,psf_out=psf_out,ps_tile_flag_list=ps_tile_flag_list,beam_ptr=beam_ptr,_Extra=extra
     
   t0=Systime(1)
   
@@ -184,31 +184,61 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     undefine_fhd,weights_arr1,variance_arr1,residual_arr1,dirty_arr1,model_arr1 ;free memory for beam_arr later!
     IF iter EQ n_iter-1 THEN undefine_fhd,beam_arr
     
+    ;set up the pointers for later arrays 
+  
+    dirty_img_arr=Ptrarr(n_pol,n_freq,/allocate)
+    weights_img_arr=Ptrarr(n_pol,n_freq,/allocate)
+    variance_img_arr=Ptrarr(n_pol,n_freq,/allocate)
+    model_img_arr=Ptrarr(n_pol,n_freq,/allocate)
+    
+    dirty_uv_arr=Ptrarr(n_pol,n_freq,/allocate)
+    weights_uv_arr=Ptrarr(n_pol,n_freq,/allocate)
+    variance_uv_arr=Ptrarr(n_pol,n_freq,/allocate)
+    model_uv_arr=Ptrarr(n_pol,n_freq,/allocate)
+    
     FOR pol_i=0,n_pol-1 DO BEGIN      
         IF dirty_flag THEN BEGIN
           dirty_cube=fltarr(n_hpx,n_freq_use)
             ;write index in much more efficient memory access order
-          FOR fi=Long64(0),n_freq_use-1 DO dirty_cube[n_hpx*fi]=Temporary(*dirty_hpx_arr[pol_i,fi])
+            ;remove temporary to avoid losing arrays
+          FOR fi=Long64(0),n_freq_use-1 DO dirty_cube[n_hpx*fi]=*dirty_hpx_arr[pol_i,fi]
         ENDIF
         
         IF model_flag THEN BEGIN
           model_cube=fltarr(n_hpx,n_freq_use)
-          FOR fi=Long64(0),n_freq_use-1 DO model_cube[n_hpx*fi]=Temporary(*model_hpx_arr[pol_i,fi])
+          FOR fi=Long64(0),n_freq_use-1 DO model_cube[n_hpx*fi]=*model_hpx_arr[pol_i,fi]
         ENDIF
         
         IF residual_flag THEN BEGIN
             res_cube=fltarr(n_hpx,n_freq_use)
-            FOR fi=Long64(0),n_freq_use-1 DO res_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[pol_i,fi])
+            FOR fi=Long64(0),n_freq_use-1 DO res_cube[n_hpx*fi]=*residual_hpx_arr[pol_i,fi]
         ENDIF
         
         weights_cube=fltarr(n_hpx,n_freq_use)
-        FOR fi=Long64(0),n_freq_use-1 DO weights_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[pol_i,fi])
+        FOR fi=Long64(0),n_freq_use-1 DO weights_cube[n_hpx*fi]=*weights_hpx_arr[pol_i,fi]
         
         variance_cube=fltarr(n_hpx,n_freq_use)
-        FOR fi=Long64(0),n_freq_use-1 DO variance_cube[n_hpx*fi]=Temporary(*variance_hpx_arr[pol_i,fi])
+        FOR fi=Long64(0),n_freq_use-1 DO variance_cube[n_hpx*fi]=*variance_hpx_arr[pol_i,fi]
         
         beam_squared_cube=fltarr(n_hpx,n_freq_use)
-        FOR fi=Long64(0),n_freq_use-1 DO beam_squared_cube[n_hpx*fi]=Temporary(*beam_hpx_arr[pol_i,fi])
+        FOR fi=Long64(0),n_freq_use-1 DO beam_squared_cube[n_hpx*fi]=*beam_hpx_arr[pol_i,fi]
+        
+        ;now do the FFTs back and normalize 
+        
+        FOR fi=Long64(0),n_freq_use-1 DO *dirty_img_arr[pol_i,fi]=reform(*dirty_hpx_arr[pol_i,fi], SQRT(n_hpx), SQRT(n_hpx))
+        FOR fi=Long64(0),n_freq_use-1 DO *dirty_uv_arr[pol_i,fi]=fft_shift(fft(fft_shift((*dirty_img_arr[pol_i,fi])*(obs_out.degpix*!DtoR)^2), /inverse))
+        
+
+        FOR fi=Long64(0),n_freq_use-1 DO *weights_img_arr[pol_i,fi]=reform(*weights_hpx_arr[pol_i,fi], SQRT(n_hpx), SQRT(n_hpx))
+        FOR fi=Long64(0),n_freq_use-1 DO *weights_uv_arr[pol_i,fi]=fft_shift(fft(fft_shift((*weights_img_arr[pol_i,fi])*(obs_out.degpix*!DtoR)^2), /inverse))
+        
+
+        FOR fi=Long64(0),n_freq_use-1 DO *variance_img_arr[pol_i,fi]=reform(*variance_hpx_arr[pol_i,fi], SQRT(n_hpx), SQRT(n_hpx))
+        FOR fi=Long64(0),n_freq_use-1 DO *variance_uv_arr[pol_i,fi]=fft_shift(fft(fft_shift((*variance_img_arr[pol_i,fi])*(obs_out.degpix*!DtoR)^2), /inverse))
+
+        FOR fi=Long64(0),n_freq_use-1 DO *model_img_arr[pol_i,fi]=reform(*model_hpx_arr[pol_i,fi], SQRT(n_hpx), SQRT(n_hpx))
+        FOR fi=Long64(0),n_freq_use-1 DO *model_uv_arr[pol_i,fi]=fft_shift(fft(fft_shift((*model_img_arr[pol_i,fi])*(obs_out.degpix*!DtoR)^2), /inverse))
+       
         
         ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save,_Extra=extra 
@@ -219,9 +249,21 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force,_Extra=extra 
         dirty_cube=(model_cube=(res_cube=(weights_cube=(variance_cube=(beam_squared_cube=0)))))
     ENDFOR
+    
+    image_filepath = file_path_fhd+ '_' + uvf_name[iter] +'_interped_images.sav'
+    save, filename = image_filepath, dirty_img_arr, weights_img_arr, variance_img_arr, model_img_arr, obs_out, /compress
+    
+    uvf_filepath = file_path_fhd+ '_' + uvf_name[iter] +'_gridded_uvf.sav'
+    save, filename = uvf_filepath, dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, /compress
+    
     undefine_fhd,dirty_hpx_arr,model_hpx_arr,weights_hpx_arr,variance_hpx_arr,beam_hpx_arr,residual_hpx_arr
 ENDFOR
+
+
+
 obs_out=obs ;for return
+
+
 Ptr_free,vis_weights_use
 timing=Systime(1)-t0
 IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
