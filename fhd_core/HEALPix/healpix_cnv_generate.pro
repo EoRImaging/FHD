@@ -17,7 +17,6 @@ ENDIF ELSE IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,fil
 t00=Systime(1)
 dimension=obs.dimension
 elements=obs.elements
-print, dimension, elements
 
 IF N_Elements(hpx_radius) EQ 0 THEN BEGIN
     IF Keyword_Set(mask) THEN BEGIN
@@ -34,15 +33,14 @@ ENDIF ELSE radius=hpx_radius
 
 ;all angles in DEGREES
 ;uses RING index scheme
-print, obs.grid_info
 ;check if a string, if it is assume it is a filepath to a save file with the desired indices 
 ; (will NOT be over-written with the indices)
 IF Keyword_Set(restrict_hpx_inds) AND (size(restrict_hpx_inds,/type) NE 7) THEN restrict_hpx_inds=observation_healpix_inds_select(obs)
 IF size(restrict_hpx_inds,/type) EQ 7 THEN BEGIN 
     file_path_use=restrict_hpx_inds
-    IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=Rootdir('fhd'),subdir='Observations')
+   IF file_test(file_path_use) EQ 0 THEN file_path_use=filepath(file_path_use,root=Rootdir('fhd'),subdir='Observations')
     
-    IF  file_test(file_path_use) THEN BEGIN
+   IF  file_test(file_path_use) THEN BEGIN
         hpx_inds=getvar_savefile(file_path_use,'hpx_inds')
         nside_test=getvar_savefile(file_path_use,names=sav_contents)
         IF Max(strmatch(StrLowCase(sav_contents),'nside')) EQ 1 THEN nside=getvar_savefile(file_path_use,'nside') ELSE BEGIN
@@ -54,7 +52,7 @@ ENDIF
 IF ~Keyword_Set(nside) THEN BEGIN
     pix_sky=4.*!Pi*!RaDeg^2./Product(Abs(obs.astr.cdelt))
     Nside=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/pixel
-    print, "i here", Nside
+   
 ENDIF
 npix=nside2npix(nside)
 
@@ -63,22 +61,17 @@ IF Keyword_Set(divide_pixel_area) THEN BEGIN
 ENDIF ELSE pixel_area_cnv=1. ;turn this off for now
 
 IF N_Elements(hpx_inds) GT 1 THEN BEGIN
-    ;pix2vec_ring,nside,hpx_inds,pix_coords
-    ;vec2ang,pix_coords,pix_dec,pix_ra,/astro
-    ;apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+    ;set up orthoslant grid
     x_vals = repmat(findgen(obs.dimension), 1, obs.dimension)
     y_vals = Transpose(x_vals)
-    print,N_ELEMENTS(x_vals)
+    ;shape them correctly
     x_vals = reform(x_vals, obs.dimension^2)
     y_vals = reform(y_vals, obs.dimension^2)
+    ;transform to ra/dec, back to orthoslant. For different observations obs would be different 
+    ;between the two  
     apply_astrometry, obs, x_arr=x_vals, y_arr=y_vals, ra_arr=ra_vals, dec_arr=dec_vals, /xy2ad
-    ;SAVE,FILENAME='pix_coords.sav',pix_ra,pix_dec 
-    ;file = '/home/lmberkhout/data/MWA/pipeline_scripts/FHD_IDL_wrappers/pix_coords.sav'
-    ;RESTORE,file
-    ;load obs_ra obs_dec 
     apply_astrometry, obs, ra_arr=ra_vals, dec_arr=dec_vals, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
-    ;apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
-    ;SAVE,FILENAME='hpxcords.sav',xv_hpx,yv_hpx
+
 
 ENDIF ELSE BEGIN
     ang2vec,obs.obsdec,obs.obsra,cen_coords,/astro
@@ -171,6 +164,7 @@ FOR i=0L,n_img_use-1L DO BEGIN
         
 ENDFOR
 ;sa=weighting function?
+;set hpx inds to be the right thing for the orthoslant 
 hpx_inds = findgen(obs.dimension^2)
 hpx_cnv={nside:nside,ija:ija,sa:sa,i_use:i_use,inds:hpx_inds}
 IF tag_exist(obs,'healpix') THEN BEGIN
