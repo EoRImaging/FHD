@@ -1,4 +1,4 @@
-PRO vis_average,vis_arr,vis_weights,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=timing
+PRO vis_average,vis_arr,vis_weights,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=timing,n_freq=n_freq
 ;need to modify params if averaging in time (no freq dependence) 
 ;need to modify hdr if averaging in frequency (no time dependence)
 t0=Systime(1)
@@ -57,6 +57,8 @@ IF Keyword_Set(vis_time_average) THEN BEGIN
     ww0=Reform(params.ww,n_baselines,n_time0)
     baseline_arr0=Reform(params.baseline_arr,n_baselines,n_time0)
     time_arr0=Reform(params.time,n_baselines,n_time0)
+    antenna1_arr0=Reform(params.antenna1,n_baselines,n_time0)
+    antenna2_arr0=Reform(params.antenna2,n_baselines,n_time0)
     params=0
     n_time=Floor(n_time0/vis_time_average)
     uu_arr=Make_array(n_baselines*n_time,type=Size(uu0,/type))
@@ -64,6 +66,8 @@ IF Keyword_Set(vis_time_average) THEN BEGIN
     ww_arr=Make_array(n_baselines*n_time,type=Size(ww0,/type))
     baseline_arr=Make_array(n_baselines*n_time,type=Size(baseline_arr0,/type))
     time_arr=Make_array(n_baselines*n_time,type=Size(time_arr0,/type))
+    antenna1_arr=Make_array(n_baselines*n_time,type=Size(antenna1_arr0,/type))
+    antenna2_arr=Make_array(n_baselines*n_time,type=Size(antenna2_arr0,/type))
     FOR ti=0L,n_time-1 DO BEGIN
         ;uu_arr[bin_offset[ti]] uses the most efficient IDL subscript notation to fill uu_arr starting at element bin_offset[ti]
         uu_arr[bin_offset[ti]]=Total(uu0[*,ti*vis_time_average:(ti+1)*vis_time_average-1],2)/vis_time_average
@@ -71,8 +75,10 @@ IF Keyword_Set(vis_time_average) THEN BEGIN
         ww_arr[bin_offset[ti]]=Total(ww0[*,ti*vis_time_average:(ti+1)*vis_time_average-1],2)/vis_time_average
         baseline_arr[bin_offset[ti]]=Total(baseline_arr0[*,ti*vis_time_average:(ti+1)*vis_time_average-1],2)/vis_time_average
         time_arr[bin_offset[ti]]=Total(time_arr0[*,ti*vis_time_average:(ti+1)*vis_time_average-1],2)/vis_time_average
+        antenna1_arr[bin_offset[ti]]=antenna1_arr0[*,ti*vis_time_average]
+        antenna2_arr[bin_offset[ti]]=antenna2_arr0[*,ti*vis_time_average]
     ENDFOR
-    params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time_arr}
+    params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time_arr,antenna1:antenna1_arr,antenna2:antenna2_arr}
     
     FOR pol_i=0,n_pol-1 DO BEGIN
         vis_old=Reform(Temporary(*vis_arr[pol_i]),n_freq,n_baselines,n_time0)
