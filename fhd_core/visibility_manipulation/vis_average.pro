@@ -1,4 +1,4 @@
-PRO vis_average,vis_arr,vis_weights,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=timing,n_freq=n_freq
+PRO vis_average,vis_arr,vis_weights,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=timing
 ;need to modify params if averaging in time (no freq dependence) 
 ;need to modify hdr if averaging in frequency (no time dependence)
 t0=Systime(1)
@@ -51,6 +51,7 @@ IF Keyword_Set(vis_freq_average) THEN BEGIN
 ENDIF
 ;params={uu:uu_arr,vv:vv_arr,ww:ww_arr,baseline_arr:baseline_arr,time:time}
 IF Keyword_Set(vis_time_average) THEN BEGIN
+    n_freq=hdr.n_freq
     vis_time_average=Float(vis_time_average) ;make sure floating point division is used later
     uu0=Reform(params.uu,n_baselines,n_time0)
     vv0=Reform(params.vv,n_baselines,n_time0)
