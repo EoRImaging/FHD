@@ -49,8 +49,8 @@ IF Keyword_Set(no_frequency_flagging) OR Keyword_Set(unflag_all) THEN do_nothing
           IF N_Elements(channel_edge_flag_width) EQ 0 THEN channel_edge_flag_width=Ceil(2./freq_avg)
           coarse_channel_width=Round(32./freq_avg)
           fine_channel_i=lindgen(n_freq) mod coarse_channel_width
-          channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width)
-          FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[channel_edge_flag,*]=0
+          channel_edge_flag=where(fine_channel_i<((coarse_channel_width-1)-fine_channel_i) LT channel_edge_flag_width, n_flagged)
+          IF n_flagged GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[channel_edge_flag,*]=0
       END
       ELSE:
   END
