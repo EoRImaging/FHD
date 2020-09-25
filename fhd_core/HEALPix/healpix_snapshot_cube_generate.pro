@@ -186,28 +186,71 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     
     FOR pol_i=0,n_pol-1 DO BEGIN      
         IF dirty_flag THEN BEGIN
-          dirty_cube=fltarr(n_hpx,n_freq_use)
-            ;write index in much more efficient memory access order
+          case size(*dirty_hpx_arr[pol_i,0],/type) of 
+            4: dirty_cube=fltarr(n_hpx,n_freq_use)
+            5: dirty_cube=dblarr(n_hpx,n_freq_use)
+            6: dirty_cube=complex(fltarr(n_hpx,n_freq_use))
+            9: dirty_cube=dcomplex(dblarr(n_hpx,n_freq_use))
+            else: dirty_cube=fltarr(n_hpx,n_freq_use)
+          endcase 
+          ;write index in much more efficient memory access order
           FOR fi=Long64(0),n_freq_use-1 DO dirty_cube[n_hpx*fi]=Temporary(*dirty_hpx_arr[pol_i,fi])
         ENDIF
         
         IF model_flag THEN BEGIN
-          model_cube=fltarr(n_hpx,n_freq_use)
+          case size(*model_hpx_arr[pol_i,0],/type) of
+            4: model_cube=fltarr(n_hpx,n_freq_use)
+            5: model_cube=dblarr(n_hpx,n_freq_use)
+            6: model_cube=complex(fltarr(n_hpx,n_freq_use))
+            9: model_cube=dcomplex(dblarr(n_hpx,n_freq_use))
+            else: model_cube=fltarr(n_hpx,n_freq_use)
+          endcase
           FOR fi=Long64(0),n_freq_use-1 DO model_cube[n_hpx*fi]=Temporary(*model_hpx_arr[pol_i,fi])
         ENDIF
         
         IF residual_flag THEN BEGIN
-            res_cube=fltarr(n_hpx,n_freq_use)
+          case size(*residual_hpx_arr[pol_i,0],/type) of
+            4: res_cube=fltarr(n_hpx,n_freq_use)
+            5: res_cube=dblarr(n_hpx,n_freq_use)
+            6: res_cube=complex(fltarr(n_hpx,n_freq_use))
+            9: res_cube=dcomplex(dblarr(n_hpx,n_freq_use))
+            else: res_cube=fltarr(n_hpx,n_freq_use)
+          endcase
             FOR fi=Long64(0),n_freq_use-1 DO res_cube[n_hpx*fi]=Temporary(*residual_hpx_arr[pol_i,fi])
         ENDIF
         
-        weights_cube=fltarr(n_hpx,n_freq_use)
+        case size(*weights_hpx_arr[pol_i,0],/type) of
+          4: begin
+               weights_cube=fltarr(n_hpx,n_freq_use)
+               variance_cube=fltarr(n_hpx,n_freq_use)
+             end
+          5: begin
+               weights_cube=dblarr(n_hpx,n_freq_use)
+               variance_cube=dblarr(n_hpx,n_freq_use)
+             end
+          6: begin
+               weights_cube=complex(fltarr(n_hpx,n_freq_use))
+               variance_cube=complex(fltarr(n_hpx,n_freq_use))
+             end
+          9: begin
+               weights_cube=dcomplex(dblarr(n_hpx,n_freq_use))
+               variance_cube=dcomplex(dblarr(n_hpx,n_freq_use))
+             end
+          else: begin
+               weights_cube=fltarr(n_hpx,n_freq_use)
+               variance_cube=fltarr(n_hpx,n_freq_use)
+             end
+        endcase
         FOR fi=Long64(0),n_freq_use-1 DO weights_cube[n_hpx*fi]=Temporary(*weights_hpx_arr[pol_i,fi])
-        
-        variance_cube=fltarr(n_hpx,n_freq_use)
         FOR fi=Long64(0),n_freq_use-1 DO variance_cube[n_hpx*fi]=Temporary(*variance_hpx_arr[pol_i,fi])
         
-        beam_squared_cube=fltarr(n_hpx,n_freq_use)
+        case size(*beam_hpx_arr[pol_i,0],/type) of
+          4: beam_squared_cube=fltarr(n_hpx,n_freq_use)
+          5: beam_squared_cube=dblarr(n_hpx,n_freq_use)
+          6: beam_squared_cube=complex(fltarr(n_hpx,n_freq_use))
+          9: beam_squared_cube=dcomplex(dblarr(n_hpx,n_freq_use))
+          else: beam_squared_cube=fltarr(n_hpx,n_freq_use)
+        endcase
         FOR fi=Long64(0),n_freq_use-1 DO beam_squared_cube[n_hpx*fi]=Temporary(*beam_hpx_arr[pol_i,fi])
         
         ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
