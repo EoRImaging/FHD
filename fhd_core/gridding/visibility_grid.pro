@@ -124,10 +124,15 @@ IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_fn=Ptrarr(dimension,elements)
 ENDIF ELSE map_flag=0
 
+;Flag baselines on their maximum and minimum extent in the frequency range
 dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
-dist_test=Float(frequency_array#dist_test)
-flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+dist_test_max=max((*obs.baseline_info).freq)*dist_test
+dist_test_min=min((*obs.baseline_info).freq)*dist_test
+flag_dist_baseline=where((dist_test_min LT min_baseline) $
+  OR (dist_test_max GT max_baseline),n_dist_flag)
 dist_test=0
+dist_test_min=0
+dist_test_max=0
 
 conj_i=where(ky_arr GT 0,n_conj)
 conj_flag=intarr(N_Elements(ky_arr)) 
@@ -158,15 +163,15 @@ dx1dy1_arr = Temporary(dx_arr) * Temporary(dy_arr)
 xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
 ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
 
-range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
-range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
+range_test_x_i=where(((xmin+(psf_dim/2-1)) LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
+range_test_y_i=where(((ymin+(psf_dim/2-1)) LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
 IF n_dist_flag GT 0 THEN BEGIN
-    xmin[flag_dist_i]=-1
-    ymin[flag_dist_i]=-1
+    xmin[*,flag_dist_baseline]=-1
+    ymin[*,flag_dist_baseline]=-1
 ENDIF
 
 IF vis_weight_switch THEN BEGIN

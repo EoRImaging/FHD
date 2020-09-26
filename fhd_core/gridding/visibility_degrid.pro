@@ -102,8 +102,8 @@ dx1dy1_arr = Temporary(dx_arr) * Temporary(dy_arr)
 xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
 ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
 
-range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
-range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
+range_test_x_i=where(((xmin+(psf_dim/2-1)) LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
+range_test_y_i=where(((ymin+(psf_dim/2-1)) LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
@@ -229,10 +229,10 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
           box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,degrid_flag=1,_Extra=extra)
     endif else begin
         IF interp_flag THEN $
-          FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
+          FOR ii=0L,vis_n-1 DO box_matrix[double(psf_dim3)*ii]=$
             interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
                 y_offset=y_off[ii],dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
-        ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
+        ELSE FOR ii=0L,vis_n-1 DO box_matrix[double(psf_dim3)*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
     endelse
 
     t4_0=Systime(1)
