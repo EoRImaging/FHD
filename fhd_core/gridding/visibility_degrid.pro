@@ -137,18 +137,9 @@ CASE 1 OF
 ENDCASE
 arr_type=Size(init_arr,/type)
 
-time_check_interval=Ceil(n_bin_use/10.)
-t1=0
-t2=0
-t3=0
-t4=0
-t5=0
 image_uv_use=image_uv
 psf_dim3=LONG64(psf_dim*psf_dim)
 
-;pdim=size(psf_base,/dimension)
-;psf_base_dag=Ptrarr(pdim,/allocate)
-;FOR pdim_i=0L,Product(pdim)-1 DO *psf_base_dag[pdim_i]=Conj(*psf_base[pdim_i])
 IF Keyword_Set(n_spectral) THEN BEGIN
     prefactor=Ptrarr(n_spectral)
     FOR s_i=0,n_spectral-1 DO prefactor[s_i]=Ptr_new(deriv_coefficients(s_i+1,/divide_factorial))
@@ -156,16 +147,11 @@ IF Keyword_Set(n_spectral) THEN BEGIN
 ENDIF
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
-    t1_0=Systime(1)
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     ind0=inds[0]
     
     x_off=x_offset[inds]
     y_off=y_offset[inds]
-    dx1dy1 = dx1dy1_arr[inds]
-    dx1dy0 = dx1dy0_arr[inds]
-    dx0dy1 = dx0dy1_arr[inds]
-    dx0dy0 = dx0dy0_arr[inds]
         
     xmin_use=xmin[ind0] ;should all be the same, but don't want an array
     ymin_use=ymin[ind0] ;should all be the same, but don't want an array
@@ -174,69 +160,74 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     fbin=freq_bin_i[freq_i]
      
     vis_n=bin_n[bin_i[bi]]
-    baseline_inds=Floor(inds/n_freq_use) mod nbaselines
-    group_id=group_arr[inds]
-    group_max=Max(group_id)+1
+    baseline_inds=(inds/n_freq_use) mod nbaselines
+
     
-;    psf_conj_flag=intarr(vis_n)
-;    IF n_conj GT 0 THEN BEGIN
-;        bi_vals=Floor(inds/n_freq_use)
-;        psf_conj_flag=conj_flag[bi_vals]
-;    ENDIF 
-    
-    IF interp_flag THEN n_xyf_bin=vis_n ELSE BEGIN
+    box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) 
+    box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
+
+    IF interp_flag THEN BEGIN
+        dx1dy1 = dx1dy1_arr[inds]
+        dx1dy0 = dx1dy0_arr[inds]
+        dx0dy1 = dx0dy1_arr[inds]
+        dx0dy0 = dx0dy0_arr[inds]
+
+        ind_remap_flag=0
+        bt_index = inds / n_freq_use
+
+        FOR ii=0L,vis_n-1 DO BEGIN
+            box_matrix[psf_dim3*ii]=$
+              interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
+              y_offset=y_off[ii],dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii])
+        ENDFOR
+
+    ENDIF ELSE BEGIN
+        group_id=group_arr[inds]
+        group_max=Max(group_id)+1
         xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.)*group_max+group_id
         xyf_si=Sort(xyf_i)
         xyf_i=xyf_i[xyf_si]
         xyf_ui=Uniq(xyf_i)
         n_xyf_bin=N_Elements(xyf_ui)
-    ENDELSE
-    
-    IF (vis_n GT Ceil(1.1*n_xyf_bin)) AND ~keyword_set(beam_per_baseline) THEN BEGIN ;there might be a better selection criteria to determine which is most efficient
-        ind_remap_flag=1
+   
+        ;there might be a better selection criteria to determine which is most efficient 
+        IF (vis_n GT Ceil(1.1*n_xyf_bin)) AND ~keyword_set(beam_per_baseline) THEN BEGIN
+            ind_remap_flag=1
         
-        inds=inds[xyf_si]
-        inds_use=[xyf_si[xyf_ui]]
+            inds=inds[xyf_si]
+            inds_use=[xyf_si[xyf_ui]]
         
-        freq_i=freq_i[inds_use]
-        x_off=x_off[inds_use] 
-        y_off=y_off[inds_use]
-        fbin=fbin[inds_use]
-        baseline_inds=baseline_inds[inds_use]
-;        psf_conj_flag=psf_conj_flag[inds_use]
+            freq_i=freq_i[inds_use]
+            x_off=x_off[inds_use] 
+            y_off=y_off[inds_use]
+            fbin=fbin[inds_use]
+            baseline_inds=baseline_inds[inds_use]
+;           psf_conj_flag=psf_conj_flag[inds_use]
         
-        IF n_xyf_bin EQ 1 THEN ind_remap=intarr(vis_n) ELSE BEGIN
-            hist_inds_u=histogram(xyf_ui,/binsize,min=0,reverse_ind=ri_xyf)
-            ind_remap=ind_ref[ri_xyf[0:n_elements(hist_inds_u)-1]-ri_xyf[0]]
+            IF n_xyf_bin EQ 1 THEN ind_remap=intarr(vis_n) ELSE BEGIN
+                hist_inds_u=histogram(xyf_ui,/binsize,min=0,reverse_ind=ri_xyf)
+                ind_remap=ind_ref[ri_xyf[0:n_elements(hist_inds_u)-1]-ri_xyf[0]]
+            ENDELSE
+        
+            vis_n=Long64(n_xyf_bin)
+        ENDIF ELSE BEGIN
+            ind_remap_flag=0
+            bt_index = inds / n_freq_use
         ENDELSE
-        
-        vis_n=Long64(n_xyf_bin)
-    ENDIF ELSE BEGIN
-        ind_remap_flag=0
-        bt_index = inds / n_freq_use
+
+        if keyword_set(beam_per_baseline) then begin
+            box_matrix = grid_beam_per_baseline(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
+              xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
+              box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,degrid_flag=1,_Extra=extra)
+        endif else begin
+            FOR ii=0L,vis_n-1 DO BEGIN
+                ;more efficient array subscript notation
+                box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]]
+            ENDFOR
+        endelse
+
     ENDELSE
-    
-    box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) 
-    
-    box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
-    t3_0=Systime(1)
-    t2+=t3_0-t1_0
 
-    ;Make the beams on the fly with corrective phases given the baseline location
-    if keyword_set(beam_per_baseline) then begin
-        box_matrix = grid_beam_per_baseline(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
-          xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$ 
-          box_matrix, vis_n, beam_int=beam_int, beam2_int=beam2_int, n_grp_use=n_grp_use,degrid_flag=1,_Extra=extra)
-    endif else begin
-        IF interp_flag THEN $
-          FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=$
-            interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
-                y_offset=y_off[ii],dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) $
-        ELSE FOR ii=0L,vis_n-1 DO box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]] ;more efficient array subscript notation
-    endelse
-
-    t4_0=Systime(1)
-    t3+=t4_0-t3_0
     IF Keyword_Set(n_spectral) THEN BEGIN
         vis_box=matrix_multiply(box_matrix,Temporary(box_arr),/atranspose)
         freq_term_arr=Rebin(transpose(freq_delta[freq_i]),psf_dim3,vis_n,/sample)
@@ -255,15 +246,11 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         ENDFOR
         ptr_free,box_arr_ptr
     ENDIF ELSE vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
-    t5_0=Systime(1)
-    t4+=t5_0-t4_0
     IF ind_remap_flag THEN vis_box=vis_box[ind_remap]
     visibility_array[inds]=vis_box
     
-    t5_1=Systime(1)
-    t5+=t5_1-t5_0
-    t1+=t5_1-t1_0 
 ENDFOR
+
 
 if keyword_set(beam_per_baseline) then begin
     beam2_int*=weight_invert(n_grp_use)/kbinsize^2. ;factor of kbinsize^2 is FFT units normalization
@@ -288,6 +275,6 @@ ENDIF
 IF ~Ptr_valid(vis_return) THEN vis_return=Ptr_new(visibility_array,/no_copy)
 
 timing=Systime(1)-t0
-IF not Keyword_Set(silent) THEN print,timing,t1,t2,t3,t4,t5
+
 RETURN,vis_return
 END
