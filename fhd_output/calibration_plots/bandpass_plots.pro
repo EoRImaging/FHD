@@ -33,8 +33,6 @@ ENDIF ELSE BEGIN
     n_cable=N_Elements(cable_length_ref)    
     yrange=[min(bandpass_arr[1:(n_pol*n_cable),freq_use]),max(bandpass_arr[1:(n_pol*n_cable),freq_use])]
     ytickv=[yrange[0],mean(yrange),yrange[1]]
-    ;PRINT, n_cable 
-    ;n_cable=N_Elements(cable_length_ref)
     Title=Strarr(n_cable)
     FOR cable_i=0,n_cable-1 DO Title[cable_i]=String(format='(A,"m cables (",A,")")',Strn(Round(cable_length_ref[cable_i])),Strn(N_Elements(*tile_use_arr[cable_i])))
     color_arr=['blue','red','green','purple','yellow','black','cyan','orange']

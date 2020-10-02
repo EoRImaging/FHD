@@ -11,6 +11,7 @@ instrument=obs.instrument
 tile_gain_fn=instrument+'_beam_setup_gain' ;mwa_beam_setup_gain
 tile_init_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
 
+;If other phases of the mwa are used, use the proper gain and init functions
 IF STRMID(instrument,0,3) EQ 'mwa' THEN BEGIN
   tile_gain_fn='mwa_beam_setup_gain'
   tile_init_fn='mwa_beam_setup_init'
