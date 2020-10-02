@@ -6,8 +6,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     calibration_visibilities_subtract=calibration_visibilities_subtract,vis_baseline_hist=vis_baseline_hist,$
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,$
     calibration_auto_fit=calibration_auto_fit,cal_stop=cal_stop, model_transfer=model_transfer,$
-    sim_over_calibrate=sim_over_calibrate,debug_phase_longrun=debug_phase_longrun,sim_perf_calibrate=sim_perf_calibrate,$
-    debug_ave_ref=debug_ave_ref,debug_amp_longrun=debug_amp_longrun,auto_ratio_calibration=auto_ratio_calibration,_Extra=extra
+    sim_over_calibrate=sim_over_calibrate,sim_perf_calibrate=sim_perf_calibrate,$
+    auto_ratio_calibration=auto_ratio_calibration,_Extra=extra
     
   t0_0=Systime(1)
   error=0
@@ -95,13 +95,16 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
       endif
     endfor
 
+    ;; Option to transfer pre-made and unflagged model visbilities
     if keyword_set(model_transfer) then begin
-      ;Option to transfer pre-made and unflagged model visbilities
       vis_model_arr=PTRARR(obs.n_pol,/allocate)
+      
       for pol_i=0, obs.n_pol-1 do begin
-        if ~file_test(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav') then $
-          message, model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav not found during model transfer.'
-        vis_model_arr[pol_i] = getvar_savefile(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav','vis_model_ptr')
+        transfer_name = model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav'
+        if ~file_test(transfer_name) then begin
+          message, transfer_name + ' not found during model transfer.'
+        endif
+        vis_model_arr[pol_i] = getvar_savefile(transfer_name,'vis_model_ptr')
       endfor
     endif
 
@@ -109,27 +112,30 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   ENDIF
   
   if ~keyword_set(model_transfer) then begin
-    vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,model_uv_arr=model_uv_arr,/fill_model_vis,$
-      timing=model_timing,silent=silent,error=error,/calibration_flag,spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
+    vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,$
+      model_uv_arr=model_uv_arr,/fill_model_vis,timing=model_timing,silent=silent,error=error,/calibration_flag,$
+      spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
   endif else begin
-    ;Option to transfer pre-made and unflagged model visbilities
+    ;; Option to transfer pre-made and unflagged model visbilities
     vis_model_arr=PTRARR(obs.n_pol,/allocate)
+
     for pol_i=0, obs.n_pol-1 do begin
-      if ~file_test(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav') then $
-        message, model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav not found during model transfer.'
-      vis_model_arr[pol_i] = getvar_savefile(model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav','vis_model_ptr')
+      transfer_name = model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav'
+      if ~file_test(transfer_name) then $
+        message, transfer_name + ' not found during model transfer.'
+      vis_model_arr[pol_i] = getvar_savefile(transfer_name,'vis_model_ptr')
     endfor
   endelse
   t1=Systime(1)-t0_0
 
-  ;Option to save unflagged model visibilities as part of a calibration-only loop.
+  ;; Option to save unflagged model visibilities as part of a calibration-only loop.
   if keyword_set(cal_stop) then begin
-    vis_export,obs,status_str,vis_model_arr,file_path_fhd=file_dirname(file_path_fhd) + '/cal_prerun/' $
-      + file_basename(file_path_fhd) ,/compress,/model
-    save, model_uv_arr, filename=file_dirname(file_path_fhd) + '/cal_prerun/' + file_basename(file_path_fhd) + '_model_uv_arr.sav'
+    name_cal_stop = file_dirname(file_path_fhd) + '/cal_prerun/' + file_basename(file_path_fhd)
+    vis_export,obs,status_str,vis_model_arr,file_path_fhd=name_cal_stop ,/compress,/model
+    save, model_uv_arr, filename = name_cal_stop + '_model_uv_arr.sav'
   endif
 
-  ;Calculate auto-correlation visibilities, optionally use them for initial calibration estimates
+  ;; Calculate auto-correlation visibilities, optionally use them for initial calibration estimates
   vis_auto=vis_extract_autocorr(obs,vis_arr = vis_ptr,/time_average,auto_tile_i=auto_tile_i)
   IF Keyword_Set(cal.auto_initialize) THEN BEGIN
     IF Keyword_Set(vis_auto) THEN $
@@ -138,7 +144,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   ENDIF
   vis_auto_model=vis_extract_autocorr(obs,vis_arr = vis_model_arr,/time_average,auto_tile_i=auto_tile_i)
 
-  ;Set initial calibration given filepath to a cal sav file, the actual cal structure, or the cal gain pointer
+  ;; Set initial calibration given filepath to a cal sav file, the actual cal structure, or the cal gain pointer
   CASE size(initial_calibration,/type) OF
     0:;do nothing if undefined
     7:BEGIN ;type code 7 is string
@@ -153,7 +159,8 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     END
     8:cal.gain=initial_calibration.gain ;type code 8 is structure
     10:cal.gain=initial_calibration ;type code 10 is pointer
-    ELSE:IF Keyword_Set(initial_calibration) THEN initial_calibration=file_path_fhd+'_cal' ;if set to a numeric type, assume this calibration solution will be wanted for future iterations
+    ;if set to a numeric type, assume this calibration solution will be wanted for future iterations
+    ELSE:IF Keyword_Set(initial_calibration) THEN initial_calibration=file_path_fhd+'_cal'
   ENDCASE
 
   IF Keyword_Set(error) THEN BEGIN
@@ -161,7 +168,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     RETURN,vis_ptr
   ENDIF
 
-  ;extract information from the structures
+  ;; extract information from the structures
   pol_names=obs.pol_names
   n_pol=obs.n_pol
   nc_pol=cal.n_pol
@@ -186,7 +193,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     FOR pol_i=0,n_pol-1 DO *vis_weight_ptr[pol_i]=flag_init
   ENDIF
 
-  ;calibration loop
+  ;; calibration loop
   IF N_Elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=0
   IF Keyword_Set(calibration_visibilities_subtract) OR Keyword_Set(vis_baseline_hist) $
     OR Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=1
@@ -205,20 +212,27 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   t2+=t3_a-t2_a
   cal_base=Pointer_copy(cal)
 
-  ;Perform bandpass (amp and phase per fine freq) and polynomial fitting (low order amp and phase fit plus cable reflection fit)
+  ;; Perform bandpass (amp+phase per fine freq) and polynomial fitting (low order amp+phase fit plus cable reflection fit)
   IF Keyword_Set(bandpass_calibrate) THEN BEGIN
-    IF Keyword_Set(auto_ratio_calibration) THEN auto_ratio=gain_cal_auto_divide(obs,cal,vis_auto=vis_auto,auto_tile_i=auto_tile_i)
-    cal_bandpass=vis_cal_bandpass(cal,obs,params,cal_remainder=cal_remainder,auto_ratio_calibration=auto_ratio_calibration,file_path_fhd=file_path_fhd,_Extra=extra)
-    
+    IF Keyword_Set(auto_ratio_calibration) THEN BEGIN
+      cal=cal_auto_ratio(obs,cal,auto_ratio=auto_ratio,vis_auto=vis_auto,auto_tile_i=auto_tile_i,/divide)
+    ENDIF
+
+    cal_bandpass=vis_cal_bandpass(cal,obs,params,cal_remainder=cal_remainder,auto_ratio_calibration=auto_ratio_calibration,$
+      file_path_fhd=file_path_fhd,_Extra=extra)
+ 
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
-        cal_polyfit=vis_cal_polyfit(cal_remainder,obs,auto_ratio=auto_ratio,_Extra=extra)
-        cal=vis_cal_combine(cal_polyfit,cal_bandpass)
+      cal_polyfit=vis_cal_polyfit(cal_remainder,obs,auto_ratio=auto_ratio,_Extra=extra)
+
+      cal=vis_cal_combine(cal_polyfit,cal_bandpass)
     ENDIF ELSE cal=cal_bandpass
-    IF Keyword_Set(auto_ratio_calibration) THEN gain_cal_auto_remultiply,obs,cal,auto_ratio,auto_tile_i=auto_tile_i
     
+    IF Keyword_Set(auto_ratio_calibration) THEN BEGIN
+      cal=cal_auto_ratio(obs,cal,auto_ratio=auto_ratio,auto_tile_i=auto_tile_i,/remultiply)    
+    ENDIF
   ENDIF ELSE IF Keyword_Set(calibration_polyfit) THEN cal=vis_cal_polyfit(cal,obs,_Extra=extra)
    
-  ;In-situ simulation -- forced calibration solutions
+  ;; In-situ simulation -- forced calibration solutions
   if keyword_set(sim_over_calibrate) then begin
     *cal.gain[0] = (*cal_base.gain[0])
     *cal.gain[1] = (*cal_base.gain[1])
@@ -230,29 +244,31 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     print, "Forcing perfect solutions on the simulated gains"
   endif
     
-  ;Get amp from auto-correlation visibilities for plotting (or optionally for the calibration solution itself)
-  IF Keyword_Set(vis_auto_model) THEN cal_auto=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
-  IF Keyword_Set(calibration_auto_fit) THEN cal_res=vis_cal_subtract(cal_base,cal_auto) ELSE cal_res=vis_cal_subtract(cal_base,cal)
+  ;; Get amp from auto-correlation visibilities for plotting (or optionally for the calibration solution itself)
+  IF Keyword_Set(vis_auto_model) THEN BEGIN
+    cal_auto=vis_cal_auto_fit(obs,cal,vis_auto=vis_auto,vis_model_auto=vis_auto_model,auto_tile_i=auto_tile_i)
+  ENDIF
+  IF Keyword_Set(calibration_auto_fit) THEN BEGIN
+    cal_res=vis_cal_subtract(cal_base,cal_auto)
+  ENDIF ELSE cal_res=vis_cal_subtract(cal_base,cal)
   
   basename=file_basename(file_path_fhd)
   dirpath=file_dirname(file_path_fhd)
   image_path=filepath(basename,root=dirpath,sub='output_images')
   IF ~Keyword_Set(no_png) THEN BEGIN
-      ;make sure to plot both, if autocorrelations are used for the calibration solution
+      ;; make sure to plot both, if autocorrelations are used for the calibration solution
       plot_cals,cal,obs,cal_res=cal_res,cal_auto=cal_auto,file_path_base=image_path,_Extra=extra
   ENDIF
 
-  if keyword_set(debug_phase_longrun) OR keyword_set(debug_amp_longrun) THEN $
-    debug_calibration_options,obs, cal, cal_base, debug_phase_longrun=debug_phase_longrun, debug_amp_longrun=debug_amp_longrun
- 
   IF Keyword_Set(calibration_auto_fit) THEN cal=cal_auto
   vis_cal=vis_calibration_apply(vis_ptr,cal, vis_model_ptr=vis_model_arr, vis_weight_ptr=vis_weight_ptr)
   cal.gain_residual=cal_res.gain
   undefine_fhd,cal_base
 
-  IF Keyword_Set(vis_baseline_hist) THEN $
+  IF Keyword_Set(vis_baseline_hist) THEN BEGIN
     vis_baseline_hist,obs,params,vis_arr=vis_cal,vis_model_arr=vis_model_arr,file_path_fhd=file_path_fhd
-  
+  ENDIF  
+
   IF ~Keyword_Set(return_cal_visibilities) THEN preserve_visibilities=0
   IF Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO *vis_cal[pol_i]-=*vis_model_arr[pol_i]
@@ -260,7 +276,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   ENDIF
   IF ~Keyword_Set(return_cal_visibilities) THEN undefine_fhd,vis_model_arr
 
-  ;Statistics for metadata reporting
+  ;; Statistics for metadata reporting
   cal_gain_avg=Fltarr(nc_pol)
   cal_res_avg=Fltarr(nc_pol)
   cal_res_restrict=Fltarr(nc_pol)
