@@ -81,21 +81,24 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
   dirty_arr=Ptrarr(n_pol,nf,/allocate)
   weights_arr=Ptrarr(n_pol,nf,/allocate)
   variance_arr=Ptrarr(n_pol,nf,/allocate)
-  IF Keyword_Set(model_flag) THEN model_arr=Ptrarr(n_pol,nf,/allocate)
+  IF Keyword_Set(model_flag) THEN BEGIN
+    model_arr=Ptrarr(n_pol,nf,/allocate)
+    model_return=1
+  ENDIF
   vis_n_arr=Fltarr(n_pol,nf)
   
   IF Keyword_Set(rephase_weights) THEN rephase_use=phase_shift_uv_image(obs_out,/to_orig_phase) ELSE rephase_use=1.
+  IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
+  IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=extract_subarray(init_arr,x_range,y_range)
+  
   t_grid=0
   FOR pol_i=0,n_pol-1 DO BEGIN
     vis_ptr=vis_data_arr[pol_i]
     model_ptr=vis_model_arr[pol_i]
     freq_use=(*obs_out.baseline_info).freq_use
     n_vis_use=0.
-    IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
-    IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=extract_subarray(init_arr,x_range,y_range)
     FOR fi=0L,nf-1 DO BEGIN
       fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
-      IF Keyword_Set(model_flag) THEN model_return=1
       variance_holo=1 ;initialize
       weights_holo=1 ;initialize
       IF nf_use EQ 0 THEN n_vis=0 ELSE $
