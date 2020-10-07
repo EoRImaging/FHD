@@ -177,10 +177,6 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
             ENDIF
 
         ENDFOR
-        
-        IF Keyword_Set(save_imagecube) THEN BEGIN
-            save, filename = imagecube_filepath[iter], dirty_arr1, residual_arr1, model_arr1, weights_arr1, variance_arr1, beam_arr, nf_vis_use, obs_out, /compress
-        ENDIF
 
         ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save,_Extra=extra
@@ -191,6 +187,11 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force,_Extra=extra
 
     ENDFOR
+    
+    IF Keyword_Set(save_imagecube) THEN BEGIN
+        save, filename = imagecube_filepath[iter], dirty_arr1, residual_arr1, model_arr1, weights_arr1, variance_arr1, beam_arr, nf_vis_use, obs_out, /compress
+    ENDIF
+    
     undefine_fhd,weights_arr1,variance_arr1,residual_arr1,dirty_arr1,model_arr1 ;free memory for beam_arr later!
     dirty_cube=(model_cube=(res_cube=(weights_cube=(variance_cube=(beam_squared_cube=0)))))
     IF iter EQ n_iter-1 THEN undefine_fhd,beam_arr
