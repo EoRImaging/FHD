@@ -159,6 +159,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
         ENDFOR
         
         gain_new=Complexarr(n_tile_use)
+        convergence_list = Fltarr(max_cal_iter)
+        conv_gain_list = Fltarr(max_cal_iter)
         FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
             vis_use=vis_data2
             
@@ -182,7 +184,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             IF phase_fit_iter-i GT 0 THEN gain_new*=Abs(gain_old)*weight_invert(Abs(gain_new)) ;fit only phase at first
 ;          IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
 ;            gain_new*=Mean(Abs(gain_new[where(gain_new)]))*weight_invert(Abs(gain_new)) ;then fit only average amplitude
-            gain_curr=(gain_new+gain_old)/2.
+            IF Keyword_Set(cal.adaptive_gain) THEN conv_gain = calculate_adaptive_gain(conv_gain_list, convergence_list, i, base_gain=base_gain) ELSE conv_gain = base_gain
+            gain_curr=(gain_new*conv_gain + gain_old*base_gain)/(base_gain + conv_gain)
             dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
             diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
             IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
@@ -190,7 +193,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             if ~keyword_set(no_ref_tile) then begin
               gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
             endif
-            conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
+            convergence_single = Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
+            convergence_list[i] = convergence_single
+            conv_test[fii,i] = convergence_single
             IF i GT phase_fit_iter THEN IF conv_test[fii,i] LE conv_thresh THEN BEGIN
                 n_converged += 1
                 BREAK
