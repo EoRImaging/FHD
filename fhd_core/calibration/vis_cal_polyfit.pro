@@ -274,7 +274,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
             gain_temp=rebin(transpose(reform(resautos[freq_use])),nmodes,nf_use)
 
           ENDIF ELSE BEGIN
-            gain_temp=rebin_complex(transpose(reform(gain_arr[freq_use,tile_i])),nmodes,nf_use) ; dimension manipulation, add dim for mode fitting
+            ; dimension manipulation, add dim for mode fitting
+            gain_temp=rebin_complex(transpose(reform(gain_arr[freq_use,tile_i] - mean(gain_arr[freq_use,tile_i]))),nmodes,nf_use)
           ENDELSE
           freq_mat=rebin(transpose(freq_use),nmodes,nf_use) ; freq_use matrix to multiply/collapse in fit
           test_fits=Total(exp(i_comp*2.*!Pi/n_freq*modes*freq_mat)*gain_temp,2) ; Perform DFT of gains to test modes
