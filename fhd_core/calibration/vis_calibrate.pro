@@ -12,6 +12,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
   t0_0=Systime(1)
   error=0
   timing=-1
+  initialize_fhd_struct, 'cal', obs=obs, params=params
   heap_gc
   IF N_Elements(flag_calibration) EQ 0 THEN flag_calibration=1
   
