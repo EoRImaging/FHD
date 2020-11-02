@@ -95,7 +95,7 @@ nbaselines=obs.nbaselines
 n_samples=obs.n_time
 n_freq_use=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
-psf_dim3=psf_dim*psf_dim
+psf_dim3=LONG64(psf_dim*psf_dim)
 bi_use_reduced=bi_use mod nbaselines
 
 if keyword_set(beam_per_baseline) then begin
@@ -163,8 +163,8 @@ dx1dy1_arr = Temporary(dx_arr) * Temporary(dy_arr)
 xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
 ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
 
-range_test_x_i=where(((xmin+(psf_dim/2-1)) LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
-range_test_y_i=where(((ymin+(psf_dim/2-1)) LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
+range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
+range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
 
 IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
 IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
