@@ -161,6 +161,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
 
+**calibration_base_gain**: The relative weight to give the old calibration solution when averaging with the new. Set to 1. to give equal weight, to 2. to give more weight to the old solution and slow down convergence, or to 0.5 to give greater weight to the new solution and attempt to speed up convergence. If use_adaptive_calibration_gain is set, the weight of the new calibration solutions will be calculated in the range calibration_base_gain/2. to 1.0 <br />
+  -*Default*: 1.0 <br />
+
 **calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
   -*Default*: filepath(`instrument`+'_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*eor_wrapper_default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
@@ -230,6 +233,12 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, the full file path to a npy file, or the full file path to a fits file that adheres to calfits format. Note that this will calibrate, but not generate a model. Please set model visibility keywords separately to generate a subtraction model. <br />
   -*Default*: not set <br />
+
+**use_adaptive_calibration_gain**: Controls whether to use a Kalman Filter to adjust the gain to use for each iteration of calculating calibration. See calibration_base_gain for more information. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+  -*eor_wrapper_defaults*: not set <br />
+
 
 **vis_baseline_hist**: !Q <br />
   -*Default*: 1 <br />
