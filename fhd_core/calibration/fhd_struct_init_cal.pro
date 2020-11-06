@@ -33,7 +33,6 @@ IF N_Elements(max_cal_baseline) EQ 0 THEN max_cal_baseline=obs.max_baseline ELSE
 IF N_Elements(cal_time_average) EQ 0 THEN cal_time_average=1 ;time average visibilities before calculating calibration solutions by default
 IF N_Elements(min_cal_solutions) EQ 0 THEN min_cal_solutions=5
 IF N_Elements(max_cal_iter) EQ 0 THEN max_cal_iter=100L
-IF N_Elements(phase_fit_iter) EQ 0 THEN phase_fit_iter=Long((Floor(max_cal_iter/4.)<Floor(Sqrt(max_cal_iter)))>4) ELSE phase_fit_iter=Long(phase_fit_iter)
 IF N_Elements(ref_antenna) EQ 0 THEN ref_antenna=1L
 ref_antenna_name=(*obs.baseline_info).tile_names[ref_antenna]
 IF N_Elements(cal_convergence_threshold) EQ 0 THEN cal_convergence_threshold=1E-7
@@ -59,6 +58,7 @@ IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0.
 IF N_Elements(use_adaptive_calibration_gain) EQ 0 THEN use_adaptive_calibration_gain=0
 ;The relative weight to give the old calibration solution when averaging with the new. 
 IF N_Elements(calibration_base_gain) EQ 0 THEN calibration_base_gain=1.
+IF N_Elements(phase_fit_iter) EQ 0 THEN phase_fit_iter=Long((calibration_base_gain*4)>4) ELSE phase_fit_iter=Long(phase_fit_iter)
 convergence=Ptrarr(2)
 mode_params=Ptrarr(n_pol,n_tile)
 auto_params=Ptrarr(2)
