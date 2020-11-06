@@ -214,12 +214,12 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
                         ; 
                         n_converged += 1
                         BREAK
-                    ENDIF ELSE IF convergence_strict GE conv_test[fii,i-2] BEGIN
+                    ENDIF ELSE IF convergence_strict GE conv_test[fii,i-2] THEN BEGIN
                         ; If both measures of convergence are getting worse, we need to stop.
                         print, String(format='("Calibration diverged at iteration ", A, " for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
                             Strn(i), Strn(pol_i), Strn(fi), Strn(conv_test[fii,i-1], format="(e12.2)"), Strn(conv_thresh, format="(e12.2)"))
                         BREAK
-                    ENDELSE
+                    ENDIF
                 ENDIF
             ENDIF
         ENDFOR
