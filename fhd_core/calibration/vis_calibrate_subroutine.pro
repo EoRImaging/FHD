@@ -166,6 +166,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
         convergence_loose = 0.
         FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
             convergence_loose_prev = convergence_loose
+            divergence_flag = 0
             vis_use=vis_data2
             
             vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
@@ -209,25 +210,39 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
                 ENDIF
                 IF convergence_loose GE convergence_loose_prev THEN BEGIN
                     ; Stop if the solutions are no longer converging
-                    ; Note that this compares the absolute value of the solutions.
                     IF convergence_loose LE conv_thresh THEN BEGIN
                         ; 
                         n_converged += 1
                         BREAK
-                    ENDIF ELSE IF convergence_strict GE conv_test[fii,i-2] THEN BEGIN
-                        ; If both measures of convergence are getting worse, we need to stop.
-                        print, String(format='("Calibration diverged at iteration ", A, " for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
-                            Strn(i), Strn(pol_i), Strn(fi), Strn(conv_test[fii,i-1], format="(e12.2)"), Strn(conv_thresh, format="(e12.2)"))
-                        BREAK
-                    ENDIF
+                    ENDIF ELSE BEGIN
+                        ; Halt if the strict convergence is worse than most of the recent iterations
+                        divergence_history = 3
+                        divergence_test_1 = convergence_strict GE Median(conv_test[fii, i-divergence_history-1:i-1])
+                        ; Also halt if the convergence gets significantly worse in one iteration
+                        divergence_factor = 1.5
+                        divergence_test_2 = convergence_strict GE Min(conv_test[fii, 0:i-1])*divergence_factor
+                        IF divergence_test_1 OR divergence_test_2 THEN BEGIN
+                            ; If both measures of convergence are getting worse, we need to stop.
+                            print, String(format='("Calibration diverged at iteration ", A, " for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
+                                Strn(i), Strn(pol_i), Strn(fi), Strn(conv_test[fii,i-1], format="(e12.2)"), Strn(conv_thresh, format="(e12.2)"))
+                            divergence_flag = 1
+                            BREAK
+                        ENDIF
+                    ENDELSE
                 ENDIF
             ENDIF
         ENDFOR
+        IF Keyword_Set(divergence_flag) THEN BEGIN
+            ; If the solution diverged, back up one iteration and use the previous solution
+            gain_curr = gain_old
+            convergence[fi,tile_use] = conv_test[fii, 0:i-1]
+        ENDIF ELSE BEGIN
+            convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
+        ENDELSE
         IF i EQ max_cal_iter THEN BEGIN
             print, String(format='("Calibration reached max iterations before converging for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
                           Strn(pol_i), Strn(fi), Strn(conv_test[fii,i-1], format="(e12.2)"), Strn(conv_thresh, format="(e12.2)")) 
         ENDIF
-        convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
         Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr
       ENDFOR
