@@ -8,7 +8,7 @@ FUNCTION fhd_struct_init_cal, obs, params, skymodel, gain_arr_ptr=gain_arr_ptr, 
     calibration_polyfit=calibration_polyfit, bandpass_calibrate=bandpass_calibrate, $
     cal_mode_fit=cal_mode_fit, file_path_fhd=file_path_fhd, transfer_calibration=transfer_calibration, $
     calibration_auto_initialize=calibration_auto_initialize, cal_gain_init=cal_gain_init, $
-    phase_fit_iter=phase_fit_iter, cal_amp_degree_fit=cal_amp_degree_fit,cal_phase_degree_fit=cal_phase_degree_fit,$
+    phase_fit_iter=phase_fit_iter, cal_amp_degree_fit=cal_amp_degree_fit,cal_phase_degree_fit=cal_phase_degree_fit, $
     use_adaptive_calibration_gain=use_adaptive_calibration_gain, calibration_base_gain=calibration_base_gain,_Extra=extra
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd
@@ -65,19 +65,19 @@ mode_params=Ptrarr(n_pol,n_tile)
 auto_params=Ptrarr(2)
 auto_scale=Fltarr(2)
 
-cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, vv:v_loc,$
-    auto_initialize:auto_initialize, max_iter:max_cal_iter, phase_iter:phase_fit_iter,$
-    tile_A:tile_A, tile_B:tile_B, tile_names:tile_names, bin_offset:bin_offset, freq:freq, gain:gain_arr_ptr,$
-    adaptive_gain:use_adaptive_calibration_gain,base_gain:calibration_base_gain,$
-    gain_residual:gain_residual, auto_scale:auto_scale, auto_params:auto_params, cross_phase:0.0, stokes_mix_phase:0.0,$
-    min_cal_baseline:min_cal_baseline, max_cal_baseline:max_cal_baseline, n_vis_cal:n_vis_cal,$
-    time_avg:cal_time_average, min_solns:min_cal_solutions, ref_antenna:ref_antenna,$
-    polyfit:calibration_polyfit, amp_degree:cal_amp_degree_fit, phase_degree:cal_phase_degree_fit,$
-    amp_params:amp_params, phase_params:phase_params,$
-    mean_gain:Fltarr(n_pol), mean_gain_residual:Fltarr(n_pol), mean_gain_restrict:Fltarr(n_pol),$
-    stddev_gain_residual:Fltarr(n_pol), bandpass:bandpass_calibrate, mode_fit:cal_mode_fit,$
+cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, vv:v_loc, $
+    auto_initialize:auto_initialize, max_iter:max_cal_iter, phase_iter:phase_fit_iter, $
+    tile_A:tile_A, tile_B:tile_B, tile_names:tile_names, bin_offset:bin_offset, freq:freq, gain:gain_arr_ptr, $
+    adaptive_gain:use_adaptive_calibration_gain, base_gain:calibration_base_gain, $
+    gain_residual:gain_residual, auto_scale:auto_scale, auto_params:auto_params, cross_phase:0.0, stokes_mix_phase:0.0, $
+    min_cal_baseline:min_cal_baseline, max_cal_baseline:max_cal_baseline, n_vis_cal:n_vis_cal, $
+    time_avg:cal_time_average, min_solns:min_cal_solutions, ref_antenna:ref_antenna, $
     ref_antenna_name:ref_antenna_name, conv_thresh:cal_convergence_threshold, $
     convergence:convergence, n_converged:Lonarr(n_pol)-1, conv_iter:conv_iter, $
+    polyfit:calibration_polyfit, amp_degree:cal_amp_degree_fit, phase_degree:cal_phase_degree_fit, $
+    amp_params:amp_params, phase_params:phase_params, $
+    mean_gain:Fltarr(n_pol), mean_gain_residual:Fltarr(n_pol), mean_gain_restrict:Fltarr(n_pol), $
+    stddev_gain_residual:Fltarr(n_pol), bandpass:bandpass_calibrate, mode_fit:cal_mode_fit, $
     mode_params:mode_params, cal_origin:calibration_origin, skymodel:skymodel}
 RETURN,cal_struct
 END
