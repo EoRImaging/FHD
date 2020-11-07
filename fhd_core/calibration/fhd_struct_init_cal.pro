@@ -60,6 +60,7 @@ IF N_Elements(use_adaptive_calibration_gain) EQ 0 THEN use_adaptive_calibration_
 IF N_Elements(calibration_base_gain) EQ 0 THEN calibration_base_gain=1.
 IF N_Elements(phase_fit_iter) EQ 0 THEN phase_fit_iter=Long((calibration_base_gain*4)>4) ELSE phase_fit_iter=Long(phase_fit_iter)
 convergence=Ptrarr(2)
+conv_iter=Ptrarr(2)
 mode_params=Ptrarr(n_pol,n_tile)
 auto_params=Ptrarr(2)
 auto_scale=Fltarr(2)
@@ -71,11 +72,12 @@ cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, 
     gain_residual:gain_residual, auto_scale:auto_scale, auto_params:auto_params, cross_phase:0.0, stokes_mix_phase:0.0,$
     min_cal_baseline:min_cal_baseline, max_cal_baseline:max_cal_baseline, n_vis_cal:n_vis_cal,$
     time_avg:cal_time_average, min_solns:min_cal_solutions, ref_antenna:ref_antenna,$
-    ref_antenna_name:ref_antenna_name, conv_thresh:cal_convergence_threshold, convergence:convergence,n_converged:Lonarr(n_pol)-1,$
     polyfit:calibration_polyfit, amp_degree:cal_amp_degree_fit, phase_degree:cal_phase_degree_fit,$
     amp_params:amp_params, phase_params:phase_params,$
     mean_gain:Fltarr(n_pol), mean_gain_residual:Fltarr(n_pol), mean_gain_restrict:Fltarr(n_pol),$
     stddev_gain_residual:Fltarr(n_pol), bandpass:bandpass_calibrate, mode_fit:cal_mode_fit,$
+    ref_antenna_name:ref_antenna_name, conv_thresh:cal_convergence_threshold, $
+    convergence:convergence, n_converged:Lonarr(n_pol)-1, conv_iter:conv_iter, $
     mode_params:mode_params, cal_origin:calibration_origin, skymodel:skymodel}
 RETURN,cal_struct
 END
