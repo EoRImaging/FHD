@@ -236,7 +236,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
         IF Keyword_Set(divergence_flag) THEN BEGIN
             ; If the solution diverged, back up one iteration and use the previous solution
             gain_curr = gain_old
-            convergence[fi,tile_use] = conv_test[fii, 0:i-1]
+            convergence[fi,tile_use] = conv_test[fii, i-1]
             conv_iter_arr[fi, tile_use] = i-1
         ENDIF ELSE BEGIN
             convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
