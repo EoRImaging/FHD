@@ -39,6 +39,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
   
   FOR pol_i=0,n_pol-1 DO BEGIN
     convergence=Fltarr(n_freq,n_tile)
+    conv_iter_arr=Fltarr(n_freq,n_tile)
     gain_arr=*cal.gain[pol_i]
     
     ;***Average the visibilities over the time steps before solving for the gains solutions
@@ -236,8 +237,10 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             ; If the solution diverged, back up one iteration and use the previous solution
             gain_curr = gain_old
             convergence[fi,tile_use] = conv_test[fii, 0:i-1]
+            conv_iter_arr[fi, tile_use] = i-1
         ENDIF ELSE BEGIN
             convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
+            conv_iter_arr[fi, tile_use] = i
         ENDELSE
         IF i EQ max_cal_iter THEN BEGIN
             print, String(format='("Calibration reached max iterations before converging for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
@@ -259,6 +262,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
     *cal_return.gain[pol_i]=gain_arr
     cal_return.convergence[pol_i]=Ptr_new(convergence)
     cal_return.n_converged[pol_i] = n_converged
+    cal_return.conv_iter[pol_i]=Ptr_new(conv_iter_arr)
   ENDFOR
   
   vis_count_i=where(weight,n_vis_cal)
