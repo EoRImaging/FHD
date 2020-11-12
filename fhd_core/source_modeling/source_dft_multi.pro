@@ -116,6 +116,13 @@ IF keyword_set(gaussian_source_models) then begin
   endelse
 ENDIF
 
+IF ~keyword_set(gaussian_source_models) THEN BEGIN
+    ;Set all gaussian params to be 0
+    gaussian_x=make_array(n_elements(source_array),/double)
+    gaussian_y=make_array(n_elements(source_array),/double)
+    gaussian_rot=make_array(n_elements(source_array),/double)
+ENDIF
+
 IF Keyword_Set(n_spectral) THEN BEGIN
 ;obs.degrid_info is set up in fhd_struct_init_obs. It is turned on by setting the keyword degrid_nfreq_avg
     IF not Keyword_Set(silent) THEN print,"Gridding source model cube using taylor expansion of order: "+Strn(n_spectral)
@@ -129,13 +136,8 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     
     IF Keyword_Set(dft_threshold) THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
-        if ~keyword_set(gaussian_source_models) then begin
-            edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
-                n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
-        endif else begin
-            edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
-                gaussian_x,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
-        endelse
+        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
+            gaussian_x,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
@@ -201,13 +203,8 @@ ENDIF ELSE BEGIN
     ENDIF
     IF Keyword_Set(dft_threshold) THEN BEGIN
         model_uv_arr=Ptrarr(n_pol)
-        if ~keyword_set(gaussian_source_models) then begin
-            edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
-                n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
-        endif else begin
-            edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
-                gaussian_x,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
-        endelse
+        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
+            gaussian_x,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
