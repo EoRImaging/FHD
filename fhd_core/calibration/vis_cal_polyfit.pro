@@ -292,7 +292,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
 
             test_fits=Total(exp(i_comp*2.*!Pi/n_freq*mode_i*freq_use)*incoherent_residual_phase)
             amp_use=2*abs(test_fits)/nf_use ;factor of 2 from fitting just the phase
-            phase_use=-atan(test_fits,/phase)+!pi/2 ;factor of pi/2 from just fitting the phase
+            phase_use=atan(test_fits,/phase)+!pi/2 ;factor of pi/2 from just fitting the phase
           endif
 
         ENDIF ELSE IF Keyword_Set(amp_arr) OR Keyword_Set(phase_arr) THEN BEGIN
@@ -306,7 +306,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
           phase_use=atan(mode_fit,/phase)
         ENDELSE
         
-        gain_mode_fit=amp_use*exp(i_comp*2.*!Pi*(mode_i*findgen(n_freq)/n_freq)+i_comp*phase_use)
+        gain_mode_fit=amp_use*exp(-i_comp*2.*!Pi*(mode_i*findgen(n_freq)/n_freq)+i_comp*phase_use)
         if keyword_set(reflection_phase_only) or keyword_set(auto_ratio) then begin
           gain_arr_fit[*,tile_i]*=exp(i_comp*imaginary(gain_mode_fit))
         endif else begin
