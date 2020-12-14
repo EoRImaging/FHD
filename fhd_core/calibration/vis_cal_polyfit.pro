@@ -275,6 +275,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
 
           ENDIF ELSE BEGIN
             ; dimension manipulation, add dim for mode fitting
+            ; subtract the mean so aliasing is reduced in the dft cable fitting
             gain_temp=rebin_complex(transpose(reform(gain_arr[freq_use,tile_i] - mean(gain_arr[freq_use,tile_i]))),nmodes,nf_use)
           ENDELSE
           freq_mat=rebin(transpose(freq_use),nmodes,nf_use) ; freq_use matrix to multiply/collapse in fit
@@ -302,12 +303,13 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         ENDIF ELSE BEGIN
           ; use nominal delay mode, but fit amplitude and phase of reflections
           mode_fit=Total(exp(i_comp*2.*!Pi/n_freq*(mode_i)*freq_use)*Reform(gain_arr[freq_use,tile_i]))
-          amp_use=abs(mode_fit)/nf_use ;why factor of 2? Check FFT normalization
+          amp_use=abs(mode_fit)/nf_use
           phase_use=atan(mode_fit,/phase)
         ENDELSE
         
         gain_mode_fit=amp_use*exp(-i_comp*2.*!Pi*(mode_i*findgen(n_freq)/n_freq)+i_comp*phase_use)
         if keyword_set(reflection_phase_only) or keyword_set(auto_ratio) then begin
+          ; only fit for the cable reflection in the phases
           gain_arr_fit[*,tile_i]*=exp(i_comp*imaginary(gain_mode_fit))
         endif else begin
           gain_arr_fit[*,tile_i]*=(1+gain_mode_fit)
