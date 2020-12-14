@@ -137,7 +137,7 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     IF Keyword_Set(dft_threshold) THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
-            gaussian_x,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+            gaussian_x OR gaussian_y,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
@@ -204,7 +204,7 @@ ENDIF ELSE BEGIN
     IF Keyword_Set(dft_threshold) THEN BEGIN
         model_uv_arr=Ptrarr(n_pol)
         edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
-            gaussian_x,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+            gaussian_x OR gaussian_y,n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
