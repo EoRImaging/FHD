@@ -3,7 +3,7 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     complex=complex,fill_model_visibilities=fill_model_visibilities,$
     vis_input_ptr=vis_input_ptr,spectral_model_uv_arr=spectral_model_uv_arr,$
     beam_mask_threshold=beam_mask_threshold,beam_per_baseline=beam_per_baseline,$
-    uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
+    uv_grid_phase_only=uv_grid_phase_only,conserve_memory=conserve_memory,_Extra=extra
 t0=Systime(1)
 heap_gc
 
@@ -147,8 +147,26 @@ IF Keyword_Set(n_spectral) THEN BEGIN
 ENDIF
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
+    vis_n=bin_n[bin_i[bi]]
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
-    ind0=inds[0]
+
+    ;if constraining memory usage, then est number of loops needed
+    if keyword_set(conserve_memory) then begin
+        required_bytes = 8.*vis_n*psf_dim3
+        mem_iter = ceil(required_bytes/conserve_memory)
+    endif else mem_iter=1
+    
+    vis_n_full = vis_n
+    inds_full = inds
+    vis_n_per_iter = float(ceil(vis_n_full/mem_iter))
+    
+    ;loop over chunks of visibilities to grid to conserve memory  
+    for mem_i=0L,mem_iter-1 do begin
+    ;calculate the indices of this visibility chunk 
+    if (vis_n_per_iter*(mem_i+1)) GT vis_n_full then max_ind = vis_n_full else max_ind = (vis_n_per_iter*(mem_i+1))
+    inds = inds_full[vis_n_per_iter*(mem_i):max_ind-1]
+    vis_n = max_ind - (vis_n_per_iter*(mem_i))
+    ind0=inds[0]    
     
     x_off=x_offset[inds]
     y_off=y_offset[inds]
@@ -158,10 +176,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
     freq_i=(inds mod n_freq_use)
     fbin=freq_bin_i[freq_i]
-     
-    vis_n=bin_n[bin_i[bi]]
     baseline_inds=(inds/n_freq_use) mod nbaselines
-
     
     box_matrix=Make_array(psf_dim3,vis_n,type=arr_type) 
     box_arr=Reform(image_uv_use[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1],psf_dim3)
@@ -248,7 +263,7 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
     ENDIF ELSE vis_box=matrix_multiply(Temporary(box_matrix),Temporary(box_arr),/atranspose) ;box_matrix#box_arr
     IF ind_remap_flag THEN vis_box=vis_box[ind_remap]
     visibility_array[inds]=vis_box
-    
+ENDFOR    
 ENDFOR
 
 
