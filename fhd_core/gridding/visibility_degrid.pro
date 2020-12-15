@@ -13,6 +13,9 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     double_precision=0
     IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision
     IF Tag_exist(psf,'interpolate_kernel') THEN interp_flag=psf.interpolate_kernel ELSE interp_flag=0
+    IF keyword_set(conserve_memory) then begin
+        IF conserve_memory GT 1E6 THEN mem_thresh=conserve_memory ELSE mem_thresh=1E8 ;in bytes
+    ENDIF
 
     ;extract information from the structures
     dimension=Long(obs.dimension)
@@ -109,8 +112,8 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
     ;IF n_dist_flag GT 0 THEN BEGIN
-    ;        xmin[flag_dist_i]=-1
-    ;        ymin[flag_dist_i]=-1
+    ;    xmin[flag_dist_i]=-1
+    ;    ymin[flag_dist_i]=-1
     ;ENDIF
 
     IF vis_weight_switch THEN BEGIN
@@ -153,19 +156,24 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
         ;if constraining memory usage, then est number of loops needed
         if keyword_set(conserve_memory) then begin
             required_bytes = 8.*vis_n*psf_dim3
-            mem_iter = ceil(required_bytes/conserve_memory)
+            mem_iter = ceil(required_bytes/mem_thresh)
+            if mem_iter GT 1 then begin
+                vis_n_full = vis_n
+                inds_full = inds
+                vis_n_per_iter = float(ceil(vis_n_full/mem_iter))
+            endif
         endif else mem_iter=1
-
-        vis_n_full = vis_n
-        inds_full = inds
-        vis_n_per_iter = float(ceil(vis_n_full/mem_iter))
 
         ;loop over chunks of visibilities to grid to conserve memory
         for mem_i=0L,mem_iter-1 do begin
-            ;calculate the indices of this visibility chunk
-            if (vis_n_per_iter*(mem_i+1)) GT vis_n_full then max_ind = vis_n_full else max_ind = (vis_n_per_iter*(mem_i+1))
-            inds = inds_full[vis_n_per_iter*(mem_i):max_ind-1]
-            vis_n = max_ind - (vis_n_per_iter*(mem_i))
+
+            if mem_iter GT 1 then begin
+                ;calculate the indices of this visibility chunk if split into multiple chunks
+                if (vis_n_per_iter*(mem_i+1)) GT vis_n_full then max_ind = vis_n_full else max_ind = (vis_n_per_iter*(mem_i+1))
+                inds = inds_full[vis_n_per_iter*(mem_i):max_ind-1]
+                vis_n = max_ind - (vis_n_per_iter*(mem_i))
+            endif
+
             ind0=inds[0]
 
             x_off=x_offset[inds]
