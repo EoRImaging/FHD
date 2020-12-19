@@ -73,7 +73,7 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     ELSE visibility_array=Complexarr(n_freq,vis_dimension)
 
     dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
-    dist_test=Float(frequency_array#dist_test)
+    dist_test=frequency_array#dist_test
     flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
     dist_test=0
 
