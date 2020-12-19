@@ -50,8 +50,8 @@ struct.dimension=Float(dimension)
 struct.elements=Float(elements)
 struct.kpix=Float(kbinsize)
 struct.degpix=Float(degpix)
-struct.max_baseline=Float(max_baseline)
-struct.min_baseline=Float(min_baseline)
+struct.max_baseline=max_baseline
+struct.min_baseline=min_baseline
 
 struct.n_pol=Fix(n_pol,type=2)
 struct.alpha=Float(spectral_index)

@@ -94,8 +94,9 @@ ENDIF
 freq_use=Lonarr(n_freq)+1
 tile_use=Lonarr(n_tile)+1
 
-kx_arr=Float(params.uu#frequency_array)
-ky_arr=Float(params.vv#frequency_array)
+;Calculate kx and ky for each baseline at high precision to get most accurate observation information
+kx_arr=params.uu#frequency_array
+ky_arr=params.vv#frequency_array
 kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr)) $
     ELSE max_baseline_use=max_baseline
@@ -105,6 +106,7 @@ IF Keyword_Set(FoV) AND Keyword_Set(kbinsize) THEN $
     print,"WARNING!! Only one of FoV and kbinsize can be specified. Using FoV."
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
 
+;Determine observation resolution/extent parameters given number of pixels in x direction (dimension)
 IF Keyword_Set(dimension) THEN BEGIN
     IF Keyword_Set(kbinsize) THEN BEGIN
         IF Keyword_Set(degpix) THEN print, "WARNING! Imaging parameters over constrained. Ignoring degpix."
@@ -122,6 +124,7 @@ ENDIF ELSE BEGIN
 ENDELSE
 IF ~Keyword_Set(elements) THEN elements=dimension
 
+;Determine the maximum and minimum baseline (cross-correlations only) to use for the given extent
 IF N_Elements(max_baseline) EQ 0 THEN $
     max_baseline=Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))])) $
     ELSE max_baseline=max_baseline<Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))
@@ -187,7 +190,7 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$
     n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_tile_flag:Long(n_flag),n_freq:Long(n_freq),n_freq_flag:0L,n_time:Long(n_time),n_time_flag:n_time_cut,$
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),primary_beam_area:Ptrarr(4),primary_beam_sq_area:Ptrarr(4),pol_names:pol_names,$
-    jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
+    jd0:meta.jd0,max_baseline:max_baseline,min_baseline:min_baseline,delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),freq_res:Float(freq_res),time_res:Float(meta.time_res),astr:meta.astr,alpha:Float(spectral_index),$
     residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,$
     degrid_spectral_terms:degrid_spectral_terms,grid_spectral_terms:grid_spectral_terms,grid_info:grid_info,healpix:healpix}    
