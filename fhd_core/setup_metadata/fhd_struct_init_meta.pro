@@ -45,6 +45,9 @@ IF file_test(metafits_path) THEN BEGIN
     tile_height=meta_data.height
     tile_height=tile_height[single_i]-alt
     tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(meta_data(single_i+pol_i).flag)
+    tile_flag_check=0
+    for pol_i=0,n_pol-1 do tile_flag_check += mean(*tile_flag[pol_i])
+    if tile_flag_check EQ n_pol then message, "ERROR: All tiles flagged in metadata"
     
     obsra=sxpar(meta_hdr,'RA')
     obsdec=sxpar(meta_hdr,'Dec')
