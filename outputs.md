@@ -334,7 +334,20 @@ See cal.skymodel.source_list in Calibration for structure description. This outp
 
 ##  Output Images<br />
 
-### \<obsids\>\_cal_amp.png / \<obsids\>\_cal_autocorr.png / \<obsids\>\_cal_phase.png<br />
+### \<obsids\>\_cal_amp.png<br />
+
+Plots the fitted gain amplitude solutions as a function of frequency. Each panel
+belongs to an antenna. Blue is the X polarization and red is the Y polarization.<br />
+
+### \<obsids\>\_cal_autocorr.png<br />
+
+Plots the fitted gain solutions from `vis_cal_auto_fit.pro`, which uses the
+autocorrelations as outlined in [Barry et al. 2019a](https://arxiv.org/abs/1901.02980).<br />
+
+### \<obsids\>\_cal_phase.png<br />
+
+Plots the fitted gain phase solutions as a function of frequency. Each panel
+belongs to an antenna. Blue is the X polarization and red is the Y polarization.<br />
 
 ### \<obsids\>\_Beam_\<pol\>.png <br />
 
