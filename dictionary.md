@@ -302,6 +302,10 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **bubble_fname**: Specify the path to an HDF5 file containing at least "spectral_info/spectrum" and "spectral_info/freq" of shapes (Npix, Nchan) and (Nchan,), respectively. The "spectrum" object is a set of healpix maps vs frequency representing a full sky EoR signal. <br />
 **select_radius_multiplier**: A circular region is selected from the input healpix maps, corresponding with the primary beam radius. This sets the selection radius to (primary_beam_radius)x(select_radius_multiplier) <br />
+**hpx_select_radius**: In degrees, the radius of a circular selection to make on the sky. Overrides **select_radius_multiplier**. <br />
+**ltaper**: If set, a tanh-function window will be applied to the input map in spherical harmonic space. <br />
+**orthomap_var**: If set, replace the interpolated orthoslant maps (binned from the input HEALPix shell) with Gaussian noise of mean 0 and variance **orthomap_var**.  <br />
+**shellreplace**: Replace the input HEALPix shell with a shell of gaussian noise with the same mean and variance. <br />
 
 ## In situ simulation
 
