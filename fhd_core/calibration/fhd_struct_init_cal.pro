@@ -55,9 +55,11 @@ phase_params=Ptrarr(n_pol,n_tile)
 IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
 IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0.
 ;whether to use a Kalman Filter to adjust the gain to use for each iteration of calculating calibration
-IF N_Elements(use_adaptive_calibration_gain) EQ 0 THEN use_adaptive_calibration_gain=0
+IF N_Elements(use_adaptive_calibration_gain) EQ 0 THEN use_adaptive_calibration_gain=0 
 ;The relative weight to give the old calibration solution when averaging with the new. 
-IF N_Elements(calibration_base_gain) EQ 0 THEN calibration_base_gain=1.
+IF N_Elements(calibration_base_gain) EQ 0 THEN BEGIN
+    IF N_Elements(use_adaptive_calibration_gain) EQ 0 THEN calibration_base_gain=1. ELSE calibration_base_gain=0.75
+ENDIF
 IF N_Elements(phase_fit_iter) EQ 0 THEN phase_fit_iter=Long((calibration_base_gain*4)>4) ELSE phase_fit_iter=Long(phase_fit_iter)
 convergence=Ptrarr(2)
 conv_iter=Ptrarr(2)

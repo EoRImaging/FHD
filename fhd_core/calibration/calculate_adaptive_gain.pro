@@ -2,8 +2,6 @@ FUNCTION calculate_adaptive_gain, gain_list, convergence_list, iter, base_gain=b
     final_convergence_estimate=final_convergence_estimate
 ;Calculate the best gain factor to use for an iterative forward modeling algorithm, using a Kalman filter.
 
-IF N_Elements(base_gain) EQ 0 THEN base_gain=0.5
-
 IF iter GT 2 THEN BEGIN
     ; To calculate the best gain to use, compare the past gains that have been used
     ; with the resulting convergences to estimate the best gain to use.

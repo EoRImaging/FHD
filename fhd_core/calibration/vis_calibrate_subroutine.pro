@@ -18,7 +18,9 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
   conv_thresh=cal.conv_thresh
   use_adaptive_gain = cal.adaptive_gain
   base_gain = cal.base_gain
-  
+  divergence_history = 3 ; halt if the strict convergence is worse than most of the last x iterations
+  divergence_factor = 1.5 ; halt if the convergence gets significantly worse by a factor of x in one iteration
+
   n_pol=cal.n_pol
   n_freq=cal.n_freq
   n_tile=cal.n_tile
@@ -203,7 +205,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             convergence_loose = Mean(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
             convergence_list[i] = convergence_strict
             conv_test[fii,i] = convergence_strict
-            IF i GT phase_fit_iter THEN BEGIN
+            IF i GT phase_fit_iter+divergence_history THEN BEGIN
                 IF convergence_strict LE conv_thresh THEN BEGIN
                     ; Stop if the solution has converged to the specified threshold
                     n_converged += 1
@@ -211,16 +213,21 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
                 ENDIF
                 IF convergence_loose GE convergence_loose_prev THEN BEGIN
                     ; Stop if the solutions are no longer converging
-                    IF convergence_loose LE conv_thresh THEN BEGIN
+                    IF (convergence_loose LE conv_thresh) OR (convergence_loose_prev LE conv_thresh) THEN BEGIN
                         ; 
                         n_converged += 1
+                        IF (convergence_loose LE conv_thresh) THEN BEGIN
+                            ; If the previous solution met the threshold, but the current one did not, then
+                            ; back up one iteration and use the previous solution
+                            gain_curr = gain_old
+                            convergence[fi,tile_use] = conv_test[fii, i-1]
+                            conv_iter_arr[fi, tile_use] = i-1
+                        ENDIF
                         BREAK
                     ENDIF ELSE BEGIN
                         ; Halt if the strict convergence is worse than most of the recent iterations
-                        divergence_history = 3
                         divergence_test_1 = convergence_strict GE Median(conv_test[fii, i-divergence_history-1:i-1])
                         ; Also halt if the convergence gets significantly worse in one iteration
-                        divergence_factor = 1.5
                         divergence_test_2 = convergence_strict GE Min(conv_test[fii, 0:i-1])*divergence_factor
                         IF divergence_test_1 OR divergence_test_2 THEN BEGIN
                             ; If both measures of convergence are getting worse, we need to stop.
