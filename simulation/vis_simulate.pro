@@ -51,8 +51,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
       ENDELSE
 
     endfor
-    test = strpos(init_beam_filepath, '_000_')
-    if test NE -1 THEN IF ~Keyword_Set(no_save) THEN save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
+    IF ~Keyword_Set(no_save) THEN save, file=init_beam_filepath, beam2_xx_image, beam2_yy_image, obs
     undefine_fhd, beam2_xx_image, beam2_yy_image, beam_arr
 
     if n_elements(model_image_cube) gt 0 or n_elements(model_uvf_cube) gt 0 or keyword_set(include_eor) then begin
@@ -133,11 +132,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
         if eor_gen ne 0 then begin
           print, 'Generating model EoR cube'
           uv_locs = findgen(101)*4.-200.
-  ;        eor_uvf = eor_sim(uv_locs, uv_locs, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
-  ;          delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky);, /lidz)
-  ;        IF ~Keyword_Set(no_save) THEN save,filename=coarse_input_model_filepath, eor_uvf, uv_locs, $
-  ;          freq_arr, /compress
-            
+
           time0 = systime(1)
           eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib, $
             delta_power = delta_power, delta_uv_loc = delta_uv_loc, real_sky = eor_real_sky);, /lidz)
@@ -192,8 +187,6 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
           FOR pol_i=0,n_pol-1 DO *source_model_uv_arr[pol_i]+=*gal_model_uv[pol_i]
 	ENDIF ELSE source_model_uv_arr = Pointer_copy(gal_model_uv)
       ENDIF
-      ;IF Min(Ptr_valid(gal_spectral_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO $
-      ;  *spectral_model_uv_arr[pol_i,s_i]+=*gal_spectral_model_uv[pol_i,s_i];*uv_mask_use
       undefine_fhd,gal_model_uv;,gal_spectral_model_uv
     endif
 
@@ -203,9 +196,6 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
 	IF size(*source_model_uv_arr[0],/type) eq 6 then begin     ;; If array is complex
 	        FOR pol_i=0,n_pol-1 DO BEGIN
 			*model_uvf_arr[pol_i]+=rebin_complex(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
-			;j = Complex(0,1)
-			;*model_uvf_arr[pol_i]+=Rebin(Real_part(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample)$
-			;				+j*(Rebin(imaginary(*source_model_uv_arr[pol_i]),dimension,elements,n_freq,/sample))
 		ENDFOR
 	ENDIF ELSE BEGIN
 	        FOR pol_i=0,n_pol-1 DO *model_uvf_arr[pol_i]+=Rebin(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
@@ -245,8 +235,6 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
             vis_model_arr[pol_i]=visibility_degrid(*model_uvf_arr[pol_i],vis_weights[pol_i],obs,psf,params,silent=silent,$
                 polarization=pol_i,_Extra=extra)
         ENDFOR
-;        vis_model_arr = vis_source_model(skymodel,obs,status_str,psf,params,vis_weights,model_uv_arr=model_uvf_arr,$
-;          timing=model_timing,silent=silent,error=error,_Extra=extra)
           
       endif else begin
         ;; 3 dimensional -- loop over frequencies
@@ -263,8 +251,6 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
           endfor
           
           if max(abs(*this_model_uv[0])) eq 0 and max(abs(*this_model_uv[1])) eq 0 then continue
-           ;this_model_ptr=vis_source_model(skymodel,obs,status_str,psf,params,this_vis_weight_ptr,model_uv_arr=this_model_uv,$
-           ;timing=model_timing,silent=silent,error=error,_Extra=extra)
            model_timing=0.0
            ;vis_source_model is inexplicably taking a long time. Since the uvf cube was already FFTed, just run visibility_degrid.
            FOR pol_i=0,n_pol-1 DO BEGIN

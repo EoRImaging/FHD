@@ -27,19 +27,7 @@ print, "Npix_selected: ", npix_sel
 
 ; Limit the range of frequencies in the uvf cube to the range of the obs
 freq_arr = (*obs.baseline_info).freq
-;lim = minmax(freq_arr)
-;freq_inds = where((freq_hpx GE lim[0]) and (freq_hpx LE lim[1]), count_inds )
-;if count_inds EQ 0 THEN  message, "No frequency overlap between shell and simulation"
-;freq_hpx = freq_hpx[freq_inds]
 nfreq_hpx = n_elements(freq_hpx)
-
-; making the coord array for h5s_select
-;coord_arr = array_indices(make_array(nfreq_hpx,npix_sel),findgen(nfreq_hpx*npix_sel))
-;coord_arr[1,*] = inds_select[coord_arr[1,*]]
-
-;; Extract only these healpix indices from the file.
-; Somehow this ended up being slower than reading in the full array, so leave it out for now.
-;H5S_SELECT_ELEMENTS, dspace_id_eor, coord_arr, /RESET
 
 print, "Reading HDF5 file with EoR Healpix Cube"
 t0 = systime(/seconds)
@@ -73,8 +61,8 @@ if keyword_set(ltaper) THEN BEGIN
     lmat = lm[0]
     mmat = lm[1]
     win_mat = 0.5*(1-tanh(ltaper*(lmat-lmax_fhd)))
+    ; In each frequency channel, convert map to alm and apply l-taper.
     for fi=0, nfreq_hpx-1 DO BEGIN
-        print, fi
         map = Temporary(reform(dat[fi,*]))
         alm = hp.map2alm(map,lmax=lmax_hpx)
         alm *= win_mat
@@ -84,27 +72,14 @@ if keyword_set(ltaper) THEN BEGIN
 ENDIF
 
 
-; Interpolate in frequency:
-dat_interp = Fltarr(obs.n_freq,npix_sel)
-t0=systime(/seconds)
+; Select pixels.
+dat_interp = Fltarr(obs.n_freq, npix_sel)
 dat_interp = dat[*, inds_select]
-;for hpx_i=0,npix_sel-1 DO dat_interp[*,hpx_i] = Interpol(dat[freq_inds,inds_select[hpx_i]],freq_hpx,freq_arr)
-print, 'Variance before freq interpolation: ', variance(dat), ', and after: ', variance(dat_interp)
  
 IF keyword_set(shellreplace) THEN BEGIN
     save, dat_interp, inds_select, filename=file_path_fhd+'_shellreplace.sav'
 ENDIF
-;; Bin in frequency instead of interpolating
-;freq_bins = round((freq_hpx - freq_arr[0]) / obs.freq_res)
-;freqweight = Fltarr(obs.n_freq,npix_sel)
-;weight = fltarr(obs.n_freq, npix_sel) + 1
-;for hpx_i=0,npix_sel-1 DO BEGIN
-;    dat_interp[*,hpx_i] += dat[freq_bins, inds_select[hpx_i]]
-;    freqweight[freq_bins,hpx_i] += 1.0
-;ENDFOR
-;;; Note that the above can leave some frequencies empty. This will cause an error in eppsilon (uv_slice = 0)
-;dat_interp *= weight_invert(freqweight)
-print, 'Frequency interpolation complete: ', systime(/seconds) - t0
+
 hpx_arr = Ptrarr(obs.n_freq)
 for fi=0, obs.n_freq-1 DO hpx_arr[fi] = ptr_new(reform(dat_interp[fi,*]))
 
@@ -126,7 +101,6 @@ IF keyword_set(orthomap_var) THEN BEGIN
     var = orthomap_var
     for fi=0, obs.n_freq-1 do begin
         model_stokes_arr[fi] = ptr_new(randomn(seed,obs.dimension,obs.elements) * sqrt(var) * convert_factor)  ; K -> Jy/pix (ortho)
-    ; * convert_factor * weight_invert(pixel_area_factor))`
     ENDFOR
 ENDIF
 
@@ -144,10 +118,6 @@ FOR fi=0, obs.n_freq-1 do begin
    ENDFOR
    Ptr_free,model_arr
 ENDFOR
-;save, filename=file_path_fhd + '_model_stokes_arr.sav',model_uv_arr, model_stokes_arr, nside, pixel_area_factor, var, convert_factor
-;uvf_cube = model_uv_arr
-;save, uvf_cube, filename='/gpfs/data/jpober/alanman/eorbubble_uvf.sav' 
-;exit
 
 return, model_uv_arr
 END
