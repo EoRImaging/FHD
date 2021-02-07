@@ -314,6 +314,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **ltaper**: If set, a tanh-function window will be applied to the input map in spherical harmonic space. <br />
   -*Dependency*: Python with healpy version >1.11 must be available. <br />
   -*Default*: not set. <br />
+  -*Notes*: This feature is disabled by default. To enable it, uncomment the indicated block in simulation/eor_bubble_sim.pro.
 
 **orthomap_var**: If set, replace the interpolated orthoslant maps (binned from the input HEALPix shell) with Gaussian noise of mean 0 and variance **orthomap_var**.  <br />
   -*Default*: not set. <br />
