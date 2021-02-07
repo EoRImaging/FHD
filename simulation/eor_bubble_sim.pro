@@ -43,33 +43,35 @@ if keyword_set(shellreplace) THEN BEGIN
     dat = randomn(seed, dims[1], dims[0])*sig + mu
 ENDIF
 
-; If l taper is set --- apply weights to l modes, up to the maximum l mode of the orthoslant map.
-; There isn't a standard way to do this strictly within IDL, so call healpy functions using IDL to Python bridge.
-if keyword_set(ltaper) THEN BEGIN
-    print, 'Applying l taper'
-    lmax_fhd = floor(180./obs.degpix)
-    lmax_hpx = 3*nside-1
-    if lmax_fhd GT lmax_hpx THEN BEGIN
-        print, "Input map resolution below FHD settings. lmax_fhd="+string(lmax_fhd)
-        lmax_fhd = lmax_hpx
-    ENDIF
-    hp = python.import('healpy')
-    mmax_hpx= lmax_hpx
-    almsize = floor(mmax_hpx * (2 * lmax_hpx + 1 - mmax_hpx) / 2.) + lmax_hpx + 1
-    almidx = lindgen(almsize)
-    lm = hp.Alm.getlm(lmax_hpx,almidx)
-    lmat = lm[0]
-    mmat = lm[1]
-    win_mat = 0.5*(1-tanh(ltaper*(lmat-lmax_fhd)))
-    ; In each frequency channel, convert map to alm and apply l-taper.
-    for fi=0, nfreq_hpx-1 DO BEGIN
-        map = Temporary(reform(dat[fi,*]))
-        alm = hp.map2alm(map,lmax=lmax_hpx)
-        alm *= win_mat
-        dat[fi,*] = hp.alm2map(alm,nside,lmax=lmax_hpx)
-        dat[fi,*] *= sqrt(variance(map)/variance(dat[fi,*]))    ; Preserve variance for gaussian maps
-    ENDFOR
-ENDIF
+;; This is commented out to avoid adding a Python dependency to FHD. Uncomment to enable ltaper.
+;; If l taper is set --- apply weights to l modes, up to the maximum l mode of the orthoslant map.
+;; There isn't a standard way to do this strictly within IDL, so call healpy functions using IDL to Python bridge.
+;if keyword_set(ltaper) THEN BEGIN
+;    print, 'Applying l taper'
+;    lmax_fhd = floor(180./obs.degpix)
+;    lmax_hpx = 3*nside-1
+;    if lmax_fhd GT lmax_hpx THEN BEGIN
+;        print, "Input map resolution below FHD settings. lmax_fhd="+string(lmax_fhd)
+;        lmax_fhd = lmax_hpx
+;    ENDIF
+;    hp = python.import('healpy')
+;    mmax_hpx= lmax_hpx
+;    almsize = floor(mmax_hpx * (2 * lmax_hpx + 1 - mmax_hpx) / 2.) + lmax_hpx + 1
+;    almidx = lindgen(almsize)
+;    lm = hp.Alm.getlm(lmax_hpx,almidx)
+;    lmat = lm[0]
+;    mmat = lm[1]
+;    win_mat = 0.5*(1-tanh(ltaper*(lmat-lmax_fhd)))
+;    ; In each frequency channel, convert map to alm and apply l-taper.
+;    for fi=0, nfreq_hpx-1 DO BEGIN
+;        map = Temporary(reform(dat[fi,*]))
+;        alm = hp.map2alm(map,lmax=lmax_hpx)
+;        alm *= win_mat
+;        dat[fi,*] = hp.alm2map(alm,nside,lmax=lmax_hpx)
+;        dat[fi,*] *= sqrt(variance(map)/variance(dat[fi,*]))    ; Preserve variance for gaussian maps
+;    ENDFOR
+;ENDIF
+;; End of ltaper block.
 
 
 ; Select pixels.
