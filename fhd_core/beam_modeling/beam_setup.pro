@@ -4,7 +4,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
   beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
   interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,beam_per_baseline=beam_per_baseline,$
-  _Extra=extra
+  save_beam_metadata_only=save_beam_metadata_only,_Extra=extra
 
   compile_opt idl2,strictarrsubs
   t00=Systime(1)
@@ -256,15 +256,25 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   IF Keyword_Set(beam_dim_fit) THEN beam_dim_fit,beam_arr,psf_dim=psf_dim,psf_resolution=psf_resolution,$
     beam_mask_threshold=beam_mask_threshold,psf_xvals=psf_xvals,psf_yvals=psf_yvals,_Extra=extra
 
-  complex_flag=1
   beam_ptr=Ptr_new(beam_arr)
   psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
-    psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
+    psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=1,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr,interpolate_kernel=interpolate_kernel,$
     image_power_beam_arr=image_power_beam_arr,ra_arr=ra_arr,dec_arr=dec_arr,psf_image_dim=psf_image_dim,$
     psf_image_resolution=psf_image_resolution,beam_mask_threshold=beam_mask_threshold)
 
-  fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
+  ; Briefly create a new psf struct with the beam ptr set to 0 if only metadata is to be saved to disk,
+  ; otherwise save the full psf struct
+  IF Keyword_Set(save_beam_metadata_only) THEN BEGIN
+    psf_metadata=fhd_struct_init_psf(beam_ptr=0,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
+      psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=1,pol_norm=pol_norm,freq_norm=freq_norm,$
+      n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr,interpolate_kernel=interpolate_kernel,$
+      image_power_beam_arr=image_power_beam_arr,ra_arr=ra_arr,dec_arr=dec_arr,psf_image_dim=psf_image_dim,$
+      psf_image_resolution=psf_image_resolution,beam_mask_threshold=beam_mask_threshold)
+    fhd_save_io,status_str,psf_metadata,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
+    undefine, psf_metadata
+  ENDIF ELSE fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
+
   fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
   IF not antenna_flag THEN undefine_fhd,antenna
   timing=Systime(1)-t00

@@ -7,7 +7,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     flag_calibration=flag_calibration,vis_model_arr=vis_model_arr,$
     calibration_auto_fit=calibration_auto_fit,cal_stop=cal_stop, model_transfer=model_transfer,$
     sim_over_calibrate=sim_over_calibrate,sim_perf_calibrate=sim_perf_calibrate,$
-    auto_ratio_calibration=auto_ratio_calibration,_Extra=extra
+    auto_ratio_calibration=auto_ratio_calibration,no_png=no_png,_Extra=extra
     
   t0_0=Systime(1)
   error=0

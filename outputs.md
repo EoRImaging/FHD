@@ -147,13 +147,13 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ### \<obsids\>\_fhd_params.sav <br />
   * **params**: Structure with arrays that contain various metadata in attributes listed below.
-      * **antenna1**: Array of first antenna indices.
-      * **antenna2**: Array of second antenna indices.
-      * **baseline_arr**: Array of baseline indices. Obtained by a product of antenna1 and antenna2 plus a shift proportional to Nants. !Q
-      * **time**: Array of times. Each block of Nants^2 entries are identical. Looks like LST. Unsure of units. fhd_struct_init_obs suggests it is some unit of "days" !Q
+      * **antenna1**: Array of first antenna indices, 1 indexed.
+      * **antenna2**: Array of second antenna indices, 1 indexed.
+      * **baseline_arr**: Array of unique baseline indices. Obtained by a product of antenna1 and antenna2 plus a shift proportional to Nants. !Q
+      * **time**: Array of times, where the time is the center of the integration period. Measured in Julian date, and is in reference to the specified Julian date from the uvfits header (i.e. the sum of the DATE parameter and this time array gives the true Julian date).
       * **UU**: Array of u-coordinate of baselines. Units: lightseconds.
-      * **VV**: Array of v-coordinate of baselines in baseline array? Units: lightseconds.
-      * **WW**: Array of w-coordinate of baselines in baseline array? Units: lightseconds.
+      * **VV**: Array of v-coordinate of baselines. Units: lightseconds.
+      * **WW**: Array of w-coordinate of baselines. Units: lightseconds.
 
 ## Grid Data<br />
 
@@ -216,10 +216,10 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **obsdec**: float of the observation's DEC in degrees
    * **zenra**: float of the zenith RA in degrees for the instrument and julian date specified
    * **zendec**: float of the zenith DEC in degrees for the instrument and julian date specified
-   * **obsx**: float of the positive x-axis for the observation, set by dimension/2
-   * **obsy**: float of the positive y-axis for the observation, set by elements/2
-   * **zenx**: float of the positive x-axis for the zenith, set by dimension/2
-   * **zeny**: float of the positive y-axis for the zenith, set by elements/2
+   * **obsx**: float of the positive x-axis extent for the observation, set by dimension/2
+   * **obsy**: float of the positive y-axis extent for the observation, set by elements/2
+   * **zenx**: float of the positive x-axis extent for the zenith, set by dimension/2
+   * **zeny**: float of the positive y-axis extent for the zenith, set by elements/2
    * **phasera**: float of the RA of the phase center for the observation
    * **phasedec**: float of the DEC of the phase center for the observation
    * **orig_phasera**: float of the RA of the phase center of the input uvfits file, which may not be the desired phase center
@@ -308,7 +308,7 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ### \<obsids\>\_\<filter\>\_Dirty\_\<pol\>.fits / \<obsids\>\_\<filter\>\_Model_\<pol\>.fits / \<obsids\>\_\<filter\>\_Residual_\<pol\>.fits <br />
 
-Fits files containing the dirty, model, and residual (dirty minus model) images. These images are constrained to be real for XX and YY instrumental polarizations. Units are Jy per sterradian.
+Fits files containing the dirty, model, and residual (dirty minus model) images. These images are constrained to be real (via taking the real part of the uv FFT) for XX and YY instrumental polarizations. Units are Jy per sterradian.
 
 ### \<obsids\>\_\<filter\>\_Dirty_XY_real.fits / \<obsids\>\_\<filter\>\_Model_XY_real.fits / \<obsids\>\_\<filter\>\_Residual_XY_real.fits <br />
 
@@ -334,13 +334,26 @@ See cal.skymodel.source_list in Calibration for structure description. This outp
 
 ##  Output Images<br />
 
-### \<obsids\>\_cal_amp.png / \<obsids\>\_cal_autocorr.png / \<obsids\>\_cal_phase.png<br />
+### \<obsids\>\_cal_amp.png<br />
+
+Plots the fitted gain amplitude solutions as a function of frequency. Each panel
+belongs to an antenna. Blue is the X polarization and red is the Y polarization.<br />
+
+### \<obsids\>\_cal_autocorr.png<br />
+
+Plots the fitted gain solutions from `vis_cal_auto_fit.pro`, which uses the
+autocorrelations as outlined in [Barry et al. 2019a](https://arxiv.org/abs/1901.02980).<br />
+
+### \<obsids\>\_cal_phase.png<br />
+
+Plots the fitted gain phase solutions as a function of frequency. Each panel
+belongs to an antenna. Blue is the X polarization and red is the Y polarization.<br />
 
 ### \<obsids\>\_Beam_\<pol\>.png <br />
 
 ### \<obsids\>\_\<filter\>\_Dirty_\<pol\>.png / \<obsids\>\_\<filter\>\_Model_\<pol\>.png / \<obsids\>\_\<filter\>\_Residual_\<pol\>.png <br />
 
-Dirty, model, and residual (dirty minus model) images. These images are constrained to be real for XX and YY instrumental polarizations. Units are Jy per sterradian.
+Dirty, model, and residual (dirty minus model) images. These images are constrained to be real (via taking the real part of the uv FFT) for XX and YY instrumental polarizations. Units are Jy per sterradian.
 
 ### \<obsids\>\_\<filter\>\_Dirty_XY_real.png / \<obsids\>\_\<filter\>\_Model_XY_real.png / \<obsids\>\_\<filter\>\_Residual_XY_real.png <br />
 

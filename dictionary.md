@@ -29,6 +29,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 2 <br />
 
+**beam_nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (beam_nfreq_avg=1). However, this is computationally difficult for most machines. <br />
+  -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
+  -*Default*: 1 <br />
+  -*eor_wrapper_defaults*: 16 <br />
+
 **beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
   -*Range*: 0-# of seconds in an observation <br />
   -*Default*: 0 <br />
@@ -64,14 +69,13 @@ This is a work in progress; please add keywords as you find them in alphabetical
                'Blackman-Harris', 'Blackman-Harris^2', 'Tukey' <br />
   -*Default*: Not set (not the same as setting to 0!) <br />
 
-**beam_nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (beam_nfreq_avg=1). However, this is computationally difficult for most machines. <br />
-  -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
-  -*Default*: 1 <br />
-  -*eor_wrapper_defaults*: 16 <br />
-
 **psf_resolution**: super-resolution factor of the psf in UV space. Values greater than 1 increase the resolution of the gridding kernel. <br />
   -*Default*: 16 <br />
   -*eor_wrapper_defaults*: 100 <br />
+
+**save_beam_metadata_only**: save only the metadata associated with the beam to speed up I/O and reduce required space. Skips writing the Jones matrix completely and writes everything but the `beam_ptr` in the psf structure. Depending on beam frequency resolution, this can save upwards of 10Gb of space per observation. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: Not set (same as 0) <br />
 
 **transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. <br />
   -*Default*: not set <br />
@@ -411,13 +415,13 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 0
   -*Turn off/on*: 0/1
 
-**no_fits**: do not export any pngs (this includes images and plots calibration solutions) <br />
+**no_fits**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
   -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect.  <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
   
-**no_png**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
+**no_png**: do not export any pngs (this includes images and plots calibration solutions) <br />
   -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
