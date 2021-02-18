@@ -272,7 +272,6 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
       image_power_beam_arr=image_power_beam_arr,ra_arr=ra_arr,dec_arr=dec_arr,psf_image_dim=psf_image_dim,$
       psf_image_resolution=psf_image_resolution,beam_mask_threshold=beam_mask_threshold)
     fhd_save_io,status_str,psf_metadata,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
-    undefine, psf_metadata
   ENDIF ELSE fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
 
   fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
