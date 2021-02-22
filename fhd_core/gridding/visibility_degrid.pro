@@ -160,7 +160,7 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
             if mem_iter GT 1 then begin
                 vis_n_full = vis_n
                 inds_full = inds
-                vis_n_per_iter = float(ceil(vis_n_full/mem_iter))
+                vis_n_per_iter = ceil(double(vis_n_full)/mem_iter)
             endif
         endif else mem_iter=1
 
