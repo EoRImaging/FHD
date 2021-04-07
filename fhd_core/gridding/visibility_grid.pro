@@ -257,41 +257,58 @@ ENDIF
 
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
+    ; Cycle through sets of visibilities which contribute to the same data/model uv-plane pixels, and perform
+    ; the gridding operation per set using each visibilities' hyperresolved kernel
+
+    ; Select the indices of the visibilities which contribute to the same data/model uv-plane pixels
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]
     ind0=inds[0]
     
+    ; Select the pixel offsets of the hyperresolution uv-kernel of the selected visibilities 
     x_off=x_offset[inds]
     y_off=y_offset[inds]
         
-    xmin_use=xmin[ind0] ;should all be the same, but don't want an array
-    ymin_use=ymin[ind0] ;should all be the same, but don't want an array
+    ; Since all selected visibilities have the same minimum x,y pixel they contribute to,
+    ; reduce the array
+    xmin_use=xmin[ind0]
+    ymin_use=ymin[ind0]
 
+    ; Find the frequency group per index
     freq_i=(inds mod n_freq_use)
     fbin=freq_bin_i[freq_i]
     
+    ; Calculate the number of selected visibilities and their baseline index
     vis_n=bin_n[bin_i[bi]]
     baseline_inds=bi_use_reduced[(inds/n_f_use) mod nbaselines]
 
-    box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
-    
     IF interp_flag THEN BEGIN
+        ; Calculate the interpolated kernel on the uv-grid given the derivatives to baseline locations
+        ; and the hyperresolved pre-calculated beam kernel
+
+        ; Select the 2D derivatives to baseline locations
         dx1dy1 = dx1dy1_arr[inds]
         dx1dy0 = dx1dy0_arr[inds]
         dx0dy1 = dx0dy1_arr[inds]
         dx0dy0 = dx0dy0_arr[inds]
 
+        ; Select the model/data visibility values of the set, each with a weight of 1
         rep_flag=0
         IF model_flag THEN model_box=model_use[inds]
         vis_box=vis_arr_use[inds]
         psf_weight=Replicate(1.,vis_n)
 
+        box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
         FOR ii=0L,vis_n-1 DO BEGIN
+            ; For each visibility, calculate the kernel values on the static uv-grid given the
+            ; hyperresolved kernel and an interpolation involving the derivatives
             box_matrix[psf_dim3*ii]=$
               interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
               y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) 
         ENDFOR
 
     ENDIF ELSE BEGIN
+        ; Calculate the beam kernel at each baseline location given the hyperresolved pre-calculated
+        ; beam kernel
         group_id=group_arr[inds]
         group_max=Max(group_id)+1
         xyf_i=(x_off+y_off*psf_resolution+fbin*psf_resolution^2.)*group_max+group_id
@@ -303,6 +320,9 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
 
         ;there might be a better selection criteria to determine which is most efficient
         IF vis_n GT 1.1*n_xyf_bin AND ~keyword_set(beam_per_baseline) THEN BEGIN
+            ; If there are any baselines which use the same beam kernel and the same discretized location
+            ; given the hyperresolution, then reduce the number of gridding operations to only 
+            ; non-repeated baselines
             rep_flag=1
             inds=inds[xyf_si]
             inds_use=xyf_si[xyf_ui]
@@ -341,22 +361,24 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
             bt_index = inds / n_freq_use
         ENDELSE
 
-    
-        ;Make the beams on the fly with corrective phases given the baseline location
+        box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)    
         if keyword_set(beam_per_baseline) then begin
+            ; Make the beams on the fly with corrective phases given the baseline location for each visibility
+            ; to the static uv-grid
             box_matrix = grid_beam_per_baseline(psf, uu, vv, ww, l_mode, m_mode, n_tracked, frequency_array, x, y,$
               xmin_use, ymin_use, freq_i, bt_index, polarization, fbin, image_bot, image_top, psf_dim3,$
               box_matrix, vis_n, _Extra=extra)
         endif else begin
             FOR ii=0L,vis_n-1 DO BEGIN
-                ;more efficient array subscript notation
+                ; For each visibility, calculate the kernel values on the static uv-grid given the
+                ; hyperresolved kernel
                 box_matrix[psf_dim3*ii]=*(*beam_arr[polarization,fbin[ii],baseline_inds[ii]])[x_off[ii],y_off[ii]]
             ENDFOR
         endelse
 
     ENDELSE
 
-    
+    ; Calculate the conjugate transpose (dagger) of the uv-pixels that the current beam kernel contributes to
     IF map_flag THEN BEGIN
         IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=real_part(box_matrix) 
         IF rep_flag THEN box_matrix*=Rebin(Transpose(psf_weight),psf_dim3,vis_n)
@@ -380,17 +402,25 @@ FOR bi=0L,n_bin_use-1 DO BEGIN
         ENDIF
     ENDIF
     IF model_flag THEN BEGIN
+        ; If model visibilities are being gridded, calculate the product of the model vis and the beam kernel
+        ; for all vis which contribute to the same static uv-pixels, and add to the static uv-plane
         box_arr=matrix_multiply(Temporary(model_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
         model_return[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     ENDIF
+    ; Calculate the product of the data vis and the beam kernel
+    ; for all vis which contribute to the same static uv-pixels, and add to the static uv-plane
     box_arr=matrix_multiply(Temporary(vis_box)/n_vis,box_matrix_dag,/atranspose,/btranspose)
     image_uv[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(box_arr) 
     
     IF weights_flag THEN BEGIN
+        ; If weight visibilities are being gridded, calculate the product the weight (1 per vis) and the beam kernel
+        ; for all vis which contribute to the same static uv-pixels, and add to the static uv-plane
         wts_box=matrix_multiply(psf_weight/n_vis,box_matrix_dag,/atranspose,/btranspose)
         weights[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(wts_box)
     ENDIF
     IF variance_flag THEN BEGIN
+        ; If variance visibilities are being gridded, calculate the product the weight (1 per vis) and the square
+        ; of the beam kernel for all vis which contribute to the same static uv-pixels, and add to the static uv-plane
         var_box=matrix_multiply(psf_weight/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
         variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
     ENDIF
@@ -444,9 +474,11 @@ IF Keyword_Set(grid_uniform) THEN BEGIN
 ENDIF
 
 IF ~Keyword_Set(no_conjugate) THEN BEGIN
+    ; The uv-plane is its own conjugate mirror about the x-axis, so fill in the rest of the uv-plane
+    ; using simple maths instead of extra gridding
     image_uv=(image_uv+conjugate_mirror(image_uv))/2.
     IF weights_flag THEN weights=(weights+conjugate_mirror(weights))/2.        
-    IF variance_flag THEN variance=(variance+conjugate_mirror(variance))/4. ;2?
+    IF variance_flag THEN variance=(variance+conjugate_mirror(variance))/4.
     IF model_flag THEN model_return=(model_return+conjugate_mirror(model_return))/2.
     IF uniform_flag THEN uniform_filter=(uniform_filter+conjugate_mirror(uniform_filter))/2.
 ENDIF
