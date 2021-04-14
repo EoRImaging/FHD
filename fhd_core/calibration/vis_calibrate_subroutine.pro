@@ -163,6 +163,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
         ENDFOR
         ;For tiles which don't satisfy the minimum number of solutions, pre-emptively set them to 0
+        ;in order to prevent certain failure in meeting strict convergence threshold
         inds_min_cal = where(n_arr LT min_cal_solutions, n_min_cal)
         if n_min_cal GT 0 then gain_curr[inds_min_cal]=0.
         
