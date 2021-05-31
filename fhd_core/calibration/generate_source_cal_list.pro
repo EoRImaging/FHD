@@ -150,6 +150,11 @@ IF n_use GT 0 THEN BEGIN
     src_use2=where(beam_mask[Round(x_arr[src_use]),Round(y_arr[src_use])],n_src_use)
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
     source_list=source_list[src_use]
+    inds_finite = where(finite(source_list.flux.I[*]),n_finite)
+    IF n_finite NE N_elements(src_use) then begin
+        print, "WARNING: Model catalog contains nan/inf fluxes"
+        source_list=source[inds_finite]
+    ENDIF
     influence=source_list.flux.I*beam[source_list.x,source_list.y]
    
     order=Reverse(sort(influence))
