@@ -153,7 +153,7 @@ IF n_use GT 0 THEN BEGIN
     inds_finite = where(finite(source_list.flux.I[*]),n_finite)
     IF n_finite NE N_elements(src_use) then begin
         print, "WARNING: Model catalog contains nan/inf fluxes"
-        source_list=source[inds_finite]
+        source_list=source_list[inds_finite]
     ENDIF
     influence=source_list.flux.I*beam[source_list.x,source_list.y]
    
