@@ -77,7 +77,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
 
     ;;Check that the flagging of the restored cal is accurately captured in the obs structure
     ;; and broadcast flags across all pols  
-    for pol_i=0,obs.n_pol-1 do begin
+    for pol_i=0,cal.n_pol-1 do begin
       tile_total=FLTARR(cal.n_tile)
       freq_total=FLTARR(cal.n_freq)
       for tile_i=0, cal.n_tile-1 do tile_total[tile_i] = total(abs((*cal.gain[pol_i])[*,tile_i]),/NAN)
