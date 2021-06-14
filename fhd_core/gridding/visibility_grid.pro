@@ -92,7 +92,7 @@ uniform_flag=Keyword_Set(uniform_filter)
 uu=params.uu[bi_use]
 vv=params.vv[bi_use]
 ww=params.ww[bi_use]
-kx_arr=uu/kbinsize ;units in pixel*sec
+kx_arr=uu/kbinsize ;units in pixel/Hz
 ky_arr=vv/kbinsize
 
 nbaselines=obs.nbaselines
