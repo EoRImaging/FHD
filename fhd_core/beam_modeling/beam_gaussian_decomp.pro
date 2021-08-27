@@ -17,10 +17,11 @@
 ;; beam_gauss_param_transfer: Optionally transfer a psf structure with params instead of fitting 
 
 
-pro beam_gaussian_decomp, image_power_beam, obs=obs, antenna1=antenna1, antenna2=antenna2, ant_pol1=ant_pol1,$
-  ant_pol2=ant_pol2,psf_base_single=psf_base_single, maxiter=maxiter, beam_gaussian_params=beam_gaussian_params, $
+pro beam_gaussian_decomp, image_power_beam, dimension_super, res_super, obs=obs, $
+  antenna1=antenna1, antenna2=antenna2, ant_pol1=ant_pol1,ant_pol2=ant_pol2,$
+  psf_base_superres=psf_base_superres, maxiter=maxiter, beam_gaussian_params=beam_gaussian_params, $
   volume_beam=volume_beam,sq_volume_beam=sq_volume_beam,freq_i=freq_i,pol=pol,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
-  beam_gauss_param_transfer=beam_gauss_param_transfer
+  beam_gauss_param_transfer=beam_gauss_param_transfer,conserve_memory=conserve_memory,_Extra=extra
 
   instrument=obs.instrument
   ;All phases of the MWA use the same beam parameters
@@ -30,15 +31,14 @@ pro beam_gaussian_decomp, image_power_beam, obs=obs, antenna1=antenna1, antenna2
 
   pix_use = *antenna1[0].pix_use ;non-zero pixel indicies of the beam
   n_freq = N_elements(antenna1.freq)
-  pix_hor = obs.dimension/antenna1.psf_scale ;number of pixels spanning horizon to horizon
+  pix_hor = round(obs.dimension/antenna1.psf_scale) ;number of pixels spanning horizon to horizon
   psf_image_dim = antenna1.psf_image_dim
-  cen=pix_hor
-  pad = 1.3 ;slight image padding factor to include zeroed super-horizon pixels for fitting purposes
-  x = FINDGEN(cen*pad)
-  y = FINDGEN(cen*pad)
-  range = [psf_image_dim/2-(cen*pad)/2.,psf_image_dim/2+(cen*pad)/2.-1]
+  ;slight image padding factor to include zeroed super-horizon pixels for fitting purposes, which is also even
+  pix_hor_pad = Ceil(pix_hor*1.3/2)*2 
+  x = FINDGEN(pix_hor_pad)
+  y = FINDGEN(pix_hor_pad)
+  range = [psf_image_dim/2-pix_hor_pad/2.,psf_image_dim/2+pix_hor_pad/2.-1]
   image_power_beam_use = image_power_beam
-
 
   ;; Create a functional form of the gaussian beams, with linear least squares fitting at selected frequencies
   ;;  Fitting every frequency would take too long *and* introduce spectral structure due to fitting residuals
@@ -49,12 +49,13 @@ pro beam_gaussian_decomp, image_power_beam, obs=obs, antenna1=antenna1, antenna2
 
       ;optionally transfer pre-fitted gaussian parameters from a psf structure
       if keyword_set(beam_gauss_param_transfer) then begin
+        undefine, image_power_beam_use, image_power_beam, x, y, pix_use
         psf_transfer = getvar_savefile(beam_gauss_param_transfer,'psf')
         beam_gaussian_params = *psf_transfer.beam_gaussian_params[0]
       endif else begin
 
         ;instrument-specific and pointing-specific gaussian parameters (calls mwa_beam_gaussian_decomp for the mwa)
-        Call_procedure, beam_decomp_fn, (cen*pad)/2., pix_hor, obs, parinfo=parinfo, parvalues=p, freq=antenna1.freq[freq_i], $
+        Call_procedure, beam_decomp_fn, pix_hor_pad/2., pix_hor, obs, parinfo=parinfo, parvalues=p, freq=antenna1.freq[freq_i], $
           gauss_beam_fbin = gauss_beam_fbin, pol=pol
 
         ;; Least-squares iterator to fit gaussians
@@ -82,7 +83,7 @@ pro beam_gaussian_decomp, image_power_beam, obs=obs, antenna1=antenna1, antenna2
           power_zenith_beam[pix_use]=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
             (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
           power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
-          power_beam = power_zenith_beam*beam_ant1*beam_ant2
+          power_beam = temporary(power_zenith_beam)*temporary(beam_ant1)*temporary(beam_ant2)
 
           image_power_beam_use=power_beam/power_zenith
 
@@ -118,6 +119,7 @@ pro beam_gaussian_decomp, image_power_beam, obs=obs, antenna1=antenna1, antenna2
 
       endelse ;end else transfer
 
+
     endif else begin
     ;if YY polarization, then flip the fitted XX
       var = reform(beam_gaussian_params,5,N_elements(beam_gaussian_params[*,0])/5.,n_freq)    
@@ -133,7 +135,8 @@ pro beam_gaussian_decomp, image_power_beam, obs=obs, antenna1=antenna1, antenna2
   endif
 
   ;Build uv-plane of the fitted gaussians
-  psf_base_single = gaussian_decomp(FINDGEN(psf_image_dim),FINDGEN(psf_image_dim),beam_gaussian_params[*,freq_i],$
-    fft=1,model_npix=cen*pad,volume_beam=volume_beam,sq_volume_beam=sq_volume_beam)
+  psf_base_superres = gaussian_decomp(FINDGEN(dimension_super),FINDGEN(dimension_super),beam_gaussian_params[*,freq_i],$
+    ftransform=1,model_npix=pix_hor_pad,model_res=res_super*dimension_super/psf_image_dim,volume_beam=volume_beam,$
+    sq_volume_beam=sq_volume_beam,conserve_memory=conserve_memory)
 
 end

@@ -61,7 +61,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   degpix=obs.degpix
   antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
-    ra_arr=ra_arr,dec_arr=dec_arr,_Extra=extra)
+    ra_arr=ra_arr,dec_arr=dec_arr,beam_per_baseline=beam_per_baseline,_Extra=extra)
 
   IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]]
 
@@ -99,19 +99,22 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   zen_int_x=(obs.zenx-obs.obsx)/image_res_scale+psf_image_dim/2
   zen_int_y=(obs.zeny-obs.obsy)/image_res_scale+psf_image_dim/2
   psf_superres_dim=psf_dim*psf_resolution
-  xvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,1)/(Float(psf_resolution)/psf_intermediate_res)-$
-    Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
-  yvals_uv_superres=meshgrid(psf_superres_dim,psf_superres_dim,2)/(Float(psf_resolution)/psf_intermediate_res)-$
-    Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2)
+  ; Calculate the hyperresolved uv-vals of the beam kernel at highest precision prior to cast to
+  ;  be accurate yet small
+  res_super = 1/(Double(psf_resolution)/Double(psf_intermediate_res))
+  xvals_uv_superres=Float(meshgrid(psf_superres_dim,psf_superres_dim,1)*res_super-$
+    Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2))
+  yvals_uv_superres=Float(meshgrid(psf_superres_dim,psf_superres_dim,2)*res_super-$
+    Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2))
 
   complex_flag_arr=intarr(n_pol,nfreq_bin)
   beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
   if keyword_set(beam_per_baseline) then image_power_beam_arr=PTRARR(n_pol,nfreq_bin)
 
-  ant_A_list=tile_A[0:nbaselines-1]
-  ant_B_list=tile_B[0:nbaselines-1]
+  ant_A_list=temporary(tile_A[0:nbaselines-1])
+  ant_B_list=temporary(tile_B[0:nbaselines-1])
   baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
-  bi_list=ant_B_list+ant_A_list*baseline_mod
+  bi_list=temporary(ant_B_list)+temporary(ant_A_list)*baseline_mod
   bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
   group_arr=Lonarr(n_pol,nfreq_bin,nbaselines)-1
@@ -119,7 +122,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   t_beam_power=0.
   FOR pol_i=0,n_pol-1 DO BEGIN
     *primary_beam_area[pol_i]=Fltarr(n_freq)
-    *primary_beam_sq_area[pol_i]=Fltarr(n_freq)
+    *primary_beam_sq_area[pol_i]=DBLarr(n_freq)
     ant_pol1=pol_arr[0,pol_i]
     ant_pol1x=Abs(1-ant_pol1)
     ant_pol2=pol_arr[1,pol_i]
@@ -206,16 +209,15 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y, $
           beam_per_baseline=beam_per_baseline,image_power_beam=image_power_beam,pol_i=pol_i,$
           beam_gaussian_params=beam_gaussian_params,volume_beam=volume_beam,beam_gaussian_decomp=beam_gaussian_decomp,$
-          sq_volume_beam=sq_volume_beam,_Extra=extra)
+          sq_volume_beam=sq_volume_beam,res_super=res_super,psf_superres_dim=psf_superres_dim,_Extra=extra)
 
         t_bint=Systime(1)
-        ;divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
         if keyword_set(beam_gaussian_decomp) then begin
           beam_int+=baseline_group_n*volume_beam
-          ;Match normalized sigmas to the resolution of the volume squared
-          beam2_int+=baseline_group_n*sq_volume_beam*psf_intermediate_res^2
+          beam2_int+=baseline_group_n*sq_volume_beam
           gaussian_params[g_i]=ptr_new(beam_gaussian_params) 
         endif else begin
+          ; divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
           beam_int+=baseline_group_n*Total(psf_base_superres,/double)/psf_resolution^2.
           beam2_int+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2.
         endelse
@@ -226,7 +228,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         ;NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
         ;  the first element, shifted by one pixel. This allows efficient subscripting for interpolation during gridding
         psf_single=Ptrarr(psf_resolution+1,psf_resolution+1)
-        
+  
         FOR i=0,psf_resolution-1 DO BEGIN
           FOR j=0,psf_resolution-1 DO $
             psf_single[psf_resolution-1-i,psf_resolution-1-j]=Ptr_new(psf_base_superres[xvals_i+i,yvals_i+j])
@@ -251,8 +253,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
       beam_int*=weight_invert(n_grp_use)/kbinsize^2.
     
       fi_use=where(freq_bin_i EQ freq_i,nf_use)
-      FOR fi1=0L,nf_use-1 DO (*primary_beam_sq_area[pol_i])[fi_use[fi1]]=Float(beam2_int)
-      FOR fi1=0L,nf_use-1 DO (*primary_beam_area[pol_i])[fi_use[fi1]]=Float(beam_int)
+      FOR fi1=0L,nf_use-1 DO (*primary_beam_sq_area[pol_i])[fi_use[fi1]]=beam2_int
+      FOR fi1=0L,nf_use-1 DO (*primary_beam_area[pol_i])[fi_use[fi1]]=beam_int
     
     ENDFOR
     ;ordered by pol, group, with arrays of coeffs, freq

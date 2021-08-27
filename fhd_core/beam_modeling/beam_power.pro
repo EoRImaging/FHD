@@ -6,12 +6,12 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   debug_beam_conjugate=debug_beam_conjugate, beam_clip_floor=beam_clip_floor,$
   debug_clip_beam_mask=debug_clip_beam_mask,beam_per_baseline=beam_per_baseline,$
   image_power_beam=image_power_beam,kernel_window=kernel_window,beam_gaussian_decomp=beam_gaussian_decomp,$
-  beam_gaussian_params=beam_gaussian_params,volume_beam=volume_beam,sq_volume_beam=sq_volume_beam, $
-  pol_i=pol_i,_Extra=extra
+  beam_gaussian_params=beam_gaussian_params,volume_beam=volume_beam,sq_volume_beam=sq_volume_beam, res_super=res_super, $
+  beam_gauss_param_transfer=beam_gauss_param_transfer,pol_i=pol_i,psf_superres_dim=psf_superres_dim,_Extra=extra
 
   icomp = Complex(0, 1)
   freq_center=antenna1.freq[freq_i]
-  dimension_super=(size(xvals_uv_superres,/dimension))[0]
+  dimension_super=psf_superres_dim
   pix_use=*antenna1[0].pix_use
 
   Jones1=antenna1.Jones[*,*,freq_i]
@@ -30,44 +30,50 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   power_zenith_beam[pix_use]=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
     (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
   power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
-  power_beam = power_zenith_beam*beam_ant1*beam_ant2
+  power_beam = temporary(power_zenith_beam)*temporary(beam_ant1)*temporary(beam_ant2)
 
-  image_power_beam=power_beam/power_zenith
+  image_power_beam=temporary(power_beam)/power_zenith
 
-  ;Generate UV beam and interpolate to a super resolution
-  ;Beam uses the forward FFT for the sky->UV transformation (note that the image uses the inverse FFT)
+  ; Generate UV beam at a super resolution
+  ; Note: Beam uses the forward FFT for the sky->UV transformation (note that the image uses the inverse FFT)
   if keyword_set(beam_gaussian_decomp) then begin
-    ;Build a uv-plane using gaussian mixture models of the image beam
-    beam_gaussian_decomp,image_power_beam,obs=obs,antenna1=antenna1,antenna2=antenna2,psf_base_single=psf_base_single,$
+    ;
+    ; Build an analytic-tranformed uv-plane using gaussian mixture models of the image beam
+    ;  at the desired overresolution (instead of interpolating)
+    undefine, xvals_uv_superres, yvals_uv_superres
+    beam_gaussian_decomp,image_power_beam,dimension_super,res_super,obs=obs,$
+      antenna1=antenna1,antenna2=antenna2,psf_base_superres=psf_base_superres,$
       volume_beam=volume_beam,sq_volume_beam=sq_volume_beam,beam_gaussian_params=beam_gaussian_params,$
-      freq_i=freq_i,pol=pol_i,ant_pol1=ant_pol1,ant_pol2=ant_pol2,zen_int_x=zen_int_x,zen_int_y=zen_int_y
-    psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-    
-    ;Masking is simplier since the derivative is always negative
-    s=size(psf_base_superres, /dimensions)
-    uv_mask_superres=Fltarr(s[0],s[1]) ;dynamically set size to match psf_base_superres
-    psf_mask_threshold_use = Max(Abs(psf_base_superres))/beam_mask_threshold
-    beam_i = where(abs(psf_base_superres) GT psf_mask_threshold_use, n_count)
-    if n_count GT 0 then uv_mask_superres[beam_i]=1 else uv_mask_superres=1
+      freq_i=freq_i,pol=pol_i,ant_pol1=ant_pol1,ant_pol2=ant_pol2,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
+      beam_gauss_param_transfer=beam_gauss_param_transfer,_Extra=extra
+
+    ; Match the FFT norm expected if one had done an overresolved beam (necessary in FFT instances)
+    ;  instead of an exact calculation
+    fft_norm_expected = 1/double(res_super)^2
+    psf_base_superres *= fft_norm_expected
+    sq_volume_beam *= fft_norm_expected*psf_intermediate_res^2.
+
   endif else begin
+    ; 
+    ; FFT the beam image and interpolate to the desired overresolution
     if keyword_set(kernel_window) then image_power_beam *= *(antenna1.pix_window)
     psf_base_single=fft_shift(FFT(fft_shift(image_power_beam)))
     psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
-  
-    ;Build a mask to remove FFT artifacts later 
-    s=size(psf_base_superres, /dimensions)
-    uv_mask_superres=Fltarr(s[0],s[1]) ;dynamically set size to match psf_base_superres
-    psf_mask_threshold_use = Max(Abs(psf_base_superres))/beam_mask_threshold
-    IF ant_pol1 NE ant_pol2 THEN BEGIN
-      seed_i=where(Abs(psf_base_superres) GE Max(Abs(psf_base_superres))/2.,n_seed)
-      beam_i=region_grow(Abs(psf_base_superres),seed_i,$
-        thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
-    ENDIF ELSE BEGIN
-      beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
-        thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
-    ENDELSE
-    uv_mask_superres[beam_i]=1
   endelse
+
+  ; Build a mask to create a well-defined finite beam
+  s=size(psf_base_superres, /dimensions)
+  uv_mask_superres=Fltarr(s[0],s[1]) ;dynamically set size to match psf_base_superres
+  psf_mask_threshold_use = Max(Abs(psf_base_superres))/beam_mask_threshold
+  IF ant_pol1 NE ant_pol2 THEN BEGIN
+    seed_i=where(Abs(psf_base_superres) GE Max(Abs(psf_base_superres))/2.,n_seed)
+    beam_i=region_grow(Abs(psf_base_superres),seed_i,$
+      thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
+  ENDIF ELSE BEGIN
+    beam_i=region_grow(Abs(psf_base_superres),dimension_super*(1.+dimension_super)/2.,$
+      thresh=[psf_mask_threshold_use,Max(Abs(psf_base_superres))])
+  ENDELSE
+  uv_mask_superres[beam_i]=1
 
   IF Keyword_Set(debug_beam_clip_grow) THEN BEGIN
     mask_dist_test = morph_distance(uv_mask_superres, neighbor=3, /background)
@@ -90,12 +96,13 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   ;FFT normalization correction in case this changes the total number of pixels
   psf_base_superres*=psf_intermediate_res^2.
   psf_base_superres/=beam_norm
+
   ;;gaussian decomposition can be calculated analytically, but is an over-estimate of the 
   ;; numerical representation and results in a beam norm of greater than one
   ;if keyword_set(beam_gaussian_decomp) then psf_val_ref=volume_beam*psf_resolution^2. $
   ;   else psf_val_ref=Total(psf_base_superres)
   psf_val_ref=Total(psf_base_superres)
-  
+ 
   IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
     xvals_i=Reform(meshgrid(psf_dim,psf_dim,1)*psf_resolution,psf_dim^2.)
     yvals_i=Reform(meshgrid(psf_dim,psf_dim,2)*psf_resolution,psf_dim^2.)
