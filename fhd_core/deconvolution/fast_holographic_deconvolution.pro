@@ -34,7 +34,7 @@ PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_
     model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,$
     map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,beam_base=beam_base,beam_correction=beam_correction,$
     file_path_fhd=file_path_fhd,no_condense_sources=no_condense_sources,source_mask=source_mask,scale_gain=scale_gain,$
-    model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
+    use_pointing_center=use_pointing_center,_Extra=extra
 compile_opt idl2,strictarrsubs  
 
 ; Deconvolution is divided into several sequential steps:
@@ -247,7 +247,7 @@ IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
         n_sidelobe_src=N_Elements(source_arr_sidelobe)
         print,'Subtracting source model from the sidelobes: '+ Strn(n_sidelobe_src) + " source components"
         IF Keyword_Set(return_sidelobe_catalog) THEN BEGIN
-            print, 'Sidelobe sources included in source list"
+            print, "Sidelobe sources included in source list"
             component_array = [source_arr_sidelobe, component_array]
             max_deconvolution_components += n_sidelobe_src
             comp_i += n_sidelobe_src
