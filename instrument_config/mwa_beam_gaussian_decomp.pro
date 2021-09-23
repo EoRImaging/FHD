@@ -87,30 +87,37 @@ pro mwa_beam_gaussian_decomp, cen, pix_hor, obs, parinfo=parinfo, parvalues=p, f
       0.005, cen-pix_hor/4.2, pix_hor/29.3,cen-pix_hor/3.26,pix_hor/30.4,$ ;sse1
       0.005, cen-pix_hor/3.3, pix_hor/29.3,cen+pix_hor/4.13,pix_hor/30.6] ;snw1
   endif
-  
+ 
+  ;Expand the p vector to readable names 
+  var = reform(p,5,N_elements(p)/5.)
+  amp = var[0,*]
+  offset_x = var[1,*]
+  sigma_x = var[2,*]
+  offset_y = var[3,*]
+  sigma_y = var[4,*]
+
   ;Model was made at high-band center frequency, scale appropriately
   freq_dep = 1.82435e8 / freq
-  var = reform(p,5,N_elements(p)/5.)
-  var[1,*] = ((var[1,*] - cen) * freq_dep) + cen
-  var[3,*] = ((var[3,*] - cen) * freq_dep) + cen
-  var[2,*] *= freq_dep
-  var[4,*] *= freq_dep
+  offset_x = ((offset_x - cen) * freq_dep) + cen
+  offset_y = ((offset_y - cen) * freq_dep) + cen
+  sigma_x *= freq_dep
+  sigma_y *= freq_dep
 
   ;; Flip pointings 1,2 about the x-axis so that the -1,-2 parameters can be used above
   if (pointing EQ 2) OR (pointing EQ 1) then begin
-    var[1,*] = (cen-var[1,*])+cen 
+    offset_x = (cen-offset_x)+cen 
   endif
 
-  ;Model was made in x polarization, flip appropriately
+  ;Model was made in x polarization, flip if y
   if pol EQ 1 then begin
-    temp = var[1,*]
-    var[1,*] = var[3,*]
-    var[3,*] = temp
-    temp = var[2,*]
-    var[2,*] = var[4,*]
-    var[4,*] = temp
+    offset_x = offset_y
+    offset_y = var[1,*]
+    sigma_x = sigma_y
+    sigma_y = var[2,*]
   endif
 
+  ;Reform the p vector (a requirement for the fitting program input)
+  var = [[amp,offset_x,sigma_x,offset_y,sigma_y]]
   p = reform(var,N_elements(p))
 
   parinfo = replicate({value:0.,fixed:0,tied:''},N_elements(p))

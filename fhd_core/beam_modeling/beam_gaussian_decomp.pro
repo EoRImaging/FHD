@@ -2,7 +2,8 @@
 ;; Decompose the image beam of an instrument using pre-defined gaussians in a 
 ;;  2D-fitting routine.
 ;;
-;; image_power_beam: Required image of the beam power
+;; dimension_super: Required dimension of the super resolved beam kernel (e.g. the kernel lookup table)
+;; res_super: Required resolution of the super resolved beam kernel (e.g. the kernel lookup table)
 ;; obs: Required obs structure for observation info
 ;; antenna1, antenna2: Required antenna structures for metadata and responses 
 ;; ant_pol1, ant_pol2: Required polarization of the antennas
@@ -14,14 +15,16 @@
 ;; freq_i: Required frequency index for the current fit
 ;; pol: Required polarization index for the current_fit
 ;; zen_int_x, zen_int_y: Pixel indicies that line up with a common grid
-;; beam_gauss_param_transfer: Optionally transfer a psf structure with params instead of fitting 
+;; beam_gauss_param_transfer: Optionally transfer a psf structure with params instead of fitting
+;; silent: Optionally turn off print statements 
+;; conserve_memory: Optionally use a max byte limit for heavy load loops
 
-
-pro beam_gaussian_decomp, image_power_beam, dimension_super, res_super, obs=obs, $
+pro beam_gaussian_decomp, dimension_super, res_super, obs=obs, $
   antenna1=antenna1, antenna2=antenna2, ant_pol1=ant_pol1,ant_pol2=ant_pol2,$
   psf_base_superres=psf_base_superres, maxiter=maxiter, beam_gaussian_params=beam_gaussian_params, $
-  volume_beam=volume_beam,sq_volume_beam=sq_volume_beam,freq_i=freq_i,pol=pol,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
-  beam_gauss_param_transfer=beam_gauss_param_transfer,conserve_memory=conserve_memory,_Extra=extra
+  volume_beam=volume_beam,sq_volume_beam=sq_volume_beam,freq_i=freq_i,pol=pol,$
+  zen_int_x=zen_int_x,zen_int_y=zen_int_y,beam_gauss_param_transfer=beam_gauss_param_transfer,$
+  silent=silent,conserve_memory=conserve_memory,_Extra=extra
 
   instrument=obs.instrument
   ;All phases of the MWA use the same beam parameters
@@ -29,16 +32,13 @@ pro beam_gaussian_decomp, image_power_beam, dimension_super, res_super, obs=obs,
     beam_decomp_fn = 'mwa_beam_gaussian_decomp'
   endif else beam_decomp_fn = instrument + '_beam_gaussian_decomp'
 
-  pix_use = *antenna1[0].pix_use ;non-zero pixel indicies of the beam
-  n_freq = N_elements(antenna1.freq)
+  n_freq = antenna1.nfreq_bin
   pix_hor = round(obs.dimension/antenna1.psf_scale) ;number of pixels spanning horizon to horizon
   psf_image_dim = antenna1.psf_image_dim
   ;slight image padding factor to include zeroed super-horizon pixels for fitting purposes, which is also even
   pix_hor_pad = Ceil(pix_hor*1.3/2)*2 
-  x = FINDGEN(pix_hor_pad)
-  y = FINDGEN(pix_hor_pad)
+  pixel_vector = FINDGEN(pix_hor_pad)
   range = [psf_image_dim/2-pix_hor_pad/2.,psf_image_dim/2+pix_hor_pad/2.-1]
-  image_power_beam_use = image_power_beam
 
   ;; Create a functional form of the gaussian beams, with linear least squares fitting at selected frequencies
   ;;  Fitting every frequency would take too long *and* introduce spectral structure due to fitting residuals
@@ -49,7 +49,6 @@ pro beam_gaussian_decomp, image_power_beam, dimension_super, res_super, obs=obs,
 
       ;optionally transfer pre-fitted gaussian parameters from a psf structure
       if keyword_set(beam_gauss_param_transfer) then begin
-        undefine, image_power_beam_use, image_power_beam, x, y, pix_use
         psf_transfer = getvar_savefile(beam_gauss_param_transfer,'psf')
         beam_gaussian_params = *psf_transfer.beam_gaussian_params[0]
       endif else begin
@@ -68,35 +67,19 @@ pro beam_gaussian_decomp, image_power_beam, dimension_super, res_super, obs=obs,
         for fbin_i=0, gauss_beam_fbin-1 do begin
           fbin = (n_freq / gauss_beam_fbin) * fbin_i
         
-          ;create image power beam at specific frequency
-          beam_ant1=DComplexarr(psf_image_dim,psf_image_dim)
-          beam_ant2=DComplexarr(psf_image_dim,psf_image_dim)
-          beam_ant1[pix_use]=DComplex(*(antenna1.response[ant_pol1,fbin]))
-          beam_ant2[pix_use]=DComplex(Conj(*(antenna2.response[ant_pol2,fbin])))
-          Jones1=antenna1.Jones[*,*,fbin]
-          Jones2=antenna2.Jones[*,*,fbin]
-
-          ;Amplitude of the response from ant1 is Sqrt(|J1[0,pol1]|^2 + |J1[1,pol1]|^2)
-          ;Amplitude of the response from ant2 is Sqrt(|J2[0,pol2]|^2 + |J2[1,pol2]|^2)
-          ;Amplitude of the baseline response is the product of the antenna responses
-          power_zenith_beam=Dcomplexarr(psf_image_dim,psf_image_dim)
-          power_zenith_beam[pix_use]=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
-            (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
-          power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
-          power_beam = temporary(power_zenith_beam)*temporary(beam_ant1)*temporary(beam_ant2)
-
-          image_power_beam_use=power_beam/power_zenith
+          ;; Create image power beam at specific frequency
+          image_power_beam=beam_image_hyperresolved(antenna1,antenna2,ant_pol1,ant_pol2,fbin,zen_int_x,zen_int_y)
 
           ;; Fit the gaussian decomposition to the instrumental beam image using the 2D fitter
           ;;  p are the input params, parinfo is a structure which details constraints on p, weights are set to one by default,
           ;;  no covariance information is default, and chi_squared and niter detail the statistics of the fit 
           t0=Systime(1)
-          fitted_p = MPFIT2DFUN('gaussian_decomp', x, y, $
-            abs(image_power_beam_use[range[0]:range[1],range[0]:range[1]]), 1 , p, parinfo=parinfo, weights=1d, /quiet, errmsg=errmsg, $
+          fitted_p = MPFIT2DFUN('gaussian_decomp', pixel_vector, pixel_vector, $
+            abs(image_power_beam[range[0]:range[1],range[0]:range[1]]), 1 , p, parinfo=parinfo, weights=1d, /quiet, errmsg=errmsg, $
             maxiter=maxiter,nocovar=1,bestnorm=chi_squared,niter=niter)
           timing=Systime(1)-t0
-          print, "Chi-squared of beam gaussian fit is " + strtrim(chi_squared,2) + " in " + strtrim(niter,2) + $
-            " total iterations for " + strtrim(timing,2) + 'secs'
+          if ~keyword_set(silent) then print, "Chi-squared of beam gaussian fit is " + strtrim(chi_squared,2) + $
+            " in " + strtrim(niter,2) + " total iterations for " + strtrim(timing,2) + 'secs'
           if keyword_set(errmsg) then message, "Gaussian mixture model least-squares fitting return error: " + errmsg
 
           all_p[fbin_i,*] = fitted_p 
@@ -121,14 +104,25 @@ pro beam_gaussian_decomp, image_power_beam, dimension_super, res_super, obs=obs,
 
 
     endif else begin
-    ;if YY polarization, then flip the fitted XX
-      var = reform(beam_gaussian_params,5,N_elements(beam_gaussian_params[*,0])/5.,n_freq)    
-      temp = var[1,*,*]
-      var[1,*,*] = var[3,*,*]
-      var[3,*,*] = temp
-      temp = var[2,*,*]
-      var[2,*,*] = var[4,*,*]
-      var[4,*,*] = temp
+    ;
+    ;if YY polarization, then flip the fitted XX rather than refit for speed purposes
+
+      ;Expand the beam_gaussian_params vector to readable names
+      var = reform(beam_gaussian_params,5,N_elements(beam_gaussian_params[*,0])/5.,n_freq)
+      amp = var[0,*,*]
+      offset_x = var[1,*,*]
+      sigma_x = var[2,*,*]
+      offset_y = var[3,*,*]
+      sigma_y = var[4,*,*]
+ 
+      ;Flip the x and y offsets/sigmas
+      offset_x = offset_y
+      offset_y = var[1,*,*]
+      sigma_x = sigma_y
+      sigma_y = var[2,*,*]
+
+      ;Reform the beam_gaussian_params vector
+      var = [[amp,offset_x,sigma_x,offset_y,sigma_y]]
       beam_gaussian_params = reform(var,N_elements(beam_gaussian_params[*,0]),n_freq)
     endelse
 

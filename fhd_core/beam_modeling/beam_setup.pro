@@ -111,10 +111,10 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
   if keyword_set(beam_per_baseline) then image_power_beam_arr=PTRARR(n_pol,nfreq_bin)
 
-  ant_A_list=temporary(tile_A[0:nbaselines-1])
-  ant_B_list=temporary(tile_B[0:nbaselines-1])
+  ant_A_list=tile_A[0:nbaselines-1]
+  ant_B_list=tile_B[0:nbaselines-1]
   baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
-  bi_list=temporary(ant_B_list)+temporary(ant_A_list)*baseline_mod
+  bi_list=ant_B_list+ant_A_list*baseline_mod
   bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
   group_arr=Lonarr(n_pol,nfreq_bin,nbaselines)-1

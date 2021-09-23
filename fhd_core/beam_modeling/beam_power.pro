@@ -12,27 +12,7 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   icomp = Complex(0, 1)
   freq_center=antenna1.freq[freq_i]
   dimension_super=psf_superres_dim
-  pix_use=*antenna1[0].pix_use
-
-  Jones1=antenna1.Jones[*,*,freq_i]
-  Jones2=antenna2.Jones[*,*,freq_i]
-
-  beam_ant1=DComplexarr(psf_image_dim,psf_image_dim)
-  beam_ant2=DComplexarr(psf_image_dim,psf_image_dim)
-  beam_ant1[pix_use]=DComplex(*(antenna1.response[ant_pol1,freq_i]))
-  beam_ant2[pix_use]=DComplex(Conj(*(antenna2.response[ant_pol2,freq_i])))
   beam_norm=1.
-  
-  ;Amplitude of the response from ant1 is Sqrt(|J1[0,pol1]|^2 + |J1[1,pol1]|^2)
-  ;Amplitude of the response from ant2 is Sqrt(|J2[0,pol2]|^2 + |J2[1,pol2]|^2)
-  ;Amplitude of the baseline response is the product of the antenna responses
-  power_zenith_beam=Dcomplexarr(psf_image_dim,psf_image_dim)
-  power_zenith_beam[pix_use]=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
-    (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
-  power_zenith=Interpolate(power_zenith_beam,zen_int_x,zen_int_y,cubic=-0.5)
-  power_beam = temporary(power_zenith_beam)*temporary(beam_ant1)*temporary(beam_ant2)
-
-  image_power_beam=temporary(power_beam)/power_zenith
 
   ; Generate UV beam at a super resolution
   ; Note: Beam uses the forward FFT for the sky->UV transformation (note that the image uses the inverse FFT)
@@ -41,7 +21,7 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
     ; Build an analytic-tranformed uv-plane using gaussian mixture models of the image beam
     ;  at the desired overresolution (instead of interpolating)
     undefine, xvals_uv_superres, yvals_uv_superres
-    beam_gaussian_decomp,image_power_beam,dimension_super,res_super,obs=obs,$
+    beam_gaussian_decomp,dimension_super,res_super,obs=obs,$
       antenna1=antenna1,antenna2=antenna2,psf_base_superres=psf_base_superres,$
       volume_beam=volume_beam,sq_volume_beam=sq_volume_beam,beam_gaussian_params=beam_gaussian_params,$
       freq_i=freq_i,pol=pol_i,ant_pol1=ant_pol1,ant_pol2=ant_pol2,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
@@ -56,9 +36,12 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   endif else begin
     ; 
     ; FFT the beam image and interpolate to the desired overresolution
+
+    image_power_beam = beam_image_hyperresolved(antenna1,antenna2,ant_pol1,ant_pol2,freq_i,zen_int_x,zen_int_y)
     if keyword_set(kernel_window) then image_power_beam *= *(antenna1.pix_window)
     psf_base_single=fft_shift(FFT(fft_shift(image_power_beam)))
     psf_base_superres=Interpolate(psf_base_single,xvals_uv_superres,yvals_uv_superres,cubic=-0.5)
+
   endelse
 
   ; Build a mask to create a well-defined finite beam
@@ -97,10 +80,9 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   psf_base_superres*=psf_intermediate_res^2.
   psf_base_superres/=beam_norm
 
-  ;;gaussian decomposition can be calculated analytically, but is an over-estimate of the 
-  ;; numerical representation and results in a beam norm of greater than one
-  ;if keyword_set(beam_gaussian_decomp) then psf_val_ref=volume_beam*psf_resolution^2. $
-  ;   else psf_val_ref=Total(psf_base_superres)
+  ;;total of the gaussian decomposition can be calculated analytically, but is an over-estimate 
+  ;; of the numerical representation and results in a beam norm of greater than one,
+  ;; thus the discrete total is used  
   psf_val_ref=Total(psf_base_superres)
  
   IF Keyword_Set(debug_clip_beam_mask) THEN BEGIN
@@ -114,10 +96,10 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   ENDIF
 
   IF Keyword_Set(interpolate_beam_threshold) THEN BEGIN
-    psf_amp = interpol_2d(abs(psf_base_superres*uv_mask_superres), uv_mask_superres) > 0
+    psf_amp = interpol_2d(abs(psf_base_superres*uv_mask_superres), uv_mask_superres, nan_safe=1) > 0
     psf_phase = Fltarr(size(psf_base_superres, /dimension))
     psf_phase[beam_i] = Atan(psf_base_superres[beam_i], /phase)
-    psf_phase = interpol_2d(psf_phase, uv_mask_superres)
+    psf_phase = interpol_2d(psf_phase, uv_mask_superres, nan_safe=1)
     psf_base_superres = psf_amp*Cos(psf_phase) + icomp*psf_amp*Sin(psf_phase)
   ENDIF ELSE psf_base_superres*=uv_mask_superres
 
@@ -129,8 +111,6 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
     psf_floor = psf_mask_threshold_use*(psf_intermediate_res^2.)/beam_norm
     psf_amp[i_use] -= psf_floor
     psf_base_superres = psf_amp*Cos(psf_phase) + icomp*psf_amp*Sin(psf_phase)
-    
-    ;if keyword_set(beam_gaussian_decomp) then volume_beam -= psf_mask_threshold_use
   ENDIF
 
   psf_base_superres*=psf_val_ref/Total(psf_base_superres)
