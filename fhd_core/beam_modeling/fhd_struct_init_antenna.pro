@@ -101,7 +101,6 @@ psf_scale=dimension*psf_intermediate_res/psf_image_dim
 antenna.psf_image_dim=psf_image_dim
 antenna.psf_scale=psf_scale
 
-print, psf_image_dim
 xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obsx
 yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
 ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below

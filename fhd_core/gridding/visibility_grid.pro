@@ -6,7 +6,7 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
     error=error,grid_uniform=grid_uniform,$
     grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
-    beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,semi_analytic_grid=semi_analytic_grid,_Extra=extra
+    beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -273,12 +273,6 @@ IF map_flag THEN BEGIN
         *map_fn_inds[i,j]=psf2_inds[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]
 ENDIF
 
-if keyword_set(semi_analytic_grid) then begin
-  image_uv=gaussian_grid(vis_arr_use,obs,psf,params,xcen=xcen,ycen=ycen,vis_inds_use=vis_inds_use/n_freq,$
-    xmin=xmin,model_use=model_use,model_return=model_return,weights=weights,variance=variance,polarization=polarization,$
-    fi_use=fi_use,n_vis=n_vis,vis_weights=vis_weights)
-  n_bin_use=0 ;skip discrete gridding for loop
-endif
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
     ; Cycle through sets of visibilities which contribute to the same data/model uv-plane pixels, and perform
