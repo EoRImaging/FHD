@@ -3,7 +3,8 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_image_resolution=psf_image_resolution,timing=timing,$
     psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
     inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
-    kernel_window=kernel_window,beam_per_baseline=beam_per_baseline,_Extra=extra
+    kernel_window=kernel_window,beam_per_baseline=beam_per_baseline,$
+    beam_gaussian_decomp=beam_gaussian_decomp,_Extra=extra
 t0=Systime(1)
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
@@ -117,6 +118,11 @@ Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs
 za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 undefine, ra_use, dec_use, alt_arr1, az_arr1
+
+if keyword_set(beam_gaussian_decomp) and keyword_set(kernel_window) then begin
+  print, 'Gaussian decomposition cannot be used with modified kernel windows. Window not applied.'
+  kernel_window=0
+endif
 
 if keyword_set(kernel_window) then begin
   print, 'Applying a modified gridding kernel. Beam is no longer instrumental. Do not use for calibration.'
