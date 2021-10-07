@@ -1,4 +1,4 @@
-FUNCTION dirty_image_generate,dirty_image_uv,obs=obs,psf=psf,params=params$
+FUNCTION dirty_image_generate,dirty_image_uv,obs=obs,psf=psf,params=params,$
     baseline_threshold=baseline_threshold,mask=mask,$
     normalization=normalization,resize=resize,width_smooth=width_smooth,degpix=degpix,$
     no_real=no_real,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
