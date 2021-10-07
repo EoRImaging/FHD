@@ -1,5 +1,5 @@
-FUNCTION filter_uv_radial,image_uv,name=name,weights=weights,filter=filter,$
-    radial_power=radial_power,return_name_only=return_name_only,_Extra=extra
+FUNCTION filter_uv_radial,image_uv,obs=obs,psf=psf,params=params,name=name,weights=weights,$
+    filter=filter,radial_power=radial_power,return_name_only=return_name_only,_Extra=extra
 name='radial'
 IF Keyword_Set(return_name_only) THEN RETURN,image_uv
 ;IF N_Elements(filter) EQ N_Elements(image_uv) THEN RETURN,image_uv*filter
@@ -42,7 +42,8 @@ filter_use=Reform(interpol(rad_vals_use,rad_i_use,reform(radial_map,dimension*Fl
 
 IF Max(filter_use) EQ 0 THEN RETURN,image_uv 
 
-IF Keyword_Set(radial_power) THEN filter_use*=radial_map^radial_power ELSE filter_use*=weight_invert(Sqrt(radial_map))
+IF Keyword_Set(radial_power) THEN filter_use*=radial_map^radial_power $
+    ELSE filter_use*=weight_invert(Sqrt(radial_map))
 wts_i=where(weights,n_wts)
 IF n_wts GT 0 THEN filter_use/=Mean(filter_use[wts_i]) ELSE filter_use/=Mean(filter_use)
 

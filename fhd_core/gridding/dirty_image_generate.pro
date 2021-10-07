@@ -1,4 +1,5 @@
-FUNCTION dirty_image_generate,dirty_image_uv,baseline_threshold=baseline_threshold,mask=mask,$
+FUNCTION dirty_image_generate,dirty_image_uv,obs=obs,psf=psf,params=params$
+    baseline_threshold=baseline_threshold,mask=mask,$
     normalization=normalization,resize=resize,width_smooth=width_smooth,degpix=degpix,$
     no_real=no_real,image_filter_fn=image_filter_fn,pad_uv_image=pad_uv_image,$
     filter=filter,weights=weights,antialias=antialias,beam_ptr=beam_ptr,_Extra=extra
@@ -30,16 +31,19 @@ IF Keyword_Set(filter) THEN BEGIN
         IF N_Elements(*filter) EQ N_Elements(di_uv_use) THEN di_uv_use*=*filter $
             ELSE BEGIN
                 IF ~Keyword_Set(image_filter_fn) THEN image_filter_fn='filter_uv_uniform'
-                di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
+                di_uv_use=Call_Function(image_filter_fn,di_uv_use,obs=obs,psf=psf,params=params,$
+                    weights=weights,filter=filter,_Extra=extra)
             ENDELSE
     ENDIF ELSE BEGIN
         filter=Ptr_new(/allocate)
         IF N_Elements(image_filter_fn) EQ 0 THEN image_filter_fn='filter_uv_uniform'
-        di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
+        di_uv_use=Call_Function(image_filter_fn,di_uv_use,obs=obs,psf=psf,params=params,$
+            weights=weights,filter=filter,_Extra=extra)
     ENDELSE
 ENDIF ELSE BEGIN
     IF Keyword_Set(image_filter_fn) THEN $
-        di_uv_use=Call_Function(image_filter_fn,di_uv_use,weights=weights,filter=filter,_Extra=extra)
+        di_uv_use=Call_Function(image_filter_fn,di_uv_use,obs=obs,psf=psf,params=params,$
+            weights=weights,filter=filter,_Extra=extra)
 ENDELSE
 
 ;IF Keyword_Set(antialias) THEN BEGIN
