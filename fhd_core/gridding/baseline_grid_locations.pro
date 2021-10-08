@@ -80,10 +80,6 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   ; Pixel number offet per baseline for each uv-box subset 
   x_offset=Fix(Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
   y_offset=Fix(Floor((ycen-Floor(ycen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
-
-  ; The minimum pixel in the uv-grid (bottom left of the kernel) that each baseline contributes to
-  xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
-  ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
   
   IF keyword_set(interp_flag) THEN BEGIN
     ; Derivatives from pixel edge to baseline center for use in interpolation
@@ -94,6 +90,10 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
     dx1dy0_arr = dx_arr*(1-dy_arr)
     dx1dy1_arr = Temporary(dx_arr) * Temporary(dy_arr)
   ENDIF
+
+  ; The minimum pixel in the uv-grid (bottom left of the kernel) that each baseline contributes to
+  xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
+  ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
 
   IF n_dist_flag GT 0 AND ~keyword_set(fill_model_visibilities) THEN BEGIN
     ; If baselines fall outside the desired min/max baseline range at all during the frequency range, 

@@ -29,7 +29,7 @@ n_vis_arr=obs.nf_vis
 ; and the 2D derivatives for bilinear interpolation
 baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
   bi_use=bi_use,fi_use=fi_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
-  dx1dy0_arr=dx1dy0_arr,mask_mirror_indicies=mask_mirror_indicies
+  dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,mask_mirror_indices=mask_mirror_indices
 
 n_b_use=N_Elements(bi_use)
 n_f_use=N_Elements(fi_use)
