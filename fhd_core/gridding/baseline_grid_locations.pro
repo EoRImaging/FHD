@@ -95,6 +95,12 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   xmin=Long(Floor(Temporary(xcen))+dimension/2-(psf_dim/2-1))
   ymin=Long(Floor(Temporary(ycen))+elements/2-(psf_dim/2-1))
 
+  ; Set the minimum pixel value of baselines which fall outside of the uv-grid to -1 to exclude them
+  range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
+  range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
+  IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
+  IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
+  
   IF n_dist_flag GT 0 AND ~keyword_set(fill_model_visibilities) THEN BEGIN
     ; If baselines fall outside the desired min/max baseline range at all during the frequency range, 
     ; then set their minimum pixel value to -1 to exlude them 
@@ -102,12 +108,6 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
     ymin[*,flag_dist_baseline]=-1
     flag_dist_baseline=0
   ENDIF
-
-  ; Set the minimum pixel value of baselines which fall outside of the uv-grid to -1 to exclude them
-  range_test_x_i=where((xmin LE 0) OR ((xmin+psf_dim-1) GE dimension-1),n_test_x)
-  range_test_y_i=where((ymin LE 0) OR ((ymin+psf_dim-1) GE elements-1),n_test_y)
-  IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
-  IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
 
   IF vis_weight_switch THEN BEGIN
     ; If baselines are flagged via the weights, then set their minimum pixel value to -1 to exclude them
