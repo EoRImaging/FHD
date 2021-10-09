@@ -22,22 +22,19 @@ IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
 freq_bin_i=(*obs.baseline_info).fbin_i
 n_freq=Long(obs.n_freq)
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
+n_f_use=N_Elements(fi_use)
 freq_bin_i=freq_bin_i[fi_use]
 n_vis_arr=obs.nf_vis
 
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
 ; and the 2D derivatives for bilinear interpolation
 baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
-  bi_use=bi_use,fi_use=fi_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
-  dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,mask_mirror_indices=mask_mirror_indices
+  bi_use=bi_use,fi_use=fi_use,vis_inds_use=vis_inds_use,interp_flag=interp_flag,$
+  dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,$
+  mask_mirror_indices=mask_mirror_indices
 
-n_b_use=N_Elements(bi_use)
-n_f_use=N_Elements(fi_use)
-
-; Calculate indices of visibilities to grid during this call (i.e. specific freqs, time sets)
-; and initialize output arrays
-vis_inds_use=matrix_multiply(fi_use,replicate(1L,n_b_use))+matrix_multiply(replicate(1L,n_f_use),bi_use)*n_freq
-IF vis_weight_switch THEN vis_weights=vis_weights[vis_inds_use]
+; Use indices of visibilities to grid during this call (i.e. specific freqs, time sets)
+; to initialize output arrays
 IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[vis_inds_use] ELSE BEGIN
     vis_arr_use=(Temporary(*visibility_ptr))[vis_inds_use] 
     Ptr_free,visibility_ptr

@@ -19,9 +19,8 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
     ; and the 2D derivatives for bilinear interpolation
     baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
-      fill_model_visibilities=fill_model_visibilities,bi_use=bi_use,fi_use=fi_use,$
-      interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
-      dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,mask_mirror_indices=mask_mirror_indices
+      fill_model_visibilities=fill_model_visibilities,interp_flag=interp_flag,$
+      dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr
 
     ;extract information from the structures
     dimension=Long(obs.dimension)

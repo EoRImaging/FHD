@@ -6,8 +6,8 @@
 
 pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
   fill_model_visibilities=fill_model_visibilities,bi_use=bi_use,fi_use=fi_use,$
-  interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,$
-  dx1dy1_arr=dx1dy1_arr,mask_mirror_indices=mask_mirror_indices
+  vis_inds_use=vis_inds_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
+  dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,mask_mirror_indices=mask_mirror_indices
 
   ; Extract information from the structures
   n_tile=obs.n_tile
@@ -52,16 +52,31 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
     ENDELSE
   ENDIF
 
+  ; Calculate indices of visibilities to grid during this call (i.e. specific freqs, time sets)
+  ; and initialize output arrays
+  n_b_use=N_Elements(bi_use)
+  n_f_use=N_Elements(fi_use)
+  vis_inds_use=matrix_multiply(fi_use,replicate(1L,n_b_use))+matrix_multiply(replicate(1L,n_f_use),bi_use)*n_freq
+  IF vis_weight_switch THEN vis_weights=vis_weights[vis_inds_use]
+
   ; Units in pixel/Hz
   kx_arr=params.uu[bi_use]/kbinsize
   ky_arr=params.vv[bi_use]/kbinsize
 
-  ; Flag baselines on their maximum and minimum extent in the full frequency range of the observation
-  dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
-  dist_test_max=max((*obs.baseline_info).freq)*dist_test
-  dist_test_min=min((*obs.baseline_info).freq)*dist_test
-  flag_dist_baseline=where((dist_test_min LT min_baseline) $
-    OR (dist_test_max GT max_baseline),n_dist_flag)
+  ; Flag baselines which fall outside the uv plane
+  IF Keyword_Set(fill_model_visibilities) THEN BEGIN
+    dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
+    dist_test=frequency_array#dist_test
+    flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
+  ENDIF ELSE BEGIN
+    ; Flag baselines on their maximum and minimum extent in the full frequency range of the observation.
+    ; This prevents the sudden disappearance of baselines along frequency
+    dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
+    dist_test_max=max((*obs.baseline_info).freq)*dist_test
+    dist_test_min=min((*obs.baseline_info).freq)*dist_test
+    flag_dist_baseline=where((dist_test_min LT min_baseline) $
+      OR (dist_test_max GT max_baseline),n_dist_flag)
+  ENDELSE
   dist_test=0
   dist_test_min=0
   dist_test_max=0
