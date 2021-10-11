@@ -30,13 +30,22 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   n_freq_use=N_Elements(frequency_array)
 
   ; Careful treatment to avoid overwriting the weights pointer
-  vis_weight_switch=Ptr_valid(vis_weight_ptr)
-  IF vis_weight_switch THEN BEGIN
-    IF Keyword_Set(preserve_visibilities) THEN vis_weights=*vis_weight_ptr ELSE BEGIN
-      vis_weights=Temporary(*vis_weight_ptr)
-      Ptr_free,vis_weight_ptr
-    ENDELSE
-  ENDIF
+  weight_type = size(vis_weight_ptr,/type)
+  IF weight_type EQ 10 THEN BEGIN
+    ; If the weights are pointers
+    vis_weight_switch=Ptr_valid(vis_weight_ptr)
+    IF vis_weight_switch THEN BEGIN
+      IF Keyword_Set(preserve_visibilities) THEN vis_weights=*vis_weight_ptr ELSE BEGIN
+        vis_weights=Temporary(*vis_weight_ptr)
+        Ptr_free,vis_weight_ptr
+      ENDELSE
+    ENDIF
+  ENDIF ELSE BEGIN
+    ; If the weights are not pointers
+    vis_weight_switch=1
+    vis_weights = vis_weight_ptr
+    vis_weight_ptr=0
+  ENDELSE
 
   ; Baselines to use
   IF N_Elements(bi_use) EQ 0 THEN BEGIN
