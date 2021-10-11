@@ -20,7 +20,8 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     ; and the 2D derivatives for bilinear interpolation
     baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
       fill_model_visibilities=fill_model_visibilities,interp_flag=interp_flag,$
-      dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr
+      dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,$
+      x_offset=x_offset,y_offset=y_offset
 
     ;extract information from the structures
     dimension=Long(obs.dimension)

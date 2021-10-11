@@ -31,7 +31,7 @@ n_vis_arr=obs.nf_vis
 baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
   bi_use=bi_use,fi_use=fi_use,vis_inds_use=vis_inds_use,interp_flag=interp_flag,$
   dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,$
-  mask_mirror_indices=mask_mirror_indices
+  x_offset=x_offset,y_offset=y_offset,mask_mirror_indices=mask_mirror_indices
 
 ; Use indices of visibilities to grid during this call (i.e. specific freqs, time sets)
 ; to initialize output arrays

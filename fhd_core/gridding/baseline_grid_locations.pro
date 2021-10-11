@@ -7,7 +7,8 @@
 pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
   fill_model_visibilities=fill_model_visibilities,bi_use=bi_use,fi_use=fi_use,$
   vis_inds_use=vis_inds_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
-  dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,mask_mirror_indices=mask_mirror_indices
+  dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,x_offset=x_offset,y_offset=y_offset,$
+  mask_mirror_indices=mask_mirror_indices
 
   ; Extract information from the structures
   n_tile=obs.n_tile
@@ -41,7 +42,7 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   IF N_Elements(bi_use) EQ 0 THEN BEGIN
     ; If the data is being gridded separatedly for the even/odd time samples, then force
     ; flagging to be consistent across even/odd sets
-    IF vis_weight_switch AND ~Keyword_set(fill_model_vis) THEN BEGIN
+    IF vis_weight_switch AND ~Keyword_set(fill_model_visibilities) THEN BEGIN
       flag_test=Total(vis_weights>0,1)
       bi_use=where((flag_test GT 0))
     ENDIF ELSE BEGIN
@@ -116,13 +117,20 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   IF n_test_x GT 0 THEN xmin[range_test_x_i]=(ymin[range_test_x_i]=-1)
   IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
   
-  IF n_dist_flag GT 0 AND ~keyword_set(fill_model_visibilities) THEN BEGIN
-    ; If baselines fall outside the desired min/max baseline range at all during the frequency range, 
-    ; then set their minimum pixel value to -1 to exlude them 
-    xmin[*,flag_dist_baseline]=-1
-    ymin[*,flag_dist_baseline]=-1
-    flag_dist_baseline=0
-  ENDIF
+  ; Flag baselines which fall outside the uv plane
+  IF n_dist_flag GT 0 THEN BEGIN
+    IF keyword_set(fill_model_visibilities) THEN BEGIN
+      xmin[flag_dist_i]=-1
+      ymin[flag_dist_i]=-1
+      flag_dist_i=0
+    ENDIF ELSE BEGIN
+      ; If baselines fall outside the desired min/max baseline range at all during the frequency range, 
+      ; then set their minimum pixel value to -1 to exlude them 
+      xmin[*,flag_dist_baseline]=-1
+      ymin[*,flag_dist_baseline]=-1
+      flag_dist_baseline=0
+    ENDELSE
+  ENDIF 
 
   IF vis_weight_switch THEN BEGIN
     ; If baselines are flagged via the weights, then set their minimum pixel value to -1 to exclude them
