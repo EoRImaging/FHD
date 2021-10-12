@@ -20,7 +20,6 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
     ;
     ; Build an analytic-tranformed uv-plane using gaussian mixture models of the image beam
     ;  at the desired overresolution (instead of interpolating)
-    undefine, xvals_uv_superres, yvals_uv_superres
     beam_gaussian_decomp,dimension_super,res_super,obs=obs,$
       antenna1=antenna1,antenna2=antenna2,psf_base_superres=psf_base_superres,$
       volume_beam=volume_beam,sq_volume_beam=sq_volume_beam,beam_gaussian_params=beam_gaussian_params,$

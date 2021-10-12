@@ -45,7 +45,15 @@ IF tag_exist(psf,'beam_gaussian_params') THEN $
   beam_gaussian_params=psf.beam_gaussian_params else beam_gaussian_params=0
 IF tag_exist(psf,'fbin_i') THEN freq_bin_i=psf.fbin_i
 
-if ~keyword_set(beam_gaussian_params) then beam_arr=*psf.beam_ptr
+if keyword_set(beam_gaussian_params) then begin
+    ; 1.3 is the padding factor for the gaussian fitting procedure
+    ; (2.*obs.kpix) is the ratio of full sky (2 in l,m) to the analysis range (1/obs.kpix)
+    ; (2.*obs.kpix*dimension/psf.pix_horizon) is the scale factor between the psf pixels-to-horizon and the 
+    ;   analysis pixels-to-horizon 
+    ; (0.5/obs.kpix) is the resolution scaling of what the beam model was made at and the current res 
+    model_npix=psf.pix_horizon*1.3
+    model_res=(2.*obs.kpix*dimension)/psf.pix_horizon*(0.5/obs.kpix)
+endif else beam_arr=*psf.beam_ptr
 
 IF Keyword_Set(obs) THEN BEGIN
     IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
@@ -70,11 +78,9 @@ IF Keyword_Set(square) THEN BEGIN
     nbin=N_Elements(Uniq(freq_bin_use,Sort(freq_bin_use)))
 
     IF keyword_set(beam_gaussian_params) THEN BEGIN
-        ;
         ; Build the image directly, hence purely real arrays.
         beam_single=FLTARR(dimension,elements)
     ENDIF ELSE BEGIN
-        ;
         ; Build the uv response, hence complex arrays
         beam_single=Complexarr(psf_dim,psf_dim)
     ENDELSE
@@ -84,18 +90,12 @@ IF Keyword_Set(square) THEN BEGIN
         nf_bin=Float(Total(freq_bin_use EQ fbin))
 
         IF keyword_set(beam_gaussian_params) THEN BEGIN
-            ;
             ; Build the image directly from the gaussian parameters since gaussians have
             ; an analytic transform
             FOR gi=0,n_groups-1 DO BEGIN
-                ;
-                ; (2.*obs.kpix) is the ratio of full sky (2 in l,m) to the analysis range (1/obs.kpix)
-                ; (2.*obs.kpix*dimension/psf.pix_horizon) is the scale factor between the psf pixels-to-horizon and the 
-                ;  analysis pixels-to-horizon 
-                ; (0.5/obs.kpix) is the resolution scaling of what the beam model was made at and the current res 
                 beam_single+=gaussian_decomp(FINDGEN(dimension),FINDGEN(elements),$
-                  (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=psf.pix_horizon*1.3,$
-                  model_res=(2.*obs.kpix*dimension)/psf.pix_horizon*(0.5/obs.kpix))*group_n[gi_use[gi]]
+                  (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=model_npix,$
+                  model_res=model_res*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             beam_base+=nf_bin*beam_single*beam_single
@@ -121,12 +121,10 @@ ENDIF ELSE BEGIN
     nf_use=N_Elements(freq_i_use)
 
     IF keyword_set(beam_gaussian_params) THEN BEGIN
-        ;
         ; Build the image directly, hence purely real arrays.
         beam_base_uv=Fltarr(dimension,elements) ;misnomer warning: using _uv to reduce code bulk
         beam_single=FLTARR(dimension,elements)
     ENDIF ELSE BEGIN
-        ;
         ; Build the uv response, hence complex arrays
         beam_base_uv=complexarr(psf_dim,psf_dim)
         beam_single=Complexarr(psf_dim,psf_dim)
@@ -138,21 +136,14 @@ ENDIF ELSE BEGIN
         fbin=freq_bin_i[fi]
         beam_single[*,*]=0
         IF keyword_set(beam_gaussian_params) THEN BEGIN
-            ;
             ; Build the image directly from the gaussian parameters since gaussians have
             ; an analytic transform
             FOR gi=0,n_groups-1 DO BEGIN
-                ;
-                ;(2.*obs.kpix) is the ratio of full sky (2 in l,m) to the analysis range (1/obs.kpix)
-                ;(2.*obs.kpix*dimension/psf.pix_horizon) is the scale factor between the psf pixels-to-horizon and the 
-                ; analysis pixels-to-horizon
-                ;(0.5/obs.kpix) is the resolution scaling of what the beam model was made at and the current res 
                 beam_single+=gaussian_decomp(FINDGEN(dimension),FINDGEN(elements),$
-                  (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=psf.pix_horizon*1.3,$
-                  model_res=(2.*obs.kpix*dimension)/psf.pix_horizon*(0.5/obs.kpix))*group_n[gi_use[gi]]
+                  (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=model_npix,$
+                  model_res=model_res*group_n[gi_use[gi]]
             ENDFOR
         ENDIF ELSE BEGIN
-            ; 
             ; Build the total uv beam from the each hyperresolved beam
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=Reform(*(*beam_arr[pol_i,fbin,gi_ref[gi]])[rbin,rbin]*group_n[gi_use[gi]],psf_dim,psf_dim)

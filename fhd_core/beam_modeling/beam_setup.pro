@@ -102,10 +102,13 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   ; Calculate the hyperresolved uv-vals of the beam kernel at highest precision prior to cast to
   ;  be accurate yet small
   res_super = 1/(Double(psf_resolution)/Double(psf_intermediate_res))
-  xvals_uv_superres=Float(meshgrid(psf_superres_dim,psf_superres_dim,1)*res_super-$
-    Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2))
-  yvals_uv_superres=Float(meshgrid(psf_superres_dim,psf_superres_dim,2)*res_super-$
-    Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2))
+  ; Calculate the hyperresolved uv-pixel coords to reduce FFT artifacts if the gauss decomposition is not used
+  if ~keyword_set(beam_gaussian_decomp) then begin
+    xvals_uv_superres=Float(meshgrid(psf_superres_dim,psf_superres_dim,1)*res_super-$
+      Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2))
+    yvals_uv_superres=Float(meshgrid(psf_superres_dim,psf_superres_dim,2)*res_super-$
+      Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2))
+  endif
 
   complex_flag_arr=intarr(n_pol,nfreq_bin)
   beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
@@ -282,7 +285,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   ; otherwise save the full psf struct
   if keyword_set(save_beam_metadata_only) then begin
     psf_metadata = fhd_struct_init_psf(beam_ptr=0,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
-      psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=complex_flag,pol_norm=pol_norm,freq_norm=freq_norm,$
+      psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=1,pol_norm=pol_norm,freq_norm=freq_norm,$
       n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr,interpolate_kernel=interpolate_kernel,$
       image_power_beam_arr=image_power_beam_arr,ra_arr=ra_arr,dec_arr=dec_arr,psf_image_dim=psf_image_dim,$
       psf_image_resolution=psf_image_resolution,beam_mask_threshold=beam_mask_threshold,$

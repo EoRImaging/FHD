@@ -110,9 +110,11 @@ pro mwa_beam_gaussian_decomp, cen, pix_hor, obs, parinfo=parinfo, parvalues=p, f
 
   ;Model was made in x polarization, flip if y
   if pol EQ 1 then begin
-    offset_x = offset_y
+    ;Reform the var vector to hold x polarization information to ensure no loss of params during flip
+    var = [[amp,offset_x,sigma_x,offset_y,sigma_y]]
+    offset_x = var[3,*]
     offset_y = var[1,*]
-    sigma_x = sigma_y
+    sigma_x = var[4,*]
     sigma_y = var[2,*]
   endif
 

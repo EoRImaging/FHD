@@ -110,15 +110,10 @@ pro beam_gaussian_decomp, dimension_super, res_super, obs=obs, $
       ;Expand the beam_gaussian_params vector to readable names
       var = reform(beam_gaussian_params,5,N_elements(beam_gaussian_params[*,0])/5.,n_freq)
       amp = var[0,*,*]
-      offset_x = var[1,*,*]
-      sigma_x = var[2,*,*]
-      offset_y = var[3,*,*]
-      sigma_y = var[4,*,*]
- 
       ;Flip the x and y offsets/sigmas
-      offset_x = offset_y
+      offset_x = var[3,*,*]
+      sigma_x = var[4,*,*]
       offset_y = var[1,*,*]
-      sigma_x = sigma_y
       sigma_y = var[2,*,*]
 
       ;Reform the beam_gaussian_params vector

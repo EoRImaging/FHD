@@ -18,6 +18,11 @@ IF STRMID(instrument,0,3) EQ 'mwa' THEN BEGIN
   tile_init_fn='mwa_beam_setup_init'
 ENDIF
 
+if keyword_set(beam_gaussian_decomp) and keyword_set(kernel_window) then begin
+  print, 'Gaussian decomposition cannot be used with modified kernel windows. Window not applied.'
+  kernel_window=0
+endif
+
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
 n_pol=obs.n_pol
@@ -118,11 +123,6 @@ Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs
 za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 undefine, ra_use, dec_use, alt_arr1, az_arr1
-
-if keyword_set(beam_gaussian_decomp) and keyword_set(kernel_window) then begin
-  print, 'Gaussian decomposition cannot be used with modified kernel windows. Window not applied.'
-  kernel_window=0
-endif
 
 if keyword_set(kernel_window) then begin
   print, 'Applying a modified gridding kernel. Beam is no longer instrumental. Do not use for calibration.'
