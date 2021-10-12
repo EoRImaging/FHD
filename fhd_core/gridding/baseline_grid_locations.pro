@@ -8,7 +8,7 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   fill_model_visibilities=fill_model_visibilities,bi_use=bi_use,fi_use=fi_use,$
   vis_inds_use=vis_inds_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
   dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,x_offset=x_offset,y_offset=y_offset,$
-  mask_mirror_indices=mask_mirror_indices
+  preserve_visibilities=preserve_visibilities,mask_mirror_indices=mask_mirror_indices
 
   ; Extract information from the structures
   n_tile=obs.n_tile
@@ -21,6 +21,9 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   b_info=*obs.baseline_info
   psf_dim=psf.dim
   psf_resolution=psf.resolution
+
+  ; Unless explicitly stated, do not free visibility array memory once used
+  IF N_elements(preserve_visibilities) EQ 0 THEN preserve_visibilities=1
 
   ; Frequency information of the visibilities
   IF N_Elements(fi_use) EQ 0 THEN fi_use=where(b_info.freq_use)
@@ -73,12 +76,7 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   kx_arr=params.uu[bi_use]/kbinsize
   ky_arr=params.vv[bi_use]/kbinsize
 
-  ; Flag baselines which fall outside the uv plane
-  IF Keyword_Set(fill_model_visibilities) THEN BEGIN
-    dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
-    dist_test=frequency_array#dist_test
-    flag_dist_i=where((dist_test LT min_baseline) OR (dist_test GT max_baseline),n_dist_flag)
-  ENDIF ELSE BEGIN
+  IF ~Keyword_Set(fill_model_visibilities) THEN BEGIN
     ; Flag baselines on their maximum and minimum extent in the full frequency range of the observation.
     ; This prevents the sudden disappearance of baselines along frequency
     dist_test=Sqrt((kx_arr)^2.+(ky_arr)^2.)*kbinsize
@@ -86,7 +84,7 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
     dist_test_min=min((*obs.baseline_info).freq)*dist_test
     flag_dist_baseline=where((dist_test_min LT min_baseline) $
       OR (dist_test_max GT max_baseline),n_dist_flag)
-  ENDELSE
+  ENDIF
   dist_test=0
   dist_test_min=0
   dist_test_max=0
@@ -127,18 +125,14 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
   IF n_test_y GT 0 THEN xmin[range_test_y_i]=(ymin[range_test_y_i]=-1)
   
   ; Flag baselines which fall outside the uv plane
-  IF n_dist_flag GT 0 THEN BEGIN
-    IF keyword_set(fill_model_visibilities) THEN BEGIN
-      xmin[flag_dist_i]=-1
-      ymin[flag_dist_i]=-1
-      flag_dist_i=0
-    ENDIF ELSE BEGIN
+  IF ~keyword_set(fill_model_visibilities) THEN BEGIN
+    IF n_dist_flag GT 0 THEN BEGIN
       ; If baselines fall outside the desired min/max baseline range at all during the frequency range, 
       ; then set their minimum pixel value to -1 to exlude them 
       xmin[*,flag_dist_baseline]=-1
       ymin[*,flag_dist_baseline]=-1
       flag_dist_baseline=0
-    ENDELSE
+    ENDIF
   ENDIF 
 
   IF vis_weight_switch THEN BEGIN
