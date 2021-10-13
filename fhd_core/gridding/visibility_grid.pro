@@ -108,7 +108,7 @@ IF Keyword_Set(mapfn_recalculate) THEN BEGIN
     map_fn=Ptrarr(dimension,elements)
 ENDIF ELSE map_flag=0
 
-conj_i=where(params.vv GT 0,n_conj)
+conj_i=where(params.vv[bi_use] GT 0,n_conj)
 IF n_conj GT 0 THEN BEGIN
     if keyword_set(beam_per_baseline) then begin
         uu[conj_i]=-uu[conj_i]
