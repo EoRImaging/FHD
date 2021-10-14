@@ -4,8 +4,12 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
     inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
     kernel_window=kernel_window,beam_per_baseline=beam_per_baseline,$
-    beam_gaussian_decomp=beam_gaussian_decomp,_Extra=extra
+    beam_gaussian_decomp=beam_gaussian_decomp,conserve_memory=conserve_memory,_Extra=extra
 t0=Systime(1)
+
+IF keyword_set(conserve_memory) then begin
+  IF conserve_memory GT 1E6 THEN mem_thresh=conserve_memory ELSE mem_thresh=1E8 ;in bytes
+ENDIF
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
 instrument=obs.instrument
@@ -116,6 +120,45 @@ valid_i=where(Finite(ra_arr),n_valid)
 ra_use=ra_arr[valid_i]
 dec_use=dec_arr[valid_i]
 if ~keyword_set(beam_per_baseline) then undefine, dec_arr, ra_arr
+
+; Split the apply astrometry step into mutiple loops if the image dimension is large to reduce 
+; memory footprint
+if keyword_set(conserve_memory) then begin
+  ; calculate bytes required
+  required_bytes = 8.*2*psf_image_dim^2.
+  mem_iter = ceil(required_bytes/mem_thresh)
+endif else mem_iter=1
+if mem_iter GT 1 then begin
+  ; calculate the number of iterations that fit within the array in question
+  mem_iter_array = indgen(mem_iter)
+  mem_iter = max(where((psf_image_dim mod mem_iter_array) EQ 0, n_count))
+  if n_count EQ 0 then mem_iter=1
+  psf_image_dim_use = psf_image_dim / mem_iter
+endif else psf_image_dim_use = psf_image_dim
+
+ra_arr = dblarr(psf_image_dim,psf_image_dim)
+dec_arr = dblarr(psf_image_dim,psf_image_dim)
+
+; Loop through strips in the x dimension to build up the RA and Dec arrays
+for mem_i=0L,mem_iter-1 do begin
+  xvals_celestial=(meshgrid(psf_image_dim_use,psf_image_dim,1)+psf_image_dim_use*mem_i)*psf_scale-psf_image_dim*psf_scale/2.+obsx
+  yvals_celestial=meshgrid(psf_image_dim_use,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
+
+  ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
+  apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_strip, dec_arr=dec_strip, /xy2ad, /ignore_refraction
+  ra_arr[psf_image_dim_use*mem_i:psf_image_dim_use*(mem_i+1)-1,*] = ra_strip
+  dec_arr[psf_image_dim_use*mem_i:psf_image_dim_use*(mem_i+1)-1,*] = dec_strip
+endfor
+
+; Only keep finite pixels (unless full array required later)
+valid_i=where(Finite(ra_arr),n_valid)
+if keyword_set(beam_per_baseline) then begin
+  ra_use=ra_arr[valid_i]
+  dec_use=dec_arr[valid_i]
+endif else begin
+  ra_use=temporary(ra_arr[valid_i])
+  dec_use=temporary(dec_arr[valid_i])
+endelse
 
 ;NOTE: Eq2Hor REQUIRES Jdate_use to have the same number of elements as RA and Dec for precession!!
 ;;NOTE: The NEW Eq2Hor REQUIRES Jdate_use to be a scalar! They created a new bug when they fixed the old one
