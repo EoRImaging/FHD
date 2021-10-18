@@ -13,12 +13,11 @@ heap_gc
 ; Extract information from the structures
 dimension=Long(obs.dimension)
 elements=Long(obs.elements)
-double_precision=0
-IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision
+double_precision=obs.double_precision
+interp_flag=psf.interpolate_kernel
 IF N_Elements(silent) EQ 0 THEN verbose=0 ELSE verbose=0>Round(1-silent)<1
-IF Tag_exist(psf,'interpolate_kernel') THEN interp_flag=psf.interpolate_kernel ELSE interp_flag=0
 
-IF Tag_exist(obs,'alpha') THEN alpha=obs.alpha ELSE alpha=0.
+alpha=obs.alpha
 freq_bin_i=(*obs.baseline_info).fbin_i
 n_freq=Long(obs.n_freq)
 IF N_Elements(fi_use) EQ 0 THEN fi_use=where((*obs.baseline_info).freq_use)
@@ -28,11 +27,12 @@ n_vis_arr=obs.nf_vis
 
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
 ; and the 2D derivatives for bilinear interpolation
-baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
+bin_n = baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,ri=ri,$
+  xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
   bi_use=bi_use,fi_use=fi_use,vis_inds_use=vis_inds_use,interp_flag=interp_flag,$
   dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,$
   x_offset=x_offset,y_offset=y_offset,preserve_visibilities=preserve_visibilities,$
-  mask_mirror_indices=mask_mirror_indices
+  mask_mirror_indices=mask_mirror_indices)
 
 ; Use indices of visibilities to grid during this call (i.e. specific freqs, time sets)
 ; to initialize output arrays
@@ -128,11 +128,6 @@ IF max(xmin)<max(ymin) LT 0 THEN BEGIN
     error=1
     RETURN,image_uv
 ENDIF
-
-; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
-; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
-bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0)
-bin_i=where(bin_n,n_bin_use)
 
 ind_ref=indgen(max(bin_n))
 n_vis=(Total(double(bin_n)))

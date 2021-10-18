@@ -19,16 +19,11 @@ dimension=Long(obs.dimension)
 elements=Long(obs.elements)
 
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
-baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,fill_model_vis=fill_model_vis,$
-    bi_use=bi_use,fi_use=fi_use,mask_mirror_indices=mask_mirror_indices
+bin_n=baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,ri=ri,$
+    xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,fill_model_vis=fill_model_vis,$
+    bi_use=bi_use,fi_use=fi_use,mask_mirror_indices=mask_mirror_indices)
 
-; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
-; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
-bin_n=histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0)
-bin_i=where(bin_n,n_bin_use)
-
-double_precision=0
-IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision
+double_precision=obs.double_precision
 IF Keyword_Set(double_precision) THEN uniform_filter=Dblarr(dimension,elements) ELSE uniform_filter=Fltarr(dimension,elements)
 FOR bi=0L,n_bin_use-1 DO BEGIN
     inds=ri[ri[bin_i[bi]]:ri[bin_i[bi]+1]-1]

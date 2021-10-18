@@ -1,10 +1,12 @@
 ;;
-;; Calculate the minimum pixel number that an unflagged baseline contributes to (depending on the 
+;; Calculate the histogram of baseline grid locations in units of pixels whilst also
+;; returning the minimum pixel number that an unflagged baseline contributes to (depending on the 
 ;; size of the kernel). Optionally return the 2D derivatives for bilinear interpolation and the
 ;; indices of the unflagged baselines/frequencies.
 ;;
 
-pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
+Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,ri=ri,$
+  xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
   fill_model_visibilities=fill_model_visibilities,bi_use=bi_use,fi_use=fi_use,$
   vis_inds_use=vis_inds_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
   dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,x_offset=x_offset,y_offset=y_offset,$
@@ -154,5 +156,12 @@ pro baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vi
       ymin[*,conj_i]=-1
     ENDIF
   ENDIF
+
+  ; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
+  ; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
+  bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0))
+  bin_i=Long(where(bin_n,n_bin_use))
+
+  return, bin_n
 
 END

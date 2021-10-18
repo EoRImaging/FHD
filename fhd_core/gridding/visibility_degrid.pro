@@ -9,19 +9,19 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
 
     complex=psf.complex_flag
     n_spectral=obs.degrid_spectral_terms
-    double_precision=0
-    IF Tag_Exist(obs, 'double_precision') THEN double_precision=obs.double_precision
-    IF Tag_exist(psf,'interpolate_kernel') THEN interp_flag=psf.interpolate_kernel ELSE interp_flag=0
+    double_precision=obs.double_precision
+    interp_flag=psf.interpolate_kernel
     IF keyword_set(conserve_memory) then begin
         IF conserve_memory GT 1E6 THEN mem_thresh=conserve_memory ELSE mem_thresh=1E8 ;in bytes
     ENDIF
 
     ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
     ; and the 2D derivatives for bilinear interpolation
-    baseline_grid_locations,obs,psf,params,xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
+    bin_n=baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,ri=ri,$
+      xmin=xmin,ymin=ymin,vis_weight_ptr=vis_weight_ptr,$
       fill_model_visibilities=fill_model_visibilities,interp_flag=interp_flag,$
       dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,$
-      x_offset=x_offset,y_offset=y_offset
+      x_offset=x_offset,y_offset=y_offset)
 
     ;extract information from the structures
     dimension=Long(obs.dimension)
@@ -81,10 +81,6 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     vis_dimension=nbaselines*n_samples
     IF Keyword_Set(double_precision) THEN visibility_array=DComplexarr(n_freq,vis_dimension) $
     ELSE visibility_array=Complexarr(n_freq,vis_dimension)
-    
-    ;match all visibilities that map from and to exactly the same pixels
-    bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0)) ;should miss any (xmin,ymin)=(-1,-1) from weights
-    bin_i=Long(where(bin_n,n_bin_use));+bin_min
 
     ind_ref=Lindgen(max(bin_n))
 
