@@ -18,7 +18,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     IF Keyword_Set(preserve_visibilities) THEN return_mapfn=0 ELSE return_mapfn=mapfn_recalculate
     IF Keyword_Set(mapfn_recalculate) AND Keyword_Set(save_visibilities) THEN preserve_vis_grid=0 ELSE preserve_vis_grid=preserve_visibilities
     IF pol_i EQ 0 THEN uniform_filter=1 ELSE uniform_filter=0
-    IF pol_i GT 1 THEN no_conjugate=1 ELSE no_conjugate=0 
+    IF pol_i GT 1 THEN no_conjugate=1 ELSE no_conjugate=0
+    IF Tag_exist(obs, "interpolated") THEN $
+        IF Keyword_Set(obs.interpolated) THEN interpolate_visibilities,vis_arr[pol_i],vis_weights[pol_i],vis_model_arr[pol_i],obs, psf, params
     grid_uv=visibility_grid(vis_arr[pol_i],vis_weights[pol_i],obs,status_str,psf,params,file_path_fhd=file_path_fhd,$
         timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,uniform_filter=uniform_filter,$
         mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$

@@ -6,7 +6,7 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elem
     dft_threshold=dft_threshold,psf_dim=psf_dim,nside=nside,restrict_hpx_inds=restrict_hpx_inds,$
     n_hpx=n_hpx,n_zero_hpx=n_zero_hpx,antenna_mod_index=antenna_mod_index,$
     degrid_spectral_terms=degrid_spectral_terms,grid_spectral_terms=grid_spectral_terms,$
-    grid_nfreq_avg=grid_nfreq_avg,_Extra=extra
+    grid_nfreq_avg=grid_nfreq_avg, interpolate_flagged_visibilities=interpolate_flagged_visibilities, _Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
 obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
@@ -171,6 +171,7 @@ IF N_Elements(restrict_hpx_inds) NE 1 THEN ind_list="UNSPECIFIED" ELSE ind_list=
 IF N_Elements(n_hpx) EQ 0 THEN n_hpx=0
 IF N_Elements(n_zero_hpx) EQ 0 THEN n_zero_hpx=-1
 IF Keyword_Set(double_precision) THEN double_precision=1 ELSE double_precision=0
+IF Keyword_Set(interpolate_flagged_visibilities) THEN interpolated_flag=1 ELSE interpolated_flag=0
 IF dimension GT 4096 THEN BEGIN
     IF double_precision EQ 0 THEN BEGIN
         print, "WARNING: If dimension is greater than 4096 you MUST use double precision!"
@@ -193,6 +194,7 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     jd0:meta.jd0,max_baseline:Double(max_baseline),min_baseline:Double(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),freq_res:Float(freq_res),time_res:Float(meta.time_res),astr:meta.astr,alpha:Float(spectral_index),$
     residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,$
-    degrid_spectral_terms:degrid_spectral_terms,grid_spectral_terms:grid_spectral_terms,grid_info:grid_info,healpix:healpix}    
+    degrid_spectral_terms:degrid_spectral_terms,grid_spectral_terms:grid_spectral_terms,grid_info:grid_info,healpix:healpix,$
+    interpolated:interpolated_flag}    
 RETURN,struct
 END
