@@ -22,8 +22,8 @@ IF (weight_type EQ 10) OR (weight_type EQ 0) THEN BEGIN
 ENDIF
 
 ;extract information from the structures
-dimension=Long(obs.dimension)
-elements=Long(obs.elements)
+dimension=obs.dimension
+elements=obs.elements
 psf_dim=psf.dim
 
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 

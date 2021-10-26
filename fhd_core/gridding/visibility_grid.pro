@@ -122,7 +122,7 @@ ENDIF
 
 IF n_bin_use EQ 0 THEN BEGIN
     ; Return if all baselines have been flagged
-    print,'WARNING: Returning an empty grid'
+    print,'WARNING: Returning an empty grid since all data are flagged or cut'
     timing=Systime(1)-t0_0
     n_vis=0.
     error=1
