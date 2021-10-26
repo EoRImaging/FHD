@@ -163,7 +163,6 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
       bin_n=0
       n_bin_use=0
       bin_i=-1
-      ri=Lonarr(1)
       RETURN,bin_n
   ENDIF
 
