@@ -157,6 +157,15 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
     ENDIF
   ENDIF
 
+  IF max(xmin)<max(ymin) LT 0 THEN BEGIN
+      ; Return if all baselines have been flagged
+      print,'WARNING: All data flagged or cut!'
+      bin_n=0
+      n_bin_use=0
+      bin_i=-1
+      RETURN,bin_n
+  ENDIF
+
   ; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
   ; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
   bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0))

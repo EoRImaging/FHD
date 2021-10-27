@@ -25,6 +25,7 @@ n_f_use=N_Elements(fi_use)
 freq_bin_i=freq_bin_i[fi_use]
 n_vis_arr=obs.nf_vis
 
+
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
 ; and the 2D derivatives for bilinear interpolation
 bin_n = baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,ri=ri,$
@@ -119,11 +120,10 @@ IF n_conj GT 0 THEN BEGIN
     IF model_flag THEN model_use[*,conj_i]=Conj(model_use[*,conj_i])
 ENDIF
 
-IF max(xmin)<max(ymin) LT 0 THEN BEGIN
+IF n_bin_use EQ 0 THEN BEGIN
     ; Return if all baselines have been flagged
-    print,'All data flagged or cut! Returning'
+    print,'WARNING: Returning an empty grid since all data are flagged or cut'
     timing=Systime(1)-t0_0
-    image_uv=Complexarr(dimension,elements)
     n_vis=0.
     error=1
     RETURN,image_uv
