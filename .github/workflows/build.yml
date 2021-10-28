@@ -13,14 +13,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    steps:
+    - uses: actions/checkout@v2
+
     - name: Update package list
       run: sudo apt-get update
 
     - name: Install dependencies
       run: sudo apt-get install libplplot17 libreadline8 ncurses zlibc
-
-    steps:
-    - uses: actions/checkout@v2
 
     - name: Get FHD
       uses: actions/checkout@v2
