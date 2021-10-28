@@ -16,6 +16,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Get FHD
+      uses: actions/checkout@v2
+      with:
+        repository: EoRImaging/FHD
+
     - name: Download gdl artifact
       uses: dawidd6/action-download-artifact@v2.14.1
       with:
@@ -33,11 +38,6 @@ jobs:
         path: ./
         repo: no-lex/idl2src
         branch: main
-
-    - name: Get FHD
-      uses: actions/checkout@v2
-      with:
-        repository: EoRImaging/FHD
 
     - name: Build Database
       run: |
