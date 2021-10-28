@@ -20,7 +20,7 @@ jobs:
       run: sudo apt-get update
 
     - name: Install dependencies
-      run: sudo apt-get install libplplot17 libreadline8 libncurses6 zlibc
+      run: sudo apt-get install libplplotcxx15 libreadline8 libncurses6 zlibc
 
     - name: Get FHD
       uses: actions/checkout@v2
