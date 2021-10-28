@@ -20,7 +20,7 @@ jobs:
       run: sudo apt-get update
 
     - name: Install dependencies
-      run: sudo apt-get install libplplotcxx15 libreadline8 libgraphicsmagick++-q16-12 libncurses6 zlibc
+      run: sudo apt-get install gnudatalanguage
 
     - name: Get FHD
       uses: actions/checkout@v2
