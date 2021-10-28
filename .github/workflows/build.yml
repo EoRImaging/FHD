@@ -1,0 +1,94 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+      - newci
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set GDL Dir
+      run: mkdir gdl && cd gdl
+
+    - name: Get GDL
+      uses: actions/checkout@v2
+      with:
+        repository: no-lex/idl2src
+
+    - name: Get GDL
+      uses: actions/checkout@v2
+      with:
+        repository: gnudatalanguage/gdl
+
+    - name: Build GDL
+      run: |
+        sed -i 's/\/\/#define GDL_DEBUG/#define GDL_DEBUG/g' src/dinterpreter.cpp
+        scripts/build_gdl.sh prep
+        scripts/build_gdl.sh configure
+        scripts/build_gdl.sh build
+        scripts/build_gdl.sh install
+        chmod 777 build/src/gdl
+
+    - name: Upload GDL binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: gdl
+        path: ./build/src/gdl
+
+    - name: Get idl2src
+      uses: actions/checkout@v2
+      with:
+        repository: no-lex/idl2src
+
+    - name: make
+      run: make
+
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: idl2src
+        path: |
+          ./idl2src
+          ./run_indexer.sh
+          ./ci_script.sh
+
+    - name: Get FHD
+      uses: actions/checkout@v2
+      with:
+        repository: EoRImaging/FHD
+
+    - name: Get idl2src binary
+      uses: actions/download-artifact@v2
+      with:
+        name: idl2src
+
+    - name: Get gdl binary
+      uses: actions/download-artifact@v2
+      with:
+        name: gdl
+
+    - name: Build Database
+      run: |
+        chmod 777 idl2src
+        chmod 777 gdl
+        chmod 777 ci_script.sh
+        chmod 777 run_indexer.sh
+        ./ci_script.sh
+        ls
+
+    - name: Upload database artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: FHD
+        path: |
+          ./FHD.srctrldb
+          ./FHD.srctrlprj
