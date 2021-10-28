@@ -19,7 +19,7 @@ jobs:
     - name: Download gdl artifact
       uses: dawidd6/action-download-artifact@v2.14.1
       with:
-        workflow: msbuild.yml
+        workflow: build.yml
         name: gdl
         path: ./
         repo: no-lex/idl2src
@@ -28,7 +28,7 @@ jobs:
     - name: Download idl2src artifact
       uses: dawidd6/action-download-artifact@v2.14.1
       with:
-        workflow: msbuild.yml
+        workflow: build.yml
         name: idl2src
         path: ./
         repo: no-lex/idl2src
