@@ -1,18 +1,15 @@
 FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol2,freq_i=freq_i,psf_dim=psf_dim,$
-  psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,$
-  beam_mask_electric_field=beam_mask_electric_field,beam_mask_threshold=beam_mask_threshold,$
-  xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
-  interpolate_beam_threshold=interpolate_beam_threshold,debug_beam_clip_grow=debug_beam_clip_grow,$
-  debug_beam_conjugate=debug_beam_conjugate, beam_clip_floor=beam_clip_floor,$
-  debug_clip_beam_mask=debug_clip_beam_mask,beam_per_baseline=beam_per_baseline,$
+  psf_intermediate_res=psf_intermediate_res,psf_resolution=psf_resolution,beam_mask_threshold=beam_mask_threshold,$
+  xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
+  zen_int_x=zen_int_x,zen_int_y=zen_int_y,interpolate_beam_threshold=interpolate_beam_threshold,$
+  debug_beam_clip_grow=debug_beam_clip_grow,debug_beam_conjugate=debug_beam_conjugate,$
+  debug_clip_beam_mask=debug_clip_beam_mask,beam_clip_floor=beam_clip_floor,$
   image_power_beam=image_power_beam,kernel_window=kernel_window,beam_gaussian_decomp=beam_gaussian_decomp,$
-  beam_gaussian_params=beam_gaussian_params,volume_beam=volume_beam,sq_volume_beam=sq_volume_beam, res_super=res_super, $
+  beam_gaussian_params=beam_gaussian_params,volume_beam=volume_beam,sq_volume_beam=sq_volume_beam, res_super=res_super,$
   beam_gauss_param_transfer=beam_gauss_param_transfer,pol_i=pol_i,psf_superres_dim=psf_superres_dim,_Extra=extra
 
   icomp = Complex(0, 1)
-  freq_center=antenna1.freq[freq_i]
   dimension_super=psf_superres_dim
-  beam_norm=1.
 
   ; Generate UV beam at a super resolution
   ; Note: Beam uses the forward FFT for the sky->UV transformation (note that the image uses the inverse FFT)
@@ -77,7 +74,6 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
 
   ;FFT normalization correction in case this changes the total number of pixels
   psf_base_superres*=psf_intermediate_res^2.
-  psf_base_superres/=beam_norm
 
   ;;total of the gaussian decomposition can be calculated analytically, but is an over-estimate 
   ;; of the numerical representation and results in a beam norm of greater than one,
@@ -107,7 +103,7 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
     psf_amp = abs(psf_base_superres)
     psf_phase = Atan(psf_base_superres, /phase)
 
-    psf_floor = psf_mask_threshold_use*(psf_intermediate_res^2.)/beam_norm
+    psf_floor = psf_mask_threshold_use*(psf_intermediate_res^2.)
     psf_amp[i_use] -= psf_floor
     psf_base_superres = psf_amp*Cos(psf_phase) + icomp*psf_amp*Sin(psf_phase)
   ENDIF
