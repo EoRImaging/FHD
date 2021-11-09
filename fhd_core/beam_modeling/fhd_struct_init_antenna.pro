@@ -3,8 +3,13 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_image_resolution=psf_image_resolution,timing=timing,$
     psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
     inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
-    kernel_window=kernel_window,_Extra=extra
+    kernel_window=kernel_window,beam_per_baseline=beam_per_baseline,$
+    beam_gaussian_decomp=beam_gaussian_decomp,conserve_memory=conserve_memory,_Extra=extra
 t0=Systime(1)
+
+IF keyword_set(conserve_memory) then begin
+  IF conserve_memory GT 1E6 THEN mem_thresh=conserve_memory ELSE mem_thresh=1E8 ;in bytes
+ENDIF
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
 instrument=obs.instrument
@@ -16,6 +21,11 @@ IF STRMID(instrument,0,3) EQ 'mwa' THEN BEGIN
   tile_gain_fn='mwa_beam_setup_gain'
   tile_init_fn='mwa_beam_setup_init'
 ENDIF
+
+if keyword_set(beam_gaussian_decomp) and keyword_set(kernel_window) then begin
+  print, 'Gaussian decomposition cannot be used with modified kernel windows. Window not applied.'
+  kernel_window=0
+endif
 
 n_tiles=obs.n_tile
 n_freq=obs.n_freq
@@ -68,7 +78,7 @@ ENDFOR
 antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
     n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
     delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1,pix_window:Ptr_new(),pix_use:Ptr_new(),$
-    psf_image_dim:0.}
+    psf_image_dim:0.,psf_scale:0.}
     
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data
@@ -79,12 +89,13 @@ if N_elements(instrument) GT 1 then begin
     antenna_temp=Call_function(tile_init_fn[inst_i],obs,antenna_str,_Extra=extra)
     antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
   endfor  
-endif  
+endif
+
 IF ~Keyword_Set(psf_dim) THEN $
     psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 ;reset psf_dim if cetain conditions met.
-if keyword_set(debug_dim) then psf_dim=18.
+if keyword_set(debug_dim) then psf_dim=28.
 if keyword_set(kernel_window) then psf_dim=18.
 
 IF Keyword_Set(psf_max_dim) THEN BEGIN
@@ -98,20 +109,63 @@ psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res ;use a larger bo
 psf_superres_dim=psf_dim*psf_resolution
 psf_scale=dimension*psf_intermediate_res/psf_image_dim
 antenna.psf_image_dim=psf_image_dim
+antenna.psf_scale=psf_scale
 
 xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obsx
 yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
 ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
 apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+undefine, xvals_celestial, yvals_celestial
 valid_i=where(Finite(ra_arr),n_valid)
 ra_use=ra_arr[valid_i]
 dec_use=dec_arr[valid_i]
+if ~keyword_set(beam_per_baseline) then undefine, dec_arr, ra_arr
+
+; Split the apply astrometry step into mutiple loops if the image dimension is large to reduce 
+; memory footprint
+if keyword_set(conserve_memory) then begin
+  ; calculate bytes required
+  required_bytes = 8.*2*psf_image_dim^2.
+  mem_iter = ceil(required_bytes/mem_thresh)
+endif else mem_iter=1
+if mem_iter GT 1 then begin
+  ; calculate the number of iterations that fit within the array in question
+  mem_iter_array = indgen(mem_iter)
+  mem_iter = max(where((psf_image_dim mod mem_iter_array) EQ 0, n_count))
+  if n_count EQ 0 then mem_iter=1
+  psf_image_dim_use = psf_image_dim / mem_iter
+endif else psf_image_dim_use = psf_image_dim
+
+ra_arr = dblarr(psf_image_dim,psf_image_dim)
+dec_arr = dblarr(psf_image_dim,psf_image_dim)
+
+; Loop through strips in the x dimension to build up the RA and Dec arrays
+for mem_i=0L,mem_iter-1 do begin
+  xvals_celestial=(meshgrid(psf_image_dim_use,psf_image_dim,1)+psf_image_dim_use*mem_i)*psf_scale-psf_image_dim*psf_scale/2.+obsx
+  yvals_celestial=meshgrid(psf_image_dim_use,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
+
+  ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
+  apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_strip, dec_arr=dec_strip, /xy2ad, /ignore_refraction
+  ra_arr[psf_image_dim_use*mem_i:psf_image_dim_use*(mem_i+1)-1,*] = ra_strip
+  dec_arr[psf_image_dim_use*mem_i:psf_image_dim_use*(mem_i+1)-1,*] = dec_strip
+endfor
+
+; Only keep finite pixels (unless full array required later)
+valid_i=where(Finite(ra_arr),n_valid)
+if keyword_set(beam_per_baseline) then begin
+  ra_use=ra_arr[valid_i]
+  dec_use=dec_arr[valid_i]
+endif else begin
+  ra_use=temporary(ra_arr[valid_i])
+  dec_use=temporary(dec_arr[valid_i])
+endelse
 
 ;NOTE: Eq2Hor REQUIRES Jdate_use to have the same number of elements as RA and Dec for precession!!
 ;;NOTE: The NEW Eq2Hor REQUIRES Jdate_use to be a scalar! They created a new bug when they fixed the old one
 Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate, refract=0
 za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
+undefine, ra_use, dec_use, alt_arr1, az_arr1
 
 if keyword_set(kernel_window) then begin
   print, 'Applying a modified gridding kernel. Beam is no longer instrumental. Do not use for calibration.'
