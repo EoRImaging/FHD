@@ -87,8 +87,8 @@ function gaussian_decomp, x, y, p, ftransform=ftransform, model_npix=model_npix,
        range_x = [split_i*nx/split, split_i*nx/split+nx/split-1]
        range_y = [split_j*ny/split, split_j*ny/split+ny/split-1]
 
-        kx = (DINDGEN(nx/2)+nx/2*split_i-nx/2.)#(DBLARR(ny/2)+1.)
-        ky = (DBLARR(nx/2)+1.)#(DINDGEN(ny/2)+ny/2*split_j-ny/2.)
+        kx = (DINDGEN(nx)+nx/2*split_i-nx/2.)#(DBLARR(ny)+1.)
+        ky = (DBLARR(nx)+1.)#(DINDGEN(ny)+ny/2*split_j-ny/2.)
         for lobe_i=0, n_lobes - 1 do begin
           ;
           ; A*2*pi/(N^2)*sigmax*sigmay * exp(-2*pi^2/(N^2)*(sigmax^2*kx^2+sigmay^2*ky^2)) 
