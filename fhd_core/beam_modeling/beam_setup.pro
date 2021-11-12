@@ -19,23 +19,36 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     ELSE IF not Keyword_Set(silent) THEN print,"Saved beam model not found. Recalculating."
   ENDIF
   IF Keyword_set(transfer_psf) then begin
-    if ~file_test(transfer_psf + '/' + obs.obsname + '_beams.sav') then $
-      message, transfer_psf + '/' + obs.obsname + '_beams.sav not found during psf transfer.'
-    if ~file_test(transfer_psf + '/' + obs.obsname + '_obs.sav') AND ~file_test(file_dirname(transfer_psf) $
-      + '/metadata/' + obs.obsname + '_obs.sav') then $
-      message, transfer_psf + '/' + obs.obsname + '_obs.sav or ' + file_dirname(transfer_psf) + $
-      '/metadata/' + obs.obsname + '_obs.sav not found during psf transfer. primary beam_sq_area needed in PS.'
+    ;
+    ; Transfer a psf/obs structure from previous run or from a specified file
+    if file_test(transfer_psf) then begin
+      psf = getvar_savefile(transfer_psf,'psf')
+      obs_restore = getvar_savefile(transfer_psf,'obs')
+    endif else begin
+      obs_id = obs.obsname
 
-    psf = getvar_savefile(transfer_psf + '/' + obs.obsname + '_beams.sav','psf')
-    if file_test(transfer_psf + '/' + obs.obsname + '_obs.sav') then $
-      obs_restore = getvar_savefile(transfer_psf + '/' + obs.obsname + '_obs.sav','obs')
-    if file_test(file_dirname(transfer_psf) + '/metadata/' + obs.obsname + '_obs.sav') then $
-      obs_restore = getvar_savefile(file_dirname(transfer_psf) + '/metadata/' + obs.obsname + '_obs.sav','obs')
-    if tag_exist(obs_restore,'primary_beam_sq_area') then begin
-      obs.primary_beam_sq_area = pointer_copy(obs_restore.primary_beam_sq_area)
-      obs.primary_beam_area = pointer_copy(obs_restore.primary_beam_area)
-    endif else if $
-      tag_exist(obs_restore,'beam_integral') then obs.primary_beam_sq_area = pointer_copy(obs_restore.beam_integral)
+      ; Test for <transfer_psf>/<obs_id>_obs.sav and <transfer_psf>/<obs_id>_beams.sav
+      ; Test for  <transfer_psf>/metadata/<obs_id>_obs.sav and <transfer_psf>/beams/<obs_id>_beams.sav
+      if file_test(transfer_psf+'/'+obs_id+'_obs.sav') AND file_test(transfer_psf+'/'+obs_id+'_beams.sav') then begin
+        file_name_obs = transfer_psf+'/'+obs_id+'_obs.sav'
+        file_name_psf = transfer_psf+'/'+obs_id+'_beams.sav'
+      endif else begin
+        if file_test(transfer_psf+'/metadata/'+obs_id+'_obs.sav') AND file_test(transfer_psf+'/beams/'+obs_id+'_beams.sav') then begin 
+          file_name_obs = transfer_psf+'/metadata/'+obs_id+'_obs.sav'
+          file_name_psf = transfer_psf+'/beams/'+obs_id+'_beams.sav'
+        endif else begin
+          print, transfer_psf+' or'
+          print, transfer_psf+'/'+obs_id+'_obs.sav and '+transfer_psf+'/'+obs_id+'_beams.sav or '
+          print, transfer_psf+'/metadata/'+obs_id+'_obs.sav and '+transfer_psf+'/beams/'+obs_id+'_beams.sav'
+          message, 'not found during psf transfer.'
+        endelse
+      endelse      
+      psf = getvar_savefile(file_name_psf,'psf')
+      obs_restore = getvar_savefile(file_name_obs,'obs')
+    endelse
+    ; Transfer the observation volumes to the current obs structure
+    obs.primary_beam_sq_area = pointer_copy(obs_restore.primary_beam_sq_area)
+    obs.primary_beam_area = pointer_copy(obs_restore.primary_beam_area)
 
     RETURN,psf
   ENDIF

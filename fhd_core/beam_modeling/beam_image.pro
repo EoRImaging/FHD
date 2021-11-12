@@ -92,7 +92,7 @@ IF Keyword_Set(square) THEN BEGIN
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=gaussian_decomp(FINDGEN(dimension),FINDGEN(elements),$
                   (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=model_npix,$
-                  model_res=model_res*group_n[gi_use[gi]]
+                  model_res=model_res)*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             beam_base+=nf_bin*beam_single*beam_single
@@ -138,7 +138,7 @@ ENDIF ELSE BEGIN
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=gaussian_decomp(FINDGEN(dimension),FINDGEN(elements),$
                   (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=model_npix,$
-                  model_res=model_res*group_n[gi_use[gi]]
+                  model_res=model_res)*group_n[gi_use[gi]]
             ENDFOR
         ENDIF ELSE BEGIN
             ; Build the total uv beam from the each hyperresolved beam
