@@ -95,7 +95,7 @@ ENDIF
 IF residual_flag THEN model_flag=0
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
-    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
+    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only,_Extra=extra)
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
 ENDIF ELSE filter_name=''
 
