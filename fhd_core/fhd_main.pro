@@ -127,7 +127,6 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_set(model_uv_transfer) THEN BEGIN
       if ~file_test(model_uv_transfer) then message, model_uv_transfer + ' not found during model uv transfer.'
       model_uv_arr = getvar_savefile(model_uv_transfer,'model_uv_arr')
-      IF Keyword_Set(model_visibilities) THEN model_uv_arr2 = model_uv_arr
     ENDIF
 
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
@@ -170,11 +169,8 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
         skymodel_update=fhd_struct_init_skymodel(obs,source_list=model_source_list,catalog_path=model_catalog_file_path,$
             diffuse_model=diffuse_model,return_cal=return_cal_visibilities,_Extra=extra)
-        vis_model_arr=vis_source_model(skymodel_update,obs,status_str,psf,params,vis_weights,0,jones,model_uv_arr=model_uv_arr2,$
-            timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
-        IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr2[pol_i] $
-            ELSE model_uv_arr=Pointer_copy(model_uv_arr2) 
-        undefine_fhd,model_uv_arr2
+        vis_model_arr=vis_source_model(skymodel_update,obs,status_str,psf,params,vis_weights,0,jones,model_uv_arr=model_uv_arr,$
+            timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,file_path_fhd=file_path_fhd,_Extra=extra)
     ENDIF
     
     IF Keyword_Set(skymodel_cal) OR Keyword_Set(skymodel_update) THEN $

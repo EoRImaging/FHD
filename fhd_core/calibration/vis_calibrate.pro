@@ -96,35 +96,16 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
 
     ;; Option to transfer pre-made and unflagged model visbilities
     if keyword_set(model_transfer) then begin
-      vis_model_arr=PTRARR(obs.n_pol,/allocate)
-      
-      for pol_i=0, obs.n_pol-1 do begin
-        transfer_name = model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav'
-        if ~file_test(transfer_name) then begin
-          message, transfer_name + ' not found during model transfer.'
-        endif
-        vis_model_arr[pol_i] = getvar_savefile(transfer_name,'vis_model_ptr')
-      endfor
+      vis_model_arr = vis_model_transfer(obs,model_transfer)
     endif
 
     RETURN,vis_cal
   ENDIF
-  
-  if ~keyword_set(model_transfer) then begin
-    vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,$
-      model_uv_arr=model_uv_arr,/fill_model_vis,timing=model_timing,silent=silent,error=error,/calibration_flag,$
-      spectral_model_uv_arr=spectral_model_uv_arr,_Extra=extra)
-  endif else begin
-    ;; Option to transfer pre-made and unflagged model visbilities
-    vis_model_arr=PTRARR(obs.n_pol,/allocate)
-
-    for pol_i=0, obs.n_pol-1 do begin
-      transfer_name = model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav'
-      if ~file_test(transfer_name) then $
-        message, transfer_name + ' not found during model transfer.'
-      vis_model_arr[pol_i] = getvar_savefile(transfer_name,'vis_model_ptr')
-    endfor
-  endelse
+ 
+  vis_model_arr=vis_source_model(cal.skymodel,obs,status_str,psf,params,vis_weight_ptr,cal,jones,$
+    model_uv_arr=model_uv_arr,/fill_model_vis,timing=model_timing,silent=silent,error=error,/calibration_flag,$
+    spectral_model_uv_arr=spectral_model_uv_arr,model_transfer=model_transfer,_Extra=extra)
+ 
   t1=Systime(1)-t0_0
 
   ;; Option to save unflagged model visibilities as part of a calibration-only loop.

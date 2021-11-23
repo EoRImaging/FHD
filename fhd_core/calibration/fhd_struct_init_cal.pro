@@ -9,7 +9,8 @@ FUNCTION fhd_struct_init_cal, obs, params, skymodel, gain_arr_ptr=gain_arr_ptr, 
     cal_mode_fit=cal_mode_fit, file_path_fhd=file_path_fhd, transfer_calibration=transfer_calibration, $
     calibration_auto_initialize=calibration_auto_initialize, cal_gain_init=cal_gain_init, $
     phase_fit_iter=phase_fit_iter, cal_amp_degree_fit=cal_amp_degree_fit,cal_phase_degree_fit=cal_phase_degree_fit, $
-    use_adaptive_calibration_gain=use_adaptive_calibration_gain, calibration_base_gain=calibration_base_gain,_Extra=extra
+    use_adaptive_calibration_gain=use_adaptive_calibration_gain, calibration_base_gain=calibration_base_gain,$
+    min_cal_solutions=min_cal_solutions,_Extra=extra
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd
 IF N_Elements(params) EQ 0 THEN fhd_save_io,0,params,var='params',/restore,file_path_fhd=file_path_fhd
