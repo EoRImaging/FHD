@@ -3,10 +3,8 @@ FUNCTION beam_image_cube,obs,psf,freq_i_arr=freq_i_arr,pol_i_arr=pol_i_arr,$
 
 n_pol=obs.n_pol
 n_freq=obs.n_freq
-n_freq_psf=psf.n_freq
 freq_arr=(*obs.baseline_info).freq
 freq_bin_i=(*obs.baseline_info).fbin_i
-;nf_vis=obs.nf_vis
 dimension=obs.dimension
 elements=obs.elements
 IF N_Elements(square) EQ 0 THEN square=1
@@ -26,10 +24,6 @@ IF Median(freq_i_arr) GT n_freq THEN BEGIN
     ;allow frequencies to be specified, instead of bin numbers
     freq_i_use=Interpol(Lindgen(n_freq),freq_arr,freq_i_arr)
 ENDIF ELSE freq_i_use=freq_i_arr
-;bin_i_start=freq_i_use
-;IF n_freq_bin GT 1 THEN bin_i_end=[freq_i_use[1:*]-1,n_freq-1] ELSE bin_i_end=n_freq-1
-;nf_vis_use=Lonarr(n_freq_bin)
-;FOR f_i=0L,n_freq_bin-1 DO nf_vis_use[f_i]=Total(nf_vis[bin_i_start[f_i]:bin_i_end[f_i]])
 
 beam_arr=Ptrarr(n_pol,n_freq_bin,/allocate)
 

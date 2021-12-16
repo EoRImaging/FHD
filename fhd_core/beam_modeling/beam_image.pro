@@ -25,10 +25,7 @@ IF N_Elements(pol_i) EQ 0 THEN pol_i=0
 IF N_Elements(dimension) EQ 0 THEN dimension=obs.dimension
 IF N_Elements(elements) EQ 0 THEN elements=dimension
 psf_dim=psf.dim
-psf_res=psf.resolution
-n_pol=psf.n_pol
 n_freq=psf.n_freq
-pol_norm=psf.pnorm
 freq_norm=psf.fnorm
 rbin=0
 xl=dimension/2-psf_dim/2+1
@@ -95,7 +92,7 @@ IF Keyword_Set(square) THEN BEGIN
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=gaussian_decomp(FINDGEN(dimension),FINDGEN(elements),$
                   (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=model_npix,$
-                  model_res=model_res*group_n[gi_use[gi]]
+                  model_res=model_res)*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             beam_base+=nf_bin*beam_single*beam_single
@@ -141,7 +138,7 @@ ENDIF ELSE BEGIN
             FOR gi=0,n_groups-1 DO BEGIN
                 beam_single+=gaussian_decomp(FINDGEN(dimension),FINDGEN(elements),$
                   (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=model_npix,$
-                  model_res=model_res*group_n[gi_use[gi]]
+                  model_res=model_res)*group_n[gi_use[gi]]
             ENDFOR
         ENDIF ELSE BEGIN
             ; Build the total uv beam from the each hyperresolved beam

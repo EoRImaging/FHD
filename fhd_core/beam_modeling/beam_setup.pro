@@ -1,7 +1,6 @@
 FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=restore_last,timing=timing,$
-  residual_tolerance=residual_tolerance,residual_threshold=residual_threshold,beam_mask_threshold=beam_mask_threshold,$
-  silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,psf_image_resolution=psf_image_resolution,$
-  swap_pol=swap_pol,no_save=no_save,beam_pol_test=beam_pol_test,$
+  beam_mask_threshold=beam_mask_threshold,silent=silent,psf_dim=psf_dim,psf_resolution=psf_resolution,$
+  psf_image_resolution=psf_image_resolution,swap_pol=swap_pol,no_save=no_save,$
   beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
   interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,beam_per_baseline=beam_per_baseline,$
   beam_gaussian_decomp=beam_gaussian_decomp,save_beam_metadata_only=save_beam_metadata_only,_Extra=extra
@@ -20,23 +19,36 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     ELSE IF not Keyword_Set(silent) THEN print,"Saved beam model not found. Recalculating."
   ENDIF
   IF Keyword_set(transfer_psf) then begin
-    if ~file_test(transfer_psf + '/' + obs.obsname + '_beams.sav') then $
-      message, transfer_psf + '/' + obs.obsname + '_beams.sav not found during psf transfer.'
-    if ~file_test(transfer_psf + '/' + obs.obsname + '_obs.sav') AND ~file_test(file_dirname(transfer_psf) $
-      + '/metadata/' + obs.obsname + '_obs.sav') then $
-      message, transfer_psf + '/' + obs.obsname + '_obs.sav or ' + file_dirname(transfer_psf) + $
-      '/metadata/' + obs.obsname + '_obs.sav not found during psf transfer. primary beam_sq_area needed in PS.'
+    ;
+    ; Transfer a psf/obs structure from previous run or from a specified file
+    if file_test(transfer_psf) then begin
+      psf = getvar_savefile(transfer_psf,'psf')
+      obs_restore = getvar_savefile(transfer_psf,'obs')
+    endif else begin
+      obs_id = obs.obsname
 
-    psf = getvar_savefile(transfer_psf + '/' + obs.obsname + '_beams.sav','psf')
-    if file_test(transfer_psf + '/' + obs.obsname + '_obs.sav') then $
-      obs_restore = getvar_savefile(transfer_psf + '/' + obs.obsname + '_obs.sav','obs')
-    if file_test(file_dirname(transfer_psf) + '/metadata/' + obs.obsname + '_obs.sav') then $
-      obs_restore = getvar_savefile(file_dirname(transfer_psf) + '/metadata/' + obs.obsname + '_obs.sav','obs')
-    if tag_exist(obs_restore,'primary_beam_sq_area') then begin
-      obs.primary_beam_sq_area = pointer_copy(obs_restore.primary_beam_sq_area)
-      obs.primary_beam_area = pointer_copy(obs_restore.primary_beam_area)
-    endif else if $
-      tag_exist(obs_restore,'beam_integral') then obs.primary_beam_sq_area = pointer_copy(obs_restore.beam_integral)
+      ; Test for <transfer_psf>/<obs_id>_obs.sav and <transfer_psf>/<obs_id>_beams.sav
+      ; Test for  <transfer_psf>/metadata/<obs_id>_obs.sav and <transfer_psf>/beams/<obs_id>_beams.sav
+      if file_test(transfer_psf+'/'+obs_id+'_obs.sav') AND file_test(transfer_psf+'/'+obs_id+'_beams.sav') then begin
+        file_name_obs = transfer_psf+'/'+obs_id+'_obs.sav'
+        file_name_psf = transfer_psf+'/'+obs_id+'_beams.sav'
+      endif else begin
+        if file_test(transfer_psf+'/metadata/'+obs_id+'_obs.sav') AND file_test(transfer_psf+'/beams/'+obs_id+'_beams.sav') then begin 
+          file_name_obs = transfer_psf+'/metadata/'+obs_id+'_obs.sav'
+          file_name_psf = transfer_psf+'/beams/'+obs_id+'_beams.sav'
+        endif else begin
+          print, transfer_psf+' or'
+          print, transfer_psf+'/'+obs_id+'_obs.sav and '+transfer_psf+'/'+obs_id+'_beams.sav or '
+          print, transfer_psf+'/metadata/'+obs_id+'_obs.sav and '+transfer_psf+'/beams/'+obs_id+'_beams.sav'
+          message, 'not found during psf transfer.'
+        endelse
+      endelse      
+      psf = getvar_savefile(file_name_psf,'psf')
+      obs_restore = getvar_savefile(file_name_obs,'obs')
+    endelse
+    ; Transfer the observation volumes to the current obs structure
+    obs.primary_beam_sq_area = pointer_copy(obs_restore.primary_beam_sq_area)
+    obs.primary_beam_area = pointer_copy(obs_restore.primary_beam_area)
 
     RETURN,psf
   ENDIF
@@ -52,24 +64,15 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   freq_bin_i=(*obs.baseline_info).fbin_i
   nfreq_bin=Max(freq_bin_i)+1
 
-  tile_A=(*obs.baseline_info).tile_A
-  tile_B=(*obs.baseline_info).tile_B
   nbaselines=obs.nbaselines
-
   dimension=obs.dimension
-  elements=obs.elements
-  degpix=obs.degpix
   antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
     ra_arr=ra_arr,dec_arr=dec_arr,beam_per_baseline=beam_per_baseline,beam_gaussian_decomp=beam_gaussian_decomp,_Extra=extra)
 
   IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]]
 
-  ;use a larger box to build the model than will ultimately be used, to allow higher resolution in the initial image 
-  ;    space beam model
-  psf_image_dim=psf_dim*psf_image_resolution*psf_intermediate_res 
   kbinsize=obs.kpix
-  kbinsize_superres=kbinsize/psf_resolution
   primary_beam_area=Ptrarr(n_pol,/allocate)
   primary_beam_sq_area=Ptrarr(n_pol,/allocate)
   if keyword_set(beam_gaussian_decomp) then beam_gaussian_params_arr=Ptrarr(n_pol,/allocate)
@@ -110,26 +113,21 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
       Floor(psf_dim/2)*psf_intermediate_res+Floor(psf_image_dim/2))
   endif
 
-  complex_flag_arr=intarr(n_pol,nfreq_bin)
   beam_arr=Ptrarr(n_pol,nfreq_bin,nbaselines)
   if keyword_set(beam_per_baseline) then image_power_beam_arr=PTRARR(n_pol,nfreq_bin)
 
-  ant_A_list=tile_A[0:nbaselines-1]
-  ant_B_list=tile_B[0:nbaselines-1]
+  ant_A_list=(*obs.baseline_info).tile_A[0:nbaselines-1]
+  ant_B_list=(*obs.baseline_info).tile_B[0:nbaselines-1]
   baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
   bi_list=ant_B_list+ant_A_list*baseline_mod
   bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
   group_arr=Lonarr(n_pol,nfreq_bin,nbaselines)-1
-  t_beam_int=0.
-  t_beam_power=0.
   FOR pol_i=0,n_pol-1 DO BEGIN
     *primary_beam_area[pol_i]=Fltarr(n_freq)
     *primary_beam_sq_area[pol_i]=DBLarr(n_freq)
     ant_pol1=pol_arr[0,pol_i]
-    ant_pol1x=Abs(1-ant_pol1)
     ant_pol2=pol_arr[1,pol_i]
-    ant_pol2x=Abs(1-ant_pol2)
 
     ;Group IDs label unique beams across the array
     group1=antenna.group_id[ant_pol1,*]
@@ -204,17 +202,15 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           ant_2_n *= 2
         ENDIF
 
-        t_bpwr=Systime(1)
         ;Calculate power beam from antenna beams
         psf_base_superres=beam_power(antenna[ant_1],antenna[ant_2],obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol2,$
-          psf_dim=psf_dim,freq_i=freq_i,psf_image_dim=psf_image_dim,psf_intermediate_res=psf_intermediate_res,$
+          psf_dim=psf_dim,freq_i=freq_i,psf_intermediate_res=psf_intermediate_res,$
           psf_resolution=psf_resolution,xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
           beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y, $
-          beam_per_baseline=beam_per_baseline,image_power_beam=image_power_beam,pol_i=pol_i,$
-          beam_gaussian_params=beam_gaussian_params,volume_beam=volume_beam,beam_gaussian_decomp=beam_gaussian_decomp,$
+          image_power_beam=image_power_beam,pol_i=pol_i,beam_gaussian_params=beam_gaussian_params,$
+          volume_beam=volume_beam,beam_gaussian_decomp=beam_gaussian_decomp,$
           sq_volume_beam=sq_volume_beam,res_super=res_super,psf_superres_dim=psf_superres_dim,_Extra=extra)
 
-        t_bint=Systime(1)
         if keyword_set(beam_gaussian_decomp) then begin
           beam_int+=baseline_group_n*volume_beam
           beam2_int+=baseline_group_n*sq_volume_beam
@@ -225,7 +221,6 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           beam2_int+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2.
         endelse
         n_grp_use+=baseline_group_n
-        t_beam_int+=Systime(1)-t_bint
 
         IF ~double_flag THEN psf_base_superres=Complex(psf_base_superres)
         ;NOTE: The extra element at the end of each dimension of psf_single contains the same beam as
@@ -266,7 +261,6 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
 
   FOR pol_i=0,n_pol-1 DO obs.primary_beam_area[pol_i]=primary_beam_area[pol_i]
   FOR pol_i=0,n_pol-1 DO obs.primary_beam_sq_area[pol_i]=primary_beam_sq_area[pol_i]
-  print,t_ant,t_beam_power,t_beam_int
 
   ;higher than necessary psf_dim is VERY computationally expensive, but we also don't want to crop the beam if there 
   ;   is real signal. So, in case a larger than necessary psf_dim was specified above, reduce it now if that is safe
