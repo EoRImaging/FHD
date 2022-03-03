@@ -74,7 +74,7 @@ psf_dim2=2*psf_dim
 psf_dim3=LONG64(psf_dim*psf_dim)
 bi_use_reduced=bi_use mod nbaselines
 ; Restructure the psf ID such that the last dimension matches the visiblity array in order to use future index arrays
-group_arr=reform(rebin(reform(psf.id[polarization,freq_bin_i[fi_use],*]),n_f_use,nbaselines,n_samples), n_f_use,n_samples*nbaselines)
+group_arr=reform(rebin(reform(psf.id[polarization,freq_bin_i,*]),n_f_use,nbaselines,n_samples), n_f_use,n_samples*nbaselines)
 
 if keyword_set(beam_per_baseline) then begin
     ; Initialization for gridding operation via a low-res beam kernel, calculated per
