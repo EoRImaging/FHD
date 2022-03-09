@@ -13,7 +13,13 @@ IF size(source_array,/type) EQ 8 THEN BEGIN
 ENDIF ELSE BEGIN
     UPNAME=StrUpCase(catalog_path)
     psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
-    IF psav EQ -1 THEN catalog_path+='.sav'
+    IF psav NE -1 THEN issav=1 ELSE BEGIN
+      pskyh5=strpos(UPNAME,'.SKYH5')>strpos(UPNAME,'.H5')
+      IF pskyh5 NE -1 THEN issav=0 ELSE BEGIN
+        catalog_path+='.sav'
+        issav=1
+      ENDELSE
+    ENDELSE
     IF file_test(catalog_path) EQ 0 THEN BEGIN
         catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
         IF file_test(catalog_path_full) EQ 0 THEN BEGIN
@@ -22,7 +28,8 @@ ENDIF ELSE BEGIN
         ENDIF
     ENDIF ELSE catalog_path_full=catalog_path
 
-    catalog = load_source_catalog(catalog_path_full, varname='catalog')
+    IF keyword_set(issav) THEN catalog = load_source_catalog(catalog_path_full, varname='catalog')$
+      ELSE catalog = load_skyh5_source_catalog(catalog_path_full)
 ENDELSE
 
 dimension=obs.dimension
