@@ -25,6 +25,10 @@ n_f_use=N_Elements(fi_use)
 freq_bin_i=freq_bin_i[fi_use]
 n_vis_arr=obs.nf_vis
 
+IF keyword_set(beam_per_baseline) AND interp_flag THEN BEGIN
+    print, "WARNING: Cannot do beam per baseline and interpolation at the same time, turning off interpolation"
+    interp_flag = 0
+ENDIF
 
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
 ; and the 2D derivatives for bilinear interpolation
