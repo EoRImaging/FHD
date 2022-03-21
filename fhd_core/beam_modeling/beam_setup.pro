@@ -182,6 +182,9 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         ;Get the baseline index
         bi_use=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)*baseline_mod+$
           Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n),baseline_group_n)
+        bi_use2=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)+$
+          Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n)*baseline_mod,baseline_group_n)
+        bi_use = [bi_use, bi_use2]
         IF Max(bi_use) GT bi_max THEN bi_use=bi_use[where(bi_use LE bi_max)]
         bi_use_i=where(bi_hist0[bi_use],n_use)
         IF n_use GT 0 THEN bi_use=bi_use[bi_use_i]
@@ -189,7 +192,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         ;use these indices to index the reverse indices of the original baseline index histogram
         bi_inds=ri_bi[ri_bi[bi_use]] 
         group_arr[pol_i,freq_i,bi_inds]=g_i
-               
+
         ;If the pols are equal, then only calculating one of the beams in the unique group matrix for efficiency.
         ;Set the redundant beam product to the one that is being calculated and redefine the element numbers.
         IF ant_pol1 EQ ant_pol2 THEN BEGIN

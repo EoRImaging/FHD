@@ -25,6 +25,10 @@ n_f_use=N_Elements(fi_use)
 freq_bin_i=freq_bin_i[fi_use]
 n_vis_arr=obs.nf_vis
 
+IF keyword_set(beam_per_baseline) AND interp_flag THEN BEGIN
+    print, "WARNING: Cannot do beam per baseline and interpolation at the same time, turning off interpolation"
+    interp_flag = 0
+ENDIF
 
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
 ; and the 2D derivatives for bilinear interpolation
@@ -74,7 +78,7 @@ psf_dim2=2*psf_dim
 psf_dim3=LONG64(psf_dim*psf_dim)
 bi_use_reduced=bi_use mod nbaselines
 ; Restructure the psf ID such that the last dimension matches the visiblity array in order to use future index arrays
-group_arr=reform(rebin(reform(psf.id[polarization,freq_bin_i[fi_use],*]),n_f_use,nbaselines,n_samples), n_f_use,n_samples*nbaselines)
+group_arr=reform(rebin(reform(psf.id[polarization,freq_bin_i,*]),n_f_use,nbaselines,n_samples), n_f_use,n_samples*nbaselines)
 
 if keyword_set(beam_per_baseline) then begin
     ; Initialization for gridding operation via a low-res beam kernel, calculated per
