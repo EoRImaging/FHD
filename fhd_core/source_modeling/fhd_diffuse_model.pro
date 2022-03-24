@@ -43,6 +43,11 @@ IF skyh5_check NE -1 THEN BEGIN ;read skyh5 file
         hpx_inds = keep_pixels
     endif
     coord_use = 'celestial' ;assume celestial coordinate system
+    n_stokes = 4 ;assume all 4 Stokes parameters are present
+    ;Convert to pointer array
+    model_hpx_ptr_array = Ptrarr(n_stokes)
+    for stokes_ind=0,n_stokes-1 do model_hpx_ptr_array[stokes_ind]=Ptr_new(reform(model_hpx_arr[*,stokes_ind]))
+    model_hpx_arr=model_hpx_ptr_array
 
 ENDIF ELSE BEGIN ;read sav file
     var_dummy=getvar_savefile(model_filepath,names=var_names)
