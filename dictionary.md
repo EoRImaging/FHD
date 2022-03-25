@@ -164,7 +164,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **calibration_base_gain**: The relative weight to give the old calibration solution when averaging with the new. Set to 1. to give equal weight, to 2. to give more weight to the old solution and slow down convergence, or to 0.5 to give greater weight to the new solution and attempt to speed up convergence. If use_adaptive_calibration_gain is set, the weight of the new calibration solutions will be calculated in the range calibration_base_gain/2. to 1.0 <br />
   -*Default*: 1.0 <br />
 
-**calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
+**calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration. The source catalog can be provided as either a IDL .sav file or a .skyh5 file. A .skyh5 file must be created with pyradiosky or conform to the pyradiosky formatting convention. <br />
   -*Default*: filepath(`instrument`+'_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*eor_wrapper_default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
 
@@ -314,15 +314,15 @@ WARNING! Options in this section may change without notice, and should never be 
 ## EoR Bubble Simulations
 
 **bubble_fname**: Specify the path to an HDF5 file containing at least "spectral_info/spectrum" and "spectral_info/freq" of shapes (Npix, Nchan) and (Nchan,), respectively. The "spectrum" object is a set of healpix maps vs frequency representing a full sky EoR signal. <br />
-  -*Dependency*: An input HDF5 file of the correct shape. <br /> 
-  -*Default*: not set <br /> 
+  -*Dependency*: An input HDF5 file of the correct shape. <br />
+  -*Default*: not set <br />
   -*Notes*: The frequency channels of the map *must* exactly match the channel centers of the simulated instrument. This does not do any interpolation or selection in frequency.
 **select_radius_multiplier**: A circular region is selected from the input healpix maps, corresponding with the primary beam radius. This sets the selection radius to (primary_beam_radius)x(select_radius_multiplier) <br />
-  -*Dependency*: **hpx_select_radius** must not be set for this to take effect. <br /> 
+  -*Dependency*: **hpx_select_radius** must not be set for this to take effect. <br />
   -*Default*: 1 <br />
- 
+
 **hpx_select_radius**: In degrees, the radius of a circular selection to make on the sky. Overrides **select_radius_multiplier**. <br />
-  -*Default*: not set <br /> 
+  -*Default*: not set <br />
 
 **ltaper**: If set, a tanh-function window will be applied to the input map in spherical harmonic space. <br />
   -*Dependency*: Python with healpy version >1.11 must be available. <br />
@@ -333,7 +333,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set. <br />
 
 **shellreplace**: Replace the input HEALPix shell with a shell of gaussian noise with the same mean and variance. <br />
-  -*Default*: 0 <br /> 
+  -*Default*: 0 <br />
   -*Turn off/on*: 0/1 <br />
 
 ## In situ simulation
@@ -388,7 +388,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. If `return_cal_visibilities` is set, then the final model will include all calibration sources and all model sources (duplicates are caught and included only once). <br />
   -*Default*: All valid sources are used. !Q <br />
 
-**model_catalog_file_path**: a catalog of sources to be used to make model visibilities for subtraction. <br />
+**model_catalog_file_path**: a catalog of sources to be used to make model visibilities for subtraction. The source catalog can be provided as either a IDL .sav file or a .skyh5 file. A .skyh5 file must be created with pyradiosky or conform to the pyradiosky formatting convention.<br />
   -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect.  <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
@@ -423,7 +423,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **instr_low**: minimum colorbar value for exported instrumental polarization .ps or .png images. Applies to all instrumental polarization images: XX, YY, and XY real and imaginary.<br />
   -*Default*: not set <br />
-  
+
 **mark_zenith**: Place a cross at zenith on output images.
   -*Default*: 0
   -*Turn off/on*: 0/1
@@ -433,7 +433,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect.  <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
-  
+
 **no_png**: do not export any pngs (this includes images and plots calibration solutions) <br />
   -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
   -*Turn off/on*: 0/1 <br />
