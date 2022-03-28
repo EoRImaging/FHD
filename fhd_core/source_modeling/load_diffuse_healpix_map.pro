@@ -1,4 +1,4 @@
-FUNCTION load_diffuse_healpix_map, model_filepath, coord_use=coord_use, diffuse_spectral_index=diffuse_spectral_index
+FUNCTION load_diffuse_healpix_map, model_filepath, nside=nside, coord_use=coord_use, diffuse_spectral_index=diffuse_spectral_index
 
   var_dummy=getvar_savefile(model_filepath,names=var_names)
   ;save file must have one variable called 'hpx_inds', one called 'nside', and at least one other variable. If there are multiple other variables, it must be called 'model_arr'

@@ -1,4 +1,4 @@
-FUNCTION load_skyh5_diffuse_healpix_map, model_filepath, freq_center=freq_center, coord_use=coord_use,$
+FUNCTION load_skyh5_diffuse_healpix_map, model_filepath, freq_center=freq_center, nside=nside, coord_use=coord_use,$
   skyh5_name_hpx_stokes=skyh5_name_hpx_stokes, skyh5_name_hpx_inds=skyh5_name_hpx_inds, skyh5_name_hpx_order=skyh5_name_hpx_order,$
   skyh5_name_hpx_nside=skyh5_name_hpx_nside, skyh5_name_hpx_nfreqs=skyh5_name_hpx_nfreqs, skyh5_name_hpx_npixels=skyh5_name_hpx_npixels,$
   skyh5_name_hpx_freq_arr=skyh5_name_hpx_freq_arr
