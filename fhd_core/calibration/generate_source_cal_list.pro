@@ -12,14 +12,17 @@ IF size(source_array,/type) EQ 8 THEN BEGIN
     catalog=source_array ;If a valid structure is supplied, use that 
 ENDIF ELSE BEGIN
     UPNAME=StrUpCase(catalog_path)
-    psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
-    IF psav NE -1 THEN issav=1 ELSE BEGIN
-      pskyh5=strpos(UPNAME,'.SKYH5')>strpos(UPNAME,'.H5')
-      IF pskyh5 NE -1 THEN issav=0 ELSE BEGIN
+    CASE 1 OF
+      strpos(UPNAME,'.SAV') NE -1: issav=1
+      strpos(UPNAME,'.IDLSAVE') NE -1: issav=1
+      strpos(UPNAME,'.SKYH5') NE -1: issav=0
+      strpos(UPNAME,'.H5') NE -1: issav=0
+      ELSE: BEGIN
         catalog_path+='.sav'
         issav=1
-      ENDELSE
-    ENDELSE
+      END
+    ENDCASE
+
     IF file_test(catalog_path) EQ 0 THEN BEGIN
         catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
         IF file_test(catalog_path_full) EQ 0 THEN BEGIN

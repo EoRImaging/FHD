@@ -19,57 +19,9 @@ IF file_test(model_filepath) EQ 0 THEN RETURN,Ptrarr(n_pol)
 upname=StrUpCase(model_filepath)
 skyh5_check=strpos(upname,'.SKYH5')
 IF skyh5_check NE -1 THEN BEGIN ;read skyh5 file
-    file_id = H5F_OPEN(model_filepath)
-    model_hpx_arr = H5D_READ(H5D_OPEN(file_id, '/Data/stokes'))
-    hpx_inds = H5D_READ(H5D_OPEN(file_id, '/Header/hpx_inds'))
-    hpx_order = H5D_READ(H5D_OPEN(file_id, '/Header/hpx_order'))
-    nside = H5D_READ(H5D_OPEN(file_id, '/Header/nside'))
-    nfreqs = H5D_READ(H5D_OPEN(file_id, '/Header/Nfreqs'))
-    npixels = H5D_READ(H5D_OPEN(file_id, '/Header/Ncomponents'))
-    if nfreqs eq 1 then model_hpx_arr = reform(model_hpx_arr) else begin
-        freq_arr = H5D_READ(H5D_OPEN(file_id, '/Header/freq_array'))
-        null = min(freq_arr-freq_center, min_ind, /absolute)
-        model_hpx_arr = reform(model_hpx_arr[*, min_ind, *])
-    endelse
-    if StrUpCase(hpx_order) eq 'NESTED' then begin ;reorder to ring ordering
-        ;requires implicit indexing
-        data_implicit = make_array(12*nside^2, 4, /float, value=-1.6375e+30)
-        for pix=0,npixels-1 do begin
-          data_implicit[hpx_inds[pix], *] = model_hpx_arr[pix, *]
-        endfor
-        data_implicit = reorder(data_implicit, /n2r)
-        keep_pixels = where(data_implicit[*, 0] ne -1.6375e+30)
-        model_hpx_arr = data_implicit[keep_pixels, *]
-        hpx_inds = keep_pixels
-    endif
-    coord_use = 'celestial' ;assume celestial coordinate system
-    n_stokes = 4 ;assume all 4 Stokes parameters are present
-    ;Convert to pointer array
-    model_hpx_ptr_array = Ptrarr(n_stokes)
-    for stokes_ind=0,n_stokes-1 do model_hpx_ptr_array[stokes_ind]=Ptr_new(reform(model_hpx_arr[*,stokes_ind]))
-    model_hpx_arr=model_hpx_ptr_array
-
+    model_hpx_arr=load_skyh5_diffuse_healpix_map(model_filepath, freq_center=freq_center, coord_use=coord_use)
 ENDIF ELSE BEGIN ;read sav file
-    var_dummy=getvar_savefile(model_filepath,names=var_names)
-    ;save file must have one variable called 'hpx_inds', one called 'nside', and at least one other variable. If there are multiple other variables, it must be called 'model_arr'
-    hpx_inds=getvar_savefile(model_filepath,'hpx_inds')
-    nside=getvar_savefile(model_filepath,'nside')
-    var_name_inds=where((StrLowCase(var_names) NE 'hpx_inds') AND (StrLowCase(var_names) NE 'nside'))
-    var_names=var_names[var_name_inds]
-    var_name_use=var_names[(where(StrLowCase(var_names) EQ 'model_arr',n_match))[0]>0] ;will pick 'model_arr' if present, or the first variable that is not 'hpx_inds' or 'nside'
-    model_hpx_arr=getvar_savefile(model_filepath,var_name_use)
-
-    model_spectra_i=where(StrLowCase(var_names) EQ 'model_spectral_arr',n_match)
-    IF n_match GE 1 THEN diffuse_spectral_index=getvar_savefile(model_filepath,var_names[model_spectra_i])
-    IF n_spectral LE 0 THEN undefine_fhd,diffuse_spectral_index
-
-    coord_use=where(StrLowCase(var_names) EQ 'coord_sys',m_match) ;will pick 'coord_sys' if present
-    IF m_match EQ 0 THEN coord_use = 'celestial' ELSE coord_use=getvar_savefile(model_filepath,'coord_sys')    ; Assume celestial if not defined otherwise
-
-    IF size(diffuse_spectral_index,/type) EQ 10 THEN BEGIN ;check if pointer type
-        ;need to write this!
-        print,"A spectral index is defined in the saved diffuse model, but this is not yet supported!"
-    ENDIF ;case of specifying a single scalar to be applied to the entire diffuse model is treated AFTER building the model in instrumental polarization
+    model_hpx_arr=load_diffuse_healpix_map(model_filepath, coord_use=coord_use, diffuse_spectral_index=diffuse_spectral_index)
 ENDELSE
 
 model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,$
