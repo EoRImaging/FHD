@@ -19,9 +19,9 @@ IF file_test(model_filepath) EQ 0 THEN RETURN,Ptrarr(n_pol)
 upname=StrUpCase(model_filepath)
 skyh5_check=strpos(upname,'.SKYH5')
 IF skyh5_check NE -1 THEN BEGIN ;read skyh5 file
-    model_hpx_arr=load_skyh5_diffuse_healpix_map(model_filepath, freq_center=freq_center, nside=nside, coord_use=coord_use)
+    model_hpx_arr=load_skyh5_diffuse_healpix_map(model_filepath, freq_center=freq_center, nside=nside, hpx_inds=hpx_inds, coord_use=coord_use)
 ENDIF ELSE BEGIN ;read sav file
-    model_hpx_arr=load_diffuse_healpix_map(model_filepath, nside=nside, coord_use=coord_use, diffuse_spectral_index=diffuse_spectral_index)
+    model_hpx_arr=load_diffuse_healpix_map(model_filepath, nside=nside, hpx_inds=hpx_inds, coord_use=coord_use, diffuse_spectral_index=diffuse_spectral_index)
 ENDELSE
 
 model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,$

@@ -1,4 +1,4 @@
-FUNCTION load_skyh5_diffuse_healpix_map, model_filepath, freq_center=freq_center, nside=nside, coord_use=coord_use,$
+FUNCTION load_skyh5_diffuse_healpix_map, model_filepath, freq_center=freq_center, nside=nside, hpx_inds=hpx_inds, coord_use=coord_use,$
   skyh5_name_hpx_stokes=skyh5_name_hpx_stokes, skyh5_name_hpx_inds=skyh5_name_hpx_inds, skyh5_name_hpx_order=skyh5_name_hpx_order,$
   skyh5_name_hpx_nside=skyh5_name_hpx_nside, skyh5_name_hpx_nfreqs=skyh5_name_hpx_nfreqs, skyh5_name_hpx_npixels=skyh5_name_hpx_npixels,$
   skyh5_name_hpx_freq_arr=skyh5_name_hpx_freq_arr
@@ -53,12 +53,12 @@ FUNCTION load_skyh5_diffuse_healpix_map, model_filepath, freq_center=freq_center
 
   if StrUpCase(hpx_order) eq 'NESTED' then begin ;reorder to ring ordering
     ;requires implicit indexing
-    data_implicit = make_array(12*nside^2, 4, /float, value=-1.6375e+30)
+    data_implicit = make_array(12*nside^2, 4, /float, value=!VALUES.F_NAN)
     for pix=0,npixels-1 do begin
       data_implicit[hpx_inds[pix], *] = model_hpx_arr[pix, *]
     endfor
     data_implicit = reorder(data_implicit, /n2r)
-    keep_pixels = where(data_implicit[*, 0] ne -1.6375e+30)
+    keep_pixels = where(finite(data_implicit[*, 0]))
     model_hpx_arr = data_implicit[keep_pixels, *]
     hpx_inds = keep_pixels
   endif
