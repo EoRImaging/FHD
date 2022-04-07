@@ -59,17 +59,13 @@ ENDIF ELSE BEGIN
     grid_info=Ptr_new()
 ENDELSE
 
-antenna_flag = 1
 IF Tag_exist(params, "antenna1") AND Tag_exist(params, "antenna2") THEN BEGIN
     ant1_arr = params.antenna1
     ant2_arr = params.antenna2
-    IF Max(ant1_arr) GT 0 AND Max(ant2_arr) GT 0 THEN BEGIN
-        tile_A = ant1_arr
-        tile_B = ant2_arr
-        n_tile=max(tile_A)>max(tile_B)
-        antenna_flag = 0
-    ENDIF
-ENDIF
+    tile_A = ant1_arr
+    tile_B = ant2_arr
+    antenna_flag=0 
+ENDIF ELSE antenna_flag = 1
 IF antenna_flag THEN BEGIN
     ;256 tile upper limit is hard-coded in CASA format
     ;these tile numbers have been verified to be correct
@@ -134,6 +130,20 @@ noise_arr=Ptr_new()
 
 meta=fhd_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,$
     n_tile=n_tile,instrument=instrument,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
+
+; If it appears that the params struct uses tile names instead of indices, then rewrite with indices
+if max(params.antenna1) GT n_tile then begin
+    tile_A = params.antenna1 - 1
+    tile_B = params.antenna2 - 1
+    for tile_i=0, n_tile-1 do begin
+        inds = where(meta.tile_names[tile_i] EQ (params.antenna1 - 1),n_count)
+        if n_count GT 0 then tile_A[inds] = tile_i+1
+        inds = where(meta.tile_names[tile_i] EQ (params.antenna2 - 1),n_count)
+        if n_count GT 0 then tile_B[inds] = tile_i+1
+    endfor
+    params.antenna1 = tile_A
+    params.antenna2 = tile_B
+endif
 
 IF N_Elements(meta_data) EQ 0 THEN meta_data=Ptr_new() ELSE meta_data=Ptr_new(meta_data)
 IF N_Elements(meta_hdr) EQ 0 THEN meta_hdr=Ptr_new() ELSE meta_hdr=Ptr_new(meta_hdr)
