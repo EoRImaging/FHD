@@ -103,7 +103,7 @@ IF Keyword_Set(uv_return) THEN BEGIN
             ; This allows for the maximum amount of diffuse emission (important if calibrating)
             ;  while taking advantage of the natural taper of the instrument.  
             pbr = primary_beam_radius(obs,psf,beam_threshold=.01)
-            frac_size = dimension/(pbr*2/obs.degpix)
+            frac_size = (pbr * 2 / obs.degpix) / dimension
         ENDIF ELSE frac_size = 1
         window_1d_dim = spectral_window(dimension, type = diffuse_fft_window[0], $
           fractional_size = frac_size, periodic=1)
