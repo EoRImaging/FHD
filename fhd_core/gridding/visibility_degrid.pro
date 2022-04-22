@@ -41,7 +41,9 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
     n_freq_use=N_Elements(frequency_array)
     n_freq=Long(obs.n_freq)
     psf_dim2=2*psf_dim
-    group_arr=reform(psf.id[polarization,freq_bin_i,*])
+    ; Restructure the psf ID such that the last dimension matches the visiblity array in order to use future index arrays
+    group_arr=reform(rebin(reform(psf.id[polarization,freq_bin_i,*]),n_freq,nbaselines,n_samples),$
+       n_freq,n_samples*nbaselines)
     beam_arr=*psf.beam_ptr
 
     if keyword_set(beam_per_baseline) then begin
