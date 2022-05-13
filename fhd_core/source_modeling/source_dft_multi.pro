@@ -52,42 +52,41 @@ FOR a_i=0L,n_alpha-1 DO BEGIN
 ENDFOR
 
 IF keyword_set(gaussian_source_models) then begin
-  if tag_exist(source_array, 'shape') then begin
-    gauss_test = ceil(0>(source_array.shape.x + source_array.shape.y)<1)
-    gauss_inds = where(gauss_test GT 0,n_gauss)
-  endif else n_gauss=0
+    if tag_exist(source_array, 'shape') then begin
+        gauss_test = ceil(0>(source_array.shape.x + source_array.shape.y)<1)
+        gauss_inds = where(gauss_test GT 0,n_gauss)
+    endif else n_gauss=0
 
-  if n_gauss GT 0 then begin
-      ;Convert from FWHM in arcsec to stddev in deg
-      gaussian_ra=double(source_array[gauss_inds].shape.x)/(7200*sqrt(2*alog(2)))
-      gaussian_dec=double(source_array[gauss_inds].shape.y)/(7200*sqrt(2*alog(2)))
-      ;Convert from deg to rad
-      gaussian_rot=double(source_array[gauss_inds].shape.angle)*!DPi/180.
+    if n_gauss GT 0 then begin
+        ;Convert from FWHM in arcsec to stddev in deg
+        gaussian_ra=double(source_array[gauss_inds].shape.x)/(7200*sqrt(2*alog(2)))
+        gaussian_dec=double(source_array[gauss_inds].shape.y)/(7200*sqrt(2*alog(2)))
+        ;Convert from deg to rad
+        gaussian_rot=double(source_array[gauss_inds].shape.angle)*!DPi/180.
 
-      ;Compression due to flat sky approximation of curved sky, see J Cook et al. 2022
-      Eq2Hor,source_array[gauss_inds].ra,source_array[gauss_inds].dec, obs.JD0, gauss_alt, gauss_az, nutate=1,precess=1,$
-        aberration=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
-      gaussian_ra_corr = sqrt( sin(gaussian_rot)^2 + cos(gaussian_rot)^2 * sin((90.-gauss_az) * !DPi/180.)^2 )
-      gaussian_dec_corr = sqrt( cos(gaussian_rot)^2 + sin(gaussian_rot)^2 * cos((90.-gauss_az) * !DPi/180.)^2 )
+        ;Compression due to flat sky approximation of curved sky, see J Cook et al. 2022
+        Eq2Hor,source_array[gauss_inds].ra,source_array[gauss_inds].dec, obs.JD0, gauss_alt, gauss_az, nutate=1,precess=1,$
+          aberration=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+        gaussian_ra_corr = sqrt( sin(gaussian_rot)^2 + cos(gaussian_rot)^2 * sin((90.-gauss_az) * !DPi/180.)^2 )
+        gaussian_dec_corr = sqrt( cos(gaussian_rot)^2 + sin(gaussian_rot)^2 * cos((90.-gauss_az) * !DPi/180.)^2 )
 
-      ;Calculate the x,y pixel coordinates of the gaussian sources
-      apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=[[obs.obsra-0.5*gaussian_ra], $
-        [obs.obsra+0.5*gaussian_ra]], dec_arr=[[obs.obsdec-0.5*gaussian_dec],[obs.obsdec+0.5*gaussian_dec]], /ad2xy
-      gaussian_x = (gaussian_x_vals[*,1]-gaussian_x_vals[*,0]) / gaussian_ra_corr
-      gaussian_y = (gaussian_y_vals[*,1]-gaussian_y_vals[*,0]) / gaussian_dec_corr
+        ;Calculate the x,y pixel coordinates of the gaussian sources
+        apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=[[obs.obsra-0.5*gaussian_ra], $
+          [obs.obsra+0.5*gaussian_ra]], dec_arr=[[obs.obsdec-0.5*gaussian_dec],[obs.obsdec+0.5*gaussian_dec]], /ad2xy
+        gaussian_x = (gaussian_x_vals[*,1]-gaussian_x_vals[*,0]) / gaussian_ra_corr
+        gaussian_y = (gaussian_y_vals[*,1]-gaussian_y_vals[*,0]) / gaussian_dec_corr
 
-      ;Flux is affected by the compression
-      for pol_i=0, n_pol-1 do source_array_use[gauss_inds].flux.(pol_i) *= (gaussian_ra_corr * gaussian_dec_corr)
+        ;Flux is affected by the compression
+        for pol_i=0, n_pol-1 do source_array_use[gauss_inds].flux.(pol_i) *= (gaussian_ra_corr * gaussian_dec_corr)
 
-      ; Create internal structure of gaussian source parametersto pass into dft subroutines
-      gaussian_source_models = {gauss_inds:gauss_inds, gaussian_x:gaussian_x, gaussian_y:gaussian_y, gaussian_rot:gaussian_rot}
+        ;Create internal structure of gaussian source parametersto pass into dft subroutines
+        gaussian_source_models = {gauss_inds:gauss_inds, gaussian_x:gaussian_x, gaussian_y:gaussian_y, gaussian_rot:gaussian_rot}
 
+    endif else begin
+        print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
+        undefine, gaussian_source_models
+        gauss_test = INTARR(n_source)
     endelse
-  endif else begin
-    print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
-    undefine, gaussian_source_models
-    gauss_test = INTARR(n_source)
-  endelse
 ENDIF ELSE gauss_test = INTARR(n_source)
 
 
