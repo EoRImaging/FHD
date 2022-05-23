@@ -90,8 +90,9 @@ IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
         binsize=Lonarr(memory_bins)+sources_per_bin ;Recalculate binsize given new memory bins
     endif
 
-    ;Make the last bin forces number of sources distributed throughout bins equals the total num of sources.
+    ;Last bin may contain less sources than the other bins (number of bins may not evenly divide the number of sources)
     binsize[memory_bins-1]-=Total(binsize)-n0
+    ;Index of the first source in each bin
     bin_start=[0,Total(binsize,/cumulative)]
 
     FOR bin_i=0L,memory_bins-1 DO BEGIN
@@ -107,11 +108,9 @@ IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
             match, gauss_inds_use, inds, suba, subb
             source_envelope = fltarr(N_elements(suba),N_elements(xvals),/NOZERO)
             rot_inds = where(gaussian_rot[suba] NE 0,n_rot,complement=unrot_inds,ncomplement=n_unrot)
-            ;rot_inds = where(gaussian_rot[gauss_inds_use[suba]] NE 0,n_rot,complement=unrot_inds,ncomplement=n_unrot)
             if n_rot gt 0 then begin
                 ; For gaussians that are rotated with respect to the x,y plane, calculate their source envelope
                 bin_rot_subset = suba[rot_inds]
-                ;bin_rot_subset = gauss_inds_use[suba[rot_inds]]
                 cos_rot = Cos(gaussian_rot[bin_rot_subset])
                 sin_rot = Sin(gaussian_rot[bin_rot_subset])
 
@@ -123,15 +122,12 @@ IF Keyword_Set(conserve_memory) AND (element_check GT mem_thresh) THEN BEGIN
             if n_unrot gt 0 then begin
                 ; For aligned gaussians, avoid extra operations by directly calculating their source envelope with rot=0
                 bin_unrot_subset = suba[unrot_inds]
-                ;bin_unrot_subset = gauss_inds_use[suba[unrot_inds]]
                 source_envelope[unrot_inds,*] = exp(-1./2*(matrix_multiply(gauss_x_use2[bin_unrot_subset], xvals2) $
                   + matrix_multiply(gauss_y_use2[bin_unrot_subset], yvals2)))
             endif
 
             cos_term[subb,*] *= source_envelope
             sin_term[subb,*] *= source_envelope
-            ;cos_term[inds[subb],*] *= source_envelope
-            ;sin_term[inds[subb],*] *= source_envelope
         ENDIF
 
         IF size(flux_use,/type) EQ 10 THEN BEGIN
@@ -202,7 +198,6 @@ ENDIF ELSE BEGIN
     source_uv_vals*=fft_norm
     IF not Keyword_Set(double_precision) THEN source_uv_vals=Complex(source_uv_vals)
 ENDELSE
-
 
 IF Keyword_Set(flux_ptr_cleanup) THEN Ptr_free,flux_use
 RETURN,source_uv_vals
