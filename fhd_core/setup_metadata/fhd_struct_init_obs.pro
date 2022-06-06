@@ -134,9 +134,9 @@ if max(params.antenna1) GT n_tile then begin
     tile_B = params.antenna2
     for tile_i=0, n_tile-1 do begin
         inds = where(layout.antenna_numbers[tile_i] EQ (params.antenna1),n_count)
-        if n_count GT 0 then tile_A[inds] = tile_i+1
+        if n_count GT 0 then tile_A[inds] = tile_i+1 else message, "antenna numbers in uvfits vis and ant hdus do not match"
         inds = where(layout.antenna_numbers[tile_i] EQ (params.antenna2),n_count)
-        if n_count GT 0 then tile_B[inds] = tile_i+1
+        if n_count GT 0 then tile_B[inds] = tile_i+1 else message, "antenna numbers in uvfits vis and ant hdus do not match"
     endfor
     params.antenna1 = tile_A
     params.antenna2 = tile_B
