@@ -1,5 +1,5 @@
 # Publications <br />
-FHD has been used in 14 papers for a total of 413 citations (ADS, Feb 2020), listed below in chronological order. 
+FHD has been used in 16 papers for a total of 550 citations (ADS, Sept 2020), listed below in chronological order. 
 
 ### [Fast Holographic Deconvolution: A New Technique for Precision Radio Interferometry](https://ui.adsabs.harvard.edu/abs/2012ApJ...759...17S/abstract)
 Sullivan, I. S.; Morales, M. F.; Hazelton, B. J.; Arcus, W.; Barnes, D.; Bernardi, G.; Briggs, F. H.; Bowman, J. D.; Bunton, J. D.; Cappallo, R. J.; Corey, B. E.; Deshpande, A.; deSouza, L.; Emrich, D.; Gaensler, B. M.; Goeke, R.; Greenhill, L. J.; Herne, D.; Hewitt, J. N.; Johnston-Hollitt, M. Kaplan, D. L.; Kasper, J. C.; Kincaid, B. B.; Koenig, R.; Kratzenberg, E.; Lonsdale, C. J.; Lynch, M. J.; McWhirter, S. R.; Mitchell, D. A.; Morgan, E.; Oberoi, D.; Ord, S. M.; Pathikulangara, J.; Prabu, T.; Remillard, R. A.; Rogers, A. E. E.; Roshi, A.; Salah, J. E.; Sault, R. J.; Udaya Shankar, N.; Srivani, K. S.; Stevens, J.; Subrahmanyan, R.; Tingay, S. J.; Wayth, R. B.; Waterson, M.; Webster, R. L.; Whitney, A. R.; Williams, A.; Williams, C. L.; Wyithe, J. S. B.   
@@ -56,3 +56,11 @@ ApJ, 2019
 ### [First Season MWA Phase II Epoch of Reionization Power Spectrum Results at Redshift 7](https://ui.adsabs.harvard.edu/abs/2019ApJ...887..141L/abstract)
 Li, W.; Pober, J. C.; Barry, N.; Hazelton, B. J.; Morales, M. F.; Trott, C. M.; Lanman, A.; Wilensky, M.; Sullivan, I.; Beardsley, A. P.; Booler, T.; Bowman, J. D.; Byrne, R.; Crosse, B.; Emrich, D.; Franzen, T. M. O.; Hasegawa, K.; Horsley, L.; Johnston-Hollitt, M.; Jacobs, D. C. Jordan, C. H.; Joseph, R. C.; Kaneuji, T.; Kaplan, D. L.; Kenney, D.; Kubota, K.; Line, J.; Lynch, C.; McKinley, B.; Mitchell, D. A.; Murray, S.; Pallot, D.; Pindor, B.; Rahimi, M.; Riding, J.; Sleap, G.; Steele, K.; Takahashi, K.; Tingay, S. J.; Walker, M.; Wayth, R. B.; Webster, R. L.; Williams, A.; Wu, C.; Wyithe, J. S. B.; Yoshiura, S.; Zheng, Q.   
 ApJ, 2019
+
+### [Quantifying excess power from radio frequency interference in Epoch of Reionization measurements](https://ui.adsabs.harvard.edu/abs/2020MNRAS.498..265W/abstract)
+Wilensky, Michael J.; Barry, Nichole; Morales, Miguel F.; Hazelton, Bryna J.; Byrne, Ruby.   
+MNRAS, 2020
+
+### [The Impact of Tandem Redundant/Sky-Based Calibration in MWA Phase II Data Analysis](https://ui.adsabs.harvard.edu/abs/2020arXiv200909269Z/abstract)
+Zhang, Zheng; Pober, Jonathan C.; Li, Wenyang; Hazelton, Bryna J.; Morales, Miguel F.; Trott, Cathryn M.; Jordan, Christopher H.; Joseph, Ronniy C.; Beardsley, Adam; Barry, Nichole; Byrne, Ruby; Tingay, Steven J.; Chokshi, Aman; Hasegawa, Kenji; Jacobs, Daniel C.; Lanman, Adam; Line, Jack L. B.; Lynch, Christene; McKinley, Benjamin; Mitchell, Daniel A. Murray, Steven; Pindor, Bart; Rahimi, Mahsa; Takahashi, Keitaro; Wayth, Randall B.; Webster, Rachel L.; Wilensky, Michael; Yoshiura, Shintaro; Zheng, Qian.   
+PASA, 2020

@@ -29,6 +29,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 2 <br />
 
+**beam_nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (beam_nfreq_avg=1). However, this is computationally difficult for most machines. <br />
+  -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
+  -*Default*: 1 <br />
+  -*eor_wrapper_defaults*: 16 <br />
+
 **beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
   -*Range*: 0-# of seconds in an observation <br />
   -*Default*: 0 <br />
@@ -64,14 +69,13 @@ This is a work in progress; please add keywords as you find them in alphabetical
                'Blackman-Harris', 'Blackman-Harris^2', 'Tukey' <br />
   -*Default*: Not set (not the same as setting to 0!) <br />
 
-**beam_nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (beam_nfreq_avg=1). However, this is computationally difficult for most machines. <br />
-  -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
-  -*Default*: 1 <br />
-  -*eor_wrapper_defaults*: 16 <br />
-
 **psf_resolution**: super-resolution factor of the psf in UV space. Values greater than 1 increase the resolution of the gridding kernel. <br />
   -*Default*: 16 <br />
   -*eor_wrapper_defaults*: 100 <br />
+
+**save_beam_metadata_only**: save only the metadata associated with the beam to speed up I/O and reduce required space. Skips writing the Jones matrix completely and writes everything but the `beam_ptr` in the psf structure. Depending on beam frequency resolution, this can save upwards of 10Gb of space per observation. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: Not set (same as 0) <br />
 
 **transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. <br />
   -*Default*: not set <br />
@@ -157,6 +161,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
 
+**calibration_base_gain**: The relative weight to give the old calibration solution when averaging with the new. Set to 1. to give equal weight, to 2. to give more weight to the old solution and slow down convergence, or to 0.5 to give greater weight to the new solution and attempt to speed up convergence. If use_adaptive_calibration_gain is set, the weight of the new calibration solutions will be calculated in the range calibration_base_gain/2. to 1.0 <br />
+  -*Default*: 1.0 <br />
+
 **calibration_catalog_file_path**: The file path to the desired source catalog to be used for calibration <br />
   -*Default*: filepath(`instrument`+'_calibration_source_list.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
   -*eor_wrapper_default*: filepath('GLEAM_v2_plus_rlb2019.sav',root=rootdir('FHD'),subdir='catalog_data') <br />
@@ -185,6 +192,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*eor_wrapper_defaults*: 0 <br />
 
 **digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: undefined (off) <br />
+
+**gaussian_source_models**:  uses SHAPE information provided in the sky catalog to build Gaussian models of extended sources. See Line et al. 2020 for more details on implementation. The models are only accurate to within ~10\%, and this is an ongoing issue (see Issue [\#211](https://github.com/EoRImaging/FHD/issues/211)). <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
 
@@ -222,6 +233,12 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **transfer_calibration**: the file path of a calibration to be read-in. The string can be: a directory where a \<obsid\>_cal.sav is located, the full file path with the obsid (file/path/\<obsid\>), the full file path to a sav file, the full file path to txt file, the full file path to a npz file, the full file path to a npy file, or the full file path to a fits file that adheres to calfits format. Note that this will calibrate, but not generate a model. Please set model visibility keywords separately to generate a subtraction model. <br />
   -*Default*: not set <br />
+
+**use_adaptive_calibration_gain**: Controls whether to use a Kalman Filter to adjust the gain to use for each iteration of calculating calibration. See calibration_base_gain for more information. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+  -*eor_wrapper_defaults*: not set <br />
+
 
 **vis_baseline_hist**: !Q <br />
   -*Default*: 1 <br />
@@ -266,7 +283,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
-**max_sources**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
+**max_deconvolution_components**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
   -*Default*: 100000 <br />
   -*eor_wrapper_defaults*: 20000 <br />
 
@@ -294,6 +311,30 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: not set <br />
 
+## EoR Bubble Simulations
+
+**bubble_fname**: Specify the path to an HDF5 file containing at least "spectral_info/spectrum" and "spectral_info/freq" of shapes (Npix, Nchan) and (Nchan,), respectively. The "spectrum" object is a set of healpix maps vs frequency representing a full sky EoR signal. <br />
+  -*Dependency*: An input HDF5 file of the correct shape. <br /> 
+  -*Default*: not set <br /> 
+  -*Notes*: The frequency channels of the map *must* exactly match the channel centers of the simulated instrument. This does not do any interpolation or selection in frequency.
+**select_radius_multiplier**: A circular region is selected from the input healpix maps, corresponding with the primary beam radius. This sets the selection radius to (primary_beam_radius)x(select_radius_multiplier) <br />
+  -*Dependency*: **hpx_select_radius** must not be set for this to take effect. <br /> 
+  -*Default*: 1 <br />
+ 
+**hpx_select_radius**: In degrees, the radius of a circular selection to make on the sky. Overrides **select_radius_multiplier**. <br />
+  -*Default*: not set <br /> 
+
+**ltaper**: If set, a tanh-function window will be applied to the input map in spherical harmonic space. <br />
+  -*Dependency*: Python with healpy version >1.11 must be available. <br />
+  -*Default*: not set. <br />
+  -*Notes*: This feature is disabled by default. To enable it, uncomment the indicated block in simulation/eor_bubble_sim.pro.
+
+**orthomap_var**: If set, replace the interpolated orthoslant maps (binned from the input HEALPix shell) with Gaussian noise of mean 0 and variance **orthomap_var**.  <br />
+  -*Default*: not set. <br />
+
+**shellreplace**: Replace the input HEALPix shell with a shell of gaussian noise with the same mean and variance. <br />
+  -*Default*: 0 <br /> 
+  -*Turn off/on*: 0/1 <br />
 
 ## In situ simulation
 
@@ -369,7 +410,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**image_filter_fn**: weighting filter to be applyed to resulting snapshot images and fits files. Options include  filter_uv_hanning, filter_uv_natural, filter_uv_radial, filter_uv_tapered_uniform, filter_uv_uniform, and filter_uv_weighted. Specifics on these filters can be found in `FHD/fhd_output/fft_filters`.<br />
+**image_filter_fn**: weighting filter to be applyed to resulting snapshot images and fits files. Options include  filter_uv_hanning, filter_uv_natural, filter_uv_radial, filter_uv_tapered_uniform, filter_uv_uniform, and filter_uv_optimal. Specifics on these filters can be found in `FHD/fhd_output/fft_filters`.<br />
   -*Default*: filter_uv_uniform <br />
   -*eor_wrapper_defaults*: filter_uv_uniform <br />
 
@@ -378,6 +419,10 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **instr_low**: minimum colorbar value for exported instrumental polarization .ps or .png images. Applies to all instrumental polarization images: XX, YY, and XY real and imaginary.<br />
   -*Default*: not set <br />
+  
+**mark_zenith**: Place a cross at zenith on output images.
+  -*Default*: 0
+  -*Turn off/on*: 0/1
 
 **no_fits**: do not export fits files of the sky. This typically saves ~20Mb of memory for every fits file, which by default there are 16 for two polarizations. <br />
   -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
@@ -385,10 +430,12 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
   
+<<<<<<< HEAD
 **no_png**: do not export any pngs (including standard images and images of calibration solutions). <br />
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect. <br />
-  -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />
+=======
+**no_png**: do not export any pngs (this includes images and plots calibration solutions) <br />
+  -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
 
 **output_directory**: the absolute path to the output directory for the FHD output run folder. See `version`.     
   -*Default*: not set <br />    
@@ -617,8 +664,8 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set<br />
   -*eor_wrapper_defaults*: 600. <br />
 
-**ps_nfreq_avg** : !Q <br />
-  -*Default*: not set<br />
+**ps_nfreq_avg** : A factor to average up the frequency resolution of the HEALPix cubes from the analysis frequency resolution. <br />
+  -*Default*: averages by a factor of 2 <br />
 
 **ps_psf_resolution** : !Q <br />
   -*Default*: not set<br />

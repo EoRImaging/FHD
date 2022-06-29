@@ -20,7 +20,7 @@ ENDIF
 n_obs=N_Elements(obs_arr)
 ;Note that defaults supplied here will be overwritten by any keywords passed through Extra
 ;use the same deconvolution parameters for all observations. obs is used for very little in here!
-fhd_params=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_sources=Sqrt(n_obs)*10000.,$
+fhd_params=fhd_init(obs_arr[0],deconvolution_filter='filter_uv_uniform',max_deconvolution_components=Sqrt(n_obs)*10000.,$
     joint_deconvolution_list=fhd_file_list,_Extra=extra) 
 
 jones_arr=Ptrarr(n_obs)
@@ -28,7 +28,7 @@ n_pol=fhd_params.npol
 gain_factor=fhd_params.gain_factor
 ;gain_factor_use=gain_factor*(!RaDeg/(obs_arr.MAX_BASELINE/obs_arr.KPIX)/obs_arr.degpix)^2. ;correct by approx. beam area
 max_iter=fhd_params.max_iter
-max_sources=fhd_params.max_sources
+max_deconvolution_components=fhd_params.max_deconvolution_components
 check_iter=fhd_params.check_iter
 beam_threshold=fhd_params.beam_threshold
 beam_model_threshold=0.05
@@ -176,7 +176,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
         filter_arr=filter_arr[*,obs_i],image_filter_fn=decon_filter,degpix=obs.degpix,/antialias,file_path_fhd=file_path_fhd)
     gain_normalization *= (obs.degpix*!DtoR)^2. ; Convert images from Jy/sr to Jy/pixel
     
-    *comp_arr[obs_i]=source_comp_init(n_sources=max_sources,gain_factor=gain_factor)
+    *comp_arr[obs_i]=source_comp_init(n_sources=max_deconvolution_components,gain_factor=gain_factor)
     
     IF Keyword_Set(galaxy_model_fit) THEN BEGIN
         gal_model_uv=fhd_galaxy_model(obs,jones_arr[obs_i],file_path_fhd=file_path_fhd,/uv_return,_Extra=extra)
@@ -289,12 +289,12 @@ FOR i=0L,max_iter-1 DO BEGIN
         nside=nside,region_inds=region_inds,pix_coords=pix_coords,reverse_inds=reverse_inds,res_stokes_arr=res_stokes_arr,$
         source_mask_hpx=source_mask_hpx,si_start=si,_Extra=extra)
     
-    n_src_use=(max_sources-si-1.)<n_sources
+    n_src_use=(max_deconvolution_components-si-1.)<n_sources
     ;generate UV model from source list
     FOR obs_i=0L,n_obs-1 DO BEGIN
         IF ~Ptr_valid(comp_arr1[obs_i]) THEN BEGIN recalc_flag[obs_i]=0 & CONTINUE & ENDIF
         IF n_src_use EQ n_sources THEN comp_single=*comp_arr1[obs_i] ELSE BEGIN
-            si_use=where((*comp_arr1[obs_i]).id LT max_sources)
+            si_use=where((*comp_arr1[obs_i]).id LT max_deconvolution_components)
             comp_single=(*comp_arr1[obs_i])[si_use]
         ENDELSE
         (*comp_arr[obs_i])[comp_single.id]=comp_single
@@ -315,7 +315,7 @@ FOR i=0L,max_iter-1 DO BEGIN
     ENDFOR
     t4+=Systime(1)-t4_0
     
-    IF (si+1) GE max_sources THEN BEGIN
+    IF (si+1) GE max_deconvolution_components THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
         conv_chk=Stddev(source_find_hpx[where(source_mask_hpx)],/nan)

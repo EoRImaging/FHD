@@ -17,7 +17,7 @@ ENDIF ELSE BEGIN
     IF file_test(catalog_path) EQ 0 THEN BEGIN
         catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
         IF file_test(catalog_path_full) EQ 0 THEN BEGIN
-            print,String(format='(A," not found! Critical problem, quitting!',catalog_path)
+            print, catalog_path+' not found! Critical problem, quitting!'
             exit
         ENDIF
     ENDIF ELSE catalog_path_full=catalog_path
@@ -47,7 +47,7 @@ IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05
 no_restrict_sources_default = 1
 
 IF Keyword_Set(model_visibilities) THEN BEGIN
-    IF N_Elements(model_flux_threshold) GT 0 THEN flux_threshold=model_flux_threshold ELSE flux_threshold=0.
+    IF N_Elements(model_flux_threshold) GT 0 THEN flux_threshold=model_flux_threshold
     IF N_Elements(allow_sidelobe_model_sources) GT 0 THEN allow_sidelobe_sources=allow_sidelobe_model_sources ELSE allow_sidelobe_sources=0
     IF Keyword_Set(allow_sidelobe_sources) THEN IF N_Elements(no_restrict_model_sources) EQ 0 THEN no_restrict_sources=1 ELSE no_restrict_sources=no_restrict_model_sources $
         ELSE no_restrict_sources=no_restrict_sources_default
@@ -56,7 +56,7 @@ IF Keyword_Set(model_visibilities) THEN BEGIN
     IF Keyword_Set(allow_sidelobe_sources) THEN beam_threshold=0.01
     IF N_Elements(beam_model_threshold) GT 0 THEN beam_threshold=beam_model_threshold
 ENDIF ELSE BEGIN
-    IF N_Elements(calibration_flux_threshold) GT 0 THEN flux_threshold=calibration_flux_threshold ELSE flux_threshold=0.
+    IF N_Elements(calibration_flux_threshold) GT 0 THEN flux_threshold=calibration_flux_threshold
     IF N_Elements(allow_sidelobe_cal_sources) GT 0 THEN allow_sidelobe_sources=allow_sidelobe_cal_sources ELSE allow_sidelobe_sources=0
     IF Keyword_Set(allow_sidelobe_sources) THEN IF N_Elements(no_restrict_cal_sources) EQ 0 THEN no_restrict_sources=1 ELSE no_restrict_sources=no_restrict_cal_sources $
         ELSE no_restrict_sources=no_restrict_sources_default
@@ -116,8 +116,13 @@ ENDIF
 IF n_use GT 0 THEN BEGIN
     catalog=catalog[i_use]
     IF N_Elements(spectral_index) GT 1 THEN spectral_index=spectral_index[i_use]
-    source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
+    if tag_exist(catalog, 'shape') then begin
+      source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
+        alpha=spectral_index,extend=catalog.extend,shape=catalog.shape)
+    endif else begin
+      source_list=source_comp_init(n_sources=n_use,freq=freq_use,ra=catalog.ra,dec=catalog.dec,$
         alpha=spectral_index,extend=catalog.extend)
+    endelse
    
     apply_astrometry, obs, ra_arr=source_list.ra, dec_arr=source_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy    
     source_list.x=x_arr
@@ -132,33 +137,37 @@ IF n_use GT 0 THEN BEGIN
     
     ;If flux_threshold is negative, assume that it is an UPPER bound, and only include the fainter sources
     flux_I_use = source_list.flux.I
-    IF flux_threshold LT 0 THEN flux_I_use = -flux_I_use
+    IF N_elements(flux_threshold) NE 0 THEN BEGIN
+        IF flux_threshold LT 0 THEN flux_I_use = -flux_I_use
+        src_use=where((x_arr GE fft_alias_range) AND (x_arr LE dimension-1-fft_alias_range) AND (y_arr GE fft_alias_range) $
+            AND (y_arr LE elements-1-fft_alias_range) AND (flux_I_use GT flux_threshold) AND (flux_I_use NE 0),n_src_use)
+    ENDIF ELSE BEGIN
+        src_use=where((x_arr GE fft_alias_range) AND (x_arr LE dimension-1-fft_alias_range) AND (y_arr GE fft_alias_range) $
+            AND (y_arr LE elements-1-fft_alias_range) AND (flux_I_use NE 0),n_src_use)
+    ENDELSE    
 
-    src_use=where((x_arr GE fft_alias_range) AND (x_arr LE dimension-1-fft_alias_range) AND (y_arr GE fft_alias_range) $
-        AND (y_arr LE elements-1-fft_alias_range) AND (flux_I_use GT flux_threshold) AND (flux_I_use NE 0),n_src_use)
-    
     IF n_src_use EQ 0 THEN RETURN,source_comp_init(n_sources=0,freq=obs.freq_center);
     src_use2=where(beam_mask[Round(x_arr[src_use]),Round(y_arr[src_use])],n_src_use)
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
     source_list=source_list[src_use]
-    beam_list=Ptrarr(n_pol<2)
-    
+    inds_finite = where(finite(source_list.flux.I[*]),n_finite)
+    IF n_finite NE N_elements(src_use) then begin
+        print, "WARNING: Model catalog contains nan/inf fluxes"
+        source_list=source_list[inds_finite]
+        n_src_use=n_finite
+    ENDIF
     influence=source_list.flux.I*beam[source_list.x,source_list.y]
-    
+   
     order=Reverse(sort(influence))
     source_list=source_list[order]
     source_list.id=Lindgen(n_src_use)
     IF Keyword_Set(no_extend) THEN source_list.extend=Ptrarr(n_src_use) ELSE BEGIN
         extend_i=where(Ptr_valid(source_list.extend),n_extend)
         FOR ext_i=0L,n_extend-1 DO BEGIN
-            ex_spectral_index=source_list[extend_i[ext_i]].alpha
             extend_list=*source_list[extend_i[ext_i]].extend
             apply_astrometry, obs, ra_arr=extend_list.ra, dec_arr=extend_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy
             extend_list.x=x_arr
             extend_list.y=y_arr
-            extend_list.alpha=ex_spectral_index
-            FOR i=0,7 DO extend_list.flux.(i)=extend_list.flux.(i)*(freq_use/catalog[extend_i[ext_i]].freq)^ex_spectral_index
-;            FOR pol_i=0,(n_pol<2)-1 DO extend_list.flux.(pol_i)=extend_list.flux.I*(*beam_list[pol_i])[extend_i[ext_i]]
             *source_list[extend_i[ext_i]].extend=extend_list
         ENDFOR
     ENDELSE

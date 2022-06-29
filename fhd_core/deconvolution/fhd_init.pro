@@ -1,5 +1,5 @@
 FUNCTION fhd_init,obs,skymodel,file_path_fhd=file_path_fhd,gain_factor=gain_factor,$
-    max_iter=max_iter,check_iter=check_iter,max_sources=max_sources,$
+    max_iter=max_iter,check_iter=check_iter,max_deconvolution_components=max_deconvolution_components,$
     smooth_width=smooth_width,beam_threshold=beam_threshold,deconvolution_add_threshold=deconvolution_add_threshold,$
     independent_fit=independent_fit,deconvolution_filter=deconvolution_filter,$
     beam_max_threshold=beam_max_threshold,deconvolution_convergence_sigma=deconvolution_convergence_sigma,local_max_radius=local_max_radius,$
@@ -37,11 +37,11 @@ IF N_Elements(deconvolution_convergence_sigma) EQ 0 THEN deconvolution_convergen
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=0.05 ;0.05 is really as far down as you should go with our current beam models!
 IF N_Elements(beam_max_threshold) EQ 0 THEN beam_max_threshold=1e-4 ; Completely mask all pixels below this beam threshold.
 
-IF N_Elements(max_sources) EQ 0 THEN max_sources=100000L ELSE max_sources=Long(max_sources) ; Maximum number of source components to deconvolve
+IF N_Elements(max_deconvolution_components) EQ 0 THEN max_deconvolution_components=100000L ELSE max_deconvolution_components=Long(max_deconvolution_components) ; Maximum number of source components to deconvolve
 IF N_Elements(gain_factor) EQ 0 THEN gain_factor=0.15 ; "clean gain" applied to detected sources before subtraction
 IF N_Elements(deconvolution_add_threshold) EQ 0 THEN deconvolution_add_threshold=0.8 ;also fit additional components brighter than this threshold
 IF N_Elements(local_max_radius) EQ 0 THEN local_max_radius=3. ; Sources must be brighter than all other pixels within this radius to be detected
-IF N_Elements(max_iter) EQ 0 THEN max_iter=Ceil(Sqrt(max_sources))>10 ELSE max_iter=Fix(max_iter)
+IF N_Elements(max_iter) EQ 0 THEN max_iter=Ceil(Sqrt(max_deconvolution_components))>10 ELSE max_iter=Fix(max_iter)
 IF N_Elements(check_iter) EQ 0 THEN check_iter=Round(1./gain_factor)<5 ELSE check_iter=Fix(check_iter)
 
 IF N_Elements(independent_fit) EQ 0 THEN independent_fit=0 ;set to 1 to fit I, Q, (U, V) seperately. Otherwise, only I (and U) is fit
@@ -73,7 +73,7 @@ detection_threshold=0.
 convergence=0.
 info=Ptr_new()
 
-fhd_params={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_sources:max_sources,check_iter:check_iter,$
+fhd_params={npol:n_pol,beam_threshold:beam_threshold,max_iter:max_iter,max_deconvolution_components:max_deconvolution_components,check_iter:check_iter,$
     gain_factor:gain_factor,add_threshold:deconvolution_add_threshold,$
     over_resolution:over_resolution,dft_threshold:dft_deconvolution_threshold,independent_fit:independent_fit,$
     reject_pol_sources:reject_pol_sources,beam_max_threshold:beam_max_threshold,horizon_threshold:deconvolution_horizon_threshold,smooth_width:smooth_width,$

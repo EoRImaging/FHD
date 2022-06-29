@@ -1,7 +1,8 @@
 PRO source_dft_multi,obs,jones,source_array,model_uv_full,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
     conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,silent=silent,$
     dimension=dimension,elements=elements,n_pol=n_pol,spectral_model_uv_arr=spectral_model_uv_arr,$
-    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,double_precision=double_precision,_Extra=extra
+    n_spectral=n_spectral,flatten_spectrum=flatten_spectrum,double_precision=double_precision,$
+    gaussian_source_models = gaussian_source_models,_Extra=extra
 
 alpha_corr=0.
 IF Keyword_Set(obs) THEN BEGIN
@@ -38,7 +39,9 @@ n_source=N_Elements(source_array)
 
 frequency=obs.freq_center
 freq_ref=Mean(source_array.freq)
-freq_ratio=Abs(Alog10(freq_ref/frequency)) ;it often happens that one is in Hz and the other in MHz. Assuming no one will ever want to extrapolate more than two orders of magnitude, correct any huge mismatch
+;it often happens that one is in Hz and the other in MHz. Assuming no one will ever want to 
+; extrapolate more than two orders of magnitude, correct any huge mismatch
+freq_ratio=Abs(Alog10(freq_ref/frequency))
 IF freq_ratio GT 2 THEN freq_scale=10.^(Round(Alog10(freq_ref/frequency)/3.)*3.) ELSE freq_scale=1.
 frequency_use=frequency*freq_scale
 
@@ -47,6 +50,44 @@ FOR a_i=0L,n_alpha-1 DO BEGIN
     flux_scale=(frequency_use/freq_ref)^source_array[alpha_i[a_i]].alpha
     FOR pol_i=0,n_pol-1 DO source_array_use[alpha_i[a_i]].flux.(pol_i)*=flux_scale
 ENDFOR
+
+IF keyword_set(gaussian_source_models) then begin
+    if tag_exist(source_array, 'shape') then begin
+        gauss_test = ceil(0>(source_array.shape.x + source_array.shape.y)<1)
+        gauss_inds = where(gauss_test GT 0,n_gauss)
+    endif else n_gauss=0
+
+    if n_gauss GT 0 then begin
+        ;Convert from FWHM in arcsec to stddev in deg
+        gaussian_ra=double(source_array[gauss_inds].shape.x)/(7200*sqrt(2*alog(2)))
+        gaussian_dec=double(source_array[gauss_inds].shape.y)/(7200*sqrt(2*alog(2)))
+        ;Convert from deg to rad
+        gaussian_rot=double(source_array[gauss_inds].shape.angle)*!DPi/180.
+
+        ;Compression due to flat sky approximation of curved sky, see J Cook et al. 2022
+        Eq2Hor,source_array[gauss_inds].ra,source_array[gauss_inds].dec, obs.JD0, gauss_alt, gauss_az, nutate=1,precess=1,$
+          aberration=0, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
+        gaussian_ra_corr = sqrt( sin(gaussian_rot)^2 + cos(gaussian_rot)^2 * sin((90.-gauss_az) * !DPi/180.)^2 )
+        gaussian_dec_corr = sqrt( cos(gaussian_rot)^2 + sin(gaussian_rot)^2 * cos((90.-gauss_az) * !DPi/180.)^2 )
+
+        ;Calculate the x,y pixel coordinates of the gaussian sources
+        apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=[[obs.obsra-0.5*gaussian_ra], $
+          [obs.obsra+0.5*gaussian_ra]], dec_arr=[[obs.obsdec-0.5*gaussian_dec],[obs.obsdec+0.5*gaussian_dec]], /ad2xy
+        gaussian_x = (gaussian_x_vals[*,1]-gaussian_x_vals[*,0]) / gaussian_ra_corr
+        gaussian_y = (gaussian_y_vals[*,1]-gaussian_y_vals[*,0]) / gaussian_dec_corr
+
+        ;Flux is affected by the compression
+        for pol_i=0, n_pol-1 do source_array_use[gauss_inds].flux.(pol_i) *= (gaussian_ra_corr * gaussian_dec_corr)
+
+        ;Create internal structure of gaussian source parametersto pass into dft subroutines
+        gaussian_source_models = {gauss_inds:gauss_inds, gaussian_x:gaussian_x, gaussian_y:gaussian_y, gaussian_rot:gaussian_rot}
+
+    endif else begin
+        print, 'Catalog does not contain Gaussian shape parameters. Unsetting keyword gaussian_source_models.'
+        undefine, gaussian_source_models
+        gauss_test = INTARR(n_source)
+    endelse
+ENDIF ELSE gauss_test = INTARR(n_source)
 
 
 IF Keyword_Set(n_spectral) THEN BEGIN
@@ -62,12 +103,13 @@ IF Keyword_Set(n_spectral) THEN BEGIN
     
     IF Keyword_Set(dft_threshold) THEN BEGIN
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
-        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
-            n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
+            gauss_test, n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision)
+                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision,$
+                gaussian_source_models=gaussian_source_models)
             FOR pol_i=0,n_pol-1 DO BEGIN
                 FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
                     single_uv=Complexarr(dimension,elements)
@@ -86,14 +128,15 @@ IF Keyword_Set(n_spectral) THEN BEGIN
             Ptr_free,model_uv_arr2
         ENDIF
         IF not Keyword_Set(silent) THEN BEGIN
-            print,"Center sources using DFT approximation: " + Strn(n_center_pix)
-            print,"Edge sources using true DFT: " + Strn(n_edge_pix)
+            print,"Center source components using DFT approximation: " + Strn(n_center_pix)
+            print,"Edge source components or gaussian components using true DFT: " + Strn(n_edge_pix)
         ENDIF
         Ptr_free,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-            conserve_memory=conserve_memory,silent=silent,double_precision=double_precision)
+            conserve_memory=conserve_memory,silent=silent,double_precision=double_precision,$
+            gaussian_source_models=gaussian_source_models)
         model_uv_arr=Ptrarr(n_pol,n_spectral+1)
         FOR pol_i=0,n_pol-1 DO BEGIN
             FOR s_i=0L,n_spectral DO BEGIN ;no "-1" for second loop!
@@ -125,12 +168,13 @@ ENDIF ELSE BEGIN
     ENDIF
     IF Keyword_Set(dft_threshold) THEN BEGIN
         model_uv_arr=Ptrarr(n_pol)
-        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix),$
-            n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
+        edge_i = where((x_vec LT dft_edge_pix) OR (y_vec LT dft_edge_pix) OR (dimension-x_vec LT dft_edge_pix) OR (elements-y_vec LT dft_edge_pix) OR $
+            gauss_test, n_edge_pix, complement=center_pix_i, ncomplement=n_center_pix)
         IF n_edge_pix GT 0 THEN BEGIN
             IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
             model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision)
+                conserve_memory=conserve_memory,silent=silent,inds_use=edge_i,double_precision=double_precision,$
+                gaussian_source_models=gaussian_source_models)
             FOR pol_i=0,n_pol-1 DO BEGIN
                 single_uv=Complexarr(dimension,elements)
                 single_uv[uv_i_use]=*model_uv_vals[pol_i] 
@@ -148,14 +192,15 @@ ENDIF ELSE BEGIN
         ENDIF
         FOR pol_i=0,n_pol-1 DO *model_uv_full[pol_i]+=*model_uv_arr[pol_i]
         IF not Keyword_Set(silent) THEN BEGIN
-            print,"Center sources using DFT approximation: " + Strn(n_center_pix)
-            print,"Edge sources using true DFT: " + Strn(n_edge_pix)
+            print,"Center source components using DFT approximation: " + Strn(n_center_pix)
+            print,"Edge source components or gaussian components using true DFT: " + Strn(n_edge_pix)
         ENDIF
         undefine_fhd,model_uv_arr,flux_arr
     ENDIF ELSE BEGIN
         IF N_Elements(conserve_memory) EQ 0 THEN conserve_memory=1
         model_uv_vals=source_dft(x_vec,y_vec,xvals,yvals,dimension=dimension,elements=elements,flux=flux_arr,$
-            silent=silent,conserve_memory=conserve_memory,double_precision=double_precision)
+            silent=silent,conserve_memory=conserve_memory,double_precision=double_precision,$
+            gaussian_source_models=gaussian_source_models)
         FOR pol_i=0,n_pol-1 DO (*model_uv_full[pol_i])[uv_i_use]+=*model_uv_vals[pol_i]
         undefine_fhd,model_uv_vals,flux_arr
     ENDELSE

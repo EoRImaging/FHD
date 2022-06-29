@@ -29,8 +29,8 @@ ENDIF ELSE BEGIN
         ENDELSE
         
         IF (gain_type LE 5) OR Keyword_Set(real_vs_imaginary) THEN BEGIN
-            IF n_pol GT 1 THEN max_amp = mean(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]])) + 5*stddev(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]])) $
-                ELSE max_amp = Mean(abs(gains_A[*,tile_use_i])) + 5*stddev(abs(gains_A[*,tile_use_i]))
+            IF n_pol GT 1 THEN max_amp = mean(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]]),/NAN) + 5*stddev(abs([gains_A[*,tile_use_i],gains_B[*,tile_use_i]]),/NAN) $
+                ELSE max_amp = Mean(abs(gains_A[*,tile_use_i]),/NAN) + 5*stddev(abs(gains_A[*,tile_use_i]),/NAN)
             amp_range=Floor(Alog10(max_amp))
             IF amp_range LT 0 THEN amp_digits=1. ELSE amp_digits=2.
             amp_test=max_amp/10.^(amp_range-amp_digits)

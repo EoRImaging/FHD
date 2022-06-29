@@ -50,8 +50,8 @@ struct.dimension=Float(dimension)
 struct.elements=Float(elements)
 struct.kpix=Float(kbinsize)
 struct.degpix=Float(degpix)
-struct.max_baseline=Float(max_baseline)
-struct.min_baseline=Float(min_baseline)
+struct.max_baseline=Double(max_baseline)
+struct.min_baseline=Double(min_baseline)
 
 struct.n_pol=Fix(n_pol,type=2)
 struct.alpha=Float(spectral_index)
@@ -70,12 +70,7 @@ struct.code_version=String(code_version)
 
 
 b_info=*obs.baseline_info
-;freq_use:Fix(freq_use)
-;tile_use:Fix(tile_use)
-;time_use:Fix(time_use)
-;tile_flag:meta.tile_flag
 b_info.fbin_i=Long(freq_bin_i)
-b_info.freq=Float(frequency_array)
 struct.baseline_info=Ptr_new(b_info)
 
 RETURN,struct

@@ -9,6 +9,14 @@ FHD outputs various data products, outlined and described below. Items marked wi
 
 ### \<obsid\>\_jones.sav <br />
 
+**jones**: structure containing the Mueller matrix information. Jones matrices are 2x2 matrices that relate the antenna responses to polarization directions on the sky. The Mueller matrix is the Kroeneker product of the Jones matrices. Mueller matrices are 4x4 matrices that relate the polarized visibility responses to the coherencies on the sky. They are direction-dependent: different directions on the sky have different associated Mueller matrices.
+  * **inds**: long array; pixel indices relating jmat and jinv to directions on the sky
+  * **dimension**: float; the number of pixels in the x-coordinate direction
+  * **elements**: float; the number of pixels in the y-coordinate direction
+  * **jmat**: 4x4 array of pointers. Each element is a pointer to a dcomplex array of length equal to the length of inds. Value (\*jones.jmat[i,j])[k] is the (i,j) element of the Mueller matrix at the direction on the sky given by pixel inds[k]. Each 4x4 Mueller matrix converts the vector [RR*, DD*, RD*, DR*] to instrumental polarization apparent sky [xx*, yy*, xy*, yx*] where R refers to the Right Ascension direction and D refers to the Declination direction.
+  * **jinv**: 4x4 array of pointers. Each element is a pointer to a dcomplex array of length equal to the length of inds. Value (\*jones.jinv[i,j])[k] is the (i,j) element of the inverse Mueller matrix at the direction on the sky given by pixel inds[k]. Each 4x4 inverse Mueller matrix converts the instrumental polarization apparent sky vector [xx*, yy*, xy*, yx*] to [RR*, DD*, RD*, DR*] where R refers to the Right Ascension direction and D refers to the Declination direction.
+
+
 ## Calibration <br />
 
 ### \<obsids\>\_cal.sav <br />
@@ -90,11 +98,11 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 ### \<obsids\>\_fhd.sav <br />
 
   * **astr**: structure containing the fits image header information.<br />
-  
+
   * **beam_base**<br />
-  
+
   * **beam_correction**<br />
-  
+
   * **component_array**: an array of structures of dimension N<sub>components</sub>. Gives the deconvolution components before clustering
       * **id**: unique ID labeling each component
       * **x**: centroided pixel column coordinate of the component
@@ -108,17 +116,17 @@ Text file of generated bandpass solutions. The first column is the frequency cha
       * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination
       * **extend**: a Null pointer. Not used for component_array.
       * **flux**: structure of the fluxes for the component. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
-  
+
   * **dirty_array**<br />
-  
+
   * **image_uv_arr**<br />
-  
+
   * **model_uv_full**<br />
-  
+
   * **model_uv_holo**<br />
-  
+
   * **residual_array**<br />
-  
+
   * **source_array**: an array of structures of dimension N<sub>sources</sub>. Gives the clustered deconvolution sources. Use generate_calibration_catalog.pro to extract this source array.<br />
       * **id**: A source label.
       * **x**: centroided pixel column coordinate of the source.
@@ -132,12 +140,20 @@ Text file of generated bandpass solutions. The first column is the frequency cha
       * **flag**: type codes where 0 is no flag, 1 is low confidence, and 2 is sidelobe contamination.
       * **extend**: a pointer. For extended sources, the pointer references a new source_array structure containing all of the extended components, in the same format. For point sources, it is a Null pointer.
       * **flux**: structure of the fluxes for the source. The order of potential polarizations is xx, yy, xy, and yx in apparent brightness or I, Q, U, V in sky brightness. Deconvolution only operates in Stokes I so Q=U=V=0.
-  
+
   * **source_mask**<br />
-  
+
   * **weights_arr**<br />
 
 ### \<obsids\>\_fhd_params.sav <br />
+  * **params**: Structure with arrays that contain various metadata in attributes listed below.
+      * **antenna1**: Array of first antenna indices, 1 indexed.
+      * **antenna2**: Array of second antenna indices, 1 indexed.
+      * **baseline_arr**: Array of unique baseline indices. Obtained by a product of antenna1 and antenna2 plus a shift proportional to Nants. !Q
+      * **time**: Array of times, where the time is the center of the integration period. Measured in Julian date, and is in reference to the specified Julian date from the uvfits header (i.e. the sum of the DATE parameter and this time array gives the true Julian date).
+      * **UU**: Array of u-coordinate of baselines. Units: lightseconds.
+      * **VV**: Array of v-coordinate of baselines. Units: lightseconds.
+      * **WW**: Array of w-coordinate of baselines. Units: lightseconds.
 
 ## Grid Data<br />
 
@@ -169,7 +185,7 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
   * **variance_cube/weights_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of 1's gridded with the beam for all visibilities (weights) or 1's gridded with the beam squared for all visibilities (variances).
 
-  * **dirty_cube*/model_cube*: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of the calibrated data (or model).
+  * **dirty_cube/model_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of the calibrated data (or model).
 
   * **beam_squared_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of the beam squared, where the square has taken place in image space. Used for general diagnostic or image-space weighting.
 
@@ -200,14 +216,14 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **obsdec**: float of the observation's DEC in degrees
    * **zenra**: float of the zenith RA in degrees for the instrument and julian date specified
    * **zendec**: float of the zenith DEC in degrees for the instrument and julian date specified
-   * **obsx**: float number of the positive x-axis for the observation, set by dimension/2
-   * **obsy**: float number of the positive y-axis for the observation, set by elements/2
-   * **zenx**: float number of the positive x-axis for the zenith, set by dimension/2
-   * **zeny**: float number of the positive y-axis for the zenith, set by elements/2
-   * **phasera**:         FLOAT           359.849
-   * **phasedec**:        FLOAT          -26.7836
-   * **orig_phasera**:    FLOAT           0.00000
-   * **orig_phasedec**:   FLOAT          -27.0000
+   * **obsx**: float of the positive x-axis extent for the observation, set by dimension/2
+   * **obsy**: float of the positive y-axis extent for the observation, set by elements/2
+   * **zenx**: float of the positive x-axis extent for the zenith, set by dimension/2
+   * **zeny**: float of the positive y-axis extent for the zenith, set by elements/2
+   * **phasera**: float of the RA of the phase center for the observation
+   * **phasedec**: float of the DEC of the phase center for the observation
+   * **orig_phasera**: float of the RA of the phase center of the input uvfits file, which may not be the desired phase center
+   * **orig_phasedec**: float of the DEC of the phase center of the input uvfits file, which may not be the desired phase center
    * **n_pol**: integer number of polarizations
    * **n_tile**: long number of tiles
    * **n_tile_flag**: long number of flagged tiles
@@ -215,13 +231,13 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **n_freq_flag**: long number of flagged frequency channels
    * **n_time**: long number of time channels
    * **n_time_flag**: long number of flagged time channels
-   * **n_vis**:           LONG          96988320
-   * **n_vis_in**:        LONG         136548552
-   * **n_vis_raw**:       LONG         174784512
-   * **nf_vis**:          LONG      Array[384]
+   * **n_vis**: long number of visibilities for one polarization that have a weight greater than 0 after processing (i.e. after cuts in u,v space)
+   * **n_vis_in**: long number of the visibilities for one polarization after basic time/frequency instrument flagging
+   * **n_vis_raw**: long number of the total possible input visibilities from the uvfits file. This disregards any input flagging, and is theoretically largest possible amount of visibilities for one polarization.
+   * **nf_vis**: long array of the number of gridded visibilities per frequency
    * **primary_beam_area**: a pointer array of dimension N<sub>pol</sub> which points to an array of dimension N<sub>freq</sub>. Each entry is the primary beam area for that frequnecy and polarization in degrees.
    * **primary_beam_sq_area**: a pointer array of dimension N<sub>pol</sub> which points to an array of dimension N<sub>freq</sub>. Each entry is the primary beam squared area for that frequnecy and polarization in degrees.
-   * **pol_names**: string array of the names of the polarizations, starting with four instrumental polarizations and ending with the four stokes polarizations 
+   * **pol_names**: string array of the names of the polarizations, starting with four instrumental polarizations and ending with the four stokes polarizations
    * **jd0**: double of the julian date of the observation (including a time offset if supplied)
    * **max_baseline**: float of the maximum baselines in wavelengths
    * **min_baseline**: float of the minimun baselines in wavelengths
@@ -232,38 +248,46 @@ Text file of generated bandpass solutions. The first column is the frequency cha
    * **freq_center**: center frequency of the observation in Hz
    * **freq_res**: frequency resolution of the observation in Hz
    * **time_res**: time resolution of the observation in seconds
-   * **ASTR**: structure of header keywords and values relating to astrometry
-      NAXIS           FLOAT     Array[2]
-   CD              FLOAT     Array[2, 2]
-   CDELT           FLOAT     Array[2]
-   CRPIX           FLOAT     Array[2]
-   CRVAL           DOUBLE    Array[2]
-   CTYPE           STRING    Array[2]
-   LONGPOLE        DOUBLE           180.00000
-   LATPOLE         DOUBLE           0.0000000
-   PV2             DOUBLE    Array[2]
-   PV1             DOUBLE    Array[5]
-   AXES            INT       Array[2]
-   REVERSE         BYTE         0
-   COORD_SYS       STRING    'C'
-   PROJECTION      STRING    'SIN'
-   KNOWN           BYTE      Array[1]
-   RADECSYS        STRING    'FK5'
-   EQUINOX         DOUBLE           2000.0000
-   DATEOBS         STRING    '2013-08-23T18:04:40.00'
-   MJDOBS          DOUBLE           56527.753
-   X0Y0            DOUBLE    Array[2]
+   * **astr**: structure of header keywords and values relating to astrometry following the fits standard
+      * **naxis**: number of pixels per axis
+      * **cd**: coordinate description matrix
+      * **cdelt**: delta per pixel of the coordinate description matrix (degrees per pixel)
+      * **crpix**: 2 element vector giving X and Y coordinates of reference pixel (def = NAXIS/2). Values must be in fits convention (first pixel is [1,1])
+      * **crval**: 2 element double precision vector giving RA and DEC of reference pixel in degrees
+      * **ctype**: 2 element string vector giving projection types, default ['RA---SIN','DEC--SIN'] (slant orthographic)
+      * **longpole**: scalar longitude of north pole, default = 180. Note that the default value of 180 is valid only for zenithal projections; it should be set to PV2_1 for conic projections, and zero for other projections.
+      * **latpole**: scalar latitude of the north pole, default = 0
+      * **pv2**: vector of projection parameters associated with the latitude axis of the slant orthographic system, corresponding to Xi and eta. This is an advanced extension of the AIPS SIN convention.
+      * **pv1**: vector of projection parameters associated with longitude axis
+      * **axes**: axis numerical labels in fits convention, default [1,2]
+      * **reverse**: byte, true if first astrometry axis is DEC/latitude
+      * **coord_sys**: 1 or 2 character code giving coordinate system, including 'C' = RA/DEC, 'G' = Galactic, 'E' = Ecliptic, 'X' = unknown
+      * **projection**: projection type, default 'SIN' (slant orthographic)
+      * **known**: true if IDL WCS routines recognise this projection
+      * **radecsys**: the system that describes RA/DEC coordinates, defaulted to IAU 1984 (FK5) standard
+      * **equinox**: coordinate equinox in J2000 standard
+      * **dateobs**: date and time string of the start of the observation, ordered as '2013-08-23T18:04:40.00'
+      * **mjobs**: Modified Julian Date at start of observation
+      * **x0y0**: Implied offset in intermediate world coordinates (x,y) if a non-standard fiducial point is set via PV1 and also PV1_0a =/ 0, indicating that an offset should be applied to place CRVAL at the (x,y) origin.
    * **alpha**: overall spectral index of the point-source catalog, generally -0.8
-   * **pflag**: not currently used
-   * **cal**: unknown
-   * **residual**: unknown
+   * **residual**: flag option to create residual HEALPix cubes (rather than letting the power spectrum code find the residual in 3D PS space using the calibrated data and simulated model)
    * **vis_noise**: pointer to an array of dimension N<sub>pol</sub>, N<sub>freq</sub> with the calculated visibility noise in units of Jy via even--odd subtractions
-   * **BASELINE_INFO**:   POINTER   <PtrHeapVar9>
+   * **baseline_info**: pointer to a structure filled with information about each baseline    
+      * **tile_a**: index of the first tile in each auto- and cross-correlation visibility vector
+      * **tile_b**: index of the second tile in each auto- and cross-correlation visibility vector
+      * **bin_offset**: the first index of each new time sample in the visibility vector
+      * **JDate**: Julian Date (J2000) of each time step in an observation
+      * **fbin_i**: index of the beam frequency for every frequency sample (i.e. if only one beam is used for all frequencies, then it will be an array of 0's, if a new beam is used per frequency, then it will be an ordered array)
+      * **freq_use**: array of frequencies used in the observation (0 is flagged, 1 is used)tile_use: array of tiles used in the observation (0 is flagged, 1 is used)
+      * **time_use**: array of times used in the observation (0 is flagged, 1 is used)
+      * **tile_names**: name of each tile, which is stored as a string in case the naming system is not number-based
+      * **tile_height**: height of each tile, taken directly from the metadata header 
+      * **tile_flag**: flags for tiles taken directly from the metadata header (and thus the flags given by the uvfits/metadata rather than flags generated during analysis)
    * **META_DATA**:       POINTER   <PtrHeapVar7>
    * **META_HDR**:        POINTER   <PtrHeapVar8>
    * **DEGRID_SPECTRAL_TERMS**:
                    INT              0
-   * **GRID_SPECTRAL_TERMS**: 
+   * **GRID_SPECTRAL_TERMS**:
                    INT              0
    * **GRID_INFO**:        POINTER   <NullPointer>
    * **HEALPIX**:          STRUCT    -> <Anonymous> Array[1]
@@ -282,9 +306,21 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
 ### \<obsids\>\_Beam_\<pol\>.sav <br />
 
-### \<obsids\>\_\<filter\>_Dirty_\<pol\>.fits / \<obsids\>\_\<filter\>\_Model_\<pol\>.fits / \<obsids\>\_\<filter\>\_Residual_\<pol\>.fits <br />
+### \<obsids\>\_\<filter\>\_Dirty\_\<pol\>.fits / \<obsids\>\_\<filter\>\_Model_\<pol\>.fits / \<obsids\>\_\<filter\>\_Residual_\<pol\>.fits <br />
+
+Fits files containing the dirty, model, and residual (dirty minus model) images. These images are constrained to be real (via taking the real part of the uv FFT) for XX and YY instrumental polarizations. Units are Jy per sterradian.
+
+### \<obsids\>\_\<filter\>\_Dirty_XY_real.fits / \<obsids\>\_\<filter\>\_Model_XY_real.fits / \<obsids\>\_\<filter\>\_Residual_XY_real.fits <br />
+
+Fits files containing the real part of the dirty, model, and residual XY- and YX-polarized images (XY- and YX-polarized images are complex conjugates of one another). Units are Jy per sterradian. Produced only when `n_pol=4`.
+
+### \<obsids\>\_\<filter\>\_Dirty_XY_imaginary.fits / \<obsids\>\_\<filter\>\_Model_XY_imaginary.fits / \<obsids\>\_\<filter\>\_Residual_XY_imaginary.fits <br />
+
+Fits files containing the imaginary part of the dirty, model, and residual XY-polarized images. Equal to the opposite of the imaginary part of the YX-polarized images because XY- and YX-polarized images are complex conjugates of one another. Units are Jy per sterradian. Produced only when `n_pol=4`.
 
 ### \<obsids\>\_\<filter\>\_Restored_rings_\<pol\>.fits <br />
+
+Fits file consisting of the residual image with the subtracted sources over-plotted. Each source is plotted with a ring around it; the ring size is set with the `ring_radius` keyword. Set `ring_radius=0` to turn off rings. Because this is a combined diffuse and point source image the units are not well-defined.
 
 ### \<obsids\>\_\<filter\>\_UV_weights_\<pol\>.fits <br />
 
@@ -298,21 +334,57 @@ See cal.skymodel.source_list in Calibration for structure description. This outp
 
 ##  Output Images<br />
 
-### \<obsids\>\_cal_amp.png / \<obsids\>\_cal_autocorr.png / \<obsids\>\_cal_phase.png<br />
+### \<obsids\>\_cal_amp.png<br />
+
+Plots the fitted gain amplitude solutions as a function of frequency. Each panel
+belongs to an antenna. Blue is the X polarization and red is the Y polarization.<br />
+
+### \<obsids\>\_cal_autocorr.png<br />
+
+Plots the fitted gain solutions from `vis_cal_auto_fit.pro`, which uses the
+autocorrelations as outlined in [Barry et al. 2019a](https://arxiv.org/abs/1901.02980).<br />
+
+### \<obsids\>\_cal_phase.png<br />
+
+Plots the fitted gain phase solutions as a function of frequency. Each panel
+belongs to an antenna. Blue is the X polarization and red is the Y polarization.<br />
 
 ### \<obsids\>\_Beam_\<pol\>.png <br />
 
 ### \<obsids\>\_\<filter\>\_Dirty_\<pol\>.png / \<obsids\>\_\<filter\>\_Model_\<pol\>.png / \<obsids\>\_\<filter\>\_Residual_\<pol\>.png <br />
 
+Dirty, model, and residual (dirty minus model) images. These images are constrained to be real (via taking the real part of the uv FFT) for XX and YY instrumental polarizations. Units are Jy per sterradian.
+
+### \<obsids\>\_\<filter\>\_Dirty_XY_real.png / \<obsids\>\_\<filter\>\_Model_XY_real.png / \<obsids\>\_\<filter\>\_Residual_XY_real.png <br />
+
+Real part of the dirty, model, and residual XY- and YX-polarized images (XY- and YX-polarized images are complex conjugates of one another). Units are Jy per sterradian. Produced only when `n_pol=4`.
+
+### \<obsids\>\_\<filter\>\_Dirty_XY_imaginary.png / \<obsids\>\_\<filter\>\_Model_XY_imaginary.png / \<obsids\>\_\<filter\>\_Residual_XY_imaginary.png <br />
+
+Imaginary part of the dirty, model, and residual XY-polarized images. Equal to the opposite of the imaginary part of the YX-polarized images because XY- and YX-polarized images are complex conjugates of one another. Units are Jy per sterradian. Produced only when `n_pol=4`.
+
 ### \<obsids\>\_\<filter\>\_Restored_rings_\<pol\>.png <br />
+
+Residual image with the subtracted sources over-plotted. Each source is plotted with a ring around it; the ring size is set with the `ring_radius` keyword. Set `ring_radius=0` to turn off rings. Because this is a combined diffuse and point source image the units are not well-defined.
 
 ### \<obsids\>\_\<filter\>\_Sources_\<pol\>.png <br />
 
 ### \<obsids\>\_\<filter\>\_UV_weights_\<pol\>.png <br />
 
+##  UVF Cubes<br />
+Saved only if keyword `save_uvf` is set.
+
+### \<obsids\>\_even_gridded_uvf.sav <br />
+
+### \<obsids\>\_odd_gridded_uvf.sav <br />
+
 ##  Vis Data<br />
 
 ### \<obsids\>\_autos.sav <br />
+
+  * **auto_corr**: Pointer array. Each points to an array of autocorrelations of a single pol. Shape is [Nfreqs, Nants X Ntimes]. Unsure of pol order or packing order for second axis. !Q
+
+  * **obs**: See <obsids>_obs.sav under metadata.
 
 ### \<obsids\>\_flags.sav <br />
 

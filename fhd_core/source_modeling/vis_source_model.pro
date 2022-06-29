@@ -1,7 +1,15 @@
 FUNCTION vis_source_model,skymodel, obs, status_str, psf, params, vis_weight_ptr, cal, jones, model_uv_arr=model_uv_arr,$
     file_path_fhd=file_path_fhd, timing=timing, silent=silent, uv_mask=uv_mask, error=error, beam_arr=beam_arr,$
     fill_model_visibilities=fill_model_visibilities, use_pointing_center=use_pointing_center, vis_model_ptr=vis_model_ptr,$
-    spectral_model_uv_arr=spectral_model_uv_arr,model_delay_filter=model_delay_filter, _Extra=extra
+    spectral_model_uv_arr=spectral_model_uv_arr,model_delay_filter=model_delay_filter, model_transfer=model_transfer,$
+    model_uv_transfer=model_uv_transfer,_Extra=extra
+
+;; Option to transfer pre-made and unflagged model visbilities
+if keyword_set(model_transfer) then begin
+   vis_arr = vis_model_transfer(obs,model_transfer)
+   return, vis_arr
+endif
+
 fill_model_visibilities=1
 t0=Systime(1)
 IF N_Elements(error) EQ 0 THEN error=0
@@ -88,20 +96,21 @@ IF (Min(Ptr_valid(spectral_model_uv_arr)) EQ 0) AND (n_spectral GT 0) THEN BEGIN
     FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO *spectral_model_uv_arr[pol_i,s_i]=Complexarr(dimension,elements)
 ENDIF
 
-IF n_sources GT 0 THEN BEGIN ;test that there are actual sources in the source list
-    ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
-    ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
-    source_list=skymodel.source_list
-    source_list.extend=Pointer_copy(source_list.extend)
-    source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra) 
-    model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,$
-        spectral_model_uv_arr=spectral_model_uv_arr1,uv_mask=uv_mask_use,_Extra=extra)
-    FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr1[pol_i];*uv_mask_use 
-    FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO *spectral_model_uv_arr[pol_i,s_i]+=*spectral_model_uv_arr1[pol_i,s_i];*uv_mask_use
-    undefine_fhd,model_uv_arr1,spectral_model_uv_arr1,source_list
-    IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
-ENDIF
-
+if ~keyword_set(model_uv_transfer) then begin
+    IF n_sources GT 0 THEN BEGIN ;test that there are actual sources in the source list
+        ;convert Stokes entries to instrumental polarization (weighted by one factor of the beam) 
+        ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
+        source_list=skymodel.source_list
+        source_list.extend=Pointer_copy(source_list.extend)
+        source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra)
+        model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,$
+            spectral_model_uv_arr=spectral_model_uv_arr1,uv_mask=uv_mask_use,_Extra=extra)
+        FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr1[pol_i];*uv_mask_use 
+        FOR pol_i=0,n_pol-1 DO FOR s_i=0,n_spectral-1 DO *spectral_model_uv_arr[pol_i,s_i]+=*spectral_model_uv_arr1[pol_i,s_i];*uv_mask_use
+        undefine_fhd,model_uv_arr1,spectral_model_uv_arr1,source_list
+        IF ~Keyword_Set(silent) THEN print,"DFT timing: "+strn(t_model)+" (",strn(n_sources)+" sources)"
+    ENDIF
+endif
 
 IF galaxy_flag THEN gal_model_uv=fhd_galaxy_model(obs,jones,spectral_model_uv_arr=gal_spectral_model_uv,antialias=1,/uv_return,_Extra=extra)
 IF Min(Ptr_valid(gal_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*gal_model_uv[pol_i];*uv_mask_use
@@ -120,6 +129,7 @@ IF Min(Ptr_valid(diffuse_spectral_model_uv)) GT 0 THEN FOR pol_i=0,n_pol-1 DO FO
     *spectral_model_uv_arr[pol_i,s_i]+=*diffuse_spectral_model_uv[pol_i,s_i];*uv_mask_use
 undefine_fhd,diffuse_model_uv,diffuse_spectral_model_uv
 
+fhd_save_io,status_str,model_uv_arr,var='model_uv_arr',file_path_fhd=file_path_fhd,_Extra=extra
 vis_arr=Ptrarr(n_pol)
 
 valid_test=fltarr(n_pol)

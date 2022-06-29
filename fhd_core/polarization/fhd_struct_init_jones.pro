@@ -1,6 +1,6 @@
 FUNCTION fhd_struct_init_jones,obs,status_str,jones_in,file_path_fhd=file_path_fhd,mask=mask,$
     restore_last=restore_last,update_last=update_last,debug_jones_obs=debug_jones_obs,$
-    beam_model_version=beam_model_version,_Extra=extra
+    beam_model_version=beam_model_version,save_beam_metadata_only=save_beam_metadata_only,_Extra=extra
 
 IF Keyword_Set(restore_last) THEN BEGIN
     fhd_save_io,status_str,jones,var='jones',file_path_fhd=file_path_fhd,/restore,_Extra=extra
@@ -53,7 +53,7 @@ apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad, /ignore_refrac
 obs_temp = fhd_struct_update_obs(obs, beam_nfreq_avg=obs.n_freq) ; Use only one average Jones matrix, not one per frequency
 antenna=fhd_struct_init_antenna(obs_temp,beam_model_version=beam_model_version,psf_resolution=1.,$
     psf_dim=obs.dimension,psf_intermediate_res=1.,psf_image_resolution=1.,timing=t_ant)
-Jones=rotate_jones_matrix(obs, antenna[0].Jones[*,*,0])
+Jones=rotate_jones_matrix(obs, antenna[0])
 
 ; Calculate the normalization
 ant_pol1 = 0
@@ -93,6 +93,6 @@ FOR pix=0L,n_pix-1 DO BEGIN
 ENDFOR
 
 jones_str={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
-fhd_save_io,status_str,jones_str,var='jones',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+if ~keyword_set(save_beam_metadata_only) then fhd_save_io,status_str,jones_str,var='jones',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 RETURN,jones_str
 END

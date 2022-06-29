@@ -1,7 +1,7 @@
 FUNCTION components2sources,comp_arr,obs,fhd_params,detection_threshold=detection_threshold,radius=radius,noise_map=noise_map,$
     reject_sigma_threshold=reject_sigma_threshold,clean_bias_threshold=clean_bias_threshold,gain_factor=gain_factor,$
     reject_outlier_components=reject_outlier_components,extend_threshold=extend_threshold,regrid_extended_sources=regrid_extended_sources,$
-    source_mask=source_mask,max_sources=max_sources,_Extra=extra
+    source_mask=source_mask,max_deconvolution_components=max_deconvolution_components,_Extra=extra
 compile_opt idl2,strictarrsubs  
 
 astr=obs.astr
@@ -30,10 +30,10 @@ gauss_width=beam_width_calculate(obs,/fwhm)
 gauss_area=beam_width_calculate(obs,/area)
 IF N_Elements(radius) EQ 0 THEN radius=gauss_width
 comp_i_use=where(comp_arr.flux.I GT 0,n_comp_use)
-IF Keyword_Set(max_sources) THEN BEGIN
-    IF n_comp_use GT max_sources THEN BEGIN
-        n_comp_use=max_sources
-        comp_i_use=comp_i_use[0:max_sources-1]
+IF Keyword_Set(max_deconvolution_components) THEN BEGIN
+    IF n_comp_use GT max_deconvolution_components THEN BEGIN
+        n_comp_use=max_deconvolution_components
+        comp_i_use=comp_i_use[0:max_deconvolution_components-1]
     ENDIF
 ENDIF
 IF n_comp_use EQ 0 THEN RETURN,source_comp_init(n_sources=0)

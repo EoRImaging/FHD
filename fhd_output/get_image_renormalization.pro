@@ -5,7 +5,7 @@ function get_image_renormalization,obs,weights_arr=weights_arr,beam_base=beam_ba
   ; Note: include keyword baseline_threshold even though it is not used, to strip it from _Extra if present
   
 n_pol=obs.n_pol
-IF image_filter_fn EQ 'filter_uv_weighted' THEN RETURN, make_array(n_pol, value=1.)
+IF image_filter_fn EQ 'filter_uv_optimal' THEN RETURN, make_array(n_pol, value=1.)
 dimension=obs.dimension
 elements=obs.elements
 IF N_Elements(filter_arr) EQ 0 THEN filter_arr=intarr(n_pol)

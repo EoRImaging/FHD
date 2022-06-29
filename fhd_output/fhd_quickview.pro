@@ -95,7 +95,7 @@ ENDIF
 IF residual_flag THEN model_flag=0
 
 IF Keyword_Set(image_filter_fn) THEN BEGIN
-    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only)
+    dummy_img=Call_function(image_filter_fn,fltarr(2,2),name=filter_name,/return_name_only,_Extra=extra)
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
 ENDIF ELSE filter_name=''
 
@@ -505,6 +505,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
             FitsFast,instr_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i]
             FitsFast,instr_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i]
             FitsFast,stokes_model,fits_header_apparent,/write,file_path=output_path+filter_name+'_Model_'+pol_names[pol_i+4]
+            FitsFast,stokes_dirty,fits_header_apparent,/write,file_path=output_path+filter_name+'_Dirty_'+pol_names[pol_i+4]
         ENDIF
         FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]

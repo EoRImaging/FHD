@@ -1,5 +1,5 @@
 PRO fhd_main, file_path_vis, status_str, export_images=export_images, cleanup=cleanup, recalculate_all=recalculate_all,$
-    mapfn_recalculate=mapfn_recalculate, grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate, grid_recalculate=grid_recalculate,beam_recalculate=beam_recalculate,$
     n_pol=n_pol, flag_visibilities=flag_visibilities, silent=silent, deconvolve=deconvolve, transfer_mapfn=transfer_mapfn,$
     tile_flag_list=tile_flag_list, diffuse_calibrate=diffuse_calibrate, diffuse_model=diffuse_model,$
     file_path_fhd=file_path_fhd, force_data=force_data, force_no_data=force_no_data, freq_start=freq_start, freq_end=freq_end,$
@@ -29,7 +29,7 @@ log_filepath=file_path_fhd+'_log.txt'
 IF Keyword_Set(!Journal) THEN journal
 
 data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
-    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,beam_recalculate=beam_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     transfer_weights=transfer_weights,file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
     calibrate_visibilities=calibrate_visibilities,transfer_calibration=transfer_calibration,$
@@ -52,10 +52,7 @@ IF data_flag LE 0 THEN BEGIN
     If keyword_set(in_situ_sim_input) then $
         in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration,n_pol=n_pol,enhance_eor=enhance_eor, $
           eor_vis_filepath=eor_vis_filepath,file_path_vis=file_path_vis,file_path_fhd=file_path_fhd,sim_noise=sim_noise, $
-          hdr=hdr,params=params,calibration_catalog_file_path=calibration_catalog_file_path, $
-          diffuse_calibrate=diffuse_calibrate,transfer_calibration=transfer_calibration,freq_start=freq_start,$
-          freq_end=freq_end,tile_flag_list=tile_flag_list,deproject_w_term=deproject_w_term,dft_threshold=dft_threshold,$
-          remove_sim_flags=remove_sim_flags,extra_vis_filepath=extra_vis_filepath,_Extra=extra
+          hdr=hdr,params=params,remove_sim_flags=remove_sim_flags,extra_vis_filepath=extra_vis_filepath,_Extra=extra
     
     IF Keyword_Set(generate_vis_savefile) THEN BEGIN
         IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
@@ -73,7 +70,7 @@ IF data_flag LE 0 THEN BEGIN
     fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;save obs structure right away for debugging. Will be overwritten a few times before the end
     IF Keyword_Set(deproject_w_term) THEN vis_arr=simple_deproject_w_term(obs,params,vis_arr,direction=deproject_w_term)
     
-    ;Read in or construct a new beam model. Also sets up the structure PSF
+    ;Construct a new beam model. Also sets up the structure PSF
     print,'Calculating beam model'
     psf=beam_setup(obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_last=0,silent=silent,timing=t_beam,no_save=no_save,_Extra=extra)
     IF Keyword_Set(t_beam) THEN IF ~Keyword_Set(silent) THEN print,'Beam modeling time: ',t_beam
@@ -127,7 +124,6 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_set(model_uv_transfer) THEN BEGIN
       if ~file_test(model_uv_transfer) then message, model_uv_transfer + ' not found during model uv transfer.'
       model_uv_arr = getvar_savefile(model_uv_transfer,'model_uv_arr')
-      IF Keyword_Set(model_visibilities) THEN model_uv_arr2 = model_uv_arr
     ENDIF
 
     IF Keyword_Set(calibrate_visibilities) THEN BEGIN
@@ -149,7 +145,9 @@ IF data_flag LE 0 THEN BEGIN
         vis_weights_update,vis_weights,obs,psf,params,_Extra=extra
         if keyword_set(cal_stop) then begin
           fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;need beam_integral for PS
-          message, "cal_stop initiated"
+          print, "cal_stop initiated. Returning."
+          run_report, start_mem, t0, silent=silent
+          RETURN
         endif
     ENDIF
     
@@ -168,11 +166,8 @@ IF data_flag LE 0 THEN BEGIN
         ENDIF
         skymodel_update=fhd_struct_init_skymodel(obs,source_list=model_source_list,catalog_path=model_catalog_file_path,$
             diffuse_model=diffuse_model,return_cal=return_cal_visibilities,_Extra=extra)
-        vis_model_arr=vis_source_model(skymodel_update,obs,status_str,psf,params,vis_weights,0,jones,model_uv_arr=model_uv_arr2,$
-            timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,_Extra=extra) 
-        IF Min(Ptr_valid(model_uv_arr)) GT 0 THEN FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr2[pol_i] $
-            ELSE model_uv_arr=Pointer_copy(model_uv_arr2) 
-        undefine_fhd,model_uv_arr2
+        vis_model_arr=vis_source_model(skymodel_update,obs,status_str,psf,params,vis_weights,0,jones,model_uv_arr=model_uv_arr,$
+            timing=model_timing,silent=silent,error=error,vis_model_ptr=vis_model_arr,calibration_flag=0,file_path_fhd=file_path_fhd,_Extra=extra)
     ENDIF
     
     IF Keyword_Set(skymodel_cal) OR Keyword_Set(skymodel_update) THEN $
@@ -272,12 +267,7 @@ ENDIF
 undefine_fhd,map_fn_arr,image_uv_arr,weights_arr,model_uv_arr,vis_arr,vis_weights,vis_model_arr
 undefine_fhd,obs,cal,jones,layout,psf,antenna,fhd_params,skymodel,skymodel_cal,skymodel_update
 
-end_mem = (MEMORY(/HIGHWATER) - start_mem)/1e9
-timing=Systime(1)-t0
-IF ~Keyword_Set(silent) THEN BEGIN
-  print,'Memory required (GB): ',Strn(Round(end_mem))
-  print,'Full pipeline time (minutes): ',Strn(Round(timing/60.))
-ENDIF
+run_report, start_mem, t0, silent=silent
 print,''
 !except=except
 

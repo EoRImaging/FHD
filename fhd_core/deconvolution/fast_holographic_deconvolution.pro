@@ -34,7 +34,7 @@ PRO fast_holographic_deconvolution,fhd_params,obs,psf,params,cal,jones,image_uv_
     model_uv_full=model_uv_full,model_uv_holo=model_uv_holo,ra_arr=ra_arr,dec_arr=dec_arr,astr=astr,silent=silent,$
     map_fn_arr=map_fn_arr,transfer_mapfn=transfer_mapfn,beam_base=beam_base,beam_correction=beam_correction,$
     file_path_fhd=file_path_fhd,no_condense_sources=no_condense_sources,source_mask=source_mask,scale_gain=scale_gain,$
-    model_uv_arr=model_uv_arr,use_pointing_center=use_pointing_center,_Extra=extra
+    use_pointing_center=use_pointing_center,_Extra=extra
 compile_opt idl2,strictarrsubs  
 
 ; Deconvolution is divided into several sequential steps:
@@ -53,7 +53,7 @@ t00=Systime(1)
 n_pol=fhd_params.npol
 gain_factor=fhd_params.gain_factor
 max_iter=fhd_params.max_iter
-max_sources=fhd_params.max_sources
+max_deconvolution_components=fhd_params.max_deconvolution_components
 check_iter=fhd_params.check_iter
 beam_threshold=fhd_params.beam_threshold
 add_threshold=fhd_params.add_threshold
@@ -69,7 +69,7 @@ galaxy_model_fit=fhd_params.galaxy_subtract
 subtract_sidelobe_catalog=fhd_params.sidelobe_subtract
 return_sidelobe_catalog=fhd_params.sidelobe_return
 
-component_array=source_comp_init(n_sources=max_sources,alpha=obs.alpha,freq=obs.freq_center,gain_factor=gain_factor)
+component_array=source_comp_init(n_sources=max_deconvolution_components,alpha=obs.alpha,freq=obs.freq_center,gain_factor=gain_factor)
 
 IF over_resolution GT 1 THEN obs_fit=fhd_struct_update_obs(obs,dimension=obs.dimension*over_resolution,kbin=obs.kpix) $
     ELSE obs_fit=obs
@@ -247,9 +247,9 @@ IF Keyword_Set(subtract_sidelobe_catalog) THEN BEGIN
         n_sidelobe_src=N_Elements(source_arr_sidelobe)
         print,'Subtracting source model from the sidelobes: '+ Strn(n_sidelobe_src) + " source components"
         IF Keyword_Set(return_sidelobe_catalog) THEN BEGIN
-            print, 'Sidelobe sources included in source list"
+            print, "Sidelobe sources included in source list"
             component_array = [source_arr_sidelobe, component_array]
-            max_sources += n_sidelobe_src
+            max_deconvolution_components += n_sidelobe_src
             comp_i += n_sidelobe_src
         ENDIF ELSE print, 'Sidelobe sources not included in source list'
         model_uv_sidelobe=source_dft_model(obs,jones,source_arr_sidelobe,t_model=t_model,uv_mask=source_uv_mask,_Extra=extra)
@@ -322,8 +322,8 @@ FOR iter=0L,max_iter-1 DO BEGIN
     converge_check2[iter]=Stddev(image_use[where(beam_mask*source_mask)],/nan)
     ;use the composite image to locate sources, but then fit for flux independently
     
-    IF comp_i+n_sources GE max_sources THEN BEGIN
-        n_sources=max_sources-comp_i-1
+    IF comp_i+n_sources GE max_deconvolution_components THEN BEGIN
+        n_sources=max_deconvolution_components-comp_i-1
         IF n_sources GT 0 THEN component_array1=component_array1[0:n_sources-1]
     ENDIF
     IF n_sources LE 0 THEN BEGIN
@@ -355,7 +355,7 @@ FOR iter=0L,max_iter-1 DO BEGIN
     ENDFOR
     t4+=Systime(1)-t4_0
     
-    IF comp_i+1 GE max_sources THEN BEGIN
+    IF comp_i+1 GE max_deconvolution_components THEN BEGIN
         i2+=1                                        
         t10=Systime(1)-t0
         fhd_params.end_condition='Max components'

@@ -2,17 +2,17 @@
 FHD inputs various models and catalogs, described below.
 
 ## UVFits <br />
-FHD requires input data to be in [uvfits format](ftp://ftp.aoc.nrao.edu/pub/software/aips/TEXT/PUBL/AIPSMEM117.PDF). Conversion into uvfits can be performed with [pyuvdata](https://github.com/RadioAstronomySoftwareGroup/pyuvdata) or CASA if necessary. Observations must have a unique string identifier (typically GPS seconds or Julian Dates). 
+FHD requires input data to be in [uvfits format](ftp://ftp.aoc.nrao.edu/pub/software/aips/TEXT/PUBL/AIPSMEM117.PDF). Conversion into uvfits can be performed with [pyuvdata](https://github.com/RadioAstronomySoftwareGroup/pyuvdata) or CASA if necessary. Observations must have a unique string identifier (typically GPS seconds or Julian Dates).
 
 ### Acquiring MWA Data <br />
 To acquire MWA uvfits files, you may use the [MWA ASVO service](https://asvo.mwatelescope.org/dashboard). Once registered and logged in, click "Data Job" in the upper right, select "New Data Job," and then select "Data Conversion Job" from the dropdown menu. We recommend starting with obsid 1061315448, which is zenith-pointed on the EoR0 field (centered on RA: 0, Dec: -27 deg) on August 23rd, 2013, and has minimal radio frequency interference. Proper settings for the query are as follows
 
  - Observation ID: 1061315448
- - Time Resolution (s): 2 
+ - Time Resolution (s): 2
  - Freq Resolution (kHz): 80
  - Edge Width (kHz): 80
  - Output: UVFITS
- 
+
 Check only the following boxes:
 
  - Do not flag auto-correlations
@@ -62,9 +62,10 @@ All sky catalogs are located in `catalog_data`.
 
 * **simulation/eor_power_1d.idlsave**:	Added code for making EoR simulations	6 years ago
 * **simulation/flat_power_1d.idlsave**:	Added flat power savefile to catalog data for simulation plots.	5 years ago
-* **simulation/RFI_PLAW_1000s_Cat.sav**:	1000 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
-* **simulation/RFI_PLAW_10x_Cat.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 1 mJy - 1 Jy
-* **simulation/RFI_PLAW_Cat.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
-* **simulation/test_RFI_source_1061315448_zenith.sav**: A 1 Jy source at zenith for MWA obsid 1061315448
+* **simulation/1000_source_plaw_0.1-100mJy.sav**:	1000 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
+* **simulation/100_source_plaw_1-1000mJy.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 1 mJy - 1 Jy
+* **simulation/100_source_plaw_0.1-100mJy.sav**:	100 point sources distributed uniformly over hemisphere centered on EoR0 with power law flux density distribution ranging from 0.1 - 100 mJy
+* **simulation/test_RFI_source_1061315448_zenith.sav**: A 1 Jy source at zenith (which is close to phase center) for MWA obsid 1061315448
+* **simulation/test_source_1Jy_RA_350_dec_-26.8.sav**: A 1 Jy source at RA 350, dec -26.8 (degrees).
 
 ## Calibration files <br />

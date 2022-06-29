@@ -1,5 +1,16 @@
-FUNCTION rotate_jones_matrix, obs, Jones, in_place=in_place
+FUNCTION rotate_jones_matrix, obs, antenna, in_place=in_place
 ;Rotate the 2x2 Jones matix from Az-ZA coordinates to RA-Dec, using the parallactic angle
+
+;Formulate Jones matrix from antenna structure
+Jones = PTRARR(antenna.n_pol,antenna.n_pol)
+pix_use = *antenna.pix_use
+psf_image_dim = antenna.psf_image_dim
+for pol_i = 0, antenna.n_pol-1 do begin
+    for pol_j=0, antenna.n_pol-1 do begin
+        Jones[pol_i,pol_j] = Ptr_new(DComplexarr(psf_image_dim,psf_image_dim))
+        (*Jones[pol_i,pol_j])[pix_use] = (*antenna.Jones[pol_i,pol_j])
+    endfor
+endfor
 
 ;Generate a grid of RA and Dec coordinates matching the image
 xvals=meshgrid(obs.dimension,obs.elements,1)

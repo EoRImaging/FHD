@@ -1,10 +1,8 @@
-PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration, n_pol=n_pol, enhance_eor=enhance_eor, $
-    eor_vis_filepath=eor_vis_filepath, file_path_vis=file_path_vis, file_path_fhd=file_path_fhd,sim_noise=sim_noise, $
-    hdr=hdr, params=params, calibration_catalog_file_path=calibration_catalog_file_path, $
-    diffuse_calibrate=diffuse_calibrate,transfer_calibration=transfer_calibration,freq_start=freq_start, $
-    freq_end=freq_end,tile_flag_list=tile_flag_list,deproject_w_term=deproject_w_term,dft_threshold=dft_threshold, $
+PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration, n_pol=n_pol, $
+    enhance_eor=enhance_eor, eor_vis_filepath=eor_vis_filepath, file_path_vis=file_path_vis, $
+    file_path_fhd=file_path_fhd,sim_noise=sim_noise, hdr=hdr, params=params, $
     remove_sim_flags=remove_sim_flags,extra_vis_filepath=extra_vis_filepath,_Extra=extra
-    
+ 
   print, "Performing in-situ simulation"
   
   if ~keyword_set(n_pol) then n_pol=2
@@ -33,7 +31,8 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
       print, "Using " + file_name + ' as input model'
       
     endfor
-  endif else message, 'Please specify the directory and/or filename of the input visibilities in in_situ_sim_input'
+  endif else $
+    message, 'Please specify the directory and/or filename of the input visibilities in in_situ_sim_input'
   
   vis_arr=temporary(vis_model_arr)
   
@@ -42,20 +41,24 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
     vis_eor=PTRARR(n_pol,/allocate)
 
     if file_test(eor_vis_filepath) AND (strmid(eor_vis_filepath,5,6,/reverse_offset) EQ 'uvfits') then begin
-      uvfits_read,hdr,params,layout,vis_eor,eor_weights,file_path_vis=eor_vis_filepath,n_pol=n_pol,silent=silent,error=error,_Extra=extra
+      uvfits_read,hdr_temp,params_temp,layout_temp,vis_eor,eor_weights,file_path_vis=eor_vis_filepath,$
+        n_pol=n_pol,silent=silent,error=error,_Extra=extra
 
-    ;Check size of visibilties 
-    for pol_i=0, n_pol-1 do begin
-      if (size(*vis_arr[pol_i]))[1] NE (size(*vis_eor[pol_i]))[1] then message, "EoR in situ visibilities do not match inherent vis size"
-      if (size(*vis_arr[pol_i]))[2] NE (size(*vis_eor[pol_i]))[2] then message, "EoR in situ visibilities do not match inherent vis size"
-    endfor
+      ;Check size of visibilties 
+      for pol_i=0, n_pol-1 do begin
+        if (size(*vis_arr[pol_i]))[1] NE (size(*vis_eor[pol_i]))[1] then $
+          message, "EoR in situ visibilities do not match inherent vis size"
+        if (size(*vis_arr[pol_i]))[2] NE (size(*vis_eor[pol_i]))[2] then $
+          message, "EoR in situ visibilities do not match inherent vis size"
+      endfor
 
     ;*Search for the specified eor savefile
     endif else if (total(file_test(eor_vis_filepath)) GT 0) AND (file_test(eor_vis_filepath,/directory) EQ 0) then begin
       size_savefile=(size(eor_vis_filepath))[1]
       
       void = GETVAR_SAVEFILE(eor_vis_filepath[0], names=names)
-      vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]  ;assumption: visibilities in sav file have "vis" in the name
+      ;assumption: visibilities in sav file have "vis" in the name
+      vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]
       
       ;Restore visibilities that are in different polarization save files, or restore the all-pol save file
       if size_savefile EQ n_pol then $
@@ -66,12 +69,13 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
       for pol_i=0,n_pol-1 do begin
         if total(file_test(eor_vis_filepath + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav')) GT 0 then begin
           void = GETVAR_SAVEFILE(eor_vis_filepath + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav', names=names)
-          vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]  ;assumption: visibilities in sav file have "vis" in the name
+          ;assumption: visibilities in sav file have "vis" in the name
+          vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]
           
           ;Restore visibilities that are in the <obsid>_vis_XX/vis_YY format
           vis_eor[pol_i] = GETVAR_SAVEFILE(eor_vis_filepath + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav', vis_varname)
-        endif else message, "eor_vis_filepath not found! Tried " + eor_vis_filepath + " and " + eor_vis_filepath + '/' + obs_id + "_vis_" $
-          + pol_name[pol_i] + ".sav (for all pol)"
+        endif else message, "eor_vis_filepath not found! Tried " + eor_vis_filepath + " and " + eor_vis_filepath $
+          + '/' + obs_id + "_vis_" + pol_name[pol_i] + ".sav (for all pol)"
       endfor
     endelse
     ;*End of search for the specified eor savefile
@@ -113,15 +117,17 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
 
     if total(file_test(extra_vis_filepath)) GT 0 then begin
       if strmid(extra_vis_filepath,5,6,/reverse_offset) EQ 'uvfits' then begin
-        uvfits_read,hdr_extra,params_extra,layout_extra,vis_extra,vis_extra_weights,file_path_vis=extra_vis_filepath,n_pol=n_pol,$
-          silent=silent,error=error,_Extra=extra
+        uvfits_read,hdr_extra,params_extra,layout_extra,vis_extra,vis_extra_weights,file_path_vis=extra_vis_filepath,$
+          n_pol=n_pol,silent=silent,error=error,_Extra=extra
       endif else message, "File " + extra_vis_filepath + " needs to be a uvfits."
     endif else message, "File " + extra_vis_filepath + " not found."
     
     ;Check size of visibilties 
     for pol_i=0, n_pol-1 do begin
-      if (size(*vis_arr[pol_i]))[1] NE (size(*vis_extra[pol_i]))[1] then message, "Extra in situ visibilities do not match inherent vis size"
-      if (size(*vis_arr[pol_i]))[2] NE (size(*vis_extra[pol_i]))[2] then message, "Extra in situ visibilities do not match inherent vis size"
+      if (size(*vis_arr[pol_i]))[1] NE (size(*vis_extra[pol_i]))[1] then $
+        message, "Extra in situ visibilities do not match inherent vis size"
+      if (size(*vis_arr[pol_i]))[2] NE (size(*vis_extra[pol_i]))[2] then $
+        message, "Extra in situ visibilities do not match inherent vis size"
     endfor
     
     ;Add visibilities

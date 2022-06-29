@@ -1,5 +1,5 @@
 FUNCTION fhd_setup,file_path_vis,status_str,export_images=export_images,cleanup=cleanup,recalculate_all=recalculate_all,$
-    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,$
+    mapfn_recalculate=mapfn_recalculate,grid_recalculate=grid_recalculate,beam_recalculate=beam_recalculate,$
     n_pol=n_pol,flag_visibilities=flag_visibilities,deconvolve=deconvolve,transfer_mapfn=transfer_mapfn,$
     transfer_weights=transfer_weights,healpix_recalculate=healpix_recalculate,$
     file_path_fhd=file_path_fhd,force_data=force_data,force_no_data=force_no_data,$
@@ -31,8 +31,6 @@ IF N_Elements(flag_visibilities) EQ 0 THEN flag_visibilities=0
 IF N_Elements(transfer_mapfn) EQ 0 THEN transfer_mapfn=0
 IF N_Elements(save_visibilities) EQ 0 THEN save_visibilities=1
 IF N_Elements(healpix_recalculate) EQ 0 THEN healpix_recalculate=recalculate_all
-;IF N_Elements(beam_recalculate) EQ 0 THEN IF status_str.psf EQ 0 THEN beam_recalculate=1 $
-;    ELSE beam_recalculate=recalculate_all
 
 IF Keyword_Set(n_pol) THEN n_pol1=n_pol ELSE BEGIN
     IF status_str.obs GT 0 THEN BEGIN
@@ -75,11 +73,6 @@ ENDIF ELSE IF N_Elements(mapfn_recalculate) EQ 0 THEN mapfn_recalculate=0
 IF mapfn_recalculate GT 0 THEN grid_recalculate=1
 IF grid_recalculate GT 0 THEN data_flag=0
 
-;IF Keyword_Set(beam_recalculate) THEN BEGIN
-;    status_str.psf=0
-;    status_str.antenna=0
-;    status_str.jones=0
-;ENDIF
 status_str.hpx_cnv=0
 IF Keyword_Set(mapfn_recalculate) THEN grid_recalculate=1
 IF Keyword_Set(grid_recalculate) THEN BEGIN

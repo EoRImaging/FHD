@@ -26,8 +26,11 @@ time_use[time_start_i:time_start_i+nt3-1:2]=time_use_01
 time_use[time_start_i+1:time_start_i+nt3-1:2]=time_use_01
 time_cut_i=where(time_use LE 0,nt_cut)
 IF nt_cut GT 0 THEN BEGIN
-    bin_i_cut=where(bin_i EQ time_cut_i,n_cut)
-    IF n_cut GT 0 THEN bin_i[bin_i_cut]=-1 ; will be skipped by using where(bin_i mod 2 EQ 0,1) below (-1 mod 2 is still -1)
+    FOR cut_i=0,nt_cut-1 DO BEGIN
+        bin_i_cut=where(bin_i EQ time_cut_i[cut_i],n_cut)
+        ; will be skipped by using where(bin_i mod 2 EQ 0,1) below (-1 mod 2 is still -1)
+        IF n_cut GT 0 THEN bin_i[bin_i_cut]=-1
+    ENDFOR
 ENDIF
 
 IF Keyword_Set(debug_evenoddsplit_integration) THEN BEGIN

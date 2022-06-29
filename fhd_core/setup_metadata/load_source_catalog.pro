@@ -1,13 +1,19 @@
-FUNCTION load_source_catalog, catalog_filepath, varname=varname
+FUNCTION load_source_catalog, catalog, varname=varname
     ; Restore a source catalog from a .sav file, being careful about changed structure definitions
 
     IF N_Elements(varname) EQ 0 THEN varname="catalog"
 
     ;define structure BEFORE restoring, in case the definition has changed
     cat_init=source_comp_init(n_sources=0)
-    source_cat = getvar_savefile(catalog_filepath, varname, /compatibility_mode)
+    IF size(catalog,/type) EQ 8 THEN BEGIN
+        source_cat = catalog ;If a valid structure is supplied, use that 
+        catalog_filepath = ''
+    ENDIF ELSE BEGIN
+        catalog_filepath=catalog
+        source_cat = getvar_savefile(catalog_filepath, varname, /compatibility_mode)
+    ENDELSE
 
-    extend_i=where(Ptr_valid(source_cat.extend),n_ext,complement=point_i,ncomp=n_point)
+    extend_i=where(Ptr_valid(source_cat.extend),n_ext)
     ignore_tags = ['EXTEND']
 
     ; If the source list structure definition has changed we have to update the structure ourselves
@@ -42,16 +48,21 @@ FUNCTION load_source_catalog, catalog_filepath, varname=varname
     ENDFOR
     IF n_missing + n_extra GT 0 THEN BEGIN
         IF n_missing GT 0 THEN BEGIN
-            print,"WARNING! Mis-matched source list structure definition for file", catalog_filepath
+            print,"WARNING! Mis-matched source list structure definition for file ", catalog_filepath
             print,"Missing tags replaced with default values:", missing_tags
         ENDIF
 
         IF n_extra GT 0 THEN BEGIN
-            print,"WARNING! Mis-matched source list structure definition for file", catalog_filepath
+            print,"WARNING! Mis-matched source list structure definition for file ", catalog_filepath
             print,"Extraneous tags have been removed:", extra_tags
         ENDIF
+
         source_cat_mod = fill_source_list(source_cat, good_tag_names, good_tag_ids)
-        FOR ext_i=0,n_ext-1 DO source_cat_mod[extend_i[ext_i]].extend = Ptr_new(fill_source_list(*source_cat[extend_i[ext_i]].extend, good_tag_names, good_tag_ids))
+        FOR ext_i=0,n_ext-1 DO BEGIN
+	    extend_struct = load_source_catalog(*source_cat[extend_i[ext_i]].extend)
+            source_cat_mod[extend_i[ext_i]].extend = Ptr_new(extend_struct)
+        ENDFOR 
+    
         RETURN, source_cat_mod
     ENDIF ELSE RETURN, source_cat
 
