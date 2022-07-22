@@ -75,7 +75,7 @@ FOR fi=0L,nfreq_bin-1 DO BEGIN
 ENDFOR
 
 ;initialize antenna structure
-antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
+antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version[0],freq:freq_center,nfreq_bin:nfreq_bin,$
     n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
     delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1,pix_window:Ptr_new(),pix_use:Ptr_new(),$
     psf_image_dim:0.,psf_scale:0.}
@@ -83,9 +83,19 @@ antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_versi
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data
 antenna=Call_function(tile_init_fn[0],obs,antenna_str,_Extra=extra) ;mwa_beam_setup_init
-if N_elements(instrument) GT 1 then begin
-  if ~isa(inst_tile_ptr, 'POINTER', /ARRAY) then message, 'instrument_tile_ptr must be filled in when there is more than one instrument. See dictionary.'
+if (N_elements(instrument) GT 1) OR (N_elements(beam_model_version) GT 1)  then begin
+  if ~isa(inst_tile_ptr, 'POINTER', /ARRAY) then message, $
+    'instrument_tile_ptr must be filled in when there is more than one instrument or beam model. See dictionary.'
+
+  if N_elements(instrument) EQ 1 then begin
+    instrument = replicate(instrument, N_elements(beam_model_version))
+    tile_init_fn = replicate(tile_init_fn, N_elements(beam_model_version))
+    tile_gain_fn = replicate(tile_gain_fn, N_elements(beam_model_version))
+  endif
+  if N_elements(beam_model_version) EQ 1 then beam_model_version = replicate(beam_model_version, N_elements(instrument))
+
   for inst_i=1, N_elements(instrument)-1 do begin
+    antenna_str.model_version = beam_model_version[inst_i]
     antenna_temp=Call_function(tile_init_fn[inst_i],obs,antenna_str,_Extra=extra)
     antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
   endfor  
@@ -197,6 +207,7 @@ antenna.pix_use=ptr_new(pix_use)
 if N_elements(instrument) GT 1 then begin
   for inst_i=0, N_elements(instrument)-1 do begin
     antenna_temp = pointer_copy(antenna)
+    antenna_temp.model_version = beam_model_version[inst_i]
     antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna_temp,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
     antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
     antenna[*inst_tile_ptr[inst_i]].antenna_type = instrument[inst_i] ;if more than one instrument, assign the correct antenna type for each subset for metadata purposes
