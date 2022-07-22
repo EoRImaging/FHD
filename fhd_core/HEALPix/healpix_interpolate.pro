@@ -48,7 +48,7 @@ image_mask[Min(Floor(xv_hpx)):Max(Ceil(xv_hpx)),Min(Floor(yv_hpx)):Max(Ceil(yv_h
 
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
-IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=nside,freq=obs.freq_center) $
+IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,degpix=obs.degpix,freq=obs.freq_center) $
     ELSE IF keyword_set(from_jy_per_sr) THEN pixel_area_cnv=(obs.degpix*!DtoR)^2. $ ; (steradian/new pixel)
         ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/n_hpx) ; (steradian/new pixel)/(steradian/old pixel)
 
