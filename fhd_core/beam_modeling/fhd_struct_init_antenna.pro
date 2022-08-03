@@ -4,7 +4,8 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
     inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
     kernel_window=kernel_window,beam_per_baseline=beam_per_baseline,$
-    beam_gaussian_decomp=beam_gaussian_decomp,conserve_memory=conserve_memory,_Extra=extra
+    beam_gaussian_decomp=beam_gaussian_decomp,beam_gauss_param_transfer=beam_gauss_param_transfer,$
+    conserve_memory=conserve_memory,_Extra=extra
 t0=Systime(1)
 
 IF keyword_set(conserve_memory) then begin
@@ -25,6 +26,28 @@ ENDIF
 if keyword_set(beam_gaussian_decomp) and keyword_set(kernel_window) then begin
   print, 'Gaussian decomposition cannot be used with modified kernel windows. Window not applied.'
   kernel_window=0
+endif
+
+;Default the parameter transfer if not set
+if keyword_set(beam_gauss_param_transfer) then begin
+  ;Default to instrumental beam if not set
+  if (beam_gauss_param_transfer EQ 1) then beam_gauss_param_transfer = 'decomp'
+
+  ;Set transfer to the instrumental beam or gaussian beam. Currently only available for the MWA
+  if (beam_gauss_param_transfer EQ 'decomp') or (beam_gauss_param_transfer EQ 'gauss') then begin
+    if instrument EQ 'mwa' then begin
+      pointing_num = mwa_get_pointing_number(obs,string=1)
+      beam_gauss_param_transfer = filepath(instrument + '_decomp_params_pointing' + pointing_num + '.sav',$
+        root=rootdir('FHD'),subdir='instrument_config')
+    endif else begin
+       message, 'Gaussian decomposition parameter defaults not currently set for non-MWA instruments'
+    endelse
+  endif
+
+  ;Match the psf size to the parameters from the file
+  psf_transfer = getvar_savefile(beam_gauss_param_transfer,'psf')
+  psf_resolution = psf_transfer.resolution
+  psf_dim = psf_transfer.dim
 endif
 
 n_tiles=obs.n_tile
