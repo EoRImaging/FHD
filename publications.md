@@ -66,17 +66,17 @@ Zhang, Zheng; Pober, Jonathan C.; Li, Wenyang; Hazelton, Bryna J.; Morales, Migu
 PASA, 2020
 
 ### [Development of a high throughput cloud-based data pipeline for 21 cm cosmology](https://ui.adsabs.harvard.edu/abs/2021A%26C....3400447B/abstract)
-Byrne, R.; Jacobs, D.
+Byrne, R.; Jacobs, D. <br />
 Astronomy and Computing, 2021
 
 ### [A unified calibration framework for 21 cm cosmology](https://ui.adsabs.harvard.edu/abs/2021MNRAS.503.2457B/abstract)
-Byrne, Ruby; Morales, Miguel F.; Hazelton, Bryna J.; Wilensky, Michael
+Byrne, Ruby; Morales, Miguel F.; Hazelton, Bryna J.; Wilensky, Michael <br />
 MNRAS, 2021
 
 ### [A map of diffuse radio emission at 182 MHz to enhance epoch of reionization observations in the Southern hemisphere](https://ui.adsabs.harvard.edu/abs/2022MNRAS.510.2011B/abstract)
-Byrne, Ruby; Morales, Miguel F.; Hazelton, Bryna; Sullivan, Ian; Barry, Nichole; Lynch, Christene; Line, Jack L. B.; Jacobs, Daniel C.
+Byrne, Ruby; Morales, Miguel F.; Hazelton, Bryna; Sullivan, Ian; Barry, Nichole; Lynch, Christene; Line, Jack L. B.; Jacobs, Daniel C. <br />
 MNRAS, 2022
 
 ### [The Role of the Instrumental Response in 21 cm Epoch of Reionization Power Spectrum Gridding Analyses](https://ui.adsabs.harvard.edu/abs/2022ApJ...929...64B/abstract)
-Barry, Nichole; Chokshi, Aman
+Barry, Nichole; Chokshi, Aman <br />
 ApJ, 2022
