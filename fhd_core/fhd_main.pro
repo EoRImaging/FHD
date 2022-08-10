@@ -63,7 +63,7 @@ IF data_flag LE 0 THEN BEGIN
     ENDIF
     
     ;Note: explicitly reference dft_threshold here to remove it from EXTRA, which would be passed on to lower-level routines
-    obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra) 
+    obs=fhd_struct_init_obs(file_path_vis,hdr,params,layout,n_pol=n_pol,dft_threshold=dft_threshold,_Extra=extra) 
     n_pol=obs.n_pol
     n_freq=obs.n_freq
     

@@ -84,7 +84,21 @@ ENDIF ELSE BEGIN
     ;free memory
     data_array=0 
     vis_weights0=0
-    
+
+    ;; now read extensions one by one until we find the antenna table
+    t_read_ant=Systime(1)
+    ext_name = ''
+    while ext_name ne 'AIPS AN' do begin
+        ext_data = mrdfits(lun, 0, ext_header)
+        ext_name=strtrim(sxpar(ext_header, 'extname'))
+    endwhile
+    layout = fhd_struct_init_layout(ext_header, ext_data,_Extra=extra)
+    t_read_ant=Systime(1)-t_read_ant
+    print,"Time finding and reading antenna table in UVFITS file and extracting header: "+Strn(t_read_ant) 
+
+    ;; use the antenna table to update hdr.n_tile, which was set to a default value of 128 in fhd_struct_init_hdr
+    hdr.n_tile=N_Elements(layout.antenna_names)
+
     IF Keyword_Set(reorder_visibilities) THEN vis_reorder,hdr,params,vis_arr,vis_weights
     
     ;Optionally average data in time and/or frequency if the visibilities are too large to store in memory as-is, or just to save time later
@@ -95,16 +109,7 @@ ENDIF ELSE BEGIN
         IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
     ENDIF
     
-    ;; now read extensions one by one until we find the antenna table
-    t_read_ant=Systime(1)
-    ext_name = ''
-    while ext_name ne 'AIPS AN' do begin
-        ext_data = mrdfits(lun, 0, ext_header)
-        ext_name=strtrim(sxpar(ext_header, 'extname'))
-    endwhile
-    layout = fhd_struct_init_layout(ext_header, ext_data,_Extra=extra)
-    t_read_ant=Systime(1)-t_read_ant
-    print,"Time finding and reading antenna table in UVFITS file and extracting header: "+Strn(t_read_ant)
+
         
 ENDELSE    
 END
