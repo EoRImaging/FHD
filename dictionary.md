@@ -187,7 +187,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 0 <br />
 
-**diffuse_calibrate**: path to the .sav file containing a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. See diffuse_model for information about the formatting of the .sav file. <br />
+**diffuse_calibrate**: path to the .sav file or .skyh5 file containing a map/model of the diffuse in which to calibrate on. The map/model undergoes a DFT for every pixel, and the contribution from every pixel is added to the model visibilities from which to calibrate on. If no diffuse_model is specified, then this map/model is used for the subtraction model as well. See diffuse_model for information about the formatting of the .sav file. <br />
   -*Default*: undefined (off) <br />
   -*eor_wrapper_defaults*: 0 <br />
 
@@ -370,15 +370,16 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 (which defaults to \['Tukey','Blackman-Harris'\]) <br />
   -*Default*: 0 <br />
 
-**diffuse_model**: File path to the diffuse model sav file. <br />
+**diffuse_model**: File path to the diffuse model .sav file or .skyh5 file. <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 0 <br />
-  -The .sav file should contain the following:<br />
+  -If a .sav file is used, the file should contain the following:<br />
   - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/pixel unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
   - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
   - HPX_INDS = The corresponding healpix indices of the model_arr.<br />
   - UNITS = The units of the map, either Jy/str or Kelvin.<br />
   - COORD_SYS = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
+  -If a .skyh5 file is used, the file should be formatted with the [pyradiosky](https://github.com/RadioAstronomySoftwareGroup/pyradiosky) conventions.<br />
 
 **diffuse_units_kelvin**: defines the units of the diffuse model to be in units Kelvin. If the units are specified as Kelvin in the `diffuse_model`, then this will be set. Used if either diffuse_model or diffuse_calibrate are set. <br />
   -*Turn off/on*: 0/1 <br />
