@@ -366,17 +366,21 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 1 (100 Mb) <br />
   -*Turn off/on*: 0/1 (optionally set to bytes)<br />
 
+**diffuse_fft_window**: an array of two strings indicating the anti-aliasing window to be used before the FFT (first element) and after the FFT (second element) as defined by `spectral_window.pro` in the fhdps_utils repo. If a Tukey window is specified before the FFT, then the alpha parameter will be calculated to align with the primary lobe of the instrument. If a Tukey window is specified after the FFT, then the alpha parameter will be calculated to align with 50 wavelengths. <br />
+  -*Turn off/on*: 0/1 (which defaults to \['Tukey','Blackman-Harris'\]) <br />
+  -*Default*: 0 <br />
+
 **diffuse_model**: File path to the diffuse model sav file. <br />
-  -*Turn off/on*: 0/1 <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 0 <br />
   -The .sav file should contain the following:<br />
   - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/pixel unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
   - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
   - HPX_INDS = The corresponding healpix indices of the model_arr.<br />
+  - UNITS = The units of the map, either Jy/str or Kelvin.<br />
   - COORD_SYS = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
 
-**diffuse_units_kelvin**: defines the units of the diffuse model to be in units Kelvin. Used if either diffuse_model or diffuse_calibrate are set. <br />
+**diffuse_units_kelvin**: defines the units of the diffuse model to be in units Kelvin. If the units are specified as Kelvin in the `diffuse_model`, then this will be set. Used if either diffuse_model or diffuse_calibrate are set. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
