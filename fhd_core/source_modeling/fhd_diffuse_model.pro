@@ -7,42 +7,22 @@ dimension=obs.dimension
 elements=obs.elements
 n_pol=obs.n_pol
 n_spectral=obs.degrid_spectral_terms
+freq_center=obs.freq_center
 IF Keyword_Set(skymodel) THEN diffuse_spectral_index=skymodel.diffuse_spectral_index ELSE diffuse_spectral_index=0
 IF Keyword_Set(flatten_spectrum) THEN alpha_corr=obs.alpha ELSE alpha_corr=0.
 
-IF file_test(model_filepath) EQ 0 THEN RETURN,Ptrarr(n_pol)
-
-; Get variables from the savefile. Must have one variable called 'hpx_inds', one called 'nside', 
-;  and one data variable. If there are multiple other variables, data variable must be 'model_arr'
-var_dummy = getvar_savefile(model_filepath, names = var_names)
-hpx_inds = getvar_savefile(model_filepath, 'hpx_inds')
-nside = getvar_savefile(model_filepath, 'nside')
-var_name_inds = where((StrLowCase(var_names) NE 'hpx_inds') AND (StrLowCase(var_names) NE 'nside'))
-var_names = var_names[var_name_inds]
-; Will pick 'model_arr' if present, or the first variable that is not 'hpx_inds' or 'nside'
-var_name_use = var_names[(where(StrLowCase(var_names) EQ 'model_arr',n_match))[0]>0]
-model_hpx_arr = getvar_savefile(model_filepath, var_name_use)
-
-; Get spectral information.
-model_spectra_i = where(StrLowCase(var_names) EQ 'model_spectral_arr',n_match)
-IF n_match GE 1 THEN diffuse_spectral_index = getvar_savefile(model_filepath, var_names[model_spectra_i])
-IF n_spectral LE 0 THEN undefine_fhd, diffuse_spectral_index
-
-; Get coordinate system if present. Assume celestial if not defined otherwise. 
-coord_use = where(StrLowCase(var_names) EQ 'coord_sys',m_match)
-IF m_match EQ 0 THEN coord_use = 'celestial' ELSE coord_use = getvar_savefile(model_filepath, 'coord_sys')
-
-; Get units if present. Assume Jy/str if not defined otherwise.
-units_use = where(StrLowCase(var_names) EQ 'units',m_match)
-IF m_match EQ 0 THEN units_use = 'Jy/str' ELSE units_use=getvar_savefile(model_filepath, 'units')
-if STRMATCH(units_use, 'kelvin', /FOLD_CASE) then diffuse_units_kelvin=1
 IF N_Elements(diffuse_units_kelvin) EQ 0 THEN diffuse_units_kelvin = 0
 IF Keyword_Set(diffuse_units_kelvin) THEN from_jy_per_sr = 0 ELSE from_jy_per_sr = 1
 
-IF size(diffuse_spectral_index,/type) EQ 10 THEN BEGIN ;check if pointer type
-    ;need to write this!
-    print,"A spectral index is defined in the saved diffuse model, but this is not yet supported!"
-ENDIF ;case of specifying a single scalar to be applied to the entire diffuse model is treated AFTER building the model in instrumental polarization
+IF file_test(model_filepath) EQ 0 THEN RETURN,Ptrarr(n_pol)
+
+upname=StrUpCase(model_filepath)
+skyh5_check=strpos(upname,'.SKYH5')
+IF skyh5_check NE -1 THEN BEGIN ;read skyh5 file
+    model_hpx_arr=load_skyh5_diffuse_healpix_map(model_filepath, freq_center=freq_center, nside=nside, hpx_inds=hpx_inds, coord_use=coord_use)
+ENDIF ELSE BEGIN ;read sav file
+    model_hpx_arr=load_diffuse_healpix_map(model_filepath, nside=nside, hpx_inds=hpx_inds, coord_use=coord_use, diffuse_spectral_index=diffuse_spectral_index)
+ENDELSE
 
 model_stokes_arr=healpix_interpolate(model_hpx_arr,obs,nside=nside,hpx_inds=hpx_inds,$
   from_jy_per_sr=from_jy_per_sr,from_kelvin=diffuse_units_kelvin,coord_sys=coord_use)
