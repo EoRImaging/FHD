@@ -14,7 +14,12 @@ git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
 IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
-n_tile=hdr.n_tile
+IF Tag_exist(layout, "n_antenna") THEN BEGIN
+    n_tile=layout.n_antenna 
+ENDIF ELSE BEGIN
+    n_tile=hdr.n_tile
+    print, "Warning: n_tile not set from uvfits; using default of 128"
+ENDELSE
 n_freq=hdr.n_freq
 
 speed_light=299792458. 
