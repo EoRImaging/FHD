@@ -128,19 +128,22 @@ IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) EL
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 noise_arr=Ptr_new()
 
-; If it appears that the params struct uses tile names instead of indices, then rewrite with indices
-if max(params.antenna1) GT n_tile then begin
-    tile_A = params.antenna1
-    tile_B = params.antenna2
-    for tile_i=0, n_tile-1 do begin
-        inds = where(layout.antenna_numbers[tile_i] EQ (params.antenna1),n_count)
-        if n_count GT 0 then tile_A[inds] = tile_i+1
-        inds = where(layout.antenna_numbers[tile_i] EQ (params.antenna2),n_count)
-        if n_count GT 0 then tile_B[inds] = tile_i+1
-    endfor
-    params.antenna1 = tile_A
-    params.antenna2 = tile_B
-endif
+; fhd expects antenna1 and antenna2 arrays containing indices that are one-indexed. 
+; Some uvfits files contain actual antenna numbers in these fields, while others  
+; (particularly, those written by cotter or birli) contain indices.
+; To account for this, all antenna numbers from the uvfits header are mapped to indices 
+; using the antenna numbers from the uvfits antenna table.
+; If the antenna numbers were written into the file as indices, they will be mapped to themselves.
+tile_A = params.antenna1
+tile_B = params.antenna2
+for tile_i=0, n_tile-1 do begin
+    inds = where(layout.antenna_numbers[tile_i] EQ (params.antenna1),n_count)
+    if n_count GT 0 then tile_A[inds] = tile_i+1
+    inds = where(layout.antenna_numbers[tile_i] EQ (params.antenna2),n_count)
+    if n_count GT 0 then tile_B[inds] = tile_i+1
+endfor
+params.antenna1 = tile_A
+params.antenna2 = tile_B
 
 meta=fhd_struct_init_meta(file_path_vis,hdr,params,layout,degpix=degpix,dimension=dimension,elements=elements,$
     n_tile=n_tile,instrument=instrument,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
