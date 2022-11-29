@@ -8,7 +8,7 @@ ww_arr=Double(reform(params[header.ww_i,*]))
 ; Use both date fields if available in the uvfits file
 ; The center value is not added automatically, so add jd0
 IF n_elements(header.date_i) GT 1 THEN BEGIN
-    time=Double(reform(params[header.date_i[0],*])) + Double(reform(params[header.date_i[1],*])) + Double(header.jd0)
+    time=Double(reform(params[header.date_i[0],*])) + Double(reform(params[header.date_i[1],*]))
 ENDIF ELSE time=Double(reform(params[header.date_i,*]))
 
 ; Sort out the baseline numbering and antenna numbers
