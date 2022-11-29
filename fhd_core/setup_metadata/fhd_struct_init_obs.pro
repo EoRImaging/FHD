@@ -128,6 +128,15 @@ IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) EL
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 noise_arr=Ptr_new()
 
+; check that all elements in the antenna1 and antenna2 array exist in the antenna numbers
+; from the uvfits antenna table
+all_ants = [params.antenna1, params.antenna2]
+uniq_ants = all_ants[uniq(all_ants)]
+for i=0, n_elements(uniq_ants)-1 do begin
+    ind = where(uniq_ants[i] EQ (layout.antenna_numbers), n_count)
+    if n_count EQ 0 then message, "antenna arrays contain number(s) not found in antenna table"
+endfor
+
 ; fhd expects antenna1 and antenna2 arrays containing indices that are one-indexed. 
 ; Some uvfits files contain actual antenna numbers in these fields, while others  
 ; (particularly, those written by cotter or birli) contain indices.
