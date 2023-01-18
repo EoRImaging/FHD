@@ -226,7 +226,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: unset <br />
   -*eor_wrapper_defaults*: 1 <br />
   
-**phase_iter**: Set the iteration number to begin phase calibration. Before this, phase is held fixed and only amplitude is being calibrated. <br />
+**phase_fit_iter**: Set the iteration number to begin phase calibration. Before this, phase is held fixed and only amplitude is being calibrated. <br />
   -*Default:* 4
 
 **return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. If n_pol = 4 (full pol mode), return_cal_visibilites must be set because the visibilites are required for calculating the mixing angle between Q and U. <br />
