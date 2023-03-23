@@ -1,11 +1,13 @@
 FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_resolution=psf_resolution,psf_intermediate_res=psf_intermediate_res,$
     psf_image_resolution=psf_image_resolution,timing=timing,$
-    psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
+    psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,$
     inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
     kernel_window=kernel_window,beam_per_baseline=beam_per_baseline,$
-    beam_gaussian_decomp=beam_gaussian_decomp,beam_gauss_param_transfer=beam_gauss_param_transfer,$
-    conserve_memory=conserve_memory,_Extra=extra
+    beam_gaussian_decomp=beam_gaussian_decomp,conserve_memory=conserve_memory,$
+    import_pyuvdata_beam_filepath=import_pyuvdata_beam_filepath,$
+    use_psf_resolution=use_psf_resolution,_Extra=extra
+
 t0=Systime(1)
 
 IF keyword_set(conserve_memory) then begin
@@ -13,41 +15,12 @@ IF keyword_set(conserve_memory) then begin
 ENDIF
 
 IF N_Elements(beam_model_version) EQ 0 THEN beam_model_version=1
+IF N_Elements(use_psf_resolution) GT 0 THEN psf_resolution=use_psf_resolution
 instrument=obs.instrument
-tile_gain_fn=instrument+'_beam_setup_gain' ;mwa_beam_setup_gain
-tile_init_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
-
-;If other phases of the mwa are used, use the proper gain and init functions
-IF STRMID(instrument,0,3) EQ 'mwa' THEN BEGIN
-  tile_gain_fn='mwa_beam_setup_gain'
-  tile_init_fn='mwa_beam_setup_init'
-ENDIF
 
 if keyword_set(beam_gaussian_decomp) and keyword_set(kernel_window) then begin
   print, 'Gaussian decomposition cannot be used with modified kernel windows. Window not applied.'
   kernel_window=0
-endif
-
-;Default the parameter transfer if not set
-if keyword_set(beam_gauss_param_transfer) then begin
-  ;Default to instrumental beam if not set
-  if (beam_gauss_param_transfer EQ 1) then beam_gauss_param_transfer = 'decomp'
-
-  ;Set transfer to the instrumental beam or gaussian beam. Currently only available for the MWA
-  if (beam_gauss_param_transfer EQ 'decomp') or (beam_gauss_param_transfer EQ 'gauss') then begin
-    if instrument EQ 'mwa' then begin
-      pointing_num = mwa_get_pointing_number(obs,string=1)
-      beam_gauss_param_transfer = filepath(instrument + '_decomp_params_pointing' + pointing_num + '.sav',$
-        root=rootdir('FHD'),subdir='instrument_config')
-    endif else begin
-       message, 'Gaussian decomposition parameter defaults not currently set for non-MWA instruments'
-    endelse
-  endif
-
-  ;Match the psf size to the parameters from the file
-  psf_transfer = getvar_savefile(beam_gauss_param_transfer,'psf')
-  psf_resolution = psf_transfer.resolution
-  psf_dim = psf_transfer.dim
 endif
 
 n_tiles=obs.n_tile
@@ -61,8 +34,6 @@ zenra=obs.zenra
 zendec=obs.zendec
 obsx=obs.obsx
 obsy=obs.obsy
-;phasera=obs.phasera
-;phasedec=obs.phasedec
 Jdate=obs.Jd0
 IF Keyword_Set(beam_offset_time) THEN Jdate_use=Jdate+beam_offset_time/24./3600. ELSE Jdate_use=Jdate
 frequency_array=(*obs.baseline_info).freq
@@ -103,6 +74,14 @@ antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_versi
     delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1,pix_window:Ptr_new(),pix_use:Ptr_new(),$
     psf_image_dim:0.,psf_scale:0.}
     
+if keyword_set(import_pyuvdata_beam_filepath) then begin
+  tile_gain_fn='general_beam_setup_gain'
+  tile_init_fn='general_beam_setup_init'
+endif else begin
+  tile_gain_fn=instrument+'_beam_setup_gain' ;mwa_beam_setup_gain
+  tile_init_fn=instrument+'_beam_setup_init' ;mwa_beam_setup_init
+endelse
+
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data
 antenna=Call_function(tile_init_fn[0],obs,antenna_str,_Extra=extra) ;mwa_beam_setup_init
@@ -118,7 +97,6 @@ IF ~Keyword_Set(psf_dim) THEN $
     psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 ;reset psf_dim if cetain conditions met.
-if keyword_set(debug_dim) then psf_dim=28.
 if keyword_set(kernel_window) then psf_dim=18.
 
 IF Keyword_Set(psf_max_dim) THEN BEGIN
@@ -142,9 +120,10 @@ undefine, xvals_celestial, yvals_celestial
 valid_i=where(Finite(ra_arr),n_valid)
 ra_use=ra_arr[valid_i]
 dec_use=dec_arr[valid_i]
+
 if ~keyword_set(beam_per_baseline) then undefine, dec_arr, ra_arr
 
-; Split the apply astrometry step into mutiple loops if the image dimension is large to reduce 
+; Split the apply astrometry step into mutiple loops if the image dimension is large to reduce
 ; memory footprint
 if keyword_set(conserve_memory) then begin
   ; calculate bytes required
@@ -189,6 +168,9 @@ Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs
 za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
 az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
 undefine, ra_use, dec_use, alt_arr1, az_arr1
+;Get pixels which fall within the horizon
+horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
+antenna.pix_use=ptr_new(pix_use)
 
 if keyword_set(kernel_window) then begin
   print, 'Applying a modified gridding kernel. Beam is no longer instrumental. Do not use for calibration.'
@@ -220,11 +202,11 @@ antenna.pix_use=ptr_new(pix_use)
 if N_elements(instrument) GT 1 then begin
   for inst_i=0, N_elements(instrument)-1 do begin
     antenna_temp = pointer_copy(antenna)
-    antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna_temp,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+    antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna_temp,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,import_pyuvdata_beam_filepath=import_pyuvdata_beam_filepath,_Extra=extra) ;mwa_beam_setup_gain
     antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
     antenna[*inst_tile_ptr[inst_i]].antenna_type = instrument[inst_i] ;if more than one instrument, assign the correct antenna type for each subset for metadata purposes
   endfor  
-endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,import_pyuvdata_beam_filepath=import_pyuvdata_beam_filepath,_Extra=extra) ;mwa_beam_setup_gain
 
 ;Finally, update antenna structure to include the response of each antenna
 antenna=general_antenna_response(obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,_Extra=extra)
