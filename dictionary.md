@@ -31,7 +31,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **beam_nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (beam_nfreq_avg=1). However, this is computationally difficult for most machines. <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
-  -*Default*: 1 <br />
+  -*Default*: 16 !Q <br />
   -*eor_wrapper_defaults*: 16 <br />
 
 **beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
@@ -492,6 +492,9 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Flagging
 
+**channel_edge_flag_width**: number of channels to flag at the edge of each coarse band. Used only if instrument is set to "mwa" or "mwa32t". <br />
+ -*Default*: 4 for instrument="mwa32t", depends on the number of frequency channels for instrument="mwa" <br />
+
 **dead_dipole_list**: an array of 3 x # of dead dipoles, where column 0 is the tile name, column 1 is the polarization (0:x, 1:y), and column 2 is the dipole number. These dipoles are flagged, which greatly increases memory usage due to the creation of many separate tile beams. <br />
   -*Default*: not set <br />  
 
@@ -519,6 +522,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 (flag/don't flag) <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 1 <br />
+
+**no_frequency_flagging**: do not flag frequency channels. <br />
+  -*Turn off/on*: 0/1 (flag/don't flag) <br />
+  -*Default*: not set <br />
 
 **no_ps** : Do not save output images in postscript format. Only png and fits.<br />
   -*Default*: 1 <br />
