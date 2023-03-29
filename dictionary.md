@@ -77,7 +77,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: Not set (same as 0) <br />
 
-**transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. <br />
+**transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. If the obs structure is in the `metadata` directory and the beams structure is in the `beams` directory, you can instead provide the path to their parent directory (i.e. `/path/to/FHD/dir/fhd_nb_test`). <br />
   -*Default*: not set <br />
 
 
