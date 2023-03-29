@@ -21,7 +21,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   IF Keyword_set(transfer_psf) then begin
     ;
     ; Transfer a psf/obs structure from previous run or from a specified file
-    if file_test(transfer_psf) then begin
+    if file_test(transfer_psf, /REGULAR) then begin
       psf = getvar_savefile(transfer_psf,'psf')
       obs_restore = getvar_savefile(transfer_psf,'obs')
     endif else begin
