@@ -473,7 +473,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **silent**: do not print messages. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 probably <br />
+  -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 0 <br />
 
 **snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
