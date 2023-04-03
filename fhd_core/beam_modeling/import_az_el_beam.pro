@@ -17,14 +17,8 @@ fits_info,file_path_J_matrix,/silent,n_ext=n_ext
 n_ext+=1 ;n_ext starts counting AFTER the 0th extension, which it considers to be the main data unit, but we use that one too
 freq_arr_Jmat=Fltarr(n_ext)
 
-;Begin hacks for pyuvdata beam
-; CTYPE1: Azimuth in degrees, from 0 and increment of 1. Don't know origin: guessing clockwise from East
-; CTYPE2: Zenith angle in degrees, from 0 and increment of 1
-; CTYPE3: Frequency in Hz, from 50,000,000 and increment of 1,000,000
-; CTYPE4: "Feed index", X then Y
-; CTYPE5: Spectral window number. There is only one.
-; CTYPE6: Basis vector index. guessing these are theta then phi
-; CTYPE7: Complex, real then imaginary component. 
+; Read beam data from fits file
+; Format is set by pyuvdata conventions, see https://github.com/RadioAstronomySoftwareGroup/pyuvdata for details
 Jmat0=mrdfits(file_path_J_matrix,0,header,status=status,/silent)
 n_za_ang = sxpar(header,'naxis2')
 n_az_ang = sxpar(header,'naxis1')
@@ -65,7 +59,7 @@ ENDFOR
 
 zenith_i=where(theta_arr EQ 0,n_zenith)
 
-;horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
+horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
 ;horizon_mask=fltarr(psf_image_dim,psf_image_dim)+1
 ;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0  
 Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
