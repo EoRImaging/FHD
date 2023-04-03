@@ -55,7 +55,7 @@ ENDFOR
 
 phi_arr=270.-phi_arr ;change azimuth convention
 
-
+; Interpolate in frequency
 Jmat_interp=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
 FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO Jmat_interp[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(n_ang))
 FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR a_i=0L,n_ang-1 DO BEGIN
@@ -63,14 +63,11 @@ FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR a_i=0L,n_ang-1 DO BEGIN
     FOR freq_i=0L,nfreq_bin-1 DO (*Jmat_interp[p_i,p_j,freq_i])[a_i]=Jmat_single_ang[freq_i]
 ENDFOR
 
-xv_model=theta_arr*Sin(phi_arr*!DtoR)
-yv_model=theta_arr*Cos(phi_arr*!DtoR)
-
 zenith_i=where(theta_arr EQ 0,n_zenith)
 
-horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
-horizon_mask=fltarr(psf_image_dim,psf_image_dim)+1
-IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0  
+;horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
+;horizon_mask=fltarr(psf_image_dim,psf_image_dim)+1
+;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0  
 Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
 FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
     Jones_matrix[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(psf_image_dim,psf_image_dim))
@@ -80,18 +77,17 @@ angle_slice_i0=Uniq(phi_arr)
 n_ang_slice=N_Elements(angle_slice_i0)
 n_zen_slice=angle_slice_i0[0]+1
 az_ang_in=phi_arr[angle_slice_i0]
-zen_ang_in=theta_arr[0:angle_slice_i0[0]]
+;zen_ang_in=theta_arr[0:angle_slice_i0[0]]
 zen_ang_out=Findgen(Ceil(90./interp_res)+1)*interp_res
 az_ang_out=Findgen(Ceil(360./interp_res)+1)*interp_res+Round(Min(az_ang_in))
 n_zen_ang=N_Elements(zen_ang_out)
 n_az_ang=N_Elements(az_ang_out)
 
-xv_model=zen_ang_out*Sin(az_ang_out*!DtoR)
-yv_model=zen_ang_out*Cos(az_ang_out*!DtoR)
-
+; Convert from x, y to azimuth, zenith angle coordinates
 zen_ang_inst=Sqrt(xvals_instrument[pix_use]^2+yvals_instrument[pix_use]^2)
 az_ang_inst=Atan(yvals_instrument[pix_use],xvals_instrument[pix_use])*!Radeg+180.
 
+; Interpolate in azimulth and zenith angle
 FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO BEGIN
     Jmat_use=Reform(*Jmat_interp[p_i,p_j,freq_i],n_zen_slice,n_ang_slice)
     Expand,Jmat_use,n_zen_ang,n_az_ang,Jmat_single
