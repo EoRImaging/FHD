@@ -17,25 +17,6 @@ fits_info,file_path_J_matrix,/silent,n_ext=n_ext
 n_ext+=1 ;n_ext starts counting AFTER the 0th extension, which it considers to be the main data unit, but we use that one too
 freq_arr_Jmat=Fltarr(n_ext)
 
-;FOR ext_i=0,n_ext-1 DO BEGIN
-;    Jmat1=mrdfits(file_path_J_matrix,ext_i,header,status=status,/silent)
-;    IF ext_i EQ 0 THEN BEGIN
-;        n_ang=Float(sxpar(header,'NAXIS2'))
-;        Jmat_arr=Dcomplexarr(n_ext,n_ant_pol,n_ant_pol,n_ang)
-;        theta_arr=Dblarr(n_ext,n_ang)
-;        phi_arr=Dblarr(n_ext,n_ang)
-;    ENDIF
-;    theta_arr[ext_i,*]=Jmat1[0,*] ;zenith angle in degrees
-;    phi_arr[ext_i,*]=Jmat1[1,*] ;azimuth angle in degrees, clockwise from East
-;    FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO BEGIN
-;        Jmat_arr[ext_i,p_i,p_j,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
-;        if keyword_set(debug_flip) then Jmat_arr[ext_i,p_j,p_i,*]=Jmat1[2+p_i*2+p_j*4,*]+icomp*Jmat1[2+p_i*2+p_j*4+1,*]
-;    ENDFOR
-;    freq_arr_Jmat[ext_i]=Float(sxpar(header,'FREQ')) ;in Hz
-;ENDFOR
-;theta_arr=median(theta_arr,dimension=1) ; all actually the same across freq, so reduce dimension
-;phi_arr=median(phi_arr,dimension=1) ; all actually the same across freq, so reduce dimension
-
 ;Begin hacks for pyuvdata beam
 ; CTYPE1: Azimuth in degrees, from 0 and increment of 1. Don't know origin: guessing clockwise from East
 ; CTYPE2: Zenith angle in degrees, from 0 and increment of 1
