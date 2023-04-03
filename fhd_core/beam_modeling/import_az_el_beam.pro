@@ -59,9 +59,7 @@ ENDFOR
 
 zenith_i=where(theta_arr EQ 0,n_zenith)
 
-horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
-;horizon_mask=fltarr(psf_image_dim,psf_image_dim)+1
-;IF n_horizon_test GT 0 THEN horizon_mask[horizon_test]=0  
+horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix) 
 Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
 FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
     Jones_matrix[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(psf_image_dim,psf_image_dim))
