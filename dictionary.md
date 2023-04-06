@@ -77,7 +77,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: Not set (same as 0) <br />
 
-**transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. <br />
+**transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. If the obs structure is in the `metadata` directory and the beams structure is in the `beams` directory, you can instead provide the path to their parent directory (i.e. `/path/to/FHD/dir/fhd_nb_test`). <br />
   -*Default*: not set <br />
 
 
@@ -194,6 +194,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
+  
+**firstpass**: Sets defaults for a standard firstpass run: sets deconvolve=0 and mapfn_recalculate=0 (overwriting them if they were previously set to 1), if return_cal_visibilities or export_images are unset, then it sets them both to 1. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: Undefined (0) <br />
 
 **gaussian_source_models**:  uses SHAPE information provided in the sky catalog to build Gaussian models of extended sources. See Line et al. 2020 for more details on implementation. The models are only accurate to within ~10\%, and this is an ongoing issue (see Issue [\#211](https://github.com/EoRImaging/FHD/issues/211)). <br />
   -*Turn off/on*: 0/1 <br />
@@ -202,6 +206,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
    -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
+   
+**initial_calibration**: Path to an existing calibration file to use as the starting point in calibration. <br />
+  -*Default* : Unset <br />
 
 **max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
   -*Default*: equal to `max_baseline` <br />
@@ -225,6 +232,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: unset <br />
   -*eor_wrapper_defaults*: 1 <br />
+  
+**phase_fit_iter**: Set the iteration number to begin phase calibration. Before this, phase is held fixed and only amplitude is being calibrated. <br />
+  -*Default:* 4
 
 **return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. If n_pol = 4 (full pol mode), return_cal_visibilites must be set because the visibilites are required for calculating the mixing angle between Q and U. <br />
   -*Turn off/on*: 0/1 <br />
@@ -465,7 +475,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **silent**: do not print messages. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 probably <br />
+  -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 0 <br />
 
 **snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />
