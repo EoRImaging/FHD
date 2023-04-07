@@ -69,7 +69,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
                'Blackman-Harris', 'Blackman-Harris^2', 'Tukey' <br />
   -*Default*: Not set (not the same as setting to 0!) <br />
 
-**psf_dim**: Sets the PSF dimension in UV space in units of pixels. By default calculated based on max antenna size, max frequency, and kbinsize. Must be an even integer. Will be overwritten to 28 if debug_dim is set, and overwritten to 18 if kernel_window is set. <br />
+**psf_dim**: Sets the PSF dimension in UV space in units of pixels. By default calculated based on max antenna size, max frequency, and kbinsize (see `fhd_struct_init_antenna.pro` for calculation). Must be an even integer. Will be overwritten to 28 if debug_dim is set, and overwritten to 18 if kernel_window is set. <br />
   -*Default*: not set <br />
   
 **psf_max_dim**: Must be an even integer. Will decrease psf_dim to this value if it is calculated to be higher. <br />
