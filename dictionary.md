@@ -1,8 +1,6 @@
 # FHD Keyword Dictionary
 FHD uses keywords to create unique run-specific settings. This dictionary describes the purpose of each keyword, as well as their logic or applicable ranges. Some keywords can override others, which is also documentated. The FHD default is listed when applicable, which can be overriden by a top-level script.
 
-For example, a script to aggregate keywords for typical EoR processing runs is [eor_wrapper_defaults.pro](https://github.com/EoRImaging/pipeline_scripts/blob/master/FHD_IDL_wrappers/eor_wrapper_defaults.pro). It can be called by top-level wrappers to define keywords. Please see the [pipeline_scripts repo](https://github.com/EoRImaging/pipeline_scripts) for more information. Keywords set in eor_wrapper_defaults.pro are labeled below as eor_wrapper_defaults.
-
 This is a work in progress; please add keywords as you find them in alphabetical order with their corresponding definition. If there's a question about a definition or keyword, label it with !Q.
 
 ## Beam
@@ -266,9 +264,12 @@ WARNING! Options in this section may change without notice, and should never be 
 ### Beam debugging options
 
 **debug_beam_clip_grow**: Set to grow the UV beam mask by one full-resolution pixel in all directions, after applying the clip set by `beam_mask_threshold` <br />
-  -*Turn on*:: 1
+  -*Turn on*: 1
 
 **debug_clip_beam_mask**: Set to mask pixels in the UV beam model if the pixel would be masked for any super-resolution offset. <br />
+  -*Turn on*: 1
+  
+**debug_dim**: Set `psf_dim=28`. Will be overwritten if `kernel_window` is set. <br />
   -*Turn on*: 1
 
 **debug_flip**: Swap the X and Y beams (use the Y beam for X and the X beam for Y). <br />
