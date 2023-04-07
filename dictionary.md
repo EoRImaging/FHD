@@ -64,10 +64,16 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**kernel_window**: modify the gridding kernel by applying a window function to the primary beam according to a user choice. If set, but not a string and nonzero, assigns 'Blackman-Harris^2' <br />
+**kernel_window**: modify the gridding kernel by applying a window function to the primary beam according to a user choice. If set, but not a string and nonzero, assigns 'Blackman-Harris^2'. Forces the value of psf_dim to be 18. <br />
   -*Options*: 'Hann', 'Hamming', 'Blackman', 'Nutall', 'Blackman-Nutall',  <br />
                'Blackman-Harris', 'Blackman-Harris^2', 'Tukey' <br />
   -*Default*: Not set (not the same as setting to 0!) <br />
+
+**psf_dim**: Sets the PSF dimension in UV space in units of pixels. By default calculated based on max antenna size, max frequency, and kbinsize. Must be an even integer. Will be overwritten to 28 if debug_dim is set, and overwritten to 18 if kernel_window is set. <br />
+  -*Default*: not set <br />
+  
+**psf_max_dim**: Must be an even integer. Will decrease psf_dim to this value if it is calculated to be higher. <br />
+  -*Default*: not set <br />
 
 **psf_resolution**: super-resolution factor of the psf in UV space. Values greater than 1 increase the resolution of the gridding kernel. <br />
   -*Default*: 16 <br />
