@@ -1,6 +1,8 @@
 # FHD Keyword Dictionary
 FHD uses keywords to create unique run-specific settings. This dictionary describes the purpose of each keyword, as well as their logic or applicable ranges. Some keywords can override others, which is also documentated. The FHD default is listed when applicable, which can be overriden by a top-level script.
 
+For example, a script to aggregate keywords for typical EoR processing runs is [eor_wrapper_defaults.pro](https://github.com/EoRImaging/pipeline_scripts/blob/master/FHD_IDL_wrappers/eor_wrapper_defaults.pro). It can be called by top-level wrappers to define keywords. Please see the [pipeline_scripts repo](https://github.com/EoRImaging/pipeline_scripts) for more information. Keywords set in eor_wrapper_defaults.pro are labeled below as eor_wrapper_defaults.
+
 This is a work in progress; please add keywords as you find them in alphabetical order with their corresponding definition. If there's a question about a definition or keyword, label it with !Q.
 
 ## Beam
