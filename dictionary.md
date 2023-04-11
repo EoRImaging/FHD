@@ -270,6 +270,12 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Deconvolution
 
+**beam_max_threshold**: Completely mask all pixels below this beam threshold during deconvolution. <br />
+  -*Default*: 1E-4 <br />
+  
+**beam_threshold**: Fraction of beam max value below which to mask the beam for deconvolution. 0.05 is really as far down as you should go with our current MWA beam models! <br />
+  -*Default*: 0.05
+
 **deconvolve**: run fast holgraphic deconvolution. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 !Q <br />
