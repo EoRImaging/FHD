@@ -276,6 +276,9 @@ WARNING! Options in this section may change without notice, and should never be 
 **beam_threshold**: Fraction of beam max value below which to mask the beam for deconvolution. 0.05 is really as far down as you should go with our current MWA beam models. This keyword is also used for calibration and modeling, but will be overwritten by `beam_model_threshold` or `beam_cal_threshold` if provided, and will be overwritten to 0.01 for those steps if `allow_sidelobe_sources` is turned on. This keyword is also used for beam modeling in some simulation code. <br />
   -*Default*: 0.05
 
+**check_iter** Sets how frequently deconvolution will do a convergence check. <br />
+  -*Default*: 5 (check every 5th iteration)
+
 **deconvolve**: run fast holgraphic deconvolution. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 !Q <br />
@@ -294,12 +297,18 @@ WARNING! Options in this section may change without notice, and should never be 
 **deconvolution_horizon_threshold**: degrees above the horizon to exclude from deconvolution. <br />
   -*Default*: 10 <br />
 
+**deconvolution_over_resolution**: Sets the over-resolution to use for deconvolution. <br />
+  -*Default*: 2 <br />
+
 **filter_background**: filters out large-scale background fluctuations before deconvolving point sources. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
 
 **gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
   -*Default*: 0.15 <br />
+
+**galaxy_model_fit**: Option to subtract a model of diffuse emission from the galaxy. <br />
+  -*Default*: 0
 
 **independent_fit**: fit source components in 4 Stokes parameters I, Q, U, V instead of only Stokes I. <br />
   -*Turn off/on*: 0/1 <br />
@@ -338,6 +347,9 @@ WARNING! Options in this section may change without notice, and should never be 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: not set <br />
+  
+**transfer_mapfn**: Option to use an existing mapfn instead of calculating it. To use, provide a path to a mapfn file. <br />
+  -*Default*: Unset <br />
 
 ## EoR Bubble Simulations
 
