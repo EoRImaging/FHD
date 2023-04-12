@@ -307,7 +307,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
   -*Default*: 0.15 <br />
 
-**galaxy_model_fit**: Option to subtract a model of diffuse emission from the galaxy. <br />
+**galaxy_model_fit**: Option to subtract a model of diffuse emission from the galaxy. Uses `catalog_data/lambda_haslam408_dsds.fits`. <br />
   -*Default*: 0
 
 **independent_fit**: fit source components in 4 Stokes parameters I, Q, U, V instead of only Stokes I. <br />
