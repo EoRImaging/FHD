@@ -270,10 +270,25 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Deconvolution
 
+**beam_max_threshold**: Completely mask all pixels below this beam threshold during deconvolution. <br />
+  -*Default*: 1E-4 <br />
+  
+**beam_threshold**: Fraction of beam max value below which to mask the beam for deconvolution. 0.05 is really as far down as you should go with our current MWA beam models. This keyword is also used for calibration and modeling, but will be overwritten by `beam_model_threshold` or `beam_cal_threshold` if provided, and will be overwritten to 0.01 for those steps if `allow_sidelobe_sources` is turned on. This keyword is also used for beam modeling in some simulation code. <br />
+  -*Default*: 0.05
+
+**check_iter** Sets how frequently deconvolution will do a convergence check. <br />
+  -*Default*: 5 (check every 5th iteration)
+
 **deconvolve**: run fast holgraphic deconvolution. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 !Q <br />
   -*eor_wrapper_defaults*: 0 <br />
+
+**deconvolution_add_threshold**: Used in source detection to also fit additional components brighter than this threshold, written as percentage of max pixel flux. <br />
+  -*Default*: 0.8 <br />
+
+**deconvolution_convergence_sigma**: End iterative deconvolution if the S/N of the brightest component is below this threshold. <br />
+  -*Default*: 2 <br />
 
 **deconvolution_filter**: filter applied to images from deconvolution. <br />
   -*Default*: filter_uv_uniform <br />
@@ -282,6 +297,9 @@ WARNING! Options in this section may change without notice, and should never be 
 **deconvolution_horizon_threshold**: degrees above the horizon to exclude from deconvolution. <br />
   -*Default*: 10 <br />
 
+**deconvolution_over_resolution**: Sets the over-resolution to use for deconvolution. <br />
+  -*Default*: 2 <br />
+
 **filter_background**: filters out large-scale background fluctuations before deconvolving point sources. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
@@ -289,13 +307,22 @@ WARNING! Options in this section may change without notice, and should never be 
 **gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
   -*Default*: 0.15 <br />
 
+**galaxy_model_fit**: Option to subtract a model of diffuse emission from the galaxy. Uses `catalog_data/lambda_haslam408_dsds.fits`. <br />
+  -*Default*: 0
+
 **independent_fit**: fit source components in 4 Stokes parameters I, Q, U, V instead of only Stokes I. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
+**local_max_radius**: Used in source detection to require that sources be somewhat isolated in order to be detected. Sources must be brighter than all other pixels within this radius to be detected.
+  -*Default*: 3, but seems to be automatically overwritten in almost all use cases based on various beam width calculations. Use with caution.
+
 **max_deconvolution_components**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
   -*Default*: 100000 <br />
   -*eor_wrapper_defaults*: 20000 <br />
+  
+**max_iter**: Sets the maxiumum iterations deconvolution can do. <br />
+  *Default*: Square root of `max_deconvolution_components` <br />
 
 **reject_pol_sources**: rejects source candidates that have a high Stokes Q to Stokes I ratio.<br />
   -*Needs updating*: not used in code! <br />
@@ -320,6 +347,9 @@ WARNING! Options in this section may change without notice, and should never be 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: not set <br />
+  
+**transfer_mapfn**: Option to use an existing mapfn instead of calculating it. To use, provide a path to a mapfn file. <br />
+  -*Default*: Unset <br />
 
 ## EoR Bubble Simulations
 
