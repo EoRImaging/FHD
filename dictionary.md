@@ -222,7 +222,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*eor_wrapper_defaults*: 50 <br />
 
 **model_transfer**: filepath to the FHD directory with model visbilities of the same obsid to be used instead of recalculating (i.e. `/path/to/the/FHD/dir/fhd_nb_test/cal_prerun/vis_data`). This is currently only an option for when the calibration model visibilities are the same as the subtraction model visibilities. The model visibilities can't have been flagged (see `cal_stop` on how to generate unflagged model visbilities). <br />
-  -*Default*: 50 <br />
+
+**model_uv_transfer**: filepath to the generated non-instrumental model uv-plane of the same obsid to be used instead of recalculating (i.e. `'<path>/<to>/<FHDdir>/cal_prerun/' + obs_id + '_model_uv_arr.sav'`). This is useful for creating model visibilities with different beam kernels using the same set of sources, and will bypass all source list generation, source DFTing, and source images.  Non-instrumental model uv-planes are only saved when `cal_stop` is set. <br />
 
 **n_avg**: number of frequencies to average over to smooth the frequency band. <br />
   -*Default*: !Q <br />
