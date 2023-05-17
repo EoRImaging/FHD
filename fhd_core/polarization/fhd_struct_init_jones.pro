@@ -52,7 +52,7 @@ apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad, /ignore_refrac
 
 obs_temp = fhd_struct_update_obs(obs, beam_nfreq_avg=obs.n_freq) ; Use only one average Jones matrix, not one per frequency
 antenna=fhd_struct_init_antenna(obs_temp,beam_model_version=beam_model_version,use_psf_resolution=1.,$
-    psf_dim=obs.dimension,psf_intermediate_res=1.,psf_image_resolution=1.,timing=t_ant,_Extra=extra)
+    psf_dim=obs.dimension,psf_intermediate_res=1.,psf_image_resolution=1.,timing=t_ant,import_pyuvdata_beam_filepath=import_pyuvdata_beam_filepath)
 Jones=rotate_jones_matrix(obs, antenna[0])
 
 ; Calculate the normalization
