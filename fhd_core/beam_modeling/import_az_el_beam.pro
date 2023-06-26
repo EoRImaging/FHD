@@ -62,7 +62,7 @@ zenith_i=where(theta_arr EQ 0,n_zenith)
 horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix) 
 Jones_matrix=Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin)
 FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO $
-    Jones_matrix[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(n_pix))
+    Jones_matrix[p_i,p_j,freq_i]=Ptr_new(Dcomplexarr(psf_image_dim,psf_image_dim))
     
 interp_res=obs.degpix
 angle_slice_i0=Uniq(phi_arr)
@@ -83,8 +83,10 @@ az_ang_inst=Atan(yvals_instrument[pix_use],xvals_instrument[pix_use])*!Radeg+180
 FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO BEGIN
     Jmat_use=Reform(*Jmat_interp[p_i,p_j,freq_i],n_zen_slice,n_ang_slice)
     Expand,Jmat_use,n_zen_ang,n_az_ang,Jmat_single
-    (*Jones_matrix[p_i,p_j,freq_i])=Interpolate(Jmat_single,zen_ang_inst/interp_res,az_ang_inst/interp_res,cubic=-0.5)
+    (*Jones_matrix[p_i,p_j,freq_i])[pix_use]=Interpolate(Jmat_single,zen_ang_inst/interp_res,az_ang_inst/interp_res,cubic=-0.5)
+    debug_point=1
 ENDFOR
+debug_point=1
 
 RETURN, Jones_matrix
 END
