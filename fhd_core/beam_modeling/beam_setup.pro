@@ -120,7 +120,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
 
   ant_A_list=(*obs.baseline_info).tile_A[0:nbaselines-1]
   ant_B_list=(*obs.baseline_info).tile_B[0:nbaselines-1]
-  baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
+  baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.>(2.*n_tiles)
   bi_list=ant_B_list+ant_A_list*baseline_mod
   bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
