@@ -136,8 +136,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     group2=antenna.group_id[ant_pol2,*]
 
     ;Histogram group IDs, get reverse indicies, and calculate number of unique beams
-    hgroup1=histogram(group1,min=0,/binsize,reverse=gri1)
-    hgroup2=histogram(group2,min=0,/binsize,reverse=gri2)
+    hgroup1=histogram(group1,min=0,/binsize,reverse=gri1, /L64)
+    hgroup2=histogram(group2,min=0,/binsize,reverse=gri2, /L64)
     ng1=N_Elements(hgroup1)
     ng2=N_Elements(hgroup2)
     
