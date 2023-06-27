@@ -42,7 +42,7 @@ FOR freq_i=0,n_freq-1 DO BEGIN
         FOR b_i=0,n_basis-1 DO BEGIN
             Jmat1 = Reform(Jmat0[*, *, freq_i, f_i, 0, b_i, 0] + icomp*Jmat0[*, *, freq_i, f_i, 0, b_i, 1])
             Jmat1 = Transpose(Jmat1)
-            Jmat_arr[freq_i,f_i,b_i,*] = Reform(Jmat1, n_ang)
+            Jmat_arr[freq_i,b_i,f_i,*] = Reform(Jmat1, n_ang)
         ENDFOR
     ENDFOR
 ENDFOR
