@@ -43,6 +43,7 @@ FOR freq_i=0,n_freq-1 DO BEGIN
             Jmat1 = Reform(Jmat0[*, *, freq_i, f_i, 0, b_i, 0] + icomp*Jmat0[*, *, freq_i, f_i, 0, b_i, 1])
             Jmat1 = Transpose(Jmat1)
             Jmat_arr[freq_i,b_i,f_i,*] = Reform(Jmat1, n_ang)
+            if b_i eq 1 then Jmat_arr[freq_i,b_i,f_i,*] *= -1  ;flip to align with MWA beam conventions
         ENDFOR
     ENDFOR
 ENDFOR
