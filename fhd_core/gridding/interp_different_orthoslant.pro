@@ -10,8 +10,7 @@ for p_ind = 0, n_pol - 1 do begin
         orthoslant_sky = Real_part(fft_shift(FFT(fft_shift(*uv_arr[p_ind, f_ind]),double=1)))
         new_orthoslant_sky = interpolate(orthoslant_sky, x_new_old_pts, y_new_old_pts)
 
-        new_uv_arr[p_ind, f_ind] = Ptr_new(Fltarr(new_obs.dimension, new_obs.elements))
-        *new_uv_arr[p_ind, f_ind] = fft_shift(FFT(fft_shift(new_orthoslant_sky),/inverse))
+        new_uv_arr[p_ind, f_ind] = Ptr_new(fft_shift(FFT(fft_shift(new_orthoslant_sky),/inverse)))
     endfor
 endfor
 
