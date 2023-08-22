@@ -37,9 +37,9 @@ pro interp_different_orthoslant, folder_name, obs_id, ref_obs_id
         ref_obs_id = number_formatter(ref_obs_id)
     endif
 
-    ref_even_file_list = file_search(folder_name + path_sep() + ref_obs_id + '_even*_uvf.sav',
+    ref_even_file_list = file_search(folder_name + path_sep() + ref_obs_id + '_even*_uvf.sav', $
         count = n_even)
-    ref_odd_file_list = file_search(folder_name + path_sep() + ref_obs_id + '_odd*_uvf.sav',
+    ref_odd_file_list = file_search(folder_name + path_sep() + ref_obs_id + '_odd*_uvf.sav', $
         count = n_odd)
     ref_file_list = [ref_even_file_list, ref_odd_file_list]
     if n_even ne 1 or n_odd ne 1 then begin
@@ -103,7 +103,7 @@ pro interp_different_orthoslant, folder_name, obs_id, ref_obs_id
         eo_types = ['even', 'odd']
         for eo_ind = 0, n_elements(eo_types) - 1 do begin
             eo_pos = strpos(file_base, eo_types[eo_ind])
-            if eo_pos gt -1 do begin
+            if eo_pos gt -1 then begin
                 new_file_base = strmid(file_base, 0, eo_pos) + 'interp' + strmid(file_base, eo_pos + strlen(eo_types[eo_ind]))
             endif
         endfor
