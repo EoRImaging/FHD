@@ -7,7 +7,8 @@
 FUNCTION fhd_struct_init_psf,beam_ptr=beam_ptr,complex_flag=complex_flag,$
     xvals=xvals,yvals=yvals,fbin_i=fbin_i,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     n_pol=n_pol,n_freq=n_freq,freq_cen=freq_cen,pol_norm=pol_norm,freq_norm=freq_norm,group_arr=group_arr,$
-    interpolate_kernel=interpolate_kernel,beam_mask_threshold=beam_mask_threshold,$
+    interpolate_kernel=interpolate_kernel,beam_mask_threshold=beam_mask_threshold,beam_model_version=beam_model_version,$
+    import_pyuvdata_beam_filepath=import_pyuvdata_beam_filepath,$
     image_power_beam_arr=image_power_beam_arr,ra_arr=ra_arr,dec_arr=dec_arr,$
     psf_image_resolution=psf_image_resolution,psf_image_dim=psf_image_dim,$
     beam_gaussian_params_arr=beam_gaussian_params_arr,pix_horizon=pix_horizon 
@@ -41,6 +42,8 @@ struct={beam_ptr:beam_ptr,xvals:xvals,yvals:yvals,pnorm:pol_norm,fnorm:freq_norm
     fbin_i:fbin_i,resolution:psf_resolution,dim:psf_dim,complex_flag:complex_flag,n_pol:n_pol,$
     n_freq:n_freq,freq:freq_cen,interpolate_kernel:interpolate_kernel,$
     beam_mask_threshold:beam_mask_threshold,image_info:Ptr_new(arr),$
+    import_pyuvdata_beam_filepath:import_pyuvdata_beam_filepath,$
+    beam_model_version:beam_model_version,$
     beam_gaussian_params:beam_gaussian_params_arr,pix_horizon:pix_horizon}
 
 RETURN,struct
