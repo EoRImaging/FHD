@@ -1,94 +1,119 @@
-function generate_interp_uv, old_obs, new_obs, uv_arr, x_new_old_pts, y_new_old_pts
+function generate_interp_uv, old_obs, new_obs, uv_arr, x_ref_old_pts, y_ref_old_pts
 
-uv_arr_dims = size(uv_arr, /dimension)
-n_pol = uv_arr_dims[0]
-n_freq = uv_arr_dims[1]
+    uv_arr_dims = size(uv_arr, /dimension)
+    n_pol = uv_arr_dims[0]
+    n_freq = uv_arr_dims[1]
 
-new_uv_arr = Ptrarr(n_pol, n_freq)
-for p_ind = 0, n_pol - 1 do begin
-    for f_ind = 0, n_freq - 1 do begin
-        orthoslant_sky = Real_part(fft_shift(FFT(fft_shift(*uv_arr[p_ind, f_ind]),double=1)))
-        new_orthoslant_sky = interpolate(orthoslant_sky, x_new_old_pts, y_new_old_pts)
+    new_uv_arr = Ptrarr(n_pol, n_freq)
+    for p_ind = 0, n_pol - 1 do begin
+        for f_ind = 0, n_freq - 1 do begin
+            orthoslant_sky = Real_part(fft_shift(FFT(fft_shift(*uv_arr[p_ind, f_ind]),double=1)))
+            new_orthoslant_sky = interpolate(orthoslant_sky, x_ref_old_pts, y_ref_old_pts)
 
-        new_uv_arr[p_ind, f_ind] = Ptr_new(fft_shift(FFT(fft_shift(new_orthoslant_sky),/inverse)))
+            new_uv_arr[p_ind, f_ind] = Ptr_new(fft_shift(FFT(fft_shift(new_orthoslant_sky),/inverse)))
+        endfor
     endfor
-endfor
 
-return, new_uv_arr
+    return, new_uv_arr
 
 end
 
-pro interp_different_orthoslant, input_gridded_uvf_file, new_obs
+pro interp_different_orthoslant, folder_name, obs_id, ref_obs_id
 
-if size(new_obs, /type) eq 7 then begin
-    ;; this is a file with an obs structure in it.
-    void = getvar_savefile(new_obs, names=varnames)
-    if n_elements (varnames) eq 0 then begin
-        message, "No variables could be extracted from file: " + new_obs
+    if size(obs_id, /type) ne 7 then begin
+        obs_id = number_formatter(obs_id)
     endif
-    whobs = where(stregex(varnames, "obs", /fold_case) eq 0, nobs)
-    if nobs eq 1 then begin
-        new_obs_use = getvar_savefile(new_obs, varnames[whobs[0]])
-    endif else begin
-        if nobs eq 0 then begin
-            message, "File " + new_obs + " did not contain a variable with 'obs' in the name."
+
+    uvf_even_file_list = file_search(folder_name + path_sep() + obs_id + '_even*_uvf.sav', $
+        count = n_even)
+    uvf_odd_file_list = file_search(folder_name + path_sep() + obs_id + '_odd*_uvf.sav', $
+        count = n_odd)
+    uvf_file_list = [uvf_even_file_list, uvf_odd_file_list]
+    if n_even ne 1 or n_odd ne 1 then begin
+        message, "Did not find exactly one even and one odd file for this obsid"
+    endif
+
+    if size(ref_obs_id, /type) ne 7 then begin
+        ref_obs_id = number_formatter(ref_obs_id)
+    endif
+
+    ref_even_file_list = file_search(folder_name + path_sep() + ref_obs_id + '_even*_uvf.sav',
+        count = n_even)
+    ref_odd_file_list = file_search(folder_name + path_sep() + ref_obs_id + '_odd*_uvf.sav',
+        count = n_odd)
+    ref_file_list = [ref_even_file_list, ref_odd_file_list]
+    if n_even ne 1 or n_odd ne 1 then begin
+        message, "Did not find exactly one even and one odd file for ref_obs_id"
+    endif
+
+    for file_id = 0, 2 do begin
+
+        void = getvar_savefile(ref_file_list[file_id], names=varnames)
+        if n_elements (varnames) eq 0 then begin
+            message, "No variables could be extracted from file: " + ref_file_list[file_id]
+        endif
+        whobs = where(stregex(varnames, "obs", /fold_case) eq 0, nobs)
+        if nobs eq 1 then begin
+            ref_obs = getvar_savefile(ref_file_list[file_id], varnames[whobs[0]])
         endif else begin
-            message, "File " + new_obs + " contained multiple variables with 'obs' in the name."
+            if nobs eq 0 then begin
+                message, "File " + ref_file_list[file_id] + " did not contain a variable with 'obs' in the name."
+            endif else begin
+                message, "File " + ref_file_list[file_id] + " contained multiple variables with 'obs' in the name."
+            endelse
         endelse
-    endelse
-endif else begin
-    if size(new_obs, /type) ne 8 then begin
-        message, "Either a string with a file name containg the new obs structure or an obs structure must be passed as the new_obs variable."
-    endif
-    new_obs_use = new_obs
-endelse
 
-void = getvar_savefile(input_gridded_uvf_file, names=varnames)
-if n_elements (varnames) eq 0 then begin
-    message, "No variables could be extracted from file: " + input_gridded_uvf_file
-endif
+        void = getvar_savefile(uvf_file_list[file_id], names=varnames)
+        if n_elements (varnames) eq 0 then begin
+            message, "No variables could be extracted from file: " + uvf_file_list[file_id]
+        endif
 
-whobs = where(stregex(varnames, "obs", /fold_case) eq 0, nobs)
-if nobs eq 1 then begin
-    old_obs = getvar_savefile(input_gridded_uvf_file, varnames[whobs[0]])
-endif else begin
-    if nobs eq 0 then begin
-        message, "File " + input_gridded_uvf_file + " did not contain a variable with 'obs' in the name."
-    endif else begin
-        message, "File " + input_gridded_uvf_file + " contained multiple variables with 'obs' in the name."
-    endelse
-endelse
+        whobs = where(stregex(varnames, "obs", /fold_case) eq 0, nobs)
+        if nobs eq 1 then begin
+            old_obs = getvar_savefile(uvf_file_list[file_id], varnames[whobs[0]])
+        endif else begin
+            if nobs eq 0 then begin
+                message, "File " + uvf_file_list[file_id] + " did not contain a variable with 'obs' in the name."
+            endif else begin
+                message, "File " + uvf_file_list[file_id] + " contained multiple variables with 'obs' in the name."
+            endelse
+        endelse
 
-apply_astrometry, new_obs_use, x_arr=meshgrid(new_obs_use.dimension, new_obs_use.elements, 1), $
-    y_arr=meshgrid(new_obs_use.dimension, new_obs_use.elements, 2), ra_arr=new_ra_arr, dec_arr=new_dec_arr, /xy2ad
+        apply_astrometry, old_obs, x_arr=meshgrid(old_obs.dimension, old_obs.elements, 1), $
+            y_arr=meshgrid(old_obs.dimension, old_obs.elements, 2), ra_arr=old_ra_arr, dec_arr=old_dec_arr, /xy2ad
 
-apply_astrometry, old_obs, x_arr=meshgrid(old_obs.dimension, old_obs.elements, 1), $
-    y_arr=meshgrid(old_obs.dimension, old_obs.elements, 2), ra_arr=old_ra_arr, dec_arr=old_dec_arr, /xy2ad
+        apply_astrometry, ref_obs, ra_arr=old_ra_arr, dec_arr=old_dec_arr, x_arr=x_ref_old_pts, y_arr=y_ref_old_pts, /ad2xy
 
-apply_astrometry, new_obs_use, ra_arr=old_ra_arr, dec_arr=old_dec_arr, x_arr=x_new_old_pts, y_arr=y_new_old_pts, /ad2xy
+        restore, uvf_file_list[file_id]
+        obs_out = ref_obs
 
-restore, input_gridded_uvf_file
-obs_out = new_obs_use
+        new_dirty_uv_arr = generate_interp_uv(old_obs, ref_obs, dirty_uv_arr, x_ref_old_pts, y_ref_old_pts)
+        dirty_uv_arr = new_dirty_uv_arr
+        undefine_fhd, new_dirty_uv_arr
 
-new_dirty_uv_arr = generate_interp_uv(old_obs, new_obs_use, dirty_uv_arr, x_new_old_pts, y_new_old_pts)
-dirty_uv_arr = new_dirty_uv_arr
-undefine_fhd, new_dirty_uv_arr
+        new_model_uv_arr = generate_interp_uv(old_obs, ref_obs, model_uv_arr, x_ref_old_pts, y_ref_old_pts)
+        model_uv_arr = new_model_uv_arr
+        undefine_fhd, new_model_uv_arr
 
-new_model_uv_arr = generate_interp_uv(old_obs, new_obs_use, model_uv_arr, x_new_old_pts, y_new_old_pts)
-model_uv_arr = new_model_uv_arr
-undefine_fhd, new_model_uv_arr
+        new_weights_uv_arr = generate_interp_uv(old_obs, ref_obs, weights_uv_arr, x_ref_old_pts, y_ref_old_pts)
+        weights_uv_arr = new_weights_uv_arr
+        undefine_fhd, new_weights_uv_arr
 
-new_weights_uv_arr = generate_interp_uv(old_obs, new_obs_use, weights_uv_arr, x_new_old_pts, y_new_old_pts)
-weights_uv_arr = new_weights_uv_arr
-undefine_fhd, new_weights_uv_arr
+        new_variance_uv_arr = generate_interp_uv(old_obs, ref_obs, variance_uv_arr, x_ref_old_pts, y_ref_old_pts)
+        variance_uv_arr = new_variance_uv_arr
+        undefine_fhd, new_variance_uv_arr
 
-new_variance_uv_arr = generate_interp_uv(old_obs, new_obs_use, variance_uv_arr, x_new_old_pts, y_new_old_pts)
-variance_uv_arr = new_variance_uv_arr
-undefine_fhd, new_variance_uv_arr
+        file_base = cgRootName(uvf_file_list[file_id], directory=filedir, extension=exten)
+        ;; want to add '_interp' after the obsid, before the even/odd
+        eo_types = ['even', 'odd']
+        for eo_ind = 0, n_elements(eo_types) do begin
+            eo_pos = strpos(file_base, eo_types[eo_ind])
+            if eo_pos gt -1 do begin
+                new_file_base = strmid(file_base, 0, eo_pos) + 'interp' + strmid(file_base, eo_pos + strlen(eo_types[eo_ind]))
+            endif
+        endfor
+        output_file = filedir + file_base + "." + exten
 
-file_base = cgRootName(input_gridded_uvf_file, directory=filedir, extension=exten)
-output_file = filedir + file_base + "_interp." + exten
-
-save, obs_out, dirty_uv_arr, model_uv_arr, weights_uv_arr, variance_uv_arr, filename=output_file
-
+        save, obs_out, dirty_uv_arr, model_uv_arr, weights_uv_arr, variance_uv_arr, filename=output_file
+    endfor
 end
