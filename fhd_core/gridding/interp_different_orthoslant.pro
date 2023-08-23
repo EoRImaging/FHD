@@ -107,7 +107,7 @@ pro interp_different_orthoslant, folder_name, obs_id, ref_obs_id
                 new_file_base = strmid(file_base, 0, eo_pos) + 'interp' + strmid(file_base, eo_pos + strlen(eo_types[eo_ind]))
             endif
         endfor
-        output_file = filedir + file_base + "." + exten
+        output_file = filedir + new_file_base + "." + exten
 
         save, obs_out, dirty_uv_arr, model_uv_arr, weights_uv_arr, variance_uv_arr, filename=output_file
     endfor
