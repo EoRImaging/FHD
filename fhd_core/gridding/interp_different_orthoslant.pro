@@ -84,29 +84,24 @@ pro interp_different_orthoslant, folder_name, obs_id, ref_obs_id
 
         apply_astrometry, ref_obs, ra_arr=old_ra_arr, dec_arr=old_dec_arr, x_arr=x_ref_old_pts, y_arr=y_ref_old_pts, /ad2xy
 
-        restore, uvf_file_list[file_id]
         obs_out = ref_obs
 
-        new_dirty_uv_arr = generate_interp_uv(old_obs, ref_obs, dirty_uv_arr, x_ref_old_pts, y_ref_old_pts)
-        dirty_uv_arr = new_dirty_uv_arr
-        undefine_fhd, new_dirty_uv_arr
+        old_dirty_uv_arr = getvar_savefile(uvf_file_list[file_id], "dirty_uv_arr")
+        dirty_uv_arr = generate_interp_uv(old_obs, ref_obs, old_dirty_uv_arr, x_ref_old_pts, y_ref_old_pts)
 
-        new_model_uv_arr = generate_interp_uv(old_obs, ref_obs, model_uv_arr, x_ref_old_pts, y_ref_old_pts)
-        model_uv_arr = new_model_uv_arr
-        undefine_fhd, new_model_uv_arr
+        old_model_uv_arr = getvar_savefile(uvf_file_list[file_id], "model_uv_arr")
+        model_uv_arr = generate_interp_uv(old_obs, ref_obs, old_model_uv_arr, x_ref_old_pts, y_ref_old_pts)
 
-        new_weights_uv_arr = generate_interp_uv(old_obs, ref_obs, weights_uv_arr, x_ref_old_pts, y_ref_old_pts)
-        weights_uv_arr = new_weights_uv_arr
-        undefine_fhd, new_weights_uv_arr
+        old_weights_uv_arr = getvar_savefile(uvf_file_list[file_id], "weights_uv_arr")
+        weights_uv_arr = generate_interp_uv(old_obs, ref_obs, old_weights_uv_arr, x_ref_old_pts, y_ref_old_pts)
 
-        new_variance_uv_arr = generate_interp_uv(old_obs, ref_obs, variance_uv_arr, x_ref_old_pts, y_ref_old_pts)
-        variance_uv_arr = new_variance_uv_arr
-        undefine_fhd, new_variance_uv_arr
+        old_variance_uv_arr = getvar_savefile(uvf_file_list[file_id], "variance_uv_arr")
+        variance_uv_arr = generate_interp_uv(old_obs, ref_obs, old_variance_uv_arr, x_ref_old_pts, y_ref_old_pts)
 
         file_base = cgRootName(uvf_file_list[file_id], directory=filedir, extension=exten)
         ;; want to add '_interp' after the obsid, before the even/odd
         eo_types = ['even', 'odd']
-        for eo_ind = 0, n_elements(eo_types) do begin
+        for eo_ind = 0, n_elements(eo_types) - 1 do begin
             eo_pos = strpos(file_base, eo_types[eo_ind])
             if eo_pos gt -1 do begin
                 new_file_base = strmid(file_base, 0, eo_pos) + 'interp' + strmid(file_base, eo_pos + strlen(eo_types[eo_ind]))
