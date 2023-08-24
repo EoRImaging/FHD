@@ -109,6 +109,6 @@ pro interp_different_orthoslant, folder_name, obs_id, ref_obs_id
         endfor
         output_file = filedir + new_file_base + "." + exten
 
-        save, obs_out, dirty_uv_arr, model_uv_arr, weights_uv_arr, variance_uv_arr, filename=output_file
+        save, obs_out, dirty_uv_arr, model_uv_arr, weights_uv_arr, variance_uv_arr, filename=output_file, /compress
     endfor
 end
