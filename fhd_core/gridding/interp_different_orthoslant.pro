@@ -46,7 +46,7 @@ pro interp_different_orthoslant, folder_name, obs_id, ref_obs_id
         message, "Did not find exactly one even and one odd file for ref_obs_id"
     endif
 
-    for file_id = 0, 2 do begin
+    for file_id = 0, 1 do begin
 
         void = getvar_savefile(ref_file_list[file_id], names=varnames)
         if n_elements (varnames) eq 0 then begin
@@ -104,7 +104,7 @@ pro interp_different_orthoslant, folder_name, obs_id, ref_obs_id
         for eo_ind = 0, n_elements(eo_types) - 1 do begin
             eo_pos = strpos(file_base, eo_types[eo_ind])
             if eo_pos gt -1 then begin
-                new_file_base = strmid(file_base, 0, eo_pos) + 'interp' + strmid(file_base, eo_pos + strlen(eo_types[eo_ind]))
+                new_file_base = strmid(file_base, 0, eo_pos) + 'interp_' + strmid(file_base, eo_pos)
             endif
         endfor
         output_file = filedir + new_file_base + "." + exten
