@@ -19,17 +19,5 @@ CASE coordsys OF
     ELSE: message,"Unsupported COORDSYS found in pyuvdata file!"
 ENDCASE
 
-for pol1=0,(size(Jones_matrix))[1]-1 do begin
-  for pol2=0,(size(Jones_matrix))[2]-1 do begin
-    if (size(Jones_matrix))[0] gt 2 then begin
-      for ind=0,(size(Jones_matrix))[3]-1 do begin
-        *Jones_matrix[pol1, pol2, ind] = (*Jones_matrix[pol1, pol2, ind])[pix_use]
-      endfor
-    endif else begin
-      *Jones_matrix[pol1, pol2] = (*Jones_matrix[pol1, pol2])[pix_use]
-    endelse
-  endfor
-endfor
-
 RETURN, Jones_matrix
 END
