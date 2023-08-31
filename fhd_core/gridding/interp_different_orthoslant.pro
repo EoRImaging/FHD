@@ -8,10 +8,10 @@ function generate_interp_uv, old_obs, new_obs, uv_arr, x_ref_old_pts, y_ref_old_
     new_uv_arr = Ptrarr(n_pol, n_freq)
     for p_ind = 0, n_pol - 1 do begin
         for f_ind = 0, n_freq - 1 do begin
-            orthoslant_sky = Real_part(fft_shift(FFT(fft_shift(*uv_arr[p_ind, f_ind]),double=1)))
-            new_orthoslant_sky = interpolate(orthoslant_sky, x_ref_old_pts, y_ref_old_pts, cubic=cubic)
+            orthoslant_sky = Real_part(fft_shift(FFT(fft_shift(*uv_arr[p_ind, f_ind]), /double)))
+            new_orthoslant_sky = interpolate(orthoslant_sky, x_ref_old_pts, y_ref_old_pts, cubic=cubic, /double)
 
-            new_uv_arr[p_ind, f_ind] = Ptr_new(fft_shift(FFT(fft_shift(new_orthoslant_sky),/inverse)))
+            new_uv_arr[p_ind, f_ind] = Ptr_new(fft_shift(FFT(fft_shift(new_orthoslant_sky), /double, /inverse)))
         endfor
     endfor
 
