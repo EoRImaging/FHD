@@ -147,9 +147,17 @@ IF data_flag LE 0 THEN BEGIN
           fhd_log_settings,file_path_fhd,obs=obs,layout=layout,psf=psf,cal=cal,antenna=antenna,skymodel=skymodel,cmd_args=cmd_args,/overwrite,sub_dir='metadata'
           fhd_save_io,status_str,params,var='params',/compress,file_path_fhd=file_path_fhd,_Extra=extra
           fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd,_Extra=extra ;need beam_integral for PS
+	  fhd_save_io,status_str,layout,var='layout',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+	  IF Keyword_Set(flag_visibilities) THEN BEGIN
+            print,'Flagging anomalous data'
+            vis_flag,vis_arr,vis_weights,obs,psf,params,_Extra=extra
+            fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+          ENDIF ELSE $ ;saved weights are needed for some later routines, so save them even if no additional flagging is done
+            fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
           IF Keyword_Set(save_visibilities) THEN BEGIN
             t_save0=Systime(1)
             vis_export,obs,status_str,vis_arr,vis_weights,file_path_fhd=file_path_fhd,/compress
+	    vis_export,obs,status_str,vis_model_arr,vis_weights,file_path_fhd=file_path_fhd,/compress,/model
             IF Keyword_Set(model_flag) THEN vis_export,obs,status_str,vis_model_arr,vis_weights,file_path_fhd=file_path_fhd,/compress,/model
             t_save=Systime(1)-t_save0
             IF ~Keyword_Set(silent) THEN print,'Visibility save time: ',t_save
