@@ -3,18 +3,23 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     file_path_fhd=file_path_fhd,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
     obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, uvf_name=uvf_name,bi_use=bi_use,_Extra=extra
-  ext='.UVFITS'
+
   t0=Systime(1)
   
   IF N_Elements(silent) EQ 0 THEN silent=0
   pol_names=obs.pol_names
-  vis_filepath=file_path_fhd+'_vis_'
   
   if keyword_set(save_uvf) then begin
-    if n_elements(uvf_name) ne 0 then uvf_filepath = file_path_fhd+'_'+uvf_name+'_gridded_uvf.sav' $
-    else uvf_filepath = file_path_fhd+'_gridded_uvf.sav'
+    folder_use = file_dirname(file_path_fhd)
+    folder_use += path_sep() + "grid_data" + path_sep()
+    basename = file_basename(file_path_fhd)
+    if n_elements(uvf_name) ne 0 then begin
+      uvf_filepath = folder_use + basename + '_' + uvf_name + '_gridded_uvf_' + pol_names + '.sav'
+    endif else begin
+      uvf_filepath = folder_use + basename + '_gridded_uvf_' + pol_names + '.sav'
+    endelse
   endif
-  
+
   n_freq=obs.n_freq
   n_pol=obs.n_pol
   dimension=obs.dimension
@@ -71,13 +76,6 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
   ENDIF ELSE obs_out=obs
   IF N_Elements(psf_out) EQ 0 THEN psf_out=psf
   
-  if keyword_set(save_uvf) then begin
-    dirty_uv_arr=Ptrarr(n_pol,nf,/allocate)
-    weights_uv_arr=Ptrarr(n_pol,nf,/allocate)
-    variance_uv_arr=Ptrarr(n_pol,nf,/allocate)
-    IF Keyword_Set(model_flag) THEN model_uv_arr=Ptrarr(n_pol,nf,/allocate)
-  endif
-  
   dirty_arr=Ptrarr(n_pol,nf,/allocate)
   weights_arr=Ptrarr(n_pol,nf,/allocate)
   variance_arr=Ptrarr(n_pol,nf,/allocate)
@@ -97,6 +95,14 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     model_ptr=vis_model_arr[pol_i]
     freq_use=(*obs_out.baseline_info).freq_use
     n_vis_use=0.
+
+    if keyword_set(save_uvf) then begin
+      dirty_uv_arr=Complexarr(dimension, dimension, nf)
+      weights_uv_arr=Complexarr(dimension, dimension, nf)
+      variance_uv_arr=Complexarr(dimension, dimension, nf)
+      IF Keyword_Set(model_flag) THEN model_uv_arr=Complexarr(dimension, dimension, nf)
+    endif
+
     FOR fi=0L,nf-1 DO BEGIN
       fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
       variance_holo=1 ;initialize
@@ -116,12 +122,12 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       vis_n_arr[pol_i,fi]=n_vis
       
       if keyword_set(save_uvf) then begin
-        *dirty_uv_arr[pol_i,fi]=dirty_uv*n_vis
-        *weights_uv_arr[pol_i,fi]=weights_holo*rephase_use*n_vis
-        *variance_uv_arr[pol_i,fi]=variance_holo*rephase_use*n_vis
-        IF Keyword_Set(model_flag) THEN *model_uv_arr[pol_i,fi]=model_return*n_vis
+        dirty_uv_arr[*, *, fi]=dirty_uv*n_vis
+        weights_uv_arr[*, *, fi]=weights_holo*rephase_use*n_vis
+        variance_uv_arr[*, *, fi]=variance_holo*rephase_use*n_vis
+        IF Keyword_Set(model_flag) THEN model_uv_arr[*, *, fi]=model_return*n_vis
       endif
-      
+
       IF Keyword_Set(fft) THEN BEGIN
         IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN BEGIN
           *dirty_arr[pol_i,fi]=extract_subarray(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis,x_range,y_range)
@@ -147,12 +153,16 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       IF Keyword_Set(t_grid0) THEN t_grid+=t_grid0
     ENDFOR
     IF ~Keyword_Set(preserve_visibilities) THEN ptr_free,vis_ptr,model_ptr
+
+    obs_out.n_vis=n_vis_use
+    IF ~Arg_present(obs_out) THEN obs.n_vis=n_vis_use
+  
+    IF keyword_set(save_uvf) THEN BEGIN
+      save, filename = uvf_filepath[pol_i], dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, /compress
+    ENDIF
+
   ENDFOR
-  obs_out.n_vis=n_vis_use
-  IF ~Arg_present(obs_out) THEN  obs.n_vis=n_vis_use
-  
-  if keyword_set(save_uvf) then save, filename = uvf_filepath, dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, /compress
-  
+    
   IF ~Keyword_Set(silent) THEN print,"Gridding timing: ",strn(t_grid)
   timing=Systime(1)-t0
   RETURN,dirty_arr
