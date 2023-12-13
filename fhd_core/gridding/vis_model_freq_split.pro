@@ -2,7 +2,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
     file_path_fhd=file_path_fhd,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
-    obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, uvf_name=uvf_name,bi_use=bi_use,_Extra=extra
+    obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, save_image_cubes=save_image_cubes, uvf_name=uvf_name,bi_use=bi_use,_Extra=extra
 
   t0=Systime(1)
   
@@ -17,6 +17,17 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       uvf_filepath = folder_use + basename + '_' + uvf_name + '_gridded_uvf_' + pol_names + '.sav'
     endif else begin
       uvf_filepath = folder_use + basename + '_gridded_uvf_' + pol_names + '.sav'
+    endelse
+  endif
+
+  if keyword_set(save_image_cubes) then begin
+    folder_use = file_dirname(file_path_fhd)
+    folder_use += path_sep() + "output_data" + path_sep()
+    basename = file_basename(file_path_fhd)
+    if n_elements(uvf_name) ne 0 then begin
+      image_cube_filepath = folder_use + basename + '_' + uvf_name + '_image_cube_' + pol_names + '.sav'
+    endif else begin
+      image_cube_filepath = folder_use + basename + '_image_cube_' + pol_names + '.sav'
     endelse
   endif
 
@@ -110,6 +121,11 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       endelse
     endif
 
+    if keyword_set(save_image_cubes) then begin
+      dirty_cube = dblarr(dimension, dimension, nf)
+      if keyword_set(model_flag) then model_cube = dblarr(dimension, dimension, nf)
+    endif
+
     FOR fi=0L,nf-1 DO BEGIN
       fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
       variance_holo=1 ;initialize
@@ -135,6 +151,19 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
         IF Keyword_Set(model_flag) THEN model_uv_arr[*, *, fi]=model_return*n_vis
       endif
 
+      if keyword_set(save_image_cubes) then begin
+        dirty_weighted = dirty_UV / (weights_holo * rephase_use)
+        wh_zero = where(abs(weights_holo eq 0), count_zero)
+        if count_zero gt 0 then dirty_weighted[wh_zero] = 0
+        dirty_cube[*, *, fi] = dirty_image_generate(dirty_weighted, degpix = degpix)
+
+        if keyword_set(model_flag) then begin
+          model_weighted = model_return / (weights_holo * rephase_use)
+          if count_zero gt 0 then model_weighted[wh_zero] = 0
+          model_cube[*, *, fi] = dirty_image_generate(model_weighted, degpix = degpix)
+        endif
+      endif
+      
       IF Keyword_Set(fft) THEN BEGIN
         IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN BEGIN
           *dirty_arr[pol_i,fi]=extract_subarray(dirty_image_generate(dirty_uv,degpix=degpix)*n_vis,x_range,y_range)
@@ -167,6 +196,10 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     IF keyword_set(save_uvf) THEN BEGIN
       save, filename = uvf_filepath[pol_i], dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, /compress
     ENDIF
+
+    if keyword_set(save_image_cubes) then begin
+      save, filename = image_cube_filepath[pol_i], dirty_cube, model_cube, obs_out, /compress
+    endif
 
   ENDFOR
     

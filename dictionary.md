@@ -500,6 +500,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
+**save_image_cubes**: save the weighted image cubes for dirty and model cubes. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+
 **save_visibililties**: save the calibrated data visibilities, the model visibilities, and the visibility flags. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 probably <br />

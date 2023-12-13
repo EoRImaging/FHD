@@ -335,6 +335,9 @@ See cal.skymodel.source_list in Calibration for structure description. This outp
 
 ### \<obsids\>\_source_list.txt <br />
 
+### \<obsids\>\_\<even/odd\>\_image_cube_\<pol\>.sav <br />
+Weighted image cubes. Saved only if keyword `save_image_cubes` is set.
+
 ##  Output Images<br />
 
 ### \<obsids\>\_cal_amp.png<br />
