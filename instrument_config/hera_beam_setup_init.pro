@@ -8,7 +8,7 @@ n_tiles=obs.n_tile
 n_dipoles=1
 nfreq_bin=antenna_str.nfreq_bin
 
-IF N_Elements(antenna_size) EQ 0 THEN antenna_size=10 ;meters A GUESS
+IF N_Elements(antenna_size) EQ 0 THEN antenna_size=14 ;meters A GUESS
 antenna_height=1.5 ;meters A GUESS
 velocity_factor=0.673 ;use MWA number (ignored anyway)
 
