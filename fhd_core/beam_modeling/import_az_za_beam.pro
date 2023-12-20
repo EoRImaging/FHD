@@ -1,7 +1,6 @@
 FUNCTION import_az_za_beam, obs, antenna, file_path_J_matrix,$
   za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim
   ; Read in an e-field antenna beam stored in evenly-spaced azimuth-zenith angle (and frequency)
-  print, "!!!!!!!! Running import_az_za_beam !!!!!!!!"
   
   n_ant_pol=Max(antenna.n_pol)
   nfreq_bin=Max(antenna.nfreq_bin)
