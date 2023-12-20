@@ -9,8 +9,11 @@ FUNCTION general_beam_setup_init,obs,antenna_str,_Extra=extra
   n_tiles=obs.n_tile
   n_dipoles=1
   nfreq_bin=antenna_str.nfreq_bin
-
-  IF N_Elements(antenna_size) EQ 0 THEN antenna_size=10 ;meters A GUESS
+  if obs.instrument EQ 'hera' then begin
+    IF N_Elements(antenna_size) EQ 0 THEN antenna_size=14 ;HERA dish diameter is 14m
+  endif else begin
+    IF N_Elements(antenna_size) EQ 0 THEN antenna_size=10 ;meters A GUESS
+  endelse
   antenna_height=1.5 ;meters A GUESS
   velocity_factor=0.673 ;use MWA number (ignored anyway)
 
