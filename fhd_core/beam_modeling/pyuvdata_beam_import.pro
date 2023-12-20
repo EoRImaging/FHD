@@ -7,7 +7,7 @@ MRD_HREAD, lun, primary_header, /silent
 coordsys = strtrim(sxpar(primary_header,'coordsys'),2)
 CASE coordsys OF
     "az_za": BEGIN  ; Beam is in azimuth/zenith angle coordinates
-        Jones_matrix = import_az_el_beam(obs, antenna_str, pyuvdata_filepath,$
+        Jones_matrix = import_az_za_beam(obs, antenna_str, pyuvdata_filepath,$
                                          za_arr=za_arr, az_arr=az_arr, psf_image_dim=psf_image_dim)
     END
     "orthoslant_zenith": BEGIN  ; Beam is in orthoslant coordinates
