@@ -273,7 +273,6 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     beam_mask_threshold=beam_mask_threshold,psf_xvals=psf_xvals,psf_yvals=psf_yvals,_Extra=extra
 
   beam_ptr=Ptr_new(beam_arr)
-  print, extra.import_pyuvdata_beam_filepath
   psf=fhd_struct_init_psf(beam_ptr=beam_ptr,xvals=psf_xvals,yvals=psf_yvals,fbin_i=freq_bin_i,$
     psf_resolution=psf_resolution,psf_dim=psf_dim,complex_flag=1,pol_norm=pol_norm,freq_norm=freq_norm,$
     n_pol=n_pol,n_freq=nfreq_bin,freq_cen=freq_center,group_arr=group_arr,interpolate_kernel=interpolate_kernel,$
