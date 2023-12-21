@@ -97,10 +97,17 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     n_vis_use=0.
 
     if keyword_set(save_uvf) then begin
-      dirty_uv_arr=Complexarr(dimension, dimension, nf)
-      weights_uv_arr=Complexarr(dimension, dimension, nf)
-      variance_uv_arr=Complexarr(dimension, dimension, nf)
-      IF Keyword_Set(model_flag) THEN model_uv_arr=Complexarr(dimension, dimension, nf)
+      if obs.double_precision then begin
+        dirty_uv_arr=dcomplexarr(dimension, dimension, nf)
+        weights_uv_arr=dcomplexarr(dimension, dimension, nf)
+        variance_uv_arr=dcomplexarr(dimension, dimension, nf)
+        IF Keyword_Set(model_flag) THEN model_uv_arr=dcomplexarr(dimension, dimension, nf)
+      endif else begin
+        dirty_uv_arr=complexarr(dimension, dimension, nf)
+        weights_uv_arr=complexarr(dimension, dimension, nf)
+        variance_uv_arr=complexarr(dimension, dimension, nf)
+        IF Keyword_Set(model_flag) THEN model_uv_arr=complexarr(dimension, dimension, nf)
+      endelse
     endif
 
     FOR fi=0L,nf-1 DO BEGIN
