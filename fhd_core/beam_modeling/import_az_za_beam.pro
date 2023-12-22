@@ -60,7 +60,7 @@ FUNCTION import_az_za_beam, obs, antenna, file_path_J_matrix,$
   
   ; Interpolate in azimulth and zenith angle
   FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO BEGIN
-    Jmat_use=Reform(*Jmat_interp[p_i,p_j,freq_i],181,360)
+    Jmat_use=Reform(*Jmat_interp[p_i,p_j,freq_i],n_za_ang,n_az_ang)
     ;Expand,Jmat_use,n_zen_ang,n_az_ang,Jmat_single
     (*Jones_matrix[p_i,p_j,freq_i])=Interpolate(Jmat_use,za_use,az_use,cubic=-0.5)
   ENDFOR
