@@ -194,7 +194,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
-  
+
 **firstpass**: Sets defaults for a standard firstpass run: sets deconvolve=0 and mapfn_recalculate=0 (overwriting them if they were previously set to 1), if return_cal_visibilities or export_images are unset, then it sets them both to 1. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: Undefined (0) <br />
@@ -206,7 +206,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
    -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
-   
+
 **initial_calibration**: Path to an existing calibration file to use as the starting point in calibration. <br />
   -*Default* : Unset <br />
 
@@ -233,7 +233,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: unset <br />
   -*eor_wrapper_defaults*: 1 <br />
-  
+
 **phase_fit_iter**: Set the iteration number to begin phase calibration. Before this, phase is held fixed and only amplitude is being calibrated. <br />
   -*Default:* 4
 
@@ -273,7 +273,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **beam_max_threshold**: Completely mask all pixels below this beam threshold during deconvolution. <br />
   -*Default*: 1E-4 <br />
-  
+
 **beam_threshold**: Fraction of beam max value below which to mask the beam for deconvolution. 0.05 is really as far down as you should go with our current MWA beam models. This keyword is also used for calibration and modeling, but will be overwritten by `beam_model_threshold` or `beam_cal_threshold` if provided, and will be overwritten to 0.01 for those steps if `allow_sidelobe_sources` is turned on. This keyword is also used for beam modeling in some simulation code. <br />
   -*Default*: 0.05
 
@@ -321,7 +321,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **max_deconvolution_components**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
   -*Default*: 100000 <br />
   -*eor_wrapper_defaults*: 20000 <br />
-  
+
 **max_iter**: Sets the maxiumum iterations deconvolution can do. <br />
   *Default*: Square root of `max_deconvolution_components` <br />
 
@@ -348,7 +348,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: not set <br />
-  
+
 **transfer_mapfn**: Option to use an existing mapfn instead of calculating it. To use, provide a path to a mapfn file. <br />
   -*Default*: Unset <br />
 
@@ -415,10 +415,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 0 <br />
   -If a .sav file is used, the file should contain the following:<br />
-  - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/pixel unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
+  - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/sr unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
   - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
   - HPX_INDS = The corresponding healpix indices of the model_arr.<br />
-  - UNITS = The units of the map, either Jy/str or Kelvin.<br />
+  - UNITS = The units of the map, either Jy/sr or Kelvin.<br />
   - COORD_SYS = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
   -If a .skyh5 file is used, the file should be formatted with the [pyradiosky](https://github.com/RadioAstronomySoftwareGroup/pyradiosky) conventions.<br />
 
