@@ -45,7 +45,7 @@ IF Keyword_Set(haslam_filtered) THEN BEGIN
     GlactC,pix_ra,pix_dec,2000.,pix_gl,pix_gb,2,/degree
     Eq2hor,pix_ra,pix_dec,obs.JD0,pix_alt,pix_az,lat=obs.lat,lon=obs.lon,alt=obs.alt, /precess, /nutate, refract=0
     
-    apply_astrometry,obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+    apply_astrometry,obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy, /refraction
     hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)) AND (pix_alt GT 0),n_hpx_use,complement=hpx_i_cut) 
 ;    hpx_i_use=hpx_i_cut
     IF n_hpx_use EQ 0 THEN RETURN,Ptrarr(n_pol)

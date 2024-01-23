@@ -200,7 +200,7 @@ if keyword_set(kernel_window) then begin
 
   ;Calculate the phase center in x,y coords
   Eq2Hor,obs.orig_phasera,obs.orig_phasedec,Jdate_use,orig_phasealt,orig_phaseaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
-  apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy
+  apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy, /refraction
   xval_center = (90. - orig_phasealt)*sin(orig_phaseaz*!dtor)
   yval_center = (90. - orig_phasealt)*cos(orig_phaseaz*!dtor)
   

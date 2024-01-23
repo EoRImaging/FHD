@@ -47,7 +47,7 @@ xv=xvals[inds_use]
 yv=yvals[inds_use]
 
 ;Convert observatory latitude to same coordinate system 
-apply_astrometry, obs, ra_arr=obs.obsra, dec_arr=obs.lat, x_arr=x_t, y_arr=y_t, /ad2xy
+apply_astrometry, obs, ra_arr=obs.obsra, dec_arr=obs.lat, x_arr=x_t, y_arr=y_t, /ad2xy, /refraction
 apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad, /ignore_refraction
 
 obs_temp = fhd_struct_update_obs(obs, beam_nfreq_avg=obs.n_freq) ; Use only one average Jones matrix, not one per frequency

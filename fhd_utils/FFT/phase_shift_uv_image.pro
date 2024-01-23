@@ -25,7 +25,7 @@ ENDIF
 ;skip calculations if already phased correctly
 IF (ra_use EQ phase_ra) AND (dec_use EQ phase_dec) THEN RETURN,Complexarr(dimension,elements)+1.
 
-apply_astrometry,obs,ra_arr=ra_use, dec_arr=dec_use, x_arr=x_use, y_arr=y_use, /ad2xy
+apply_astrometry,obs,ra_arr=ra_use, dec_arr=dec_use, x_arr=x_use, y_arr=y_use, /ad2xy, /refraction
 
 rephase_calc=Complexarr(dimension,elements)
 
