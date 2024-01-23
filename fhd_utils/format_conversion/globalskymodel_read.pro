@@ -10,7 +10,7 @@ elements=obs.elements
 astr=obs.astr
 degpix=obs.degpix
 n_pol=obs.n_pol
-apply_astrometry, obs, x_arr=meshgrid(dimension, elements, 1), y_arr=meshgrid(dimension, elements, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+apply_astrometry, obs, x_arr=meshgrid(dimension, elements, 1), y_arr=meshgrid(dimension, elements, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /refraction
 
 file_path_base=filepath('',root=rootdir('FHD'),sub='catalog_data')
 IF Keyword_Set(haslam_filtered) THEN BEGIN

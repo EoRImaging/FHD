@@ -113,7 +113,8 @@ astr_out=obs_out.astr
 horizon_mask=fltarr(dimension,elements)+1.
 ;IF Keyword_Set(image_mask_horizon) THEN BEGIN
     ;set /ignore_refraction for speed since we're just finding pixels to mask
-    apply_astrometry, obs_out, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+    ; UPDATE: Refraction is ignored by default in apply astrometry
+    apply_astrometry, obs_out, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
     horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
     IF n_horizon_mask GT 0 THEN horizon_mask[horizon_test]=0
 ;ENDIF

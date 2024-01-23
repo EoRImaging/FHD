@@ -39,7 +39,8 @@ IF N_Elements(mask) EQ 0 THEN mask=Replicate(1.,dimension,elements)
 xvals=meshgrid(dimension,elements,1)
 yvals=meshgrid(dimension,elements,2)
 ;ignore effect of refraction, since we are only determining which pixels to include
-apply_astrometry, obs, ra_arr=ra_arr, dec_arr=dec_arr, x_arr=xvals, y_arr=yvals, /xy2ad, /ignore_refraction
+; UPDATE: refraction is now ignored by default in apply_astrometry
+apply_astrometry, obs, ra_arr=ra_arr, dec_arr=dec_arr, x_arr=xvals, y_arr=yvals, /xy2ad
 inds_use=where(Finite(ra_arr) AND mask,n_pix)
 ra_use=ra_arr[inds_use]
 dec_use=dec_arr[inds_use]
@@ -48,7 +49,7 @@ yv=yvals[inds_use]
 
 ;Convert observatory latitude to same coordinate system 
 apply_astrometry, obs, ra_arr=obs.obsra, dec_arr=obs.lat, x_arr=x_t, y_arr=y_t, /ad2xy, /refraction
-apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad, /ignore_refraction
+apply_astrometry, obs, dec_arr=lat, x_arr=x_t, y_arr=y_t, /xy2ad
 
 obs_temp = fhd_struct_update_obs(obs, beam_nfreq_avg=obs.n_freq) ; Use only one average Jones matrix, not one per frequency
 antenna=fhd_struct_init_antenna(obs_temp,beam_model_version=beam_model_version,psf_resolution=1.,$
