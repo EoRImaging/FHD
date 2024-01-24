@@ -9,6 +9,8 @@ FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square
 ;Adjusts error handling so that if an error occurs, it halts execution and returns to the line at which the error occurred
 ON_ERROR, 2
 
+; TODO: add a check that n_pol <= 2. error if not.
+
 IF Min(Ptr_valid(beam_arr)) EQ 0 THEN BEGIN
     n_pol=4
     beam_use=Ptrarr(n_pol,/allocate)
@@ -138,16 +140,12 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
         stokes_i_offset=0
+        ; TODO: add a check if there are non-zero values in Q, U or V. If so, error
         FOR pol_i=0,n_pol_stokes-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i+4)
-        FOR pol_i=0,n_pol_stokes-1 DO *flux_pq[pol_i]=(stokes_inv_term1[pol_i]*(*flux_arr[stokes_list1[pol_i]])+stokes_inv_term2[pol_i]*(*flux_arr[stokes_list2[pol_i]]))
-        FOR pol_i2=0,n_pol-1 DO BEGIN
-            IF pol_i2 LE 1 THEN *flux_out[pol_i2]=Fltarr(ns) ELSE *flux_out[pol_i2]=Complexarr(ns) 
-            FOR pol_i1=0,n_pol_stokes-1 DO BEGIN
-                *flux_out[pol_i2]+=*flux_pq[pol_i1]*(*p_map[pol_i1,pol_i2])[p_ind]
-            ENDFOR
-            *flux_out[pol_i2]*=*beam_use[pol_i2]
-        ENDFOR
+        FOR pol_i2=0,n_pol-1 DO *flux_out[pol_i2] = 0.5 * (*flux_arr[0])
+
     ENDIF ELSE BEGIN ;instrumental -> Stokes
+        ; TODO error.
         stokes_i_offset=4  
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i)
         
@@ -183,22 +181,18 @@ ENDIF ELSE BEGIN ;else case is array of images
     ;stokes I can have proper inverse-variance weighting. (not used!)
     ; All other polarizations need to be converted to 'true sky' frame before they can be added
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
-        FOR sky_pol=0,n_pol-1 DO image_arr_sky[sky_pol]=$
-            Ptr_new(stokes_inv_term1[sky_pol]*(*image_arr[stokes_list1[sky_pol]])+stokes_inv_term2[sky_pol]*(*image_arr[stokes_list2[sky_pol]]))
-        FOR instr_pol=0,n_pol-1 DO BEGIN
-            image_arr_out[instr_pol]=Ptr_new(Dcomplexarr(dimension,elements))
-            FOR sky_pol=0,n_pol-1 DO BEGIN
-                (*image_arr_out[instr_pol])[inds]+=(*image_arr_sky[sky_pol])[inds]*(*p_map[sky_pol,instr_pol])
-            ENDFOR
-            *image_arr_out[instr_pol]*=*beam_use[instr_pol]
-        ENDFOR
+
+        ; TODO error if Q, U, V ne 0
+        FOR sky_pol=0,n_pol-1 DO image_arr_sky[sky_pol] = Ptr_new(0.5 * (*image_arr[0]))
         
     ENDIF ELSE BEGIN ;instrumental -> Stokes
+    
         FOR sky_pol=0,n_pol-1 DO BEGIN
             image_arr_sky[sky_pol]=Ptr_new(Dcomplexarr(dimension,elements))
-            FOR instr_pol=0,n_pol-1 DO BEGIN
-                (*image_arr_sky[sky_pol])[inds]+=(*image_arr[instr_pol]*weight_invert(*beam_use[instr_pol]))[inds]*(*p_corr[instr_pol,sky_pol])
-            ENDFOR
+        ENDFOR
+        
+        FOR instr_pol=0,n_pol-1 DO BEGIN
+            (*image_arr_sky[0])[inds]+=(*image_arr[instr_pol]*weight_invert(*beam_use[instr_pol]))[inds]
         ENDFOR
         FOR pol_i=0,n_pol-1 DO image_arr_out[pol_i]=$
             Ptr_new(Real_part(stokes_mat_term1[pol_i]*(*image_arr_sky[stokes_list1[pol_i]])+stokes_mat_term2[pol_i]*(*image_arr_sky[stokes_list2[pol_i]])))
