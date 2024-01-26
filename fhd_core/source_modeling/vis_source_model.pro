@@ -102,7 +102,7 @@ if ~keyword_set(model_uv_transfer) then begin
         ;NOTE this is for record-keeping purposes, since the Stokes flux values will actually be used
         source_list=skymodel.source_list
         source_list.extend=Pointer_copy(source_list.extend)
-        source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,_Extra=extra)
+        source_list=stokes_cnv(source_list,jones,beam_arr=beam_arr,/inverse,n_pol=n_pol,_Extra=extra)
         model_uv_arr1=source_dft_model(obs,jones,source_list,t_model=t_model,sigma_threshold=2.,$
             spectral_model_uv_arr=spectral_model_uv_arr1,uv_mask=uv_mask_use,_Extra=extra)
         FOR pol_i=0,n_pol-1 DO *model_uv_arr[pol_i]+=*model_uv_arr1[pol_i];*uv_mask_use 

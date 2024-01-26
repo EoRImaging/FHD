@@ -143,7 +143,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     
     IF status_str.jones THEN fhd_save_io,status_str,jones,var='jones',/restore,file_path_fhd=file_path_fhd $
         ELSE jones=fhd_struct_init_jones(obs,status_str,file_path_fhd=file_path_fhd,restore=0,mask=beam_mask)
-    IF source_flag THEN source_array=Stokes_Cnv(source_array,jones,obs,/inverse)
+    IF source_flag THEN source_array=Stokes_Cnv(source_array,jones,obs,/inverse,_Extra=extra)
     instr_model_arr=Ptrarr(n_pol)
     instr_dirty_arr=Ptrarr(n_pol)
     instr_sources=Ptrarr(n_pol)
@@ -159,10 +159,10 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             dimension=dimension,restored_beam_width=restored_beam_width,_Extra=extra)*(*beam_base[pol_i]))
     ENDFOR
     
-    stokes_dirty=stokes_cnv(instr_dirty_arr,jones,obs,beam_arr=beam_base,/square)
-    IF model_flag THEN stokes_model=stokes_cnv(instr_model_arr,jones,obs,beam_arr=beam_base,/square)
-    IF source_flag THEN stokes_sources=stokes_cnv(instr_sources,jones,obs,beam_arr=beam_base,/square)
-    stokes_weights_ptr=stokes_cnv(beam_base2,jones,obs)
+    stokes_dirty=stokes_cnv(instr_dirty_arr,jones,obs,beam_arr=beam_base,/square,_Extra=extra)
+    IF model_flag THEN stokes_model=stokes_cnv(instr_model_arr,jones,obs,beam_arr=beam_base,/square,_Extra=extra)
+    IF source_flag THEN stokes_sources=stokes_cnv(instr_sources,jones,obs,beam_arr=beam_base,/square,_Extra=extra)
+    stokes_weights_ptr=stokes_cnv(beam_base2,jones,obs,_Extra=extra)
     npix=nside2npix(nside)
 
     stokes_weights=*stokes_weights_ptr[0]

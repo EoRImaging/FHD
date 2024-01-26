@@ -1,6 +1,7 @@
 FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square=square,no_extend=no_extend,$
     rotate_pol=rotate_pol,no_dipole_projection_rotation=no_dipole_projection_rotation,$
-    center_rotate=center_rotate,debug_direction=debug_direction;,beam_threshold=beam_threshold
+    center_rotate=center_rotate,debug_direction=debug_direction,n_pol=n_pol,$
+    _Extra=extra;,beam_threshold=beam_threshold
     ;/rotate_pol is a temporary debugging tool
 ;converts [xx,yy,{xy,yx}] to [I,Q,{U,V}] or [I,Q,{U,V}] to [xx,yy,{xy,yx}] if /inverse is set
 ;;Note that "image_arr" can actually be a 2D image, a vector of values, or a source_list structure. 
@@ -9,17 +10,20 @@ FUNCTION stokes_cnv,image_arr,jones,obs,beam_arr=beam_arr,inverse=inverse,square
 ;Adjusts error handling so that if an error occurs, it halts execution and returns to the line at which the error occurred
 ON_ERROR, 2
 
-; TODO: add a check that n_pol <= 2. error if not.
+; Want to check the global n_pol, probably set in obs structure
 
 IF Min(Ptr_valid(beam_arr)) EQ 0 THEN BEGIN
-    n_pol=4
+    IF ~Keyword_Set(n_pol) then n_pol=4
     beam_use=Ptrarr(n_pol,/allocate)
     FOR ii=0L,n_pol-1 DO *beam_use[ii]=1.
 ENDIF ELSE BEGIN
-    n_pol=N_Elements(beam_arr)
+    IF ~Keyword_Set(n_pol) then n_pol=N_Elements(beam_arr)
     beam_use=pointer_copy(beam_arr)
     IF Keyword_Set(square) THEN FOR ii=0L,n_pol-1 DO *beam_use[ii]=*beam_use[ii]^2.
 ENDELSE
+
+IF n_pol GT 2 THEN message, "ERROR: Maximum of two polarizations allowed for this functionality, more than two given."
+
 IF N_Elements(beam_threshold) EQ 0 THEN beam_threshold=1E-2
 IF Keyword_Set(square) THEN beam_threshold_use=beam_threshold^2 ELSE beam_threshold_use=beam_threshold
 
@@ -136,16 +140,20 @@ IF type EQ 8 THEN BEGIN ;check if a source list structure is supplied
     extend_i=where(Ptr_valid(source_list.extend),n_ext)
     IF Keyword_Set(no_extend) THEN n_ext=0
     FOR ext_i=0L,n_ext-1 DO *(source_list[extend_i[ext_i]].extend)=$
-        stokes_cnv(*(source_list[extend_i[ext_i]].extend),jones,beam_arr=beam_arr,inverse=inverse,square=square,/no_extend)
+        stokes_cnv(*(source_list[extend_i[ext_i]].extend),jones,beam_arr=beam_arr,inverse=inverse,square=square,n_pol=n_pol,/no_extend)
     
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
         stokes_i_offset=0
-        ; TODO: add a check if there are non-zero values in Q, U or V. If so, error
+        FOR pol_i=1,n_pol_stokes-1 DO BEGIN
+          IF max(source_list[s_use].flux.(pol_i+4)) GT 0 THEN message, "ERROR: There should only be flux in Stokes I. Nonzero values found in one of Q, U, or V.
+        ENDFOR
+        
         FOR pol_i=0,n_pol_stokes-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i+4)
         FOR pol_i2=0,n_pol-1 DO *flux_out[pol_i2] = 0.5 * (*flux_arr[0])
+        
 
     ENDIF ELSE BEGIN ;instrumental -> Stokes
-        ; TODO error.
+        message, "ERROR: Instrumental -> Stokes not permitted in this case." 
         stokes_i_offset=4  
         FOR pol_i=0,n_pol-1 DO *flux_arr[pol_i]=source_list[s_use].flux.(pol_i)
         
@@ -182,7 +190,10 @@ ENDIF ELSE BEGIN ;else case is array of images
     ; All other polarizations need to be converted to 'true sky' frame before they can be added
     IF Keyword_Set(inverse) THEN BEGIN ;Stokes -> instrumental
 
-        ; TODO error if Q, U, V ne 0
+        FOR pol_i=1,n_pol_stokes-1 DO BEGIN
+          IF max(source_list[s_use].flux.(pol_i+4)) GT 0 THEN message, "ERROR: There should only be flux in Stokes I. Nonzero values found in one of Q, U, or V.
+        ENDFOR
+        
         FOR sky_pol=0,n_pol-1 DO image_arr_sky[sky_pol] = Ptr_new(0.5 * (*image_arr[0]))
         
     ENDIF ELSE BEGIN ;instrumental -> Stokes

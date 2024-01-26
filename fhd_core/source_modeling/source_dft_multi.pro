@@ -34,7 +34,7 @@ y_vec=source_array.y
 
 ;set /no_extend since extended sources will not be read. 
 ; If you want extended sources, inflate the source list before calling this program
-source_array_use=Stokes_cnv(source_array,jones,/inverse,/no_extend,_Extra=extra) 
+source_array_use=Stokes_cnv(source_array,jones,/inverse,/no_extend,n_pol=n_pol,_Extra=extra) 
 n_source=N_Elements(source_array)
 
 frequency=obs.freq_center
