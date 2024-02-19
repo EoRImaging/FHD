@@ -64,10 +64,16 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**kernel_window**: modify the gridding kernel by applying a window function to the primary beam according to a user choice. If set, but not a string and nonzero, assigns 'Blackman-Harris^2' <br />
+**kernel_window**: modify the gridding kernel by applying a window function to the primary beam according to a user choice. If set, but not a string and nonzero, assigns 'Blackman-Harris^2'. Forces the value of psf_dim to be 18. <br />
   -*Options*: 'Hann', 'Hamming', 'Blackman', 'Nutall', 'Blackman-Nutall',  <br />
                'Blackman-Harris', 'Blackman-Harris^2', 'Tukey' <br />
   -*Default*: Not set (not the same as setting to 0!) <br />
+
+**psf_dim**: Sets the PSF dimension in UV space in units of pixels. By default calculated based on max antenna size, max frequency, and kbinsize (see `fhd_struct_init_antenna.pro` for calculation). Must be an even integer. Will be overwritten to 28 if debug_dim is set, and overwritten to 18 if kernel_window is set. <br />
+  -*Default*: not set <br />
+
+**psf_max_dim**: Must be an even integer. Will decrease psf_dim to this value if it is calculated to be higher. <br />
+  -*Default*: not set <br />
 
 **psf_resolution**: super-resolution factor of the psf in UV space. Values greater than 1 increase the resolution of the gridding kernel. <br />
   -*Default*: 16 <br />
@@ -261,9 +267,12 @@ WARNING! Options in this section may change without notice, and should never be 
 ### Beam debugging options
 
 **debug_beam_clip_grow**: Set to grow the UV beam mask by one full-resolution pixel in all directions, after applying the clip set by `beam_mask_threshold` <br />
-  -*Turn on*:: 1
+  -*Turn on*: 1
 
 **debug_clip_beam_mask**: Set to mask pixels in the UV beam model if the pixel would be masked for any super-resolution offset. <br />
+  -*Turn on*: 1
+
+**debug_dim**: Set `psf_dim=28`. Will be overwritten if `kernel_window` is set. <br />
   -*Turn on*: 1
 
 **debug_flip**: Swap the X and Y beams (use the Y beam for X and the X beam for Y). <br />
@@ -475,9 +484,9 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect.  <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
-
-**no_png**: do not export any pngs (this includes images and plots calibration solutions) <br />
-  -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
+  
+**no_png**: do not export any pngs (including standard images and images of calibration solutions). <br />
+  -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
