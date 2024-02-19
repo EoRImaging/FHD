@@ -490,11 +490,6 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
-**no_png**: do not export any pngs (this includes images and plots calibration solutions) <br />
-  -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
-  -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />
-
 **output_directory**: the absolute path to the output directory for the FHD output run folder. See `version`.     
   -*Default*: not set <br />    
 
