@@ -31,7 +31,7 @@ FOR i=1,n_time-1 DO bin_width[i]=b0i[i]-b0i[i-1]
 bin_offset=Lonarr(n_time) & IF n_time GT 1 THEN bin_offset[1:*]=total(bin_width[0:n_time-2],/cumulative)    
 nbaselines=bin_width[0]
 n_vis=(n_vis_raw=(n_vis_in=(Float(N_Elements(time))*n_freq)))
-n_vis_arr=Lonarr(n_freq)
+n_vis_arr=Lonarr(2,n_freq)
 
 freq_res=hdr.freq_res
 frequency_array=hdr.freq_arr

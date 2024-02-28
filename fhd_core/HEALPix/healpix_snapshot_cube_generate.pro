@@ -146,8 +146,10 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       residual_flag=0
     ENDIF ELSE residual_flag=1
     nf_vis=obs.nf_vis
-    nf_vis_use=Lonarr(n_freq_use)
-    FOR freq_i=0L,n_freq_use-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
+    nf_vis_use=Lonarr(2,n_freq_use)
+    FOR pol_i=0,n_pol-1 DO BEGIN
+      FOR freq_i=0L,n_freq_use-1 DO nf_vis_use[pol_i,freq_i]=Total(nf_vis[pol_i,freq_i*n_avg:(freq_i+1)*n_avg-1])
+    ENDFOR
     
     t_hpx0=Systime(1)
     
@@ -162,7 +164,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
 
         FOR freq_i=Long64(0),n_freq_use-1 DO BEGIN
 
-            beam_squared_cube[n_hpx*freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv)
+            beam_squared_cube[n_hpx*freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])*nf_vis_use[pol_i,freq_i],hpx_cnv)
             weights_cube[n_hpx*freq_i]=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv)
             variance_cube[n_hpx*freq_i]=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv)
 

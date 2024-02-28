@@ -199,9 +199,11 @@ pro healpix_three_d_images, cube_path, savefile_directory, even = even, odd = od
 ;If number of visibilities per frequency exists, use it to get the correct units.  Create images
       
   ENDIF ELSE BEGIN
+    IF keyword_set(xx) THEN pol_i=0
+    IF keyword_set(yy) THEN pol_i=1
     nf_vis = obs_arr.nf_vis
     FOR ii=0, size_info[1]-1 DO BEGIN
-      healpix_quickimage,input_cube/nf_vis[ii],hpx_inds,nside, $
+      healpix_quickimage,input_cube/nf_vis[pol_i,ii],hpx_inds,nside, $
           title = title_input + STRTRIM(STRING(freq_array[ii]),1) + ' MHz, ' + STRTRIM(STRING(ii),1) + ' slice', $
           slice_ind = ii,savefile = savefile_directory + STRING(ii)
     ENDFOR
