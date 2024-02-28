@@ -175,6 +175,7 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
 ENDFOR
 n_time_cut = n_time - Total(time_use)
 
+;TILE FLAGGING HAPPENS HERE FOR TILE_USE, IF FLAGGED IN EITHER POL THEN FLAGGED IN BOTH POLS
 tile_use1=intarr(n_tile)
 FOR pol_i=0,n_pol-1 DO BEGIN
     tile_use_i=where(*(meta.tile_flag[pol_i]) EQ 0,n_use)

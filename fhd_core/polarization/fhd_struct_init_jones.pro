@@ -93,6 +93,7 @@ FOR pix=0L,n_pix-1 DO BEGIN
 ENDFOR
 
 jones_str={inds:inds_use,dimension:dimension,elements:elements,Jmat:p_map,Jinv:p_corr}
+; # COMMENTING OUT TO WRITE OUT DIFFERENT JONES FOR NICEL
 if ~keyword_set(save_beam_metadata_only) then fhd_save_io,status_str,jones_str,var='jones',/compress,file_path_fhd=file_path_fhd,_Extra=extra
 RETURN,jones_str
 END

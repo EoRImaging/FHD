@@ -65,10 +65,11 @@ IF Keyword_Set(no_frequency_flagging) THEN (*obs.baseline_info).freq_use=Replica
     IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[freq_cut_i,*]=0
 ENDELSE
 tile_cut_i=where(b_info.tile_use EQ 0,n_tile_cut)
-IF n_tile_cut GT 0 THEN BEGIN
-    bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
-    IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,bi_cut]=0
-ENDIF
+; COMMENTING OUT ON THE ASSUMPTION THAT NO ADDITIONAL TILES SHOULD BE CUT
+;IF n_tile_cut GT 0 THEN BEGIN
+;    bi_cut=array_match(b_info.tile_A,b_info.tile_B,value_match=(tile_cut_i+1),n_match=n_bi_cut)
+;    IF n_bi_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,bi_cut]=0
+;ENDIF
 
 time_use=b_info.time_use
 nt=N_Elements(time_use)
@@ -82,12 +83,14 @@ FOR ti=0L,n_time_cut-1 DO BEGIN
     IF n_ti_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,ti_cut]=0
 ENDFOR
 
-flag_i=where(*vis_weight_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
+;Changing so that it's different per pol
+flag_x=where(*vis_weight_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
+flag_y=where(*vis_weight_ptr[1] LE 0,n_flag,ncomplement=n_unflag)
 flag_i_new=where(xmin LT 0,n_flag_new)
 IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[flag_i_new]=0
 IF n_flag GT 0 THEN BEGIN
-    xmin[flag_i]=-1
-    ymin[flag_i]=-1
+    xmin[flag_x]=-1
+    ymin[flag_y]=-1
 ENDIF
 
 IF max(xmin)<max(ymin) LT 0 THEN BEGIN

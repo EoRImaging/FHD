@@ -75,7 +75,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     tile_use1=intarr(n_tile)
     IF nb_use GT 0 THEN tile_use1[tile_A_i[bi_use]]=1
     IF nb_use GT 0 THEN tile_use1[tile_B_i[bi_use]]=1
-    tile_use*=tile_use1
+    ;tile_use*=tile_use1
     
 ENDFOR
 
@@ -137,7 +137,7 @@ ENDIF
 
 tile_use_new=tile_use AND (*obs.baseline_info).tile_use
 freq_use_new=freq_use AND (*obs.baseline_info).freq_use
-(*obs.baseline_info).tile_use=tile_use_new
+;(*obs.baseline_info).tile_use=tile_use_new
 (*obs.baseline_info).freq_use=freq_use_new
 
 IF Tag_exist(obs,'n_time_flag') THEN obs.n_time_flag=Total(1L-(*obs.baseline_info).time_use)

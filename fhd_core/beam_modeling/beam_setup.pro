@@ -71,6 +71,22 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
     ra_arr=ra_arr,dec_arr=dec_arr,beam_per_baseline=beam_per_baseline,beam_gaussian_decomp=beam_gaussian_decomp,$
     beam_gauss_param_transfer=beam_gauss_param_transfer,_Extra=extra)
+    
+  ; ADDING THIS CHUNK TO WRITE OUT JONES FOR NICEL
+  ;print, 'Running jones for Nicel'
+  ;Jones = PTRARR(antenna[0].n_pol,antenna[0].n_pol,antenna[0].nfreq_bin)
+  ;pix_use = *antenna[0].pix_use
+  ;psf_image_dim = antenna[0].psf_image_dim
+  ;for pol_i = 0, antenna[0].n_pol-1 do begin
+  ;  for pol_j=0, antenna[0].n_pol-1 do begin
+  ;    for f_i = 0, antenna[0].nfreq_bin-1 do begin
+  ;      Jones[pol_i,pol_j,f_i] = Ptr_new(DComplexarr(psf_image_dim,psf_image_dim))
+  ;      (*Jones[pol_i,pol_j,f_i])[pix_use] = (*antenna[0].Jones[pol_i,pol_j,f_i])
+  ;    endfor
+  ;  endfor
+  ;endfor
+  ;fhd_save_io,status_str,Jones,var='jones',/compress,file_path_fhd=file_path_fhd,_Extra=extra
+  ; ADDING THIS CHUNK TO WRITE OUT JONES FOR NICEL
 
   IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]]
 
