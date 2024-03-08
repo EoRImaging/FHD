@@ -47,7 +47,7 @@ IF Keyword_Set(obs) THEN BEGIN
     angs=angle_difference(dec0,ra0,dec,ra,/degree)
     i_use=where(Abs(angs) LE 60.,n_use)
     IF n_use GT 0 THEN BEGIN
-        apply_astrometry, obs, ra_arr=ra[i_use], dec_arr=dec[i_use], x_arr=x_arr, y_arr=y_arr, /ad2xy
+        apply_astrometry, obs, ra_arr=ra[i_use], dec_arr=dec[i_use], x_arr=x_arr, y_arr=y_arr, /ad2xy, /refraction
         mrc_cat[i_use].x=x_arr
         mrc_cat[i_use].y=y_arr
     ENDIF

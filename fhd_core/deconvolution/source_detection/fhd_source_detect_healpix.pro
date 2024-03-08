@@ -93,7 +93,7 @@ WHILE n_sources LE 0 DO BEGIN
     si_i_arr=Ptrarr(n_obs)
     FOR obs_i=0L,n_obs-1 DO BEGIN
         si=0L
-        apply_astrometry, obs_arr[obs_i], ra_arr=ra_arr, dec_arr=dec_arr, x_arr=x_arr, y_arr=y_arr, /ad2xy
+        apply_astrometry, obs_arr[obs_i], ra_arr=ra_arr, dec_arr=dec_arr, x_arr=x_arr, y_arr=y_arr, /ad2xy, /refraction
     ;    dist_test=angle_difference(obs_arr[obs_i].obsdec,obs_arr[obs_i].obsra,dec_arr,ra_arr,/degree)
     ;    dist_cut=where(dist_test GT source_alias_radius,n_dist_cut)
     

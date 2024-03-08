@@ -51,7 +51,7 @@ FOR j=0L,n_rep-1 DO BEGIN
         normalization=norm_arr2[fi]
         n_pol=obs.n_pol
         astr=obs.astr
-        apply_astrometry, obs, x_arr=meshgrid(obs.dimension,obs.elements,1), y_arr=meshgrid(obs.dimension,obs.elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+        apply_astrometry, obs, x_arr=meshgrid(obs.dimension,obs.elements,1), y_arr=meshgrid(obs.dimension,obs.elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /refraction
         dirty_array=Ptrarr(n_pol)
         weights_arr=Reform(weights_arr2[*,fi])
         FOR pol_i=0,n_pol-1 DO BEGIN

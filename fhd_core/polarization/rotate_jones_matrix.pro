@@ -15,7 +15,7 @@ endfor
 ;Generate a grid of RA and Dec coordinates matching the image
 xvals=meshgrid(obs.dimension,obs.elements,1)
 yvals=meshgrid(obs.dimension,obs.elements,2)
-apply_astrometry, obs, ra_arr=ra_arr, dec_arr=dec_arr, x_arr=xvals, y_arr=yvals, /xy2ad
+apply_astrometry, obs, ra_arr=ra_arr, dec_arr=dec_arr, x_arr=xvals, y_arr=yvals, /xy2ad, /refraction
 ; Pixels beyond the horizon will have NAN RA and Dec values. Skip them.
 inds_use=where(Finite(ra_arr),n_pix)
 ra_use=ra_arr[inds_use]

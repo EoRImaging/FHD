@@ -57,7 +57,7 @@ IF coord_sys EQ 'galactic' THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /d
 IF coord_sys EQ 'equatorial' THEN Hor2Eq,pix_dec,pix_ra,Jdate_use,pix_ra,pix_dec,lat=obs_hpx.lat,lon=obs_hpx.lon,alt=obs_hpx.alt,precess=1,/nutate
 
 ; Transform pixel coordinates to orthoslant coordinates.
-apply_astrometry, obs_hpx, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+apply_astrometry, obs_hpx, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy, /refraction
 
 ; Select healpix pixels that fall within the field of view.
 hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension_hpx-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements_hpx-1)),n_hpx_use) 
