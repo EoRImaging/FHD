@@ -60,6 +60,7 @@ IF n_dist_flag GT 0 THEN BEGIN
     flag_dist_i=0
 ENDIF
 
+;djs note - in my case, this is just switching from -1 to 0 in weights array, not changing total number of flags
 IF Keyword_Set(no_frequency_flagging) THEN (*obs.baseline_info).freq_use=Replicate(1,n_freq) ELSE BEGIN
     freq_cut_i=where(b_info.freq_use EQ 0,n_freq_cut)
     IF n_freq_cut GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[freq_cut_i,*]=0
