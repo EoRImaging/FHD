@@ -75,7 +75,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     tile_use1=intarr(n_tile)
     IF nb_use GT 0 THEN tile_use1[tile_A_i[bi_use]]=1
     IF nb_use GT 0 THEN tile_use1[tile_B_i[bi_use]]=1
-    ;tile_use*=tile_use1
+    tile_use*=tile_use1
     
 ENDFOR
 
@@ -104,7 +104,7 @@ IF Keyword_Set(no_frequency_flagging) THEN BEGIN
                 IF nb_use EQ 0 THEN CONTINUE 
                 data_test=Abs((*vis_ptr[pol_i])[freq_unflag_i[fi],bi_use])
                 unflag_i=where(data_test GT 0,n_unflag1)
-                IF n_unflag1 GT 0 THEN (*vis_weight_ptr[pol_i])[freq_unflag_i[fi],bi_use[unflag_i]]=1
+                ;IF n_unflag1 GT 0 THEN (*vis_weight_ptr[pol_i])[freq_unflag_i[fi],bi_use[unflag_i]]=1
             ENDFOR  
         ENDIF      
     ENDFOR
