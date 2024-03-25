@@ -4,6 +4,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
     obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, save_image_cubes=save_image_cubes, uvf_name=uvf_name,bi_use=bi_use,_Extra=extra
 
+    vis_debug=0
   t0=Systime(1)
   
   IF N_Elements(silent) EQ 0 THEN silent=0
@@ -15,8 +16,10 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     basename = file_basename(file_path_fhd)
     if n_elements(uvf_name) ne 0 then begin
       uvf_filepath = folder_use + basename + '_' + uvf_name + '_gridded_uvf_' + pol_names + '.sav'
+      bin_n_filepath = folder_use + basename + '_' + uvf_name + '_bin_n_' + pol_names + '.sav'
     endif else begin
       uvf_filepath = folder_use + basename + '_gridded_uvf_' + pol_names + '.sav'
+      bin_n_filepath = folder_use + basename + '_bin_n_' + pol_names + '.sav'
     endelse
   endif
 
@@ -133,7 +136,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       IF nf_use EQ 0 THEN n_vis=0 ELSE $
         dirty_UV=visibility_grid(vis_ptr,vis_weights_use[pol_i],obs_out,0,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
             polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
-            model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return, _Extra=extra)
+            model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return,bin_n=bin_n,ri=ri,vis_debug=vis_debug,_Extra=extra)
       IF n_vis EQ 0 THEN BEGIN
         *dirty_arr[pol_i,fi]=init_arr
         *weights_arr[pol_i,fi]=init_arr
@@ -141,6 +144,14 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
         IF Keyword_Set(model_flag) THEN *model_arr[pol_i,fi]=init_arr
         CONTINUE
       ENDIF
+      
+      IF vis_debug THEN BEGIN
+          IF fi EQ 0 THEN bin_n_use=bin_n ELSE bin_n_use = [[bin_n_use],[bin_n]]
+          ri_ptr = ptr_new(ri)
+          IF fi EQ 0 THEN ri_use=ptrarr(nf,/ALLOCATE_HEAP) 
+          ri_use[fi] = ri_ptr
+      ENDIF
+      
       n_vis_use+=n_vis
       vis_n_arr[pol_i,fi]=n_vis
       
@@ -152,7 +163,10 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       endif
 
       if keyword_set(save_image_cubes) then begin
-        dirty_weighted = dirty_UV / (weights_holo * rephase_use)
+        SAVE, rephase_use, FILENAME=folder_use + basename + '_rephase_use.sav'
+        ;;dirty_weighted = dirty_UV / (weights_holo * rephase_use)
+        dirty_weighted = dirty_UV / (weights_holo)
+
         wh_zero = where(abs(weights_holo eq 0), count_zero)
         if count_zero gt 0 then dirty_weighted[wh_zero] = 0
         dirty_cube[*, *, fi] = dirty_image_generate(dirty_weighted, degpix = degpix)
@@ -192,6 +206,9 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
 
     obs_out.n_vis=n_vis_use
     IF ~Arg_present(obs_out) THEN obs.n_vis=n_vis_use
+    print,'n_vis from vis_model_freq_split:',Strn(n_vis_use)
+    
+    IF vis_debug THEN save, filename = bin_n_filepath[pol_i], bin_n_use,ri_use
   
     IF keyword_set(save_uvf) THEN BEGIN
       save, filename = uvf_filepath[pol_i], dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, /compress

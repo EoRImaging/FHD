@@ -152,6 +152,7 @@ IF data_flag LE 0 THEN BEGIN
             print,'Flagging anomalous data'
             vis_flag,vis_arr,vis_weights,obs,psf,params,_Extra=extra
           ENDIF
+            print,'Saving weights at point 1'
             fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
           IF Keyword_Set(save_visibilities) THEN BEGIN
             t_save0=Systime(1)
@@ -170,8 +171,10 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(flag_visibilities) THEN BEGIN
         print,'Flagging anomalous data'
         vis_flag,vis_arr,vis_weights,obs,psf,params,_Extra=extra
+        print,'Saving weights at point 2'
         fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     ENDIF ELSE $ ;saved weights are needed for some later routines, so save them even if no additional flagging is done
+        print,'Saving weights at point 3'
         fhd_save_io,status_str,vis_weights,var='vis_weights',/compress,file_path_fhd=file_path_fhd,_Extra=extra
     
     IF Keyword_Set(model_visibilities) THEN BEGIN

@@ -6,7 +6,7 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     model_ptr=model_ptr,model_return=model_return,preserve_visibilities=preserve_visibilities,$
     error=error,grid_uniform=grid_uniform,$
     grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
-    beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,_Extra=extra
+    beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,bin_n=bin_n,ri=ri,vis_debug=vis_debug,_Extra=extra
 t0_0=Systime(1)
 heap_gc
 
@@ -37,7 +37,7 @@ bin_n = baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,r
   bi_use=bi_use,fi_use=fi_use,vis_inds_use=vis_inds_use,interp_flag=interp_flag,$
   dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,$
   x_offset=x_offset,y_offset=y_offset,preserve_visibilities=preserve_visibilities,$
-  mask_mirror_indices=mask_mirror_indices)
+  mask_mirror_indices=mask_mirror_indices,vis_debug=vis_debug)
 
 ; Use indices of visibilities to grid during this call (i.e. specific freqs, time sets)
 ; to initialize output arrays
@@ -380,7 +380,10 @@ ENDFOR
 
 ; free memory
 vis_arr_use=(model_use=0)
-xmin=(ymin=(ri=(inds=(x_offset=(y_offset=(bin_i=(bin_n=0)))))))
+
+IF vis_debug THEN xmin=(ymin=(inds=(x_offset=(y_offset=(bin_i=0))))) ELSE xmin=(ymin=(ri=(inds=(x_offset=(y_offset=(bin_i=(bin_n=0)))))))
+
+
 
 IF map_flag THEN BEGIN
     map_fn=holo_mapfn_convert(map_fn,psf_dim=psf_dim,dimension=dimension,n_vis=n_vis,error=error)

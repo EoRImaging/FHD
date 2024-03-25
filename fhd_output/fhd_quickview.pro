@@ -109,6 +109,8 @@ dimension=obs_out.dimension
 elements=obs_out.elements
 degpix=obs_out.degpix
 astr_out=obs_out.astr
+SAVE, obs_out, FILENAME = output_path + 'quickview_obs_out.sav'
+SAVE, astr_out, FILENAME = output_path + 'quickview_astr_out.sav'
 
 horizon_mask=fltarr(dimension,elements)+1.
 ;IF Keyword_Set(image_mask_horizon) THEN BEGIN

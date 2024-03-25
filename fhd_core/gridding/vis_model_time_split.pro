@@ -153,6 +153,8 @@ FUNCTION vis_model_time_split,obs,status_str,psf,params,vis_weights,model_uv_arr
   ENDFOR
   obs_out.n_vis=n_vis_use
   IF ~Arg_present(obs_out) THEN  obs.n_vis=n_vis_use
+  print,'n_vis from vis_model_freq_split:',Strn(n_vis_use)
+  
   
   if keyword_set(save_uvf) then save, filename = uvf_filepath, dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, /compress
   

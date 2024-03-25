@@ -10,7 +10,7 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
   fill_model_visibilities=fill_model_visibilities,bi_use=bi_use,fi_use=fi_use,$
   vis_inds_use=vis_inds_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
   dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,x_offset=x_offset,y_offset=y_offset,$
-  preserve_visibilities=preserve_visibilities,mask_mirror_indices=mask_mirror_indices
+  preserve_visibilities=preserve_visibilities,mask_mirror_indices=mask_mirror_indices,vis_debug=vis_debug
 
   ; Extract information from the structures
   n_tile=obs.n_tile
@@ -168,7 +168,9 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
 
   ; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
   ; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
+  IF vis_debug THEN bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0,max=elements*dimension-1)) ELSE$
   bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0))
+  
   bin_i=Long(where(bin_n,n_bin_use))
 
   return, bin_n
