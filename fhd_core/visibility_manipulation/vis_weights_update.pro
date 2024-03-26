@@ -85,13 +85,22 @@ FOR ti=0L,n_time_cut-1 DO BEGIN
 ENDFOR
 
 ;Changing so that it's different per pol
-flag_x=where(*vis_weight_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
-flag_y=where(*vis_weight_ptr[1] LE 0,n_flag,ncomplement=n_unflag)
+IF n_pol GT 1 THEN BEGIN
+    flag_x=where(*vis_weight_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
+    flag_y=where(*vis_weight_ptr[1] LE 0,n_flag,ncomplement=n_unflag)
+ENDIF ELSE BEGIN
+    flag_i=where(*vis_weight_ptr[0] LE 0,n_flag,ncomplement=n_unflag)
+ENDELSE
 flag_i_new=where(xmin LT 0,n_flag_new)
 IF n_flag_new GT 0 THEN FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[flag_i_new]=0
 IF n_flag GT 0 THEN BEGIN
-    xmin[flag_x]=-1
-    ymin[flag_y]=-1
+    IF n_pol GT 1 THEN BEGIN
+        xmin[flag_x]=-1
+        ymin[flag_y]=-1
+    ENDIF ELSE BEGIN
+        xmin[flag_i]=-1
+        ymin[flag_i]=-1
+    ENDELSE
 ENDIF
 
 IF max(xmin)<max(ymin) LT 0 THEN BEGIN
