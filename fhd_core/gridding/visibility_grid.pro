@@ -41,6 +41,7 @@ bin_n = baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,r
 
 ; Use indices of visibilities to grid during this call (i.e. specific freqs, time sets)
 ; to initialize output arrays
+IF Keyword_set(vis_debug) THEN vis_debug=vis_debug ELSE vis_debug=0
 IF Keyword_Set(preserve_visibilities) THEN vis_arr_use=(*visibility_ptr)[vis_inds_use] ELSE BEGIN
     vis_arr_use=(Temporary(*visibility_ptr))[vis_inds_use] 
     Ptr_free,visibility_ptr

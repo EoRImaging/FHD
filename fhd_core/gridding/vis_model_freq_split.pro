@@ -7,6 +7,8 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     vis_debug=0
   t0=Systime(1)
   
+  
+  
   IF N_Elements(silent) EQ 0 THEN silent=0
   pol_names=obs.pol_names
   
@@ -163,7 +165,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       endif
 
       if keyword_set(save_image_cubes) then begin
-        SAVE, rephase_use, FILENAME=folder_use + basename + '_rephase_use.sav'
+        ;;SAVE, rephase_use, FILENAME=folder_use + basename + '_rephase_use.sav'
         ;;dirty_weighted = dirty_UV / (weights_holo * rephase_use)
         dirty_weighted = dirty_UV / (weights_holo)
 
@@ -172,7 +174,8 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
         dirty_cube[*, *, fi] = dirty_image_generate(dirty_weighted, degpix = degpix)
 
         if keyword_set(model_flag) then begin
-          model_weighted = model_return / (weights_holo * rephase_use)
+          ;;model_weighted = model_return / (weights_holo * rephase_use)
+          model_weighted = model_return / (weights_holo)
           if count_zero gt 0 then model_weighted[wh_zero] = 0
           model_cube[*, *, fi] = dirty_image_generate(model_weighted, degpix = degpix)
         endif
