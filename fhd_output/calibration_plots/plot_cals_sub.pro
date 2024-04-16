@@ -49,7 +49,7 @@ FOR tile_i=0L,n_tiles-1 DO BEGIN
 ;    rec=Floor(tile_name/10)
 ;    tile=tile_name mod 10
     
-    IF tile_exist[tile_i] EQ 0  THEN BEGIN
+    IF tile_use[tile_i] EQ 0  THEN BEGIN
       ; no tile found... must have been flagged in pre-processing
       axiscolor='grey'
       cgplot,1,title=strtrim(tile_name,2),XTICKFORMAT="(A1)",YTICKFORMAT="(A1)",position=plot_pos[tile_i,*],$

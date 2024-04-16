@@ -32,10 +32,12 @@ for file_i=0, page_num-1 do begin
     phase_filename=file_path_base+'_cal_phase'+pagename+ext_name
     amp_filename=file_path_base+'_cal_amp'+pagename+ext_name
     auto_filename=file_path_base+'_cal_autocorr'+pagename+ext_name
-    res_filename=file_path_base+'_cal_residual'+pagename+ext_name
-    res_real_im_filename0=file_path_base+'_cal_residual_'+pol_names[0]+pagename+ext_name
-    res_real_im_filename1=file_path_base+'_cal_residual_'+pol_names[1]+pagename+ext_name
-    orig_amp_filename=file_path_base+'_cal_unfit'+pagename+ext_name
+    res_filename_amp=file_path_base+'_cal_residual_amp'+pagename+ext_name
+    res_filename_phase=file_path_base+'_cal_residual_phase'+pagename+ext_name
+    res_real_im_filename0=file_path_base+'_cal_residual_realVsIm'+pol_names[0]+pagename+ext_name
+    res_real_im_filename1=file_path_base+'_cal_residual_realVsIm'+pol_names[1]+pagename+ext_name
+    orig_amp_filename=file_path_base+'_cal_unfit_amp'+pagename+ext_name
+    orig_phase_filename=file_path_base+'_cal_unfit_phase'+pagename+ext_name
     vis_hist_filename=file_path_base+'_cal_hist'+ext_name
     IF file_test(file_dirname(file_path_base),/directory) EQ 0 THEN file_mkdir,file_dirname(file_path_base)
 
@@ -115,10 +117,19 @@ for file_i=0, page_num-1 do begin
     
         ;plot amplitude residuals
         IF max_amp_res GT 0 THEN BEGIN
+            ; plot unfit phase
+            plot_cals_sub,freq,gains0_orig,gains1_orig,filename=orig_phase_filename,/phase,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+            ; plot unfit amp
             plot_cals_sub,freq,gains0_orig,gains1_orig,filename=orig_amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
                 obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange
-            plot_cals_sub,freq,gains0_res_abs,gains1_res_abs,filename=res_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+            ; plot phase residual
+            plot_cals_sub,freq,gains0_res,gains1_res,filename=res_filename_phase,/phase,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
+              obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize
+            ; plot abs residual
+            plot_cals_sub,freq,gains0_res_abs,gains1_res_abs,filename=res_filename_amp,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
                 obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
+            ; plot real im residual
             plot_cals_sub,freq,gains0_res,filename=res_real_im_filename0,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
                 obsname=obs.obsname,plot_pos=plot_pos,cal_plot_charsize=cal_plot_charsize,cal_plot_symsize=cal_plot_symsize,cal_plot_resize=cal_plot_resize,yrange=yrange_res
             IF n_pol GT 1 THEN plot_cals_sub,freq,gains1_res,filename=res_real_im_filename1,/real_vs_imaginary,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$
