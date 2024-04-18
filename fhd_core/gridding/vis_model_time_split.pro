@@ -150,9 +150,10 @@ FUNCTION vis_model_time_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       IF Keyword_Set(t_grid0) THEN t_grid+=t_grid0
     ENDFOR
     IF ~Keyword_Set(preserve_visibilities) THEN ptr_free,vis_ptr,model_ptr
+    obs_out.n_vis[pol_i]=n_vis_use
+    IF ~Arg_present(obs_out) THEN  obs.n_vis[pol_i]=n_vis_use
   ENDFOR
-  obs_out.n_vis=n_vis_use
-  IF ~Arg_present(obs_out) THEN  obs.n_vis=n_vis_use
+  
   
   if keyword_set(save_uvf) then save, filename = uvf_filepath, dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, /compress
   

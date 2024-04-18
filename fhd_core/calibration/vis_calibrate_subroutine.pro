@@ -26,6 +26,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
   n_tile=cal.n_tile
   n_time=cal.n_time
   
+  n_vis_cal = Lonarr(2)
+  
   vis_weight_ptr_use=vis_weight_ptr ;weights WILL be over-written! (Only for NAN gain solutions)
   tile_A_i=cal.tile_A-1 ;tile_A contribution indexed from 0
   tile_B_i=cal.tile_B-1 ;tile_B contribution indexed from 0
@@ -274,9 +276,11 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
     cal_return.convergence[pol_i]=Ptr_new(convergence)
     cal_return.n_converged[pol_i] = n_converged
     cal_return.conv_iter[pol_i]=Ptr_new(conv_iter_arr)
+  vis_count_i=where(weight,n_vis_cal_p)  
+  n_vis_cal[pol_i]=n_vis_cal_p
   ENDFOR
   
-  vis_count_i=where(weight,n_vis_cal)
+  
   cal_return.n_vis_cal=n_vis_cal
   
   RETURN,cal_return

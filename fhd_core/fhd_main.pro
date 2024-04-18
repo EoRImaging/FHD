@@ -213,7 +213,7 @@ IF data_flag LE 0 THEN BEGIN
     undefine_fhd,antenna
     auto_corr=vis_extract_autocorr(obs,status_str,vis_arr=vis_arr,file_path_fhd=file_path_fhd,_Extra=extra)
     
-    IF obs.n_vis EQ 0 THEN BEGIN
+    IF obs.n_vis[0] EQ 0 OR obs.n_vis[1] EQ 0 THEN BEGIN
         print,"All data flagged! Returning."
         error=1
         IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present

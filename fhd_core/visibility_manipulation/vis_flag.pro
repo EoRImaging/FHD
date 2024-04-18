@@ -142,5 +142,6 @@ ENDFOR
 
 IF Keyword_Set(flag_sparse_uv_coverage) THEN sparse_uv_flag,obs,psf,params,vis_weight_ptr,flag_sparse_uv_coverage=flag_sparse_uv_coverage
 
-obs.n_vis=N_Elements(where(*vis_weight_ptr[0] GT 0))
+obs.n_vis[0]=N_Elements(where(*vis_weight_ptr[0] GT 0))
+obs.n_vis[1]=N_Elements(where(*vis_weight_ptr[1] GT 0))
 END

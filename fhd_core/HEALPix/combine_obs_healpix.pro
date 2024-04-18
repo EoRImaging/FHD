@@ -89,7 +89,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     status_str=status_arr_use[obs_i]
     dimension=obs.dimension
     elements=obs.elements
-    n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis)
+    n_vis_rel=obs.n_vis/Mean(obs_arr.n_vis,dimension=2)
     astr=obs.astr    
     degpix = obs.degpix        
     restored_beam_width=(!RaDeg/(obs.MAX_BASELINE/obs.KPIX)/obs.degpix)/(2.*Sqrt(2.*Alog(2.)))
@@ -260,10 +260,10 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             weights_hpx0[ind_map0]=(*weights_hpx[pol_i])
             *weights_hpx[pol_i]=(weights_hpx0)
         ENDIF 
-        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(stokes_weights,hpx_cnv)*n_vis_rel
-        (*stokes_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_dirty[pol_i],hpx_cnv)*n_vis_rel
-        IF model_flag THEN (*stokes_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_model[pol_i],hpx_cnv)*n_vis_rel
-        IF source_flag THEN (*stokes_sources_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_sources[pol_i],hpx_cnv)*n_vis_rel
+        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(stokes_weights,hpx_cnv)*n_vis_rel[pol_i,*]
+        (*stokes_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_dirty[pol_i],hpx_cnv)*n_vis_rel[pol_i,*]
+        IF model_flag THEN (*stokes_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_model[pol_i],hpx_cnv)*n_vis_rel[pol_i,*]
+        IF source_flag THEN (*stokes_sources_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_sources[pol_i],hpx_cnv)*n_vis_rel[pol_i,*]
     ENDFOR
     IF N_Elements(n_obs_hpx) EQ 0 THEN n_obs_hpx=intarr(n_hpx)
     IF reform_flag THEN BEGIN

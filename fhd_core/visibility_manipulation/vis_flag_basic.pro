@@ -144,7 +144,9 @@ IF Tag_exist(obs,'n_time_flag') THEN obs.n_time_flag=Total(1L-(*obs.baseline_inf
 IF Tag_exist(obs,'n_tile_flag') THEN obs.n_tile_flag=Total(1L-(*obs.baseline_info).tile_use)
 IF Tag_exist(obs,'n_freq_flag') THEN obs.n_freq_flag=Total(1L-(*obs.baseline_info).freq_use)
 
-vis_count_i=where(*vis_weight_ptr[0],n_vis_in)
-obs.n_vis_in=n_vis_in
+vis_count_i=where(*vis_weight_ptr[0],n_vis_in_0)
+obs.n_vis_in[0]=n_vis_in_0
+vis_count_i=where(*vis_weight_ptr[1],n_vis_in_1)
+obs.n_vis_in[1]=n_vis_in_1
 RETURN,vis_weight_ptr
 END

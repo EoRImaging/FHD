@@ -455,9 +455,9 @@ FOR pol_i=0,n_pol-1 DO BEGIN
     ENDIF
     
     IF ~Keyword_Set(no_png) THEN BEGIN
-        IF weights_flag THEN Imagefast,Abs(*weights_use[pol_i])*obs.n_vis,file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
+        IF weights_flag THEN Imagefast,Abs(*weights_use[pol_i])*obs.n_vis[pol_i],file_path=image_path+'_UV_weights_'+pol_names[pol_i],$
             /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,/log,$
-            low=Min(Abs(*weights_use[pol_i])*obs.n_vis),high=Max(Abs(*weights_use[pol_i])*obs.n_vis),_Extra=extra
+            low=Min(Abs(*weights_use[pol_i])*obs.n_vis[pol_i]),high=Max(Abs(*weights_use[pol_i])*obs.n_vis[pol_i]),_Extra=extra
         IF model_flag THEN BEGIN
             Imagefast,instr_dirty[zoom_low:zoom_high,zoom_low:zoom_high]+mark_image,file_path=image_path+filter_name+'_Dirty_'+pol_names[pol_i],$
                 /right,sig=2,color_table=0,back='white',reverse_image=reverse_image,low=instr_low_use,high=instr_high_use,$
@@ -509,7 +509,7 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         ENDIF
         FitsFast,instr_residual,fits_header_apparent,/write,file_path=output_path+filter_name+res_name+pol_names[pol_i]
         FitsFast,beam_use,fits_header,/write,file_path=output_path+'_Beam_'+pol_names[pol_i]
-        IF weights_flag THEN FitsFast,Abs(*weights_use[pol_i])*obs.n_vis,fits_header_uv,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
+        IF weights_flag THEN FitsFast,Abs(*weights_use[pol_i])*obs.n_vis[pol_i],fits_header_uv,/write,file_path=output_path+'_UV_weights_'+pol_names[pol_i]
         IF Keyword_Set(galaxy_model_fit) THEN FitsFast,*gal_model_img[pol_i],fits_header_apparent,/write,file_path=output_path+'_GalModel_'+pol_names[pol_i]
     ENDIF
     

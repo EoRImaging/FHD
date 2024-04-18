@@ -91,7 +91,9 @@ pro healpix_three_d_images, cube_path, savefile_directory, even = even, odd = od
 
 
   obs_arr = obs_arr[0]
-  n_vis = obs_arr.n_vis
+  IF keyword_set(xx) THEN n_vis = obs_arr.n_vis[0]
+  IF keyword_set(yy) THEN n_vis = obs_arr.n_vis[1]
+  
   n_freq = obs_arr.n_freq
   baseline_info = *(obs_arr.baseline_info)
   freq_array_big = baseline_info.freq
