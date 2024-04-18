@@ -195,6 +195,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
 
+**fill_model_visibilities**:  calculate model even where there are flags (without unflagging that data) <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: undefined (off) <br />
+
 **gaussian_source_models**:  uses SHAPE information provided in the sky catalog to build Gaussian models of extended sources. See Line et al. 2020 for more details on implementation. The models are only accurate to within ~10\%, and this is an ongoing issue (see Issue [\#211](https://github.com/EoRImaging/FHD/issues/211)). <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
