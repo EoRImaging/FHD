@@ -38,6 +38,7 @@ data_flag=fhd_setup(file_path_vis,status_str,export_images=export_images,cleanup
     
 IF data_flag LE 0 THEN BEGIN
   
+    ;print, "ref_antenna: " + extra.ref_antenna
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
     
@@ -102,7 +103,7 @@ IF data_flag LE 0 THEN BEGIN
       ENDIF
       skymodel_cal=fhd_struct_init_skymodel(obs,source_list=calibration_source_list,catalog_path=catalog_use,return_cal=1,diffuse_model=diffuse_calibrate,_Extra=extra)
       cal=fhd_struct_init_cal(obs,params,skymodel_cal,source_list=calibration_source_list,$
-        catalog_path=catalog_use,transfer_calibration=transfer_calibration,_Extra=extra)
+        catalog_path=catalog_use,transfer_calibration=transfer_calibration,ref_antenna=extra.ref_antenna,_Extra=extra)
     ENDIF
 
     ;print informational messages
