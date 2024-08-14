@@ -18,11 +18,11 @@ dist_hist = histogram(dist_arr, min=obs.min_baseline, binsize=5, max=obs.max_bas
             wh_noflag = where(Abs(model_vals) GT 0, count_noflag)
             IF count_noflag EQ 0 THEN CONTINUE ELSE inds = inds[wh_noflag]
             if Keyword_Set(calibration_visibilities_subtract) THEN BEGIN
-                vis_res_ratio_mean[i] = mean(abs((*vis_arr[pol_i])[inds]))/mean(abs(model_vals))
-                vis_res_sigma[i] = sqrt(variance(abs((*vis_arr[pol_i])[inds])))/mean(abs(model_vals))
+                vis_res_ratio_mean[pol_i, i] = mean(abs((*vis_arr[pol_i])[inds]))/mean(abs(model_vals))
+                vis_res_sigma[pol_i, i] = sqrt(variance(abs((*vis_arr[pol_i])[inds])))/mean(abs(model_vals))
             ENDIF ELSE BEGIN
-                vis_res_ratio_mean[i] = mean(abs((*vis_arr[pol_i])[inds]-model_vals))/mean(abs(model_vals))
-                vis_res_sigma[i] = sqrt(variance(abs((*vis_arr[pol_i])[inds]-model_vals)))/mean(abs(model_vals))
+                vis_res_ratio_mean[pol_i, i] = mean(abs((*vis_arr[pol_i])[inds]-model_vals))/mean(abs(model_vals))
+                vis_res_sigma[pol_i, i] = sqrt(variance(abs((*vis_arr[pol_i])[inds]-model_vals)))/mean(abs(model_vals))
             ENDELSE
         ENDIF
     ENDFOR
