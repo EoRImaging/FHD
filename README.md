@@ -28,14 +28,15 @@ For further details, please see [Sullivan et al 2012](https://arxiv.org/abs/1209
 Download the latest versions of these libraries/repos.    
 a. This repository   
 b. The [fhdps_utils](https://github.com/EoRImaging/fhdps_utils) repository   
-c. The NASA [astro](https://idlastro.gsfc.nasa.gov/) IDL library    
+c. The NASA [astro](https://github.com/wlandsman/IDLAstro) IDL library    
 d. The [coyote](https://github.com/idl-coyote/coyote) library   
 e. The [HEALPix](https://healpix.sourceforge.io/) library   
 f. Optional: the [eppsilon](https://github.com/EoRImaging/eppsilon/) power spectrum generation code    
 
-Add these libraries to your IDL path. Be sure to use the correct separator (; or : ) and include the ‘+’ sign at the start of `+path/to/library/`. Optionally, you can create an IDL startup file to set the IDL path.    
+Add these libraries to your IDL path, with examples per OS below.  
 a. Windows: `!PATH = !PATH + ';' + Expand_Path('+path\to\library\')`   
-b. Unix: `!PATH = Expand_Path('+path/to/library/') + ':' + !PATH`
+b. Unix: `!PATH = Expand_Path('+path/to/library/') + ':' + !PATH`  
+Be sure to use the correct separator (; or :) and include the ‘+’ sign at the start of `+path/to/library/`. Optionally, you can create an IDL startup file to set the IDL path. The [IDL startup file](https://www.nv5geospatialsoftware.com/docs/StartupFiles.html) is essentially a `bash_profile` for IDL -- the default name is `idl_startup.pro` and the default path is your home directory.
 
 Install [HEALPix](http://healpix.jpl.nasa.gov/html/install.htm)    
 
