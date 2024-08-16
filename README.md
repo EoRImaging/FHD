@@ -36,20 +36,22 @@ f. Optional: the [eppsilon](https://github.com/EoRImaging/eppsilon/) power spect
 Add these libraries to your IDL path, with examples per OS below.  
 a. Windows: `!PATH = !PATH + ';' + Expand_Path('+path\to\library\')`   
 b. Unix: `!PATH = Expand_Path('+path/to/library/') + ':' + !PATH`  
-Be sure to use the correct separator (; or :) and include the ‘+’ sign at the start of `+path/to/library/`. Optionally, you can create an IDL startup file to set the IDL path. The [IDL startup file](https://www.nv5geospatialsoftware.com/docs/StartupFiles.html) is essentially a `bash_profile` for IDL -- the default name is `idl_startup.pro` and the default path is your home directory.
+Be sure to use the correct separator (; or :) and include the ‘+’ sign at the start of `+path/to/library/`. Optionally, you can create an IDL startup file to set the IDL path. The [IDL startup file](https://www.nv5geospatialsoftware.com/docs/StartupFiles.html) is essentially a `bashrc` for IDL -- create a file `idl_startup.pro` with all of your IDL path commands, and set the global variable `IDL_STARTUP` to its location (e.g. `export IDL_STARTUP=/home/<user>/idl_startup.pro` in your `bashrc` or similar).
 
 Install [HEALPix](http://healpix.jpl.nasa.gov/html/install.htm)    
 
 Install [Imagemagick](http://www.imagemagick.org) if not already present.   
 
-Suggested test commands:     
-a. `print,cgHasImageMagick()`   
+Suggested test commands:  
+a. `idl`  
+will open up an IDL terminal if IDL is installed correctly. Run the following commands in an IDL terminal.  
+b. `print,cgHasImageMagick()`   
 prints error if coyote library not installed, returns 0 if coyote library installed but Imagemagick not installed correctly, and returns 1 if both are installed correctly.   
-b. `astrolib`   
+c. `astrolib`   
 prints error if astro IDL library not installed correctly, prints message “ASTROLIB: Astronomy Library system variables have been added” if installed correctly.   
-c. `init_healpix`   
+d. `init_healpix`   
 prints error if HEALPix not installed correctly   
-d. `imagefast,randomN(5,256,256),file_path='some/output/path/testimage.png'`  
+e. `imagefast,randomN(5,256,256),file_path='some/output/path/testimage.png'`  
 prints error if FHD not installed correctly, generates a 256x256 pixel image of poisson noise at path 'some/output/path/testimage.png' if installed correctly and read/write permissions are set correctly.
 
 ## Community Guidelines
