@@ -179,9 +179,12 @@ Text file of generated bandpass solutions. The first column is the frequency cha
 
   * **vis_count**: an image of dimensions N<sub>dimension</sub> by N<sub>elements</sub> (where dimension and elements are FHD keywords). Each pixel value is how many visibilities contributed to that pixel, which is the same as our in-house uniform weighting. (!Q right?)
 
+### \<obsids\>\_\<even/odd\>\_gridded_uvf_\<pol\>.sav <br />
+Gridded uvf cubes, alternative input to eppsilon. Saved only if keyword `save_uvf` is set.
+
 ##  HEALPix<br />
 
-### \<obsids\>\_even_cube\<pol\>.sav / \<obsids\>_even_cube\<pol\>.sav <br />
+### \<obsids\>\_\<even/odd\>_cube\<pol\>.sav
 
   * **variance_cube/weights_cube**: an array of HEALPix pixels organized by hpx_inds for each output frequency. This is an image cube of 1's gridded with the beam for all visibilities (weights) or 1's gridded with the beam squared for all visibilities (variances).
 
@@ -371,12 +374,6 @@ Residual image with the subtracted sources over-plotted. Each source is plotted 
 
 ### \<obsids\>\_\<filter\>\_UV_weights_\<pol\>.png <br />
 
-##  UVF Cubes<br />
-Saved only if keyword `save_uvf` is set.
-
-### \<obsids\>\_even_gridded_uvf.sav <br />
-
-### \<obsids\>\_odd_gridded_uvf.sav <br />
 
 ##  Vis Data<br />
 
