@@ -21,14 +21,14 @@
 ;    
 ;    ad2xy - set to convert from celestial to pixel coordinates
 ;    
-;    ignore_refraction - set to ignore refraction (for backwards compatibility and testing)
+;    refraction - set to take refraction into account (it's false by default for speed, backwards compatibility and testing)
 ;    
 ;    _Extra - passes any additional keywords (like temperature (Kelvin) or pressure (millibars) to co_refract
 ;
 ; :Author: Ian
 ;-
 PRO apply_astrometry,obs, x_arr=x_arr, y_arr=y_arr, ra_arr=ra_arr, dec_arr=dec_arr, xy2ad=xy2ad, ad2xy=ad2xy, $
-    astr=astr, JDate=JDate, ignore_refraction=ignore_refraction, _Extra=extra
+    astr=astr, JDate=JDate, refraction=refraction, _Extra=extra
 
 IF not (Keyword_Set(xy2ad) OR Keyword_Set(ad2xy)) THEN $
     message, "ERROR! At least one direction keyword (xy2ad or ad2xy) must be set."
@@ -39,13 +39,16 @@ IF (Keyword_Set(xy2ad) AND Keyword_Set(ad2xy)) THEN $
 IF size(obs,/type) EQ 8 THEN BEGIN 
     astr=obs.astr
     JDate=obs.JD0
-ENDIF ELSE ignore_refraction=1
+ENDIF ELSE refraction=0
+
+if Keyword_Set(refraction) THEN refraction=1 ELSE refraction=0
+
 precess_forward=0
 precess_reverse=0
 IF Keyword_Set(xy2ad) THEN BEGIN
     xy2ad, x_arr, y_arr, astr, ra_arr, dec_arr
     
-    IF ~Keyword_Set(ignore_refraction) THEN BEGIN   
+    IF Keyword_Set(refraction) THEN BEGIN   
         i_nan=where(Finite(ra_arr,/nan),n_nan,complement=i_use)
         IF n_nan EQ 0 THEN BEGIN
             Eq2Hor,ra_arr, dec_arr, JDate, alt_arr, az_arr, nutate=precess_reverse,precess=precess_reverse,aberration=precess_reverse, refract=0, lon=obs.lon, alt=obs.alt, lat=obs.lat
@@ -78,7 +81,7 @@ IF Keyword_Set(ad2xy) THEN BEGIN
         dec_arr_new[horizon_i] = !Values.F_NAN
         i_nan=where(Finite(ra_arr_new,/nan),n_nan,complement=i_use)
     ENDIF
-    IF ~Keyword_Set(ignore_refraction) THEN BEGIN    
+    IF Keyword_Set(refraction) THEN BEGIN    
         ra_arr_new = ra_arr
         dec_arr_new = dec_arr
         IF n_nan EQ 0 THEN BEGIN

@@ -40,7 +40,7 @@ pro vis_delay_filter, vis_model_arr,  params, obs
   
   ; Phase to zenith -- easier calculations of the location of the horizon when phased to zenith
   dimension=obs.dimension
-  apply_astrometry,obs,ra_arr=obs.zenra, dec_arr=obs.zendec, x_arr=x_use, y_arr=y_use, /ad2xy
+  apply_astrometry,obs,ra_arr=obs.zenra, dec_arr=obs.zendec, x_arr=x_use, y_arr=y_use, /ad2xy, /refraction
   dx=obs.obsx - obs.zenx
   dy=obs.obsy - obs.zeny
   dx*=(2.*!Pi/dimension)

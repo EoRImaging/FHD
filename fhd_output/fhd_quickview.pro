@@ -113,7 +113,8 @@ astr_out=obs_out.astr
 horizon_mask=fltarr(dimension,elements)+1.
 ;IF Keyword_Set(image_mask_horizon) THEN BEGIN
     ;set /ignore_refraction for speed since we're just finding pixels to mask
-    apply_astrometry, obs_out, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+    ; UPDATE: Refraction is ignored by default in apply astrometry
+    apply_astrometry, obs_out, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
     horizon_test=where(Finite(ra_arr,/nan),n_horizon_mask)
     IF n_horizon_mask GT 0 THEN horizon_mask[horizon_test]=0
 ;ENDIF
@@ -199,14 +200,14 @@ IF model_flag THEN IF skymodel.n_sources GT 0 THEN BEGIN
     source_array=skymodel.source_list
     source_arr_out=source_array
     
-    apply_astrometry, obs_out, ra_arr=source_array.ra, dec_arr=source_array.dec, x_arr=sx, y_arr=sy, /ad2xy
+    apply_astrometry, obs_out, ra_arr=source_array.ra, dec_arr=source_array.dec, x_arr=sx, y_arr=sy, /ad2xy, /refraction
     source_arr_out.x=sx & source_arr_out.y=sy
     
     extend_test=where(Ptr_valid(source_arr_out.extend),n_extend)
     IF n_extend GT 0 THEN BEGIN
         FOR ext_i=0L,n_extend-1 DO BEGIN
             component_array_out=*source_array[extend_test[ext_i]].extend
-            apply_astrometry, obs_out, ra_arr=component_array_out.ra, dec_arr=component_array_out.dec, x_arr=cx, y_arr=cy, /ad2xy
+            apply_astrometry, obs_out, ra_arr=component_array_out.ra, dec_arr=component_array_out.dec, x_arr=cx, y_arr=cy, /ad2xy, /refraction
             component_array_out.x=cx & component_array_out.y=cy
             
             IF Total(component_array_out.flux.(0)) EQ 0 THEN BEGIN
@@ -229,14 +230,14 @@ IF size(cal, /type) EQ 8 THEN IF cal.skymodel.n_sources GT 0 THEN BEGIN
     cal_source_array = cal.skymodel.source_list
     cal_source_arr_out=cal_source_array
     
-    apply_astrometry, obs_out, ra_arr=cal_source_array.ra, dec_arr=cal_source_array.dec, x_arr=sx, y_arr=sy, /ad2xy
+    apply_astrometry, obs_out, ra_arr=cal_source_array.ra, dec_arr=cal_source_array.dec, x_arr=sx, y_arr=sy, /ad2xy, /refraction
     cal_source_arr_out.x=sx & cal_source_arr_out.y=sy
 
     extend_test=where(Ptr_valid(cal_source_arr_out.extend),n_extend)
     IF n_extend GT 0 THEN BEGIN
         FOR ext_i=0L,n_extend-1 DO BEGIN
             component_array_out=*cal_source_array[extend_test[ext_i]].extend
-            apply_astrometry, obs_out, ra_arr=component_array_out.ra, dec_arr=component_array_out.dec, x_arr=cx, y_arr=cy, /ad2xy
+            apply_astrometry, obs_out, ra_arr=component_array_out.ra, dec_arr=component_array_out.dec, x_arr=cx, y_arr=cy, /ad2xy, /refraction
             component_array_out.x=cx & component_array_out.y=cy
             
             cal_source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)

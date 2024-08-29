@@ -72,7 +72,7 @@ IF keyword_set(gaussian_source_models) then begin
 
         ;Calculate the x,y pixel coordinates of the gaussian sources
         apply_astrometry, obs, x_arr=gaussian_x_vals, y_arr=gaussian_y_vals, ra_arr=[[obs.obsra-0.5*gaussian_ra], $
-          [obs.obsra+0.5*gaussian_ra]], dec_arr=[[obs.obsdec-0.5*gaussian_dec],[obs.obsdec+0.5*gaussian_dec]], /ad2xy
+          [obs.obsra+0.5*gaussian_ra]], dec_arr=[[obs.obsdec-0.5*gaussian_dec],[obs.obsdec+0.5*gaussian_dec]], /ad2xy, /refraction
         gaussian_x = (gaussian_x_vals[*,1]-gaussian_x_vals[*,0]) / gaussian_ra_corr
         gaussian_y = (gaussian_y_vals[*,1]-gaussian_y_vals[*,0]) / gaussian_dec_corr
 
