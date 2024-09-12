@@ -215,7 +215,7 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,obsra:meta.obsra,obsdec:meta.obsdec,$
     zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,zenx:meta.zenx,zeny:meta.zeny,$
     phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$
-    n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_tile_flag:Long(n_flag),n_freq:Long(n_freq),n_freq_flag:0L,n_time:Long(n_time),n_time_flag:n_time_cut,$
+    n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_tile_flag:Long(n_flag),n_freq:Long(n_freq),n_freq_flag:0L,n_time:Long(n_time),n_time_flag:Long(n_time_cut),$
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),primary_beam_area:Ptrarr(4),primary_beam_sq_area:Ptrarr(4),pol_names:pol_names,$
     jd0:meta.jd0,max_baseline:Double(max_baseline),min_baseline:Double(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),freq_res:Float(freq_res),time_res:Float(meta.time_res),astr:meta.astr,alpha:Float(spectral_index),$
