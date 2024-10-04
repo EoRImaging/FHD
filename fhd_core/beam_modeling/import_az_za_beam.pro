@@ -20,13 +20,29 @@ FUNCTION import_az_za_beam, obs, antenna, file_path_J_matrix,$
   n_freq = sxpar(header, 'naxis3')
   n_feed = sxpar(header, 'naxis4')
   n_basis = sxpar(header, 'naxis6')
-  n_ang = n_za_ang*n_az_ang
   
   za_file_delta = sxpar(header,'cdelt2') ;in degrees
   za_file_start = sxpar(header, 'crval2') ;in degrees
 
   az_file_delta = sxpar(header,'cdelt1') ;in degrees
   az_file_start = sxpar(header, 'crval1') ;in degrees
+
+  az_file_arr = findgen(n_az_ang) * az_file_delta + az_file_start
+
+  ; check to see if we have a beam that's defined over exactly 2pi in azimuth
+  if abs((az_file_arr[-1] - az_file_arr[0] + az_file_delta) - 2 * !dpi) < 1e-3 then begin
+    ; azimuth wraps around, extend array in each direction to improve interpolation
+    extend_length = 3
+    az_file_arr = findgen(n_az_ang + extend_length*2) * az_file_delta + (az_file_start - extend_length * az_file_delta)
+    n_az_ang = n_elements(az_file_arr)
+
+    low_slice = Jmat0[0:extend_length-1, *, *, *, *, *, *]
+    high_slice = Jmat0[-1 * extend_length:-1, *, *, *, *, *, *]
+
+    Jmat0 = [high_slice, Jmat0, low_slice]
+  endif 
+
+  n_ang = n_za_ang*n_az_ang
 
   freq_arr_Jmat = findgen(sxpar(header,'naxis3'))*sxpar(header,'cdelt3') + sxpar(header, 'crval3') ; in Hz
   
@@ -67,7 +83,19 @@ FUNCTION import_az_za_beam, obs, antenna, file_path_J_matrix,$
   ; get the az/za use values in the coordinates of the image
   ; (taking the az/za file values into account)
   za_use_coords = (za_use-za_file_start)/za_file_delta
-  az_use_coords = (az_use-az_file_start)/az_file_delta
+
+  ; NOTE: that the `az_arr` passed in here is the azimuth angle associated
+  ; with altitude, making it a LEFT-HANDED coordinate system when combined with
+  ; zenith angle! The azimuth angle in `az_arr` is defined as running East from
+  ; North (North=0, East=pi/2). The UVBeam convention is that azimuth runs from
+  ; East to North (East=0, North=pi/2) so opposite direction and off by 90 degrees.
+  new_az_use = 90. - az_use
+  wh_neg = where(new_az_use < 0, count_neg)
+  if count_neg gt 0 then begin
+    new_az_use[wh_neg] = new_az_use[wh_neg] + 360.
+  endif
+  ; use az_file_arr[0] rather than az_file_start to pick up extension
+  az_use_coords = (new_az_use-az_file_arr[0])/az_file_delta
 
   ; Interpolate in azimulth and zenith angle
   FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO BEGIN

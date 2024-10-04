@@ -187,8 +187,17 @@ endelse
 ;NOTE: Eq2Hor REQUIRES Jdate_use to have the same number of elements as RA and Dec for precession!!
 ;;NOTE: The NEW Eq2Hor REQUIRES Jdate_use to be a scalar! They created a new bug when they fixed the old one
 Eq2Hor,ra_use,dec_use,Jdate_use,alt_arr1,az_arr1,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate, refract=0
-za_arr=fltarr(psf_image_dim,psf_image_dim)+90. & za_arr[valid_i]=90.-alt_arr1
-az_arr=fltarr(psf_image_dim,psf_image_dim) & az_arr[valid_i]=az_arr1
+za_arr=fltarr(psf_image_dim,psf_image_dim)+90.
+za_arr[valid_i]=90.-alt_arr1
+
+; NOTE: this keeps the azimuth angle associated with zenith angle the same as
+; the azimuth angle associated with altitude, making it a LEFT-HANDED coordinate
+; system! The azimuth here is defined as running East from North (North=0, East=pi/2).
+; The UVBeam convention is from East to North (East=0, North=pi/2) (so opposite
+; direction and off by 90 degrees)
+az_arr=fltarr(psf_image_dim,psf_image_dim)
+az_arr[valid_i]=az_arr1
+
 undefine, ra_use, dec_use, alt_arr1, az_arr1
 ;Get pixels which fall within the horizon
 horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
