@@ -22,6 +22,12 @@ FUNCTION import_az_za_beam, obs, antenna, file_path_J_matrix,$
   n_basis = sxpar(header, 'naxis6')
   n_ang = n_za_ang*n_az_ang
   
+  za_file_delta = sxpar(header,'cdelt2') ;in degrees
+  za_file_start = sxpar(header, 'crval2') ;in degrees
+
+  az_file_delta = sxpar(header,'cdelt1') ;in degrees
+  az_file_start = sxpar(header, 'crval1') ;in degrees
+
   freq_arr_Jmat = findgen(sxpar(header,'naxis3'))*sxpar(header,'cdelt3') + sxpar(header, 'crval3') ; in Hz
   
   ; Make Jmat Array, combining real and imaginary parts into same axis
@@ -58,13 +64,18 @@ FUNCTION import_az_za_beam, obs, antenna, file_path_J_matrix,$
   za_use = za_arr[pix_use]
   az_use = az_arr[pix_use]
   
+  ; get the az/za use values in the coordinates of the image
+  ; (taking the az/za file values into account)
+  za_use_coords = (za_use-za_file_start)/za_file_delta
+  az_use_coords = (az_use-az_file_start)/az_file_delta
+
   ; Interpolate in azimulth and zenith angle
   FOR p_i=0,n_ant_pol-1 DO FOR p_j=0,n_ant_pol-1 DO FOR freq_i=0L,nfreq_bin-1 DO BEGIN
     Jmat_use=Reform(*Jmat_interp[p_i,p_j,freq_i],n_za_ang,n_az_ang)
     ;Expand,Jmat_use,n_zen_ang,n_az_ang,Jmat_single
-    (*Jones_matrix[p_i,p_j,freq_i])=Interpolate(Jmat_use,za_use,az_use,cubic=-0.5)
+    (*Jones_matrix[p_i,p_j,freq_i])=Interpolate(Jmat_use,za_use_coords,az_use_coords,cubic=-0.5)
   ENDFOR
-  
+
   RETURN, Jones_matrix
   END
   
