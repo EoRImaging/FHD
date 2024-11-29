@@ -5,8 +5,8 @@ FUNCTION load_skyh5_source_catalog, catalog_path, $
   
   if ~keyword_set(skyh5_name_stokes) then skyh5_name_stokes='/Data/stokes'
   if ~keyword_set(skyh5_name_nsources) then skyh5_name_nsources='/Header/Ncomponents'
-  if ~keyword_set(skyh5_name_ra) then skyh5_name_ra= '/Header/lon'
-  if ~keyword_set(skyh5_name_dec) then skyh5_name_dec='/Header/lat'
+  if ~keyword_set(skyh5_name_ra) then skyh5_name_ra= '/Header/skycoord/ra'
+  if ~keyword_set(skyh5_name_dec) then skyh5_name_dec='/Header/skycoord/dec'
   if ~keyword_set(skyh5_name_freqs) then skyh5_name_freqs='/Header/reference_frequency'
   if ~keyword_set(skyh5_name_alphas) then skyh5_name_alphas='/Header/spectral_index'
   

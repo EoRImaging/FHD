@@ -22,7 +22,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Dependency*: `model_visibilities` must be set <br />
   -*Default*: 0.05, or 0.01 if `allow_sidelobe_sources` set <br />
 
-**beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989, 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there are currently two options: 2) 2016 version by Dave Deboer saved as cross and co-pol, 0) an earlier version !Q saved as X and Y pols. <br />
+**beam_model_version**: a number that indicates the tile beam model calculation. This is dependent on the instrument, and specific calculations are carried out in `<instrument>_beam_setup_gain.pro`. For the MWA, there are currently three options: 0) !Q, 1) a Hertzian dipole as prescribed by Cheng 1992 and Balanis 1989, 2) the average embedded element model from Sutinjo 2015. For PAPER, there are currently two options: 1) !Q, 2) !Q. For HERA, there are currently two options: 2) 2016 version by Dave Deboer saved as cross and co-pol, 0) an earlier version !Q saved as X and Y pols. This keyword is ignored if import_pyuvdata_beam_filepath is set. <br />
   -*MWA range*: 0, 1 (or anything else captured in the `else` statement), 2 <br />
   -*PAPER range*: 1 (or anything else captured in the `else` statement), 2 <br />
   -*HERA range*: 2 (or anything else captured in the `else` statement) <br />
@@ -48,6 +48,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 1 <br />
+
+**import_pyuvdata_beam_filepath**: path to a .beamfits file that contains a beam model formatted according to the standards of [pyuvdata](https://github.com/RadioAstronomySoftwareGroup/pyuvdata). If set, this beam model will be used instead of an internal beam model specified with beam_model_version. <br />
+  -*Default*: not set <br />
 
 **inst_tile_ptr**: a pointer array to designate which tile indices belong to which instrument. The order of the pointer array is assumed to match the order of instruments specified in the keyword string array `instrument`. Only used if there is more than one instrument supplied. Tiles are numbered from 0. <br />
   -*Example*: `inst_tile_ptr = PTRARR(2,/allocate)`<br />
