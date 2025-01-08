@@ -31,7 +31,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **beam_nfreq_avg**: the number of fine frequency channels to calculate a beam for, using the average of the frequencies. The beam is a function of frequency, and a calculation on the finest level is most correct (beam_nfreq_avg=1). However, this is computationally difficult for most machines. <br />
   -*Range*: 1-# of frequency channels, as long as it evenly divides the # of frequency channels <br />
-  -*Default*: 16 !Q <br />
+  -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 16 <br />
 
 **beam_offset_time**: calculate the beam at a specific time within the observation. 0 seconds indicates the start of the observation, and the # of seconds in an observation indicates the end of the observation. <br />
@@ -197,7 +197,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **fill_model_visibilities**:  calculate model even where there are flags (without unflagging that data) <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: undefined (off) <br />
+  -*Default*: 1 <br />
 
 **gaussian_source_models**:  uses SHAPE information provided in the sky catalog to build Gaussian models of extended sources. See Line et al. 2020 for more details on implementation. The models are only accurate to within ~10\%, and this is an ongoing issue (see Issue [\#211](https://github.com/EoRImaging/FHD/issues/211)). <br />
   -*Turn off/on*: 0/1 <br />
@@ -527,7 +527,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**no_frequency_flagging**: do not flag frequency channels. <br />
+**no_frequency_flagging**: do not flag extra frequency channels, such as the edges of the coarse bands for the MWA. In addition, remove pre-processing frequency flags if the data is non-zero. <br />
   -*Turn off/on*: 0/1 (flag/don't flag) <br />
   -*Default*: not set <br />
 
