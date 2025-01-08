@@ -64,10 +64,16 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**kernel_window**: modify the gridding kernel by applying a window function to the primary beam according to a user choice. If set, but not a string and nonzero, assigns 'Blackman-Harris^2' <br />
+**kernel_window**: modify the gridding kernel by applying a window function to the primary beam according to a user choice. If set, but not a string and nonzero, assigns 'Blackman-Harris^2'. Forces the value of psf_dim to be 18. <br />
   -*Options*: 'Hann', 'Hamming', 'Blackman', 'Nutall', 'Blackman-Nutall',  <br />
                'Blackman-Harris', 'Blackman-Harris^2', 'Tukey' <br />
   -*Default*: Not set (not the same as setting to 0!) <br />
+
+**psf_dim**: Sets the PSF dimension in UV space in units of pixels. By default calculated based on max antenna size, max frequency, and kbinsize (see `fhd_struct_init_antenna.pro` for calculation). Must be an even integer. Will be overwritten to 28 if debug_dim is set, and overwritten to 18 if kernel_window is set. <br />
+  -*Default*: not set <br />
+
+**psf_max_dim**: Must be an even integer. Will decrease psf_dim to this value if it is calculated to be higher. <br />
+  -*Default*: not set <br />
 
 **psf_resolution**: super-resolution factor of the psf in UV space. Values greater than 1 increase the resolution of the gridding kernel. <br />
   -*Default*: 16 <br />
@@ -77,7 +83,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: Not set (same as 0) <br />
 
-**transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. <br />
+**transfer_psf**: filepath to the FHD beams directory with the same obsid's psf structure (i.e. `/path/to/FHD/dir/fhd_nb_test/beams`). That psf structure is used instead of calculating a new one. The obs structure from that FHD directory is also used to provide the beam_integral. If the obs structure is in the `metadata` directory and the beams structure is in the `beams` directory, you can instead provide the path to their parent directory (i.e. `/path/to/FHD/dir/fhd_nb_test`). <br />
   -*Default*: not set <br />
 
 
@@ -195,9 +201,14 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
 
+
 **fill_model_visibilities**:  calculate model even where there are flags (without unflagging that data) <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
+
+**firstpass**: Sets defaults for a standard firstpass run: sets deconvolve=0 and mapfn_recalculate=0 (overwriting them if they were previously set to 1), if return_cal_visibilities or export_images are unset, then it sets them both to 1. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: Undefined (0) <br />
 
 **gaussian_source_models**:  uses SHAPE information provided in the sky catalog to build Gaussian models of extended sources. See Line et al. 2020 for more details on implementation. The models are only accurate to within ~10\%, and this is an ongoing issue (see Issue [\#211](https://github.com/EoRImaging/FHD/issues/211)). <br />
   -*Turn off/on*: 0/1 <br />
@@ -206,6 +217,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
    -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
+
+**initial_calibration**: Path to an existing calibration file to use as the starting point in calibration. <br />
+  -*Default* : Unset <br />
 
 **max_cal_baseline**: the maximum baseline length in wavelengths to be used in calibration. If max_baseline is smaller, it will be used instead. <br />
   -*Default*: equal to `max_baseline` <br />
@@ -219,7 +233,8 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*eor_wrapper_defaults*: 50 <br />
 
 **model_transfer**: filepath to the FHD directory with model visbilities of the same obsid to be used instead of recalculating (i.e. `/path/to/the/FHD/dir/fhd_nb_test/cal_prerun/vis_data`). This is currently only an option for when the calibration model visibilities are the same as the subtraction model visibilities. The model visibilities can't have been flagged (see `cal_stop` on how to generate unflagged model visbilities). <br />
-  -*Default*: 50 <br />
+
+**model_uv_transfer**: filepath to the generated non-instrumental model uv-plane of the same obsid to be used instead of recalculating (i.e. `'<path>/<to>/<FHDdir>/cal_prerun/' + obs_id + '_model_uv_arr.sav'`). This is useful for creating model visibilities with different beam kernels using the same set of sources, and will bypass all source list generation, source DFTing, and source images.  Non-instrumental model uv-planes are only saved when `cal_stop` is set. <br />
 
 **n_avg**: number of frequencies to average over to smooth the frequency band. <br />
   -*Default*: !Q <br />
@@ -229,6 +244,9 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: unset <br />
   -*eor_wrapper_defaults*: 1 <br />
+
+**phase_fit_iter**: Set the iteration number to begin phase calibration. Before this, phase is held fixed and only amplitude is being calibrated. <br />
+  -*Default:* 4
 
 **return_cal_visibilities**: saves the visibilities created for calibration for use in the model. If `model_visibilities` is set to 0, then the calibration model visibilities and the model visibilities will be the same if `return_cal_visibilities` is set. If `model_visibilities` is set to 1, then any new modelling (of more sources, diffuse, etc.) will take place and the visibilities created for the calibration model will be added. If n_pol = 4 (full pol mode), return_cal_visibilites must be set because the visibilites are required for calculating the mixing angle between Q and U. <br />
   -*Turn off/on*: 0/1 <br />
@@ -254,9 +272,12 @@ WARNING! Options in this section may change without notice, and should never be 
 ### Beam debugging options
 
 **debug_beam_clip_grow**: Set to grow the UV beam mask by one full-resolution pixel in all directions, after applying the clip set by `beam_mask_threshold` <br />
-  -*Turn on*:: 1
+  -*Turn on*: 1
 
 **debug_clip_beam_mask**: Set to mask pixels in the UV beam model if the pixel would be masked for any super-resolution offset. <br />
+  -*Turn on*: 1
+
+**debug_dim**: Set `psf_dim=28`. Will be overwritten if `kernel_window` is set. <br />
   -*Turn on*: 1
 
 **debug_flip**: Swap the X and Y beams (use the Y beam for X and the X beam for Y). <br />
@@ -264,10 +285,25 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Deconvolution
 
+**beam_max_threshold**: Completely mask all pixels below this beam threshold during deconvolution. <br />
+  -*Default*: 1E-4 <br />
+
+**beam_threshold**: Fraction of beam max value below which to mask the beam for deconvolution. 0.05 is really as far down as you should go with our current MWA beam models. This keyword is also used for calibration and modeling, but will be overwritten by `beam_model_threshold` or `beam_cal_threshold` if provided, and will be overwritten to 0.01 for those steps if `allow_sidelobe_sources` is turned on. This keyword is also used for beam modeling in some simulation code. <br />
+  -*Default*: 0.05
+
+**check_iter** Sets how frequently deconvolution will do a convergence check. <br />
+  -*Default*: 5 (check every 5th iteration)
+
 **deconvolve**: run fast holgraphic deconvolution. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 !Q <br />
   -*eor_wrapper_defaults*: 0 <br />
+
+**deconvolution_add_threshold**: Used in source detection to also fit additional components brighter than this threshold, written as percentage of max pixel flux. <br />
+  -*Default*: 0.8 <br />
+
+**deconvolution_convergence_sigma**: End iterative deconvolution if the S/N of the brightest component is below this threshold. <br />
+  -*Default*: 2 <br />
 
 **deconvolution_filter**: filter applied to images from deconvolution. <br />
   -*Default*: filter_uv_uniform <br />
@@ -276,6 +312,9 @@ WARNING! Options in this section may change without notice, and should never be 
 **deconvolution_horizon_threshold**: degrees above the horizon to exclude from deconvolution. <br />
   -*Default*: 10 <br />
 
+**deconvolution_over_resolution**: Sets the over-resolution to use for deconvolution. <br />
+  -*Default*: 2 <br />
+
 **filter_background**: filters out large-scale background fluctuations before deconvolving point sources. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 1 <br />
@@ -283,13 +322,22 @@ WARNING! Options in this section may change without notice, and should never be 
 **gain_factor**: a fractional amount to add to the flux of a given source to compensate for not capturing all flux in deconvolution components. <br />
   -*Default*: 0.15 <br />
 
+**galaxy_model_fit**: Option to subtract a model of diffuse emission from the galaxy. Uses `catalog_data/lambda_haslam408_dsds.fits`. <br />
+  -*Default*: 0
+
 **independent_fit**: fit source components in 4 Stokes parameters I, Q, U, V instead of only Stokes I. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
+**local_max_radius**: Used in source detection to require that sources be somewhat isolated in order to be detected. Sources must be brighter than all other pixels within this radius to be detected.
+  -*Default*: 3, but seems to be automatically overwritten in almost all use cases based on various beam width calculations. Use with caution.
+
 **max_deconvolution_components**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
   -*Default*: 100000 <br />
   -*eor_wrapper_defaults*: 20000 <br />
+
+**max_iter**: Sets the maxiumum iterations deconvolution can do. <br />
+  *Default*: Square root of `max_deconvolution_components` <br />
 
 **reject_pol_sources**: rejects source candidates that have a high Stokes Q to Stokes I ratio.<br />
   -*Needs updating*: not used in code! <br />
@@ -314,6 +362,9 @@ WARNING! Options in this section may change without notice, and should never be 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: not set <br />
+
+**transfer_mapfn**: Option to use an existing mapfn instead of calculating it. To use, provide a path to a mapfn file. <br />
+  -*Default*: Unset <br />
 
 ## EoR Bubble Simulations
 
@@ -378,10 +429,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 0 <br />
   -If a .sav file is used, the file should contain the following:<br />
-  - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/pixel unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
+  - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/sr unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
   - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
   - HPX_INDS = The corresponding healpix indices of the model_arr.<br />
-  - UNITS = The units of the map, either Jy/str or Kelvin.<br />
+  - UNITS = The units of the map, either Jy/sr or Kelvin.<br />
   - COORD_SYS = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
   -If a .skyh5 file is used, the file should be formatted with the [pyradiosky](https://github.com/RadioAstronomySoftwareGroup/pyradiosky) conventions.<br />
 
@@ -438,9 +489,9 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect.  <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
-
-**no_png**: do not export any pngs (this includes images and plots calibration solutions) <br />
-  -*Needs updating*: might be better to change the logic (avoid the double negative) !Q. <br />
+  
+**no_png**: do not export any pngs (including standard images and images of calibration solutions). <br />
+  -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
@@ -470,7 +521,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **silent**: do not print messages. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 probably <br />
+  -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 0 <br />
 
 **snapshot_healpix_export**: appears to be preserving visibilities. Save model/dirty/residual/weights/variance cubes as healpix arrays, split into even and odd time samples, in preparation for eppsilon.  !Q<br />

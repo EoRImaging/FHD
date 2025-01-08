@@ -4,7 +4,8 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     psf_dim=psf_dim,psf_max_dim=psf_max_dim,beam_offset_time=beam_offset_time,debug_dim=debug_dim,$
     inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
     kernel_window=kernel_window,beam_per_baseline=beam_per_baseline,$
-    beam_gaussian_decomp=beam_gaussian_decomp,conserve_memory=conserve_memory,_Extra=extra
+    beam_gaussian_decomp=beam_gaussian_decomp,beam_gauss_param_transfer=beam_gauss_param_transfer,$
+    conserve_memory=conserve_memory,_Extra=extra
 t0=Systime(1)
 
 IF keyword_set(conserve_memory) then begin
@@ -25,6 +26,28 @@ ENDIF
 if keyword_set(beam_gaussian_decomp) and keyword_set(kernel_window) then begin
   print, 'Gaussian decomposition cannot be used with modified kernel windows. Window not applied.'
   kernel_window=0
+endif
+
+;Default the parameter transfer if not set
+if keyword_set(beam_gauss_param_transfer) then begin
+  ;Default to instrumental beam if not set
+  if (beam_gauss_param_transfer EQ 1) then beam_gauss_param_transfer = 'decomp'
+
+  ;Set transfer to the instrumental beam or gaussian beam. Currently only available for the MWA
+  if (beam_gauss_param_transfer EQ 'decomp') or (beam_gauss_param_transfer EQ 'gauss') then begin
+    if instrument EQ 'mwa' then begin
+      pointing_num = mwa_get_pointing_number(obs,string=1)
+      beam_gauss_param_transfer = filepath(instrument + '_decomp_params_pointing' + pointing_num + '.sav',$
+        root=rootdir('FHD'),subdir='instrument_config')
+    endif else begin
+       message, 'Gaussian decomposition parameter defaults not currently set for non-MWA instruments'
+    endelse
+  endif
+
+  ;Match the psf size to the parameters from the file
+  psf_transfer = getvar_savefile(beam_gauss_param_transfer,'psf')
+  psf_resolution = psf_transfer.resolution
+  psf_dim = psf_transfer.dim
 endif
 
 n_tiles=obs.n_tile
@@ -114,7 +137,8 @@ antenna.psf_scale=psf_scale
 xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obsx
 yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
 ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
-apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+; UPDATE: Refraction is now turned off in apply_astrometry
+apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 undefine, xvals_celestial, yvals_celestial
 valid_i=where(Finite(ra_arr),n_valid)
 ra_use=ra_arr[valid_i]
@@ -145,7 +169,8 @@ for mem_i=0L,mem_iter-1 do begin
   yvals_celestial=meshgrid(psf_image_dim_use,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
 
   ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
-  apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_strip, dec_arr=dec_strip, /xy2ad, /ignore_refraction
+  ; UPDATE: Refraction is now turned off in apply_astrometry
+  apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_strip, dec_arr=dec_strip, /xy2ad
   ra_arr[psf_image_dim_use*mem_i:psf_image_dim_use*(mem_i+1)-1,*] = ra_strip
   dec_arr[psf_image_dim_use*mem_i:psf_image_dim_use*(mem_i+1)-1,*] = dec_strip
 endfor
@@ -177,7 +202,7 @@ if keyword_set(kernel_window) then begin
 
   ;Calculate the phase center in x,y coords
   Eq2Hor,obs.orig_phasera,obs.orig_phasedec,Jdate_use,orig_phasealt,orig_phaseaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
-  apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy
+  apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy, /refraction
   xval_center = (90. - orig_phasealt)*sin(orig_phaseaz*!dtor)
   yval_center = (90. - orig_phasealt)*cos(orig_phaseaz*!dtor)
   

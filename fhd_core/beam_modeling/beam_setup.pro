@@ -3,7 +3,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   psf_image_resolution=psf_image_resolution,swap_pol=swap_pol,no_save=no_save,$
   beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
   interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,beam_per_baseline=beam_per_baseline,$
-  beam_gaussian_decomp=beam_gaussian_decomp,save_beam_metadata_only=save_beam_metadata_only,_Extra=extra
+  beam_gaussian_decomp=beam_gaussian_decomp,beam_gauss_param_transfer=beam_gauss_param_transfer,$
+  save_beam_metadata_only=save_beam_metadata_only,_Extra=extra
 
   compile_opt idl2,strictarrsubs
   t00=Systime(1)
@@ -21,7 +22,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   IF Keyword_set(transfer_psf) then begin
     ;
     ; Transfer a psf/obs structure from previous run or from a specified file
-    if file_test(transfer_psf) then begin
+    if file_test(transfer_psf, /REGULAR) then begin
       psf = getvar_savefile(transfer_psf,'psf')
       obs_restore = getvar_savefile(transfer_psf,'obs')
     endif else begin
@@ -68,7 +69,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   dimension=obs.dimension
   antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
-    ra_arr=ra_arr,dec_arr=dec_arr,beam_per_baseline=beam_per_baseline,beam_gaussian_decomp=beam_gaussian_decomp,_Extra=extra)
+    ra_arr=ra_arr,dec_arr=dec_arr,beam_per_baseline=beam_per_baseline,beam_gaussian_decomp=beam_gaussian_decomp,$
+    beam_gauss_param_transfer=beam_gauss_param_transfer,_Extra=extra)
 
   IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]]
 
@@ -118,7 +120,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
 
   ant_A_list=(*obs.baseline_info).tile_A[0:nbaselines-1]
   ant_B_list=(*obs.baseline_info).tile_B[0:nbaselines-1]
-  baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.
+  baseline_mod=(2.^(Ceil(Alog(Sqrt(nbaselines*2.-n_tiles))/Alog(2.)))>(Max(ant_A_list)>Max(ant_B_list)))>256.>(2.*n_tiles)
   bi_list=ant_B_list+ant_A_list*baseline_mod
   bi_hist0=histogram(bi_list,min=0,omax=bi_max,/binsize,reverse_indices=ri_bi)
 
@@ -134,8 +136,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     group2=antenna.group_id[ant_pol2,*]
 
     ;Histogram group IDs, get reverse indicies, and calculate number of unique beams
-    hgroup1=histogram(group1,min=0,/binsize,reverse=gri1)
-    hgroup2=histogram(group2,min=0,/binsize,reverse=gri2)
+    hgroup1=histogram(group1,min=0,/binsize,reverse=gri1, /L64)
+    hgroup2=histogram(group2,min=0,/binsize,reverse=gri2, /L64)
     ng1=N_Elements(hgroup1)
     ng2=N_Elements(hgroup2)
     
@@ -211,7 +213,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           psf_resolution=psf_resolution,xvals_uv_superres=xvals_uv_superres,yvals_uv_superres=yvals_uv_superres,$
           beam_mask_threshold=beam_mask_threshold,zen_int_x=zen_int_x,zen_int_y=zen_int_y, $
           image_power_beam=image_power_beam,pol_i=pol_i,beam_gaussian_params=beam_gaussian_params,$
-          volume_beam=volume_beam,beam_gaussian_decomp=beam_gaussian_decomp,$
+          volume_beam=volume_beam,beam_gaussian_decomp=beam_gaussian_decomp,beam_gauss_param_transfer=beam_gauss_param_transfer,$
           sq_volume_beam=sq_volume_beam,res_super=res_super,psf_superres_dim=psf_superres_dim,_Extra=extra)
 
         if keyword_set(beam_gaussian_decomp) then begin
