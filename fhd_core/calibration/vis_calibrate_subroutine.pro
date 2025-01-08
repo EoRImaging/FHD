@@ -231,8 +231,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
                     ENDIF ELSE BEGIN
                         ; Halt if the strict convergence is worse than most of the recent iterations
                         divergence_test_1 = convergence_strict GE Median(conv_test[fii, i-divergence_history-1:i-1])
-                        ; Also halt if the convergence gets significantly worse in one iteration
-                        divergence_test_2 = convergence_strict GE Min(conv_test[fii, 0:i-1])*divergence_factor
+                        ; Also halt if the convergence gets significantly worse in one iteration, barring phase iterations
+                        divergence_test_2 = convergence_strict GE Min(conv_test[fii, phase_fit_iter:i-1])*divergence_factor
                         IF divergence_test_1 OR divergence_test_2 THEN BEGIN
                             ; If both measures of convergence are getting worse, we need to stop.
                             print, String(format='("Calibration diverged at iteration ", A, " for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
