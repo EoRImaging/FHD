@@ -206,6 +206,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
 
       cal=vis_cal_combine(cal_polyfit,cal_bandpass)
     ENDIF ELSE cal=cal_bandpass
+    cal.gain_bandpass = cal_bandpass.gain
     
     IF Keyword_Set(auto_ratio_calibration) THEN BEGIN
       cal=cal_auto_ratio(obs,cal,auto_ratio=auto_ratio,auto_tile_i=auto_tile_i,/remultiply)    
