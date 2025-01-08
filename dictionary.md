@@ -201,6 +201,11 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
 
+
+**fill_model_visibilities**:  calculate model even where there are flags (without unflagging that data) <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
+
 **firstpass**: Sets defaults for a standard firstpass run: sets deconvolve=0 and mapfn_recalculate=0 (overwriting them if they were previously set to 1), if return_cal_visibilities or export_images are unset, then it sets them both to 1. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: Undefined (0) <br />
@@ -542,6 +547,9 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Flagging
 
+**channel_edge_flag_width**: number of channels to flag at the edge of each coarse band. Used only if instrument is set to "mwa" or "mwa32t". <br />
+ -*Default*: 4 for instrument="mwa32t", depends on the number of frequency channels for instrument="mwa" <br />
+
 **dead_dipole_list**: an array of 3 x # of dead dipoles, where column 0 is the tile name, column 1 is the polarization (0:x, 1:y), and column 2 is the dipole number. These dipoles are flagged, which greatly increases memory usage due to the creation of many separate tile beams. <br />
   -*Default*: not set <br />  
 
@@ -569,6 +577,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 (flag/don't flag) <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 1 <br />
+
+**no_frequency_flagging**: do not flag extra frequency channels, such as the edges of the coarse bands for the MWA. In addition, remove pre-processing frequency flags if the data is non-zero. <br />
+  -*Turn off/on*: 0/1 (flag/don't flag) <br />
+  -*Default*: not set <br />
 
 **no_ps** : Do not save output images in postscript format. Only png and fits.<br />
   -*Default*: 1 <br />
