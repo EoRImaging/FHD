@@ -68,8 +68,8 @@ function vis_model_transfer,obs,params,model_transfer
   ;Initialize matched model pointer array
   matched_model = PTRARR(obs.n_pol,/allocate)
   for pol_i=0, obs.n_pol-1 do begin
-    if size(*vis_model_arr[pol_i], /type) eq 6 then *matched_model[pol_i] = complex(FLTARR(obs.n_freq, data_nbaselines))
-    if size(*vis_model_arr[pol_i], /type) eq 9 then *matched_model[pol_i] = dcomplex(DBLARR(obs.n_freq, data_nbaselines))
+    if size(*vis_model_arr[pol_i], /type) eq 6 then *matched_model[pol_i] = complex(FLTARR(obs.n_freq, data_nbaselines * data_n_time))
+    if size(*vis_model_arr[pol_i], /type) eq 9 then *matched_model[pol_i] = dcomplex(DBLARR(obs.n_freq, data_nbaselines * data_n_time))
   endfor
 
   ; In each matched timestep, match the baselines and fill a new, matched model array 
