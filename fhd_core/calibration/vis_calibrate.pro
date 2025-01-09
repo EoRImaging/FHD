@@ -96,7 +96,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
 
     ;; Option to transfer pre-made and unflagged model visbilities
     if keyword_set(model_transfer) then begin
-      vis_model_arr = vis_model_transfer(obs,model_transfer)
+      vis_model_arr = vis_model_transfer(obs,params,model_transfer)
     endif
 
     RETURN,vis_cal
