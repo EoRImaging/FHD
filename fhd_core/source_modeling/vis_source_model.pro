@@ -6,7 +6,7 @@ FUNCTION vis_source_model,skymodel, obs, status_str, psf, params, vis_weight_ptr
 
 ;; Option to transfer pre-made and unflagged model visbilities
 if keyword_set(model_transfer) then begin
-   vis_arr = vis_model_transfer(obs,model_transfer)
+   vis_arr = vis_model_transfer(obs,params,model_transfer)
    return, vis_arr
 endif
 
