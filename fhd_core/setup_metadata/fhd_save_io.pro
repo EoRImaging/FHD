@@ -63,6 +63,8 @@ CASE var_name OF ;listed in order typically generated
     'jones':BEGIN status_use.jones=1 & path_add='_jones' & subdir='beams'& END
     'cal':BEGIN status_use.cal=1 & path_add='_cal' & subdir='calibration'& END
     'skymodel':BEGIN status_use.skymodel=1 & path_add='_skymodel' & subdir='output_data'& END
+    'skymodel_cal':BEGIN status_use.skymodel=1 & path_add='_skymodel_cal' & subdir='output_data'& END
+    'skymodel_model':BEGIN status_use.skymodel=1 & path_add='_skymodel_model' & subdir='output_data'& END
     'source_array':BEGIN status_use.source_array=1 & path_add='_source_array' & subdir='output_data'& END
     'vis_weights':BEGIN
         IF Tag_exist(status_use,"vis_weights") THEN status_use.vis_weights=1 ELSE status_use.flag_arr=1
