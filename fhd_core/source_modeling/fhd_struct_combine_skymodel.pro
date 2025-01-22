@@ -1,4 +1,4 @@
-FUNCTION fhd_struct_combine_skymodel, obs, skymodel_cal, skymodel_model
+FUNCTION fhd_struct_combine_skymodel, obs, skymodel_cal, skymodel_update
 
 IF N_Elements(skymodel_cal) EQ 0 THEN RETURN, skymodel_update
 IF N_Elements(skymodel_update) EQ 0 THEN RETURN, skymodel_cal
@@ -34,7 +34,7 @@ ENDIF ELSE BEGIN
 ENDELSE
 
 skymodel=fhd_struct_init_skymodel(obs,source_list=source_list,$
-    include_calibration=calibration_flag,catalog_path=catalog_path,$
+    calibration_flag=calibration_flag,catalog_path=catalog_path,$
     galaxy_model=galaxy_model,galaxy_spectral_index=galaxy_spectral_index,$
     diffuse_model=diffuse_model,diffuse_spectral_index=diffuse_spectral_index)
 

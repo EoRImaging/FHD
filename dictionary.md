@@ -225,7 +225,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: equal to `max_baseline` <br />
 
 **max_calibration_sources**: limits the number of sources used in the calibration. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
-  -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set. <br />
   -*Default*: All valid sources in the catalog are used. <br />
 
 **min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
@@ -417,6 +416,11 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: Unset, unless model_visibilities and model_subtract_sidelobe_catalog are set OR deconvolve and subtract_sidelobe_catalog are set <br />
   -*eor_wrapper_defaults*: 1 <br />
 
+**combine_skymodels**: combines the calibration and model skymodel together. Sources are marked as duplicates if matched by 1/100th of a pixel. If `return_cal_visibilities` is set, then only the non-duplicate model sources are calculated, which are added to the returned calibration visibilities to build the full model. This assumes that the calibration skymodel is a subset of the model skymodel. This reduces the number of calculations and is thus more efficient. If `return_cal_visibilities` is not set, then the entire model skymodel is calculated. If `save_skymodel` is set, then the calibration skymodel (marked with `include_calibration=1` in the structure) and non-duplicate model skymodel (marked with `include_calibration=0` in the structure) are saved as one output. <br />
+  -*Dependency*: `calibrate_visibilities` and `model_visibilities` must be set to 1 <br />
+  -*Default*: Unset <br />
+  -*Turn off/on*: 0/1 <br />
+
 **conserve_memory**: split the model DFT into matrix chunks to reduce the memory load at the cost of extra walltime. If set to greater than 1e6, then it will set the maximum memory used in bytes. <br />
   -*Default*: 1 (100 Mb) <br />
   -*Turn off/on*: 0/1 (optionally set to bytes)<br />
@@ -441,7 +445,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 0 <br />
 
 **max_model_sources**: limits the number of sources used in the model. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
-  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. If `return_cal_visibilities` is set, then the final model will include all calibration sources and all model sources (duplicates are caught and included only once). <br />
+  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: All valid sources are used. !Q <br />
 
 **model_catalog_file_path**: a catalog of sources to be used to make model visibilities for subtraction. The source catalog can be provided as either a IDL .sav file or a .skyh5 file. A .skyh5 file must be created with pyradiosky or conform to the pyradiosky formatting convention.<br />
@@ -509,6 +513,10 @@ WARNING! Options in this section may change without notice, and should never be 
 **ring_radius**: sets the size of the rings around sources in the restored images. To generate restored images without rings, set ring_radius = 0. <br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 10.x`pad_uv_image` <br />
+
+**save_skymodel**: save the skymodel. If both `calibrate_visibilities` and `model_visibilities` are set, then save them individually as `skymodel_cal` and `skymodel_model` unless `combine_skymodels` is set. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
 
 **save_uvf**: saves the gridded uv plane as a function of frequency for dirty, model, weights, and variance cubes. <br />
   -*Turn off/on*: 0/1 <br />
