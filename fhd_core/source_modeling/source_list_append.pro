@@ -19,12 +19,7 @@ IF Keyword_Set(exclude_duplicate) THEN BEGIN
     ;If no unique sources, return the entire first source list.
     IF n_uniq1 GT 0 THEN source_list=source_list1[uniq_i1] ELSE source_list=source_list1
 ENDIF ELSE BEGIN
-    CASE n_dup OF
-        0:source_list=[source_list1,source_list2] 
-        n2:source_list=source_list1
-        n1:source_list=source_list2
-        ELSE:source_list=[source_list1[uniq_i1],source_list2]
-    ENDCASE
+    source_list=[source_list1,source_list2] 
 ENDELSE
 
 RETURN,source_list

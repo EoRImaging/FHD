@@ -50,7 +50,7 @@ IF Keyword_Set(text) THEN BEGIN
 ENDIF
 
 IF N_Elements(var_name) EQ 0 THEN var_name='' ELSE var_name=StrLowCase(var_name)
-IF var_name NE 'status_str' THEN IF not tag_exist(status_use,var_name) THEN RETURN
+IF var_name NE 'status_str' THEN IF ~strmatch(var_name,'skymodel*') THEN IF not tag_exist(status_use,var_name) THEN RETURN
 
 CASE var_name OF ;listed in order typically generated
     'status_str':BEGIN path_add='_status' & subdir='metadata' & END
