@@ -1,4 +1,4 @@
-FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,layout,lon=lon,lat=lat,alt=alt,n_tile=n_tile,$
+FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n_tile=n_tile,$
     zenra_in=zenra_in,zendec_in=zendec_in,obsra_in=obsra_in,obsdec_in=obsdec_in,phasera_in=phasera_in,phasedec_in=phasedec_in,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,pol_names=pol_names,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
@@ -64,6 +64,10 @@ IF file_test(metafits_path) THEN BEGIN
     tile_names=tile_names[single_i]
     tile_height=meta_data.height
     tile_height=tile_height[single_i]-alt
+    tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(meta_data(single_i+pol_i).flag)
+    tile_flag_check=0
+    for pol_i=0,n_pol-1 do tile_flag_check += mean(*tile_flag[pol_i])
+    if tile_flag_check EQ n_pol then message, "ERROR: All tiles flagged in metadata"
 
     ;Grab dipole amplitudes from metafits if they exist.
     ;Currently only defined in simulation, thus tagname may need to change 
@@ -111,7 +115,7 @@ ENDIF ELSE BEGIN
     hist_A1=histogram(tile_A1,min=1,max=n_tile,/binsize,reverse_ind=ria)
     hist_B1=histogram(tile_B1,min=1,max=n_tile,/binsize,reverse_ind=rib)
     hist_AB=hist_A1+hist_B1
-    tile_names=layout.antenna_numbers
+    tile_names=indgen(n_tile)+1
     tile_use=where(hist_AB,n_tile_exist,complement=missing_i,ncomplement=missing_n)+1
     tile_height=Fltarr(n_tile)
     tile_flag0=intarr(n_tile)
@@ -177,7 +181,11 @@ Eq2Hor,obsra,obsdec,JD0,obsalt,obsaz,lat=lat,lon=lon,alt=Mean(alt)
 meta={obsra:Double(obsra),obsdec:Double(obsdec),zenra:Double(zenra),zendec:Double(zendec),phasera:Double(phasera),phasedec:Double(phasedec),$
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),$
     astr:astr,obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),obsaz:Float(obsaz),obsalt:Float(obsalt),$
+<<<<<<< HEAD
     delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Double(orig_phasera),orig_phasedec:Double(orig_phasedec),$
+=======
+    delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Float(orig_phasera),orig_phasedec:Float(orig_phasedec),$
+>>>>>>> d0731fd9 (dipole gain handling)
     time_res:Float(time_res),base_gain:base_gain}
 
 RETURN,meta
