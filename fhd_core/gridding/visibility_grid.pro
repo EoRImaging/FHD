@@ -30,6 +30,7 @@ IF keyword_set(beam_per_baseline) AND interp_flag THEN BEGIN
     interp_flag = 0
 ENDIF
 
+
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
 ; and the 2D derivatives for bilinear interpolation
 bin_n = baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,ri=ri,$
@@ -65,6 +66,7 @@ frequency_array=frequency_array[fi_use]
 complex_flag=psf.complex_flag
 psf_dim=psf.dim
 psf_resolution=psf.resolution
+group_arr=reform(psf.id[polarization,freq_bin_i[fi_use],bi_use])
 beam_arr=*psf.beam_ptr
 
 weights_flag=Keyword_Set(weights)
@@ -77,8 +79,6 @@ n_freq_use=N_Elements(frequency_array)
 psf_dim2=2*psf_dim
 psf_dim3=LONG64(psf_dim*psf_dim)
 bi_use_reduced=bi_use mod nbaselines
-; Restructure the psf ID such that the last dimension matches the visiblity array in order to use future index arrays
-group_arr=reform(rebin(reform(psf.id[polarization,freq_bin_i,*]),n_f_use,nbaselines,n_samples), n_f_use,n_samples*nbaselines)
 
 if keyword_set(beam_per_baseline) then begin
     ; Initialization for gridding operation via a low-res beam kernel, calculated per
@@ -185,7 +185,6 @@ IF map_flag THEN BEGIN
     FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO $  
         *map_fn_inds[i,j]=psf2_inds[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]
 ENDIF
-
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
     ; Cycle through sets of visibilities which contribute to the same data/model uv-plane pixels, and perform
