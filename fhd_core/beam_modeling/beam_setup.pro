@@ -330,12 +330,15 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
   endif
 
+<<<<<<< HEAD
   psf = structure_update(psf,_Extra={beam_ptr:Ptr_new(beam_arr)})
 
   if ~keyword_set(save_beam_metadata_only) then begin
     fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
   endif
 
+=======
+>>>>>>> 52aa62f5 (discrete sq beam volume for gauss decomp)
   fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd
   fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
   IF not antenna_flag THEN undefine_fhd,antenna
