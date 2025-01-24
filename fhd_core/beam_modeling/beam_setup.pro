@@ -267,7 +267,10 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
 
         if keyword_set(beam_gaussian_decomp) then begin
           beam_int+=baseline_group_n*volume_beam
-          beam2_int+=baseline_group_n*sq_volume_beam
+          ;The analytic volume is an overestimate due to the horizon and/or clipping.
+          ;Until this is fixed, the discrete calculation will be used.
+          ;beam2_int+=baseline_group_n*sq_volume_beam
+          beam2_int+=baseline_group_n*Total(Abs(psf_base_superres)^2,/double)/psf_resolution^2.
           gaussian_params[g_i]=ptr_new(beam_gaussian_params) 
         endif else begin
           ; divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
@@ -341,6 +344,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     fhd_save_io,status_str,psf_metadata,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
   ENDIF ELSE fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
 
+  fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd
   fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
   IF not antenna_flag THEN undefine_fhd,antenna
   timing=Systime(1)-t00
