@@ -48,17 +48,17 @@ IF N_Elements(lon) EQ 0 THEN BEGIN
     lon = sxpar(header,'LON',count=found_lon) 
     IF found_lon EQ 0 THEN lon=116.67081524 ;degrees (MWA, from Tingay et al. 2013)
 ENDIF
-lon=Float(lon)
+
 IF N_Elements(lat) EQ 0 THEN BEGIN
     lat = sxpar(header,'LAT',count=found_lat) 
     IF found_lat EQ 0 THEN lat=-26.7033194 ;degrees (MWA, from Tingay et al. 2013)
 ENDIF
-lat=Float(lat)
+
 IF N_Elements(alt) EQ 0 THEN BEGIN
     alt = sxpar(header,'ALT',count=found_alt) 
     IF found_alt EQ 0 THEN alt=377.827 ;altitude (meters) (MWA, from Tingay et al. 2013)
 ENDIF
-alt=Float(alt)
+
 
 ant1_i = where(Strmatch(param_list,'ANTENNA1', /fold_case),found_ant1)
 ant2_i = where(Strmatch(param_list,'ANTENNA2', /fold_case),found_ant2)
