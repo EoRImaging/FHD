@@ -117,6 +117,10 @@ function fhd_struct_init_layout, ant_table_header, ant_table_data, $
       diameters = ant_table_data.diameter
     if n_elements(beam_fwhm) eq 0 and Tag_exist(ant_table_data, 'beamfwhm') then $
       beam_fwhm = ant_table_data.beamfwhm
+
+    ;; if n_antenna wasn't already set, calculate it from the antenna table data
+    if n_elements(n_antenna) eq 0 and n_elements(antenna_numbers) gt 0 then $
+      n_antenna = (size(antenna_numbers))[1]
   endif
   
   ;; if no center given, assume MWA center (Tingay et al. 2013, converted from lat/lon using pyuvdata)

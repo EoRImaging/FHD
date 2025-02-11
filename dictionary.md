@@ -200,7 +200,12 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **digital_gain_jump_polyfit**:  perform polynomial fitting for the amplitude separately before and after the highband digital gain jump at 187.515E6. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: undefined (off) <br />
-  
+
+
+**fill_model_visibilities**:  calculate model even where there are flags (without unflagging that data) <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 1 <br />
+
 **firstpass**: Sets defaults for a standard firstpass run: sets deconvolve=0 and mapfn_recalculate=0 (overwriting them if they were previously set to 1), if return_cal_visibilities or export_images are unset, then it sets them both to 1. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: Undefined (0) <br />
@@ -212,7 +217,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 **include_catalog_sources**: Adds sources in the file specified by catalog_file_path to the source_list for simulations (used in vis_simulate.pro) <br />
    -*Default* : 0 <br />
    -*If set to zero, and no source_array is passed to vis_simulate, then no point sources will be included in the simulation. Originally, sim_versions_wrapper would load the source array directly and pass it along to vis_simulate, then additional sources could be included via catalog_file_path. This feature has been turned off, so this parameter alone specified whether or not point sources will be included in simulations.* !Q <br />
-   
+
 **initial_calibration**: Path to an existing calibration file to use as the starting point in calibration. <br />
   -*Default* : Unset <br />
 
@@ -220,7 +225,6 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: equal to `max_baseline` <br />
 
 **max_calibration_sources**: limits the number of sources used in the calibration. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
-  -*Dependency*: The sources are also included in the model if `return_cal_visibilities` is set. <br />
   -*Default*: All valid sources in the catalog are used. <br />
 
 **min_cal_baseline**: the minimum baseline length in wavelengths to be used in calibration. <br />
@@ -239,7 +243,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Turn off/on*: 0/1 <br />
   -*Default*: unset <br />
   -*eor_wrapper_defaults*: 1 <br />
-  
+
 **phase_fit_iter**: Set the iteration number to begin phase calibration. Before this, phase is held fixed and only amplitude is being calibrated. <br />
   -*Default:* 4
 
@@ -282,7 +286,7 @@ WARNING! Options in this section may change without notice, and should never be 
 
 **beam_max_threshold**: Completely mask all pixels below this beam threshold during deconvolution. <br />
   -*Default*: 1E-4 <br />
-  
+
 **beam_threshold**: Fraction of beam max value below which to mask the beam for deconvolution. 0.05 is really as far down as you should go with our current MWA beam models. This keyword is also used for calibration and modeling, but will be overwritten by `beam_model_threshold` or `beam_cal_threshold` if provided, and will be overwritten to 0.01 for those steps if `allow_sidelobe_sources` is turned on. This keyword is also used for beam modeling in some simulation code. <br />
   -*Default*: 0.05
 
@@ -330,7 +334,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **max_deconvolution_components**: the number of source components allowed to be found in fast holographic deconvolution. Not used outside of deconvolution. <br />
   -*Default*: 100000 <br />
   -*eor_wrapper_defaults*: 20000 <br />
-  
+
 **max_iter**: Sets the maxiumum iterations deconvolution can do. <br />
   *Default*: Square root of `max_deconvolution_components` <br />
 
@@ -357,7 +361,7 @@ WARNING! Options in this section may change without notice, and should never be 
 **subtract_sidelobe_catalog**: a catalog to subtract sources from the sidelobes before deconvolution. <br />
   -*Dependency*: `deconvolve` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: not set <br />
-  
+
 **transfer_mapfn**: Option to use an existing mapfn instead of calculating it. To use, provide a path to a mapfn file. <br />
   -*Default*: Unset <br />
 
@@ -412,6 +416,11 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: Unset, unless model_visibilities and model_subtract_sidelobe_catalog are set OR deconvolve and subtract_sidelobe_catalog are set <br />
   -*eor_wrapper_defaults*: 1 <br />
 
+**combine_skymodels**: combines the calibration and model skymodel together. Sources are marked as duplicates if matched by 1/100th of a pixel. If `return_cal_visibilities` is set, then only the non-duplicate model sources are calculated, which are added to the returned calibration visibilities to build the full model. This assumes that the calibration skymodel is a subset of the model skymodel. This reduces the number of calculations and is thus more efficient. If `return_cal_visibilities` is not set, then the entire model skymodel is calculated. If `save_skymodel` is set, then the calibration skymodel (marked with `include_calibration=1` in the structure) and non-duplicate model skymodel (marked with `include_calibration=0` in the structure) are saved as one output. <br />
+  -*Dependency*: `calibrate_visibilities` and `model_visibilities` must be set to 1 <br />
+  -*Default*: Unset <br />
+  -*Turn off/on*: 0/1 <br />
+
 **conserve_memory**: split the model DFT into matrix chunks to reduce the memory load at the cost of extra walltime. If set to greater than 1e6, then it will set the maximum memory used in bytes. <br />
   -*Default*: 1 (100 Mb) <br />
   -*Turn off/on*: 0/1 (optionally set to bytes)<br />
@@ -424,10 +433,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 0 <br />
   -If a .sav file is used, the file should contain the following:<br />
-  - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/pixel unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
+  - MODEL_ARR = A healpix map with the diffuse model. Diffuse model has units Jy/sr unless keyword diffuse_units_kelvin is set. The model can be an array of pixels, a pointer to an array of pixels, or an array of four pointers corresponding to I, Q, U, and V Stokes polarized maps. <br />
   - NSIDE = The corresponding NSIDE parameter of the healpix map.<br />
   - HPX_INDS = The corresponding healpix indices of the model_arr.<br />
-  - UNITS = The units of the map, either Jy/str or Kelvin.<br />
+  - UNITS = The units of the map, either Jy/sr or Kelvin.<br />
   - COORD_SYS = (Optional) 'galactic' or 'celestial'. Specifies the coordinate system of the healpix map. GSM is in galactic coordinates, for instance. If missing, defaults to equatorial.<br />
   -If a .skyh5 file is used, the file should be formatted with the [pyradiosky](https://github.com/RadioAstronomySoftwareGroup/pyradiosky) conventions.<br />
 
@@ -436,7 +445,7 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 0 <br />
 
 **max_model_sources**: limits the number of sources used in the model. Sources are weighted by apparent brightness before applying the cut. Note that extended sources with many associated source components count as only a single source. <br />
-  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. If `return_cal_visibilities` is set, then the final model will include all calibration sources and all model sources (duplicates are caught and included only once). <br />
+  -*Dependency*: `model_visibilities` must be set to 1 in order for the keyword to take effect. <br />
   -*Default*: All valid sources are used. !Q <br />
 
 **model_catalog_file_path**: a catalog of sources to be used to make model visibilities for subtraction. The source catalog can be provided as either a IDL .sav file or a .skyh5 file. A .skyh5 file must be created with pyradiosky or conform to the pyradiosky formatting convention.<br />
@@ -505,6 +514,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 10.x`pad_uv_image` <br />
 
+**save_skymodel**: save the skymodel. If both `calibrate_visibilities` and `model_visibilities` are set, then save them individually as `skymodel_cal` and `skymodel_model` unless `combine_skymodels` is set. <br />
+  -*Turn off/on*: 0/1 <br />
+  -*Default*: 0 <br />
+
 **save_uvf**: saves the gridded uv plane as a function of frequency for dirty, model, weights, and variance cubes. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
@@ -542,6 +555,9 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Flagging
 
+**channel_edge_flag_width**: number of channels to flag at the edge of each coarse band. Used only if instrument is set to "mwa" or "mwa32t". <br />
+ -*Default*: 4 for instrument="mwa32t", depends on the number of frequency channels for instrument="mwa" <br />
+
 **dead_dipole_list**: an array of 3 x # of dead dipoles, where column 0 is the tile name, column 1 is the polarization (0:x, 1:y), and column 2 is the dipole number. These dipoles are flagged, which greatly increases memory usage due to the creation of many separate tile beams. <br />
   -*Default*: not set <br />  
 
@@ -569,6 +585,10 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Turn off/on*: 0/1 (flag/don't flag) <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: 1 <br />
+
+**no_frequency_flagging**: do not flag extra frequency channels, such as the edges of the coarse bands for the MWA. In addition, remove pre-processing frequency flags if the data is non-zero. <br />
+  -*Turn off/on*: 0/1 (flag/don't flag) <br />
+  -*Default*: not set <br />
 
 **no_ps** : Do not save output images in postscript format. Only png and fits.<br />
   -*Default*: 1 <br />

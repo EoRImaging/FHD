@@ -134,7 +134,7 @@ IF n_use GT 0 THEN BEGIN
         alpha=spectral_index,extend=catalog.extend)
     endelse
    
-    apply_astrometry, obs, ra_arr=source_list.ra, dec_arr=source_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy    
+    apply_astrometry, obs, ra_arr=source_list.ra, dec_arr=source_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy, /refraction    
     source_list.x=x_arr
     source_list.y=y_arr
     FOR i=0,7 DO source_list.flux.(i)=catalog.flux.(i)*(freq_use/catalog.freq)^spectral_index
@@ -175,7 +175,7 @@ IF n_use GT 0 THEN BEGIN
         extend_i=where(Ptr_valid(source_list.extend),n_extend)
         FOR ext_i=0L,n_extend-1 DO BEGIN
             extend_list=*source_list[extend_i[ext_i]].extend
-            apply_astrometry, obs, ra_arr=extend_list.ra, dec_arr=extend_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy
+            apply_astrometry, obs, ra_arr=extend_list.ra, dec_arr=extend_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy, /refraction
             extend_list.x=x_arr
             extend_list.y=y_arr
             *source_list[extend_i[ext_i]].extend=extend_list

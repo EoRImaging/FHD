@@ -137,7 +137,8 @@ antenna.psf_scale=psf_scale
 xvals_celestial=meshgrid(psf_image_dim,psf_image_dim,1)*psf_scale-psf_image_dim*psf_scale/2.+obsx
 yvals_celestial=meshgrid(psf_image_dim,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
 ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
-apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+; UPDATE: Refraction is now turned off in apply_astrometry
+apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 undefine, xvals_celestial, yvals_celestial
 valid_i=where(Finite(ra_arr),n_valid)
 ra_use=ra_arr[valid_i]
@@ -168,7 +169,8 @@ for mem_i=0L,mem_iter-1 do begin
   yvals_celestial=meshgrid(psf_image_dim_use,psf_image_dim,2)*psf_scale-psf_image_dim*psf_scale/2.+obsy
 
   ;turn off refraction for speed, then make sure it is also turned off in Eq2Hor below
-  apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_strip, dec_arr=dec_strip, /xy2ad, /ignore_refraction
+  ; UPDATE: Refraction is now turned off in apply_astrometry
+  apply_astrometry, obs, x_arr=xvals_celestial, y_arr=yvals_celestial, ra_arr=ra_strip, dec_arr=dec_strip, /xy2ad
   ra_arr[psf_image_dim_use*mem_i:psf_image_dim_use*(mem_i+1)-1,*] = ra_strip
   dec_arr[psf_image_dim_use*mem_i:psf_image_dim_use*(mem_i+1)-1,*] = dec_strip
 endfor
@@ -200,7 +202,7 @@ if keyword_set(kernel_window) then begin
 
   ;Calculate the phase center in x,y coords
   Eq2Hor,obs.orig_phasera,obs.orig_phasedec,Jdate_use,orig_phasealt,orig_phaseaz,lat=obs.lat,lon=obs.lon,alt=obs.alt
-  apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy
+  apply_astrometry, obs, x_arr=xval_center, y_arr=yval_center, ra_arr=obs.orig_phasera, dec_arr=obs.orig_phasedec, /ad2xy, /refraction
   xval_center = (90. - orig_phasealt)*sin(orig_phaseaz*!dtor)
   yval_center = (90. - orig_phasealt)*cos(orig_phaseaz*!dtor)
   
