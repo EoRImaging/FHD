@@ -54,10 +54,15 @@ function vis_model_transfer,obs,params,model_transfer
     endfor
 
     ; Find which option was more successful in matching the times
+    ; Error if no matching times found or if matching times does not obviously cover all data times
+    if (total(matched_times_opt1 < 1) EQ 0) and (total(matched_times_opt2 < 1) EQ 0) then $
+      message, 'ERROR: No matching times found between transferred model and data.'
     if total(matched_times_opt1 < 1) GT total(matched_times_opt2 < 1) then matched_times = matched_times_opt1
     if total(matched_times_opt1 < 1) LT total(matched_times_opt2 < 1) then matched_times = matched_times_opt2
+    if total(matched_times < 1) NE data_n_time then $
+      message, 'ERROR: Number of matching times found between transferred model and data does not equal the number of timesteps in data.'
 
-    endif else matched_times = indgen(model_n_time)
+  endif else matched_times = indgen(model_n_time)
 
   ;An arbitrary larger number than tiles to make an index array
   baseline_mod = ULONG(obs.n_tile*2)
@@ -73,6 +78,7 @@ function vis_model_transfer,obs,params,model_transfer
   endfor
 
   ; In each matched timestep, match the baselines and fill a new, matched model array 
+  ; Unmatched times in the transferred model are not included in the matched model array 
   for time_i=0, data_n_time-1 do begin
     ;suba is the subset of indices in the first array that are also in the second.
     ;subb is the subset of indices in the second array that are also in the first.
