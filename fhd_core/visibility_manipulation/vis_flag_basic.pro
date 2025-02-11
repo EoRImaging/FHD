@@ -126,10 +126,20 @@ FOR ti=0L,n_time-1 DO BEGIN
         ENDFOR
     ENDIF
     ; Make sure the time_use array matches the flagging of the visiblities
-    FOR pol_i=0, n_pol-1 DO BEGIN
-        ; If any polarization is fully flagged, then count that time as flagged
-        time_use[ti] *= total((*vis_weight_ptr[pol_i])[*, bin_offset[ti]:bin_offset[ti+1]-1] > 0) GT 0
-    ENDFOR
+    IF STRMID(instrument,0,3) eq 'mwa' THEN BEGIN
+        FOR pol_i=0, n_pol-1 DO BEGIN
+            ; If any polarization is fully flagged, then count that time as flagged for the MWA
+            time_use[ti] *= total((*vis_weight_ptr[pol_i])[*, bin_offset[ti]:bin_offset[ti+1]-1] > 0) GT 0
+        ENDFOR
+    ENDIF ELSE BEGIN
+        ; For other instruments, do not assume that the flagging of the visibilities is the same for all polarizations
+        time_use_temp = 0
+        FOR pol_i=0, n_pol-1 DO BEGIN
+            time_use_temp += total((*vis_weight_ptr[pol_i])[*, bin_offset[ti]:bin_offset[ti+1]-1] > 0) GT 0
+        ENDFOR
+        ; If all polarizations are fully flagged, then count that time as flagged
+        IF time_use_temp EQ 0 THEN time_use[ti] = 0
+    ENDELSE
 ENDFOR
 (*obs.baseline_info).time_use = time_use
 ;;; End time-based flagging
