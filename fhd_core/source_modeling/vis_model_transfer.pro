@@ -36,30 +36,50 @@ function vis_model_transfer,obs,params,model_transfer
 
     ; Match times betweeen model and data
     ; Option 1: You are working with a model made by FHD. Thus the timing convention in the params is the same
-    ; Option 2: You are working with a model made by WODEN. Thus the timing convention in the params is different
-    ;           and you need to convert the model Jdate to the data Jdate within precision.
+    ; Option 2: You are working with a model made by WODEN above version 1.4. This is different from FHD convention
+    ;           by half a timestep.
+    ; Option 3: You are working with a model made by WODEN below version 1.4. Thus the timing convention in the 
+    ;           params is different and you need to convert the model Jdate to the data Jdate within precision.
 
     ; Option 1
-    matched_times_opt1 = intarr(data_n_time)
+    matched_times_opt1 = intarr(data_n_time)-1
     for data_time_i=0, data_n_time-1 do begin
       min_val= min(abs(model_time - data_time[data_time_i]), min_ind)
       if min_val LT tolerance then matched_times_opt1[data_time_i] = min_ind
     endfor
-
+  
     ; Option 2
-    matched_times_opt2 = intarr(data_n_time)
+    matched_times_opt2 = intarr(data_n_time)-1
     for data_time_i=0, data_n_time-1 do begin
-      min_val = min(abs(model_time - (data_Jdate[data_time_i]-time_res_Jdate)), min_ind)
+      min_val= min(abs(model_time - (data_time[data_time_i]-time_res_Jdate)), min_ind)
       if min_val LT tolerance then matched_times_opt2[data_time_i] = min_ind
     endfor
 
+    ; Option 3
+    matched_times_opt3 = intarr(data_n_time)-1
+    for data_time_i=0, data_n_time-1 do begin
+      min_val = min(abs(model_time - (data_Jdate[data_time_i]-time_res_Jdate)), min_ind)
+      if min_val LT tolerance then matched_times_opt3[data_time_i] = min_ind
+    endfor
+
     ; Find which option was more successful in matching the times
+    ; Initialization of matched_times arrays above to -1 allows up to check if all data times are matched (including the 0th index)
     ; Error if no matching times found or if matching times does not obviously cover all data times
-    if (total(matched_times_opt1 < 1) EQ 0) and (total(matched_times_opt2 < 1) EQ 0) then $
+    temp = where(matched_times_opt1 NE -1, n_matched_opt1)
+    temp = where(matched_times_opt2 NE -1, n_matched_opt2)
+    temp = where(matched_times_opt3 NE -1, n_matched_opt3)
+    if (n_matched_opt1 EQ 0) and (n_matched_opt2 EQ 0) and (n_matched_opt3 EQ 0) then $
       message, 'ERROR: No matching times found between transferred model and data.'
-    if total(matched_times_opt1 < 1) GT total(matched_times_opt2 < 1) then matched_times = matched_times_opt1
-    if total(matched_times_opt1 < 1) LT total(matched_times_opt2 < 1) then matched_times = matched_times_opt2
-    if total(matched_times < 1) NE data_n_time then $
+
+    max_matched = max([n_matched_opt1, n_matched_opt2, n_matched_opt3],max_matched_ind)
+    CASE max_matched_ind OF
+      0: matched_times = matched_times_opt1
+      1: matched_times = matched_times_opt2
+      2: matched_times = matched_times_opt3
+    ENDCASE
+
+    temp = where(matched_times NE -1, n_matched)
+    if n_matched NE data_n_time then $
       message, 'ERROR: Number of matching times found between transferred model and data does not equal the number of timesteps in data.'
 
   endif else matched_times = indgen(model_n_time)
