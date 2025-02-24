@@ -1,4 +1,4 @@
-FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,lon=lon,lat=lat,alt=alt,n_tile=n_tile,$
+FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,layout,lon=lon,lat=lat,alt=alt,n_tile=n_tile,$
     zenra_in=zenra_in,zendec_in=zendec_in,obsra_in=obsra_in,obsdec_in=obsdec_in,phasera_in=phasera_in,phasedec_in=phasedec_in,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
     obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
@@ -95,7 +95,7 @@ ENDIF ELSE BEGIN
     hist_A1=histogram(tile_A1,min=1,max=n_tile,/binsize,reverse_ind=ria)
     hist_B1=histogram(tile_B1,min=1,max=n_tile,/binsize,reverse_ind=rib)
     hist_AB=hist_A1+hist_B1
-    tile_names=indgen(n_tile)+1
+    tile_names=layout.antenna_numbers
     tile_use=where(hist_AB,n_tile_exist,complement=missing_i,ncomplement=missing_n)+1
     tile_height=Fltarr(n_tile)
     tile_flag0=intarr(n_tile)
