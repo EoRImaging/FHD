@@ -48,7 +48,20 @@ IF file_test(metafits_path) THEN BEGIN
     tile_flag_check=0
     for pol_i=0,n_pol-1 do tile_flag_check += mean(*tile_flag[pol_i])
     if tile_flag_check EQ n_pol then message, "ERROR: All tiles flagged in metadata"
-    
+
+    ;Grab dipole amplitudes from metafits if they exist.
+    ;Currently only defined in simulation, thus tagname may need to change 
+    ; if ever incorperated into real data.
+    amp_ind = where(strmatch(tag_names(meta_data),'DIPAMPS') EQ 1,n_count)
+    if n_count GT 0 then begin
+        dip_pol = ['X','Y']
+        base_gain = PTRARR(N_elements(dip_pol),/allocate)
+        for pol_i=0, N_elements(dip_pol)-1 do begin
+            single_i=where(pol_names EQ dip_pol[pol_i],n_single)
+            *base_gain[pol_i] = meta_data[single_i].dipamps
+        endfor
+    endif else base_gain=0
+
     obsra=sxpar(meta_hdr,'RA')
     obsdec=sxpar(meta_hdr,'Dec')
     phasera=sxpar(meta_hdr,'RAPHASE')
@@ -148,7 +161,7 @@ meta={obsra:Float(obsra),obsdec:Float(obsdec),zenra:Float(zenra),zendec:Float(ze
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),$
     astr:astr,obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),obsaz:Float(obsaz),obsalt:Float(obsalt),$
     delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Float(orig_phasera),orig_phasedec:Float(orig_phasedec),$
-    time_res:Float(time_res)}
+    time_res:Float(time_res),base_gain:base_gain}
 
 RETURN,meta
 END
