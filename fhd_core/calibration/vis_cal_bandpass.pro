@@ -1,6 +1,7 @@
 FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_fhd=file_path_fhd,cable_bandpass_fit=cable_bandpass_fit,$
     bandpass_directory=bandpass_directory,tile_use=tile_use,calibration_bandpass_cable_exclude=calibration_bandpass_cable_exclude,$
-    cal_bp_transfer=cal_bp_transfer,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,auto_ratio_calibration=auto_ratio_calibration,Extra=extra
+    cal_bp_transfer=cal_bp_transfer,uvfits_version=uvfits_version,uvfits_subversion=uvfits_subversion,auto_ratio_calibration=auto_ratio_calibration,$
+    no_png=no_png,Extra=extra
   ;This function is version 1 of calibrating each group of tiles with similar cable lengths per observation.
     
   ;Extract needed elements from the input structures
@@ -177,7 +178,7 @@ FUNCTION vis_cal_bandpass,cal,obs,params,cal_remainder=cal_remainder,file_path_f
     
   ENDELSE
   
-  IF Keyword_Set(file_path_fhd) THEN bandpass_plots,obs,bandpass_arr,file_path_fhd=file_path_fhd,$
+  IF Keyword_Set(file_path_fhd) AND ~Keyword_Set(no_png) THEN bandpass_plots,obs,bandpass_arr,file_path_fhd=file_path_fhd,$
     cable_length_ref=cable_length_ref,tile_use_arr=tile_use_arr
     
   RETURN,cal_bandpass

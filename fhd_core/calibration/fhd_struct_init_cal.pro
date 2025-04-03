@@ -71,7 +71,7 @@ auto_scale=Fltarr(2)
 cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, vv:v_loc, $
     auto_initialize:auto_initialize, max_iter:max_cal_iter, phase_iter:phase_fit_iter, $
     tile_A:tile_A, tile_B:tile_B, tile_names:tile_names, bin_offset:bin_offset, freq:freq, gain:gain_arr_ptr, $
-    adaptive_gain:use_adaptive_calibration_gain, base_gain:calibration_base_gain, $
+    gain_bandpass:Pointer_copy(gain_arr_ptr), adaptive_gain:use_adaptive_calibration_gain, base_gain:calibration_base_gain, $
     gain_residual:gain_residual, auto_scale:auto_scale, auto_params:auto_params, cross_phase:0.0, stokes_mix_phase:0.0, $
     min_cal_baseline:min_cal_baseline, max_cal_baseline:max_cal_baseline, n_vis_cal:n_vis_cal, $
     time_avg:cal_time_average, min_solns:min_cal_solutions, ref_antenna:ref_antenna, $

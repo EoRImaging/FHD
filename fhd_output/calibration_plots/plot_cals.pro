@@ -110,9 +110,9 @@ for file_i=0, page_num-1 do begin
             if page_num GT 1 then gains1_res=gains1_res[*,file_i*page_tile_max:(file_i+1)*page_tile_max<(size(gains1_res))[2]-1]
             gains1_orig=gains1_res+gains1
             gains1_res_abs=Abs(gains1_orig)-Abs(gains1)
-            max_amp_res = mean(abs([gains0_res_abs,gains1_res_abs]),/NAN) + 3*stddev(abs([gains0_res_abs,gains1_res_abs]),/NAN)
-        ENDIF ELSE max_amp_res = mean(abs(gains0_res_abs),/NAN) + 3*stddev(abs(gains0_res_abs),/NAN)
-    
+            max_amp_res = mean(abs([gains0_res_abs,gains1_res_abs]),/nan) + 3*stddev(abs([gains0_res_abs,gains1_res_abs]),/nan)
+        ENDIF ELSE max_amp_res = mean(abs(gains0_res_abs),/nan) + 3*stddev(abs(gains0_res_abs),/nan)
+
         ;plot amplitude residuals
         IF max_amp_res GT 0 THEN BEGIN
             plot_cals_sub,freq,gains0_orig,gains1_orig,filename=orig_amp_filename,tile_A=tile_A,tile_B=tile_B,tile_use=tile_use,tile_exist=tile_exist,tile_names=tile_names,$

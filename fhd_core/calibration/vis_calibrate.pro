@@ -96,7 +96,7 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
 
     ;; Option to transfer pre-made and unflagged model visbilities
     if keyword_set(model_transfer) then begin
-      vis_model_arr = vis_model_transfer(obs,model_transfer)
+      vis_model_arr = vis_model_transfer(obs,params,model_transfer)
     endif
 
     RETURN,vis_cal
@@ -199,13 +199,14 @@ FUNCTION vis_calibrate,vis_ptr,cal,obs,status_str,psf,params,jones,vis_weight_pt
     ENDIF
 
     cal_bandpass=vis_cal_bandpass(cal,obs,params,cal_remainder=cal_remainder,auto_ratio_calibration=auto_ratio_calibration,$
-      file_path_fhd=file_path_fhd,_Extra=extra)
+      file_path_fhd=file_path_fhd,no_png=no_png,_Extra=extra)
  
     IF Keyword_Set(calibration_polyfit) THEN BEGIN
       cal_polyfit=vis_cal_polyfit(cal_remainder,obs,auto_ratio=auto_ratio,_Extra=extra)
 
       cal=vis_cal_combine(cal_polyfit,cal_bandpass)
     ENDIF ELSE cal=cal_bandpass
+    cal.gain_bandpass = cal_bandpass.gain
     
     IF Keyword_Set(auto_ratio_calibration) THEN BEGIN
       cal=cal_auto_ratio(obs,cal,auto_ratio=auto_ratio,auto_tile_i=auto_tile_i,/remultiply)    
