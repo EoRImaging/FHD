@@ -1,7 +1,7 @@
 FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,layout,lon=lon,lat=lat,alt=alt,n_tile=n_tile,$
     zenra_in=zenra_in,zendec_in=zendec_in,obsra_in=obsra_in,obsdec_in=obsdec_in,phasera_in=phasera_in,phasedec_in=phasedec_in,$
     rephase_to_zenith=rephase_to_zenith,precess=precess,degpix=degpix,dimension=dimension,elements=elements,$
-    obsx=obsx,obsy=obsy,instrument=instrument,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
+    obsx=obsx,obsy=obsy,instrument=instrument,pol_names=pol_names,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
     meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,$
     cotter_precess_fix=cotter_precess_fix,force_rephase_to_zenith=force_rephase_to_zenith,$
     override_target_phasera=override_target_phasera,override_target_phasedec=override_target_phasedec,_Extra=extra
@@ -38,16 +38,33 @@ IF file_test(metafits_path) THEN BEGIN
     tile_nums=meta_data.antenna
     tile_nums=radix_sort(tile_nums,index=tile_order)
     meta_data=meta_data[tile_order]
-    pol_names=meta_data.pol
-    single_i=where(pol_names EQ pol_names[0],n_single)
+
+    tile_flag=Ptrarr(n_pol,/allocate)
+    FOR pol_i=0, n_pol-1 DO *tile_flag[pol_i]=intarr(n_tile)
+    meta_pol_names=meta_data.pol
+    single_i=where(meta_pol_names EQ meta_pol_names[0],n_single)
+    ; Grab the unique polarization names for a single tile (for example, X and Y for the MWA) 
+    ; in the order they appear in the metadata file
+    tile_pol_names = meta_pol_names[reverse(uniq(meta_pol_names, sort(meta_pol_names)))]
+    FOR single_pol_i=0, N_elements(tile_pol_names)-1 DO BEGIN
+        ; Find where each individual tile polarization will contribute to the cross-correlation polarization
+        pol_matches = where(strmatch(pol_names[0:n_pol-1], '*'+tile_pol_names[single_pol_i]+'*') EQ 1, n_pol_matches)
+        FOR pol_matches_i=0, n_pol_matches - 1 DO BEGIN
+            ; Flag (max value 1) tiles in cross-correlation pols if their individual tile pol is flagged
+            *tile_flag[pol_matches[pol_matches_i]] = $
+              (*tile_flag[pol_matches[pol_matches_i]] + meta_data[single_i+single_pol_i].flag) < 1
+        ENDFOR
+    ENDFOR
+    tile_flag_check=0
+    for pol_i=0,n_pol-1 do tile_flag_check += mean(*tile_flag[pol_i])
+    if tile_flag_check EQ n_pol then message, "ERROR: All tiles flagged in metadata"
+
+    ; Use one of the polarizations to fill out non-pol specific params
     tile_names=meta_data.tile
     tile_names=tile_names[single_i]
     tile_height=meta_data.height
     tile_height=tile_height[single_i]-alt
-    tile_flag=Ptrarr(n_pol) & FOR pol_i=0,n_pol-1 DO tile_flag[pol_i]=Ptr_new(meta_data(single_i+pol_i).flag)
-    tile_flag_check=0
-    for pol_i=0,n_pol-1 do tile_flag_check += mean(*tile_flag[pol_i])
-    if tile_flag_check EQ n_pol then message, "ERROR: All tiles flagged in metadata"
+
     
     obsra=sxpar(meta_hdr,'RA')
     obsdec=sxpar(meta_hdr,'Dec')
