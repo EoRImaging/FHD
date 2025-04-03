@@ -112,22 +112,37 @@ IF Keyword_Set(no_frequency_flagging) THEN BEGIN
 ENDIF ELSE freq_use=0>freq_use<1
 tile_use=0>tile_use<1
 
-;Time-based flagging
+;;; Time-based flagging
 time_use=(*obs.baseline_info).time_use
 n_time = obs.n_time
-IF Min(time_use) LE 0 THEN BEGIN
-    n_baselines=N_Elements((*obs.baseline_info).tile_A)
-    bin_offset=(*obs.baseline_info).bin_offset
-    bin_offset=[bin_offset,n_baselines]
-    time_bin=Lonarr(n_baselines)
-    FOR ti=0L,n_time-1 DO BEGIN
-        IF time_use[ti] LE 0 THEN BEGIN
-            FOR pol_i=0, n_pol-1 DO BEGIN
-                (*vis_weight_ptr[pol_i])[*, bin_offset[ti]:bin_offset[ti+1]-1] = 0
-            ENDFOR
-        ENDIF
-    ENDFOR
-ENDIF
+n_baselines=N_Elements((*obs.baseline_info).tile_A)
+bin_offset=(*obs.baseline_info).bin_offset
+bin_offset=[bin_offset,n_baselines]
+FOR ti=0L,n_time-1 DO BEGIN
+    ; Make sure the flagging of the visibilities matches the time_use array  
+    IF time_use[ti] LE 0 THEN BEGIN 
+        FOR pol_i=0, n_pol-1 DO BEGIN  
+            (*vis_weight_ptr[pol_i])[*, bin_offset[ti]:bin_offset[ti+1]-1] = 0
+        ENDFOR
+    ENDIF
+    ; Make sure the time_use array matches the flagging of the visiblities
+    IF STRMID(instrument,0,3) eq 'mwa' THEN BEGIN
+        FOR pol_i=0, n_pol-1 DO BEGIN
+            ; If any polarization is fully flagged, then count that time as flagged for the MWA
+            time_use[ti] *= total((*vis_weight_ptr[pol_i])[*, bin_offset[ti]:bin_offset[ti+1]-1] > 0) GT 0
+        ENDFOR
+    ENDIF ELSE BEGIN
+        ; For other instruments, do not assume that the flagging of the visibilities is the same for all polarizations
+        time_use_temp = 0
+        FOR pol_i=0, n_pol-1 DO BEGIN
+            time_use_temp += total((*vis_weight_ptr[pol_i])[*, bin_offset[ti]:bin_offset[ti+1]-1] > 0) GT 0
+        ENDFOR
+        ; If all polarizations are fully flagged, then count that time as flagged
+        IF time_use_temp EQ 0 THEN time_use[ti] = 0
+    ENDELSE
+ENDFOR
+(*obs.baseline_info).time_use = time_use
+;;; End time-based flagging
 
 IF Keyword_Set(unflag_all) THEN BEGIN
     tile_use[*]=1
