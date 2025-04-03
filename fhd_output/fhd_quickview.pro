@@ -225,24 +225,28 @@ ENDIF
 IF model_flag THEN instr_model_arr=Ptrarr(n_pol)
 
 cal_source_flag=0
-IF size(cal, /type) EQ 8 THEN IF cal.skymodel.n_sources GT 0 THEN BEGIN
-    cal_source_flag = 1
-    cal_source_array = cal.skymodel.source_list
-    cal_source_arr_out=cal_source_array
+IF size(cal, /type) EQ 8 THEN BEGIN
+    IF size(cal.skymodel, /type) EQ 8 THEN BEGIN
+        IF cal.skymodel.n_sources GT 0 THEN BEGIN
+            cal_source_flag = 1
+            cal_source_array = cal.skymodel.source_list
+            cal_source_arr_out=cal_source_array
     
-    apply_astrometry, obs_out, ra_arr=cal_source_array.ra, dec_arr=cal_source_array.dec, x_arr=sx, y_arr=sy, /ad2xy, /refraction
-    cal_source_arr_out.x=sx & cal_source_arr_out.y=sy
+            apply_astrometry, obs_out, ra_arr=cal_source_array.ra, dec_arr=cal_source_array.dec, x_arr=sx, y_arr=sy, /ad2xy, /refraction
+            cal_source_arr_out.x=sx & cal_source_arr_out.y=sy
 
-    extend_test=where(Ptr_valid(cal_source_arr_out.extend),n_extend)
-    IF n_extend GT 0 THEN BEGIN
-        FOR ext_i=0L,n_extend-1 DO BEGIN
-            component_array_out=*cal_source_array[extend_test[ext_i]].extend
-            apply_astrometry, obs_out, ra_arr=component_array_out.ra, dec_arr=component_array_out.dec, x_arr=cx, y_arr=cy, /ad2xy, /refraction
-            component_array_out.x=cx & component_array_out.y=cy
+            extend_test=where(Ptr_valid(cal_source_arr_out.extend),n_extend)
+            IF n_extend GT 0 THEN BEGIN
+                FOR ext_i=0L,n_extend-1 DO BEGIN
+                    component_array_out=*cal_source_array[extend_test[ext_i]].extend
+                    apply_astrometry, obs_out, ra_arr=component_array_out.ra, dec_arr=component_array_out.dec, x_arr=cx, y_arr=cy, /ad2xy, /refraction
+                    component_array_out.x=cx & component_array_out.y=cy
             
-            cal_source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)
-            *cal_source_arr_out[extend_test[ext_i]].extend=component_array_out
-        ENDFOR
+                    cal_source_arr_out[extend_test[ext_i]].extend=Ptr_new(/allocate)
+                    *cal_source_arr_out[extend_test[ext_i]].extend=component_array_out
+                ENDFOR
+            ENDIF
+        ENDIF
     ENDIF
 ENDIF
 
