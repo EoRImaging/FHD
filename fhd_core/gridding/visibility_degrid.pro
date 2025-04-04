@@ -15,6 +15,11 @@ FUNCTION visibility_degrid,image_uv,vis_weight_ptr,obs,psf,params,$
         IF conserve_memory GT 1E6 THEN mem_thresh=conserve_memory ELSE mem_thresh=1E8 ;in bytes
     ENDIF
 
+    IF keyword_set(beam_per_baseline) AND interp_flag THEN BEGIN
+        print, "WARNING: Cannot do beam per baseline and interpolation at the same time, turning off interpolation"
+        interp_flag = 0
+    ENDIF
+
     ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
     ; and the 2D derivatives for bilinear interpolation
     bin_n=baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,ri=ri,$

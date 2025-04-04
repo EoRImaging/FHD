@@ -49,9 +49,19 @@ freq_center=antenna_str.freq
 IF Keyword_Set(dipole_mutual_coupling_factor) THEN antenna_str.coupling=mwa_dipole_mutual_coupling(freq_center) $
     ELSE FOR i=0L,N_Elements(antenna_str.coupling)-1 DO antenna_str.coupling[i]=Ptr_new(Complex(Identity(n_dipoles)))
 
-base_gain=fltarr(16)+1.
-gain_arr=Ptrarr(n_ant_pol)
-FOR pol_i=0,n_ant_pol-1 DO gain_arr[pol_i]=Ptr_new(Rebin(reform(base_gain,1,n_dipoles),nfreq_bin,n_dipoles,/sample))
+;If dipole gains are set in the metadata, use them. Otherwise, set them to 1.
+if ~tag_exist(obs,'base_gain') then begin
+    base_gain=fltarr(16)+1.
+    gain_arr=Ptrarr(n_ant_pol)
+    FOR pol_i=0,n_ant_pol-1 DO gain_arr[pol_i]=Ptr_new(Rebin(reform(base_gain,1,n_dipoles),nfreq_bin,n_dipoles,/sample))
+endif else begin
+    gain_arr=Ptrarr(n_ant_pol,n_tiles,/allocate)
+    FOR pol_i=0,n_ant_pol-1 DO begin
+        for tile_i=0L,n_tiles-1 do begin
+            gain_arr[pol_i,tile_i]=Ptr_new(Rebin(reform(reform((*obs.base_gain[pol_i])[*,tile_i]),1,n_dipoles),nfreq_bin,n_dipoles,/sample))
+        ENDFOR
+    ENDFOR
+endelse
 
 antenna_str.n_ant_elements=n_dipoles
 antenna_str.size_meters=antenna_size
@@ -59,7 +69,12 @@ antenna_str.coords=antenna_coords
 antenna_str.height=antenna_height
 antenna_str.delays=delay_settings
 antenna=replicate(antenna_str,n_tiles)
-FOR t_i=0L,n_tiles-1 DO antenna[t_i].gain=Pointer_copy(gain_arr)
+if (size(gain_arr))[0] EQ 1 then begin
+    FOR t_i=0L,n_tiles-1 DO antenna[t_i].gain=Pointer_copy(gain_arr)
+endif else begin
+    FOR t_i=0L,n_tiles-1 DO antenna[t_i].gain=Pointer_copy(gain_arr[*,t_i])
+endelse
+
 IF Keyword_Set(flag_dead_dipoles) THEN mwa_dead_dipole_list_read,obs,antenna
 
 IF Keyword_Set(dead_dipole_list) THEN BEGIN

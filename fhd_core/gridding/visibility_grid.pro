@@ -30,6 +30,7 @@ IF keyword_set(beam_per_baseline) AND interp_flag THEN BEGIN
     interp_flag = 0
 ENDIF
 
+
 ; For each unflagged baseline, get the minimum contributing pixel number for gridding 
 ; and the 2D derivatives for bilinear interpolation
 bin_n = baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,ri=ri,$
@@ -61,7 +62,6 @@ IF Ptr_valid(model_ptr) THEN BEGIN
 ENDIF
 frequency_array=(*obs.baseline_info).freq
 frequency_array=frequency_array[fi_use]
-
 complex_flag=psf.complex_flag
 psf_dim=psf.dim
 psf_resolution=psf.resolution
@@ -185,7 +185,6 @@ IF map_flag THEN BEGIN
     FOR i=0,psf_dim-1 DO FOR j=0,psf_dim-1 DO $  
         *map_fn_inds[i,j]=psf2_inds[psf_dim-i:2*psf_dim-i-1,psf_dim-j:2*psf_dim-j-1]
 ENDIF
-
 
 FOR bi=0L,n_bin_use-1 DO BEGIN
     ; Cycle through sets of visibilities which contribute to the same data/model uv-plane pixels, and perform

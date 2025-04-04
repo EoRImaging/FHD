@@ -7,21 +7,32 @@ function grid_beam_per_baseline, psf, uu, vv, ww, l_mode, m_mode, n_tracked, fre
 ;Will need to be rerun for every baseline, so speed is key.
 ;For more information, see Jack Line's thesis
 
+;Pre-calculations outside of the loop
+psf_dim2 = psf.dim^2.
+;nx = (image_top - image_bot + 1)/psf.psf_intermediate_res
+nx = (image_top - image_bot + 1)/psf.resolution
+ny = nx 
+uu_m = uu[bt_index]*frequency_array[freq_i]-x[xmin_use+psf.dim/2]
+vv_m = vv[bt_index]*frequency_array[freq_i]-y[ymin_use+psf.dim/2]
+ww_m = ww[bt_index]*frequency_array[freq_i]
+
+
 ;Loop over all visibilities that fall within the chosen visibility box
 FOR ii=0L,vis_n-1 DO begin
-    ;Pixel center offset phases
-    deltau_l = l_mode*(uu[bt_index[ii]]*frequency_array[freq_i[ii]]-x[xmin_use+psf.dim/2])
-    deltav_m = m_mode*(vv[bt_index[ii]]*frequency_array[freq_i[ii]]-y[ymin_use+psf.dim/2])
-    ;w term offset phase
-    w_n_tracked = n_tracked*ww[bt_index[ii]]*frequency_array[freq_i[ii]]
 
-    ;Generate a UV beam from the image space beam, offset by calculated phases
-    psf_base_superres=dirty_image_generate((*(*psf.image_info).image_power_beam_arr[polarization,fbin[ii]])*$
-      exp(2.*!pi*Complex(0,1)*(-w_n_tracked+deltau_l+deltav_m)),/no_real)
- 
+    ;Pixel center offset phases
+    uvw_shifted = l_mode*uu_m[ii] + m_mode*vv_m[ii] - n_tracked*ww_m[ii]
+
+    ;Offset the image space beam by the calculated phases
+    ;complex(cos(a),sin(a)) is the same as exp(i*a), but faster
+    psf_base_superres = (*(*psf.image_info).image_power_beam_arr[polarization,fbin[ii]])*$
+        complex(cos(2.*!pi*uvw_shifted),sin(2.*!pi*uvw_shifted))
+
+    ;Generate a UV beam from the image space beam
+    psf_base_superres=fft_shift(FFT(fft_shift(psf_base_superres),double=1))
     psf_base_superres=psf_base_superres[image_bot:image_top,image_bot:image_top]
 
-    ;A quick way to sum down the image by a factor of 2 in both dimensions.
+    ;A quick way to sum down the image by some factor in both dimensions.
     ;A 4x4 example where we sum down by a factor of 2
     ;
     ;1  2  3  4           1  2           1  2           1  2  5  6            14 46           14 22
@@ -34,12 +45,12 @@ FOR ii=0L,vis_n-1 DO begin
     ;                     11 12          11 12
     ;                                    15 16
     ;                     13 14
-    ;                     15 16    
-    d = size(psf_base_superres,/DIMENSIONS) & nx = d[0]/psf.resolution & ny = d[1]/psf.resolution
+    ;                     15 16   
     psf_base_superres = transpose(total(reform(transpose(reform(psf_base_superres,psf.resolution,$
       nx,psf.resolution*ny,/overwrite),[0,2,1]),psf.resolution^2,ny,nx,/overwrite),1))
- 
-    psf_base_superres = reform(psf_base_superres, psf.dim^2.)
+
+    psf_base_superres = reform(psf_base_superres, psf_dim2)
+
     box_matrix[psf_dim3*ii]=psf_base_superres
 endfor
 
