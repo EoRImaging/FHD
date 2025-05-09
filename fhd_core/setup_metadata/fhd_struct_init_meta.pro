@@ -181,11 +181,7 @@ Eq2Hor,obsra,obsdec,JD0,obsalt,obsaz,lat=lat,lon=lon,alt=Mean(alt)
 meta={obsra:Double(obsra),obsdec:Double(obsdec),zenra:Double(zenra),zendec:Double(zendec),phasera:Double(phasera),phasedec:Double(phasedec),$
     epoch:Float(epoch),tile_names:tile_names,lon:Float(lon),lat:Float(lat),alt:Float(alt),JD0:Double(JD0),Jdate:Double(Jdate),$
     astr:astr,obsx:Float(obsx),obsy:Float(obsy),zenx:Float(zenx),zeny:Float(zeny),obsaz:Float(obsaz),obsalt:Float(obsalt),$
-<<<<<<< HEAD
     delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Double(orig_phasera),orig_phasedec:Double(orig_phasedec),$
-=======
-    delays:beamformer_delays,tile_height:Float(tile_height),tile_flag:tile_flag,orig_phasera:Float(orig_phasera),orig_phasedec:Float(orig_phasedec),$
->>>>>>> d0731fd9 (dipole gain handling)
     time_res:Float(time_res),base_gain:base_gain}
 
 RETURN,meta
