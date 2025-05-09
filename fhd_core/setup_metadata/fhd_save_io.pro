@@ -40,7 +40,7 @@ IF Keyword_Set(restore) THEN no_save=1
 
 IF Keyword_Set(reset) THEN status_str={hdr:0,params:0,obs:0,layout:0,psf:0,antenna:0,jones:0,cal:0,skymodel:0,source_array:0,vis_weights:0,auto_corr:0,$
     vis_ptr:intarr(4),vis_model_ptr:intarr(4),grid_uv:intarr(4),weights_uv:intarr(4),grid_uv_model:intarr(4),vis_count:0,$
-    map_fn:intarr(4),fhd:0,fhd_params:0,hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4),complete:0}
+    map_fn:intarr(4),fhd:0,fhd_params:0,uvf_even:intarr(4),uvf_odd:intarr(4),hpx_cnv:0,healpix_cube:intarr(4),hpx_even:intarr(4),hpx_odd:intarr(4),complete:0}
 IF size(status_str,/type) NE 8  THEN status_str=getvar_savefile(status_path+'.sav','status_str', compatibility_mode = compatibility_mode)
 status_use=status_str
 IF Keyword_Set(text) THEN BEGIN
@@ -81,6 +81,8 @@ CASE var_name OF ;listed in order typically generated
     'map_fn':BEGIN status_use.map_fn[pol_i]=1 & path_add='_mapfn_'+pol_names[pol_i] & subdir='mapfn' & pol_flag=0 & END
     'fhd_params':BEGIN status_use.fhd_params=1 & path_add='_fhd_params' & subdir='deconvolution'& END
     'fhd':BEGIN status_use.fhd=1 & path_add='_fhd' & subdir='deconvolution' & END 
+    'uvf_even':BEGIN status_use.uvf_even[pol_i]=1 & path_add='_even_gridded_cube'+pol_names[pol_i] & subdir='grid_data' & pol_flag=1 & END
+    'uvf_odd':BEGIN status_use.uvf_odd[pol_i]=1 & path_add='_odd_gridded_cube'+pol_names[pol_i] & subdir='grid_data' & pol_flag=1 & END
     'hpx_cnv':BEGIN status_use.hpx_cnv=1 & path_add='_hpxcnv' & subdir='Healpix' & END
     'healpix_cube':BEGIN status_use.healpix_cube[pol_i]=1 & path_add='_cube'+pol_names[pol_i] & subdir='Healpix' & pol_flag=1 & END
     'hpx_even':BEGIN status_use.hpx_even[pol_i]=1 & path_add='_even_cube'+pol_names[pol_i] & subdir='Healpix' & pol_flag=1 & END

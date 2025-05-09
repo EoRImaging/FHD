@@ -10,7 +10,8 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
   fill_model_visibilities=fill_model_visibilities,bi_use=bi_use,fi_use=fi_use,$
   vis_inds_use=vis_inds_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
   dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,x_offset=x_offset,y_offset=y_offset,$
-  preserve_visibilities=preserve_visibilities,mask_mirror_indices=mask_mirror_indices
+  preserve_visibilities=preserve_visibilities,mask_mirror_indices=mask_mirror_indices,$
+  wstacking=wstacking,w_bin=w_bin,lm=lm,outside_horizon_inds=outside_horizon_inds
 
   ; Extract information from the structures
   n_tile=obs.n_tile
@@ -166,10 +167,91 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
       RETURN,bin_n
   ENDIF
 
-  ; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
-  ; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
-  bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0))
-  bin_i=Long(where(bin_n,n_bin_use))
+  if keyword_set(wstacking) then begin
+
+    apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), $
+      ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+
+    n_tracked = l_m_n(obs, psf, l_mode=l_mode, m_mode=m_mode, ra_arr=ra_arr, dec_arr=dec_arr)
+
+    ; Determine the indices outside of the horizon, easiest on ra or dec
+    outside_horizon_inds = where(~finite(dec_arr))
+
+    ; Calculate the lm term to the measurement equation    
+    lm = sqrt(1 - l_mode^2. - m_mode^2.)
+
+    ; Select unflagged baselines for finding correct w-stacks
+    ; Baselines are grouped by chunks in frequency -- if any baseline in a chunk is unflagged,
+    ;  then that baseline chunk is included in w-stacking 
+    baselines_ind = where(total(xmin GE 0, 1) GE 1 and total(ymin GE 0, 1) GE 1)
+
+    ; Calculate the w for each unflagged baseline group in radians
+    ww_rad = (2*!DPi) * (params.ww[bi_use[baselines_ind]] * mean(frequency_array))
+
+    ; Create the other half of the uv plane via negating the locations
+    conj_i=where(ww_rad LT 0,n_conj)
+    IF n_conj GT 0 THEN BEGIN
+      ww_rad[conj_i]=-ww_rad[conj_i]
+    ENDIF
+
+    ; Calculate the absolute number of w-stacks required.
+    n_w_stack = ceil(2 * !DPi * (max(ww_rad,/nan) - min(ww_rad,/nan)) * max(1. - sqrt(1 - l_mode^2 - m_mode^2)))
+
+    ; Calculate the histogram and reverse indices for each w-stack
+    w_bin_n = histogram(ww_rad, nbins=n_w_stack, reverse_indices=w_ri, omin=w_omin)
+    w_bin_i=Long(where(w_bin_n,n_bin_use))
+
+    ; Also capture the size of the w bins in radians
+    w_binsize = (max(ww_rad,/nan) - min(ww_rad,/nan)) / n_w_stack
+
+    ; Reset the number of w-stacks because some may be empty. w_bin_i holds the number of the non-empty w-stacks 
+    n_w_stack = N_elements(w_bin_i)
+
+    ; Initialize arrays for the w-stacking
+    bin_n = PTRARR(n_w_stack)
+    bin_i = PTRARR(n_w_stack)
+    ri = PTRARR(n_w_stack)
+    w_bin = DBLARR(n_w_stack)
+
+    xmin_w_i = xmin
+    ymin_w_i = ymin
+
+    for w_i = 0 , n_w_stack - 1 do begin
+
+      ; Reinitialize the minimum pixel values for each w-stack to be not included
+      xmin_w_i[*] = -1
+      ymin_w_i[*] = -1
+
+      ; Calculate the center w of the w-stack in radians
+      w_bin[w_i] = w_omin + w_binsize * (w_bin_i[w_i]+1) - w_binsize/2
+
+      ; Find the indices for each w-stack where flagged baselines are not included
+      inds_i = w_ri[w_ri[w_bin_i[w_i]]:w_ri[w_bin_i[w_i]+1]-1]
+      ; Convert these indicies to where flagged are included
+      w_stack_inds = baselines_ind[inds_i]
+
+      ; Include baselines in the w-stack
+      xmin_w_i[*,w_stack_inds] = xmin[*,w_stack_inds]
+      ymin_w_i[*,w_stack_inds] = ymin[*,w_stack_inds]
+ 
+      ; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
+      ; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
+      ; Store in pointers due to changing size in each w-stack
+      bin_n[w_i]=PTR_NEW(Long(histogram(xmin_w_i+ymin_w_i*dimension,binsize=1,reverse_indices=pix_w_ri,min=0)))
+      ri[w_i] = PTR_NEW(pix_w_ri)
+      bin_i[w_i]=PTR_NEW(Long(where(*bin_n[w_i],n_bin_use_i)))
+      if w_i EQ 0 then n_bin_use = n_bin_use_i else n_bin_use = [n_bin_use, n_bin_use_i]
+
+    endfor
+
+  endif else begin
+
+    ; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
+    ; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
+    bin_n=Long(histogram(xmin+ymin*dimension,binsize=1,reverse_indices=ri,min=0))
+    bin_i=Long(where(bin_n,n_bin_use))
+  
+  endelse
 
   return, bin_n
 
