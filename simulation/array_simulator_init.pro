@@ -45,5 +45,5 @@ PRO array_simulator_init,obs,params,layout,error=error,sim_from_uvfits_filepath=
   ENDIF ELSE params=params_in
 
   IF N_Elements(file_path_vis) EQ 0 THEN file_path_vis='simulation'
-  obs=fhd_struct_init_obs(file_path_vis,hdr,params,n_pol=n_pol,instrument=instrument,_Extra=extra)
+  obs=fhd_struct_init_obs(file_path_vis,hdr,params,layout,n_pol=n_pol,instrument=instrument,_Extra=extra)
 END
