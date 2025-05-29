@@ -195,7 +195,7 @@ FUNCTION vis_simulate,obs,status_str,psf,params,jones,skymodel,file_path_fhd=fil
         ;; if there is also a uvf cube, add the uv from the sources to the cube at each freq.
 	IF size(*source_model_uv_arr[0],/type) eq 6 then begin     ;; If array is complex
 	        FOR pol_i=0,n_pol-1 DO BEGIN
-			*model_uvf_arr[pol_i]+=rebin_complex(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
+			*model_uvf_arr[pol_i]+=rebin_complex(*source_model_uv_arr[pol_i],dimension,elements,n_freq)
 		ENDFOR
 	ENDIF ELSE BEGIN
 	        FOR pol_i=0,n_pol-1 DO *model_uvf_arr[pol_i]+=Rebin(*source_model_uv_arr[pol_i],dimension,elements,n_freq,/sample)
