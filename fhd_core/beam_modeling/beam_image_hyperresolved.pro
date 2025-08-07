@@ -13,28 +13,46 @@ function beam_image_hyperresolved,antenna1,antenna2,ant_pol1,ant_pol2,freq_i,$
   ;; Defined only at non-zero pixels for memory reduction
   pix_use=*antenna1[0].pix_use
   psf_image_dim = antenna1.psf_image_dim
-
-  ;; Jones pointers and antenna beams
-  Jones1=antenna1.Jones[*,*,freq_i]
-  Jones2=antenna2.Jones[*,*,freq_i]
-  beam_ant1=DComplex(*(antenna1.response[ant_pol1,freq_i]))
-  beam_ant2=DComplex(Conj(*(antenna2.response[ant_pol2,freq_i])))
-
-  ;; Amplitude of the response from ant1 is Sqrt(|J1[0,pol1]|^2 + |J1[1,pol1]|^2)
-  ;; Amplitude of the response from ant2 is Sqrt(|J2[0,pol2]|^2 + |J2[1,pol2]|^2)
-  ;; Amplitude of the baseline response is the product of the antenna responses
-  power_zenith_beam=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
-    (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
- 
   ;; Create only one full-scale array for memory reduction
   image_power_beam = Dcomplexarr(psf_image_dim,psf_image_dim)
 
-  ;; Co-opt this array to calculate the power at zenith
-  image_power_beam[pix_use] = power_zenith_beam
-  power_zenith=Interpolate(image_power_beam,zen_int_x,zen_int_y,cubic=-0.5)
-  
-  ;; Redefine the array to be the image power beam, normalized to zenith
-  image_power_beam[pix_use] = (power_zenith_beam*beam_ant1*beam_ant2)/power_zenith
+
+  if ~tag_exist(antenna1,'F') and ~tag_exist(antenna1,'D') and $
+    ~tag_exist(antenna2,'F') and ~tag_exist(antenna2,'D') then begin
+    ;; Jones pointers and antenna beams
+    Jones1=antenna1.Jones[*,*,freq_i]
+    Jones2=antenna2.Jones[*,*,freq_i]
+    beam_ant1=DComplex(*(antenna1.response[ant_pol1,freq_i]))
+    beam_ant2=DComplex(Conj(*(antenna2.response[ant_pol2,freq_i])))
+
+    ;; Amplitude of the response from ant1 is Sqrt(|J1[0,pol1]|^2 + |J1[1,pol1]|^2)
+    ;; Amplitude of the response from ant2 is Sqrt(|J2[0,pol2]|^2 + |J2[1,pol2]|^2)
+    ;; Amplitude of the baseline response is the product of the antenna responses
+    power_zenith_beam=Sqrt((abs(*Jones1[0,ant_pol1])^2.+abs(*Jones1[1,ant_pol1])^2.)*$
+      (abs(*Jones2[0,ant_pol2])^2.+abs(*Jones2[1,ant_pol2])^2.))
+
+    ;; Co-opt this array to calculate the power at zenith
+    image_power_beam[pix_use] = power_zenith_beam
+    power_zenith=Interpolate(image_power_beam,zen_int_x,zen_int_y,cubic=-0.5)
+    
+    ;; Redefine the array to be the image power beam, normalized to zenith
+    image_power_beam[pix_use] = (power_zenith_beam*beam_ant1*beam_ant2)/power_zenith
+  endif else begin
+    ; F is the diagonal amplitude response of the antenna to unpolarized radiation, 
+    ; ordered as [n_pol, n_freq]. 
+    ; D is the diagonal time delay response of the antenna 
+    ; to unpolarized radiation, ordered as [n_pol, n_freq].
+    power_zenith_beam = (*antenna1.F[ant_pol1,freq_i]) * (*antenna2.F[ant_pol2,freq_i])
+    
+    ;; Co-opt this array to calculate the power at zenith
+    image_power_beam[pix_use] = power_zenith_beam
+    power_zenith=Interpolate(image_power_beam,zen_int_x,zen_int_y,cubic=-0.5)
+
+    ;; Redefine the array to be the image power beam, normalized to zenith
+    image_power_beam[pix_use] = power_zenith_beam * $
+      (*antenna1.D[ant_pol1,freq_i]) * Conj(*antenna2.D[ant_pol2,freq_i]) / power_zenith
+
+  endelse
 
   return, image_power_beam
 

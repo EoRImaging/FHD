@@ -98,10 +98,22 @@ FOR fi=0L,nfreq_bin-1 DO BEGIN
 ENDFOR
 
 ;initialize antenna structure
-antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version,freq:freq_center,nfreq_bin:nfreq_bin,$
-    n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),$
-    delays:Ptr_new(),size_meters:0.,height:0.,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1,pix_window:Ptr_new(),pix_use:Ptr_new(),$
-    psf_image_dim:0.,psf_scale:0.}
+; If the Jones matrix is going to be decomposed into F D K contributions, then add those tags.
+; Keep a combined Jones matrix for backwards compatibility
+If instrument EQ 'lofar' then begin
+  antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version,$
+      freq:freq_center,nfreq_bin:nfreq_bin,n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),$
+      coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),delays:Ptr_new(),$
+      size_meters:0.,height:0.,rotation:0,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1,$
+      pix_window:Ptr_new(),pix_use:Ptr_new(),psf_image_dim:0.,psf_scale:0.,K: Ptrarr(n_ant_pol, n_ant_pol, nfreq_bin), $
+      D: Ptrarr(n_ant_pol, nfreq_bin), F: Ptrarr(n_ant_pol, nfreq_bin)}
+endif else begin
+  antenna_str={n_pol:n_ant_pol,antenna_type:instrument,names:ant_names,model_version:beam_model_version,$
+      freq:freq_center,nfreq_bin:nfreq_bin,n_ant_elements:0,Jones:Ptrarr(n_ant_pol,n_ant_pol,nfreq_bin),$
+      coupling:Ptrarr(n_ant_pol,nfreq_bin),gain:Ptrarr(n_ant_pol),coords:Ptrarr(3),delays:Ptr_new(),$
+      size_meters:0.,height:0.,rotation:0,response:Ptrarr(n_ant_pol,nfreq_bin),group_id:Lonarr(n_ant_pol)-1,$
+      pix_window:Ptr_new(),pix_use:Ptr_new(),psf_image_dim:0.,psf_scale:0.}
+endelse
     
 ;update structure with instrument-specific values, and return as a structure array, with an entry for each tile/antenna
 ;first, update to include basic configuration data
@@ -228,8 +240,10 @@ if N_elements(instrument) GT 1 then begin
   endfor  
 endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
 
-;Finally, update antenna structure to include the response of each antenna
-antenna=general_antenna_response(obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,_Extra=extra)
+if ~tag_exist(antenna, 'K') and ~tag_exist(antenna, 'F') and ~tag_exist(antenna, 'D') then begin
+  ;Finally, update antenna structure to include the response of each antenna
+  antenna=general_antenna_response(obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,_Extra=extra)
+endif
 
 timing=Systime(1)-t0
 RETURN,antenna
