@@ -135,7 +135,43 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
       endif
     endelse
     
-    restore, filenames[i]
+    file_extension = (STRSPLIT(file_basename(filenames[i]), '.', /extract))[1]
+    if (file_extension eq 'sav') or (file_extension eq 'idlsave') then begin
+      ; Restore a idl save file
+      restore, filenames[i]
+    endif else begin
+      if (file_extension eq 'h5') or (file_extension eq 'hd5') or (file_extension eq 'hdf5') then begin
+        ; Restore a hdf5 file
+        
+        file_id = H5F_OPEN(filename) ;Get file ID
+
+        ; Define the potential dataset names in the HDF5 healpix files
+        dataset_names = ['beam_squared_cube', 'dirty_cube', 'model_cube', 'res_cube' ,'variance_cube', 'weights_cube', $
+                        'obs', 'hpx_inds', 'n_avg', 'nside']
+
+        ; Read the h5 file 
+        FOR i = 0, N_ELEMENTS(dataset_names)-1 DO BEGIN
+            dataset_id = H5D_OPEN(file_id, dataset_names[i])
+            data = H5D_READ(dataset_id)
+            H5D_CLOSE, dataset_id
+            
+            ; Assign to appropriately named variable
+            CASE dataset_names[i] OF
+                'beam_squared_cube': beam_squared_cube = data
+                'dirty_cube': dirty_cube = data
+                'model_cube': model_cube = data
+                'res_cube': res_cube = data
+                'variance_cube': variance_cube = data
+                'weights_cube': weights_cube = data
+                'obs': obs = data
+                'hpx_inds': hpx_inds = data
+                'n_avg': n_avg = data
+                'nside': nside = data
+            ENDCASE
+        ENDFOR
+      endif message, "Warning: File " + filenames[i] + " has an unsupported file extension: " + file_extension + ". Skipping this file."
+    endelse
+
     if n_elements(obs) gt 0 then begin
       this_nobs=1
       integrated=0
