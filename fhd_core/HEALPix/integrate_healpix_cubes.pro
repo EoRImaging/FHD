@@ -125,38 +125,46 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   freq_match_arr = intarr(nfiles)
   pix_match_arr = intarr(nfiles)
   for i=0, nfiles-1 do begin
-    void = getvar_savefile(filenames[i], names = this_varnames)
-    print,'Working on file '+filenames[i]+'   ('+number_formatter(i+1)+'/'+number_formatter(nfiles)+')'
-    if i eq 0 then varnames = this_varnames else begin
-      match, varnames, this_varnames, suba, subb, count = count_var
-      if count_var ne n_elements(varnames) then begin
-        print, 'file ' + filenames[i] + 'does not have the same variables as the other files. It will not be included in the integration.'
-        continue
-      endif
-    endelse
+
     
     file_extension = (STRSPLIT(file_basename(filenames[i]), '.', /extract))[1]
     if (file_extension eq 'sav') or (file_extension eq 'idlsave') then begin
       ; Restore a idl save file
       restore, filenames[i]
+
+      ; Check that the variables are consistent across all files
+      void = getvar_savefile(filenames[i], names = this_varnames)
+      print,'Working on file '+filenames[i]+'   ('+number_formatter(i+1)+'/'+number_formatter(nfiles)+')'
+      if i eq 0 then begin
+        varnames = this_varnames 
+      endif else begin
+        match, varnames, this_varnames, suba, subb, count = count_var
+        if count_var ne n_elements(varnames) then begin
+          print, 'file ' + filenames[i] + 'does not have the same variables as the other files. It will not be included in the integration.'
+          continue
+        endif
+      endelse
+
     endif else begin
       if (file_extension eq 'h5') or (file_extension eq 'hd5') or (file_extension eq 'hdf5') then begin
         ; Restore a hdf5 file
         
-        file_id = H5F_OPEN(filename) ;Get file ID
+        file_id = H5F_OPEN(filenames[i]) ;Get file ID
 
         ; Define the potential dataset names in the HDF5 healpix files
         dataset_names = ['beam_squared_cube', 'dirty_cube', 'model_cube', 'res_cube' ,'variance_cube', 'weights_cube', $
                         'obs', 'hpx_inds', 'n_avg', 'nside']
 
         ; Read the h5 file 
-        FOR i = 0, N_ELEMENTS(dataset_names)-1 DO BEGIN
-            dataset_id = H5D_OPEN(file_id, dataset_names[i])
+        FOR var_i = 0, N_ELEMENTS(dataset_names)-1 DO BEGIN
+          catch, error_status
+          if error_status eq 0 then begin
+            dataset_id = H5D_OPEN(file_id, dataset_names[var_i])
             data = H5D_READ(dataset_id)
             H5D_CLOSE, dataset_id
             
             ; Assign to appropriately named variable
-            CASE dataset_names[i] OF
+            CASE dataset_names[var_i] OF
                 'beam_squared_cube': beam_squared_cube = data
                 'dirty_cube': dirty_cube = data
                 'model_cube': model_cube = data
@@ -168,8 +176,11 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
                 'n_avg': n_avg = data
                 'nside': nside = data
             ENDCASE
+          ENDIF
+          catch, /cancel
         ENDFOR
-      endif message, "Warning: File " + filenames[i] + " has an unsupported file extension: " + file_extension + ". Skipping this file."
+
+      endif else message, "Warning: File " + filenames[i] + " has an unsupported file extension: " + file_extension + ". Skipping this file."
     endelse
 
     if n_elements(obs) gt 0 then begin
