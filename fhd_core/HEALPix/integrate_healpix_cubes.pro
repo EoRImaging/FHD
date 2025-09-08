@@ -188,8 +188,9 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
                         'jd0', 'kpix', 'max_baseline', 'meta_data', 'min_baseline', 'n_baselines', 'n_freq', 'n_freq_flag', $
                         'n_pol', 'n_tile', 'n_tile_flag', 'n_time', 'n_time_flag', 'n_vis', 'n_vis_in', 'n_vis_raw', $
                         'nf_vis', 'obsalt', 'obsaz', 'obsdec', 'obsname', 'obsra', 'obsx', 'obsy', 'orig_phasedec', $
-                        'orig_phasera', 'phasedec', 'phasera', 'pol_names', 'residual', 'time_res', 'vis_noise', $
+                        'orig_phasera', 'phasedec', 'phasera', 'pol_names', 'residual', 'time_res', $
                         'zendec', 'zenra', 'zenx', 'zeny']
+        dataset_names_pointers = ['primary_beam_area', 'primary_beam_sq_area', 'vis_noise']
         group_id = H5G_OPEN(file_id, 'obs')
 
         FOR var_i = 0, N_ELEMENTS(dataset_names)-1 DO BEGIN
@@ -203,6 +204,29 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
             ; Put the variable in the obs structure
             ; Create a temporary structure because structure tags cannot be dynamically assigned
             temp_struct = CREATE_STRUCT(dataset_names[var_i], data)
+            obs = structure_update(obs, _Extra=temp_struct)  
+          ENDIF
+          catch, /cancel
+        ENDFOR
+
+        FOR var_i = 0, N_ELEMENTS(dataset_names_pointers)-1 DO BEGIN
+          ; Do the same for pointer variables.
+          catch, error_status
+          ; if a variable is not present, skip it to avoid a return
+          IF error_status eq 0 then begin
+            dataset_id = H5D_OPEN(group_id, dataset_names[var_i])
+            data = H5D_READ(dataset_id)
+            H5D_CLOSE, dataset_id
+
+            ; First dimension is the polarisation dimension (assumption)
+            pol_size = size(data[0], \dimension)
+
+            ; Put the variable in the obs structure
+            ; Create a temporary structure because structure tags cannot be dynamically assigned
+            temp_struct = CREATE_STRUCT(dataset_names[var_i], Ptrarr(pol_size,/allocate))
+            for pol_i=0, pol_size-1 do begin
+              *temp_struct.(dataset_names[var_i])[pol_i] = data[pol_i,*]
+            endfor
             obs = structure_update(obs, _Extra=temp_struct)  
           ENDIF
           catch, /cancel
