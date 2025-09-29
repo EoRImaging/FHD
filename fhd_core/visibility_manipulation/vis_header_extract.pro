@@ -68,16 +68,18 @@ IF found_baseline NE 1 THEN BEGIN
         found_baseline = 1 ; 'BASELINE' only needs to be present if the antennas are not included separately
     ENDIF ELSE print,"WARNING: Group parameter BASELINE not found within uvfits header PTYPE keywords" 
 ENDIF
-uu_i=(where(Strmatch(param_list,'UU', /fold_case),found_uu))[0] & IF found_uu NE 1 THEN print,"WARNING: Group parameter UU not found within uvfits header PTYPE keywords"
-vv_i=(where(Strmatch(param_list,'VV', /fold_case),found_vv))[0] & IF found_vv NE 1 THEN print,"WARNING: Group parameter VV not found within uvfits header PTYPE keywords"
-ww_i=(where(Strmatch(param_list,'WW', /fold_case),found_ww))[0] & IF found_ww NE 1 THEN print,"WARNING: Group parameter WW not found within uvfits header PTYPE keywords"
+
+uu_i=(where(Strmatch(param_list,'UU', /fold_case),found_uu))[0] & IF found_uu LT 1 THEN print,"WARNING: Group parameter UU not found within uvfits header PTYPE keywords"
+vv_i=(where(Strmatch(param_list,'VV', /fold_case),found_vv))[0] & IF found_vv LT 1 THEN print,"WARNING: Group parameter VV not found within uvfits header PTYPE keywords"
+ww_i=(where(Strmatch(param_list,'WW', /fold_case),found_ww))[0] & IF found_ww LT 1 THEN print,"WARNING: Group parameter WW not found within uvfits header PTYPE keywords"
 date_i=where(Strmatch(param_list,'DATE', /fold_case),found_date) & IF found_date LT 1 THEN print,"WARNING: Group parameter DATE not found within uvfits header PTYPE keywords"
-IF (found_baseline NE 1) OR (found_uu NE 1) OR (found_vv NE 1) OR (found_ww NE 1) OR (found_date LT 1) THEN error=1 
+
+IF (found_baseline NE 1) OR (found_uu LT 1) OR (found_vv LT 1) OR (found_ww LT 1) OR (found_date LT 1) THEN error=1 
 
 IF found_date GT 1 THEN BEGIN
-    Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i[0]+1)))
+    Jdate0=Double(sxpar(header,String(format='("PZERO",I0)',date_i[0]+1)))
 ENDIF ELSE BEGIN
-    Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i+1)))
+    Jdate0=Double(sxpar(header,String(format='("PZERO",I0)',date_i+1)))
 ENDELSE
 ;Jdate_extract=sxpar(header,String(format='("PZERO",I1)',date_i+1),count=found_jd0)
 ;IF Keyword_Set(found_jd0) THEN IF Jdate_extract GT 2.4E6 THEN Jdate0=Jdate_extract

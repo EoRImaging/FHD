@@ -1,29 +1,40 @@
 function vis_model_transfer,obs,params,model_transfer
 
-  data_nbaselines = obs.nbaselines
+  data_uniq_time_inds = [0,uniq(params.time)+1]
+  ;data_uniq_time_inds = data_uniq_time_inds[0:n_elements(data_uniq_time_inds)-2]
   data_n_time = obs.n_time
 
-  ;; Option to transfer pre-made and unflagged model visbilities
-  vis_model_arr=PTRARR(obs.n_pol,/allocate)
+  if strlowcase(strmid(model_transfer, strlen(model_transfer)-7, 7)) eq '.uvfits' then begin
+    ; model_transfer is a UVFITS file
+    if file_test(model_transfer) then begin
+      uvfits_read,hdr,params_model,layout,vis_model_arr,vis_weights,file_path_vis=model_transfer,n_pol=obs.n_pol,silent=silent,error=error
+    endif else message, model_transfer + ' not found during model transfer.'
 
-  for pol_i=0, obs.n_pol-1 do begin
-    transfer_name = model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav'
-    if ~file_test(transfer_name) then $
-      message, transfer_name + ' not found during model transfer.'
-    vis_model_arr[pol_i] = getvar_savefile(transfer_name,'vis_model_ptr')
-    print, "Model visibilities transferred from " + transfer_name
-  endfor
-
-  ;; Get the params file associated with the model visibilities
-  if file_test(model_transfer+'/'+obs.obsname+'_params.sav') then begin
-    params_model = getvar_savefile(model_transfer+'/'+obs.obsname+'_params.sav','params')
   endif else begin
-    if file_test(file_dirname(model_transfer)+'/metadata/'+obs.obsname+'_params.sav') then begin
-      params_model = getvar_savefile(file_dirname(model_transfer)+'/metadata/'+obs.obsname+'_params.sav','params')
-    endif else message, 'No params file found in model transfer directory.'
-  endelse 
-  model_n_time = n_elements(uniq(params_model.time))
-  model_nbaselines = (uniq(params_model.time))[0]+1
+    ; model_transfer is a directory of saved visibility model files
+    vis_model_arr=PTRARR(obs.n_pol,/allocate)
+
+    for pol_i=0, obs.n_pol-1 do begin
+      transfer_name = model_transfer + '/' + obs.obsname + '_vis_model_'+obs.pol_names[pol_i]+'.sav'
+      if ~file_test(transfer_name) then $
+        message, transfer_name + ' not found during model transfer.'
+      vis_model_arr[pol_i] = getvar_savefile(transfer_name,'vis_model_ptr')
+      print, "Model visibilities transferred from " + transfer_name
+    endfor
+
+    ;; Get the params file associated with the model visibilities
+    if file_test(model_transfer+'/'+obs.obsname+'_params.sav') then begin
+      params_model = getvar_savefile(model_transfer+'/'+obs.obsname+'_params.sav','params')
+    endif else begin
+      if file_test(file_dirname(model_transfer)+'/metadata/'+obs.obsname+'_params.sav') then begin
+        params_model = getvar_savefile(file_dirname(model_transfer)+'/metadata/'+obs.obsname+'_params.sav','params')
+      endif else message, 'No params file found in model transfer directory.'
+    endelse 
+  endelse
+
+  model_uniq_time_inds = [0,uniq(params_model.time)+1]
+  ;model_uniq_time_inds = model_uniq_time_inds[0:n_elements(model_uniq_time_inds)-2]
+  model_n_time = n_elements(model_uniq_time_inds)
 
   if model_n_time NE data_n_time then begin
   ;; Exclude flagged times from the model visibilities if the number of time steps do not match
@@ -93,8 +104,8 @@ function vis_model_transfer,obs,params,model_transfer
   ;Initialize matched model pointer array
   matched_model = PTRARR(obs.n_pol,/allocate)
   for pol_i=0, obs.n_pol-1 do begin
-    if size(*vis_model_arr[pol_i], /type) eq 6 then *matched_model[pol_i] = complex(FLTARR(obs.n_freq, data_nbaselines * data_n_time))
-    if size(*vis_model_arr[pol_i], /type) eq 9 then *matched_model[pol_i] = dcomplex(DBLARR(obs.n_freq, data_nbaselines * data_n_time))
+    if size(*vis_model_arr[pol_i], /type) eq 6 then *matched_model[pol_i] = complex(FLTARR(obs.n_freq, obs.nbaselines * data_n_time))
+    if size(*vis_model_arr[pol_i], /type) eq 9 then *matched_model[pol_i] = dcomplex(DBLARR(obs.n_freq, obs.nbaselines * data_n_time))
   endfor
 
   ; In each matched timestep, match the baselines and fill a new, matched model array 
@@ -102,10 +113,10 @@ function vis_model_transfer,obs,params,model_transfer
   for time_i=0, data_n_time-1 do begin
     ;suba is the subset of indices in the first array that are also in the second.
     ;subb is the subset of indices in the second array that are also in the first.
-    match, data_baseline_index[time_i*data_nbaselines:(time_i+1)*data_nbaselines-1], $
-      model_baseline_index[matched_times[time_i]*model_nbaselines:(matched_times[time_i]+1)*model_nbaselines-1], $
+    match, data_baseline_index[data_uniq_time_inds[time_i]:data_uniq_time_inds[time_i+1]-1], $
+      model_baseline_index[model_uniq_time_inds[matched_times[time_i]]:model_uniq_time_inds[matched_times[time_i]+1]-1], $
       suba, subb
-    for pol_i=0, obs.n_pol-1 do (*matched_model[pol_i])[*,suba+time_i*(data_nbaselines)] = (*vis_model_arr[pol_i])[*,subb+matched_times[time_i]*model_nbaselines]
+    for pol_i=0, obs.n_pol-1 do (*matched_model[pol_i])[*,suba+data_uniq_time_inds[time_i]] = (*vis_model_arr[pol_i])[*,subb+model_uniq_time_inds[matched_times[time_i]]]
   endfor
 
   for pol_i=0, obs.n_pol-1 do vis_model_arr[pol_i] = Pointer_copy(matched_model[pol_i])
