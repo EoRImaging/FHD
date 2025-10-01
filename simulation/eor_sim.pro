@@ -47,7 +47,7 @@ function eor_sim, u_arr, v_arr, freq_arr, seed = seed, real_sky = real_sky, flat
   
   ;; savefile contains: k_centers, power
   ;restore, base_path('data') + 'eor_data/eor_power_1d.idlsave' ;;k_centers, power
-  restore, filepath('eor_power_1d.idlsave',root=rootdir('FHD'),subdir='catalog_data')
+  restore, filepath('eor_power_1d.idlsave',root=rootdir('FHD'),subdir='catalog_data/simulation')
   
   npts_log = n_elements(k_centers)
   
