@@ -1,15 +1,16 @@
 FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_flag=cal_neighbor_freq_flag,$
     cal_reflection_hyperresolve=cal_reflection_hyperresolve,cal_reflection_mode_theory=cal_reflection_mode_theory,$
-    cal_reflection_mode_file=cal_reflection_mode_file,cal_reflection_mode_delay=cal_reflection_mode_delay, $
+    cal_reflection_mode_file=cal_reflection_mode_file,cal_reflection_mode_delay=cal_reflection_mode_delay,auto_ratio=auto_ratio,$
     no_phase_calibration=no_phase_calibration,digital_gain_jump_polyfit=digital_gain_jump_polyfit,_Extra=extra
     
   IF Keyword_Set(cal_reflection_mode_theory) OR Keyword_Set(cal_reflection_mode_file) $
     OR Keyword_Set(cal_reflection_mode_delay) OR Keyword_Set(cal_reflection_hyperresolve) THEN BEGIN
-    IF (cal.mode_fit EQ 0) THEN cal.mode_fit=1.
+    IF not Keyword_Set(cal.mode_fit) THEN cal.mode_fit=1.
   ENDIF
   cal_mode_fit=cal.mode_fit
-  IF (cal_mode_fit EQ 1) AND keyword_set(cal_reflection_mode_theory) then $
+  IF Keyword_Set(cal_mode_fit) AND keyword_set(cal_reflection_mode_theory) then $
     if (abs(cal_reflection_mode_theory) GT 1) then cal_mode_fit = cal_reflection_mode_theory
+  
   IF Tag_exist(cal,"amp_degree") THEN amp_degree = cal.amp_degree ELSE amp_degree=2
   IF Tag_exist(cal,"phase_degree") THEN phase_degree = cal.phase_degree ELSE phase_degree=1
   
@@ -23,7 +24,9 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     freq_use=(*obs.baseline_info).freq_use
     freq_flag=where(freq_use EQ 0,nf_flag)
     IF nf_flag GT 0 THEN BEGIN
-      FOR fi=0L,nf_flag-1 DO freq_use[((freq_flag[fi]-cal_neighbor_freq_flag)>0):((freq_flag[fi]+cal_neighbor_freq_flag)<(n_freq-1))]=0
+      FOR fi=0L,nf_flag-1 DO BEGIN
+        freq_use[((freq_flag[fi]-cal_neighbor_freq_flag)>0):((freq_flag[fi]+cal_neighbor_freq_flag)<(n_freq-1))]=0
+      ENDFOR
     ENDIF
     freq_use=where(freq_use,nf_use)
   ENDIF
@@ -62,31 +65,33 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
       gain=reform(gain_amp[freq_use,tile_i])
       
       ;*****Fit for amplitude
-      IF N_Elements(amp_degree) GT 0 THEN BEGIN
+      IF keyword_set(amp_degree) THEN BEGIN
+        ;Only fit for amplitude if amp_degree is set and greater than zero
         fit_params=poly_fit(freq_use,gain,amp_degree)
         cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
         gain_fit=fltarr(n_freq)
         FOR di=0L,amp_degree DO gain_fit+=fit_params[di]*findgen(n_freq)^di
-      ENDIF ELSE gain_fit=Reform(gain_amp[*,tile_i])
-      
-      ;Fit pre- and post-digital gain jump separately in highband MWA data
-      IF keyword_set(digital_gain_jump_polyfit) then begin
-        gain_fit=fltarr(n_freq)
-        pre_dig_inds = where((*obs.baseline_info).freq[freq_use] LT 187.515E6,n_count)
-        if (obs.instrument NE 'mwa') OR (n_count LT 0) then begin
-          print, 'digital_gain_jump_polyfit keyword only works with highband mwa data. Full band polyfit applied instead'
-          continue
+
+        ;Fit pre- and post-digital gain jump separately in highband MWA data
+        IF keyword_set(digital_gain_jump_polyfit) then begin
+          gain_fit=fltarr(n_freq)
+          pre_dig_inds = where((*obs.baseline_info).freq[freq_use] LT 187.515E6,n_count)
+          if (obs.instrument NE 'mwa') OR (n_count LT 0) then begin
+            print, 'digital_gain_jump_polyfit keyword only works with highband mwa data. Full band polyfit applied instead'
+            continue
+          endif
+          f_d = max(pre_dig_inds)
+          f_end = N_elements(freq_use)-1
+          fit_params1=poly_fit(freq_use[0:f_d],gain[0:f_d],amp_degree-1)
+          fit_params2=poly_fit(freq_use[f_d+1:f_end],gain[f_d+1:f_end],amp_degree-1)
+          FOR di=0L,amp_degree-1 DO gain_fit[freq_use[0]:freq_use[f_d]] += fit_params1[di]*findgen(freq_use[f_d])^di
+          FOR di=0L,amp_degree-1 DO gain_fit[freq_use[f_d+1]:freq_use[f_end]] += $
+            fit_params2[di]*(findgen(freq_use[f_end] - freq_use[f_d+1]+1) + freq_use[f_d+1])^di
+          fit_params = [fit_params1,fit_params2]
+          cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
         endif
-        f_d = max(pre_dig_inds)
-        f_end = N_elements(freq_use)-1
-        fit_params1=poly_fit(freq_use[0:f_d],gain[0:f_d],amp_degree-1)
-        fit_params2=poly_fit(freq_use[f_d+1:f_end],gain[f_d+1:f_end],amp_degree-1)
-        FOR di=0L,amp_degree-1 DO gain_fit[freq_use[0]:freq_use[f_d]] += fit_params1[di]*findgen(freq_use[f_d])^di
-        FOR di=0L,amp_degree-1 DO gain_fit[freq_use[f_d+1]:freq_use[f_end]] += $
-          fit_params2[di]*(findgen(freq_use[f_end] - freq_use[f_d+1]+1) + freq_use[f_d+1])^di
-        fit_params = [fit_params1,fit_params2]
-        cal_return.amp_params[pol_i,tile_i]=Ptr_new(fit_params)
-      endif
+
+      ENDIF ELSE gain_fit=fltarr(n_freq)+1.
       
       gain_residual[pol_i,tile_i]=Ptr_new(Reform(gain_amp[*,tile_i])-gain_fit)
       IF Keyword_Set(cal_step_fit) THEN FOR si=0L,n_step-1 DO gain_fit[freq_use[step_i[si]]:*,*]+=jump_test[step_i[si]]
@@ -211,7 +216,7 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     
     ;Option to fit only certain cable lengths, can specify more than one length
     ;Positive length indicates fit mode, negative length indicates exclude mode
-    IF total(cal_mode_fit) NE 1 THEN BEGIN
+    IF total(cal_mode_fit) NE 1 AND ~Keyword_Set(auto_ratio) THEN BEGIN
       tile_ref_logic = FLTARR(n_tile)
       if ~keyword_set(cable_len) then begin
         cable_filepath=filepath(obs.instrument+'_cable_length.txt',root=rootdir('FHD'),subdir='instrument_config')
@@ -238,8 +243,8 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
     FOR pol_i=0,n_pol-1 DO BEGIN
       gain_arr=*cal.gain[pol_i]
       gain_arr_fit=*cal_return.gain[pol_i]
-      gain_arr-=gain_arr_fit ; Subtract the polyfit outright so they don't talk to one another
-      
+      gain_arr = gain_arr / gain_arr_fit ; Divide the polyfit to reveal residual cable reflections better
+
       FOR ti=0L,nt_use-1 DO BEGIN
         tile_i=tile_use[ti]
         mode_i=mode_i_arr[pol_i,tile_i]
@@ -252,12 +257,45 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
           nmodes=101 ; range around the central mode to test
           modes=(dindgen(nmodes)-nmodes/2)*dmode+mode0 ; array of modes to try
           modes=rebin(modes,nmodes,nf_use) ; reshape for ease of computing
-          gain_temp=rebin_complex(transpose(reform(gain_arr[freq_use,tile_i])),nmodes,nf_use) ; dimension manipulation, add dim for mode fitting
+
+          IF Keyword_Set(auto_ratio) THEN BEGIN
+            ;Find tiles which will *not* be accidently coherent in their cable reflection in order to reduce bias
+            inds = where((*obs.baseline_info).tile_use AND mode_i_arr[pol_i,*] gt 0 AND Abs(mode_i_arr[pol_i,*]-mode_i) gt 0.01, ninds)
+
+            ;mean over frequency for each tile
+            freq_mean = mean((*auto_ratio[pol_i]), dimension=1,/NAN)
+            ;normalized autos using each tile's freq mean
+            norm_autos = (*auto_ratio[pol_i]) / rebin(transpose(freq_mean),n_freq,n_tile)
+            ;mean over all tiles which *are not* accidently coherent as a func of freq
+            incoherent_mean = mean(norm_autos[*,inds],dimension=2,/NAN) 
+
+            ;Residual and normalized (using incoherent mean) auto-correlation
+            resautos = (norm_autos[*,tile_i] / incoherent_mean) - mean(norm_autos[*,tile_i] / incoherent_mean,/NAN) 
+            gain_temp=rebin(transpose(reform(resautos[freq_use])),nmodes,nf_use)
+
+          ENDIF ELSE BEGIN
+            ; dimension manipulation, add dim for mode fitting
+            ; subtract the mean so aliasing is reduced in the dft cable fitting
+            gain_temp=rebin_complex(transpose(reform(gain_arr[freq_use,tile_i] - mean(gain_arr[freq_use,tile_i]))),nmodes,nf_use)
+          ENDELSE
           freq_mat=rebin(transpose(freq_use),nmodes,nf_use) ; freq_use matrix to multiply/collapse in fit
           test_fits=Total(exp(i_comp*2.*!Pi/n_freq*modes*freq_mat)*gain_temp,2) ; Perform DFT of gains to test modes
           amp_use=max(abs(test_fits),mode_ind)/nf_use ; Pick out highest amplitude fit (mode_ind gives the index of the mode)
           phase_use=atan(test_fits[mode_ind],/phase) ; Phase of said fit
           mode_i=modes[mode_ind,0] ; And the actual mode
+
+          ;Using the mode selected from the gains, optionally use the phase to find the amp and phase
+          if keyword_set(cal_reflection_hyperresolve_incoherent) OR keyword_set(auto_ratio) then begin
+            ;Find tiles which will *not* be accidently coherent in their cable reflection in order to reduce bias
+            inds = where((*obs.baseline_info).tile_use AND mode_i_arr[pol_i,*] gt 0 AND Abs(mode_i_arr[pol_i,*]-mode_i) gt 0.01, ninds)
+            residual_phase = atan(gain_arr[freq_use,*],/phase)
+            incoherent_residual_phase = residual_phase[*,tile_i] - Mean(residual_phase[*,inds], dimension=2, /NAN)
+
+            test_fits=Total(exp(i_comp*2.*!Pi/n_freq*mode_i*freq_use)*incoherent_residual_phase)
+            amp_use=2*abs(test_fits)/nf_use ;factor of 2 from fitting just the phase
+            phase_use=atan(test_fits,/phase)+!pi/2 ;factor of pi/2 from just fitting the phase
+          endif
+
         ENDIF ELSE IF Keyword_Set(amp_arr) OR Keyword_Set(phase_arr) THEN BEGIN
           ; use predetermined fits
           amp_use=amp_arr[pol_i,tile_i]
@@ -265,16 +303,19 @@ FUNCTION vis_cal_polyfit,cal,obs,cal_step_fit=cal_step_fit,cal_neighbor_freq_fla
         ENDIF ELSE BEGIN
           ; use nominal delay mode, but fit amplitude and phase of reflections
           mode_fit=Total(exp(i_comp*2.*!Pi/n_freq*(mode_i)*freq_use)*Reform(gain_arr[freq_use,tile_i]))
-          amp_use=abs(mode_fit)/nf_use ;why factor of 2? Check FFT normalization
+          amp_use=abs(mode_fit)/nf_use
           phase_use=atan(mode_fit,/phase)
         ENDELSE
         
-        ; Rebuild the reflection ripple, and add to polyfit gains
         gain_mode_fit=amp_use*exp(-i_comp*2.*!Pi*(mode_i*findgen(n_freq)/n_freq)+i_comp*phase_use)
+        if keyword_set(reflection_phase_only) or keyword_set(auto_ratio) then begin
+          ; only fit for the cable reflection in the phases
+          gain_arr_fit[*,tile_i]*=exp(i_comp*imaginary(gain_mode_fit))
+        endif else begin
+          gain_arr_fit[*,tile_i]*=(1+gain_mode_fit)
+        endelse
         
-        gain_arr_fit[*,tile_i]+=gain_mode_fit
         cal_return.mode_params[pol_i,tile_i]=Ptr_new([mode_i,amp_use,phase_use])
-        debug=1
       ENDFOR
       *cal_return.gain[pol_i]=gain_arr_fit
     ENDFOR

@@ -1,8 +1,10 @@
-FUNCTION interpol_2d,image, mask
+FUNCTION interpol_2d,image, mask, nan_safe=nan_safe
 ; Interpolate a 2D image, filling NAN values and/or values at masked locations
 dimension = (size(image, /dimension))[0]
 elements = (size(image, /dimension))[1]
  
+if N_elements(nan_safe) EQ 0 then nan_safe = 0
+
 result_x = fltarr(dimension, elements)
 weights_x = fltarr(dimension, elements)
 result_y = fltarr(dimension, elements)
@@ -12,6 +14,7 @@ IF N_Elements(mask) GT 0 THEN BEGIN
     i_cut = where(mask EQ 0, n_cut)
     IF n_cut GT 0 THEN image_use[i_cut] = !Values.F_NAN
     i_use = where(Finite(image_use), n_use)
+    nan_safe=1
 ENDIF ELSE BEGIN
     mask = fltarr(dimension, elements)
     i_use = where(Finite(image_use), n_use)
@@ -22,13 +25,13 @@ mask_i_threshold = dimension/2
 FOR i=0, dimension-1 DO BEGIN
     mask_sum = Total(mask[i, *])
     IF mask_sum LE mask_i_threshold THEN CONTINUE
-    result_x[i, *] = interpol(image_use[i, *], dimension)
+    result_x[i, *] = interpol(image_use[i, *], dimension, nan=nan_safe)
     weights_x[i, *] = mask_sum
 ENDFOR
 FOR j=0, elements-1 DO BEGIN
     mask_sum = Total(mask[*, j])
     IF mask_sum LE mask_i_threshold THEN CONTINUE
-    result_y[*, j] = interpol(image_use[*, j], elements)
+    result_y[*, j] = interpol(image_use[*, j], elements, nan=nan_safe)
     weights_y[*, j] = mask_sum
 ENDFOR
 ;i_cut = where((weights_x + weights_y) 

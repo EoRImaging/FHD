@@ -48,17 +48,17 @@ IF N_Elements(lon) EQ 0 THEN BEGIN
     lon = sxpar(header,'LON',count=found_lon) 
     IF found_lon EQ 0 THEN lon=116.67081524 ;degrees (MWA, from Tingay et al. 2013)
 ENDIF
-lon=Float(lon)
+
 IF N_Elements(lat) EQ 0 THEN BEGIN
     lat = sxpar(header,'LAT',count=found_lat) 
     IF found_lat EQ 0 THEN lat=-26.7033194 ;degrees (MWA, from Tingay et al. 2013)
 ENDIF
-lat=Float(lat)
+
 IF N_Elements(alt) EQ 0 THEN BEGIN
     alt = sxpar(header,'ALT',count=found_alt) 
     IF found_alt EQ 0 THEN alt=377.827 ;altitude (meters) (MWA, from Tingay et al. 2013)
 ENDIF
-alt=Float(alt)
+
 
 ant1_i = where(Strmatch(param_list,'ANTENNA1', /fold_case),found_ant1)
 ant2_i = where(Strmatch(param_list,'ANTENNA2', /fold_case),found_ant2)
@@ -75,8 +75,7 @@ date_i=where(Strmatch(param_list,'DATE', /fold_case),found_date) & IF found_date
 IF (found_baseline NE 1) OR (found_uu NE 1) OR (found_vv NE 1) OR (found_ww NE 1) OR (found_date LT 1) THEN error=1 
 
 IF found_date GT 1 THEN BEGIN
-    Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i[0]+1))) + Double(params[date_i[0],0])
-    date_i=date_i[1]
+    Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i[0]+1)))
 ENDIF ELSE BEGIN
     Jdate0=Double(sxpar(header,String(format='("PZERO",I1)',date_i+1)))
 ENDELSE

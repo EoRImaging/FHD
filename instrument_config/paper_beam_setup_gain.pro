@@ -67,7 +67,7 @@ CASE beam_model_version OF
         Jones_matrix=antenna.jones
         FOR pol_i=0,n_ant_pol-1 DO BEGIN
             IF pol_i EQ 1 THEN astr.cd=[[0.,1.],[1.,0.]] ELSE astr.cd=[[1.,0.],[0.,1.]]
-            apply_astrometry, obs,ra_arr=xvals_use, dec_arr=yvals_use, x_arr=x_int, y_arr=y_int, JDate=obs.JD0, astr=astr, /ad2xy ; This might be broken! If it is, it's probably a problem with JDate
+            apply_astrometry, obs,ra_arr=xvals_use, dec_arr=yvals_use, x_arr=x_int, y_arr=y_int, JDate=obs.JD0, astr=astr, /ad2xy, /refraction ; This might be broken! If it is, it's probably a problem with JDate
 ;            ad2xy,xvals_use,yvals_use,astr,x_int,y_int
             FOR freq_i=0,nfreq_bin-1 DO BEGIN
                 freq_i_test=Min(abs(freq_arr-freq_center[freq_i]),freq_i_use)

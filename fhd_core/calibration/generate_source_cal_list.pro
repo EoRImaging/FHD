@@ -12,8 +12,17 @@ IF size(source_array,/type) EQ 8 THEN BEGIN
     catalog=source_array ;If a valid structure is supplied, use that 
 ENDIF ELSE BEGIN
     UPNAME=StrUpCase(catalog_path)
-    psav=strpos(UPNAME,'.SAV')>strpos(UPNAME,'.IDLSAVE')
-    IF psav EQ -1 THEN catalog_path+='.sav'
+    CASE 1 OF
+      strpos(UPNAME,'.SAV') NE -1: issav=1
+      strpos(UPNAME,'.IDLSAVE') NE -1: issav=1
+      strpos(UPNAME,'.SKYH5') NE -1: issav=0
+      strpos(UPNAME,'.H5') NE -1: issav=0
+      ELSE: BEGIN
+        catalog_path+='.sav'
+        issav=1
+      END
+    ENDCASE
+
     IF file_test(catalog_path) EQ 0 THEN BEGIN
         catalog_path_full=filepath(catalog_path,root=Rootdir('fhd'),subdir='catalog_data')
         IF file_test(catalog_path_full) EQ 0 THEN BEGIN
@@ -22,7 +31,8 @@ ENDIF ELSE BEGIN
         ENDIF
     ENDIF ELSE catalog_path_full=catalog_path
 
-    catalog = load_source_catalog(catalog_path_full, varname='catalog')
+    IF keyword_set(issav) THEN catalog = load_source_catalog(catalog_path_full, varname='catalog')$
+      ELSE catalog = load_skyh5_source_catalog(catalog_path_full)
 ENDELSE
 
 dimension=obs.dimension
@@ -124,7 +134,7 @@ IF n_use GT 0 THEN BEGIN
         alpha=spectral_index,extend=catalog.extend)
     endelse
    
-    apply_astrometry, obs, ra_arr=source_list.ra, dec_arr=source_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy    
+    apply_astrometry, obs, ra_arr=source_list.ra, dec_arr=source_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy, /refraction    
     source_list.x=x_arr
     source_list.y=y_arr
     FOR i=0,7 DO source_list.flux.(i)=catalog.flux.(i)*(freq_use/catalog.freq)^spectral_index
@@ -150,6 +160,12 @@ IF n_use GT 0 THEN BEGIN
     src_use2=where(beam_mask[Round(x_arr[src_use]),Round(y_arr[src_use])],n_src_use)
     IF n_src_use GT 0 THEN src_use=src_use[src_use2]
     source_list=source_list[src_use]
+    inds_finite = where(finite(source_list.flux.I[*]),n_finite)
+    IF n_finite NE N_elements(src_use) then begin
+        print, "WARNING: Model catalog contains nan/inf fluxes"
+        source_list=source_list[inds_finite]
+        n_src_use=n_finite
+    ENDIF
     influence=source_list.flux.I*beam[source_list.x,source_list.y]
    
     order=Reverse(sort(influence))
@@ -159,7 +175,7 @@ IF n_use GT 0 THEN BEGIN
         extend_i=where(Ptr_valid(source_list.extend),n_extend)
         FOR ext_i=0L,n_extend-1 DO BEGIN
             extend_list=*source_list[extend_i[ext_i]].extend
-            apply_astrometry, obs, ra_arr=extend_list.ra, dec_arr=extend_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy
+            apply_astrometry, obs, ra_arr=extend_list.ra, dec_arr=extend_list.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy, /refraction
             extend_list.x=x_arr
             extend_list.y=y_arr
             *source_list[extend_i[ext_i]].extend=extend_list

@@ -9,7 +9,7 @@ IF N_Elements(hpx_inds) EQ 0 THEN hpx_inds=Lindgen(n_hpx)
 astr=obs.astr
 dimension=obs.dimension
 elements=obs.elements
-apply_astrometry,obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension, elements, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+apply_astrometry,obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension, elements, 2), ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /refraction
 radec_i=where(Finite(ra_arr))
 
 IF size(healpix_map,/type) EQ 10 THEN BEGIN ;check if pointer type, and if so allow it to be a pointer array
@@ -33,7 +33,7 @@ vec2ang,pix_coords,pix_dec,pix_ra,/astro
 IF coord_sys EQ 'galactic' THEN glactc,pix_ra,pix_dec,2000.,pix_ra,pix_dec,2, /degree
 IF coord_sys EQ 'equatorial' THEN Hor2Eq,pix_dec,pix_ra,Jdate_use,pix_ra,pix_dec,lat=obs.lat,lon=obs.lon,alt=obs.alt,precess=1,/nutate
 
-apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy
+apply_astrometry, obs, ra_arr=pix_ra, dec_arr=pix_dec, x_arr=xv_hpx, y_arr=yv_hpx, /ad2xy, /refraction
 
 hpx_i_use=where((xv_hpx GT 0) AND (xv_hpx LT (dimension-1)) AND (yv_hpx GT 0) AND (yv_hpx LT (elements-1)),n_hpx_use) 
 IF n_hpx_use EQ 0 THEN BEGIN
@@ -48,7 +48,7 @@ image_mask[Min(Floor(xv_hpx)):Max(Ceil(xv_hpx)),Min(Floor(yv_hpx)):Max(Ceil(yv_h
 
 x_frac=1.-(xv_hpx-Floor(xv_hpx))
 y_frac=1.-(yv_hpx-Floor(yv_hpx))
-IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,nside=nside,freq=obs.freq_center) $
+IF Keyword_Set(from_kelvin) THEN pixel_area_cnv=convert_kelvin_jansky(1.,degpix=obs.degpix,freq=obs.freq_center) $
     ELSE IF keyword_set(from_jy_per_sr) THEN pixel_area_cnv=(obs.degpix*!DtoR)^2. $ ; (steradian/new pixel)
         ELSE pixel_area_cnv=((obs.degpix*!DtoR)^2.)/(4.*!Pi/n_hpx) ; (steradian/new pixel)/(steradian/old pixel)
 

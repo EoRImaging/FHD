@@ -10,6 +10,7 @@ Current MWA examples include:
 [Drift scan](#drift-scan)   
 [MWA Phase II](#mwa-phase-ii)   
 [Calibration only](#calibration-only)  
+[Gaussian Decomposition Beams](#gaussian-decomposition-beams) <br />
 [Modified gridding kernel](#modified-gridding-kernel)  
 
 There are also examples for:    
@@ -125,7 +126,31 @@ or the non-instrumental model uv-plane by setting
 model_uv_transfer = '<path>/<to>/<FHDdir>/cal_prerun/' + obs_id + '_model_uv_arr.sav'
 ~~~
 
-
+### Gaussian Decomposition Beams
+Avoid the effects of an FFT on the (de)gridding kernel by generating an analytic uv-beam kernel from a set of gaussians. The gaussians are fit using input parameters from a provided instrument file (searches for <instrument>_beam_gaussian_decomp.pro by default) on the hyper-resolved image space beam. Frequencies are interpolated between a maximum set in the instrument file to ensure smoothness and speed. See [Barry & Chokshi 2022](https://ui.adsabs.harvard.edu/abs/2022ApJ...929...64B/abstract) for more information.
+  
+Set this parameter to generate a gaussian decomposition beam that matches the instrumental response. This can be used for calibration. Gaussian fitting that requires multiple gaussians will take significant time.
+~~~
+beam_gaussian_decomp = 1
+~~~
+Optionally, read in parameters from a psf structure where the fitting as already been performed. For a specific psf structure, set
+~~~
+beam_gaussian_decomp = 1
+beam_gauss_param_transfer = '<path>/<to>/<FHDdir>/beams/' + obs_id + '_beams.sav'
+~~~  
+or for the MWA instrumental default, set
+~~~  
+beam_gaussian_decomp = 1
+beam_gauss_param_transfer = 1 (or 'decomp')
+~~~  
+A single gaussian which is FWHM-matched to the MWA beam can also be used. As seen in [Barry & Chokshi 2022](https://ui.adsabs.harvard.edu/abs/2022ApJ...929...64B/abstract), this reduces systematics. However, this is no longer an instrumental beam, and thus cannot be used for calibration (see [Calibration only](#calibration-only)).
+~~~
+beam_gaussian_decomp = 1
+beam_gauss_param_transfer = 'gauss'  
+~~~
+Depending on the health of your machine's file system, it may be benificial to generate the psf (and obs) structure of the gaussian decomposition and use the `transfer_psf` option instead. 
+  
+  
 ### Modified Gridding Kernel
 In order to produce EoR limit quality power spectra, a modified gridding kernel must be used to avoid model degridding errors and image aliasing (see [Barry et al 2019a](https://arxiv.org/abs/1901.02980) and [Barry et al 2019b](https://arxiv.org/abs/1909.00561)). These options cannot be used to generate calibration solutions, please use [Calibration only](calibration-only) using an instrumental beam. 
 

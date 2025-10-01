@@ -1,4 +1,4 @@
-FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params, dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
+FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params,layout,dimension=dimension, elements=elements, degpix=degpix, kbinsize=kbinsize, $
     n_pol=n_pol,max_baseline=max_baseline,min_baseline=min_baseline,double_precision=double_precision,$
     FoV=FoV,rotate_uv=rotate_uv,scale_uv=scale_uv,mirror_X=mirror_X,mirror_Y=mirror_Y,$
     zenra=zenra,zendec=zendec,phasera=phasera,phasedec=phasedec,obsx=obsx,obsy=obsy,instrument=instrument,$
@@ -14,7 +14,14 @@ git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
 IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol
-n_tile=hdr.n_tile
+pol_names=['XX','YY','XY','YX','I','Q','U','V']
+
+IF Tag_exist(layout, "n_antenna") THEN BEGIN
+    n_tile=layout.n_antenna 
+ENDIF ELSE BEGIN
+    n_tile=hdr.n_tile
+    print, "Warning: n_tile not set from uvfits; using default of 128"
+ENDELSE
 n_freq=hdr.n_freq
 
 speed_light=299792458. 
@@ -59,17 +66,13 @@ ENDIF ELSE BEGIN
     grid_info=Ptr_new()
 ENDELSE
 
-antenna_flag = 1
 IF Tag_exist(params, "antenna1") AND Tag_exist(params, "antenna2") THEN BEGIN
     ant1_arr = params.antenna1
     ant2_arr = params.antenna2
-    IF Max(ant1_arr) GT 0 AND Max(ant2_arr) GT 0 THEN BEGIN
-        tile_A = ant1_arr
-        tile_B = ant2_arr
-        n_tile=max(tile_A)>max(tile_B)
-        antenna_flag = 0
-    ENDIF
-ENDIF
+    tile_A = ant1_arr
+    tile_B = ant2_arr
+    antenna_flag=0 
+ENDIF ELSE antenna_flag = 1
 IF antenna_flag THEN BEGIN
     ;256 tile upper limit is hard-coded in CASA format
     ;these tile numbers have been verified to be correct
@@ -94,8 +97,9 @@ ENDIF
 freq_use=Lonarr(n_freq)+1
 tile_use=Lonarr(n_tile)+1
 
-kx_arr=Float(params.uu#frequency_array)
-ky_arr=Float(params.vv#frequency_array)
+;Calculate kx and ky for each baseline at high precision to get most accurate observation information
+kx_arr=params.uu#frequency_array
+ky_arr=params.vv#frequency_array
 kr_arr=Sqrt((kx_arr)^2.+(ky_arr)^2.)
 IF N_Elements(max_baseline) EQ 0 THEN max_baseline_use=Max(Abs(kx_arr))>Max(Abs(ky_arr)) $
     ELSE max_baseline_use=max_baseline
@@ -105,6 +109,7 @@ IF Keyword_Set(FoV) AND Keyword_Set(kbinsize) THEN $
     print,"WARNING!! Only one of FoV and kbinsize can be specified. Using FoV."
 IF Keyword_Set(FoV) THEN kbinsize=!RaDeg/FoV
 
+;Determine observation resolution/extent parameters given number of pixels in x direction (dimension)
 IF Keyword_Set(dimension) THEN BEGIN
     IF Keyword_Set(kbinsize) THEN BEGIN
         IF Keyword_Set(degpix) THEN print, "WARNING! Imaging parameters over constrained. Ignoring degpix."
@@ -122,6 +127,7 @@ ENDIF ELSE BEGIN
 ENDELSE
 IF ~Keyword_Set(elements) THEN elements=dimension
 
+;Determine the maximum and minimum baseline (cross-correlations only) to use for the given extent
 IF N_Elements(max_baseline) EQ 0 THEN $
     max_baseline=Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))])) $
     ELSE max_baseline=max_baseline<Max(Abs(kr_arr[where((Abs(kx_arr)/kbinsize LT dimension/2) AND (Abs(ky_arr)/kbinsize LT elements/2))]))
@@ -129,8 +135,34 @@ IF N_Elements(min_baseline) EQ 0 THEN min_baseline=Min(kr_arr[where(kr_arr)]) EL
 kx_arr=0 & ky_arr=0 & kr_arr=0 ;free memory
 noise_arr=Ptr_new()
 
-meta=fhd_struct_init_meta(file_path_vis,hdr,params,degpix=degpix,dimension=dimension,elements=elements,$
-    n_tile=n_tile,instrument=instrument,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
+; check that all elements in the antenna1 and antenna2 array exist in the antenna numbers
+; from the uvfits antenna table
+all_ants = [params.antenna1, params.antenna2]
+uniq_ants = all_ants[uniq(all_ants)]
+for i=0, n_elements(uniq_ants)-1 do begin
+    ind = where(uniq_ants[i] EQ (layout.antenna_numbers), n_count)
+    if n_count EQ 0 then message, "antenna arrays contain number(s) not found in antenna table"
+endfor
+
+; fhd expects antenna1 and antenna2 arrays containing indices that are one-indexed. 
+; Some uvfits files contain actual antenna numbers in these fields, while others  
+; (particularly, those written by cotter or birli) contain indices.
+; To account for this, all antenna numbers from the uvfits header are mapped to indices 
+; using the antenna numbers from the uvfits antenna table.
+; If the antenna numbers were written into the file as indices, they will be mapped to themselves.
+tile_A = params.antenna1
+tile_B = params.antenna2
+for tile_i=0, n_tile-1 do begin
+    inds = where(layout.antenna_numbers[tile_i] EQ (params.antenna1),n_count)
+    if n_count GT 0 then tile_A[inds] = tile_i+1
+    inds = where(layout.antenna_numbers[tile_i] EQ (params.antenna2),n_count)
+    if n_count GT 0 then tile_B[inds] = tile_i+1
+endfor
+params.antenna1 = tile_A
+params.antenna2 = tile_B
+
+meta=fhd_struct_init_meta(file_path_vis,hdr,params,layout,degpix=degpix,dimension=dimension,elements=elements,$
+    n_tile=n_tile,instrument=instrument,pol_names=pol_names,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
 
 IF N_Elements(meta_data) EQ 0 THEN meta_data=Ptr_new() ELSE meta_data=Ptr_new(meta_data)
 IF N_Elements(meta_hdr) EQ 0 THEN meta_hdr=Ptr_new() ELSE meta_hdr=Ptr_new(meta_hdr)
@@ -149,7 +181,6 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
     IF ti_end GE ti_start THEN time_use[ti_start:ti_end]=0
 ENDFOR
 n_time_cut = n_time - Total(time_use)
-
 tile_use1=intarr(n_tile)
 FOR pol_i=0,n_pol-1 DO BEGIN
     tile_use_i=where(*(meta.tile_flag[pol_i]) EQ 0,n_use)
@@ -175,7 +206,7 @@ IF dimension GT 4096 THEN BEGIN
         double_precision=1
     ENDIF
 ENDIF
-pol_names=['XX','YY','XY','YX','I','Q','U','V']
+
 healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
 
 arr={tile_A:Long(tile_A),tile_B:Long(tile_B),bin_offset:Long(bin_offset),Jdate:meta.Jdate,freq:Double(frequency_array),fbin_i:Long(freq_bin_i),$
@@ -185,9 +216,9 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     kpix:Float(kbinsize),degpix:Float(degpix),obsaz:meta.obsaz,obsalt:meta.obsalt,obsra:meta.obsra,obsdec:meta.obsdec,$
     zenra:meta.zenra,zendec:meta.zendec,obsx:meta.obsx,obsy:meta.obsy,zenx:meta.zenx,zeny:meta.zeny,$
     phasera:meta.phasera,phasedec:meta.phasedec,orig_phasera:meta.orig_phasera,orig_phasedec:meta.orig_phasedec,$
-    n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_tile_flag:Long(n_flag),n_freq:Long(n_freq),n_freq_flag:0L,n_time:Long(n_time),n_time_flag:n_time_cut,$
+    n_pol:Fix(n_pol,type=2),n_tile:Long(n_tile),n_tile_flag:Long(n_flag),n_freq:Long(n_freq),n_freq_flag:0L,n_time:Long(n_time),n_time_flag:Long(n_time_cut),$
     n_vis:Long(n_vis),n_vis_in:Long(n_vis_in),n_vis_raw:Long(n_vis_raw),nf_vis:Long(n_vis_arr),primary_beam_area:Ptrarr(4),primary_beam_sq_area:Ptrarr(4),pol_names:pol_names,$
-    jd0:meta.jd0,max_baseline:Float(max_baseline),min_baseline:Float(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
+    jd0:meta.jd0,max_baseline:Double(max_baseline),min_baseline:Double(min_baseline),delays:meta.delays,lon:meta.lon,lat:meta.lat,alt:meta.alt,$
     freq_center:Float(freq_center),freq_res:Float(freq_res),time_res:Float(meta.time_res),astr:meta.astr,alpha:Float(spectral_index),$
     residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,$
     degrid_spectral_terms:degrid_spectral_terms,grid_spectral_terms:grid_spectral_terms,grid_info:grid_info,healpix:healpix}    

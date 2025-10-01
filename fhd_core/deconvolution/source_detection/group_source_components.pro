@@ -125,6 +125,10 @@ FOR gi=0L,ng-1 DO BEGIN
     ENDIF   
     
     sub_expand=(2./ext_factor^2.)>(1./gauss_width)
+    IF sub_expand LE 1 THEN BEGIN
+        print, 'WARNING: sub_expand is less than one. Manually resetting to be 1.
+        sub_expand=1
+    ENDIF
     n_sub=N_Elements(si_g)
     
     sub_dim2=Ceil(sub_dim*sub_expand)

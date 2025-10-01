@@ -1,4 +1,4 @@
-FUNCTION primary_beam_radius, obs, psf, beam_threshold=beam_threshold, _Extra=extra
+FUNCTION primary_beam_radius, obs, psf, beam_threshold=beam_threshold, select_radius_multiplier=select_radius_multiplier,_Extra=extra
   ;Approximate width of circular primary beam, out to some threshold
 
   if not keyword_set(beam_threshold) then beam_threshold = 0.05
@@ -17,9 +17,9 @@ FUNCTION primary_beam_radius, obs, psf, beam_threshold=beam_threshold, _Extra=ex
   beam=Sqrt(beam/(n_pol<2))
   obs_i = Round(obs.obsx) + dimension*Round(obs.obsy)
   beam_primary_i=region_grow(beam,obs_i,threshold=[Max(beam)/2.<beam_threshold,Max(beam)>1.])
-  boundary=find_boundary(beam_primary_i,xsize=dimension, ysize=elements,perim_area=perim_area)
-  select_radius = degpix*sqrt(perim_area)/2   ;Primary beam radius
-
+  boundary=find_boundary(beam_primary_i,xsize=dimension, ysize=elements,perim_area=perim_area, perimeter=perimeter, scale=[degpix, degpix])
+  select_radius = perimeter/(2. * !pi)
+  if keyword_set(select_radius_multiplier) THEN select_radius *= select_radius_multiplier
 return, select_radius
 
 END

@@ -23,7 +23,8 @@ IF N_Elements(hpx_radius) EQ 0 THEN BEGIN
         xv_arr=meshgrid(dimension,elements,1)
         yv_arr=meshgrid(dimension,elements,2)
         ;set /ignore_refraction for speed, since we don't need to be exact
-        apply_astrometry, obs, x_arr=xv_arr, y_arr=yv_arr, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction 
+        ; UPDATE: refraction is ignored by default
+        apply_astrometry, obs, x_arr=xv_arr, y_arr=yv_arr, ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
         ang_arr=angle_difference(dec_arr,ra_arr,obs.obsdec,obs.obsra,/degree)
         ang_i=where((mask GT 0) AND Finite(ang_arr),n_ang_use)
         IF n_ang_use GT 0 THEN radius=Max(ang_arr[ang_i])

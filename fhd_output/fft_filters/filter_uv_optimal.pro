@@ -1,26 +1,24 @@
-FUNCTION filter_uv_weighted,image_uv,obs=obs,psf=psf,params=params,weights=weights,name=name,filter=filter,$
+FUNCTION filter_uv_optimal,image_uv,obs=obs,psf=psf,params=params,weights=weights,name=name,filter=filter,$
     file_path_fhd=file_path_fhd,return_name_only=return_name_only,uvfilter_weight_threshold=uvfilter_weight_threshold,$
     uvfilter_count_threshold=uvfilter_count_threshold,_Extra=extra
 ;NOTE: 'params' can actually be EITHER params OR 'cal' structure!
 
-name='weighted'
-IF Keyword_Set(return_name_only) THEN BEGIN
-    print,"WARNING! 'Weighted' uv filter produces images weighted by only one factor of the primary beam."
-    print,"WARNING! All FHD code expects images to be weighted by the beam squared, so expect strange results."
-    RETURN,image_uv
-ENDIF
+name='optimal'
+IF Keyword_Set(return_name_only) THEN RETURN,image_uv
 
 IF ~(Keyword_Set(obs) AND Keyword_Set(psf) AND Keyword_Set(params)) THEN BEGIN
     IF Keyword_Set(file_path_fhd) THEN BEGIN
         fhd_save_io,status_str,vis_count,var='vis_count',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-        IF ~Keyword_Set(vis_count) THEN vis_count=visibility_count(obs,psf,params,file_path_fhd=file_path_fhd,_Extra=extra) 
+        IF ~Keyword_Set(vis_count) THEN vis_count=visibility_count(obs,psf,params,vis_weight_ptr=weights,$
+            file_path_fhd=file_path_fhd,_Extra=extra)
     ENDIF ELSE BEGIN
         IF N_Elements(weights) NE N_Elements(image_uv) THEN RETURN,image_uv
         vis_count=weights/Min(weights[where(weights GT 0)])
     ENDELSE
 ENDIF ELSE BEGIN
     IF Keyword_Set(file_path_fhd) THEN fhd_save_io,status_str,vis_count,var='vis_count',/restore,file_path_fhd=file_path_fhd,_Extra=extra
-    IF ~Keyword_Set(vis_count) THEN vis_count=visibility_count(obs,psf,params,file_path_fhd=file_path_fhd,_Extra=extra)
+    IF ~Keyword_Set(vis_count) THEN vis_count=visibility_count(obs,psf,params,vis_weight_ptr=weights,$
+        file_path_fhd=file_path_fhd,_Extra=extra)
 ENDELSE
 
 

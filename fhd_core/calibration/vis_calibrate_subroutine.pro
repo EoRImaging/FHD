@@ -16,7 +16,11 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
   max_cal_iter=cal.max_iter ;maximum iterations to perform for the linear least-squares solver
   IF max_cal_iter LT 5 THEN print,'Warning! At least 5 calibration iterations recommended. Using '+Strn(Floor(max_cal_iter))
   conv_thresh=cal.conv_thresh
-  
+  use_adaptive_gain = cal.adaptive_gain
+  base_gain = cal.base_gain
+  divergence_history = 3 ; halt if the strict convergence is worse than most of the last x iterations
+  divergence_factor = 1.5 ; halt if the convergence gets significantly worse by a factor of x in one iteration
+
   n_pol=cal.n_pol
   n_freq=cal.n_freq
   n_tile=cal.n_tile
@@ -37,6 +41,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
   
   FOR pol_i=0,n_pol-1 DO BEGIN
     convergence=Fltarr(n_freq,n_tile)
+    conv_iter_arr=Fltarr(n_freq,n_tile)
     gain_arr=*cal.gain[pol_i]
     
     ;***Average the visibilities over the time steps before solving for the gains solutions
@@ -157,9 +162,18 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             IF n1 GT 1 THEN *A_ind_arr[tile_i]=Reform(inds,1,n1) ELSE *A_ind_arr[tile_i]=-1
             n_arr[tile_i]=n1 ;NEED SOMETHING MORE IN CASE INDIVIDUAL TILES ARE FLAGGED FOR ONLY A FEW FREQUENCIES!!
         ENDFOR
+        ;For tiles which don't satisfy the minimum number of solutions, pre-emptively set them to 0
+        ;in order to prevent certain failure in meeting strict convergence threshold
+        inds_min_cal = where(n_arr LT min_cal_solutions, n_min_cal)
+        if n_min_cal GT 0 then gain_curr[inds_min_cal]=0.
         
         gain_new=Complexarr(n_tile_use)
+        convergence_list = Fltarr(max_cal_iter)
+        conv_gain_list = Fltarr(max_cal_iter)
+        convergence_loose = 0.
         FOR i=0L,(max_cal_iter-1)>1 DO BEGIN
+            convergence_loose_prev = convergence_loose
+            divergence_flag = 0
             vis_use=vis_data2
             
             vis_model_matrix=vis_model2*Conj(gain_curr[B_ind])
@@ -180,9 +194,10 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
                 BREAK
             ENDIF
             IF phase_fit_iter-i GT 0 THEN gain_new*=Abs(gain_old)*weight_invert(Abs(gain_new)) ;fit only phase at first
-;          IF (2.*phase_fit_iter-i GT 0) AND (phase_fit_iter-i LE 0) THEN $
-;            gain_new*=Mean(Abs(gain_new[where(gain_new)]))*weight_invert(Abs(gain_new)) ;then fit only average amplitude
-            gain_curr=(gain_new+gain_old)/2.
+            IF Keyword_Set(use_adaptive_gain) THEN $
+                conv_gain = calculate_adaptive_gain(conv_gain_list, convergence_list, i, base_gain=base_gain, final_convergence_estimate=0.) $
+                ELSE conv_gain = base_gain
+            gain_curr=(gain_new*conv_gain + gain_old*base_gain)/(base_gain + conv_gain)
             dgain=Abs(gain_curr)*weight_invert(Abs(gain_old))
             diverge_i=where(dgain LT Abs(gain_old)/2.,n_diverge)
             IF n_diverge GT 0 THEN gain_curr[diverge_i]=(gain_new[diverge_i]+gain_old[diverge_i]*2.)/3.
@@ -190,16 +205,58 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
             if ~keyword_set(no_ref_tile) then begin
               gain_curr*=Conj(gain_curr[ref_tile_use])/Abs(gain_curr[ref_tile_use])
             endif
-            conv_test[fii,i]=Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
-            IF i GT phase_fit_iter THEN IF conv_test[fii,i] LE conv_thresh THEN BEGIN
-                n_converged += 1
-                BREAK
+            convergence_strict = Max(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
+            convergence_loose = Mean(Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old)))
+            convergence_list[i] = convergence_strict
+            conv_test[fii,i] = convergence_strict
+            IF i GT phase_fit_iter+divergence_history THEN BEGIN
+                IF convergence_strict LE conv_thresh THEN BEGIN
+                    ; Stop if the solution has converged to the specified threshold
+                    n_converged += 1
+                    BREAK
+                ENDIF
+                IF convergence_loose GE convergence_loose_prev THEN BEGIN
+                    ; Stop if the solutions are no longer converging
+                    IF (convergence_loose LE conv_thresh) OR (convergence_loose_prev LE conv_thresh) THEN BEGIN
+                        ; 
+                        n_converged += 1
+                        IF (convergence_loose LE conv_thresh) THEN BEGIN
+                            ; If the previous solution met the threshold, but the current one did not, then
+                            ; back up one iteration and use the previous solution
+                            gain_curr = gain_old
+                            convergence[fi,tile_use] = conv_test[fii, i-1]
+                            conv_iter_arr[fi, tile_use] = i-1
+                        ENDIF
+                        BREAK
+                    ENDIF ELSE BEGIN
+                        ; Halt if the strict convergence is worse than most of the recent iterations
+                        divergence_test_1 = convergence_strict GE Median(conv_test[fii, i-divergence_history-1:i-1])
+                        ; Also halt if the convergence gets significantly worse in one iteration
+                        divergence_test_2 = convergence_strict GE Min(conv_test[fii, 0:i-1])*divergence_factor
+                        IF divergence_test_1 OR divergence_test_2 THEN BEGIN
+                            ; If both measures of convergence are getting worse, we need to stop.
+                            print, String(format='("Calibration diverged at iteration ", A, " for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
+                                Strn(i), Strn(pol_i), Strn(fi), Strn(conv_test[fii,i-1], format="(e12.2)"), Strn(conv_thresh, format="(e12.2)"))
+                            divergence_flag = 1
+                            BREAK
+                        ENDIF
+                    ENDELSE
+                ENDIF
             ENDIF
         ENDFOR
+        IF Keyword_Set(divergence_flag) THEN BEGIN
+            ; If the solution diverged, back up one iteration and use the previous solution
+            gain_curr = gain_old
+            convergence[fi,tile_use] = conv_test[fii, i-1]
+            conv_iter_arr[fi, tile_use] = i-1
+        ENDIF ELSE BEGIN
+            convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
+            conv_iter_arr[fi, tile_use] = i
+        ENDELSE
         IF i EQ max_cal_iter THEN BEGIN
-            print,String(format='("Calibration reached max iterations before converging for pol_i: ", A, " freq_i: ",A)', Strn(pol_i), Strn(fi)) 
+            print, String(format='("Calibration reached max iterations before converging for pol_i: ", A, " freq_i: ", A,". Convergence was: ", A, " threshold was: ", A)', $
+                          Strn(pol_i), Strn(fi), Strn(conv_test[fii,i-1], format="(e12.2)"), Strn(conv_thresh, format="(e12.2)")) 
         ENDIF
-        convergence[fi,tile_use]=Abs(gain_curr-gain_old)*weight_invert(Abs(gain_old))
         Ptr_free,A_ind_arr
         gain_arr[fi,tile_use]=gain_curr
       ENDFOR
@@ -216,6 +273,7 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
     *cal_return.gain[pol_i]=gain_arr
     cal_return.convergence[pol_i]=Ptr_new(convergence)
     cal_return.n_converged[pol_i] = n_converged
+    cal_return.conv_iter[pol_i]=Ptr_new(conv_iter_arr)
   ENDFOR
   
   vis_count_i=where(weight,n_vis_cal)

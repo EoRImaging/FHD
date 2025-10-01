@@ -6,8 +6,9 @@ elements = obs.elements
 horizon_mask=intarr(dimension,elements)+1
 
 ;ignore refraction since it's only being used to calculate a pixel mask for the horizon
+; UPDATE: refraction is now ignored by default in apply_astrometry 
 apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), $
-    ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad, /ignore_refraction
+    ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
 nan_i=where(Finite(ra_arr,/nan),n_nan,complement=horizon_i)
 IF n_nan GT 0 THEN horizon_mask[nan_i]=0
 ra_use=ra_arr[horizon_i]

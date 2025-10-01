@@ -19,7 +19,11 @@ IF n_autocorr GT 0 THEN BEGIN
             FOR tile_i=0,n_tile_use-1 DO BEGIN
                 baseline_i=where(auto_tile_i EQ auto_tile_i_single[tile_i])
                 baseline_i=baseline_i[time_inds]
-                auto_single[*,tile_i]=Total(extract_subarray(auto_vals,indgen(n_freq),baseline_i),2)/n_time_use
+                IF n_time_use GT 1 THEN BEGIN
+                  auto_single[*,tile_i]=Total(extract_subarray(auto_vals,indgen(n_freq),baseline_i),2)/n_time_use
+                ENDIF ELSE BEGIN
+                  auto_single[*,tile_i]=extract_subarray(auto_vals,indgen(n_freq),baseline_i)
+                ENDELSE
             ENDFOR
             auto_vals=auto_single
         ENDIF
