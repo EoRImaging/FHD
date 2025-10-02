@@ -116,7 +116,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
         endelse
       endif
       
-      save_base = 'Combined_obs_' + obs_name + '_' + type + pol_str + '_cube.sav'
+      save_base = 'Combined_obs_' + obs_name + '_' + type  + '_cube' + pol_str + '.sav'
       
       save_file = save_path + save_base
     endif else if file_dirname(save_file) eq '.' then save_file = save_path + save_file
@@ -125,17 +125,147 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
   freq_match_arr = intarr(nfiles)
   pix_match_arr = intarr(nfiles)
   for i=0, nfiles-1 do begin
-    void = getvar_savefile(filenames[i], names = this_varnames)
-    print,'Working on file '+filenames[i]+'   ('+number_formatter(i+1)+'/'+number_formatter(nfiles)+')'
-    if i eq 0 then varnames = this_varnames else begin
-      match, varnames, this_varnames, suba, subb, count = count_var
-      if count_var ne n_elements(varnames) then begin
-        print, 'file ' + filenames[i] + 'does not have the same variables as the other files. It will not be included in the integration.'
-        continue
-      endif
-    endelse
+
     
-    restore, filenames[i]
+    file_extension = (STRSPLIT(file_basename(filenames[i]), '.', /extract))[1]
+    if (file_extension eq 'sav') or (file_extension eq 'idlsave') then begin
+      ; Restore a idl save file
+      restore, filenames[i]
+
+      ; Check that the variables are consistent across all files
+      void = getvar_savefile(filenames[i], names = this_varnames)
+      print,'Working on file '+filenames[i]+'   ('+number_formatter(i+1)+'/'+number_formatter(nfiles)+')'
+      if i eq 0 then begin
+        varnames = this_varnames 
+      endif else begin
+        match, varnames, this_varnames, suba, subb, count = count_var
+        if count_var ne n_elements(varnames) then begin
+          print, 'file ' + filenames[i] + 'does not have the same variables as the other files. It will not be included in the integration.'
+          continue
+        endif
+      endelse
+
+    endif else begin
+      if (file_extension eq 'h5') or (file_extension eq 'hd5') or (file_extension eq 'hdf5') then begin
+        ; Restore a hdf5 file
+        
+        file_id = H5F_OPEN(filenames[i]) ;Get file ID
+
+        ; Define the potential dataset names in the HDF5 healpix files
+        dataset_names = ['beam_squared_cube', 'dirty_cube', 'model_cube', 'res_cube' ,'variance_cube', 'weights_cube', $
+                        'hpx_inds', 'n_avg', 'nside']
+
+        ; Read the h5 file 
+        FOR var_i = 0, N_ELEMENTS(dataset_names)-1 DO BEGIN
+          catch, error_status
+          ; if a variable is not present, skip it to avoid a return
+          if error_status eq 0 then begin
+            dataset_id = H5D_OPEN(file_id, dataset_names[var_i])
+            data = H5D_READ(dataset_id)
+            H5D_CLOSE, dataset_id
+
+            ; Assign to appropriately named variable
+            CASE dataset_names[var_i] OF
+                'beam_squared_cube': beam_squared_cube = data
+                'dirty_cube': dirty_cube = data
+                'model_cube': model_cube = data
+                'res_cube': res_cube = data
+                'variance_cube': variance_cube = data
+                'weights_cube': weights_cube = data
+                'hpx_inds': hpx_inds = data
+                'n_avg': n_avg = data
+                'nside': nside = data
+            ENDCASE
+          ENDIF
+          catch, /cancel
+        ENDFOR
+
+        ; obs structure is a group and needs to be iterated over
+        ; A temporary variable needs to be present to define the structure
+        obs = {temp:1}
+        dataset_names = ['alpha', 'beam_nfreq_avg', 'degpix', 'degrid_spectral_terms', 'delays', 'dft_threshold', $
+                        'dimension', 'elements', 'epoch', 'freq_center', 'freq_res', 'grid_spectral_terms', 'instrument', $
+                        'jd0', 'kpix', 'max_baseline', 'meta_data', 'min_baseline', 'n_baselines', 'n_freq', 'n_freq_flag', $
+                        'n_pol', 'n_tile', 'n_tile_flag', 'n_time', 'n_time_flag', 'n_vis', 'n_vis_in', 'n_vis_raw', $
+                        'nf_vis', 'obsalt', 'obsaz', 'obsdec', 'obsname', 'obsra', 'obsx', 'obsy', 'orig_phasedec', $
+                        'orig_phasera', 'phasedec', 'phasera', 'pol_names', 'residual', 'time_res', $
+                        'zendec', 'zenra', 'zenx', 'zeny']
+        dataset_names_pointers = ['primary_beam_area', 'primary_beam_sq_area', 'vis_noise']
+        group_id = H5G_OPEN(file_id, 'obs')
+
+        FOR var_i = 0, N_ELEMENTS(dataset_names)-1 DO BEGIN
+          catch, error_status
+          ; if a variable is not present, skip it to avoid a return
+          IF error_status eq 0 then begin
+            dataset_id = H5D_OPEN(group_id, dataset_names[var_i])
+            data = H5D_READ(dataset_id)
+            H5D_CLOSE, dataset_id
+
+            ; Put the variable in the obs structure
+            ; Create a temporary structure because structure tags cannot be dynamically assigned
+            temp_struct = CREATE_STRUCT(dataset_names[var_i], data)
+            obs = structure_update(obs, _Extra=temp_struct)  
+          ENDIF
+          catch, /cancel
+        ENDFOR
+
+        FOR var_i = 0, N_ELEMENTS(dataset_names_pointers)-1 DO BEGIN
+          ; Do the same for pointer variables.
+          catch, error_status
+          ; if a variable is not present, skip it to avoid a return
+          IF error_status eq 0 then begin
+            dataset_id = H5D_OPEN(group_id, dataset_names[var_i])
+            data = H5D_READ(dataset_id)
+            H5D_CLOSE, dataset_id
+
+            ; First dimension is the polarisation dimension (assumption)
+            pol_size = size(data[0], /dimensions)
+
+            ; Put the variable in the obs structure
+            ; Create a temporary structure because structure tags cannot be dynamically assigned
+            temp_struct = CREATE_STRUCT(dataset_names[var_i], Ptrarr(pol_size,/allocate))
+            for pol_i=0, pol_size-1 do begin
+              *temp_struct.(dataset_names[var_i])[pol_i] = data[pol_i,*]
+            endfor
+            obs = structure_update(obs, _Extra=temp_struct)  
+          ENDIF
+          catch, /cancel
+        ENDFOR
+        ; Remove temporary variable
+        obs = structure_update(obs, delete_tags=1, _Extra={temp:1})  
+        
+        ; baseline_info is a group and needs to be iterated over
+        ; A temporary variable needs to be present to define the structure
+        baseline_info = {temp:1}
+        dataset_names = ['bin_offset', 'fbin_i', 'freq', 'freq_use', 'jdate', 'tile_a', 'tile_b', 'tile_flag', $
+                        'tile_height', 'tile_names', 'tile_use', 'time_use']
+        group_id = H5G_OPEN(file_id, 'obs')
+        second_group_id = H5G_OPEN(group_id, 'baseline_info')
+
+        FOR var_i = 0, N_ELEMENTS(dataset_names)-1 DO BEGIN
+          catch, error_status
+          ; if a variable is not present, skip it to avoid a return
+          IF error_status eq 0 then begin
+            dataset_id = H5D_OPEN(second_group_id, dataset_names[var_i])
+            data = H5D_READ(dataset_id)
+            H5D_CLOSE, dataset_id
+
+            ; Put the variable in the obs structure
+            ; Create a temporary structure because structure tags cannot be dynamically assigned
+            temp_struct = CREATE_STRUCT(dataset_names[var_i], data)
+            baseline_info = structure_update(baseline_info, _Extra=temp_struct)  
+          ENDIF
+          catch, /cancel
+        ENDFOR
+        ; Remove temporary variable
+        baseline_info = structure_update(baseline_info, delete_tags=1, _Extra={temp:1}) 
+
+        ; Add baseline_info to obs structure
+        obs = structure_update(obs, _Extra={baseline_info: PTR_NEW(baseline_info)})  
+
+      endif else message, "Warning: File " + filenames[i] + " has an unsupported file extension: " + file_extension + ". Skipping this file."
+    endelse
+
     if n_elements(obs) gt 0 then begin
       this_nobs=1
       integrated=0
