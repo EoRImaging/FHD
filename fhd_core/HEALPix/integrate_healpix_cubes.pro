@@ -116,7 +116,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
         endelse
       endif
       
-      save_base = 'Combined_obs_' + obs_name + '_' + type  + '_cube' + pol_str' '.sav'
+      save_base = 'Combined_obs_' + obs_name + '_' + type  + '_cube' + pol_str + '.sav'
       
       save_file = save_path + save_base
     endif else if file_dirname(save_file) eq '.' then save_file = save_path + save_file
@@ -219,7 +219,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
             H5D_CLOSE, dataset_id
 
             ; First dimension is the polarisation dimension (assumption)
-            pol_size = size(data[0], \dimension)
+            pol_size = size(data[0], /dimensions)
 
             ; Put the variable in the obs structure
             ; Create a temporary structure because structure tags cannot be dynamically assigned
