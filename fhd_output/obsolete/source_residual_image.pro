@@ -121,17 +121,17 @@ FOR pol_i=0,n_pol-1 DO BEGIN
 ;    res_y_max=(Max(sy)+restored_beam_width/2)<(elements-1)
 ;    res_y_min=(Min(sy)-restored_beam_width/2)>0
     
-    res_img2=Smooth(res_img*source_weights,radius,/edge)
-    source_img2=Smooth(source_img,radius,/edge)
+    res_img2=Smooth(res_img*source_weights,radius,/edge_wrap)
+    source_img2=Smooth(source_img,radius,/edge_wrap)
     FOR i=0L,smooth_iter-1 DO BEGIN
-        res_img2=Smooth(res_img2,radius,/edge)
-        source_img2=Smooth(source_img2,radius,/edge)
+        res_img2=Smooth(res_img2,radius,/edge_wrap)
+        source_img2=Smooth(source_img2,radius,/edge_wrap)
     ENDFOR
     ;power of 3 intentional: after 1 iteration a source will be smeared at 1/radius^2 in all surrounding pixels. 
     ;Want to pick up one more iteration out, and the final row of radius pixels will be smeared at an additional 1/r^2 for a total of 1/r^3
     res_test=res_img2*weight_invert(source_img2,min(source_arr_use.flux.I)/radius^3.)
-;    res_test2=Smooth((res_img*source_weights)[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge)*$
-;        weight_invert(Smooth(source_img[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge),min(source_arr_use.flux.I)/radius^2.)
+;    res_test2=Smooth((res_img*source_weights)[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge_wrap)*$
+;        weight_invert(Smooth(source_img[res_x_min:res_x_max,res_y_min:res_y_max],radius,/edge_wrap),min(source_arr_use.flux.I)/radius^2.)
     
 ;    res_fill=max_filter(res,radius,/median,/circle,mask=res_mask,missing=0)
     residual_arr[pol_i]=Ptr_new(res_test)

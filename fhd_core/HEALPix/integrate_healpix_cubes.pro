@@ -116,7 +116,7 @@ pro integrate_healpix_cubes, filenames, save_file = save_file, save_path = save_
         endelse
       endif
       
-      save_base = 'Combined_obs_' + obs_name + '_' + type + pol_str + '_cube.sav'
+      save_base = 'Combined_obs_' + obs_name + '_' + type  + '_cube' + pol_str' '.sav'
       
       save_file = save_path + save_base
     endif else if file_dirname(save_file) eq '.' then save_file = save_path + save_file
