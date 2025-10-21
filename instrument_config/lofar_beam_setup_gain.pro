@@ -132,7 +132,7 @@ FUNCTION lofar_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
     center_ind = (ulong(nside)) / 2
 
     ; initialize K matrix for instrumental pixels
-    K_inst = PTRARR(2, 2)
+    K_proj_inst = PTRARR(2, 2)
 
     ; Loop over instrumental frequencies
     FOR freq_i = 0, nfreq_bin-1 DO BEGIN
@@ -149,11 +149,12 @@ FUNCTION lofar_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
             J10[pix_i] = interpol(Dy[pix_use_input[pix_i],*],freqs, freq_center[freq_i],/quadratic)
         endfor
 
-        ; Solve for F, the diagonal amplitude, hence only two elements defined
-        F = [[sqrt(abs(J00)^2 + abs(J01)^2)], $
+        ; Solve for the magnitude of F, the diagonal amplitude, hence only two elements defined
+        F_mag = [[sqrt(abs(J00)^2 + abs(J01)^2)], $
             [sqrt(abs(J10)^2 + abs(J11)^2)]]
 
-        ; Get D K (pseudo, or old K), which is easily solvable because the inverse of F is the reciprocal
+        ; Get the combination of F_phase and K (pseudo, or old K), 
+        ; which is easily solvable because the inverse of F is the reciprocal
         pseudo_K = [[[J00 / F[*,0]], [J01 / F[*,0]]], $
                     [[J10 / F[*,1]], [J11 / F[*,1]]]]
 
@@ -162,53 +163,53 @@ FUNCTION lofar_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
         J10[flip_inds_J10] *= -1
         J11[flip_inds_J11] *= -1
 
-        ; D is the diagonal time delay matrix, the combined phase received by p and q components
-        D = [[exp(icomp * atan(imaginary(J00+J01), real_part(J00+J01)))], $
+        ; F_phase is the diagonal time delay matrix, the combined phase received by p and q components
+        F_phase = [[exp(icomp * atan(imaginary(J00+J01), real_part(J00+J01)))], $
             [exp(icomp * atan(imaginary(J10+J11), real_part(J10+J11)))]]
 
-        ; K is polarisation-dependent response which should be tile-independent
-        K = [[[ pseudo_K[*,0,0] / D[*, 0] ], [ pseudo_K[*,0,1] / D[*, 0] ]], $
+        ; K_proj is the polarisation-dependent (projection) response which should be tile-independent
+        K_proj = [[[ pseudo_K[*,0,0] / D[*, 0] ], [ pseudo_K[*,0,1] / D[*, 0] ]], $
             [[ pseudo_K[*,1,0] / D[*, 1] ], [ pseudo_K[*,1,1] / D[*, 1] ]]]
 
         ; Dummy matrix for intermediate steps
         input_matrix = Dcomplexarr(nside,nside)
 
-        ;Interpolate K to the instrumental pixel grid
+        ;Interpolate K_proj to the instrumental pixel grid
         for i = 0,1 do begin
             for j = 0,1 do begin
-                input_matrix[pix_use_input] = K[*, i, j]
-                K_inst[i, j] = Ptr_new(INTERPOLATE(input_matrix, x_interp, y_interp))
+                input_matrix[pix_use_input] = K_proj[*, i, j]
+                K_proj_inst[i, j] = Ptr_new(INTERPOLATE(input_matrix, x_interp, y_interp))
             endfor
         endfor
 
-        antenna[*].K[*,*,freq_i] = K_inst
+        antenna[*].K_proj[*,*,freq_i] = K_proj_inst
 
         for tile_i=0, n_tile-1 do begin
-            ; For each tile, rotate the F and D matrices.
+            ; For each tile, rotate the F_mag and F_phase matrices.
             ; This is way around having a seperate beam model file for each LOFAR station.
             ; Generalised input_matrix and output_matrix used to reduce RAM overhead.
 
-            input_matrix[pix_use_input] = F[*,0]
+            input_matrix[pix_use_input] = F_mag[*,0]
             output_matrix = rot_cubic_complex(input_matrix, rotation_angle[tile_i], x_interp, y_interp, center_ind)
-            (antenna[tile_i].F[0, freq_i]) = ptr_new(output_matrix)
+            (antenna[tile_i].F_mag[0, freq_i]) = ptr_new(output_matrix)
 
-            input_matrix[pix_use_input] = D[*,0]
+            input_matrix[pix_use_input] = F_phase[*,0]
             output_matrix = rot_cubic_complex(input_matrix, rotation_angle[tile_i], x_interp, y_interp, center_ind)
-            (antenna[tile_i].D[0, freq_i]) = ptr_new(output_matrix)
+            (antenna[tile_i].F_phase[0, freq_i]) = ptr_new(output_matrix)
             
-            input_matrix[pix_use_input] = F[*,1]
+            input_matrix[pix_use_input] = F_mag[*,1]
             output_matrix = rot_cubic_complex(input_matrix, rotation_angle[tile_i], x_interp, y_interp, center_ind)
-            (antenna[tile_i].F[1, freq_i]) = ptr_new(output_matrix)
+            (antenna[tile_i].F_mag[1, freq_i]) = ptr_new(output_matrix)
 
-            input_matrix[pix_use_input] = D[*,1]
+            input_matrix[pix_use_input] = F_phase[*,1]
             output_matrix = rot_cubic_complex(input_matrix, rotation_angle[tile_i], x_interp, y_interp, center_ind)
-            (antenna[tile_i].D[1, freq_i]) = ptr_new(output_matrix)
+            (antenna[tile_i].F_phase[1, freq_i]) = ptr_new(output_matrix)
 
             ; Update combined Jones matrix ( F D K ) to reflect rotation of delays and amplitude
-            (antenna[tile_i].jones[0, 0, freq_i]) = Ptr_new( (*antenna[tile_i].F[0, freq_i]) * (*antenna[tile_i].D[0, freq_i]) * (*antenna[tile_i].K[0, 0, freq_i]) )
-            (antenna[tile_i].jones[0, 1, freq_i]) = Ptr_new( (*antenna[tile_i].F[0, freq_i]) * (*antenna[tile_i].D[0, freq_i]) * (*antenna[tile_i].K[0, 1, freq_i]) )
-            (antenna[tile_i].jones[1, 0, freq_i]) = Ptr_new( (*antenna[tile_i].F[1, freq_i]) * (*antenna[tile_i].D[1, freq_i]) * (*antenna[tile_i].K[1, 0, freq_i]) )
-            (antenna[tile_i].jones[1, 1, freq_i]) = Ptr_new( (*antenna[tile_i].F[1, freq_i]) * (*antenna[tile_i].D[1, freq_i]) * (*antenna[tile_i].K[1, 1, freq_i]) )
+            (antenna[tile_i].jones[0, 0, freq_i]) = Ptr_new( (*antenna[tile_i].F_mag[0, freq_i]) * (*antenna[tile_i].F_phase[0, freq_i]) * (*antenna[tile_i].K_proj[0, 0, freq_i]) )
+            (antenna[tile_i].jones[0, 1, freq_i]) = Ptr_new( (*antenna[tile_i].F_mag[0, freq_i]) * (*antenna[tile_i].F_phase[0, freq_i]) * (*antenna[tile_i].K_proj[0, 1, freq_i]) )
+            (antenna[tile_i].jones[1, 0, freq_i]) = Ptr_new( (*antenna[tile_i].F_mag[1, freq_i]) * (*antenna[tile_i].F_phase[1, freq_i]) * (*antenna[tile_i].K_proj[1, 0, freq_i]) )
+            (antenna[tile_i].jones[1, 1, freq_i]) = Ptr_new( (*antenna[tile_i].F_mag[1, freq_i]) * (*antenna[tile_i].F_phase[1, freq_i]) * (*antenna[tile_i].K_proj[1, 1, freq_i]) )
 
         endfor
 

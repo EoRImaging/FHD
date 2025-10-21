@@ -33,7 +33,6 @@ function vis_model_transfer,obs,params,model_transfer
   endelse
 
   model_uniq_time_inds = [0,uniq(params_model.time)+1]
-  ;model_uniq_time_inds = model_uniq_time_inds[0:n_elements(model_uniq_time_inds)-2]
   model_n_time = n_elements(model_uniq_time_inds)
 
   if model_n_time NE data_n_time then begin
