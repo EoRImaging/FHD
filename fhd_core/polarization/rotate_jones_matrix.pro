@@ -8,7 +8,11 @@ psf_image_dim = antenna.psf_image_dim
 for pol_i = 0, antenna.n_pol-1 do begin
     for pol_j=0, antenna.n_pol-1 do begin
         Jones[pol_i,pol_j] = Ptr_new(DComplexarr(psf_image_dim,psf_image_dim))
-        (*Jones[pol_i,pol_j])[pix_use] = (*antenna.Jones[pol_i,pol_j])
+        if ~tag_exist(antenna1,'K_proj') then begin
+            (*Jones[pol_i,pol_j])[pix_use] = (*antenna.Jones[pol_i,pol_j])
+        endif else begin
+            (*Jones[pol_i,pol_j])[pix_use] = (*antenna.K_proj[pol_i,pol_j])
+        endelse
     endfor
 endfor
 

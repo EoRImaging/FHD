@@ -144,6 +144,27 @@ ENDFOR
 (*obs.baseline_info).time_use = time_use
 ;;; End time-based flagging
 
+;;; Baseline-based flagging
+IF instrument EQ 'lofar' THEN BEGIN
+    ; Intra-cabinet baselines need to be flagged due to cabinet RFI 
+    ; Pairs of sequential tiles are in the same cabinet,
+    ; i.e. tiles 0 and 1, tiles 2 and 3, etc. for just the core stations (1 through 48)
+    tile_A_i=(*obs.baseline_info).tile_A-1
+    tile_B_i=(*obs.baseline_info).tile_B-1
+    n_core_stations = 48
+
+    FOR pairs_i=0, n_core_stations/2-1 DO BEGIN
+        inds_tile_a = where(tile_A_i EQ (pairs_i*2),n_count)
+        IF n_count GT 0 THEN BEGIN 
+            inds_tile_b = where(tile_B_i[inds_tile_a] EQ (pairs_i*2+1),n_count)
+        ENDIF
+        IF n_count GT 0 THEN BEGIN
+            FOR pol_i=0,n_pol-1 DO (*vis_weight_ptr[pol_i])[*,inds_tile_a[inds_tile_b]]=0
+        ENDIF
+    ENDFOR
+ENDIF
+;;; End baseline-based flagging
+
 IF Keyword_Set(unflag_all) THEN BEGIN
     tile_use[*]=1
     freq_use[*]=1

@@ -236,7 +236,11 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
         bi_use2=Reform(rebin((ant_1_arr+1),ant_1_n,ant_2_n)+$
           Rebin(Transpose(ant_2_arr+1),ant_1_n,ant_2_n)*baseline_mod,baseline_group_n)
         bi_use = [bi_use, bi_use2]
-        IF Max(bi_use) GT bi_max THEN bi_use=bi_use[where(bi_use LE bi_max)]
+        IF Max(bi_use) GT bi_max THEN BEGIN
+          ;Check that the group is not larger than the maximum baseline index and that the baselines exist
+          inds = where(bi_use LE bi_max,n_count)
+          if n_count GT 0 then bi_use=bi_use[inds] else continue
+        ENDIF
         bi_use_i=where(bi_hist0[bi_use],n_use)
         IF n_use GT 0 THEN bi_use=bi_use[bi_use_i]
         baseline_group_n=N_Elements(bi_use)
