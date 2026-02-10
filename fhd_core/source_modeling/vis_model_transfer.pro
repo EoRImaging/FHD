@@ -1,13 +1,13 @@
 function vis_model_transfer,obs,params,model_transfer
 
   data_uniq_time_inds = [0,uniq(params.time)+1]
-  ;data_uniq_time_inds = data_uniq_time_inds[0:n_elements(data_uniq_time_inds)-2]
   data_n_time = obs.n_time
 
   if strlowcase(strmid(model_transfer, strlen(model_transfer)-7, 7)) eq '.uvfits' then begin
     ; model_transfer is a UVFITS file
     if file_test(model_transfer) then begin
       uvfits_read,hdr,params_model,layout,vis_model_arr,vis_weights,file_path_vis=model_transfer,n_pol=obs.n_pol,silent=silent,error=error
+      obs_model=fhd_struct_init_obs(model_transfer,hdr,params_model,layout,n_pol=obs.n_pol,dimension=obs.dimension) 
     endif else message, model_transfer + ' not found during model transfer.'
 
   endif else begin
@@ -30,6 +30,16 @@ function vis_model_transfer,obs,params,model_transfer
         params_model = getvar_savefile(file_dirname(model_transfer)+'/metadata/'+obs.obsname+'_params.sav','params')
       endif else message, 'No params file found in model transfer directory.'
     endelse 
+
+    ;; Get the obs file associated with the model visibilities
+    if file_test(model_transfer+'/'+obs.obsname+'_obs.sav') then begin
+      obs_model = getvar_savefile(model_transfer+'/'+obs.obsname+'_obs.sav','obs')
+    endif else begin
+      if file_test(file_dirname(model_transfer)+'/metadata/'+obs.obsname+'_obs.sav') then begin
+        obs_model = getvar_savefile(file_dirname(model_transfer)+'/metadata/'+obs.obsname+'_obs.sav','obs')
+      endif else message, 'No obs file found in model transfer directory.'
+    endelse 
+
   endelse
 
   model_uniq_time_inds = [0,uniq(params_model.time)+1]
@@ -39,37 +49,28 @@ function vis_model_transfer,obs,params,model_transfer
   ;; Exclude flagged times from the model visibilities if the number of time steps do not match
 
     data_Jdate = (*obs.baseline_info).Jdate
+    model_Jdate = (*obs_model.baseline_info).Jdate
     time_res_Jdate = (double(obs.time_res)/2.) / (24.*3600.) ;offset to the center of a time step
-    model_time = params_model.time[uniq(params_model.time)]
-    data_time = params.time[uniq(params.time)]
     tolerance = 1E-5
 
     ; Match times betweeen model and data
-    ; Option 1: You are working with a model made by FHD. Thus the timing convention in the params is the same
-    ; Option 2: You are working with a model made by WODEN above version 1.4. This is different from FHD convention
-    ;           by half a timestep.
-    ; Option 3: You are working with a model made by WODEN below version 1.4. Thus the timing convention in the 
-    ;           params is different and you need to convert the model Jdate to the data Jdate within precision.
+    ; By creating/using the obs structure, the creation of the Julian dates should be consistent, up to half a time step.
+    ; Option 1: The convention for the Julian date of the visibilities is the same.
+    ; Option 2: The convention for the Julian date of the visibilities is different by half a time step, where FHD
+    ;           expects the Julian date to mark the beginning of the time step and the input expects the center.
 
     ; Option 1
     matched_times_opt1 = intarr(data_n_time)-1
     for data_time_i=0, data_n_time-1 do begin
-      min_val= min(abs(model_time - data_time[data_time_i]), min_ind)
+      min_val = min(abs(model_Jdate - (data_Jdate[data_time_i])), min_ind)
       if min_val LT tolerance then matched_times_opt1[data_time_i] = min_ind
     endfor
   
     ; Option 2
     matched_times_opt2 = intarr(data_n_time)-1
     for data_time_i=0, data_n_time-1 do begin
-      min_val= min(abs(model_time - (data_time[data_time_i]-time_res_Jdate)), min_ind)
+      min_val= min(abs(model_Jdate - (data_Jdate[data_time_i]-time_res_Jdate)), min_ind)
       if min_val LT tolerance then matched_times_opt2[data_time_i] = min_ind
-    endfor
-
-    ; Option 3
-    matched_times_opt3 = intarr(data_n_time)-1
-    for data_time_i=0, data_n_time-1 do begin
-      min_val = min(abs(model_time - (data_Jdate[data_time_i]-time_res_Jdate)), min_ind)
-      if min_val LT tolerance then matched_times_opt3[data_time_i] = min_ind
     endfor
 
     ; Find which option was more successful in matching the times
@@ -77,15 +78,13 @@ function vis_model_transfer,obs,params,model_transfer
     ; Error if no matching times found or if matching times does not obviously cover all data times
     temp = where(matched_times_opt1 NE -1, n_matched_opt1)
     temp = where(matched_times_opt2 NE -1, n_matched_opt2)
-    temp = where(matched_times_opt3 NE -1, n_matched_opt3)
-    if (n_matched_opt1 EQ 0) and (n_matched_opt2 EQ 0) and (n_matched_opt3 EQ 0) then $
+    if (n_matched_opt1 EQ 0) and (n_matched_opt2 EQ 0) then $
       message, 'ERROR: No matching times found between transferred model and data.'
 
-    max_matched = max([n_matched_opt1, n_matched_opt2, n_matched_opt3],max_matched_ind)
+    max_matched = max([n_matched_opt1, n_matched_opt2],max_matched_ind)
     CASE max_matched_ind OF
       0: matched_times = matched_times_opt1
       1: matched_times = matched_times_opt2
-      2: matched_times = matched_times_opt3
     ENDCASE
 
     temp = where(matched_times NE -1, n_matched)
