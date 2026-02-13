@@ -71,7 +71,7 @@ pro beam_decomp, dimension_super, res_super, psf_intermediate_res, obs=obs, $
         fwhm_use = beam_width_deg
         if N_elements(fwhm_use) EQ 1 then fwhm_use = replicate(double(fwhm_use), n_freq)
         if N_elements(fwhm_use) NE n_freq then begin
-          message, 'beam_fwhm_deg must be a scalar or have length n_freq.'
+          message, 'beam_width_deg must be a scalar or have length n_freq.'
         endif
 
         if decomp_type EQ 'gaussian' then begin
