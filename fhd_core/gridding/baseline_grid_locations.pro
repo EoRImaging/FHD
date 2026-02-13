@@ -11,7 +11,7 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
   vis_inds_use=vis_inds_use,interp_flag=interp_flag,dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,$
   dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,x_offset=x_offset,y_offset=y_offset,$
   preserve_visibilities=preserve_visibilities,mask_mirror_indices=mask_mirror_indices,$
-  wstacking=wstacking,w_bin=w_bin,lm=lm,outside_horizon_inds=outside_horizon_inds
+  wstacking=wstacking,aw_projection=aw_projection,w_info=w_info,polarization=polarization
 
   ; Extract information from the structures
   n_tile=obs.n_tile
@@ -167,18 +167,91 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
       RETURN,bin_n
   ENDIF
 
-  if keyword_set(wstacking) then begin
+  if keyword_set(wstacking) OR keyword_set(aw_projection) then begin
 
-    apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), $
-      ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+    if keyword_set(aw_projection) then begin
+      ;; Recreate the power beam in image space
 
-    n_tracked = l_m_n(obs, psf, l_mode=l_mode, m_mode=m_mode, ra_arr=ra_arr, dec_arr=dec_arr)
+      ; Dimension and resolution of the PSF
+      psf_dim = psf.dim
+      psf_resolution = psf.resolution
 
-    ; Determine the indices outside of the horizon, easiest on ra or dec
-    outside_horizon_inds = where(~finite(dec_arr))
+      ; Pixels to horizon
+      pix_hor = psf.pix_horizon         
+      pix_hor_pad = Ceil(pix_hor*1.3/2)*2 
 
-    ; Calculate the lm term to the measurement equation    
-    lm = sqrt(1 - l_mode^2. - m_mode^2.)
+      ; intermediate resolutions
+      psf_intermediate_res=(Ceil(Sqrt(psf_resolution)/2)*2.)<psf_resolution
+
+      ; dimensions of the super-res image
+      psf_image_dim = ((*psf.image_info).psf_image_dim)  
+      dimension_super = psf.dim*psf_resolution
+      res_super = 1/(Double(psf_resolution)/Double(psf_intermediate_res))
+      fft_norm = 1/double(res_super)^2*psf_intermediate_res^2
+      psf_scale=obs.dimension*psf_intermediate_res/psf_image_dim
+      res_super = 1/(Double(psf_resolution)/Double(psf_intermediate_res))
+
+      ; Create dummy obs for creating proper astrometry and directional cosines
+      obs_copy = obs
+      obs_copy.astr.cdelt[*] = psf_scale
+      obs_copy.astr.naxis[*] = dimension_super
+      obs_copy.astr.crpix[*] = dimension_super/2 + 1
+
+      ; Astrometry of the power beam image
+      apply_astrometry, obs_copy, x_arr=meshgrid(dimension_super,dimension_super,1), y_arr=meshgrid(dimension_super,dimension_super,2),ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+      ; Directional cosines of the power beam image
+      n_tracked = l_m_n(obs_copy, psf, l_mode=l_mode, m_mode=m_mode, ra_arr=ra_arr, dec_arr=dec_arr)
+
+      ; Calculate the lm term to the measurement equation    
+      lm = sqrt(1 - l_mode*l_mode - m_mode*m_mode)
+
+      ; Determine the indices inside of the horizon, easiest on ra or dec
+      inside_horizon_inds=where(finite(shift(dec_arr,dimension_super/2,dimension_super/2)))
+      
+      image_power_beam_arr = DBLARR(dimension_super,dimension_super,n_freq_use)
+      max_amp_freq = DBLARR(n_freq_use)
+
+      if ptr_valid((*psf.image_info).image_power_beam_arr[0]) then begin
+        ; If the image power beam exists in the structure, use that directly.
+        for fi=0, n_freq_use-1 do begin
+          image_power_beam_arr[*,*,fi] = *(*psf.image_info).image_power_beam_arr[polarization,psf.fbin_i[fi_use[fi]]] * lm
+        endfor
+      endif else begin
+        if tag_exist(psf, 'beam_decomp_info') then begin
+          ; If there is beam decomposition information, recreate the image power beam.
+          ; This is vastly preferable to a stored image, which can drastically increase memory usage. 
+          for fi=0, n_freq_use-1 do begin
+            image_power_beam_arr[*,*,fi] =  call_function((*psf.beam_decomp_info).decomp_type + '_decomp', $
+              FINDGEN(dimension_super),FINDGEN(dimension_super), $
+              (*(*psf.beam_decomp_info).beam_params[polarization])[*,fi_use[fi]],ftransform=0,model_npix=(*psf.beam_decomp_info).model_npix,$
+              model_res=(*psf.image_info).image_res_scale/(*psf.beam_decomp_info).model_res,over_res=res_super,max_amp=max_amp)
+            max_amp_freq[fi] = max_amp
+            image_power_beam_arr[*,*,fi] *= lm
+            image_power_beam_arr[*,*,fi] = shift(image_power_beam_arr[*,*,fi],dimension_super/2,dimension_super/2)
+          endfor
+        endif else message, 'Either image_power_beam_arr pointer or decomp_type must be set in the psf structure for w-stacking.'
+      endelse
+      lm = shift(lm,dimension_super/2,dimension_super/2)
+      image_power_beam_arr *= fft_norm
+      max_amp_freq *= fft_norm
+
+    endif else begin
+    ; Astrometry of the image
+      apply_astrometry, obs, x_arr=meshgrid(dimension,elements,1), y_arr=meshgrid(dimension,elements,2), $
+        ra_arr=ra_arr, dec_arr=dec_arr, /xy2ad
+
+      ; Directional cosines of the image
+      n_tracked = l_m_n(obs, psf, l_mode=l_mode, m_mode=m_mode, ra_arr=ra_arr, dec_arr=dec_arr)
+
+      ; Determine the indices inside of the horizon, easiest on ra or dec
+      inside_horizon_inds = where(finite(dec_arr))
+
+      ; Calculate the lm term to the measurement equation    
+      lm = sqrt(1 - l_mode^2. - m_mode^2.)
+
+      image_power_beam_arr=0
+      max_amp_freq=0
+    endelse
 
     ; Select unflagged baselines for finding correct w-stacks
     ; Baselines are grouped by chunks in frequency -- if any baseline in a chunk is unflagged,
@@ -199,7 +272,28 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
 
     ; Calculate the histogram and reverse indices for each w-stack
     w_bin_n = histogram(ww_rad, nbins=n_w_stack, reverse_indices=w_ri, omin=w_omin)
-    w_bin_i=Long(where(w_bin_n,n_bin_use))
+
+    ; Flag w-stacks with less than 50% of the number of visibilities per bin 
+    ; (if evenly distributed) for removal. Check if over 75% of the remaining 
+    ; bins are bad, and if so, remove all subsequent bins. If not, keep that bin
+    ; and continue looking for the cutoff point.
+    ; This keeps a contiguous set of w-stacks whilst increasing efficiency during gridding.
+    low_n_baselines_mask = w_bin_n lt N_elements(ww_rad)/n_w_stack*.50
+    low_inds = where(low_n_baselines_mask,n_count)
+    if n_count GT 0 then begin
+      for low_i=0,n_elements(low_inds)-1 do begin
+        if total(low_n_baselines_mask[low_inds[low_i]:-1]) gt (n_w_stack - low_inds[low_i])*.75 then begin
+          low_n_baselines_mask[low_inds[low_i]:-1] = 1
+          continue
+        endif else low_n_baselines_mask[low_inds[low_i]] = 0
+      endfor
+      ; Only apply the mask if not all w-stacks are removed. Otherwise, keep all w-stacks
+      ; because this simple filter did not work well in this case.
+      if total(low_n_baselines_mask) NE n_w_stack then w_bin_n[where(low_n_baselines_mask)] = 0.0
+    endif
+
+    ; Indices of non-empty w-stacks
+    w_bin_i=Long(where(w_bin_n))
 
     ; Also capture the size of the w bins in radians
     w_binsize = (max(ww_rad,/nan) - min(ww_rad,/nan)) / n_w_stack
@@ -208,22 +302,23 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
     n_w_stack = N_elements(w_bin_i)
 
     ; Initialize arrays for the w-stacking
-    bin_n = PTRARR(n_w_stack)
-    bin_i = PTRARR(n_w_stack)
-    ri = PTRARR(n_w_stack)
-    w_bin = DBLARR(n_w_stack)
+    w_bin = DBLARR(n_w_stack) + w_omin - w_binsize/2
+    n_freq_vis_w = LONARR(n_freq_use, n_w_stack)
 
     xmin_w_i = xmin
     ymin_w_i = ymin
 
+    wstack_hist = PTRARR(n_w_stack,/allocate)
+    n_vis=0
+
     for w_i = 0 , n_w_stack - 1 do begin
 
       ; Reinitialize the minimum pixel values for each w-stack to be not included
-      xmin_w_i[*] = -1
-      ymin_w_i[*] = -1
+      replicate_inplace, xmin_w_i, -1
+      replicate_inplace, ymin_w_i, -1
 
       ; Calculate the center w of the w-stack in radians
-      w_bin[w_i] = w_omin + w_binsize * (w_bin_i[w_i]+1) - w_binsize/2
+      w_bin[w_i] += w_binsize * (w_bin_i[w_i]+1)
 
       ; Find the indices for each w-stack where flagged baselines are not included
       inds_i = w_ri[w_ri[w_bin_i[w_i]]:w_ri[w_bin_i[w_i]+1]-1]
@@ -237,12 +332,27 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
       ; Match all visibilities that map from and to exactly the same pixels and store them as a histogram in bin_n
       ; with their respective index ri. Setting min equal to 0 excludes flagged (i.e. (xmin,ymin)=(-1,-1)) data
       ; Store in pointers due to changing size in each w-stack
-      bin_n[w_i]=PTR_NEW(Long(histogram(xmin_w_i+ymin_w_i*dimension,binsize=1,reverse_indices=pix_w_ri,min=0)))
-      ri[w_i] = PTR_NEW(pix_w_ri)
-      bin_i[w_i]=PTR_NEW(Long(where(*bin_n[w_i],n_bin_use_i)))
+      bin_n=Long(histogram(xmin_w_i+ymin_w_i*dimension,binsize=1,reverse_indices=ri,min=0))
+      bin_i = Long(where(bin_n,n_bin_use_i))
+      *wstack_hist[w_i] = {bin_n:bin_n, ri:ri, bin_i:bin_i}
+
       if w_i EQ 0 then n_bin_use = n_bin_use_i else n_bin_use = [n_bin_use, n_bin_use_i]
+      n_vis += Total(bin_n)
+
+      ; ; Get the number of visibilities in the w-stack per frequency
+      freq_inds_per_stack = ri[N_elements(bin_n)+1:*] mod n_freq_use
+      for f_i=0, n_freq_use-1 do begin
+        temp = where(freq_inds_per_stack EQ f_i,n_count)
+        if n_count GT 0 then begin
+          n_freq_vis_w[f_i,w_i] = n_count
+        endif else n_freq_vis_w[f_i,w_i] = 0
+      endfor
 
     endfor
+
+    w_info = {n_w_stack:n_w_stack,n_vis:n_vis,w_bin:w_bin,wstack_hist:wstack_hist,n_freq_vis_w:n_freq_vis_w,$
+      lm:lm,image_power_beam_arr:dcomplex(image_power_beam_arr),inside_horizon_inds:inside_horizon_inds,$
+      max_amp:max_amp_freq}
 
   endif else begin
 
