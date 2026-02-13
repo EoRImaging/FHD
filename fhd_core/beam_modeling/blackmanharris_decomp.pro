@@ -41,8 +41,7 @@ END
 
 FUNCTION blackmanharris_decomp, x, y, p, $
   ftransform=ftransform, model_npix=model_npix, model_res=model_res, over_res=over_res,$
-  volume_beam=volume_beam, sq_volume_beam=sq_volume_beam, max_amp=max_amp, $
-  conserve_memory=conserve_memory
+  volume_beam=volume_beam, sq_volume_beam=sq_volume_beam, max_amp=max_amp
 
   nx = N_ELEMENTS(x) & ny = N_ELEMENTS(y)
   decomp_beam = DCOMPLEX(DBLARR(nx, ny))
