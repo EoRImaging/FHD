@@ -47,7 +47,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: not set <br />
 
-**beam_width_deg**: Set the width of the image beam in degrees given a functional decomposition. If `beam_function_decomp` is `gaussian`, then this will be the FWHM. If `beam_function_decomp` is `blackmanharris`, then this will be the window length. If one number is provided, then this will represent all frequencies. Optionally, a vector the length of `n_freq` can be passed to create frequency depedence. <br />
+**beam_width_deg**: Set the width of the image beam in degrees given a functional decomposition. If `beam_function_decomp` is `gaussian`, then this will be the FWHM. If `beam_function_decomp` is `blackmanharris`, then this will be the window length. If one number is provided, then this will represent all frequencies. Optionally, a vector the length of `n_freq` can be passed to create frequency dependence. <br />
   -*Default*: not set <br />
   -*eor_wrapper_defaults*: not set <br />
 
