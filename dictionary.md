@@ -15,6 +15,10 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Default*: 0 (unset) <br />
   -*eor_wrapper_defaults*: 1 <br />
 
+**beam_function_decomp**: Represent the beam image as a decomposition of pre-defined functions. Current functions are `gaussian` or `blackmanharris`. If set to a non-string, it will default to `blackmanharris`. <br />
+  -*Default*: not set <br />
+  -*eor_wrapper_defaults*: not set <br />
+
 **beam_mask_threshold**: the factor at which to clip the beam model. For example, a factor of 100 would clip the beam model at 100x down from the maximum value. This removes extraneous and uncertain modelling at low levels.  <br />
   -*Default*: 100 <br />
 
@@ -38,6 +42,14 @@ This is a work in progress; please add keywords as you find them in alphabetical
   -*Range*: 0-# of seconds in an observation <br />
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 56 <br />
+
+**beam_param_transfer**: Pass in the parameters required to represent the beam image as a decomposition of pre-defined functions. Set to a psf save file to pass in previous structures (it is suggested to keep a parameter file where `beam_ptr` is set to 0 for ease of use).  Set to 1 to read-in parameters for high-band MWA full gaussian decomposition. <br />
+  -*Default*: not set <br />
+  -*eor_wrapper_defaults*: not set <br />
+
+**beam_width_deg**: Set the width of the image beam in degrees given a functional decomposition. If `beam_function_decomp` is `gaussian`, then this will be the FWHM. If `beam_function_decomp` is `blackmanharris`, then this will be the window length. If one number is provided, then this will represent all frequencies. Optionally, a vector the length of `n_freq` can be passed to create frequency depedence. <br />
+  -*Default*: not set <br />
+  -*eor_wrapper_defaults*: not set <br />
 
 **complex_beam**: set if the beam is complex. Affects how gridding is handled. <br />
   -*Turn off/on*: 0/1 <br />
