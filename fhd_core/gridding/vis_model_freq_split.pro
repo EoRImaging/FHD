@@ -2,7 +2,8 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     weights_arr=weights_arr,variance_arr=variance_arr,model_arr=model_arr,n_avg=n_avg,timing=timing,fft=fft,source_list=source_list,$
     file_path_fhd=file_path_fhd,rephase_weights=rephase_weights,silent=silent,$
     vis_n_arr=vis_n_arr,x_range=x_range,y_range=y_range,preserve_visibilities=preserve_visibilities,$
-    obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, uvf_name=uvf_name,bi_use=bi_use,wstacking=wstacking,_Extra=extra
+    obs_out=obs_out,psf_out=psf_out,save_uvf=save_uvf, uvf_name=uvf_name,bi_use=bi_use,wstacking=wstacking,$
+    aw_projection=aw_projection,_Extra=extra
 
   t0=Systime(1)
   
@@ -112,6 +113,15 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       endelse
     endif
 
+    if keyword_set(wstacking) OR keyword_set(aw_projection) then begin
+      psf_dim3 = LONG64(psf_out.dim*psf_out.dim)
+      xvals_i=Reform(meshgrid(psf_out.dim,psf_out.dim,1)*psf_out.resolution,psf_dim3)
+      yvals_i=Reform(meshgrid(psf_out.dim,psf_out.dim,2)*psf_out.resolution,psf_dim3)
+      ; Precompute index arrays for main block
+      x_grid = ulong(rebin(xvals_i, psf_dim3, psf_out.resolution) + rebin(transpose(lindgen(psf_out.resolution)), psf_dim3, psf_out.resolution))
+      y_grid = ulong(rebin(yvals_i, psf_dim3, psf_out.resolution) + rebin(transpose(lindgen(psf_out.resolution)), psf_dim3, psf_out.resolution))
+    endif
+
     FOR fi=0L,nf-1 DO BEGIN
       fi_use=where((freq_bin_i2 EQ fi) AND (freq_use GT 0),nf_use)
       variance_holo=1 ;initialize
@@ -120,7 +130,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
         dirty_UV=visibility_grid(vis_ptr,vis_weights_use[pol_i],obs_out,0,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
             polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
             model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return,wstacking=wstacking,$
-            w_bin=w_bin,n_bin_use_stack=n_bin_use_stack, _Extra=extra)
+            aw_projection=aw_projection,w_bin=w_bin,n_bin_use_stack=n_bin_use_stack,x_grid=x_grid,y_grid=y_grid, _Extra=extra)
       IF n_vis EQ 0 THEN BEGIN
         *dirty_arr[pol_i,fi]=init_arr
         *weights_arr[pol_i,fi]=init_arr
@@ -170,7 +180,8 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     IF ~Arg_present(obs_out) THEN obs.n_vis=n_vis_use
   
     IF keyword_set(save_uvf) THEN BEGIN
-      save, filename = uvf_filepath[pol_i], dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, w_bin_full, n_bin_use_stack_full,/compress
+      IF file_test(file_dirname(uvf_filepath[pol_i])) EQ 0 THEN file_mkdir,file_dirname(uvf_filepath[pol_i])
+      save, filename = uvf_filepath[pol_i], dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, w_bin_full, n_bin_use_stack_full, n_avg,/compress
     ENDIF
 
   ENDFOR
