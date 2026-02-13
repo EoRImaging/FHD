@@ -183,7 +183,6 @@ pro beam_decomp, dimension_super, res_super, psf_intermediate_res, obs=obs, $
           if keyword_set(errmsg) then message, "Gaussian mixture model least-squares fitting return error: " + errmsg
 
           all_p[fbin_i,*] = fitted_p 
-          stop
           ;Update estimate of gauss params for next iteration
           p=fitted_p
         endfor
