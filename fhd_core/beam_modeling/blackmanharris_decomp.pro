@@ -7,7 +7,7 @@ FUNCTION dirichlet_kernel_amp, f, N
   nz = WHERE(ABS(denom) GT 1D-14, n_nz)
   IF n_nz GT 0 THEN res[nz] = SIN(N * x[nz]) / denom[nz]
   z = WHERE(ABS(denom) LE 1D-14, n_z)
-  IF n_z GT 0 THEN res[z] = N  ; lim f-&gt;0 is N
+  IF n_z GT 0 THEN res[z] = N  ; lim f->0 is N
   RETURN, res
 END
 
