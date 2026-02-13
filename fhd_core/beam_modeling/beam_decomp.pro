@@ -17,7 +17,7 @@
 ;; conserve_memory: Optionally use a max byte limit for heavy load loops
 ;; image_power_beam: Optionally return the beam image 
 ;; beam_decomp_info: Pass back the beam decomposition information structure
-;; beam_width_deg: Pass a beam width in degrees centered on zentih to create using the functional form
+;; beam_width_deg: Pass a beam width in degrees centered on zenith to create using the functional form
 ;; silent: Optionally turn off print statements 
 
 pro beam_decomp, dimension_super, res_super, psf_intermediate_res, obs=obs, $
