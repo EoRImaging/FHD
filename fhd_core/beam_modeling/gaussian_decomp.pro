@@ -11,13 +11,12 @@
 ;;  the input parameters to convert to the current x,y grid 
 ;; model_res: Optionally provide the grid resolution used to derive the input
 ;;  parameters to convert to the current grid resolution
-;; volume_beam: Returns the analytical calculation of the beam volume
-;; sq_volume_beam: Returns the analytical calculation of the squared beam volume
+;; max_amp: The maximum amplitude of the beam in uv-space, paired with generation of the image-space beam
 ;; conserve_memory: Optionally supply the max number of bytes to split the fourier transform 
 ;;  into loops to reduce the memory required to calculate hyperresolved beam kernels
 
 function gaussian_decomp, x, y, p, ftransform=ftransform, model_npix=model_npix, model_res=model_res,$
-  volume_beam=volume_beam,sq_volume_beam=sq_volume_beam,conserve_memory=conserve_memory
+  over_res=over_res, max_amp=max_amp,conserve_memory=conserve_memory
  
   nx = N_elements(x)
   ny = N_elements(y)
@@ -33,28 +32,25 @@ function gaussian_decomp, x, y, p, ftransform=ftransform, model_npix=model_npix,
   sigma_y = var[4,*]
   n_lobes = (size(var))[2]
 
+  IF ~KEYWORD_SET(over_res) then over_res = 1.0d
+
   ;If the parameters were built on a different grid, then put on new grid
   ;Npix only affects the offset params
-  if keyword_set(model_npix) then begin
-    if model_npix lt nx then begin
-      offset = abs(nx/2. - model_npix/2.)
-      offset_x += offset 
-      offset_y += offset
-    endif
-    if model_npix gt nx then begin
-      offset = abs(model_npix/2. - nx/2.)
-      offset_x -= offset
-      offset_y -= offset
-    endif 
-  endif
   ;Resolution affects gaussian sigma and offsets
   if keyword_set(model_res) then begin
-    sigma_x *=  model_res
-    sigma_y *= model_res
-    offset_x = ((offset_x-nx/2.) * model_res) + nx/2.
-    offset_y = ((offset_y-ny/2.) * model_res) + ny/2.
+    sigma_x *= over_res / model_res
+    sigma_y *= over_res / model_res
+    offset_x *= over_res / model_res 
+    offset_y *= over_res / model_res 
   endif
-  
+    ; Adjust for model grid differences
+  IF KEYWORD_SET(model_npix) THEN BEGIN
+    offset = (model_npix * over_res / model_res - nx) / 2.0
+    offset_x -= offset
+    offset_y -= offset
+  ENDIF
+
+
   if ~keyword_set(ftransform) then begin
     ;
     ; Full image model with all the gaussian components
@@ -62,12 +58,17 @@ function gaussian_decomp, x, y, p, ftransform=ftransform, model_npix=model_npix,
       decomp_beam += amp[lobe_i] * $
         (exp(-(x-offset_x[lobe_i])^2/(2*sigma_x[lobe_i]^2))#exp(-(y-offset_y[lobe_i])^2/(2*sigma_y[lobe_i]^2)))  
     endfor
+    max_amp = amp[0]*2.*!dpi/(nx*ny)*sigma_x[0]*sigma_y[0]
   endif else begin
     ;
     ; Full uv model with all the gaussian components
     decomp_beam=complex(decomp_beam)
-    volume_beam = total(amp)
-    sq_volume_beam = !Dpi*total((sigma_x)*(sigma_y)*amp^2)/(nx*ny)
+    
+    ;; volume_beam: the analytical calculation of the beam volume
+    ;; sq_volume_beam: the analytical calculation of the squared beam volume
+    ;; Both are unused because the beam is normally clipped/renormalized later
+    ;volume_beam = total(amp)
+    ;sq_volume_beam = !Dpi*total((sigma_x)*(sigma_y)*amp^2)/(nx*ny)
 
     offset_x -= nx/2
     offset_y -= ny/2
