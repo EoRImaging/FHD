@@ -57,7 +57,7 @@ function vis_model_transfer,obs,params,model_transfer
     ; By creating/using the obs structure, the creation of the Julian dates should be consistent, up to half a time step.
     ; Option 1: The convention for the Julian date of the visibilities is the same.
     ; Option 2: The convention for the Julian date of the visibilities is different by half a time step, where FHD
-    ;           expects the Julian date to mark the beginning of the time step and the input expects the center.
+    ;           expects the Julian date to mark the center of the time step (AIPS Memo compliant) and the input expects the beginning.
 
     ; Option 1
     matched_times_opt1 = intarr(data_n_time)-1
