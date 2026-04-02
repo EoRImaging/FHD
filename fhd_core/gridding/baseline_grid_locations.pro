@@ -99,8 +99,8 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
   ENDIF
 
   ; Center of baselines for x and y in units of pixels
-  xcen=Float(frequency_array#Temporary(kx_arr))
-  ycen=Float(frequency_array#Temporary(ky_arr))
+  xcen=frequency_array#Temporary(kx_arr)
+  ycen=frequency_array#Temporary(ky_arr)
 
   ; Pixel number offet per baseline for each uv-box subset 
   x_offset=Fix(Floor((xcen-Floor(xcen))*psf_resolution) mod psf_resolution, type=12) ; type=12 is unsigned int
