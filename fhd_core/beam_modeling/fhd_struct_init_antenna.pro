@@ -115,8 +115,13 @@ if N_elements(instrument) GT 1 then begin
   endfor  
 endif
 
-IF ~Keyword_Set(psf_dim) THEN $
-    psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
+IF ~Keyword_Set(psf_dim) THEN BEGIN
+    IF Max(antenna.size_meters) GT 0 THEN BEGIN
+      psf_dim=Ceil((Max(antenna.size_meters)*2.*Max(frequency_array)/speed_light)/kbinsize)
+    ENDIF ELSE BEGIN
+      message, "Neither antenna.size_meters nor psf_dim is set."
+    ENDELSE
+ENDIF
 psf_dim=Ceil(psf_dim/2.)*2. ;dimension MUST be even
 ;reset psf_dim if cetain conditions met.
 if keyword_set(kernel_window) then psf_dim=18.
