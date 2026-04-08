@@ -1,4 +1,4 @@
-PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,vis_model_arr=vis_model_arr,$
+PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,vis_model_arr=vis_model_arr,jones,$
     file_path_fhd=file_path_fhd,ps_dimension=ps_dimension,ps_fov=ps_fov,ps_degpix=ps_degpix,$
     ps_kbinsize=ps_kbinsize,ps_kspan=ps_kspan,ps_beam_threshold=ps_beam_threshold,ps_nfreq_avg=ps_nfreq_avg,$
     rephase_weights=rephase_weights,n_avg=n_avg,vis_weights=vis_weights,split_ps_export=split_ps_export,$
@@ -141,6 +141,14 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
       save_uvf=save_uvf, uvf_name=uvf_name[iter],bi_use=*bi_use[iter], _Extra=extra)
 
     t_split+=t_split1
+
+    case size(residual_arr1,/type) of 
+      4: init_arr=fltarr(n_hpx,n_freq_use)
+      5: init_arr=dblarr(n_hpx,n_freq_use)
+      6: init_arr=complex(fltarr(n_hpx,n_freq_use))
+      9: init_arr=dcomplex(dblarr(n_hpx,n_freq_use))
+    endcase
+
     IF dirty_flag THEN BEGIN
       dirty_arr1=residual_arr1
       residual_flag=0
@@ -151,14 +159,24 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     
     t_hpx0=Systime(1)
     
-    beam_squared_cube=fltarr(n_hpx,n_freq_use)
-    weights_cube=fltarr(n_hpx,n_freq_use)
-    variance_cube=fltarr(n_hpx,n_freq_use)
-    IF residual_flag THEN res_cube=fltarr(n_hpx,n_freq_use)
-    IF dirty_flag THEN dirty_cube=fltarr(n_hpx,n_freq_use)
-    IF model_flag THEN model_cube=fltarr(n_hpx,n_freq_use)
+    beam_squared_cube=real_part(init_arr)
+    weights_cube=init_arr
+    variance_cube=real_part(init_arr)
+    IF residual_flag THEN res_cube=init_arr
+    IF dirty_flag THEN dirty_cube=init_arr
+    IF model_flag THEN model_cube=init_arr
 
     FOR pol_i=0,n_pol-1 DO BEGIN
+
+        IF (obs.pol_names[pol_i] EQ 'YX') then begin
+            If (size(init_arr,/type) EQ 6) OR (size(init_arr,/type) EQ 9) then begin
+                print, "Skipping YX HEALPix cube generation because it is the complex conjugate of XY"
+                ;If complex 4-pol HEALPix are being generated, then also create the Jones HEALPix cube after the loop
+                ; so that Stokes cubes can be generated during integration. 
+                jones_hpx_flag = 1
+                continue
+            ENDIF
+        ENDIF
 
         FOR freq_i=Long64(0),n_freq_use-1 DO BEGIN
 
@@ -187,7 +205,7 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
         fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force,_Extra=extra
 
     ENDFOR
-    
+
     IF Keyword_Set(save_imagecube) THEN BEGIN
         save, filename = imagecube_filepath[iter], dirty_arr1, residual_arr1, model_arr1, weights_arr1, variance_arr1, beam_arr, nf_vis_use, obs_out, /compress
     ENDIF
@@ -196,10 +214,28 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     dirty_cube=(model_cube=(res_cube=(weights_cube=(variance_cube=(beam_squared_cube=0)))))
     IF iter EQ n_iter-1 THEN undefine_fhd,beam_arr
     
-ENDFOR
-obs_out=obs ;for return
-Ptr_free,vis_weights_use
-timing=Systime(1)-t0
-IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
+  ENDFOR
+
+  if keyword_set(jones_hpx_flag) then begin
+    ; Generate Jones matrix HEALPix cube to be able to translate
+    ; instrumental pol cubes to Stokes pol cubes during integration
+
+    jones_hpx_arr=Ptrarr(4,4,/allocate)
+    p_corr = Complex(FLTARR(jones.dimension,jones.elements))
+  
+    FOR instr_pol=0, n_pol-1 DO BEGIN
+      FOR sky_pol=0, n_pol-1 DO BEGIN
+        p_corr[jones.inds] = *jones.jinv[instr_pol,sky_pol]
+        *jones_hpx_arr[instr_pol,sky_pol] = healpix_cnv_apply(p_corr,hpx_cnv)
+      ENDFOR
+    ENDFOR
+    save, jones_hpx_arr, filename = file_basename(file_path_fhd)+'/Healpix/'+obs.obsname+'_jones_cube.sav',jones_hpx_arr
+
+  endif
+
+  obs_out=obs ;for return
+  Ptr_free,vis_weights_use
+  timing=Systime(1)-t0
+  IF ~Keyword_Set(silent) THEN print,'HEALPix cube export timing: ',timing,t_split,t_hpx
 
 END
