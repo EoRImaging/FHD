@@ -76,6 +76,7 @@ ENDFOR
 n_pol=Min(obs_arr.n_pol)
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
 IF ~Keyword_Set(silent) THEN print,'Creating HEALPix maps using nside='+Strn(nside)
+double_precision=Max(obs_arr.double_precision)
 
 stokes_model_hpx=Ptrarr(n_pol)
 stokes_dirty_hpx=Ptrarr(n_pol)
@@ -260,10 +261,10 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
             weights_hpx0[ind_map0]=(*weights_hpx[pol_i])
             *weights_hpx[pol_i]=(weights_hpx0)
         ENDIF 
-        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(stokes_weights,hpx_cnv)*n_vis_rel
-        (*stokes_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_dirty[pol_i],hpx_cnv)*n_vis_rel
-        IF model_flag THEN (*stokes_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_model[pol_i],hpx_cnv)*n_vis_rel
-        IF source_flag THEN (*stokes_sources_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_sources[pol_i],hpx_cnv)*n_vis_rel
+        (*weights_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(stokes_weights,hpx_cnv,double_precision=double_precision)*n_vis_rel
+        (*stokes_dirty_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_dirty[pol_i],hpx_cnv,double_precision=double_precision)*n_vis_rel
+        IF model_flag THEN (*stokes_model_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_model[pol_i],hpx_cnv,double_precision=double_precision)*n_vis_rel
+        IF source_flag THEN (*stokes_sources_hpx[pol_i])[ind_map1]+=healpix_cnv_apply(*stokes_sources[pol_i],hpx_cnv,double_precision=double_precision)*n_vis_rel
     ENDFOR
     IF N_Elements(n_obs_hpx) EQ 0 THEN n_obs_hpx=intarr(n_hpx)
     IF reform_flag THEN BEGIN

@@ -5,6 +5,7 @@ n_obs=N_Elements(obs_arr)
 n_pol=obs_arr[0].n_pol
 n_hpx=N_Elements(hpx_inds)
 beam_square=Ptrarr(n_pol)
+double_precision=Max(obs_arr.double_precision)
 
 IF Arg_present(obs_weight_arr) THEN BEGIN
     weight_return_flag=1
@@ -21,7 +22,7 @@ FOR obs_i=0L,n_obs-1 DO BEGIN
     obs_weight_single/=(2.<n_pol)
 ;    IF mask_flag THEN obs_weight_single*=*beam_mask_arr[obs_i]
     
-    weight_hpx[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(obs_weight_single,hpx_cnv_arr[obs_i])
+    weight_hpx[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(obs_weight_single,hpx_cnv_arr[obs_i],double_precision=double_precision)
     IF Keyword_Set(weight_return_flag) THEN obs_weight_arr[obs_i]=Ptr_new(Temporary(obs_weight_single))
 ENDFOR
 
