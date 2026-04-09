@@ -43,6 +43,7 @@ Nside_chk=2.^(Ceil(ALOG(Sqrt(pix_sky/12.))/ALOG(2))) ;=1024. for 0.1119 degrees/
 IF ~Keyword_Set(nside) THEN nside_use=Nside_chk
 nside_use=nside_use>Nside_chk
 IF Keyword_Set(nside) THEN nside_use=nside ELSE nside=nside_use
+double_precision=Max(obs_arr.double_precision)
 
 residual_flag=Round(Mean(obs_arr.residual)) ;use Mean() not Median() because Median() will give an error if there is only one element
 model_flag=intarr(n_obs)+1
@@ -132,13 +133,13 @@ FOR obs_i=0,n_obs-1 DO BEGIN
     FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
         IF dirty_flag THEN IF stddev(*dirty_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE 
         IF ~dirty_flag THEN IF stddev(*residual_arr1[pol_i,freq_i]) EQ 0 THEN CONTINUE
-        (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
-        (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
+        (*weights_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv[obs_i],double_precision=double_precision)
+        (*variance_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv[obs_i],double_precision=double_precision)
         IF dirty_flag THEN *residual_arr1[pol_i,freq_i]=*dirty_arr1[pol_i,freq_i]-*model_arr1[pol_i,freq_i]
-        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
-        IF dirty_flag THEN (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
-        IF model_flag THEN (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv[obs_i])
-        (*beam_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*beam[pol_i,freq_i])^2.,hpx_cnv)
+        (*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv[obs_i],double_precision=double_precision)
+        IF dirty_flag THEN (*dirty_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv[obs_i],double_precision=double_precision)
+        IF model_flag THEN (*model_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv[obs_i],double_precision=double_precision)
+        (*beam_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply((*beam[pol_i,freq_i])^2.,hpx_cnv,double_precision=double_precision)
     ENDFOR
     t_hpx1=Systime(1)
     t_hpx+=t_hpx1-t_hpx0

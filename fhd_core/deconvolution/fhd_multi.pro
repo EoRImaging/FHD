@@ -40,6 +40,7 @@ reject_pol_sources=fhd_params.reject_pol_sources
 beam_width=beam_width_calculate(obs_arr,min_restored_beam_width=1.,/FWHM)
 local_max_radius=beam_width*2.
 local_radius=local_max_radius*Mean(obs_arr.degpix)
+double_precision=Max(obs_arr.double_precision)
 source_alias_radius=Mean(obs_arr.degpix*obs_arr.dimension)/4.
 calibration_model_subtract=fhd_params.cal_subtract
 filter_background=fhd_params.filter_background
@@ -271,7 +272,7 @@ FOR i=0L,max_iter-1 DO BEGIN
         
         res_stokes=stokes_cnv(res_arr,jones_arr[obs_i],obs_arr[obs_i],beam=beam_model[*,obs_i],/square,_Extra=extra)
         *res_stokes_arr[obs_i]=*res_stokes[0]
-        FOR pol_i=0,n_pol-1 DO (*residual_stokes_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(*res_stokes[pol_i]*(*obs_weight[obs_i]),hpx_cnv[obs_i])
+        FOR pol_i=0,n_pol-1 DO (*residual_stokes_hpx[pol_i])[*hpx_ind_map[obs_i]]+=healpix_cnv_apply(*res_stokes[pol_i]*(*obs_weight[obs_i]),hpx_cnv[obs_i],double_precision=double_precision)
         ptr_free,res_stokes
     ENDFOR
     
