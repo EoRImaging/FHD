@@ -96,7 +96,7 @@ This is a work in progress; please add keywords as you find them in alphabetical
 
 **bandpass_calibrate**: calculates a bandpass. This is an average of tiles by frequency by polarization (default), beamformer-to-LNA cable types by frequency by polarization (see `cable_bandpass_fit`), or over the whole season by pointing by by cable type by frequency by polarization via a read-in file (see `saved_run_bp`). If unset, no by-frequency bandpass is used. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 1 <br />  
+  -*Default*: 1 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
 **cable_bandpass_fit**: average the calibration solutions across tiles within a cable grouping for the particular instrument. <br />
@@ -493,14 +493,14 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect.  <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
-  
+
 **no_png**: do not export any pngs (including standard images and images of calibration solutions). <br />
   -*Dependency*: `export_images` must be set to 1 in order for the keyword to take effect. <br />
   -*Turn off/on*: 0/1 <br />
   -*Default*: 0 <br />
 
-**output_directory**: the absolute path to the output directory for the FHD output run folder. See `version`.     
-  -*Default*: not set <br />    
+**output_directory**: the absolute path to the output directory for the FHD output run folder. See `version`.
+  -*Default*: not set <br />
 
 **pad_uv_image**: pad the UV image by this factor with 0's along the outside so that output images are at a higher resolution. <br />
   -*Default*: 1. <br />
@@ -559,26 +559,26 @@ WARNING! Options in this section may change without notice, and should never be 
  -*Default*: 4 for instrument="mwa32t", depends on the number of frequency channels for instrument="mwa" <br />
 
 **dead_dipole_list**: an array of 3 x # of dead dipoles, where column 0 is the tile name, column 1 is the polarization (0:x, 1:y), and column 2 is the dipole number. These dipoles are flagged, which greatly increases memory usage due to the creation of many separate tile beams. <br />
-  -*Default*: not set <br />  
+  -*Default*: not set <br />
 
 **flag_calibration**: flags antennas based on calculations in `vis_calibration_flag.pro`.<br />
   -*Needs update*: keyword check both in general_obs and vis_calibrate !Q <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 1 <br />  
+  -*Default*: 1 <br />
 
 **flag_dead_dipoles**: flag the dead dipoles listed in `<instrument>_dead_dipole_list.txt` for the golden set of Aug 23, 2013. This greatly increases memory usage due to the creation of many separate tile beams. <br />
-  -*Default*: not set <br />  
+  -*Default*: not set <br />
 
 **flag_visibilities**: flag visibilities based on calculations in `vis_flag.pro`. <br />
   -*Turn off/on*: 0/1 <br />
-  -*Default*: 0 <br />  
+  -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 0 <br />
 
 **freq_end**: Frequency in MHz to end the observation. Flags frequencies greater than it.  <br />
   -*Default*: not set<br />
 
 **freq_start**: Frequency in MHz to begin the observation. Flags frequencies less than it.  <br />
-  -*Default*: not set<br />  
+  -*Default*: not set<br />
 
 **no_calibration_frequency_flagging**: do not flag frequencies based off of zeroed calibration gains. <br />
   -*Needs updating*: might be better if changed to calibration_frequency_flagging and change the logic (avoid the double negative) !Q. <br />
@@ -624,8 +624,8 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 0 <br />
   -*eor_wrapper_defaults*: 1 <br />
 
-**obs_id**: the unique identifier for the observation. Examples are GPS seconds or Julian Dates. The input uvfits file must share this unique identifier name: `<obs_id>.uvfits`.    
-  -*Default*: not set    
+**obs_id**: the unique identifier for the observation. Examples are GPS seconds or Julian Dates. The input uvfits file must share this unique identifier name: `<obs_id>.uvfits`.
+  -*Default*: not set
 
 **override_target_phasedec**: dec of the target phase center, which overrides the value supplied in the metafits under the header keyword DECPHASE. If the metafits doesn't exist, it ovverides the value supplied in the uvfits under the header keyword Dec.<br />
   -*Default*: not set<br />
@@ -684,6 +684,9 @@ WARNING! Options in this section may change without notice, and should never be 
 
 ## Resolution
 
+**double_precision**: Set equal to 1 to enable double precision in all calculations. <br />
+  -*Default*: 0 <br />
+
 **baseline_threshold**: Positive numbers cut baselines shorter than the given number in wavelengths. Negative numbers cut baselines longer than the given number in wavelengths. This keyword is deprecated because it does not return the correct image normalization. Consider using min_baseline and max_baseline instead. <br />
   -*Default*: 0 <br />
 
@@ -715,19 +718,19 @@ WARNING! Options in this section may change without notice, and should never be 
   -*Default*: 2 <br />
 
 **ps_beam_threshold** : Minimum value to which to calculate the beam out to in image space. The beam in UV space is pre-calculated and may have its own `beam_threshold` (see that keyword for more information), and this is only an additional cut in image space. <br />
-  -*Default*: not set<br />     
+  -*Default*: not set<br />
 
 **ps_degpix** : Degrees per pixel for Healpix cube generation. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
   -*Dependency*: `ps_kspan` and `ps_dimension` must not be set in order for the keyword to take effect. <br />
-  -*Default*: not set<br />  
+  -*Default*: not set<br />
 
 **ps_dimension** : UV plane dimension in pixel number for Healpix cube generation. Overrides `ps_degpix` if set. If `ps_kspan`, `ps_dimension`, or `ps_degpix` are not set, the UV plane dimension is calculated from the FoV and the `degpix` from the obs structure.<br />
   -*Dependency*: `ps_kspan` must not be set in order for the keyword to take effect. <br />
-  -*Default*: not set<br />    
+  -*Default*: not set<br />
 
 **ps_fov** : Field of view in degrees for Healpix cube generation. Overrides `kpix` in the obs structure if set.<br />
   -*Dependency*: `ps_kbinsize` must not be set in order for the keyword to take effect. <br />
-  -*Default*: not set<br />  
+  -*Default*: not set<br />
 
 **ps_kbinsize** : UV pixel size in wavelengths to grid for Healpix cube generation. Overrides `ps_fov` and the `kpix` in the obs structure if set. <br />
   -*Default*: not set<br />
