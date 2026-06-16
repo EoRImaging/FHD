@@ -4,30 +4,25 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   zen_int_x=zen_int_x,zen_int_y=zen_int_y,interpolate_beam_threshold=interpolate_beam_threshold,$
   debug_beam_clip_grow=debug_beam_clip_grow,debug_beam_conjugate=debug_beam_conjugate,$
   debug_clip_beam_mask=debug_clip_beam_mask,beam_clip_floor=beam_clip_floor,$
-  image_power_beam=image_power_beam,kernel_window=kernel_window,beam_gaussian_decomp=beam_gaussian_decomp,$
-  beam_gaussian_params=beam_gaussian_params,volume_beam=volume_beam,sq_volume_beam=sq_volume_beam, res_super=res_super,$
-  beam_gauss_param_transfer=beam_gauss_param_transfer,pol_i=pol_i,psf_superres_dim=psf_superres_dim,_Extra=extra
+  image_power_beam=image_power_beam,kernel_window=kernel_window,beam_function_decomp=beam_function_decomp,$
+  res_super=res_super,beam_param_transfer=beam_param_transfer,pol_i=pol_i,psf_superres_dim=psf_superres_dim,$
+  beam_decomp_info=beam_decomp_info,_Extra=extra
 
   icomp = Complex(0, 1)
   dimension_super=psf_superres_dim
 
   ; Generate UV beam at a super resolution
   ; Note: Beam uses the forward FFT for the sky->UV transformation (note that the image uses the inverse FFT)
-  if keyword_set(beam_gaussian_decomp) then begin
+  if keyword_set(beam_function_decomp) then begin
     ;
-    ; Build an analytic-tranformed uv-plane using gaussian mixture models of the image beam
-    ;  at the desired overresolution (instead of interpolating)
-    beam_gaussian_decomp,dimension_super,res_super,obs=obs,$
+    ; Build an analytic image beam based off of pre-defined functions
+    ; Optionally build analytic uv-plane using mixture models of the image beam
+    ;  at the desired overresolution (instead of interpolating) for Gaussians
+    beam_decomp,dimension_super,res_super,psf_intermediate_res,obs=obs,$
       antenna1=antenna1,antenna2=antenna2,psf_base_superres=psf_base_superres,$
-      volume_beam=volume_beam,sq_volume_beam=sq_volume_beam,beam_gaussian_params=beam_gaussian_params,$
       freq_i=freq_i,pol=pol_i,ant_pol1=ant_pol1,ant_pol2=ant_pol2,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
-      beam_gauss_param_transfer=beam_gauss_param_transfer,_Extra=extra
-
-    ; Match the FFT norm expected if one had done an overresolved beam (necessary in FFT instances)
-    ;  instead of an exact calculation
-    fft_norm_expected = 1/double(res_super)^2
-    psf_base_superres *= fft_norm_expected
-    sq_volume_beam *= fft_norm_expected*psf_intermediate_res^2.
+      beam_function_decomp=beam_function_decomp,beam_param_transfer=beam_param_transfer,$
+      image_power_beam=image_power_beam,beam_decomp_info=beam_decomp_info,_Extra=extra
 
   endif else begin
     ; 
@@ -110,5 +105,6 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
 
   psf_base_superres*=psf_val_ref/Total(psf_base_superres)
   IF Keyword_Set(debug_beam_conjugate) THEN psf_base_superres=Conj(psf_base_superres)
+
   RETURN,psf_base_superres
 END
