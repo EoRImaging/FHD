@@ -1,6 +1,7 @@
 FUNCTION visibility_grid_wrap,vis_arr,vis_weights,obs,status_str,psf,params,file_path_fhd=file_path_fhd,vis_model_arr=vis_model_arr,$
     deconvolve=deconvolve,model_flag=model_flag,snapshot_healpix_export=snapshot_healpix_export,mapfn_recalculate=mapfn_recalculate,$
-    save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,_Extra=extra
+    save_visibilities=save_visibilities,error=error,no_save=no_save,weights_arr=weights_arr,model_uv_holo=model_uv_holo,wstacking=wstacking,$
+    aw_projection=aw_projection,_Extra=extra
     
 n_pol=obs.n_pol
 t_grid=fltarr(n_pol)
@@ -9,6 +10,22 @@ print,'Gridding visibilities'
 IF Keyword_Set(deconvolve) THEN map_fn_arr=Ptrarr(n_pol)
 image_uv_arr=Ptrarr(n_pol,/allocate)
 weights_arr=Ptrarr(n_pol,/allocate)
+
+if keyword_set(wstacking) OR keyword_set(aw_projection) then begin
+    ; If performing analysis for combining uvw planes across observations, make sure the visibilities
+    ; are phased to the common phase centre across observations and pointings (i.e. EoR0 for EoR0 observations)
+    rephase_uv_data, vis_arr, vis_model_arr, vis_weights, obs=obs, params=params
+    obs = structure_update(obs, _Extra={w_phasera: obs.w_phasera, w_phasedec: obs.w_phasedec})
+endif
+if keyword_set(aw_projection) then begin
+    ; If performing aw projection, pre-compute x and y pierce-point grids for the beam pointer
+    psf_dim3 = LONG64(psf.dim*psf.dim)
+    xvals_i=Reform(meshgrid(psf.dim,psf.dim,1)*psf.resolution,psf_dim3)
+    yvals_i=Reform(meshgrid(psf.dim,psf.dim,2)*psf.resolution,psf_dim3)
+    ; Precompute index arrays for main block
+    x_grid = ulong(rebin(xvals_i, psf_dim3, psf.resolution) + rebin(transpose(lindgen(psf.resolution)), psf_dim3, psf.resolution))
+    y_grid = ulong(rebin(yvals_i, psf_dim3, psf.resolution) + rebin(transpose(lindgen(psf.resolution)), psf_dim3, psf.resolution))
+endif
 
 IF Keyword_Set(model_flag) THEN model_uv_holo=Ptrarr(n_pol,/allocate)
 IF N_Elements(weights_grid) EQ 0 THEN weights_grid=1
@@ -23,7 +40,8 @@ FOR pol_i=0,n_pol-1 DO BEGIN
         timing=t_grid0,polarization=pol_i,weights=weights_grid,silent=silent,uniform_filter=uniform_filter,$
         mapfn_recalculate=mapfn_recalculate,return_mapfn=return_mapfn,error=error,no_save=no_save,$
         model_return=model_return,model_ptr=vis_model_arr[pol_i],preserve_visibilities=preserve_vis_grid,$
-        no_conjugate=no_conjugate,_Extra=extra)
+        no_conjugate=no_conjugate,wstacking=wstacking,$
+            aw_projection=aw_projection,x_grid=x_grid,y_grid=y_grid,_Extra=extra)
     IF Keyword_Set(error) THEN BEGIN
         print,"Error occured during gridding. Returning."
         IF Keyword_Set(!Journal) THEN Journal ;write and close log file if present
