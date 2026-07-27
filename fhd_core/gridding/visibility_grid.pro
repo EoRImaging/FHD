@@ -7,7 +7,7 @@ FUNCTION visibility_grid,visibility_ptr,vis_weight_ptr,obs,status_str,psf,params
     error=error,grid_uniform=grid_uniform,$
     grid_spectral=grid_spectral,spectral_uv=spectral_uv,spectral_model_uv=spectral_model_uv,$
     beam_per_baseline=beam_per_baseline,uv_grid_phase_only=uv_grid_phase_only,wstacking=wstacking, $
-    aw_projection=aw_projection,w_bin=w_bin,n_bin_use_stack=n_bin_use_stack,x_grid=x_grid,y_grid=y_grid,$
+    aw_projection=aw_projection,x_grid=x_grid,y_grid=y_grid,$
     _Extra=extra
 t0_0=Systime(1)
 heap_gc
@@ -40,7 +40,7 @@ bin_n = baseline_grid_locations(obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,r
   dx0dy0_arr=dx0dy0_arr,dx0dy1_arr=dx0dy1_arr,dx1dy0_arr=dx1dy0_arr,dx1dy1_arr=dx1dy1_arr,$
   x_offset=x_offset,y_offset=y_offset,preserve_visibilities=preserve_visibilities,$
   mask_mirror_indices=mask_mirror_indices,wstacking=wstacking,aw_projection=aw_projection,$
-  w_info=w_info,polarization=polarization)
+  w_info=w_info,ww_arr=ww_arr,polarization=polarization)
 
 ; Use indices of visibilities to grid during this call (i.e. specific freqs, time sets)
 ; to initialize output arrays
@@ -205,41 +205,48 @@ IF keyword_set(wstacking) OR keyword_set(aw_projection) THEN BEGIN
     n_w_stack = w_info.n_w_stack
     n_bin_use_stack = n_bin_use
 
-    lm_term = 2 * !DPi * (w_info.lm - 1)
-
-    psf_resolution_m1 = psf_resolution-1
-
-    shift_dim = (psf.dim*psf.resolution) / 2
-    shift_dim_m1 = shift_dim-1
-    n_axis = psf.dim * psf.resolution
-    slice_range_m1 = n_axis-shift_dim-1
-    slice_range = n_axis-shift_dim
-    n_axis_m1 = n_axis-1 
-    psf_base_superres = ComplexArr(n_axis, n_axis)
-
-    beam_mask_threshold = w_info.max_amp * 1e-8
-    beam_mask_threshold2 = beam_mask_threshold^2
-
     inside_horizon_inds = w_info.inside_horizon_inds
+    lm_term = 2 * !DPi * (w_info.lm[inside_horizon_inds] - 1)
+    taper = w_info.taper[inside_horizon_inds]
 
     n_vis = w_info.n_vis
-    beam2_int = DBLARR(N_elements(freq_bin_i))
+    obs.nf_vis=w_info.n_vis_arr
+
+    idx2d = Reverse(Reverse(Lindgen(psf_dim, psf_dim), 1), 2)
+    flip_idx = Reform(idx2d, psf_dim^2)
 
     if keyword_set(aw_projection) then begin
-        cache_image_power_beam_inside = ComplexArr(N_elements(inside_horizon_inds), N_elements(freq_bin_i))
+        ; Caching variables for aw-projection to avoid redundant calculations and memory allocations across w-stacks
+
+        n_axis = psf.dim * psf.resolution
+        psf_base_superres = DComplexArr(n_axis, n_axis)
+
+        psf_resolution_m1 = psf_resolution-1
+        y_last = y_grid[*,psf_resolution_m1]
+        x_last = x_grid[*,psf_resolution_m1]
+        beam2_int = DBLARR(N_elements(freq_bin_i))
+
+        cache_image_power_beam_inside = DComplexArr(N_elements(inside_horizon_inds), N_elements(freq_bin_i))
+        psf_single_cache = PtrArr(N_elements(freq_bin_i), /NOZERO)
         FOR fii=0L, N_elements(freq_bin_i)-1 DO BEGIN
             temp = w_info.image_power_beam_arr[*,*,fii]
             cache_image_power_beam_inside[*, fii] = temp[inside_horizon_inds]
+            psf_single = PtrArr(psf_resolution+1, psf_resolution+1, /NOZERO)
+            FOR i=0,psf_resolution DO FOR j=0,psf_resolution DO $
+                psf_single[i,j] = PTR_NEW(ComplexArr(psf_dim3))
+            psf_single_cache[fii] = PTR_NEW(psf_single)
         ENDFOR
-        image_power_beam_arr = w_info.image_power_beam_arr[*,*,0] ;initialize array
-        vector_complex = ComplexArr(N_elements(image_power_beam_arr))
+
+        image_power_beam_arr = dcomplexarr(n_axis,n_axis) ;initialize array
+        vector_complex = dComplexArr(N_elements(image_power_beam_arr))
         mags = DblArr(N_elements(image_power_beam_arr))
+
     endif
 
 ENDIF ELSE n_w_stack=1
 
 FOR w_stack_i=0, n_w_stack-1 DO BEGIN
-  
+
     IF keyword_set(wstacking) OR keyword_set(aw_projection) THEN BEGIN
 
         ;; Grab the w-stacking histograms and parameters for the current iteration
@@ -255,17 +262,12 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
 
         ; Compute the exponential correction factor for the w-stacking using the fastest method.
         ; Already preshifted for the fft
-        exp_w = w_info.w_bin[w_stack_i] * lm_term[inside_horizon_inds]
-        exp_w = complex(cos(exp_w), sin(exp_w))
+        exp_w = w_info.w_bin[w_stack_i] * lm_term
+        exp_w = dcomplex(cos(exp_w), -sin(exp_w)) * taper
 
         if keyword_set(aw_projection) then begin
             ;; W-project the image of the power beam to the current w-stack and recalculate the 
             ;; hyperresolved beam kernel for each frequency bin
-
-            ; Set pointers outside the freq loop once to reduce pointer overhead
-            psf_single = PtrArr(psf_resolution+1, psf_resolution+1, /NOZERO)
-            FOR i=0,psf_resolution DO FOR j=0,psf_resolution DO $
-                psf_single[i,j] = PTR_NEW(ComplexArr(psf_dim3))
 
             for fii=0, N_elements(freq_bin_i)-1 do begin
 
@@ -274,44 +276,45 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
                 image_power_beam_arr[inside_horizon_inds] = cache_image_power_beam_inside[*,fii] * exp_w
 
                 ; Fourier transform the w-corrected image power beam to uv-space
-                fft_result = FFT(image_power_beam_arr ,double=double_precision, /overwrite)
+                fft_result = fft_shift(FFT(image_power_beam_arr, double=1))
 
-                ; Create shifted array manually for speed
-                psf_base_superres[0:slice_range_m1, 0:slice_range_m1] = fft_result[shift_dim:n_axis_m1, shift_dim:n_axis_m1]
-                psf_base_superres[slice_range:n_axis_m1, 0:slice_range_m1] = fft_result[0:shift_dim_m1, shift_dim:n_axis_m1]
-                psf_base_superres[0:slice_range_m1, slice_range:n_axis_m1] = fft_result[shift_dim:n_axis_m1, 0:shift_dim_m1]
-                psf_base_superres[slice_range:n_axis_m1, slice_range:n_axis_m1] = fft_result[0:shift_dim_m1, 0:shift_dim_m1]
-
-                ; Quickly find the indices where the uv-space hyperresolved kernel is above a threshold
-                ; Faster than using abs
-                re = real_part(psf_base_superres) 
-                im = imaginary(psf_base_superres)
-                beam_mask = (re*re + im*im) GT beam_mask_threshold2[fii]
-
-                beam_inds = where(beam_mask, n_beam, complement=zero_inds, ncomplement=n_zero)
-
-                ; Set indices below the threshold to zero
-                psf_base_superres[zero_inds] = 0
+                ; Find the beam inds which are above a threshold calculated from the estimated noise level caused by the FFT
+                ; Noise level is estimated from the mean of the edge of the array. Threshold is half a dec above that
+                mags_2d = abs(fft_result)
+                beam_inds = where(mags_2d GT mean([reform(mags_2d[0:n_axis-1,0]), reform(mags_2d[0,0:n_axis-1])],/nan)*5) 
+                n_beam = N_elements(beam_inds)
 
                 ; Move the kernel floor to zero in amplitude only
                 ; Place the selected values into a vector for faster operations
-                vector_complex[0:n_beam-1] = psf_base_superres[beam_inds]
+                vector_complex[0:n_beam-1] = fft_result[beam_inds]
 
                 ; Compute magnitudes of the vector. Needing to renormalize via the amp means that creating this variable is faster overall
-                mags[0:n_beam-1] = Abs(vector_complex[0:n_beam-1])
+                mags[0:n_beam-1] = mags_2d[beam_inds]
+                min_abs = min(mags[0:n_beam-1])
 
                 ; Subtract threshold and clamp to 0
-                mag_minus_thr = (mags[0:n_beam-1] - beam_mask_threshold[fii]) > 0.0
+                mag_minus_thr = (mags[0:n_beam-1] - min_abs) > 0.0
 
                 ; w-corrected and clipped hyperresolved beam kernel for current frequency bin and w-stack
-                ; psf_base_superres[beam_inds] = (vector_complex[0:n_beam-1] / mags[0:n_beam-1]) * mag_minus_thr
-                vector_complex[0:n_beam-1] = (vector_complex[0:n_beam-1] / mags[0:n_beam-1]) * mag_minus_thr
+                vector_complex[0:n_beam-1] *= (mag_minus_thr / mags[0:n_beam-1])
 
                 ; w-corrected, clipped, renormalized, fft-normed hyperresolved beam kernel for current frequency bin and w-stack
-                norm_factor = psf_resolution3 / Total(vector_complex[0:n_beam-1])
-                psf_base_superres[beam_inds] = norm_factor * vector_complex[0:n_beam-1]
+                norm_factor = psf_resolution3 / Total(abs(vector_complex[0:n_beam-1]),/double)
+                vector_complex[0:n_beam-1] *= norm_factor
+                ; Set indices below the threshold to zero
+                psf_base_superres[beam_inds] = vector_complex[0:n_beam-1]
 
-                ; ; Place the new beam kernel into the expected beam array
+                ; Calculate the squared beam integral for cosmological volume measurements
+                ; Extract once to avoid multiple gathers
+                re = real_part(vector_complex[0:n_beam-1]) 
+                im = imaginary(vector_complex[0:n_beam-1])
+                ; Sum of squares is faster than z*conj(z) or abs(z)^2
+                beam_power_sum = TOTAL(re*re + im*im, /DOUBLE)
+
+                beam2_int[fii]+=w_info.n_freq_vis_w[fii,w_stack_i]*beam_power_sum
+
+                ;; Place the new beam kernel into the expected beam array
+                psf_single = *psf_single_cache[fii]
                 FOR i=0,psf_resolution_m1 DO BEGIN
                     xi = x_grid[*,i]
                     FOR j=0,psf_resolution_m1 DO BEGIN
@@ -321,26 +324,16 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
                     ENDFOR
                     ;Edge cases
                     *psf_single[psf_resolution_m1-i,psf_resolution]=(reform(shift(reform($
-                        psf_base_superres[xi,y_grid[*,psf_resolution_m1]],psf_dim,psf_dim),0,1),psf_dim3))
+                        psf_base_superres[xi,y_last],psf_dim,psf_dim),0,1),psf_dim3))
                     *psf_single[psf_resolution,psf_resolution_m1-i]=(reform(shift(reform($
-                        psf_base_superres[y_grid[*,psf_resolution_m1],xi],psf_dim,psf_dim),1,0),psf_dim3))
+                        psf_base_superres[x_last,y_grid[*,i]],psf_dim,psf_dim),1,0),psf_dim3))
                 ENDFOR
                 ;Corner case
                 *psf_single[psf_resolution,psf_resolution]=(reform(shift(reform($
-                    psf_base_superres[x_grid[*,psf_resolution_m1], y_grid[*,psf_resolution_m1]],psf_dim,psf_dim),1,1),psf_dim3))
+                    psf_base_superres[x_last, y_last],psf_dim,psf_dim),1,1),psf_dim3))
 
-                beam_arr[polarization,freq_bin_i[fii],*]=Ptr_new(psf_single)
-
-                ; Calculate the squared beam integral for cosmological volume measurements
-                ; Extract once to avoid multiple gathers
-                vc = psf_base_superres[beam_inds]
-                ; Work in single or double (match your precision needs)
-                re = real_part(vc) 
-                im = imaginary(vc)
-                ; Sum of squares is faster than z*conj(z) or abs(z)^2
-                beam_power_sum = TOTAL(re*re + im*im, /DOUBLE)
-
-                beam2_int[fii]+=w_info.n_freq_vis_w[fii,w_stack_i]*beam_power_sum
+                beam_arr[polarization,freq_bin_i[fii],*]=psf_single_cache[fii]
+                psf_base_superres[beam_inds] = 0
 
             endfor ;for freq loop
         endif ; if aw-projection loop
@@ -369,7 +362,11 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
         
         ; Calculate the number of selected visibilities and their baseline index
         vis_n=bin_n[bin_i[bi]]
-        baseline_inds=bi_use_reduced[(inds/n_f_use) mod nbaselines]
+        bt_inds = inds / n_f_use
+        baseline_inds=bi_use_reduced[bt_inds mod nbaselines]
+
+        ; A flag to check if the conjugate plane of w needs to be flipped. Will be zero for non w-gridding.
+        ww_conj_flag = ww_arr[bt_inds] LT 0
 
         IF interp_flag THEN BEGIN
             ; Calculate the interpolated kernel on the uv-grid given the derivatives to baseline locations
@@ -388,13 +385,27 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
             psf_weight=Replicate(1.,vis_n)
 
             box_matrix=Make_array(psf_dim3,vis_n,type=arr_type)
+            IF ~keyword_set(aw_projection) AND ~keyword_set(wstacking) THEN BEGIN
             FOR ii=0L,vis_n-1 DO BEGIN
                 ; For each visibility, calculate the kernel values on the static uv-grid given the
                 ; hyperresolved kernel and an interpolation involving the derivatives
                 box_matrix[psf_dim3*ii]=$
-                interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
-                y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) 
+                    interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
+                    y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) 
             ENDFOR
+            ENDIF ELSE BEGIN
+            FOR ii=0L,vis_n-1 DO BEGIN
+                if ww_conj_flag[ii] then begin
+                    box_matrix[psf_dim3*ii]=$
+                        interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
+                        y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii], flip_idx=flip_idx) 
+                endif else begin
+                    box_matrix[psf_dim3*ii]=$
+                        interpolate_kernel(*beam_arr[polarization,fbin[ii],baseline_inds[ii]],x_offset=x_off[ii], $
+                        y_offset=y_off[ii], dx0dy0=dx0dy0[ii], dx1dy0=dx1dy0[ii], dx0dy1=dx0dy1[ii], dx1dy1=dx1dy1[ii]) 
+                endelse
+            ENDFOR
+            ENDELSE
 
         ENDIF ELSE BEGIN
             ; Calculate the beam kernel at each baseline location given the hyperresolved pre-calculated
@@ -482,7 +493,6 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
             IF complex_flag THEN box_matrix_dag=Conj(box_matrix) ELSE box_matrix_dag=real_part(box_matrix) 
             IF rep_flag THEN box_matrix*=Rebin(Transpose(psf_weight),psf_dim3,vis_n)
         ENDIF ELSE BEGIN
-        
             IF complex_flag THEN box_matrix_dag=Conj(Temporary(box_matrix)) ELSE box_matrix_dag=Real_part(Temporary(box_matrix))
         ENDELSE
         
@@ -524,15 +534,6 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
             ; of the beam kernel for all vis which contribute to the same static uv-pixels, and add to the static uv-plane
             var_box=matrix_multiply(psf_weight/n_vis,Abs(box_matrix_dag)^2.,/atranspose,/btranspose)
             variance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=Temporary(var_box)
-        ENDIF
-        IF covariance_flag THEN BEGIN
-            ; If variance visibilities are being gridded, calculate the product the weight (1 per vis) and the square
-            ; of the beam kernel for all vis which contribute to the same static uv-pixels, and add to the static uv-plane
-            for vis_i=0, vis_n-1 do begin
-                covar = (matrix_multiply(box_matrix_dag[*,vis_i], conj(box_matrix_dag[*,vis_i]), /btranspose))
-                covar = Reform(covar, psf_dim, psf_dim, psf_dim, psf_dim)
-                covariance[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1,*,*]+=covar
-            endfor
         ENDIF
         IF uniform_flag THEN uniform_filter[xmin_use:xmin_use+psf_dim-1,ymin_use:ymin_use+psf_dim-1]+=bin_n[bin_i[bi]]
         
@@ -578,24 +579,21 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
         ENDIF
     ENDIF
 
-
-
     IF keyword_set(wstacking) THEN BEGIN
         ; Add the w-corrected images for each w-stack to the running total
-
-        image_uv_stack[w_info.inside_horizon_inds] += (fft_shift(FFT(fft_shift(image_uv),double=1)))[w_info.inside_horizon_inds] * exp_w 
+        image_uv_stack[inside_horizon_inds] += (fft_shift(FFT(fft_shift(image_uv),double=1)))[inside_horizon_inds] * exp_w 
         image_uv = init_arr_com
 
         IF weights_flag THEN BEGIN
-            weights_stack[w_info.inside_horizon_inds] += (fft_shift(FFT(fft_shift(weights),double=1)))[w_info.inside_horizon_inds] * exp_w 
+            weights_stack[inside_horizon_inds] += (fft_shift(FFT(fft_shift(weights),double=1)))[inside_horizon_inds] * exp_w 
             weights = init_arr_com  
         ENDIF  
         IF variance_flag THEN BEGIN
-            variance_stack[w_info.inside_horizon_inds] += (fft_shift(FFT(fft_shift(variance),double=1)))[w_info.inside_horizon_inds] * exp_w  
+            variance_stack[inside_horizon_inds] += (fft_shift(FFT(fft_shift(variance),double=1)))[inside_horizon_inds] * exp_w  
             variance = init_arr_real
         ENDIF
         IF model_flag THEN BEGIN
-            model_return_stack[w_info.inside_horizon_inds] += (fft_shift(FFT(fft_shift(model_return),double=1)))[w_info.inside_horizon_inds] * exp_w 
+            model_return_stack[inside_horizon_inds] += (fft_shift(FFT(fft_shift(model_return),double=1)))[inside_horizon_inds] * exp_w 
             model_return = init_arr_com
         ENDIF
         IF uniform_flag THEN BEGIN
@@ -603,7 +601,6 @@ FOR w_stack_i=0, n_w_stack-1 DO BEGIN
             uniform_filter = init_arr_real
         ENDIF
     ENDIF
-
 ENDFOR
 
 IF Keyword_Set(grid_uniform) THEN BEGIN
@@ -645,7 +642,7 @@ IF ~Keyword_Set(no_conjugate) THEN BEGIN
     ; The uv-plane is its own conjugate mirror about the x-axis, so fill in the rest of the uv-plane
     ; using simple maths instead of extra gridding
     image_uv=(image_uv+conjugate_mirror(image_uv))/2.
-    IF weights_flag THEN weights=(weights+conjugate_mirror(weights))/2.        
+    IF weights_flag THEN weights=(weights+conjugate_mirror(weights))/2.
     IF variance_flag THEN variance=(variance+conjugate_mirror(variance))/4.
     IF model_flag THEN model_return=(model_return+conjugate_mirror(model_return))/2.
     IF uniform_flag THEN uniform_filter=(uniform_filter+conjugate_mirror(uniform_filter))/2.

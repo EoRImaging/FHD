@@ -1,78 +1,69 @@
-function rotation_matrix, a=a, b=b, obs=obs
-; rotation from a into b
-
-  ; Cross product and dot product
-  v = crossp(a, b)
-  c = total(a * b)
-  s = sqrt(total(v^2))
-
-  if s EQ 0.0 then begin
-    if c GT 0.0 then return, identity(3)  ; no rotation
-    ; 180-degree rotation: choose orthogonal axis
-    if abs(a[0]) LT 0.9 then axis = [1.0, 0.0, 0.0] else axis = [0.0, 1.0, 0.0]
-    v = crossp(a, axis)
-    v = v / sqrt(total(v^2))
-    vx = [[ 0,     -v[2],  v[1]], $
-          [ v[2],   0,    -v[0]], $
-          [-v[1],  v[0],   0   ]]
-    return, identity(3) + 2.0 * matrix_multiply(vx, vx)
-  endif
-
-  ; Skew-symmetric matrix of v
-  vx = [[ 0,     -v[2],  v[1]], $
-        [ v[2],   0,    -v[0]], $
-        [-v[1],  v[0],   0   ]]
-
-  ; Compute the rotation matrix
-  R = identity(3) + vx + matrix_multiply(vx, vx) * ((1.0 - c) / (s^2))
-
-  return, R
-end
-
-; === MAIN: Rephase visibilities to a common phase centre across observations and pointings
-; === i.e. point to EoR0 for EoR0 observations.
-pro rephase_uv_data, vis_data_arr, vis_model_arr, vis_weights_use, obs, params=params
+; Rephase visibilities to a common phase centre across observations and pointings
+pro rephase_uv_data, vis_data_arr, vis_model_arr, vis_weights_use, obs=obs, params=params, $
+  w_phasera=w_phasera, w_phasedec=w_phasedec
 
   n_pol=obs.n_pol
   uu = params.uu
   vv = params.vv
   ww = params.ww
 
-  ra  = obs.phasera  * !dpi / 180.0
-  dec = obs.phasedec * !dpi / 180.0
-  x = cos(dec) * cos(ra)
-  y = cos(dec) * sin(ra)
-  z = sin(dec)
-  phase_centre_vec = [x, y, z]
+  if ~keyword_set(w_phasera) then w_phasera = obs.orig_phasera
+  if ~keyword_set(w_phasedec) then w_phasedec = obs.orig_phasedec
+  ; Store for later astrometry / WCS use
+  obs = structure_update(obs, _Extra={w_phasera: w_phasera, w_phasedec: w_phasedec})
 
-  ra  = obs.orig_phasera  * !dpi / 180.0
-  dec = obs.orig_phasedec * !dpi / 180.0
-  x = cos(dec) * cos(ra)
-  y = cos(dec) * sin(ra)
-  z = sin(dec)
-  orig_phase_centre_vec = [x, y, z]
+  ; Calculate the rotation to the common phase centre for the visibilities through
+  ; directional cosines to new phase centre expressed in the old tangent frame
+  ra0  = obs.phasera  * !dpi / 180d
+  dec0 = obs.phasedec * !dpi / 180d
+  ra_w  = w_phasera    * !dpi / 180d
+  dec_w = w_phasedec   * !dpi / 180d
+  dra = ra_w - ra0
 
-  ; Get rotation matrix to align the fitted plane with the z-axis
-  R = rotation_matrix(a=phase_centre_vec, b=orig_phase_centre_vec)
+  l0 = cos(dec_w) * sin(dra)
+  m0 = sin(dec_w) * cos(dec0) - cos(dec_w) * sin(dec0) * cos(dra)
+  n0 = sin(dec0) * sin(dec_w) + cos(dec0) * cos(dec_w) * cos(dra)
 
-  ; Apply phase shift to visibilities
   freq_arr = (*obs.baseline_info).freq
-  delta_phase_centre =  orig_phase_centre_vec - phase_centre_vec
-  phase = - 2.0 * !dpi * (freq_arr#(uu * delta_phase_centre[0])  + freq_arr#(vv * delta_phase_centre[1])  + freq_arr#(ww * delta_phase_centre[2])) 
+  ;phase = 2d * !dpi * (freq_arr # (uu*l0 + vv*m0 + ww*(n0 - 1d)))
+  phase = 2d * !dpi * (freq_arr # (uu*l0 + vv*m0 - ww*(n0 - 1d)))
+  exp_rotate = complex(cos(phase), -sin(phase))
 
-  ; Rotate UVW
-  uvw_out = matrix_multiply(R, transpose([[uu], [vv], [ww]]),/atranspose)
-
-  params.uu = reform(uvw_out[0, *])
-  params.vv = reform(uvw_out[1, *])
-  params.ww = reform(uvw_out[2, *])
-
-  exp_rotate = complex(cos(phase), sin(phase))
-
+  ; Rephase the visibilities and models (if present) to the new phase centre.
   for pol_i=0, n_pol-1 do begin
     *vis_data_arr[pol_i] = *vis_data_arr[pol_i] * exp_rotate
     if vis_model_arr[pol_i] NE !Null then *vis_model_arr[pol_i] = *vis_model_arr[pol_i] * exp_rotate
   endfor
+
+  ; Now, calculate the rotation to the common phase centre for the uvw coordinates through 
+  ; Cartesian vectors and rotation matrices.
+  ; Columns are the local tangent basis vectors in celestial Cartesian coords:
+  ;   col 0 = east  (u)
+  ;   col 1 = north (v)
+  ;   col 2 = source direction (w)
+  tangent_0 = dblarr(3, 3)
+  tangent_0[*,0] = [-sin(ra0), cos(ra0), 0d]
+  tangent_0[*,1] = [-sin(dec0)*cos(ra0), -sin(dec0)*sin(ra0), cos(dec0)]
+  tangent_0[*,2] = [cos(dec0)*cos(ra0), cos(dec0)*sin(ra0), sin(dec0)]
+
+  tangent_w = dblarr(3, 3)
+  tangent_w[*,0] = [-sin(ra_w), cos(ra_w), 0d]
+  tangent_w[*,1] = [-sin(dec_w)*cos(ra_w), -sin(dec_w)*sin(ra_w), cos(dec_w)]
+  tangent_w[*,2] = [cos(dec_w)*cos(ra_w), cos(dec_w)*sin(ra_w), sin(dec_w)]
+
+  ; Transformation matrix from old tangent frame -> new tangent frame
+  T = matrix_multiply(transpose(tangent_w), tangent_0)
+
+  ; Rotate UVW
+  uvw_mat = dblarr(3, n_elements(uu))
+  uvw_mat[0,*] = uu
+  uvw_mat[1,*] = vv
+  uvw_mat[2,*] = ww 
+  uvw_out = matrix_multiply(T, uvw_mat)
+
+  params.uu = reform(uvw_out[0, *])
+  params.vv = reform(uvw_out[1, *])
+  params.ww = reform(uvw_out[2, *])
 
   return
 

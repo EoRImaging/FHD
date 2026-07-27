@@ -1,5 +1,5 @@
 function l_m_n, obs, psf, obsdec=obsdec, obsra=obsra, dec_arr=dec_arr, ra_arr=ra_arr,$
-    l_mode=l_mode,m_mode=m_mode
+    l_mode=l_mode,m_mode=m_mode,extend=extend
 
 if ~keyword_set(obsdec) then obsdec = obs.obsdec
 if ~keyword_set(obsra) then obsra = obs.obsra
@@ -18,12 +18,12 @@ m_mode = sdec*cdec0 - cdec*sdec0*cdra
 ;n=1 at phase center, so reference from there for phase tracking
 n_tracked = (sdec*sdec0 + cdec*cdec0*cdra) - 1.
 
-nan_vals=where(finite(n_tracked, /nan),n_count)
-if n_count GT 0 then begin
-    n_tracked[nan_vals]=0
-    l_mode[nan_vals]=0
-    m_mode[nan_vals]=0
-endif
+; nan_vals=where(finite(n_tracked, /nan),n_count)
+; if n_count GT 0 then begin
+;     n_tracked[nan_vals]=0
+;     l_mode[nan_vals]=0
+;     m_mode[nan_vals]=0
+; endif
 
 return, n_tracked
 

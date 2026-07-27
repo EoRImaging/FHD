@@ -86,7 +86,8 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
   ENDIF
   vis_n_arr=Fltarr(n_pol,nf)
   
-  IF Keyword_Set(rephase_weights) THEN rephase_use=phase_shift_uv_image(obs_out,/to_orig_phase) ELSE rephase_use=1.
+  IF Keyword_Set(rephase_weights) AND ~keyword_set(wstacking) AND ~keyword_set(aw_projection) THEN $
+    rephase_use=phase_shift_uv_image(obs_out,/to_orig_phase) ELSE rephase_use=1.
   IF Keyword_Set(fft) THEN init_arr=Fltarr(dimension,dimension) ELSE init_arr=Complexarr(dimension,dimension)
   IF N_Elements(x_range)<N_Elements(y_range) GT 0 THEN init_arr=extract_subarray(init_arr,x_range,y_range)
 
@@ -98,8 +99,6 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
     n_vis_use=0.
 
     if keyword_set(save_uvf) then begin
-      n_bin_use_stack_full = PTRARR(nf,/allocate)
-      w_bin_full = PTRARR(nf,/allocate)
       if obs.double_precision then begin
         dirty_uv_arr=dcomplexarr(dimension, dimension, nf)
         weights_uv_arr=dcomplexarr(dimension, dimension, nf)
@@ -113,7 +112,8 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       endelse
     endif
 
-    if keyword_set(wstacking) OR keyword_set(aw_projection) then begin
+    if keyword_set(aw_projection) then begin
+      ; If performing aw projection, pre-compute x and y pierce-point grids for the beam pointer
       psf_dim3 = LONG64(psf_out.dim*psf_out.dim)
       xvals_i=Reform(meshgrid(psf_out.dim,psf_out.dim,1)*psf_out.resolution,psf_dim3)
       yvals_i=Reform(meshgrid(psf_out.dim,psf_out.dim,2)*psf_out.resolution,psf_dim3)
@@ -130,7 +130,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
         dirty_UV=visibility_grid(vis_ptr,vis_weights_use[pol_i],obs_out,0,psf_out,params,timing=t_grid0,fi_use=fi_use,bi_use=bi_use,$
             polarization=pol_i,weights=weights_holo,variance=variance_holo,silent=1,mapfn_recalculate=0,$
             model_ptr=model_ptr,n_vis=n_vis,/preserve_visibilities,model_return=model_return,wstacking=wstacking,$
-            aw_projection=aw_projection,w_bin=w_bin,n_bin_use_stack=n_bin_use_stack,x_grid=x_grid,y_grid=y_grid, _Extra=extra)
+            aw_projection=aw_projection,x_grid=x_grid,y_grid=y_grid, _Extra=extra)
       IF n_vis EQ 0 THEN BEGIN
         *dirty_arr[pol_i,fi]=init_arr
         *weights_arr[pol_i,fi]=init_arr
@@ -142,8 +142,6 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
       vis_n_arr[pol_i,fi]=n_vis
       
       if keyword_set(save_uvf) then begin
-        *w_bin_full[fi] = w_bin
-        *n_bin_use_stack_full[fi] = n_bin_use_stack
         dirty_uv_arr[*, *, fi]=dirty_uv*n_vis
         weights_uv_arr[*, *, fi]=weights_holo*rephase_use*n_vis
         variance_uv_arr[*, *, fi]=variance_holo*rephase_use*n_vis
@@ -181,7 +179,7 @@ FUNCTION vis_model_freq_split,obs,status_str,psf,params,vis_weights,model_uv_arr
   
     IF keyword_set(save_uvf) THEN BEGIN
       IF file_test(file_dirname(uvf_filepath[pol_i])) EQ 0 THEN file_mkdir,file_dirname(uvf_filepath[pol_i])
-      save, filename = uvf_filepath[pol_i], dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, w_bin_full, n_bin_use_stack_full, n_avg,/compress
+      save, filename = uvf_filepath[pol_i], dirty_uv_arr, weights_uv_arr, variance_uv_arr, model_uv_arr, obs_out, n_avg,/compress
     ENDIF
 
   ENDFOR

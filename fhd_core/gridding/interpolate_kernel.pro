@@ -1,5 +1,5 @@
 FUNCTION interpolate_kernel, kernel_arr, x_offset=x_offset, y_offset=y_offset, $
-    dx0dy0=dx0dy0, dx1dy0=dx1dy0, dx0dy1=dx0dy1, dx1dy1=dx1dy1
+    dx0dy0=dx0dy0, dx1dy0=dx1dy0, dx0dy1=dx0dy1, dx1dy1=dx1dy1, flip_idx=flip_idx
 
 kernel = *kernel_arr[x_offset, y_offset]*dx0dy0
 kernel += *kernel_arr[x_offset+1, y_offset]*dx1dy0
@@ -26,5 +26,10 @@ kernel += *kernel_arr[x_offset+1, y_offset+1]*dx1dy1
 ;ENDIF
 ;
 ;kernel = kernel_0_0*(1-dx)*(1-dy) + kernel_1_0*(dx)*(1-dy) + kernel_0_1*(1-dx)*dy + kernel_1_1*dx*dy
+
+if keyword_set(flip_idx) then begin
+    kernel = conj(kernel[flip_idx])
+endif
+
 RETURN, kernel
 END

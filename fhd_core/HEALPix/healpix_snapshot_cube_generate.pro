@@ -136,7 +136,8 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
   if keyword_set(wstacking) OR keyword_set(aw_projection) then begin
     ; If performing analysis for combining uvw planes across observations, make sure the visibilities
     ; are phased to the common phase centre across observations and pointings (i.e. EoR0 for EoR0 observations)
-    rephase_uv_data, vis_arr, vis_model_arr, vis_weights_use, obs_in_ref, params=params
+    rephase_uv_data, vis_arr, vis_model_arr, vis_weights_use, obs=obs_in_ref, params=params
+    obs_out_ref = structure_update(obs_out_ref, _Extra={w_phasera: obs_in_ref.w_phasera, w_phasedec: obs_in_ref.w_phasedec})
   endif
 
   FOR iter=0,n_iter-1 DO BEGIN
@@ -160,45 +161,48 @@ PRO healpix_snapshot_cube_generate,obs_in,status_str,psf_in,cal,params,vis_arr,v
     FOR freq_i=0L,n_freq_use-1 DO nf_vis_use[freq_i]=Total(nf_vis[freq_i*n_avg:(freq_i+1)*n_avg-1])
 
     t_hpx0=Systime(1)
+    if ~keyword_set(wstacking) AND ~keyword_set(aw_projection) then begin    
+      ; Create HEALPix cubes for non-w corrected integrations. 
+      
+      arr_fn = (double_precision) ? 'dblarr' : 'fltarr'
 
-    arr_fn = (double_precision) ? 'dblarr' : 'fltarr'
+      beam_squared_cube = call_function(arr_fn, n_hpx, n_freq_use)
+      weights_cube      = call_function(arr_fn, n_hpx, n_freq_use)
+      variance_cube     = call_function(arr_fn, n_hpx, n_freq_use)
+      IF residual_flag THEN res_cube = call_function(arr_fn, n_hpx, n_freq_use)
+      IF dirty_flag    THEN dirty_cube = call_function(arr_fn, n_hpx, n_freq_use)
+      IF model_flag    THEN model_cube = call_function(arr_fn, n_hpx, n_freq_use)
 
-    beam_squared_cube = call_function(arr_fn, n_hpx, n_freq_use)
-    weights_cube      = call_function(arr_fn, n_hpx, n_freq_use)
-    variance_cube     = call_function(arr_fn, n_hpx, n_freq_use)
-    IF residual_flag THEN res_cube = call_function(arr_fn, n_hpx, n_freq_use)
-    IF dirty_flag    THEN dirty_cube = call_function(arr_fn, n_hpx, n_freq_use)
-    IF model_flag    THEN model_cube = call_function(arr_fn, n_hpx, n_freq_use)
+        FOR pol_i=0,n_pol-1 DO BEGIN
 
-    FOR pol_i=0,n_pol-1 DO BEGIN
+            FOR freq_i=Long64(0),n_freq_use-1 DO BEGIN
 
-        FOR freq_i=Long64(0),n_freq_use-1 DO BEGIN
+                beam_squared_cube[n_hpx*freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv)
+                weights_cube[n_hpx*freq_i]=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv)
+                variance_cube[n_hpx*freq_i]=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv)
 
-            beam_squared_cube[n_hpx*freq_i]=healpix_cnv_apply((*beam_arr[pol_i,freq_i])*nf_vis_use[freq_i],hpx_cnv,double_precision=double_precision)
-            weights_cube[n_hpx*freq_i]=healpix_cnv_apply((*weights_arr1[pol_i,freq_i]),hpx_cnv,double_precision=double_precision)
-            variance_cube[n_hpx*freq_i]=healpix_cnv_apply((*variance_arr1[pol_i,freq_i]),hpx_cnv,double_precision=double_precision)
+                IF residual_flag THEN BEGIN
+                    res_cube[n_hpx*freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv)
+                ENDIF
+                IF dirty_flag THEN BEGIN
+                    dirty_cube[n_hpx*freq_i]=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv)
+                ENDIF
+                IF model_flag THEN BEGIN
+                    model_cube[n_hpx*freq_i]=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv)
+                ENDIF
 
-            IF residual_flag THEN BEGIN
-                res_cube[n_hpx*freq_i]=healpix_cnv_apply((*residual_arr1[pol_i,freq_i]),hpx_cnv,double_precision=double_precision)
-            ENDIF
-            IF dirty_flag THEN BEGIN
-                dirty_cube[n_hpx*freq_i]=healpix_cnv_apply((*dirty_arr1[pol_i,freq_i]),hpx_cnv,double_precision=double_precision)
-            ENDIF
-            IF model_flag THEN BEGIN
-                model_cube[n_hpx*freq_i]=healpix_cnv_apply((*model_arr1[pol_i,freq_i]),hpx_cnv,double_precision=double_precision)
-            ENDIF
+            ENDFOR
+
+            ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
+            fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save,_Extra=extra
+            IF file_test(file_dirname(path_use)) EQ 0 THEN file_mkdir,file_dirname(path_use)
+            save,filename=path_use+'.sav',/compress,dirty_cube,model_cube,weights_cube,variance_cube,res_cube,beam_squared_cube,$
+                obs,nside,hpx_inds,n_avg
+            ;call fhd_save_io a second time to update the status structure now that the file has actually been written
+            fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force,_Extra=extra
 
         ENDFOR
-
-        ;call fhd_save_io first to obtain the correct path. Will NOT update status structure yet
-        fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,path_use=path_use,/no_save,_Extra=extra
-        IF file_test(file_dirname(path_use)) EQ 0 THEN file_mkdir,file_dirname(path_use)
-        save,filename=path_use+'.sav',/compress,dirty_cube,model_cube,weights_cube,variance_cube,res_cube,beam_squared_cube,$
-            obs,nside,hpx_inds,n_avg
-        ;call fhd_save_io a second time to update the status structure now that the file has actually been written
-        fhd_save_io,status_str,file_path_fhd=file_path_fhd,var=cube_name[iter],pol_i=pol_i,/force,_Extra=extra
-
-    ENDFOR
+    endif    
 
     IF Keyword_Set(save_imagecube) THEN BEGIN
         save, filename = imagecube_filepath[iter], dirty_arr1, residual_arr1, model_arr1, weights_arr1, variance_arr1, beam_arr, nf_vis_use, obs_out, /compress
