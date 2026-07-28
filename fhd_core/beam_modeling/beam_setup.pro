@@ -204,6 +204,14 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     gi_use=where(group_matrix,n_group)
     freq_center=antenna[0].freq ;all antennas need to have the same frequency coverage, so just take the first
 
+    if (n_group gt 1) and (keyword_set(beam_param_transfer) or keyword_set(beam_function_decomp)) then begin
+      print, "Functional decomposition of the beam does not support multiple beam groups at the moment."
+      print, "Setting beam groups from " + strtrim(n_group,2) + " to 1"
+      n_group = 1
+      gi_use = 0
+
+    endif
+
     FOR freq_i=0,nfreq_bin-1 DO BEGIN
       t2_a=Systime(1)
 
@@ -329,16 +337,12 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   if keyword_set(save_beam_metadata_only) then begin
     fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
   endif
-
-<<<<<<< HEAD
   psf = structure_update(psf,_Extra={beam_ptr:Ptr_new(beam_arr)})
 
   if ~keyword_set(save_beam_metadata_only) then begin
     fhd_save_io,status_str,psf,var='psf',/compress,file_path_fhd=file_path_fhd,no_save=no_save
   endif
 
-=======
->>>>>>> 52aa62f5 (discrete sq beam volume for gauss decomp)
   fhd_save_io,status_str,obs,var='obs',/compress,file_path_fhd=file_path_fhd
   fhd_save_io,status_str,antenna,var='antenna',/compress,file_path_fhd=file_path_fhd,no_save=~save_antenna_model
   IF not antenna_flag THEN undefine_fhd,antenna
