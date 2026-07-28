@@ -155,8 +155,8 @@ FUNCTION lofar_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
 
         ; Get the combination of F_phase and K (pseudo, or old K), 
         ; which is easily solvable because the inverse of F is the reciprocal
-        pseudo_K = [[[J00 / F[*,0]], [J01 / F[*,0]]], $
-                    [[J10 / F[*,1]], [J11 / F[*,1]]]]
+        pseudo_K = [[[J00 / F_mag[*,0]], [J01 / F_mag[*,0]]], $
+                    [[J10 / F_mag[*,1]], [J11 / F_mag[*,1]]]]
 
         J00[flip_inds_J00] *= -1
         J01[flip_inds_J01] *= -1
@@ -168,8 +168,8 @@ FUNCTION lofar_beam_setup_gain,obs,antenna,file_path_fhd=file_path_fhd,$
             [exp(icomp * atan(imaginary(J10+J11), real_part(J10+J11)))]]
 
         ; K_proj is the polarisation-dependent (projection) response which should be tile-independent
-        K_proj = [[[ pseudo_K[*,0,0] / D[*, 0] ], [ pseudo_K[*,0,1] / D[*, 0] ]], $
-            [[ pseudo_K[*,1,0] / D[*, 1] ], [ pseudo_K[*,1,1] / D[*, 1] ]]]
+        K_proj = [[[ pseudo_K[*,0,0] / F_phase[*, 0] ], [ pseudo_K[*,0,1] / F_phase[*, 0] ]], $
+            [[ pseudo_K[*,1,0] / F_phase[*, 1] ], [ pseudo_K[*,1,1] / F_phase[*, 1] ]]]
 
         ; Dummy matrix for intermediate steps
         input_matrix = Dcomplexarr(nside,nside)
