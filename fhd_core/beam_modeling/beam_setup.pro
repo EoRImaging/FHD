@@ -3,7 +3,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   psf_image_resolution=psf_image_resolution,swap_pol=swap_pol,no_save=no_save,$
   beam_model_version=beam_model_version,beam_dim_fit=beam_dim_fit,save_antenna_model=save_antenna_model,$
   interpolate_kernel=interpolate_kernel,transfer_psf=transfer_psf,beam_per_baseline=beam_per_baseline,$
-  beam_function_decomp=beam_function_decomp,beam_param_transfer=beam_param_transfer,$
+  beam_function_decomp=beam_function_decomp,beam_param_transfer=beam_param_transfer,beam_width_deg=beam_width_deg,$
   save_beam_metadata_only=save_beam_metadata_only,_Extra=extra
 
   compile_opt idl2,strictarrsubs
@@ -119,7 +119,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   antenna=fhd_struct_init_antenna(obs,beam_model_version=beam_model_version,psf_resolution=psf_resolution,psf_dim=psf_dim,$
     psf_intermediate_res=psf_intermediate_res,psf_image_resolution=psf_image_resolution,timing=t_ant,$
     ra_arr=ra_arr,dec_arr=dec_arr,beam_per_baseline=beam_per_baseline,beam_function_decomp=beam_function_decomp,$
-    beam_param_transfer=beam_param_transfer,_Extra=extra)
+    beam_param_transfer=beam_param_transfer,beam_width_deg=beam_width_deg,_Extra=extra)
 
   IF Keyword_Set(swap_pol) THEN pol_arr=[[1,1],[0,0],[1,0],[0,1]] ELSE pol_arr=[[0,0],[1,1],[0,1],[1,0]]
 
@@ -204,14 +204,6 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
     gi_use=where(group_matrix,n_group)
     freq_center=antenna[0].freq ;all antennas need to have the same frequency coverage, so just take the first
 
-    if (n_group gt 1) and (keyword_set(beam_param_transfer) or keyword_set(beam_function_decomp)) then begin
-      print, "Functional decomposition of the beam does not support multiple beam groups at the moment."
-      print, "Setting beam groups from " + strtrim(n_group,2) + " to 1"
-      n_group = 1
-      gi_use = 0
-
-    endif
-
     FOR freq_i=0,nfreq_bin-1 DO BEGIN
       t2_a=Systime(1)
 
@@ -273,7 +265,7 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           image_power_beam=image_power_beam,pol_i=pol_i,$
           beam_function_decomp=beam_function_decomp,beam_param_transfer=beam_param_transfer,$
           res_super=res_super,psf_superres_dim=psf_superres_dim,$
-          beam_decomp_info=beam_decomp_info,_Extra=extra)
+          beam_decomp_info=beam_decomp_info,beam_width_deg=beam_width_deg,_Extra=extra)
 
         ; divide by psf_resolution^2 since the FFT is done at a different resolution and requires a different normalization
         beam_int+=baseline_group_n*Total(psf_base_superres,/double)/psf_resolution^2.

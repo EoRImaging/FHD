@@ -5,7 +5,7 @@ FUNCTION fhd_struct_init_antenna,obs,beam_model_version=beam_model_version,$
     inst_tile_ptr=inst_tile_ptr,ra_arr=ra_arr,dec_arr=dec_arr,fractional_size=fractional_size,$
     kernel_window=kernel_window,beam_per_baseline=beam_per_baseline,$
     beam_function_decomp=beam_function_decomp,beam_param_transfer=beam_param_transfer,$
-    conserve_memory=conserve_memory,_Extra=extra
+    beam_width_deg=beam_width_deg,conserve_memory=conserve_memory,_Extra=extra
 t0=Systime(1)
 
 IF keyword_set(conserve_memory) then begin
@@ -225,15 +225,20 @@ endif
 if ~keyword_set(pix_use) then horizon_test=where(abs(za_arr) GE 90.,n_horizon_test,complement=pix_use,ncomplement=n_pix)
 antenna.pix_use=ptr_new(pix_use)
 
-;now, update antenna structure to include gains
-if N_elements(instrument) GT 1 then begin
-  for inst_i=0, N_elements(instrument)-1 do begin
-    antenna_temp = pointer_copy(antenna)
-    antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna_temp,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
-    antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
-    antenna[*inst_tile_ptr[inst_i]].antenna_type = instrument[inst_i] ;if more than one instrument, assign the correct antenna type for each subset for metadata purposes
-  endfor  
-endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+if ~keyword_set(beam_width_deg) then begin
+  ;now, update antenna structure to include gains
+  if N_elements(instrument) GT 1 then begin
+    for inst_i=0, N_elements(instrument)-1 do begin
+      antenna_temp = pointer_copy(antenna)
+      antenna_temp=Call_function(tile_gain_fn[inst_i],obs,antenna_temp,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+      antenna[*inst_tile_ptr[inst_i]] = pointer_copy(antenna_temp[*inst_tile_ptr[inst_i]])
+      antenna[*inst_tile_ptr[inst_i]].antenna_type = instrument[inst_i] ;if more than one instrument, assign the correct antenna type for each subset for metadata purposes
+    endfor  
+  endif else antenna=Call_function(tile_gain_fn,obs,antenna,za_arr=za_arr,az_arr=az_arr,psf_image_dim=psf_image_dim,Jdate_use=Jdate_use,_Extra=extra) ;mwa_beam_setup_gain
+endif else begin
+  print, "Option beam_width_deg assumes all antennas are the same"
+  antenna.group_id[*,*]=0
+endelse
 
 if ~tag_exist(antenna, 'K_proj') and ~tag_exist(antenna, 'F_mag') and ~tag_exist(antenna, 'F_phase') then begin
   ;Finally, update antenna structure to include the response of each antenna
