@@ -6,7 +6,7 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
   debug_clip_beam_mask=debug_clip_beam_mask,beam_clip_floor=beam_clip_floor,$
   image_power_beam=image_power_beam,kernel_window=kernel_window,beam_function_decomp=beam_function_decomp,$
   res_super=res_super,beam_param_transfer=beam_param_transfer,pol_i=pol_i,psf_superres_dim=psf_superres_dim,$
-  beam_decomp_info=beam_decomp_info,_Extra=extra
+  beam_decomp_info=beam_decomp_info,beam_width_deg=beam_width_deg,_Extra=extra
 
   icomp = Complex(0, 1)
   dimension_super=psf_superres_dim
@@ -22,7 +22,8 @@ FUNCTION beam_power,antenna1,antenna2,obs=obs,ant_pol1=ant_pol1,ant_pol2=ant_pol
       antenna1=antenna1,antenna2=antenna2,psf_base_superres=psf_base_superres,$
       freq_i=freq_i,pol=pol_i,ant_pol1=ant_pol1,ant_pol2=ant_pol2,zen_int_x=zen_int_x,zen_int_y=zen_int_y,$
       beam_function_decomp=beam_function_decomp,beam_param_transfer=beam_param_transfer,$
-      image_power_beam=image_power_beam,beam_decomp_info=beam_decomp_info,_Extra=extra
+      image_power_beam=image_power_beam,beam_decomp_info=beam_decomp_info,beam_width_deg=beam_width_deg,$
+      _Extra=extra
 
   endif else begin
     ; 
