@@ -18,8 +18,8 @@ FUNCTION vis_calibrate_subroutine,vis_ptr,vis_model_ptr,vis_weight_ptr,obs,cal,p
   conv_thresh=cal.conv_thresh
   use_adaptive_gain = cal.adaptive_gain
   base_gain = cal.base_gain
-  divergence_history = 3 ; halt if the strict convergence is worse than most of the last x iterations
-  divergence_factor = 1.5 ; halt if the convergence gets significantly worse by a factor of x in one iteration
+  divergence_history = cal.divergence_history ; halt if the strict convergence is worse than most of the last x iterations
+  divergence_factor = cal.divergence_factor ; halt if the convergence gets significantly worse by a factor of x in one iteration
 
   n_pol=cal.n_pol
   n_freq=cal.n_freq

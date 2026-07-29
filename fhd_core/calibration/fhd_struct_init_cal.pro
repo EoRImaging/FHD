@@ -10,7 +10,8 @@ FUNCTION fhd_struct_init_cal, obs, params, skymodel, gain_arr_ptr=gain_arr_ptr, 
     calibration_auto_initialize=calibration_auto_initialize, cal_gain_init=cal_gain_init, $
     phase_fit_iter=phase_fit_iter, cal_amp_degree_fit=cal_amp_degree_fit,cal_phase_degree_fit=cal_phase_degree_fit, $
     use_adaptive_calibration_gain=use_adaptive_calibration_gain, calibration_base_gain=calibration_base_gain,$
-    min_cal_solutions=min_cal_solutions,_Extra=extra
+    min_cal_solutions=min_cal_solutions, divergence_history=divergence_history, $
+    divergence_factor=divergence_factor, _Extra=extra
 
 IF N_Elements(obs) EQ 0 THEN fhd_save_io,0,obs,var='obs',/restore,file_path_fhd=file_path_fhd
 IF N_Elements(params) EQ 0 THEN fhd_save_io,0,params,var='params',/restore,file_path_fhd=file_path_fhd
@@ -57,6 +58,10 @@ IF N_Elements(bandpass_calibrate) EQ 0 THEN bandpass_calibrate=1
 IF N_Elements(cal_mode_fit) EQ 0 THEN cal_mode_fit=0.
 ;whether to use a Kalman Filter to adjust the gain to use for each iteration of calculating calibration
 IF N_Elements(use_adaptive_calibration_gain) EQ 0 THEN use_adaptive_calibration_gain=0 
+; Halt if the strict convergence is worse than most of the last x iterations
+IF N_Elements(divergence_history) EQ 0 THEN divergence_history=3 
+; Halt if the convergence gets significantly worse by a factor of x in one iteration
+IF N_Elements(divergence_factor) EQ 0 THEN divergence_factor=1.5
 ;The relative weight to give the old calibration solution when averaging with the new. 
 IF N_Elements(calibration_base_gain) EQ 0 THEN BEGIN
     IF N_Elements(use_adaptive_calibration_gain) EQ 0 THEN calibration_base_gain=1. ELSE calibration_base_gain=0.75
@@ -71,7 +76,8 @@ auto_scale=Fltarr(2)
 cal_struct={n_pol:n_pol, n_freq:n_freq, n_tile:n_tile, n_time:n_time, uu:u_loc, vv:v_loc, $
     auto_initialize:auto_initialize, max_iter:max_cal_iter, phase_iter:phase_fit_iter, $
     tile_A:tile_A, tile_B:tile_B, tile_names:tile_names, bin_offset:bin_offset, freq:freq, gain:gain_arr_ptr, $
-    gain_bandpass:Pointer_copy(gain_arr_ptr), adaptive_gain:use_adaptive_calibration_gain, base_gain:calibration_base_gain, $
+    gain_bandpass:Pointer_copy(gain_arr_ptr), adaptive_gain:use_adaptive_calibration_gain, $
+    divergence_history:divergence_history, divergence_factor:divergence_factor, base_gain:calibration_base_gain, $
     gain_residual:gain_residual, auto_scale:auto_scale, auto_params:auto_params, cross_phase:0.0, stokes_mix_phase:0.0, $
     min_cal_baseline:min_cal_baseline, max_cal_baseline:max_cal_baseline, n_vis_cal:n_vis_cal, $
     time_avg:cal_time_average, min_solns:min_cal_solutions, ref_antenna:ref_antenna, $
