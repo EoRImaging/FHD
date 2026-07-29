@@ -285,8 +285,10 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
     if keyword_set(aw_projection) then begin
       ; Create image power beam at a hyperresolution
 
+      lm = shift(lm,dimension_super/2,dimension_super/2)
+      taper = shift(taper,dimension_super/2,dimension_super/2)
       ; Determine the indices inside of the horizon, easiest on ra or dec
-      inside_horizon_inds=where(shift(lm,proj_dimension/2,proj_elements/2) GT 1e-6)
+      inside_horizon_inds=where(lm GT 1e-6)
 
       ;Pre-initialize array for the image power beam 
       image_power_beam_arr = DBLARR(dimension_super,dimension_super,n_freq_use)
@@ -316,7 +318,6 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
 
         endif else message, 'Either image_power_beam_arr pointer or decomp_type must be set in the psf structure for w-stacking.'
       endelse
-      lm = shift(lm,dimension_super/2,dimension_super/2)
       image_power_beam_arr *= fft_norm
 
     endif else begin
@@ -467,7 +468,7 @@ Function baseline_grid_locations,obs,psf,params,n_bin_use=n_bin_use,bin_i=bin_i,
 
       if w_i EQ 0 then n_bin_use = n_bin_use_i else n_bin_use = [n_bin_use, n_bin_use_i]
       n_vis += Total(double(bin_n))
-      FOR fi=0L,n_f_use-1 DO n_vis_arr[fi_use[fi]]=Total(Long(xmin_w_i[fi,*] GT 0))
+      FOR fi=0L,n_f_use-1 DO n_vis_arr[fi_use[fi]]+=Total(Long(xmin_w_i[fi,*] GT 0))
 
       ; ; Get the number of visibilities in the w-stack per frequency
       freq_inds_per_stack = ri[N_elements(bin_n)+1:*] mod n_freq_use

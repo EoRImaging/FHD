@@ -99,7 +99,7 @@ IF Keyword_Set(image_filter_fn) THEN BEGIN
     IF Keyword_Set(filter_name) THEN filter_name='_'+filter_name ELSE filter_name=''
 ENDIF ELSE filter_name=''
 
-IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix) $
+IF Keyword_Set(pad_uv_image) THEN obs_out=fhd_struct_update_obs(obs,dimension=obs.dimension*pad_uv_image,kbin=obs.kpix,_Extra=extra) $
     ELSE obs_out=obs
 
 IF N_Elements(min_restored_beam_width) EQ 0 THEN min_restored_beam_width=0.75
