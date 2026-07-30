@@ -1,9 +1,9 @@
 FUNCTION vis_param_extract,params,header, antenna_mod_index=antenna_mod_index
 
-
-uu_arr=Double(reform(params[header.uu_i,*]))
-vv_arr=Double(reform(params[header.vv_i,*]))
-ww_arr=Double(reform(params[header.ww_i,*]))
+; handle uu_i having 1 or 2 elements. If 2, they should be summed over
+uu_arr=total(Double(params[header.uu_i,*]), 1)
+vv_arr=total(Double(params[header.vv_i,*]), 1)
+ww_arr=total(Double(params[header.ww_i,*]), 1)
 
 ; Use both date fields if available in the uvfits file
 ; This doesn't give julian dates; those are calcuated in fhd_struct_init_meta
