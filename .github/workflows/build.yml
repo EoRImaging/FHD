@@ -1,0 +1,63 @@
+name: SourcetrailDB
+
+on:
+  push:
+    branches:
+      - master
+      - idl2src-ci
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Update package list
+      run: sudo apt-get update
+
+    - name: Install dependencies
+      run: sudo apt-get install gnudatalanguage
+
+    - name: Get FHD
+      uses: actions/checkout@v2
+      with:
+        repository: EoRImaging/FHD
+
+    - name: Download gdl artifact
+      uses: dawidd6/action-download-artifact@v2.14.1
+      with:
+        workflow: build.yml
+        name: gdl
+        path: ./
+        repo: no-lex/idl2src
+        branch: main
+
+    - name: Download idl2src artifact
+      uses: dawidd6/action-download-artifact@v2.14.1
+      with:
+        workflow: build.yml
+        name: idl2src
+        path: ./
+        repo: no-lex/idl2src
+        branch: main
+
+    - name: Build Database
+      run: |
+        chmod 777 idl2src
+        chmod 777 gdl
+        chmod 777 ci_script.sh
+        chmod 777 run_indexer.sh
+        ./ci_script.sh
+        ls
+
+    - name: Upload database artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: FHD
+        path: |
+          ./FHD.srctrldb
+          ./FHD.srctrlprj
