@@ -43,8 +43,15 @@ t4=0.
 t5=0.
 influence_inds=Region_grow(component_intensity,source_candidate_i,threshold=[gain_factor,1.])
 ind_map=lindgen(dimension,elements)
+
 zoom_x=Minmax(Floor(influence_inds) mod dimension)+[-2,2]
 zoom_y=Minmax(Floor(influence_inds/dimension))+[-2,2]
+; Prevent zoom window from extending outside image boundaries.
+zoom_x[0] = zoom_x[0] > 0L
+zoom_x[1] = zoom_x[1] < (dimension - 1L)
+zoom_y[0] = zoom_y[0] > 0L
+zoom_y[1] = zoom_y[1] < (elements - 1L)
+
 ind_map=ind_map[zoom_x[0]:zoom_x[1],zoom_y[0]:zoom_y[1]]
 intensity_zoom=component_intensity[zoom_x[0]:zoom_x[1],zoom_y[0]:zoom_y[1]]
 source_candidate_x=source_candidate_i mod dimension & source_candidate_x-=zoom_x[0] 
