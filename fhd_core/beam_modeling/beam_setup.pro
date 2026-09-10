@@ -22,59 +22,8 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
   IF Keyword_set(transfer_psf) then begin
     ;
     ; Transfer a psf/obs structure from previous run or from a specified file
-    if file_test(transfer_psf) then begin
-      psf = getvar_savefile(transfer_psf,'psf')
-      obs_restore = getvar_savefile(transfer_psf,'obs')
-
-      obs_freq_bin_i=(*obs.baseline_info).fbin_i
-      psf_freq_bin_i=(*obs_restore.baseline_info).fbin_i
-      nfreq_bin=Max(obs_freq_bin_i)+1
-
-      if total(abs(obs_freq_bin_i-psf_freq_bin_i)) GT 0 then $
-        message, "Frequency bins do not match between the desired psf and the transferred psf."
-
-      if obs_restore.nbaselines NE obs.nbaselines then begin
-        ;Match the baselines between the observation and the transferred psf
-
-        ;An arbitrary larger number than tiles to make an index array
-        baseline_mod = ULONG(obs.n_tile*2)
-        ;Create a baseline array, a unique tile idendifier, for the observation and the transferred psf
-        tile_a = (*obs.baseline_info).tile_a[0:obs.nbaselines-1]
-        tile_b = (*obs.baseline_info).tile_b[0:obs.nbaselines-1]
-        obs_baseline_index = tile_a * baseline_mod + tile_b
-        tile_a = (*obs_restore.baseline_info).tile_a[0:obs_restore.nbaselines-1]
-        tile_b = (*obs_restore.baseline_info).tile_b[0:obs_restore.nbaselines-1]
-        psf_baseline_index = tile_a * baseline_mod + tile_b
-
-        ;Match the unique baselines between the observation and the transferred psf
-        match, obs_baseline_index, psf_baseline_index, suba, subb
-
-        ;Initialize arrays to be updated with appropriate baseline matching
-        beam_ptr = PTRARR(obs.n_pol,nfreq_bin,obs.nbaselines)
-        id = LONARR(obs.n_pol,nfreq_bin,obs.nbaselines)
-
-        ;If not all baselines are matched in the observation, set the missing baselines to the first group ID
-        if N_elements(suba) NE N_elements(obs_baseline_index) then begin
-          print, "Transferred psf does not have full baseline coverage for observation. Setting missing baselines to the first group ID."
-          for pol_i=0, obs.n_pol-1 do begin
-            for freq_i=0, nfreq_bin-1 do begin
-              beam_ptr[pol_i,freq_i,*] = (*psf.beam_ptr)[pol_i,freq_i,0]
-              id[pol_i,freq_i,*] = (psf.id)[pol_i,freq_i,0]
-            endfor
-          endfor
-        endif
-
-        ;Update the beam pointer and ID arrays with the matched baselines
-        beam_ptr[*,*,suba] = (*psf.beam_ptr)[0:obs.n_pol-1,*,subb]
-        id[*,*,suba] = (psf.id)[0:obs.n_pol-1,*,subb]
-        *psf.beam_ptr = beam_ptr
-        updated_values = {id:id}
-        psf = structure_update(psf,_Extra=updated_values)
-      endif
-
-    endif else begin
-      obs_id = obs.obsname
-
+    if file_test(transfer_psf,/directory) then begin
+        obs_id = obs.obsname
       ; Test for <transfer_psf>/<obs_id>_obs.sav and <transfer_psf>/<obs_id>_beams.sav
       ; Test for  <transfer_psf>/metadata/<obs_id>_obs.sav and <transfer_psf>/beams/<obs_id>_beams.sav
       if file_test(transfer_psf+'/'+obs_id+'_obs.sav') AND file_test(transfer_psf+'/'+obs_id+'_beams.sav') then begin
@@ -91,9 +40,60 @@ FUNCTION beam_setup,obs,status_str,antenna,file_path_fhd=file_path_fhd,restore_l
           print, 'not found during psf transfer.'
           message, 'psf_transfer not found'
         endelse
-      endelse      
+      endelse     
       psf = getvar_savefile(file_name_psf,'psf')
       obs_restore = getvar_savefile(file_name_obs,'obs')
+    endif else begin
+      if file_test(transfer_psf) then begin
+        psf = getvar_savefile(transfer_psf,'psf')
+        obs_restore = getvar_savefile(transfer_psf,'obs')
+
+        obs_freq_bin_i=(*obs.baseline_info).fbin_i
+        psf_freq_bin_i=(*obs_restore.baseline_info).fbin_i
+        nfreq_bin=Max(obs_freq_bin_i)+1
+
+        if total(abs(obs_freq_bin_i-psf_freq_bin_i)) GT 0 then $
+          message, "Frequency bins do not match between the desired psf and the transferred psf."
+
+        if obs_restore.nbaselines NE obs.nbaselines then begin
+          ;Match the baselines between the observation and the transferred psf
+
+          ;An arbitrary larger number than tiles to make an index array
+          baseline_mod = ULONG(obs.n_tile*2)
+          ;Create a baseline array, a unique tile idendifier, for the observation and the transferred psf
+          tile_a = (*obs.baseline_info).tile_a[0:obs.nbaselines-1]
+          tile_b = (*obs.baseline_info).tile_b[0:obs.nbaselines-1]
+          obs_baseline_index = tile_a * baseline_mod + tile_b
+          tile_a = (*obs_restore.baseline_info).tile_a[0:obs_restore.nbaselines-1]
+          tile_b = (*obs_restore.baseline_info).tile_b[0:obs_restore.nbaselines-1]
+          psf_baseline_index = tile_a * baseline_mod + tile_b
+
+          ;Match the unique baselines between the observation and the transferred psf
+          match, obs_baseline_index, psf_baseline_index, suba, subb
+
+          ;Initialize arrays to be updated with appropriate baseline matching
+          beam_ptr = PTRARR(obs.n_pol,nfreq_bin,obs.nbaselines)
+          id = LONARR(obs.n_pol,nfreq_bin,obs.nbaselines)
+
+          ;If not all baselines are matched in the observation, set the missing baselines to the first group ID
+          if N_elements(suba) NE N_elements(obs_baseline_index) then begin
+            print, "Transferred psf does not have full baseline coverage for observation. Setting missing baselines to the first group ID."
+            for pol_i=0, obs.n_pol-1 do begin
+              for freq_i=0, nfreq_bin-1 do begin
+                beam_ptr[pol_i,freq_i,*] = (*psf.beam_ptr)[pol_i,freq_i,0]
+                id[pol_i,freq_i,*] = (psf.id)[pol_i,freq_i,0]
+              endfor
+            endfor
+          endif
+
+          ;Update the beam pointer and ID arrays with the matched baselines
+          beam_ptr[*,*,suba] = (*psf.beam_ptr)[0:obs.n_pol-1,*,subb]
+          id[*,*,suba] = (psf.id)[0:obs.n_pol-1,*,subb]
+          *psf.beam_ptr = beam_ptr
+          updated_values = {id:id}
+          psf = structure_update(psf,_Extra=updated_values)
+        endif
+        endif else message, "psf_transfer must be a directory or file."
     endelse
 
     ; Transfer the observation volumes to the current obs structure
