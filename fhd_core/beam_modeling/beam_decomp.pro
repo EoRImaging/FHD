@@ -251,7 +251,7 @@ pro beam_decomp, dimension_super, res_super, psf_intermediate_res, obs=obs, $
     FINDGEN(dimension_super),FINDGEN(dimension_super),(*beam_decomp_info.beam_params[pol])[*,freq_i],$
     ftransform=1,model_npix=beam_decomp_info.model_npix,$
     model_res=(obs.dimension*psf_intermediate_res/psf_image_dim) / beam_decomp_info.model_res,$
-    over_res=res_super,conserve_memory=conserve_memory)
+    over_res=res_super)
 
   fft_norm_expected = 1/double(res_super)^2
   psf_base_superres *= fft_norm_expected
