@@ -1,6 +1,6 @@
 PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration, n_pol=n_pol, $
-    enhance_eor=enhance_eor, eor_vis_filepath=eor_vis_filepath, file_path_vis=file_path_vis, $
-    file_path_fhd=file_path_fhd,sim_noise=sim_noise, hdr=hdr, params=params, $
+    enhance_eor=enhance_eor, transfer_eor=transfer_eor, file_path_vis=file_path_vis, $
+    file_path_fhd=file_path_fhd,sim_noise=sim_noise, hdr=hdr, params=params, layout=layout,$
     remove_sim_flags=remove_sim_flags,extra_vis_filepath=extra_vis_filepath,_Extra=extra
  
   print, "Performing in-situ simulation"
@@ -35,13 +35,13 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
     message, 'Please specify the directory and/or filename of the input visibilities in in_situ_sim_input'
   
   vis_arr=temporary(vis_model_arr)
-  
+
   ;restore EoR visibilities
-  If keyword_set(eor_vis_filepath) then begin
+  If keyword_set(transfer_eor) then begin
     vis_eor=PTRARR(n_pol,/allocate)
 
-    if file_test(eor_vis_filepath) AND (strmid(eor_vis_filepath,5,6,/reverse_offset) EQ 'uvfits') then begin
-      uvfits_read,hdr_temp,params_temp,layout_temp,vis_eor,eor_weights,file_path_vis=eor_vis_filepath,$
+    if file_test(transfer_eor) AND (strmid(transfer_eor,5,6,/reverse_offset) EQ 'uvfits') then begin
+      uvfits_read,hdr_temp,params_temp,layout_temp,vis_eor,eor_weights,file_path_vis=transfer_eor,$
         n_pol=n_pol,silent=silent,error=error,_Extra=extra
 
       ;Check size of visibilties 
@@ -53,28 +53,28 @@ PRO in_situ_sim_setup, in_situ_sim_input, vis_arr, vis_weights, flag_calibration
       endfor
 
     ;*Search for the specified eor savefile
-    endif else if (total(file_test(eor_vis_filepath)) GT 0) AND (file_test(eor_vis_filepath,/directory) EQ 0) then begin
-      size_savefile=(size(eor_vis_filepath))[1]
+    endif else if (total(file_test(transfer_eor)) GT 0) AND (file_test(transfer_eor,/directory) EQ 0) then begin
+      size_savefile=(size(transfer_eor))[1]
       
-      void = GETVAR_SAVEFILE(eor_vis_filepath[0], names=names)
+      void = GETVAR_SAVEFILE(transfer_eor[0], names=names)
       ;assumption: visibilities in sav file have "vis" in the name
       vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]
       
       ;Restore visibilities that are in different polarization save files, or restore the all-pol save file
       if size_savefile EQ n_pol then $
-        for pol_i=0,n_pol-1 do vis_eor[pol_i] = GETVAR_SAVEFILE(eor_vis_filepath[pol_i], vis_varname) $
-      else vis_eor = GETVAR_SAVEFILE(eor_vis_filepath, vis_varname)
+        for pol_i=0,n_pol-1 do vis_eor[pol_i] = GETVAR_SAVEFILE(transfer_eor[pol_i], vis_varname) $
+      else vis_eor = GETVAR_SAVEFILE(transfer_eor, vis_varname)
       
     endif else begin
       for pol_i=0,n_pol-1 do begin
-        if total(file_test(eor_vis_filepath + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav')) GT 0 then begin
-          void = GETVAR_SAVEFILE(eor_vis_filepath + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav', names=names)
+        if total(file_test(transfer_eor + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav')) GT 0 then begin
+          void = GETVAR_SAVEFILE(transfer_eor + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav', names=names)
           ;assumption: visibilities in sav file have "vis" in the name
           vis_varname = names[where(strmatch(names, '*vis*') EQ 1,n_count)]
           
           ;Restore visibilities that are in the <obsid>_vis_XX/vis_YY format
-          vis_eor[pol_i] = GETVAR_SAVEFILE(eor_vis_filepath + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav', vis_varname)
-        endif else message, "eor_vis_filepath not found! Tried " + eor_vis_filepath + " and " + eor_vis_filepath $
+          vis_eor[pol_i] = GETVAR_SAVEFILE(transfer_eor + '/' + obs_id + '_vis_' + pol_name[pol_i] + '.sav', vis_varname)
+        endif else message, "transfer_eor not found! Tried " + transfer_eor + " and " + transfer_eor $
           + '/' + obs_id + "_vis_" + pol_name[pol_i] + ".sav (for all pol)"
       endfor
     endelse
