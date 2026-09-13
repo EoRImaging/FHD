@@ -38,19 +38,13 @@ group_n=histogram(group_id,min=0,/binsize,reverse_ind=ri_id)
 gi_use=where(group_n,n_groups)
 gi_ref=ri_id[ri_id[gi_use]]
 
-IF tag_exist(psf,'beam_gaussian_params') THEN $
-  beam_gaussian_params=psf.beam_gaussian_params else beam_gaussian_params=0
+IF tag_exist(psf,'beam_decomp_info') THEN BEGIN
+  beam_decomp_info=*psf.beam_decomp_info
+ENDIF ELSE BEGIN
+    beam_arr=*psf.beam_ptr
+    beam_decomp_info=0
+ENDELSE
 IF tag_exist(psf,'fbin_i') THEN freq_bin_i=psf.fbin_i
-
-if keyword_set(beam_gaussian_params) then begin
-    ; 1.3 is the padding factor for the gaussian fitting procedure
-    ; (2.*obs.kpix) is the ratio of full sky (2 in l,m) to the analysis range (1/obs.kpix)
-    ; (2.*obs.kpix*dimension/psf.pix_horizon) is the scale factor between the psf pixels-to-horizon and the 
-    ;   analysis pixels-to-horizon 
-    ; (0.5/obs.kpix) is the resolution scaling of what the beam model was made at and the current res 
-    model_npix=psf.pix_horizon*1.3
-    model_res=(2.*obs.kpix*dimension)/psf.pix_horizon*(0.5/obs.kpix)
-endif else beam_arr=*psf.beam_ptr
 
 IF Keyword_Set(obs) THEN BEGIN
     IF Tag_exist(obs,'fbin_i') THEN freq_bin_i=obs.fbin_i ELSE freq_bin_i=(*obs.baseline_info).fbin_i
@@ -74,7 +68,7 @@ IF Keyword_Set(square) THEN BEGIN
     fbin_use=freq_bin_use[Uniq(freq_bin_use,Sort(freq_bin_use))]
     nbin=N_Elements(Uniq(freq_bin_use,Sort(freq_bin_use)))
 
-    IF keyword_set(beam_gaussian_params) THEN BEGIN
+    IF keyword_set(beam_decomp_info) THEN BEGIN
         ; Build the image directly, hence purely real arrays.
         beam_single=FLTARR(dimension,elements)
     ENDIF ELSE BEGIN
@@ -86,13 +80,14 @@ IF Keyword_Set(square) THEN BEGIN
         fbin=fbin_use[bin0]
         nf_bin=Float(Total(freq_bin_use EQ fbin))
 
-        IF keyword_set(beam_gaussian_params) THEN BEGIN
-            ; Build the image directly from the gaussian parameters since gaussians have
+        IF keyword_set(beam_decomp_info) THEN BEGIN
+            ; Build the image directly from the parameters in the case of
             ; an analytic transform
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=gaussian_decomp(FINDGEN(dimension),FINDGEN(elements),$
-                  (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=model_npix,$
-                  model_res=model_res)*group_n[gi_use[gi]]
+                beam_single+=call_function(beam_decomp_info.decomp_type + '_decomp',FINDGEN(dimension),FINDGEN(elements),$
+                    (*(beam_decomp_info).beam_params[pol_i,gi_ref[gi]])[*,fbin],$
+                    model_npix=(beam_decomp_info).model_npix,model_res=1/(beam_decomp_info).model_res,$
+                    over_res=1)*group_n[gi_use[gi]]
             ENDFOR
             beam_single/=Total(group_n[gi_use])
             beam_base+=nf_bin*beam_single*beam_single
@@ -117,7 +112,7 @@ ENDIF ELSE BEGIN
     IF N_Elements(freq_i_use) EQ 0 THEN freq_i_use=findgen(n_freq)
     nf_use=N_Elements(freq_i_use)
 
-    IF keyword_set(beam_gaussian_params) THEN BEGIN
+    IF keyword_set(beam_decomp_info) THEN BEGIN
         ; Build the image directly, hence purely real arrays.
         beam_base_uv=Fltarr(dimension,elements) ;misnomer warning: using _uv to reduce code bulk
         beam_single=FLTARR(dimension,elements)
@@ -132,13 +127,14 @@ ENDIF ELSE BEGIN
         IF N_Elements(freq_i) GT 0 THEN IF Total(freq_i EQ fi) EQ 0 THEN CONTINUE
         fbin=freq_bin_i[fi]
         beam_single[*,*]=0
-        IF keyword_set(beam_gaussian_params) THEN BEGIN
-            ; Build the image directly from the gaussian parameters since gaussians have
+        IF keyword_set(beam_decomp_info) THEN BEGIN
+            ; Build the image directly from the parameters in the case of
             ; an analytic transform
             FOR gi=0,n_groups-1 DO BEGIN
-                beam_single+=gaussian_decomp(FINDGEN(dimension),FINDGEN(elements),$
-                  (*psf.beam_gaussian_params[pol_i,gi_ref[gi]])[*,fbin],model_npix=model_npix,$
-                  model_res=model_res)*group_n[gi_use[gi]]
+                beam_single+=call_function(beam_decomp_info.decomp_type + '_decomp',FINDGEN(dimension),FINDGEN(elements),$
+                    (*(beam_decomp_info).beam_params[pol_i,gi_ref[gi]])[*,fbin],$
+                    model_npix=(beam_decomp_info).model_npix,model_res=1/(beam_decomp_info).model_res,$
+                    over_res=1)*group_n[gi_use[gi]]
             ENDFOR
         ENDIF ELSE BEGIN
             ; Build the total uv beam from the each hyperresolved beam
@@ -151,7 +147,7 @@ ENDIF ELSE BEGIN
         n_bin_use+=1.*freq_norm[fbin]
     ENDFOR
   
-    IF ~keyword_set(beam_gaussian_params) THEN BEGIN 
+    IF ~keyword_set(beam_decomp_info) THEN BEGIN 
         beam_base_uv1=Complexarr(dimension,elements)
         beam_base_uv1[xl:xh,yl:yh]=beam_base_uv
         beam_base=fft_shift(FFT(fft_shift(beam_base_uv1),/inverse))
