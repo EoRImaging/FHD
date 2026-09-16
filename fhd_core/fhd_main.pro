@@ -41,7 +41,8 @@ IF data_flag LE 0 THEN BEGIN
     IF Keyword_Set(log_store) THEN Journal,log_filepath
     fhd_save_io,status_str,file_path_fhd=file_path_fhd,/reset
     
-    uvfits_read,hdr,params,layout,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,error=error,_Extra=extra
+    uvfits_read,hdr,params,layout,vis_arr,vis_weights,file_path_vis=file_path_vis,file_path_fhd=file_path_fhd,$
+      n_pol=n_pol,silent=silent,error=error,_Extra=extra
     IF Keyword_Set(error) THEN BEGIN
       print,"Error occured while reading uvfits data. Returning."
       RETURN

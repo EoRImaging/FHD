@@ -9,7 +9,7 @@ FUNCTION fhd_struct_init_obs,file_path_vis,hdr,params,layout,dimension=dimension
     grid_nfreq_avg=grid_nfreq_avg,_Extra=extra
 ;initializes the structure containing frequently needed parameters relating to the observation
 IF N_Elements(instrument) EQ 0 THEN instrument='mwa' ELSE instrument=StrLowCase(instrument)
-obsname=file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'_cal',/fold_case)
+obsname=file_basename(file_basename(file_basename(file_path_vis,'.uvfits',/fold_case),'.h5',/fold_case),'.uvh5',/fold_case)
 git,'describe',result=code_version,repo_path=rootdir('fhd'),args='--long --dirty'
 IF N_Elements(code_version) GT 0 THEN code_version=code_version[0] ELSE code_version=''
 
@@ -161,8 +161,11 @@ endfor
 params.antenna1 = tile_A
 params.antenna2 = tile_B
 
+if tag_exist(hdr,'orig_obsname') then orig_obsname=hdr.orig_obsname
+
 meta=fhd_struct_init_meta(file_path_vis,hdr,params,layout,degpix=degpix,dimension=dimension,elements=elements,$
-    n_tile=n_tile,instrument=instrument,pol_names=pol_names,meta_data=meta_data,meta_hdr=meta_hdr,_Extra=extra)
+    n_tile=n_tile,instrument=instrument,pol_names=pol_names,meta_data=meta_data,meta_hdr=meta_hdr,$
+    orig_obsname=orig_obsname,_Extra=extra)
 
 IF N_Elements(meta_data) EQ 0 THEN meta_data=Ptr_new() ELSE meta_data=Ptr_new(meta_data)
 IF N_Elements(meta_hdr) EQ 0 THEN meta_hdr=Ptr_new() ELSE meta_hdr=Ptr_new(meta_hdr)
@@ -181,6 +184,7 @@ FOR ti=0,N_Elements(time_cut)<2-1 DO BEGIN
     IF ti_end GE ti_start THEN time_use[ti_start:ti_end]=0
 ENDFOR
 n_time_cut = n_time - Total(time_use)
+
 tile_use1=intarr(n_tile)
 FOR pol_i=0,n_pol-1 DO BEGIN
     tile_use_i=where(*(meta.tile_flag[pol_i]) EQ 0,n_use)
@@ -206,7 +210,7 @@ IF dimension GT 4096 THEN BEGIN
         double_precision=1
     ENDIF
 ENDIF
-
+pol_names=['XX','YY','XY','YX','I','Q','U','V']
 healpix={nside:Long(nside),ind_list:String(ind_list),n_pix:Long(n_hpx),n_zero:Long(n_zero_hpx)}
 
 arr={tile_A:Long(tile_A),tile_B:Long(tile_B),bin_offset:Long(bin_offset),Jdate:meta.Jdate,freq:Double(frequency_array),fbin_i:Long(freq_bin_i),$
@@ -222,5 +226,8 @@ struct={code_version:String(code_version),instrument:String(instrument),obsname:
     freq_center:Float(freq_center),freq_res:Float(freq_res),time_res:Float(meta.time_res),astr:meta.astr,alpha:Float(spectral_index),$
     residual:0,vis_noise:noise_arr,baseline_info:Ptr_new(arr),meta_data:meta_data,meta_hdr:meta_hdr,$
     degrid_spectral_terms:degrid_spectral_terms,grid_spectral_terms:grid_spectral_terms,grid_info:grid_info,healpix:healpix}    
+
+if tag_exist(hdr, 'freq_ref') then struct = structure_update(struct, _Extra={freq_ref:hdr.freq_ref})
+
 RETURN,struct
 END
