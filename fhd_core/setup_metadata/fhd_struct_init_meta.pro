@@ -4,7 +4,8 @@ FUNCTION fhd_struct_init_meta,file_path_vis,hdr,params,layout,lon=lon,lat=lat,al
     obsx=obsx,obsy=obsy,instrument=instrument,pol_names=pol_names,mirror_X=mirror_X,mirror_Y=mirror_Y,no_rephase=no_rephase,$
     meta_data=meta_data,meta_hdr=meta_hdr,time_offset=time_offset,$
     cotter_precess_fix=cotter_precess_fix,force_rephase_to_zenith=force_rephase_to_zenith,$
-    override_target_phasera=override_target_phasera,override_target_phasedec=override_target_phasedec,_Extra=extra
+    override_target_phasera=override_target_phasera,override_target_phasedec=override_target_phasedec,$
+    orig_obsname=orig_obsname,_Extra=extra
 
 IF N_Elements(instrument) EQ 0 THEN instrument=''
 metafits_ext='.metafits'
@@ -12,6 +13,7 @@ metafits_dir=file_dirname(file_path_vis)
 metafits_name=file_basename(file_path_vis,'.sav',/fold_case)
 metafits_name=file_basename(metafits_name,'.uvfits',/fold_case)
 metafits_name=file_basename(metafits_name,'_cal',/fold_case) ;sometimes "_cal" is present, sometimes not.
+if keyword_set(orig_obsname) then metafits_name = orig_obsname
 metafits_path=metafits_dir+path_sep()+metafits_name+metafits_ext
 
 time=params.time
