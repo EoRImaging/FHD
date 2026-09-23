@@ -1,7 +1,8 @@
-PRO uvfits_read,hdr,params,layout,vis_arr,vis_weights,file_path_vis=file_path_vis,n_pol=n_pol,silent=silent,$
-    restore_vis_savefile=restore_vis_savefile,reorder_visibilities=reorder_visibilities,$
-    vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,error=error,$
-    uvfits_spectral_dimension=uvfits_spectral_dimension,_Extra=extra
+PRO uvfits_read,hdr,params,layout,vis_arr,vis_weights,file_path_vis=file_path_vis,file_path_fhd=file_path_fhd,$
+    n_pol=n_pol,silent=silent,restore_vis_savefile=restore_vis_savefile, $
+    reorder_visibilities=reorder_visibilities,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,$
+    error=error,uvfits_spectral_dimension=uvfits_spectral_dimension,freq_split=freq_split,$
+    partial_read=partial_read,_Extra=extra
 ;set n_pol=0 to not return any data, only header and parameters
 
 IF Strpos(file_path_vis,'.sav') EQ -1 THEN file_path_vis_sav=file_path_vis+".sav" ELSE file_path_vis_sav=file_path_vis
@@ -24,16 +25,36 @@ ENDIF ELSE BEGIN
     ENDIF
     
     t_readfits=Systime(1)
-    lun = fxposit(file_path_vis, 0,/readonly)
-    data_struct=mrdfits(lun,0,data_header0,/silent)
-    hdr=vis_header_extract(data_header0, params = data_struct.params,error=error,_Extra=extra)    
-    IF Keyword_Set(error) THEN RETURN
+    ext = STRLOWCASE(FILE_BASENAME(file_path_vis))
+    if STRMATCH(ext, '*.uvh5') OR STRMATCH(ext, '*.h5') THEN BEGIN
+        layout = uvh5_read_layout(file_path_vis, _Extra=extra)
+        if N_elements(partial_read) EQ 0 THEN BEGIN
+            data_struct = read_uvh5(file_path_vis, _Extra=extra)
+        endif else begin
+            data_struct = read_uvh5(file_path_vis, partial_read=partial_read, $
+               file_path_fhd=file_path_fhd,file_path_vis=file_path_vis, _Extra=extra)
+        endelse
+        hdr = data_struct.hdr
+    ENDIF ELSE BEGIN
+        lun = fxposit(file_path_vis, 0,/readonly)
+        data_struct=mrdfits(lun,0,data_header0,/silent)
+        hdr=vis_header_extract(data_header0, params = data_struct.params,error=error,_Extra=extra)  
+        IF Keyword_Set(error) THEN RETURN 
+        
+        ext_name = ''
+        while ext_name ne 'AIPS AN' do begin
+            ext_data = mrdfits(lun, 0, ext_header)
+            ext_name=strtrim(sxpar(ext_header, 'extname'))
+        endwhile
+        layout = fhd_struct_init_layout(ext_header, ext_data,_Extra=extra)
+    ENDELSE
+    params=vis_param_extract(data_struct.params,hdr,_Extra=extra)
+
     IF N_Elements(n_pol) EQ 0 THEN n_pol=hdr.n_pol ELSE n_pol=n_pol<hdr.n_pol
     
-    params=vis_param_extract(data_struct.params,hdr,_Extra=extra)
     t_readfits=Systime(1)-t_readfits
     print,"Time reading UVFITS files and extracting header: "+Strn(t_readfits)
-    
+
     data_array=Temporary(data_struct.array) 
     data_struct=0. ;free memory
     
@@ -85,17 +106,6 @@ ENDIF ELSE BEGIN
     data_array=0 
     vis_weights0=0
 
-    ;; now read extensions one by one until we find the antenna table
-    t_read_ant=Systime(1)
-    ext_name = ''
-    while ext_name ne 'AIPS AN' do begin
-        ext_data = mrdfits(lun, 0, ext_header)
-        ext_name=strtrim(sxpar(ext_header, 'extname'))
-    endwhile
-    layout = fhd_struct_init_layout(ext_header, ext_data,_Extra=extra)
-    t_read_ant=Systime(1)-t_read_ant
-    print,"Time finding and reading antenna table in UVFITS file and extracting header: "+Strn(t_read_ant) 
-
     ;; use the antenna table to update hdr.n_tile, which was set to a default value of 128 in fhd_struct_init_hdr
     hdr.n_tile=N_Elements(layout.antenna_names)
 
@@ -108,8 +118,6 @@ ENDIF ELSE BEGIN
         vis_average,vis_arr,vis_weights,params,hdr,vis_time_average=vis_time_average,vis_freq_average=vis_freq_average,timing=t_averaging
         IF ~Keyword_Set(silent) THEN print,"Visibility averaging time: "+Strtrim(String(t_averaging),2)
     ENDIF
-    
-
-        
+ 
 ENDELSE    
 END
