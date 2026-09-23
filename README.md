@@ -23,6 +23,7 @@ For further details, please see [Sullivan et al 2012](https://arxiv.org/abs/1209
 * [Outputs](https://github.com/EoRImaging/FHD/blob/master/outputs.md): For documentation of the various outputs, see the outputs page.
 * [Inputs](https://github.com/EoRImaging/FHD/blob/master/inputs.md): FHD inputs beam models, calibration files, and sky model catalogs. Currently available inputs are described on this page.
 * [Publications](https://github.com/EoRImaging/FHD/blob/master/publications.md): FHD has been used in a variety of publications, documented on this page.
+* [Sourcetrail](https://github.com/EoRImaging/FHD/actions): FHD's GitHub Actions generates a Sourcetrail database; just unpack the FHD artifact in the link and open it with [Sourcetrail](https://github.com/CoatiSoftware/Sourcetrail) for convenient, interactive visualization.
 
 ## Installation
 Download the latest versions of these libraries/repos.    
