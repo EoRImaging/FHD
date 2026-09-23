@@ -11,7 +11,7 @@ FUNCTION uvh5_read_layout, file_path_vis, _EXTRA=extra
 
     ant_names = uvh5_read_dataset(fid, '/Header/antenna_names')
     ant_numbers = uvh5_read_dataset(fid, '/Header/antenna_numbers')
-    ant_positions = uvh5_read_dataset(fid, '/Header/antenna_positions')
+    ant_positions_ecef = uvh5_read_dataset(fid, '/Header/antenna_positions')
     latitude = uvh5_read_dataset(fid, '/Header/latitude')
     longitude = uvh5_read_dataset(fid, '/Header/longitude')
     altitude = uvh5_read_dataset(fid, '/Header/altitude')
@@ -22,8 +22,18 @@ FUNCTION uvh5_read_layout, file_path_vis, _EXTRA=extra
     nant = N_ELEMENTS(ant_numbers)
 
     ; IDL/HDF5 dimension order can be reversed, so make sure positions are [3, nant].
-    pos_dims = SIZE(ant_positions, /DIMENSIONS)
-    IF pos_dims[0] NE 3 THEN ant_positions = TRANSPOSE(ant_positions)
+    pos_dims = SIZE(ant_positions_ecef, /DIMENSIONS)
+    IF pos_dims[0] NE 3 THEN ant_positions_ecef = TRANSPOSE(ant_positions_ecef)
+
+
+    ; antenna positions from uvh5 are in ECEF, which is different from the
+    ; rotated ECEF positions in uvfits. Convert to match what comes from uvfits
+    rot_angle = -1 * longitude
+
+    rot_matrix = [[cos(angle), -1 * sin(angle), 0], $
+        [np.sin(angle), np.cos(angle), 0], $
+        [0, 0, 1]]
+    ant_positions = matrix_multiply(rot_matrix, ant_positions_ecef)
 
     ; Build a layout structure with the fields FHD usually needs.
     ; UVH5 antenna_positions are ECEF positions relative to the telescope location,
