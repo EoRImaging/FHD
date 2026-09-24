@@ -18,11 +18,24 @@ pro vis_delay_filter, vis_model_arr,  params, obs
   kbinsize=obs.kpix
   nfreq = n_elements(freq_arr)
   nbl = n_elements(params.uu)
-  
-  data = Complex(fltarr(nfreq,nbl,n_pol)) ; Stack pols
-  
+
+  ; use double precision if set in obs or if vis_model_arr is double precision
+  double_precision=0
+  if Tag_Exist(obs, 'double_precision') then begin
+    double_precision=obs.double_precision
+  endif
+  if size(*vis_model_arr[pol_i], /type) eq 9 then begin
+    double_precision = 1
+  endif
+
+  ; Stack pols
+  if keyword_set(double_precision) then begin
+    data = DComplex(fltarr(nfreq,nbl,n_pol))
+  endif else begin
+    data = Complex(fltarr(nfreq,nbl,n_pol))
+  endelse
+
   for pol_i=0,n_pol-1 do data[*,*,pol_i] = *vis_model_arr[pol_i]
-  
   
   ;test with removing zeroed visibilities instead
   total_data = total(total(data,1),2)
@@ -37,16 +50,22 @@ pro vis_delay_filter, vis_model_arr,  params, obs
   ww = params.ww[bi_use]
   bb = sqrt(uu^2.+vv^2.+ww^2.)
   nbl = n_elements(bi_use)
-  
+
   ; Phase to zenith -- easier calculations of the location of the horizon when phased to zenith
   dimension=obs.dimension
   apply_astrometry,obs,ra_arr=obs.zenra, dec_arr=obs.zendec, x_arr=x_use, y_arr=y_use, /ad2xy, /refraction
   dx=obs.obsx - obs.zenx
   dy=obs.obsy - obs.zeny
-  dx*=(2.*!Pi/dimension)
-  dy*=(2.*!Pi/dimension)
+  dx*=(2.*!dPi/dimension)
+  dy*=(2.*!dPi/dimension)
   phase=(uu#freq_arr)*dx/kbinsize + (vv#freq_arr)*dy/kbinsize
-  rephase_vals=transpose(Complex(Cos(phase),Sin(phase))) ;multiply by vis to phase
+  ; multiply by vis to phase
+  if keyword_set(double_precision) then begin
+    rephase_vals=transpose(DComplex(Cos(phase),Sin(phase)))
+  endif else begin
+    rephase_vals=transpose(Complex(Cos(phase),Sin(phase)))
+  endelse
+
   for pol_i=0,n_pol-1 do data[*,*,pol_i] *= rephase_vals
   undefine_fhd, uu, vv, ww
   
@@ -58,7 +77,7 @@ pro vis_delay_filter, vis_model_arr,  params, obs
   data = data * window_expand
  
   ; FFT
-  spectra = shift(fft(data,dim=1),nfreq/2,0,0) ; Shift only in fft direction.
+  spectra = shift(fft(data,dim=1,double=double_precision),nfreq/2,0,0) ; Shift only in fft direction.
   undefine_fhd, data, window
  
   ;Cut at the horizon
@@ -78,7 +97,7 @@ pro vis_delay_filter, vis_model_arr,  params, obs
     if n_count GT 0 then spectra[freq_i,mask_low_inds,*] = 0
   endfor
   
-  masked_data = fft(shift(spectra,nfreq/2,0,0),dim=1,/inverse)
+  masked_data = fft(shift(spectra,nfreq/2,0,0),dim=1,/inverse, double=double_precision)
   
   masked_data = masked_data / window_expand
   
